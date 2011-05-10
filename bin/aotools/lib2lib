@@ -1,3 +1,0 @@
-#!/bin/ksh
-
-symfind --callers /bbs/lib/lib$2.a | grep "^$1\\["

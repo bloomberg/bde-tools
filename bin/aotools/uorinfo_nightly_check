@@ -1,4 +1,0 @@
-#!/usr/bin/ksh
-
-uorinfo check
-/home/dsugalsk/src/tomstools/check_adddepends.pl gtkcore gobject

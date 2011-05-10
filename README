@@ -1,1 +1,4 @@
 BDE tools copied from the clearcase dev branch
+
+Some directories, like bin/scm, bin/robo, and bin/test were deliberately
+elided, since those are under svn management already.
