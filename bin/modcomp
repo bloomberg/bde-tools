@@ -1,0 +1,131 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+use POSIX;
+
+my %option;
+my @extensions = ("cpp", "h", "t.cpp");
+
+GetOptions(\%option, "help|?");
+&usage if $option{'help'};
+
+die "Invalid number of arguments. See modcomp -h for help\n" if (@ARGV < 2 || ((scalar(@ARGV)-1) % 2) != 0);
+
+my $compName = shift;
+my @replace = @ARGV; # copy the rest
+
+if ($compName eq '.') {
+  # use directory name as the component name
+  my $pwd = `pwd`;
+  chomp $pwd;
+  ($compName) = $pwd =~ m!([^/]+)$!;
+}
+
+# process files of each extension for the component
+foreach (@extensions) {
+  my $srcFile = "\L$compName.$_"; # filename is always lowercase
+
+  print "File $srcFile does not exist or not modifiable. Skipping file\n"
+    and next unless (-f $srcFile && -w _);
+
+  # get real file path if file is a symlink (path may be relative)
+  $srcFile = readlink($srcFile) if (-l $srcFile);
+
+  # create temporary filename
+  my $tmpFile;
+  do {
+    $tmpFile = tmpnam();
+  } until (!-f $tmpFile);
+
+  # copy original to temp file
+  system("mv", "$srcFile", "$tmpFile") == 0 or
+    die("Failed to rename $srcFile to $tmpFile for modification: $!\n");
+
+  # open file and slurp whole content in one shot
+  open(FILE, "<$tmpFile") or die "Failed to open file $tmpFile: $!\n";
+  my $tmp = $/; $/ = undef;
+  my $content = <FILE>;
+  $/ = $tmp;
+  close FILE;
+
+  # replace
+  for (my $i=0; $i<=$#replace; $i+=2) {
+    my $srcItem = $replace[$i];
+    my $dstItem = (($i+1)<=$#replace)? $replace[$i+1] : "";
+    $content =~ s/(\b|_)($srcItem)(\b|_)/$1.&replaceMatchCase($2, $dstItem).$3/eig;
+    if ($i == 0) {
+      # replaces comments like below to have all three lines of same length:
+      # note that this is only done for the first replacement pair
+      # // =========
+      # // class xxx
+      # // =========
+      $content =~ s!(\n\s*?)         # initial spaces upto // === or // ----
+                    (//\s*?(=|-)+)   # // === or // ----
+                    (\s*?)           # any trailing spaces in the first line
+                    \1               # initial spaces on 2nd line
+                    (//\s*?(?:class\s*|)$dstItem) # // class xxx
+                    (\s*?)           # any trailing spaces in the 2nd line
+                    \1               # initial spaces on 3rd line
+                    \2               # the same // === or // --- as the first line
+                    (\s*?\n)         # trailing spaces on the 3rd line
+                    !&matchCommentLen(undef, $1, $2, $3, $4, $5, $6, $7)!exsgi;
+    }
+  }
+
+  open(FILE, ">$srcFile") or die "Failed to create file $srcFile: $!\n";
+  print FILE $content;
+  close FILE;
+  print "modified $srcFile\n";
+
+  unlink $tmpFile; # delete temp file
+}
+
+sub matchCommentLen {
+  my @t = @_;
+  my $diff = length($t[2]) - length($t[5]);
+  if ($diff > 0) {
+    for (1 .. $diff) { chop $t[2] }
+  } elsif ($diff < 0) {
+    for ($diff .. -1) { $t[2] .= $t[3] }
+  }
+
+  return "$t[1]$t[2]$t[4]$t[1]$t[5]$t[6]$t[1]$t[2]$t[7]";
+}
+
+sub replaceMatchCase {
+  my $src = shift;
+  my $dst = shift;
+
+  return lc($dst) if $src !~ /[A-Z]/; # all lowercase
+  return uc($dst) if $src !~ /[a-z]/; # all uppercase
+  return ucfirst(lc($dst)) if ($src =~ /^[A-Z][^A-Z]*$/); # cap first
+  return $dst; # return as is specified on command line
+}
+
+sub usage {
+  print <<"USAGE";
+modcomp -- component modification utility
+  modcomp modifies the component's files in place, relacing
+  occurrences of the specified string with the replacement
+  string.  When replacing, case-matching is performed so that if
+  the occurrence of the source is all lowercase, then the
+  substitued string will be all lowercase.  Same applies to all
+  uppercase occurrences.  If the occurrence is mixed-case, then the
+  substitued name will be the same as specified on the command line.
+
+Usage: modcomp [-options] component [replacement pairs]..
+Options:
+  --help    This help
+Arguments:
+  component
+    The name of the component to modify.  If '.' is used, it is
+    assumed that the current directory name is the component name
+  replacement pairs
+    Each pair of arguments correspond to a pair of source string and
+    replacement string.  
+
+USAGE
+
+  exit 0;
+}

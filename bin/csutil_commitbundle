@@ -1,0 +1,35 @@
+#!/bbs/opt/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use SCM::Repository;
+use SCM::Symbols qw(SCM_REPOSITORY);
+use Util::Message qw/fatal/;
+use Util::SCMControl qw/acceptSCMUser/;
+use strict;
+
+acceptSCMUser()  or  fatal "user not authorized";
+
+my %opt = ( repository => SCM_REPOSITORY );
+my @getopt = qw(repository=s);
+
+sub usage {
+  return "usage: $0 [--repository /fsfs/path] bundle1 ...";
+}
+
+GetOptions(\%opt, @getopt) or die usage();
+die usage() if !@ARGV;
+
+my $repo = SCM::Repository->new(repository_path => $opt{repository}) or
+  die "Can't open repository at $opt{repository}.$/";
+
+for my $bundle (@ARGV) {
+  my $csid = (split m{/}, $bundle)[0];
+  my ($ret,$err) = $repo->commit_bundle($bundle);
+  print "error: $err" . $/ . "code: " . ($err+0) . $/ if $err;
+}
+

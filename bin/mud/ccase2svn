@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+vob="$1" && shift
+branch="$1" && shift
+svnurl="$1" && shift
+
+list="$PWD/pnames.list"
+skeleton="$PWD/import.dirs"
+
+(
+cd "$vob"
+pname_find > "$list"
+pname_dirs "$branch" "$list" | sort -u | \
+  while read d; do mkdir -p "$skeleton/$d"; done
+svn import -m "initial directory structure" "$skeleton" "$svnurl"
+pname_filevers "$branch" "$list" | pname_desc | sort -n -d`printf "\t"` -k2 | \
+  ccase2svn_loadfiles "$svnurl"
+)
+

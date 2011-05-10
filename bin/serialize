@@ -1,0 +1,156 @@
+#!/opt/swt/bin/perl
+use strict;
+
+use Getopt::Long;
+use Fcntl qw(:flock);
+
+#-------------------------------------------------------------------------------
+
+=head1 SYNOPSIS
+
+    serialize --args 1 --ignoreopts ar -rv libincrementallybuilt.a objectfile.o
+
+=head1 DESCRIPTION
+
+I<serialize> restricts access to the specified command using a cooperative lock
+to allow commands that do not handle concurrent access well to be insulated from
+syncronous invokations.
+
+One or more arguments may also be included in the lock, in which case the lock
+applies only when the arguments are identical. Note that this relies on a 
+consistent order of arguments; it will not lock a command if the arguments are
+supplied with the same values but in different orders.
+
+If the option C<--ignoreopts> is specified, options (prefixed with '-') are
+ignored and only non-option arguments are considered. Note that I<serialize>
+does not differentiate between options with arguments and true non-option
+arguments, so specify option arguments without an intermediate space (or using
+a '=') to have serialize ignore them.
+
+I<serialize> was specifically written to allow commands like I<ar> work in
+incremental mode (C<ar -r>) from within a parallel make. Without this protection
+two invokations of C<ar -r> can and probably will collide attempting to add 
+different object files to the same library. The synopsis shows how this can
+be prevented using I<serialize>.
+
+=cut
+
+#-------------------------------------------------------------------------------
+
+# get command line options. Return hash ref on success, error string on failure.
+sub get_options () {
+    my $opts = {
+        args       => 0,
+        debug      => 0,
+        ignoreopts => 0,
+        lockdir    => "/bb/data/tmp",
+        matcharg   => 0,
+        verbose    => 0,
+    };
+
+    Getopt::Long::Configure("bundling","require_order");
+    unless (GetOptions($opts, qw[
+        help|h
+        args|a=i
+        debug|d
+        ignoreopts|i
+        lockdir|l=s
+        matcharg|m=s
+        verbose|v
+    ])) {
+        usage();
+        return undef;
+    }
+
+    usage(),exit 0 if $opts->{help};
+
+    unless (@ARGV) {
+        return "No command supplied";
+    }
+
+    my @args=@ARGV;
+    @args=grep { $_!~/^-/ } @args if $opts->{ignoreopts};
+
+    if ($opts->{matcharg}) {
+        die "--args and --matcharg are incompatible\n" if $opts->{args};
+
+        my @newargs=();
+	foreach my $arg (@args) {
+            push @newargs,$arg;
+	    last if $arg=~/$opts->{matcharg}/;
+	}
+        @args=@newargs;
+    } else {
+        if ($opts->{args}) {
+            if ($opts->{args} > $#args) {
+                return "Lock arguments exceed actual arguments";
+            }
+        }
+        @args=@args[0..$opts->{args}]; #the command itself counts +1 arg
+    }
+
+    print "[[ Arguments in lock: @args\n" if $opts->{debug};
+
+    map { s|[./\\]|-|og } @args;
+    $opts->{lock} = ".".(join "_",@args);
+    $opts->{lock} = substr $opts->{lock},0,200 if length($opts->{lock})>200;
+    $opts->{lock} .=".serialise";
+    $opts->{command} = [ @ARGV ];
+
+    return $opts;
+}
+
+sub usage () {
+    my $prog = $1 if $0=~m|([^/]+)$|;
+    print STDERR <<_USAGE_END;
+Usage: $prog --h | [-a <N>] [-l <dir>] <cmd> [<arg> [<arg> ...]]
+
+  --help       | -h         usage information (this text)
+  --args       | -a  <N>    number of arguments to include in lock
+  --debug      | -d         enable debug reporting
+  --ignoreopts | -i         ignore -options when calculating number of
+                            arguments.
+  --lockdir    | -l  <dir>  location to store lock files
+  --matcharg   | -m  <re>   include arguments up to the one matching the
+                            supplied regular expression
+  --verbose    | -v         enable verbose reporting
+
+See `perldoc $prog` for more information.
+
+_USAGE_END
+}
+
+#-------------------------------------------------------------------------------
+
+MAIN: {
+    $|=1;
+
+    my $opts=get_options();
+    die("Error: $opts\n") unless ref $opts;
+
+    if ($opts->{debug}) {
+        print "[[ Command : @{$opts->{command}}\n";
+        print "[[ Lockfile: $opts->{lockdir}/$opts->{lock}\n";
+    }
+
+    print "-- $$-opening @{$opts->{command}}\n" if $opts->{verbose};
+    my $umask = umask(0000);  ## world writable
+    open LOCK, ">$opts->{lockdir}/$opts->{lock}"
+	or die "unable to open lock file for writing: $!\n";
+    umask($umask);
+
+    print "-- $$-waiting @{$opts->{command}}\n" if $opts->{verbose};
+    flock LOCK,LOCK_EX;
+    print "-- $$-locked\n" if $opts->{verbose};
+    print LOCK "locked-$$\n";
+
+    # (force execution by shell (do not pass as array) because we want shell to
+    #  evaluate SUNWS_CACHE_NAME=... or others at the beginning of the command)
+    my $status=system(qq{sh -c "@{$opts->{command}}"});
+
+    flock LOCK,LOCK_UN;
+    print "-- $$-unlocked @{$opts->{command}}\n" if $opts->{verbose};
+    close LOCK or die "unable to close lock file: $!\n";
+
+    exit $status >> 8;
+}

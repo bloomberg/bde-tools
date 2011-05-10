@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="common_64"
+	>
+	<Tool Name="VCCLCompilerTool"
+		PreprocessorDefinitions="_WIN32_WINNT=0x0502;WINVER=0x0502;"
+		AdditionalOptions="/bigobj"
+	/>
+	<Tool Name="VCLinkerTool"
+		AdditionalOptions="/machine:AMD64"
+		TargetMachine="17"
+	/>
+	
+</VisualStudioPropertySheet>

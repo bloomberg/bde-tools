@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# deploy checked out files to a location outside the clearcase universe.
+# specific to scm system at the moment.
+
+CLEARCASE=/bbcm/infrastructure/tools/lib/perl
+TARGET=/bb/csdata/scm/lib/perl
+
+cd $CLEARCASE; cleartool lsco -r -s -user "$USER" | \
+  perl -ne 'chomp; print "$_\n" if -f' | \
+  xargs tar cf - | \
+  (cd $TARGET; su rpbuild -c "tar xvf -")
+

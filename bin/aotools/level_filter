@@ -1,0 +1,13 @@
+#! /bbs/opt/bin/perl -w
+use strict;
+
+my $level;
+
+while ( <> ) {
+    if ( m/^level (\d+)$/ ) {
+	$level = $1;
+    }
+    elsif ( m/\s*(\S+)\s*(.*)/ ) {
+	printf "%10s %2s %s\n", $2, $level, $1;
+    }
+}

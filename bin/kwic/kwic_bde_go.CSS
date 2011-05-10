@@ -1,0 +1,45 @@
+body
+{
+	font-size:11.0pt;
+	font-family:Verdana;
+	mso-fareast-font-family:"Arial Unicode MS";
+	mso-bidi-font-family:"Arial Unicode MS"
+	background-color: #ffffff;
+	color: black;
+}
+
+h1
+{
+	font-size:18.0pt;
+	color: #FF9900;
+	mso-bidi-font-size:11.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Arial Unicode MS";
+	mso-bidi-font-family:"Arial Unicode MS";
+}
+
+h2
+{
+	font-size:14.0pt;
+        color: #FF9900;
+        font-style: italic;
+	mso-bidi-font-size:11.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Arial Unicode MS";
+	mso-bidi-font-family:"Arial Unicode MS";
+}
+
+h3
+{
+	font-size:12.0pt;
+        color: #FF9900;
+        font-style: italic;
+	mso-bidi-font-size:11.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Arial Unicode MS";
+	mso-bidi-font-family:"Arial Unicode MS";
+}
+A:link {text-decoration: none}
+A:visited {text-decoration: none}
+A:active {text-decoration: none}
+A:hover {text-decoration: underline; color: orange;}

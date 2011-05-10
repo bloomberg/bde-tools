@@ -1,0 +1,36 @@
+#!/bbs/opt/bin/perl -w
+
+# make cleartool annotate suck less:
+# (1) the defaults suck
+# (2) the date formatting sucks
+
+use Getopt::Long;
+use strict;
+
+my %opt = (note=>1,rest=>1); # music to my ears
+my @getopt = qw(note! rest!);
+
+GetOptions(\%opt, @getopt);
+
+my $file = shift;
+my $cmd = 'cleartool annotate -out - -nheader -f -fmt "%8.8u %Nd |" '.$file;
+
+open (my $ctfh, "$cmd |") or
+  die "Error running $cmd: $?" . $/;
+
+while (<$ctfh>) {
+  chomp;
+
+  if (/^\s*([a-zA-Z0-9]+)\s+([\d|\.]+)\s+\|(.*)$/) {
+    my ($user,$ndate,$line) = ($1,$2,$3);
+    my ($y,$m,$d) = ($ndate =~ /^\d\d(\d\d)(\d\d)(\d\d)/);
+    my $note = sprintf('%s%s%s %8s', $y,$m,$d,$user);
+    $_ = join ' | ', $opt{note}?$note:(), $opt{rest}?$line:();
+  }
+
+  print $_.$/;
+}
+
+close $ctfh or
+  die "Error running $cmd: $?" . $/;
+

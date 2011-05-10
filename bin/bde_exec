@@ -1,0 +1,12 @@
+#!/bin/sh
+GROUP=${GROUP-general}
+SYSTEM="`/usr/bin/uname`"
+case "$SYSTEM" in
+  SunOS*)
+    USERID="`/usr/xpg4/bin/id -u`"
+    ;;
+  *)
+    USERID="`/usr/bin/id -u`"
+    ;;
+esac
+exec env - PATH="/bin:/usr/bin:/usr/local/bin" CHANGE_USER="$USERID" CHANGE_GROUP="$GROUP" "$@"

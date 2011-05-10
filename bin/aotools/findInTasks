@@ -1,0 +1,103 @@
+#!/usr/bin/ksh
+
+#===========================================================================
+# Syntax:  findInTasks [-b] [-p] [-t] [-P] (-f inFile | searchstring)
+# Purpose: search the cache of files that are incorporated into
+#          the set of Big (-b) TSFILES (-t) or PORTFILES (-p) tasks.
+#===========================================================================
+
+syntax="Syntax: findInTasks [-b] [-h] [-p] [-t] [-P] (-f inFile|searchstring)"
+syntax=$syntax"\n\t-b searches Big tasks. (default)"
+syntax=$syntax"\n\t-p searches PORTFILE tasks."
+syntax=$syntax"\n\t-t searches TSFILE tasks."
+syntax=$syntax"\n\t-P turns on Partial (initial) match."
+syntax=$syntax"\n\t-h prints this help summary."
+
+tasksBaseDir=/bb/csdata/cache/aotools/ProdTasks
+bigsDir=${tasksBaseDir}/bigs
+portfilesDir=${tasksBaseDir}/portfiles
+tsfilesDir=${tasksBaseDir}/tsfiles
+
+searchDir=${bigsDir}
+inputFile=""
+exactMatch=1
+
+exitcode=0
+
+#--------------------------------------------------------------------------
+# Parameter Parsing
+#--------------------------------------------------------------------------
+
+while getopts ":bf:hoptP" opt; do
+    case $opt in
+     b ) 
+	searchDir=${bigsDir};;
+     f ) 
+        inputFile=$OPTARG;;
+     h ) 
+	print ${syntax}
+        exit 0;;
+     o ) 
+	print " ** The -o option is deprecated.  Please use -t or -p"
+        print " ** for TSFILES or PORTFILES, respectively."
+        exit 1;;
+     p ) 
+	searchDir=${portfilesDir};;
+     t ) 
+	searchDir=${tsfilesDir};;
+     P ) 
+	exactMatch=0;;
+     * )
+	print ${syntax}
+	exit 1;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+#--------------------------------------------------------------------------
+# Error Checking (case of no arguments at all)
+#--------------------------------------------------------------------------
+
+if [[ $inputFile = "" && $# -le 0 ]]; then
+    print $syntax
+    exit 1
+fi
+
+#--------------------------------------------------------------------------
+# Function definitions
+#--------------------------------------------------------------------------
+
+function readAndProcessInput {
+  while read line; do
+      if [[ -n $line && $line = ${line#\#} ]]; then
+          print $line
+          print "= = = = = = = ="
+          if [[ $exactMatch -eq 1 ]]; then
+            egrep "(^|/)$line$" ${searchDir}/*.tsk | sed -e "s?${searchDir}/??"
+          else
+            egrep "(^|/)$line" ${searchDir}/*.tsk | sed -e "s?${searchDir}/??"
+          fi
+          print " "
+      fi
+  done
+}
+
+#--------------------------------------------------------------------------
+# Main Working Code (such as it is)
+#--------------------------------------------------------------------------
+
+if [[ $inputFile = "" ]]; then
+    for string in $* ; do
+        if [[ $exactMatch -eq 1 ]]; then
+          egrep "(^|/)$string$" ${searchDir}/*.tsk | sed -e "s?${searchDir}/??"
+        else
+          egrep "(^|/)$string" ${searchDir}/*.tsk | sed -e "s?${searchDir}/??"
+        fi
+    done
+elif [[ -s $inputFile && -r $inputFile ]]; then
+    readAndProcessInput < $inputFile
+else
+    print "Input file " $inputFile " not valid."
+fi
+
+exit 0

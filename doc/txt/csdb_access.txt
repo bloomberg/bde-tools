@@ -1,0 +1,53 @@
+- Problem
+
+CSDB::Access is currently a mess: in addition to generic database access
+functionality, it now contains code for marshalling a wide variety of objects
+into and out of the database. This specialized code incurs a number of
+dependencies which may or may not be desirable for caller.
+
+The current mitigation technique is to make these dependencies runtime via a
+'require' within the CSDB::Access method which needs them. This has its own
+problems however: it makes module dependencies less explicit, incurs perl
+compile-time cost at potentially time-critical points in the program, etc.
+
+- Solution
+
+Firstly, move the whole namespace up one level: CSDB::(Request|Response) has
+been obsoleted, therefore SCM::CSDB can and should fill this namespace gap.
+
+Move specialized database access methods into the SCM::CSDB::MyStuff namespace.
+Methods which the same dependencies have affinity and should probably be lumped
+together in their own module.
+
+Each of these modules should have SCM::CSDB as base class. Extend
+SCM::CSDB->new to accept an open database handle, to permit efficient
+connection usage when multiple specialized DB modules are in use.
+
+The SQL templates currently found in $SCM::CSDB::Access::CSDB_SQL also need to
+be refactored in parallel. They should move along with the methods which use
+them, and should be made available to the SCM::CSDB base class via an overriden
+method sql_template().
+
+It might be beneficial to move these snippets into separate files: they do have
+reuse value outside of the SCM::CSDB context. For instance, I have sql
+templates on SCM that I use to query out the history of a file directly from
+the CSDB using sqlcmd, or to construct a serialised Change::Set +
+Change::Files. The downside is that they have strong affinity with the methods
+in CSDB::Access::MyStuff and distancing them via the filesystem may make the
+system a bit harder to maintain overall.
+
+- dbh reuse
+
+In order to avoid SCM::CSDB becoming the new Production::Services::ChangeSet
+with obnoxious unnerving $svc as first argument, the base class SCM::CSDB needs
+a public dbh method, so that the following becomes feasible:
+
+    my $status_csdb = SCM::CSDB::Status->new(database => SCM_CSDB,
+                                             driver   => SCM_CSDB_DRIVER);
+
+    ...
+    # oups, need to do something with change sets
+    my $cs_csdb = SCM::CSDB::ChangeSet->new(dbh => $status_csdb->dbh);
+
+    # or simply pass in anything that isa SCM::CSDB:
+    my $cs_csdb = SCM::CSDB::ChangeSet->new($status_csdb);

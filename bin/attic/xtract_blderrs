@@ -1,0 +1,76 @@
+#!/bin/ksh
+
+
+# globals
+typeset pkg
+typeset currpkg
+typeset -i error
+
+function error_start {
+    error=1  # just set this here because it's convenient
+    [[ $currpkg = $pkg ]] && return
+    currpkg=$pkg
+    print "\n"
+    print "*****"
+    print "***** PACKAGE $pkg"
+    print "*****"
+    print "\n"   
+}
+
+bde_base=/view/bde_integrator/bbcm/infrastructure/groups/bde
+
+sun=unix-SunOS-sparc-5.8-def
+sun64=unix-SunOS-sparc-5.8-CC64
+dg=unix-dgux-PentiumPro-R4.20MU06-def
+aix=unix-AIX-powerpc-5.1-def
+
+# loop for each package
+for pkgpath in $bde_base/* 
+do
+
+    pkg=$(basename ${pkgpath##*/})
+    [[ $pkg != bde* ]] && continue
+
+    cd $bde_base/$pkg
+
+    # loop for each system 
+    for system in $sun $sun64 $dg $aix
+    do
+
+        [[ ! -d $system ]] && continue
+
+        cd $system > /dev/null
+
+        error=0  #set global
+        typeset ok_targets=""
+
+        for makelog in make.*.log
+        do
+            typeset target=${makelog#make.}
+            target=${target%.log}
+            typeset -i targeterr=0
+            if grep '^Total Errors: [^0]' $makelog>/dev/null 2>&1; then
+                error_start
+                print "***** TEST DRIVER ERRORS IN $system ($makelog)"
+                grep '^Error' $makelog 
+		targeterr=1
+            fi
+            if grep -i 'make:.*error' $makelog>/dev/null 2>&1; then
+                error_start
+                print "***** MAKE ERROR IN $system - $makelog tail:"
+                grep -i 'make:.*error' $makelog
+                tail -8 $makelog
+		targeterr=1
+            fi
+            [[ $targeterr -eq 0 ]] && ok_targets="$target $ok_targets"
+        done
+
+        [[ error -eq 1 && -n $ok_targets ]] && 
+            print "***** SUCCESSFUL TARGETS: $ok_targets"
+
+        cd ..
+
+    done
+
+done
+

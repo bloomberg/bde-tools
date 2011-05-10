@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cleartool ls -vob -r -sho | sed -e 's/^\.\///' | sort -u
+

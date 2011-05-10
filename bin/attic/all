@@ -1,0 +1,35 @@
+#! /usr/local/bin/perl -s
+# File Name: all
+#
+# This script runs all the tests
+
+die "Usage: all <test_program> [arg1] [arg2] ..." unless 0 < @ARGV; 
+
+$testName = shift @ARGV;
+$testName = "./$testName" unless $testName =~ /^(\/|\.\.?\/)/;
+die "$testName not an executable or does not exist" unless -e $testName;
+ 
+$totalErrors = 0;
+$testIndex = "1";
+$rc = 0;
+ 
+while ($rc != 0xff00)
+{
+    $rc =  0xffff & system($testName, $testIndex, @ARGV);
+    $error = int $rc;
+    $localError = int $rc/256;
+    if ($localError!=255) {
+        $totalErrors += $localError;
+    }
+    if ($localError!=255 && $error!=0) {
+	$totalErrors += 1;
+	printf("ABNORMAL TEST FAILURE\n");
+    }
+    $testIndex++;
+}
+ 
+printf "\nTotal Errors: $totalErrors\n\n";
+
+exit $totalErrors;
+
+

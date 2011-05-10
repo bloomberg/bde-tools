@@ -1,0 +1,557 @@
+#!/bbs/opt/bin/perl -w
+use strict;
+
+use FindBin;
+BEGIN {
+    $FindBin::Bin =~/^(.*)$/ and $FindBin::Bin=$1;
+    $ENV{PATH}="/usr/bin:$FindBin::Bin";
+    foreach (sort keys %ENV) {
+	delete($ENV{$_}),next unless /^(BDE_|CHANGE_|GROUP$|PATH$)/;
+	$ENV{$_}=~/^(.*)$/ and $ENV{$_}=$1;
+    }
+}
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use File::Copy qw(copy);
+use Getopt::Long;
+use Util::File::Basename qw(basename dirname);
+use Util::File::RCSid qw(unexpand_rcsid);
+use Cwd qw(cwd);
+use File::Path qw(mkpath);
+
+use Symbols qw(EXIT_SUCCESS EXIT_FAILURE);
+use BDE::Build::Invocation qw($FS $FSRE);
+
+use Change::AccessControl qw(isInvalidContext);
+use Term::Interact;
+use Util::Message qw(message fatal warning error alert debug);
+use Change::Util::InterfaceRCS qw(
+    getFileArchivePath getFileVersionForCSID getFileVersions
+    copyOutFileVersion
+);
+
+use Production::Services::ChangeSet qw();
+use Production::Services;
+
+#==============================================================================
+
+=head1 NAME
+
+rcsrecover - Recover files from RCS
+
+=head1 SYNOPSIS
+
+Recover change set files into current directory using full original paths:
+
+    $ rcsrecover 428E32AD001476E94D
+
+Recover change set files directly (i.e. flat) into current directory:
+
+    $ rcsrecover -f 428E32AD001476E94D
+
+Recover change set files into a CSID directory in the current directory:
+
+    $ rcsrecover -i 428E32AD001476E94D
+
+Recover change set files, flat, into a CSID directory:
+
+    $ rcsrecover -i -f 428E32AD001476E94D
+
+Recover the current revisions or staged copies of the files in the changeset:
+
+    $ rcsrecover -C 428E32AD001476E94D
+
+Recover the current revisions, ignoring any staged copies:
+
+    $ rcsrecover -C -R 428E32AD001476E94D
+
+Recover the file revisions immediately prior to the change set:
+
+    $ rcsrecover -p 428E32AD001476E94D
+
+Recover the latest revision of a file if it is newer than the change set
+revision, or the prior revision otherwise:
+
+    $ rcsrecover -p -C 428E32AD001476E94D
+
+=head1 DESCRIPTION
+
+C<rcsrecover> allows the files in a change set to be copied back to the current
+directory. B<Files can only be recovered from RCS>.
+
+Options may be bundled and placed before or after the CSID argument. More than
+one CSID argument may also be specified. For example, this recovers three
+changesets into flat directories named for each change set ID:
+
+    $ rcsrecover 428E32AD001476E94D 4223E2DA001476E94E 4289912DA0014762AE3 -fi
+
+Change set IDs are ordered prior to querying, so if two historical change sets
+contain files that overlap, the more recent file version will be recovered.
+
+=head2 File Origin Modes
+
+C<rcsrecover> allows files to be recovered from RCS only. As such, you can only
+recover change sets that were B<fully> swept. The terms C<previous> and
+C<current> likewise only apply to material in RCS.
+
+For a more flexible approch, see L<csrecover>.
+
+=over 4
+
+=item If the change set has already been processed (a.k.a 'swept'):
+
+=over 4
+
+=item * By default, the historical revision associated with each file in the
+        change set is recovered.
+
+=item * If the C<--current> or C<-C> option is used, the most recently swept
+        version of each file is fetched.
+
+=item * If the C<--previous> or C<-p> option is used, the revision immediately
+        prior to the revision associated with the change set is recovered.
+        This mode can be used to undo a changeset after it has been processed,
+        but might clobber changes made to files after the change set was
+        originally submitted.
+
+=item * If both C<--current> and C<--previous> are specified, then the current
+        revision is retrieved I<if it is newer than the revision associated
+        with the change set>, otherwise the prior revision is retrieived.  This
+        mode can be used to attempt to undo a changeset after it has been
+        processed, but without wiping out more recent changes that might have
+        been made to files in the change set after the change set of inspection
+        was originally submitted. B<Note>: More recent changes does not include 
+        what is currently being staged.
+
+=back
+
+=back
+
+=head2 File Destination Modes
+
+C<rcsrecover> provides two output modes, I<flat>, and I<structured>. Of the
+two, structured mode is the more powerful.
+
+=over 4
+
+=item Flat Recovery
+
+A flat recovery places all files into the current directory (or if the C<--id>
+or C<-i> option is used, a change set ID subdirectory) irrespective of the
+location that the file were originally destined for. This is convenient
+mostly for change sets that involve only one target directory.
+
+=item Structured Recovery
+
+A structured recovery recreates the directory structure of the source files,
+but placed under the current working directory.
+
+If the current working directory does not coincide with the paths of the source
+files, then the source files are placed under a directory structure that
+replicates the whole path up to the root. If, however, the current working
+directory forms the prefix of any file in the change set, it is stripped from
+the source path prior to reconstruction.
+
+This means that if developer C<one> recovers into their workspace a change set
+originally submitted by developer <two>, and uses the C<--id> option to insert
+the change set ID as a directory, the recovered directory structure will
+resomble something like this:
+
+    Checked in:              /home/two/twoswpro/acclib/que.c
+    'rcsrecover -i' run from: /home/one/mywork
+    Recovered file:          /home/one/mywork/<CSID>/two/twoswork/acclib/que.c
+
+This is because C</home> is the common path in this case. If developer two
+recovers their own change set, the structure will instead look like this:
+
+    Checked in:             /home/two/twoswpro/acclib/que.c
+    rcsrecover -i' run from: /home/two/twoswork
+    Recovered file:         /home/one/twoswork/<CSID>/acclib/que.c
+
+If the C<--id> option is I<not> used, this second case will cause the recovered
+files to be copied back into the exact locations they were originally checked
+in from. Note that this will overwrite any existing versions of those files if
+they are present.
+
+=head2 File Version Information
+
+When C<rcsrecover> lists files and versions it will qualify the filename with
+either the archive version or C<staged>, if the selected version is the staged
+file. Following this is a comma-separated list of additional keywords:
+
+=over 4
+
+=item * staged - the file is staged
+
+=item * new - the file is new (either staged or new in RCS)
+
+=item * previous - the file version is that prior to the CS version
+
+=item * head - the file version is the head of the RCS archive)
+
+=item * current - the file version is the current version (meaning it is
+        either staged or the head of the RCS archive and np staged version
+        is present)
+
+=cut
+
+=back
+
+A file qualified as C<(staged new)> is therefore a new file that is staged. A
+file qualified as C<v1.22 new,current,head> is a file that was new in RCS for
+the changeset which suppied it, is the current head of the RCS archive, and
+has no newer version staged.
+
+=cut
+
+#==============================================================================
+
+sub usage(;$) {
+    print STDERR "!! @_\n" if @_;
+
+    my $prog = "rcsrecover"; #basename $0;
+
+    print <<_USAGE_END;
+Usage: $prog -h | [-d] [-v] [-l | [-f] [-i]] [-R] [-C] [-p] [-P|-M] <csid> [<csid>...]
+  --debug       | -d              enable debug reporting
+  --help        | -h              usage information (this text)
+  --verbose     | -v              enable verbose reporting
+
+File destination options:
+
+  --flat        | -f              copy all files into the current directory
+                                  (or change set directory, with --id)
+  --id          | -i              place all files/directories under a
+                                  directory named for the change set ID
+  --list        | -l              list file origins and versions without
+                                  extracting them
+  --unexpand    | -U              unexpand RCS IDs (remove the expanded RCSid)
+
+File origin options:
+
+  --current     | -C              extract the current rather than historical
+                                  revision when retrieving a released change
+                                  set.
+  --previous    | -p              extract the previous revision to the
+                                  historical revision associated with the
+                                  change set. See manual page for using -C and
+                                  -p together.
+
+Display options:
+
+  --pretty      | -P              list changes in human-parseable output
+                                  (default if run interactively)
+  --machine     | -M              list changes in machine-parseable output
+                                  (default if run non-interactively)
+
+See 'perldoc $prog' for more information.
+
+_USAGE_END
+}
+
+#------------------------------------------------------------------------------
+
+sub getoptions {
+    my %opts;
+
+    Getopt::Long::Configure("bundling");
+    unless (GetOptions(\%opts, qw[
+        debug|d+
+        flat|f
+        help|h
+        id|i
+        list|l
+        machine|M
+        current|C
+        pretty|P
+	previous|p
+	unexpand|U
+        verbose|v+
+
+    ])) {
+        usage();
+        exit EXIT_FAILURE;
+    }
+
+    # help
+    usage(), exit EXIT_SUCCESS if $opts{help};
+
+    # no arguments
+    usage, exit EXIT_FAILURE if @ARGV<1 and not $opts{list};
+
+    # pretty/machine
+    if ($opts{pretty} and $opts{machine}) {
+	usage("--pretty and --machine are mutually exclusive");
+	exit EXIT_FAILURE;
+    }
+    unless ($opts{pretty} or $opts{machine}) {
+	if (-t STDIN) { $opts{pretty}=1; } else { $opts{machine}=1; }
+    }
+
+    # list mode
+    if ($opts{list} and ($opts{flat} or $opts{id})) {
+	warning "--flat and --id have no effect when specified with --list";
+    }
+
+    # debug mode
+    Util::Message::set_debug($opts{debug} || 0);
+
+    # verbose mode
+    Util::Message::set_verbose($opts{verbose} || 0);
+
+    return \%opts;
+}
+
+#------------------------------------------------------------------------------
+
+use constant STAGED => "*staged*";
+use constant NEW    => "*staged,new*";
+use constant NA     => "n/a";
+
+sub changeSetIsProcessed ($) {
+    # we'd use 'P' status to figure this out, if it was being set. But it
+    # isn't yet, so instead we peek at the first file in the set and see
+    # if the CSID is in the RCS archive or not.
+    my $changeset=shift;
+    my @files=$changeset->getFiles();
+    my $stage=$changeset->getStage();
+
+    my $file=getFileArchivePath($files[0],$stage);
+    my $processed=getFileVersionForCSID($file,$changeset,$stage);
+
+    return $processed ? 1 : 0;
+}
+
+# recopy the source files to the destination files for a specified changeset
+sub recoverFiles ($;$) {
+    my ($changeset,$mode)=@_;
+
+    my $usr=$changeset->getUser();
+    my $grp=$ENV{GROUP};
+    my $tkt=$changeset->getTicket();
+    my $csid=$changeset->getID();
+
+    my $result=1;
+    my $cwd=cwd;
+
+    my $processed=changeSetIsProcessed($changeset);
+    if (-t STDIN) {
+	message "change set $changeset is ".
+	  ($processed ? "processed" : "staged");
+    }
+
+    my @files=sort {
+	basename($a->getSource) cmp basename($b->getSource)
+    } $changeset->getFiles();
+
+    FILE: foreach my $file (@files) {
+        my $src=$file->getSource();
+	my $dest=$file->getDestination();
+
+	my ($previous,$csversion,$head)=("n/a","n/a","n/a");
+	my $version="?"; # desired version
+	my $current="?"; # current version (staged or head)
+
+	# query archive versions if required
+	if (($version ne NEW) and ($mode=~/[Rp]/ or not -f $dest)) {
+	    $dest=getFileArchivePath($file,$changeset->getStage);
+
+	    ($previous,$csversion,$head)=getFileVersions($dest,$csid);
+	    $previous  ||= NA;
+	    $csversion ||= NA;
+	    $head      ||= NA;
+	    $current=($version eq STAGED) ? STAGED : $head;
+
+	    if ($version eq STAGED) {
+		$version=$head;
+		$previous=$head;
+	    } elsif ($mode=~/C/ and $mode=~/p/) {
+		if ($csversion eq $current) {
+		    $version=$previous;
+		} else {
+		    $version=$current;
+		}
+	    } elsif ($mode=~/C/) {
+		$version=$current;
+	    } elsif ($mode=~/p/) {
+		$version=$previous;
+	    } else {
+		$version=$csversion;
+	    }
+
+	    debug "$dest: cs=$csversion, previous=$previous, ".
+	      "head=$head, current=$current";
+	} elsif ($version eq NEW) {
+	    $previous=$head=$version=NA;
+	    $csversion=$current=STAGED;
+	}
+	debug "$file: selected version=$version";
+
+	# construct the 'source path'. Since we're recovering, the source
+	# is where we're going to recover *to* and the destination is where
+	# we're recovering *from*. I.e. destination->source.
+	if ($mode =~ /f/) {
+	    $src=basename($src);
+	} elsif ($src=~/^$FSRE/) {
+	    $src=~s/^$cwd// if $src=~/^$cwd/;
+	    $src=~s/^$FSRE//;
+	}
+	if ($mode =~ /i/) {
+	    $src=$csid.$FS.$src;
+	}
+	$src=$cwd.$FS.$src;
+
+	$src=~/^(.*)$/ and $src=$1; #untaint
+	$dest=~/^(.*)$/ and $dest=$1; #untaint
+
+	# compute the descriptive version string
+	my $vstr="v".$version;
+	my @notes=();
+	if ($version eq NA) {
+	    $vstr = "new, no selectable version";
+	} elsif ($version eq NEW or $version eq STAGED) {
+	    push @notes,"new" if $version eq NEW;
+	    $vstr = "staged";
+	} else {
+	    if ($version eq $previous) {
+		push @notes,($previous eq $current)?"new":"previous";
+	    }
+	    push @notes,"current" if $version eq $current;
+	    push @notes,"head" if $version eq $head;
+	}
+	$vstr.=" ".join(",",@notes) if @notes;
+
+	# perform requested action -- list, or recover
+	if ($mode =~ /l/) {
+	    # list mode
+	    if ($mode =~ /M/) {
+		print "$dest:$src:$version\n";
+	    } else {
+		print "   $dest ($vstr)";
+
+		if (Util::Message::get_verbose) {
+		    print " [csid=$csversion, previous=$previous, ".
+		      "head=$head, current=$current]";
+		}
+		print "\n";
+	    }
+	} else {
+	    # non-list mode -- recover the files
+
+	    # 1 - make sure the source (that is, place to write to) exists
+	    unless (-d dirname($src)) {
+		eval { mkpath dirname($src); };
+		error($@),$result=0 if $@;
+	    }
+
+	    # 2 - recover the file from staging or RCS
+	    # we copy 'dest' to 'src' because this is a recovery operation,
+	    # i.e. backwards compared to the normal direction of movement.
+	    my $copied=0;
+	    if ($version eq STAGED or $version eq NEW) {
+		# get the file from the staging area
+		$copied=copy $dest => $src;
+	    } elsif ($version eq NA) {
+		# no selectable version, skip
+		$copied=1;
+		warning "cannot copy out $dest, not released -- skipped";
+	    } else {
+		# get the file from RCS
+		$copied=copyOutFileVersion($dest,$version,$src);
+	    }
+	    if ($copied) {
+		if (-t STDIN) {
+		    if ($mode =~ /M/) {
+			print "$dest:$src:$version\n";
+		    } else {
+			message "Copied $dest ($vstr) to $src";
+		    }
+		}
+		if ($mode =~ /U/) {
+		    my $force = 0;  # unexpand RCS IDs for known file types only
+		    warning "failed to expand rcsid: $src"
+			unless unexpand_rcsid($src,$force);
+		}
+	    } else {
+		error "Failed to copy $dest to $src: $!";
+		$result=0;
+	    }
+	}
+    }
+
+    return $result;
+}
+
+#----
+
+MAIN: {
+
+    my $opts=getoptions();
+
+    if (my $reason=isInvalidContext) {
+	fatal $reason;
+    }
+
+    warning "*** rcsrecover will only be able to work on material already swept to RCS. ***";
+    warning "*** It is not able to take into account staged material. In particular, ***";
+    warning "*** this means you should be careful when using files retrieves with rcsrecover ***";
+    warning "*** as the starting point for changes you plan to check in. You might ***";
+    warning "*** inadvertantly be undoing changes in change sets that are still staged ***";
+    warning "*** If at all possible, please use csrecover ***";
+    sleep 4;
+    
+    # rcsrecover does not know how to look up staged files
+    my $mode="R";
+
+    $mode.="f" if $opts->{flat};
+    $mode.="i" if $opts->{id};
+    $mode.="l" if $opts->{list};
+    $mode.="M" if $opts->{machine};
+    $mode.="P" if $opts->{pretty};
+    $mode.="p" if $opts->{previous};
+    $mode.="C" if $opts->{current};
+    $mode.="U" if $opts->{unexpand};
+    # MODE: checkout   : lock the file when getting it (checkout vs 'co')
+
+    my $result=0;
+    my $svc=new Production::Services();
+    foreach my $csid (@ARGV) {
+        my $changeset;
+
+        $changeset = Production::Services::ChangeSet::getChangeSetDbRecord($svc, $csid);
+
+	if (defined $changeset) {
+	    $result=3 unless recoverFiles($changeset,$mode);
+	    if ($result) {
+		error "Failed to recover change set $csid";
+	    } else {
+		unless ($opts->{list}) {
+		    alert "Change set $csid recovered" if -t STDIN;
+		}
+	    }
+	} else {
+	    $result=1;
+	    warning "Change set $csid not found in database - ignored";
+	}
+    }
+
+    exit $result;
+}
+
+#==============================================================================
+
+=head1 NOTES
+
+This tool is deprecated and you should be using C<csrecover> if possible.
+
+=head1 AUTHOR
+
+Peter Wainwright (pwainwright@bloomberg.net)
+
+=head1 SEE ALSO
+
+L<bde_createcs.pl>, L<bde_querycs.pl>, L<bde_findcs.pl>
+
+=cut

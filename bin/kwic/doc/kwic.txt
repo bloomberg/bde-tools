@@ -1,0 +1,7 @@
+# kwic.txt
+
+#@PURPOSE: Create TOC and Index pages from BDE's Doxgen-generated HTML pages.
+
+#@AUTHOR: Steven Breitstein (sbreitst) 
+
+#@SEE_ALSO: http://en.wikipedia.org/wiki/Key_Word_in_Context

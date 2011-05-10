@@ -1,0 +1,98 @@
+=pod
+
+=head1 NAME
+
+csutils - Change Set- and SCM-related tools
+
+=head1 DESCRIPTION
+
+This document gives an overview over the various little helpers
+that exist to perform common clearn-up- or repair-tasks.
+
+=head1 LIST OF TOOLS
+
+=over 4
+
+=item * csutil_addchangedb metafile1 metafile2 ...
+
+=item * csutil_addchangedb -
+
+Loads the metadata for a change set from a list of files (STDIN when C<-> is
+passed) and adds them to the flatfile DB.
+
+=item * csutil_addcsdb metafile1 metafile2 ...
+
+=item * csutil_addcsdb -
+
+Loads the metadata for a change set from a list of files (STDIN when C<-> is
+passed) and adds them to the changesetdb.
+
+=item * csutil_bundlecs [-c] metafile bundlefile
+
+Creates a change set bundle from the supplied metafile and bundlefile 
+arguments. With -c, additionally canonicalize the metafile before bundling.
+
+=item * csutil_canoncs metafile1 metafile2 ...
+
+=item * csutil_canoncs -
+
+Loads the metadata for a change set from a list of files (STDIN when C<-> is
+passed) and converts each change set into one with canonical file paths. The
+thusly transformed change set is serialized to STDOUT.
+
+=item * csutil_commitbundle bundle1 bundle2 ...
+
+Commits a list of change set bundles to the subversion repository.
+
+=item * csutil_csdepadd csid depends_on deptype
+
+Adds a dependency on C<depends_on> of type C<deptype> to the change set
+with ID C<csid>.
+
+=item * csutil_csdepdel --help
+
+Deletes dependencies from a change set.
+
+=item * csutil_csdeps --help
+
+Lists dependencies for a change set.
+
+=item * csutil_enqueuescm --bundle bundle1 bundle2 ...
+
+=item * csutil_enqueuescm csid1 csid2 ...
+
+Enqueues a list of CSIDs or bundles to SCM.
+
+=item * csutil_csstatus --help
+
+Print the status of one or more change sets to STDOUT.
+
+=item * csutil_csstatusupdate csid status
+
+Changes the status of C<csid> to C<status> in the changesetdb.
+
+=item * csutil_cshist --help
+
+Display the status of a change set.
+
+=item * csutil_sendmsg --help
+
+Send a Bloomberg message to an arbitrary recipient.
+
+=item * csutil_csidswept csid1 csid2 ...
+
+Reveals if a change set given through its CSID has been swept into RCS.
+
+=item * csutil_overlap movetype file1 file2 ...
+
+Returns all CSIDs of C<movetype> from staging area that contain any of
+C<file1>, C<file2>, etc.
+
+=back
+
+=head1 AUTHORS
+
+These tools have been written by Alan Grow E<lt>agrow@bloomberg.netE<gt> and
+Tassilo von Parseval E<lt>tvonparseval@bloomberg.netE<gt>
+
+=cut

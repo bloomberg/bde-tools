@@ -1,0 +1,151 @@
+#!/bbs/opt/bin/perl -w
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use Symbols qw(
+    EXIT_SUCCESS EXIT_FAILURE
+);
+use Util::Message qw(
+    fatal error alert message debug verbose warning warnonce
+);
+
+use Tie::File;
+use Util::File::Basename qw(basename);
+use Util::File::RCSid qw(unexpand_rcsid);
+
+#==============================================================================
+
+=head1 NAME
+
+unexpand_rcsid - remove the expanded RCSid
+
+=head1 SYNOPSIS
+
+   #basic use
+   $unexpand_rcsid [options] <file(s)>
+
+=head1 DESCRIPTION
+
+Many files checked into the production repository exist in other repositories 
+with expanded RCS IDs, typically because the files were originally extracted
+from RCS without using the -kk option of 'co', The RCS IDs are misleading and
+should be corrected rather than allowing an 'allow clobber' option to permit 
+them to continue. This script is used to correct this expanded RCS IDs.
+
+To process a file without regard to type use the --force option.  This is not
+presently the default but may become so in future.
+
+=cut
+
+
+#==============================================================================
+
+sub usage (;$) {
+    print STDERR "!! @_\n" if @_;
+
+    my $prog = basename $0;
+
+    print <<_USAGE_END;
+Usage: $prog -h | [-d] [filename list]
+  --debug      | -d           enable debug reporting
+  --help       | -h           usage information (this text)
+  --verbose    | -v           enable verbose reporting
+  --force      | -f           process file regardless of type
+
+See 'perldoc $prog' for more information.
+
+_USAGE_END
+}
+
+#------------------------------------------------------------------------------
+
+sub getoptions {
+    my %opts;
+
+    Getopt::Long::Configure("bundling");
+    unless (GetOptions(\%opts, qw[
+        debug|d+
+        help|h
+	verbose|v
+	force|f
+    ])) {
+        usage();
+        exit EXIT_FAILURE;
+    }
+
+    # help
+    usage(), exit EXIT_SUCCESS if $opts{help};
+
+    # no arguments
+    usage, exit EXIT_FAILURE if @ARGV == 0;
+
+    # debug mode
+    Util::Message::set_debug($opts{debug} || 0);
+
+    # verbose mode
+    Util::Message::set_verbose($opts{verbose} || 0);
+
+    return \%opts;
+}
+#------------------------------------------------------------------------------
+
+MAIN:{
+   my $opts = getoptions();
+
+   my $num_of_fails = 0;
+   my $num_of_alerts = 0;
+   my $lang;
+   my $force = $opts->{force} ? 1 : 0;
+
+   foreach my $file (@ARGV){
+      unless (-e $file) {
+         warning "$file does not exist"; 
+         $num_of_fails++;
+         next ;
+      }
+      unless (-w $file) {
+         warning "$file is not writable"; 
+         $num_of_fails++;
+         next ;
+      }
+
+      my ($msg,$r) = unexpand_rcsid($file,$force);
+      if ($r) {# success
+	if ($msg) {
+	  alert($msg);
+	  ++$num_of_alerts;
+	}
+      } else {# failure
+	$msg  and  warning($msg);
+	++$num_of_fails;
+      }
+   }
+
+   if ($num_of_fails > 0){
+      error "$num_of_fails files failed";
+   }
+
+   if ($num_of_alerts > 0){
+      error "$num_of_alerts files do not contain expanded RCS id";
+   }
+
+   exit (($num_of_fails == 0 and $num_of_alerts == 0) ? EXIT_SUCCESS : EXIT_FAILURE);
+}
+
+#==============================================================================
+
+=head1 AUTHOR
+
+William Baxter(wbaxter1@bloomberg.net)
+Dezhuang Zhang(dzhang9@bloomberg.net)
+
+=head1 SEE ALSO
+
+L<bde_verify.pl>
+
+=cut

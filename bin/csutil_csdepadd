@@ -1,0 +1,54 @@
+#!/bbs/opt/bin/perl
+
+use warnings;
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Production::Services;
+use Production::Services::ChangeSet     qw(addDependencyToChangeSet);
+use Change::Symbols                     qw(/\$DEPENDENCY_TYPE_.*/);
+use Util::Message qw/fatal/;
+use Util::SCMControl qw/acceptSCMUser/;
+
+acceptSCMUser()  or  fatal "user not authorized";
+
+die usage() if @ARGV != 3;
+
+@$_{$DEPENDENCY_TYPE_NONE, $DEPENDENCY_TYPE_ROLLBACK, 
+    $DEPENDENCY_TYPE_CONTINGENT, $DEPENDENCY_TYPE_DEPENDENT,
+    $DEPENDENCY_TYPE_SIBLING} = () for \my %deps;
+my %string2dep = (
+        none          => $DEPENDENCY_TYPE_NONE,
+        rollback      => $DEPENDENCY_TYPE_ROLLBACK,
+        contingent    => $DEPENDENCY_TYPE_CONTINGENT,
+        dependent     => $DEPENDENCY_TYPE_DEPENDENT,
+        sibling       => $DEPENDENCY_TYPE_SIBLING,
+);
+
+my ($csid, $on, $type) = @ARGV;
+
+$type = $string2dep{ $type } || $type;
+
+die "$type: Invalid dependency type\n\n", usage() if not exists $deps{$type};
+
+my $svc = Production::Services->new;
+die $svc->getError, "\n" if not 
+    addDependencyToChangeSet($svc, $csid, $on, $type);
+
+sub usage {
+    return <<EOUSAGE;
+Usage: $0 \$csid \$depends_on \$type
+
+Add a dependency on \$depends_on to \$csid with \$type which is one of:
+
+    N | none
+    R | rollback
+    C | contingent
+    D | dependent
+    S | sibling
+EOUSAGE
+}

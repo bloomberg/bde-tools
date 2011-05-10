@@ -1,0 +1,200 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+
+my %option;
+my @cppExt = ("cpp", "h", "t.cpp");
+my @cExt = ("c", "h", "t.c");
+
+GetOptions(\%option, "help|?", "c-mode|C");
+&usage if $option{'help'};
+
+die "See dupcomp -h for usage of this script\n" if (@ARGV < 2);
+
+my $src = shift;
+my $dst = shift;
+my @args = @ARGV; # copy the rest
+@ARGV = (); # clear so when we read from <>, we don't get arguments from @ARV
+
+# get last directory names in case src and dst are paths
+my ($srcPath, $srcName) = $src =~ m!(.*?)([^/]+)$!;
+my ($dstPath, $dstName) = $dst =~ m!(.*?)([^/]+)$!;
+
+$srcPath ||= "./";
+$dstPath ||= "./";
+
+die "Can't find source class name\n" unless $srcName;
+die "Can't find destination class name\n" unless $dstName;
+
+die "Destination path $dstPath does not exist\n" unless (-d $dstPath);
+
+my $extensions = ($option{"c-mode"}) ? \@cExt : \@cppExt;
+foreach (@$extensions) {
+  my $srcFile = "$srcPath\L$srcName.$_";
+  my $dstFile = "$dstPath\L$dstName.$_";
+
+  if (-f $dstFile) {
+    my $ans;
+    print "File $dstFile exists.  Replace (y/n)?";
+    while (<>) {
+      chomp;
+      $ans = lc($_);
+      print("Invalid answer. File $dstFile exists.  Replace (y/n)?")
+        and next unless ($ans eq "y" || $ans eq "n");
+      last;
+    }
+    next if ($ans eq "n"); # don't replace file
+  }
+
+  # open file and slurp whole content in one shot
+  open(FILE, "<$srcFile") or die "Failed to open file $srcFile: $!\n";
+  my $tmp = $/; $/ = undef;
+  my $content = <FILE>;
+  $/ = $tmp;
+  close FILE;
+
+  # replace all occurrences of source
+  $content =~ s/(\b|_)($srcName)(\b|_)/$1.&replaceMatchCase($2, $dstName).$3/eig;
+
+  # other replacements
+  my $item;
+  my $srcItem;
+  my $dstItem;
+  my @replace = @args; # make a copy of the arguments
+  while ($item = shift @replace) {
+    if ($item =~ /(.+)=(.*)/) { # exact match replacement pairs
+      $srcItem = $1;
+      $dstItem = $2;
+      $content =~ s/(\b|_)$srcItem(\b|_)/$1$dstItem$2/g; # use exact matches
+    } else {
+      $srcItem = $item;
+      $dstItem = shift @replace;
+      die "Failed to find replacement word for '$srcItem'.  See dupcomp -h for help." unless ($dstItem && $dstItem !~ /.+=.*/);
+      $content =~ s/(\b|_)($srcItem)(\b|_)/$1.&replaceMatchCase($2, $dstItem).$3/eig;
+    }
+  }
+
+  unless ($option{"c-mode"}) {
+    # replaces comments like below to have all three lines of same length:
+    # // =========
+    # // class xxx
+    # // =========
+    $content =~ s!(\n\s*?)         # initial spaces upto // === or // ----
+                  (//\s*?(=|-)+)   # // === or // ----
+                  (\s*?)           # trailing spaces in the first line
+                  \1               # initial spaces on 2nd line
+                  (//\s*?(?:class\s*|)$dstName) # // class xxx
+                  (\s*?)           # trailing spaces in the 2nd line
+                  \1               # initial spaces on 3rd line
+                  \2               # same // === or // --- as the first line
+                  (\s*?\n)         # trailing spaces on the 3rd line
+                  !&fixCppBanner(undef, $1, $2, $3, $4, $5, $6, $7)!exsgi;
+  } else {
+    # replaces comments like below to have all three lines of same length:
+    # /* ========== */
+    # /* struct xxx */
+    # /* ========== */
+    $content =~ s!(\n\s*?)         # initial spaces upto /* === */ or /* --- */
+                  /\*\s*?((=|-)+)\s*?\*/ # /* === */ or /* --- */
+                  (\s*?)           # trailing spaces in first line
+                  \1               # initial spaces on 2nd line
+                  /\*\s*?((?:struct\s*|)$dstName)\s*?\*/ # /* struct xxx */
+                  (\s*?)           # trailing spaces in the 2nd line
+                  \1               # initial spaces on 3rd line
+                  /\*\s*?\2\s*?\*/ # same as first line
+                  (\s*?\n)         # trailing spaces on the 3rd line
+                  !&fixCBanner(undef, $1, $2, $3, $4, $5, $6, $7)!exsgi;
+  }
+
+  open(FILE, ">$dstFile") or die "Failed to create file $dstFile: $!\n";
+  print FILE $content;
+  close FILE;
+  print "created $dstFile\n";
+}
+
+sub replaceMatchCase {
+  my $src = shift;
+  my $dst = shift;
+
+  return lc($dst) if $src !~ /[A-Z]/; # all lowercase
+  return uc($dst) if $src !~ /[a-z]/; # all uppercase
+  return ucfirst(lc($dst)) if ($src =~ /^[A-Z][^A-Z]*$/); # cap first
+  return $dst; # return as is specified on command line
+}
+
+sub fixCppBanner {
+  my @t = @_;
+  my $diff = length($t[2]) - length($t[5]);
+  if ($diff > 0) {
+    for (1 .. $diff) { chop $t[2] }
+  } elsif ($diff < 0) {
+    for ($diff .. -1) { $t[2] .= $t[3] }
+  }
+
+  return "$t[1]$t[2]$t[4]$t[1]$t[5]$t[6]$t[1]$t[2]$t[7]";
+}
+
+sub fixCBanner {
+  my @t = @_;
+  my $diff = length($t[2]) - length($t[5]);
+  if ($diff > 0) {
+    for (1 .. $diff) { chop $t[2] }
+  } elsif ($diff < 0) {
+    for ($diff .. -1) { $t[2] .= $t[3] }
+  }
+
+  return "$t[1]/* $t[2] */$t[4]$t[1]/* $t[5] */$t[6]$t[1]/* $t[2] */$t[7]";
+}
+
+sub usage {
+  print <<"USAGE";
+dupcomp -- class duplication utility
+  dupcomp duplicates a component and replaces the new component
+  with another name.  The script takes two arguments, with additional
+  trailing optional arguments (see below).  First argument is the
+  source component name, second is the replacement component name.
+  Files of the duplicated component is created in the path specified
+  in the second argument, with all filenames in lowercase. Occurrences
+  of the source name will be searched and replaced in the content
+  of the new files.  When replacing, case-matching is performed
+  so that if the occurrence of the source is all lowercase, then the
+  substituted name will be all lowercase.  Same applies to all
+  uppercase occurrences.  If the occurrence is mixed-case, then the
+  substitued name will be the same as specified on the command line.
+  Additional replacement pairs may be supplied to perform case-
+  matching substitution for other words.  Exact replacement pairs may
+  be supplied as the last arguments to the program.  An exact
+  replacement pair is specified in the form abc=xyz.  This
+  will replace all occurrences of abc with xyz using exact matches.
+  In other words, no case-matching substitution is performed
+
+Usage: dupcomp [-options] source destination [replacement pairs] [exact replacement pairs]..
+Options:
+  --help         This help.
+
+  --c-mode, C    Duplicate a C component.
+
+Arguments:
+  source
+    The path and name of the source component to be duplicated from
+    Ex: /path/to/component/srcComponentName
+
+  destination
+    The path and name of the destination component to be created
+    Ex: /path/to/component/dstComponentName
+
+  replacement pairs
+    Two arguments represent one replacement pair.  The first argument
+    in the pair is the original word, the second is the replacement
+    word.  Case-matching substitution is performed as described above
+
+  exact replacement pairs
+    This is a string of the format abc=xyz.  In this example,
+    string abc will be searched for and replaced by xyz. No
+    case-matching substitution is performed
+
+USAGE
+
+  exit 0;
+}

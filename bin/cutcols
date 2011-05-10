@@ -1,0 +1,35 @@
+#!/bbs/opt/bin/perl
+use Getopt::Std;
+if (!@ARGV) {
+  print STDERR "cutcols: usage: cutcols colname ...";
+  exit 100;
+}
+my %opt = ( d => undef );
+getopts('Hd:',\%opt);
+my $delim = defined($opt{d}) ? $opt{d} : "\t";
+my $i = -1;
+my %wanted = (map (($_ => ++$i) => @ARGV));
+@ARGV = ();
+my $header = <>;
+chomp($header);
+my @header = split(/$delim/ => $header);
+my @col;
+$i = -1;
+for (@header) {
+  ++$i;
+  if (exists($wanted{$_})) {
+    @col[$wanted{$_}] = $i; 
+    delete $wanted{$_};
+  }
+}
+if (%wanted) {
+  die "headers not found: ",join(',' => keys %wanted),$/;
+}
+if (!$opt{H}) {
+  print join($delim => @header[@col]),$/;
+}
+while (<>) {
+  chomp;
+  print join($delim => (split(/$delim/ => $_))[@col]),$/;
+}
+exit 0;

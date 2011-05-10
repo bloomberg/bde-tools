@@ -1,0 +1,12 @@
+* There is a compile test service running on the dev network. It can cache the result of a compile test so that, given an identical changeset + dependency context (or whatever the inputs are to the test) it will return immediate success. This will eliminate some redundant checkin compile tests when developer has cscompiled beforehand and the testing context has not changed since. Possibly will be seen as a huge benefit to committers of large changesets (Scott H, etc.).
+
+* The approval operation should be reformulated in terms of a simple checkin operation. Unapproved changesets can be submitted tentatively to the compile test service so that (hopefully) the "approval checkin" is a trivial immediate success in cases where the testing context has not changed. If testing context has changed, we must recompile anyway--this point has already been conceded in the form of the continuous build II.
+
+* Rollback should become a normal checkin operation, not a magical operation that wipes out a delta instantly (and dangerously in the case of overlap with subsequent deltas). As such rollbacks will be subject to full compile tests (which may succeed quickly due to compile test caching) and full symbol validation tests. They are also subject to out-of-date tests, and are always formulated with the target changeset as working base, so that in case of overlap with subsequent changesets they fail as out-of-date.
+
+* Out-of-date tests for checkins should be restored, and performed atomically as part of checkin by SVN. A notification mechanism should be in place before permitting checkins to fail as out-of-date. Out-of-date tests rely on reformulation of the approval and rollback operations as regular checkins, as these currently permit reordering and cherry-picking of deltas, respectively. On a basic level the out-of-date test system relies on...
+
+* Checkout tracking. The version of every cschecked-out file should be recorded in a database somewhere and should form the basis for the out-of-date test.
+
+* If CB2 is the way of the future, we can move all compile tests to it, rather than having two frequently redundant compile test barriers in the checkin process. For backwards compatibility we should provide a -wait-for-tests switch that is on by default. This may have considerable perceived benefit to developers who want to detach and go home. SCM must integrate with the compile test service to test in-queue material.
+

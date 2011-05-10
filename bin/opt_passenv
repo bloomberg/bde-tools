@@ -1,0 +1,83 @@
+#!/usr/bin/perl -w
+
+use Getopt::Long;
+use strict;
+
+if (!@ARGV) {
+  die usage('error, argument missing: var_prefix').$/;
+}
+
+my $varprefix = shift || '';
+my @getopt;
+
+while (my $spec = shift @ARGV) {
+  last if $spec eq '--';
+  push @getopt, $spec;
+}
+
+my %opt;
+
+if (GetOptions(\%opt, @getopt)) {
+  die usage().$/ unless @ARGV;
+
+  while (my ($k, $v) = each %opt) {
+    if (!ref $v) {
+      $ENV{$varprefix.$k} = $v;
+    }
+    elsif (ref $v eq 'ARRAY') {
+      for (my $i=0; $i<@$v; $i++) {
+        $ENV{$varprefix.$k.'_'.$i} = $v->[$i];
+      }
+    }
+    elsif (ref $v eq 'HASH') {
+      $ENV{$varprefix.$k.'_'.$_} = $v->{$_} for keys %$v;
+    }
+    else {
+      die usage("error, can't pass option of type ".(ref $v)).$/
+    }
+  }
+
+  exec(@ARGV);
+}
+else {
+  $ENV{$varprefix.'bad_options'} = 1;
+  exec(@ARGV);
+}
+
+sub usage {
+  my $msg = shift;
+  my $prog = ($0 =~ m{/([^/]+)$}) ? $1 : $0;    # basename
+
+  my $usage = qq{
+    $prog - process and pass options as environmental variables to a program 
+
+    USAGE
+      $prog var_prefix [option specs] -- argv0 argv1 argv2 ...
+
+    ARGUMENTS
+      var_prefix   prefix all variables with this string (required)
+      foo=s        interpret options like --foo=bar, where bar is a string
+      foo=n        interpret options like --foo=n, where n is an integer
+      foo          interpret flag options like --foo
+      'x|foo'      interpret options like --foo, and make -x an alias for --foo
+      --           signals end of option specs. interpret remaining options.
+      argv0 ...    set variables and exec uninterpreted remainder of command line
+
+    EXAMPLES
+      $prog myscript_ count=n 'verbose|v' -- myscript.sh --count 99 -v
+      $prog '' x=n y=n -- env -x=43 -y=90
+
+    NOTES
+      Options processing in shell is hard. Let $prog do it for you.
+
+      When invalid options follow the --, the subordinate program is executed
+      with the variable "\$var_prefix_bad_options" set to 1.
+
+      Run "perldoc Getopt::Long" for more about the option specs format.
+  };
+
+  $usage =~ s/\n[ \t]{4}/\n/g;
+  $usage = $msg.$/.$usage if $msg;
+  return $usage;
+}
+

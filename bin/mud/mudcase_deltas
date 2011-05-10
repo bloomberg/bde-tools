@@ -1,0 +1,30 @@
+#!/bin/sh
+
+file="$1" && shift
+
+if [ $# -gt 0 ]; then
+  branch="$1" && shift
+else 
+  branch=/main/bb/dev
+fi
+
+element="$file"@@"$branch"
+
+if [ $# -gt 0 ]; then
+  maxrevs="$1" && shift
+else
+  maxrevs=-1
+fi
+
+cleartool ls "$element" | \
+  perl -ne 'chomp; my $n = (split m{/})[-1]; print $n.$/ if $n > 0' |
+  sort -n -r | pairlines | cat -n | \
+  while read i r2 r1; do
+    test "$maxrevs" -gt 0 -a "$i" -gt "$maxrevs" || echo "$r2" "$r1"
+  done | \
+  while read r2 r1; do
+    printf '*** '
+    cleartool describe -fmt '%u: %c' "$element/$r2"
+    diff -U 3 "$element/$r1" "$element/$r2"
+  done
+

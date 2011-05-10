@@ -1,0 +1,114 @@
+#!/usr/bin/ksh
+
+log_home=/bb/csdata/logs
+# log_home=/home/jmacd/test_log_home
+
+# TODO:  Used for original testing - delete next time this is updated.
+# log_home=/home/bldtools
+
+arch_log_home=$log_home/aotools
+arch_log_base=$arch_log_home/cronlogs
+
+function init_log
+{
+    typeset jobbase=$1
+
+    for i in $log_home $arch_log_home $arch_log_base $jobbase
+    do
+	if [[ ! -d $i ]]
+	then
+	    mkdir $i || {
+		    echo >&2 "cannot mkdir $i"
+		    exit 1
+		}
+	    chgrp sibuild $i || {
+		    echo >&2 "cannot chgrp sibuild $i"
+		    exit 1
+		}
+	    chmod g+sw $i || {
+		    echo >&2 "cannot chmod g+s $i"
+		    exit 1
+		}
+	fi
+    done
+    for i in work hour weekday monthday month
+    do
+	mkdir $jobbase/$i || {
+		echo >&2 "cannot mkdir $jobbase/$i"
+		exit 1
+	    }
+	chmod g+sw $jobbase/$i
+    done
+}
+
+function old_lock_log
+{
+    # TODO: check if there is really a job still running 
+    #          if not, remove the lock file and return
+    echo >&2 "old lock $1/LOCK still around, aborting"
+    exit 1
+}
+
+function start_log
+{
+    typeset jobname=$1
+    typeset jobbase=$arch_log_base/$jobname
+    shift
+    typeset freq=$1
+    shift
+    typeset workbase=$jobbase/work
+    [[ -d $jobbase ]] || init_log $jobbase
+    [[ -f $workbase/LOCK ]] && old_lock_log $workbase
+    typeset info="$(uname -n).$$"
+    typeset locktmp=$workbase/LOCK.$info
+    typeset lock=$workbase/LOCK
+    echo "$info" > $locktmp
+    if ! ln -n $locktmp $lock
+    then
+	rm $locktmp
+	echo 2>&1 "cannot link to $lock, looks like a simultaneous startup"
+	exit 1
+    fi
+    rm $locktmp
+    typeset dow mon day hour minute second tzone year
+    date | sed -e 's/:/ /g' | read dow mon day hour minute second tzone year
+    typeset logfile=$workbase/log
+    # disconnect from linked copies of previous log
+    [[ -f $logfile ]] && rm $logfile
+    touch $logfile
+    [[ "$freq" = hourly ]] && ln -f $logfile $jobbase/hour/$hour
+    ln -f $logfile $jobbase/weekday/$dow
+    ln -f $logfile $jobbase/monthday/$day
+    ln -f $logfile $jobbase/month/$mon
+    print -n $logfile
+}
+
+function finish_log
+{
+    typeset jobbase=$1
+    typeset jobname=$2
+    typeset runtime=$3
+    if [ -f $jobbase/mailto ]
+    then
+	mailx -s "$jobname $runtime" $(<$jobbase/mailto) <$CRONLOGNAME
+    fi
+    rm $jobbase/work/LOCK
+}
+
+
+freq=$1
+shift
+export JOBNAME=$1
+shift
+
+export CRONLOGNAME=$(start_log $JOBNAME $freq)
+
+typeset runtime=$(date)
+echo "Run START: ${JOBNAME-$0} $runtime" >>  $CRONLOGNAME
+echo "    running command:" "$@"         >>  $CRONLOGNAME
+echo "================================"  >>  $CRONLOGNAME
+"$@" >>$CRONLOGNAME 2>&1
+echo "================================"  >>  $CRONLOGNAME
+echo "Run   END: ${JOBNAME-$0} $(date)" >>  $CRONLOGNAME
+
+finish_log $arch_log_base/$JOBNAME $JOBNAME $runtime

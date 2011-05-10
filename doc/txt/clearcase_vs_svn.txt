@@ -1,0 +1,93 @@
+ClearCase and changesets
+------------------------
+
+It's true, ClearCase can do *almost* everything you want of a version control system, albeit with an exponent or two more of complexity than anything else known to man. But let's put the complexity issue aside for the moment. There's one thing it literally cannot do: changesets. This turns out to be extremely important.
+
+(1) ClearCase cannot atomically check in a set of files
+(2) ClearCase cannot identify a set of files that were checked in together
+(3) ClearCase cannot present a static view of the entire source tree as it appeared after the application of a particular file or set of files
+
+Without (1), a checkin spanning multiple files which contain co-dependent code will often leave the source tree in a dangerously inconsistent ("broken") state. E.g. imagine I'm checking in foo.cpp and foo.h because I've added a new method to the public interface of class Foo. Further imagine we are using unreserved checkouts (because we know how to merge and collaborate properly). Now imagine that you have checked out foo.cpp, changed the implementation of something, and checked foo.cpp back in while I'm working on my changes. When I go to checkin, I see this:
+
+$ ct ci -c 'add new method bar' foo.h foo.cpp
+cleartool: Error: The most recent version on branch "/main/bb/dev" is not the predecessor of this version.
+cleartool: Error: Unable to check in "foo.cpp".
+Checked in "foo.h" version "/main/bb/dev/2".
+
+The source tree is now broken, until I recover from my shock, resolve the merge conflict, and checkin again. The point is: clearcase checkin is not an atomic transaction ("either succeeds or fails in whole") when it spans multiple files.
+
+In combination with (2) and (3), the situation in (1) gets worse: even though I may encounter no merge conflicts during my checkin, if you are snapshotting at the same time as my checkin you may "slice my checkin in half," picking up only a portion of it. E.g. you may get foo.h but not foo.cpp: your snapshot will be dangerously inconsistent ("broken").
+
+In reality, one can attempt to compensate for (2) and (3) via labeling, but this places a large burden on the human who must do the labeling. This human must examine every ClearCase element to decide which version to apply the label to. Often, the human must compensate for (2) by correlating checkin log messages--a crude method at best, and not always reliable, because elements can be and often are checked in together under different comments (the -c argument to cleartool co).
+
+With (3), taking a consistent snapshot of the entire source tree becomes quite an ordeal. "Just label what you want" is not a real solution.
+
+ClearCase and complexity
+------------------------
+
+ClearCase does have many of the features you expect from a good version control system. Unfortunately these features are often buried beneath page upon page of ct man, appear under non-intuitive subcommand names / command line switches, or require too many steps for what should be a relatively simple operation.
+
+Compare the operation of making a branch in ClearCase (simplified):
+
+$ cleartool mkbrtype -c "new branch type foo" foo
+$ cleartool ls -vob -r -s /root/element | \
+    xargs cleartool mkbranch -nco -c "place element on branch foo" foo
+
+with the same operation in Subversion:
+
+$ svn cp -m "new branch foo" svn:///trunk svn:///branches/foo 
+
+In Subversion, branching is just another case of a simple cheap copy within a transactional filesystem. In ClearCase, branching occurs in the orthogonal space of "types" of which "brtype" is just one case, and it must occur on every individual element recursively. In ClearCase this process suffers from the same problems that snapshotting does (i.e. risk of dangerously inconsistent source tree state on the new branch).
+
+Branching in ClearCase is also horrendously slow:
+
+$ cd /bbcm/infrastructure/tools
+$ time cleartool ls -vob -r -s . | \
+    xargs cleartool mkbranch -nco -c "apply a test branch" test-cc-br-time
+Created branch type "test-cc-br-time".
+Created branch "test-cc-br-time" from "addnotetoticket" version "/main/bb/dev/agrow/0".
+Created branch "test-cc-br-time" from "bin" version "/main/bb/dev/agrow/0".
+Created branch "test-cc-br-time" from "csalter" version "/main/bb/dev/agrow/0".
+Created branch "test-cc-br-time" from "cscheckin" version "/main/bb/dev/agrow/0".
+Created branch "test-cc-br-time" from "cscheckout" version "/main/bb/dev/agrow/0"...
+
+real    10m41.203s
+user    0m33.990s
+sys     3m46.002s
+
+This slowness is due to (in silly mathematical terms) the fact that you must glue the manifold of typespace to the manifold of element space at n different points, where n = |elements|.
+
+The sloppy workaround in ClearCase for this is to use a config spec with the "-mkbranch mybranch" rule. This auto-branches elements whenever there is a checkout operation. The branch "mybranch" becomes an overlay of the underlying branch: those elements that you've checked out in your view exist independently on "mybranch," but the vast majority of elements are taken from the underlying branch. The underlying branch is usually a checkin area shared among many people.
+
+In our particular case, we have a "dev" branch where all checkins--bugfixes, feature work, mature changes destined for production, immature changes related to speculative work--immediately go. So with the "-mkbranch mybranch" rule, your branch is not a static view of the source code: it can and does change at any time due to out-of-band checkins from other developers. This is what is meant by the term "sloppy." You don't have a static branch where changes are tightly controlled via explicit merges to / from the branch by the branch owner. You have a jello branch.
+
+In subversion, branching is as simple as:
+
+$ svn cp $repo/trunk $repo/branches/mybranch
+
+This is very fast, and very efficient in its storage requirements.
+
+Like the "branching" operation, the "tagging" operation in ClearCase also suffers from the same problems: it occurs off in the type space, the labels need to be applied per-element (which is very slow / error prone--you don't know what you're labeling), etc. In Subversion tags are just cheap copies to a well-known place in the repository filesystem, ala:
+
+$ svn cp $repo/branches/mybranch $repo/tags/foo-release-123
+
+This section could go on and on--just like a ClearCase ct manpage in fact--but really, it doesn't need to. It's rare for anyone who has used both ClearCase and any other version control system to contest the assertion that ClearCase is complicated.
+
+Yet this fact is commonly glossed over ("RTFM") in discussions of ClearCase vs. Some Other Inferior Version Control System. It should not; complexity has a real, measurable time cost to developers who use the tools. Reducing the amount of time needed to accurately change code is a large part of why we use version control tools in the first place.
+
+Subversion shortcomings
+-----------------------
+
+Subversion has a number of shortcomings too. They aren't, however, as fundamental as ClearCase's lack of changesets.
+
+(1) the Subversion repository can't be presented as a filesystem
+(2) the move operation is implemented as cp + rm, which can cause problems when merging filesystem changes
+(3) no intrinsic merge tracking
+(4) performance issues wrt large directories
+
+Presenting the repository tree (anchored at a particular revision) as even a read-only filesystem (1) is definitely a nice-to-have. Not necessary though for most typical scenarios: working copies + svn log seem to be enough. Also, simply making historical versions of elements available via @@/branch/version syntax ala ClearCase does not immediately make them useful...oftentimes what's needed is the historical version plus some metadata (author, log message, etc.) that accompanied the commit. In either ClearCase or Subversion you must frequently resort to a tool to extract this extra information which is presented in a simple way via the filesystem.
+
+SVK solves (3), and has the potential to solve (2) via transaction properties that flag true mvs. The situation in (2) is not very commonly encountered: in order to run across it, you must make directory changes on a branch and merge them with file content changes that have occurred on another branch.
+
+The large directory performance in (4) would presumably also manifest itself with large directories under ClearCase, unless they made some extraordinarily good imp decisions...I have not performed any isolated tests of ClearCase dynamic view large directory performance. We have performed such tests with Subversion and are even aware of the particular areas of the implementation that are responsible. With enough support we could fix them in Subversion. There has been understandably little interest in the opensource community in improving massive directory performance, as it is not typical usage.
+

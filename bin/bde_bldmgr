@@ -1,0 +1,1563 @@
+#!/opt/swt/bin/perl -w     # -*-Perl-*-
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use File::Copy;
+use File::Temp qw(tempfile);
+use IO::Handle;
+use IO::Socket;
+use POSIX qw(:sys_wait_h :errno_h uname strftime);
+use Storable qw(store retrieve);
+
+use Util::Retry qw(retry_open3 retry_output3);
+use Util::Message qw(
+    set_category set_default_category set_prefix set_verbose set_debug
+    alert message error verbose debug fatal log_input log_output
+    retrieve_messages
+);
+use Util::File::Basename qw(basename);
+
+use Digest::MD5;
+
+use Data::Dumper;
+
+#------------------------------------------------------------------------------
+
+# prototypes
+sub usage(;$);
+sub display_results($$$;$);
+sub debug($@);
+sub alert($@);
+sub error($@);
+sub message($@);
+sub postprocess_configuration ($@);
+sub expand_macros ($$);
+sub deep_copy ($$);
+sub get_hash ($);
+sub html_copy ($$;$);
+sub colour_and_htmlize ($$);
+
+# constants
+use constant EXIT_SUCCESS => 0;
+use constant EXIT_FAILURE => 1;
+use constant EXIT_BAD_OPT => 2;
+use constant EXIT_BAD_ARG => 3;
+use constant EXIT_BAD_CFG => 4;
+use constant DEFAULT_JOBS => 4; #simultaneous parallel jobs
+use constant DEFAULT_PORT => 9000; # for socket invokations
+
+# from configuration file
+use vars qw(
+             $view $path %configured_builds @default_units
+             $enableLogArchive $logArchiveBase
+             $enableHtmlOutput $htmlOutputBase $htmlOutputBaseURL
+             $resultsBase
+           );
+
+#------------------------------------------------------------------------------
+
+my $available_platforms="see configuration"; #overwritten later
+my @default_platforms=($available_platforms);
+my $default_recipient='bde@devcvs.bloomberg.com';
+
+my $datePathPart = strftime("%Y%m%d/",localtime);
+
+#------------------------------------------------------------------------------
+
+STDOUT->autoflush(1);
+
+set_default_category();
+
+# parse options
+my $prog = basename $0;
+my %opts;
+
+Getopt::Long::Configure("bundling");
+unless (GetOptions(\%opts,qw[
+    after|A=s
+    before|B=s
+    check|C
+    compiler|c=s
+    config|k=s
+    debug|d+
+    define|D=s@
+    express|e
+    flags|f=s@
+    groups|g=s@
+    help|h
+    id|i=s
+    jobs|j:i
+    mail|m
+    make|M|T=s
+    nodepend|n
+    options|o=s
+    platforms|p=s@
+    quiet|q
+    rebuild|R
+    recipients|r=s@
+    serial|s
+    targets|t=s@
+    verbose|v+
+    where|who|w=s
+])) {
+    usage(), exit(EXIT_BAD_OPT);
+}
+#debug:+ and verbose:+ in Perl 5.8
+
+usage(), exit(EXIT_SUCCESS) if $opts{help};
+
+my $targets = "";
+if ($opts{targets}) {
+    $targets = join(',',@{$opts{targets}});
+}
+my $platforms = $opts{platforms};
+my $recipients = $opts{recipients};
+$opts{mail} ||= 0;
+set_debug($opts{debug} ||= 0);
+
+unless ($opts{serial}) {
+    $opts{jobs}=DEFAULT_JOBS unless defined $opts{jobs};
+    unless (abs($opts{jobs})>=1) {
+        usage("number of --jobs must be >= 1");
+        exit EXIT_FAILURE;
+    }
+    $opts{serial}=1 if $opts{jobs}==1;
+}
+
+# have verbose if bde_bldmgr run at terminal, or forced on
+# quiet option overrides interactive output in logging routines
+my $interactive = (-t STDIN && -t STDOUT)?1:0;
+$opts{verbose} += $interactive;
+$opts{verbose}=0 if $opts{quiet};
+set_verbose($opts{verbose} ||= 0);
+
+# process platforms spec
+my @platforms = $platforms ? (split /[^\w:]+/, "@$platforms") : ();
+
+# process recipients spec
+my @recipients = $recipients ? (split /[^\w:\@\.]+/, "@$recipients") : ($default_recipient);
+
+# parse -p <plat>:<host>:<host> syntax, if present
+my %hosts_override=();
+foreach my $pi (0..$#platforms) {
+    if (my @hosts=split /:/,$platforms[$pi]) {
+        $platforms[$pi] = shift @hosts; #platform is first part
+        $hosts_override{$platforms[$pi]} ||= [];
+        push @{$hosts_override{$platforms[$pi]}},@hosts; #remainder
+    }
+}
+
+($path,$view)=(undef,undef);
+$view=$opts{where} if defined $opts{where};
+
+my $started_at=time;
+alert("Build started at ".localtime($started_at));
+
+# figure out where to build from - if we're in a view form the full path
+# by prepending the view to /bbcm..., otherwise build relative
+# to bin of bde_bldmgr
+my $buildroot;
+if ($view) {
+    if (-d $view) {
+        $buildroot = $view;
+        message("View: $view (explicit root)");
+    } else {
+        $buildroot = "/view/$view/bbcm/infrastructure";
+        unless (-d $buildroot) {
+            fatal "Cannot find build root '$buildroot': $!";
+        }
+        message("View: $view (explicit view)");
+    }
+} elsif ($ENV{CLEARCASE_ROOT}) {
+    $buildroot = $ENV{CLEARCASE_ROOT} . "/bbcm/infrastructure";
+    $buildroot =~ m|^/view/([^/]+)| and $view=$1;
+    message("View: $view (from environment)");
+} else {
+    $buildroot = "$FindBin::Bin/../..";
+    $buildroot =~ s|/\w+/\.\./|/|g;
+    $buildroot =~ m|^/view/([^/]+)| and $view=$1;
+    if ($view) {
+        message("View: $view (from path)");
+    } else {
+        message("View: none");
+    }
+}
+message("Build root: $buildroot");
+
+if ($opts{config}) {
+    alert("Using configuration '$opts{config}'");
+} else {
+    $opts{config} = $FindBin::Bin;
+    $opts{config} =~s|bin/?$|etc|;
+    $opts{config} .= "/bde_bldmgr.config";
+    alert("Using default configuration '$opts{config}'");
+}
+require $opts{config} or fatal "Failed to load configuration '$opts{config}':".
+  "\n\t$!";
+unless (defined %configured_builds) {
+    error("No valid build configurations found");
+    usage();
+    exit(EXIT_BAD_CFG);
+}
+
+$available_platforms = join ", ",sort keys %configured_builds;
+@default_platforms = grep {
+    exists($configured_builds{$_}{build}) and
+      $configured_builds{$_}{build} =~ /^Y/i
+} sort keys %configured_builds;
+
+# determines whether "build=N" can take effect after post-processing
+my $forcedPlatforms = 0;
+
+if (@platforms) {
+    $forcedPlatforms = 1;
+
+    if (scalar(@platforms)==1 and $platforms[0] eq 'all') {
+       @platforms=sort keys %configured_builds;
+       message("building all platforms: @platforms");
+    } else {
+        # abort if we're fed a platform that doesn't exist in the configuration
+        for (@platforms) {
+            unless ($configured_builds{$_}) {
+                error("Unrecognized platform '$_': use $available_platforms");
+                exit(EXIT_BAD_ARG);
+            }
+        }
+        message("Building platforms: @platforms");
+    }
+} else {
+    # no platforms defined - use default set as specified by 'build' key
+    message("building default platforms: @default_platforms");
+    @platforms=@default_platforms;
+}
+
+# no arguments - display usage and exit
+unless (@ARGV>=1 or $opts{groups}) {
+    @ARGV = @default_units ? @default_units : (); #from config
+}
+usage("No group or package specified"), exit(EXIT_SUCCESS)
+  unless @ARGV >= 1 or $opts{groups};
+
+# postprocess configuration
+if ($opts{id}) {
+    message("Configuration ID: $opts{id}");
+}
+postprocess_configuration(\%configured_builds,@platforms);
+
+# remove platforms deselected for this ID
+if(!$forcedPlatforms) {
+    my @removedPlatforms;
+
+    for(my $i=$#platforms; $i>=0; --$i) {
+        my $pl = $platforms[$i];
+        if(   exists($configured_builds{$pl}{build}) and
+              $configured_builds{$pl}{build} !~ /^Y/i
+          ) {
+            push @removedPlatforms, $pl;
+            delete $configured_builds{$pl};
+            splice @platforms,$i,1;
+        }
+    }
+
+    message("Removing de-selected platform $_") foreach @removedPlatforms;
+}
+
+# this is what we're going to build
+my @groups;
+if ($opts{groups}) {
+    foreach (@{$opts{groups}}) {
+        push @groups, split(/\W+/,$_);
+    }
+}
+if (@ARGV) {
+    push @groups, split(/\W+/,"@ARGV");
+}
+# <<< enhancement: allow express/not express per target: "bde:e,bce:e,bte" ?
+# <<< enhancement: provide -g option as alternative to trailing args
+
+message("Building: @groups");
+
+#------------------------------------------------------------------------------
+#==============================================================================
+#------------------------------------------------------------------------------
+
+# expand [macros], expanding recursively if necessary
+sub expand_macros($$) {
+    my ($platform,$key)=@_;
+
+    return undef unless exists $platform->{$key};
+
+    return $platform->{$key} unless $platform->{$key}=~/\[/;
+
+    debug "Expanding $key <- '$platform->{$key}'";
+    $platform->{$key} =~ s/\[(\w+)\]/expand_macros($platform,$1)/esg;
+    debug "Expanded  $key -> '$platform->{$key}'";
+
+    return $platform->{$key}
+}
+
+
+sub colour_and_htmlize ($$) {
+    my $redColor=qq{<SPAN style="color: red; background-color: black; font-weight: bold">};
+    my $warningColor=qq{<SPAN style="color: red; font-weight: bold; font-style: italic">};
+
+    my ($line, $anchor_r)=@_;
+
+    if(    $line!~/is not a valid default record buffer size/
+        && $line!~/Error: could not find a route for request/
+        && $line!~/Propagating error message from interface/
+      ) {
+        if($line=~/(\b(?:Pause limit exceeded while running|Assertion failed|failure|failed|FAILED|TIMED OUT|fail|ERROR|[Ee]rror)\b|\([ESU]\))/) {
+            my $anchor=sprintf("error%03d",1 + scalar @{$anchor_r});
+
+            push @{$anchor_r},[$anchor,$line];
+            $line=qq{<A NAME="$anchor">$line</A>};
+            $line=~s!(\b(?:Assertion failed|failure|failed|fail|error)\b|\([ESU]\))
+                !qq{$redColor$1</span>}
+            !ixeg;
+        }
+    }
+
+    $line=~s!\b
+             (
+                [Ww]arning # not using i on regex; don't want
+                           #     WARNING: CASE xx NOT FOUND
+                           # highlighted
+               | \([IW]\)  # IBM warnings or informationals
+             )
+             \b
+            !
+                qq{$warningColor$1</span>}
+            !xeg;
+
+    return "<P>$line</P>\n";
+}
+
+sub html_copy($$;$) {
+    my ($logFile,$failureShorts,$textLines)=@_;
+
+    if(!-d $failureShorts) {
+        unless(mkdir $failureShorts) {
+            warn "Can't create $failureShorts ($!)";
+            return;
+        }
+    }
+
+    my $hashTarget = get_hash($logFile);
+    my $htmlName   = "$hashTarget.html";
+    my $targetFile = "$failureShorts$htmlName";
+    open OUTPUT, ">$targetFile";
+    my @anchors;
+
+    my $text=qq{<SPAN STYLE="font-family: monospace; font-size: 8pt;">\n};
+
+    if ($textLines) {
+        for (@$textLines) {
+            $text.=colour_and_htmlize($_, \@anchors);
+        }
+    }
+    else {
+        open INPUT, "<$logFile";
+        while(<INPUT>) {
+            $text.=colour_and_htmlize($_, \@anchors);
+        }
+        close(INPUT);
+    }
+
+    $text.=qq{</SPAN>\n};
+
+    print OUTPUT "<P>",((scalar localtime),": $logFile</P>\n");
+    if(@anchors) {
+        print  OUTPUT "<P>Error lines: <UL>\n";
+        print  OUTPUT qq{<SPAN STYLE="font-family: monospace; font-size: 8pt;">\n};
+        foreach my $a_r(@anchors) {
+            if($a_r->[0]=~m!(\d+)!) {
+                printf OUTPUT qq{<LI><A HREF="#%s">%s</A> %s</LI>\n},
+                              $a_r->[0],
+                              $1,
+                              $a_r->[1];
+            }
+            else {
+                printf OUTPUT qq{<LI><A HREF="#%s">%s</A></LI>\n},
+                              $a_r->[0],
+                              $a_r->[1];
+            }
+        }
+        print  OUTPUT qq{</SPAN>\n};
+        print  OUTPUT "</UL></P>\n";
+    }
+
+    print OUTPUT $text,"\n";
+
+    close(OUTPUT);
+
+    return "$htmlOutputBaseURL$datePathPart$htmlName";
+}
+
+sub deep_copy($$) {
+    my ($file,$targetbase)=@_;
+
+    if(!-d $targetbase) {
+        unless(mkdir $targetbase) {
+            warn "Can't create $targetbase ($!)";
+            return;
+        }
+    }
+
+    my $accum;
+    my @subdirs=split "/",$file;
+    pop @subdirs; # don't want to create subdir for filename
+    @subdirs = map {$accum.="/$_"} grep length,@subdirs;
+
+    foreach my $subdir(@subdirs) {
+        my $target="$targetbase/$subdir";
+        if(!-d $target) {
+            unless (mkdir $target) {
+                warn "Can't create $target ($!)";
+                return;
+            }
+        }
+    }
+
+    copy($file,"$targetbase/$file");
+}
+
+
+sub get_hash($) {
+    my ($file)=@_;
+
+        # returns the "salt" of the current day, since 20060419
+        sub getDaySalt {
+            my $day0JNumber = 13257; # "Unix" day for 20060419 (days since Jan 1 1970, more or less)
+            my $currentJNumber = int(time / 86400);
+
+            my $currentDay= $currentJNumber - $day0JNumber;
+
+            my @base64Set = ('.', '/', 'a'..'z', 'A'..'Z', '0'..'9');
+
+            return sprintf("%1s%1s",$base64Set[$currentDay/64],$base64Set[$currentDay%64]);
+        }
+
+    my $salt = getDaySalt();
+    my $filename= crypt(Digest::MD5::md5_hex($file),$salt);
+
+    # must use legal filename and html characters
+    $filename=~tr!./!_-!;
+
+    return $filename;
+}
+
+sub postprocess_configuration ($@) {
+    my ($config,@platforms)=@_;
+
+    # assign default values
+    if (my $default = $config->{default}) {
+        foreach my $plid (@platforms) {
+            foreach my $key (keys %$default) {
+                  unless (exists $config->{$plid}{$key}) {
+                      $config->{$plid}{$key}=$config->{default}{$key};
+                      debug("Platform $plid assigned default value ".
+                              $key."='".$config->{default}{$key}."'");
+                  }
+            }
+        }
+
+        delete $config->{default};
+    }
+
+    # assign ID-specific values
+    foreach my $plid (@platforms) {
+        my $platform=$config->{$plid};
+        my $id=$opts{id} || $platform->{defaultid};
+        next unless $id and $id="id:$id" and exists $platform->{$id};
+        verbose("Platform $plid assigning values from $id");
+        foreach my $key (keys %{$platform->{$id}}) {
+            $platform->{$key}=$platform->{$id}{$key};
+            debug("Platform $plid assigned value ".
+                    $key."='".$platform->{$key}."'");
+        }
+    }
+
+    # expand macros
+    foreach my $plid (@platforms) {
+        foreach my $key (keys %{$config->{$plid}}) {
+            expand_macros($config->{$plid},$key);
+        }
+    }
+}
+
+#------------------------------------------------------------------------------
+
+sub invoke_by_socket ($$) {
+    my ($host,$command)=@_;
+
+    log_output($command);
+
+    my $port=DEFAULT_PORT;
+    if ($host=~s/:(\d+)$//) {
+        $port=$1;
+    }
+
+    my $sock = new IO::Socket::INET->new(
+        PeerAddr => $host,
+        PeerPort => $port,
+        Proto    => 'tcp',
+        Type     => SOCK_STREAM
+    );
+
+    return(1, [ "Failed to open socket to $host:$port: $@" ] ) unless ($sock);
+
+    # request
+    print $sock $command."\n";
+    $sock->flush();
+
+    # response
+    my @cmd_out = ();
+    while (my $line=<$sock>) {
+        chomp $line;
+        push @cmd_out, $line;
+        log_input($line);
+    }
+
+    $sock->close();
+
+    return(0, \@cmd_out);
+}
+
+sub invoke_by_command ($) {
+    my ($command)=@_;
+
+    log_output($command);
+
+    my ($rdfh,$wrfh)=(new IO::Handle,new IO::Handle);
+    #split into argument array - keep / and \ separated items together
+    #my @command=split /\s+/,$command;
+    my @command = ($command =~ m{"[^"]+"|[=.\-\w/\\]+}g);
+    @command = map {s/"//g; $_} @command;
+    my $pid=retry_open3($rdfh,$wrfh,$rdfh,@command);
+    return(1, [ "retry_open3 returned undef for ".join(" ",@command) ] ) unless $pid;
+
+    my @cmd_out = ();
+    while (my $line=<$rdfh>) {
+        chomp $line;
+        push @cmd_out, $line;
+        log_input($line);
+    }
+    close $rdfh; close $wrfh;
+
+    waitpid $pid,0;
+    if($?) {
+        unshift @cmd_out, "Child ".join(" ",@command)
+                          .($?&127 ? " got signal ".($?&127)."," : "")
+                          ." exited with status ".($?>>8)
+                          .", child output follows:";
+#        print Dumper(@cmd_out);
+        return (1, \@cmd_out);
+    }
+
+    return (0, \@cmd_out);
+}
+
+sub invoke ($$$) {
+    my ($host,$command,$build)=@_;
+    my @output;
+
+    if ($build->{local}) {
+        debug("invoke local command");
+        @output=invoke_by_command($command);
+    } else {
+        # build up basic rsh command
+        if ($build->{socket} and $build->{socket}=~/^Y/i) {
+            debug("invoke socket command");
+            @output=invoke_by_socket($host,$command);
+        } else {
+            debug("invoke rsh command");
+            my $rsh_cmd = $build->{rsh_cmd}?
+              ($build->{rsh_cmd}." $host ") : "rsh $host -n ";
+            debug("RUNNING: $rsh_cmd \"$build->{kshrc_check} $command\"");
+            @output=invoke_by_command("$rsh_cmd \"$build->{kshrc_check} $command\"");
+        }
+    }
+
+    return @output;
+}
+
+sub assemble_command ($$) {
+    my ($build,$group)=@_;
+    my $platform=$build->{platform};
+
+    my ($temp);
+    my $command="";
+
+    # slave script
+    $command .= $build->{slave_script};
+
+    # build root
+    $command .= " -w ";
+    $temp = $build->{rmtroot} || $buildroot;
+    $command .= $temp;
+
+    # build output directory
+    $command .= " -l $build->{log_destdir}" if $build->{log_destdir};
+
+    # parallel/serial
+    if ($opts{jobs} and $opts{jobs}<0) {
+        # negative job number forces a parallel build even if serial is configured
+        $opts{jobs}=abs $opts{jobs};
+        alert("forced parallel build (up to $opts{jobs} jobs)");
+        $command .= " -j$opts{jobs}";
+    } elsif ($opts{serial} or ($build->{serial} and $build->{serial}=~/^Y/i)
+             or ($build->{force_serial} and $build->{force_serial}=~/^Y/i)) {
+        verbose("serial build");
+        $command .= " -s";
+    } elsif ($build->{jobs} and $build->{jobs} > 0 and $build->{jobs} < 96) {
+        verbose("parallel build (up to ".$build->{jobs}." jobs)");
+        $command .= " -j".$build->{jobs};
+    } elsif ($opts{jobs}) {
+        verbose("parallel build (up to $opts{jobs} jobs)");
+        $command .= " -j$opts{jobs}";
+    }
+
+    # flags (passed through to bde_build itself)
+    my @flags = ();
+    push @flags,@{$opts{flags}} if $opts{flags};
+    push @flags,$build->{buildflags} if $build->{buildflags};
+    foreach my $flagset (@flags) {
+        $command .= " -f$flagset";
+    }
+
+    # -A, -B, -C
+    $command .= " -A$opts{after}" if defined $opts{after};
+    $command .= " -B$opts{before}" if defined $opts{before};
+    $command .= " -C$opts{check}" if defined $opts{check};
+
+    # -u and then -c
+    if (defined $opts{uplid}) {
+        $command .= " -u".$opts{uplid};
+    } elsif (defined $build->{uplid}) {
+        $command .= " -u".$build->{uplid};
+    } elsif (defined $opts{compiler}) {
+        $command .= " -c".$opts{compiler};
+    } elsif (defined $build->{compiler}) {
+        $command .= " -c".$build->{compiler};
+    }
+
+    # -D : defines
+    if ($opts{define}) {
+        $command .= " ".join('', map { "-D$_" } @{$opts{define}});
+    }
+
+    # -n, -M, -o
+    $command .= " -n" if defined $opts{nodepend} or
+        ($build->{nodepend} and $build->{nodepend} =~ /^Y/i);
+    $command .= " -M$opts{make}" if defined $opts{make};
+    $command .= " -M$build->{make}" if defined $build->{make};
+    $command .= " -o$opts{options}" if defined $opts{options};
+
+    # -d, -v : verbosity and debug
+    if (defined $opts{debug}) {
+        $command .= " -d" x $opts{debug};
+    }
+    verbose("passing debug=$opts{debug}");
+    if (defined $opts{verbose}) {
+        $command .= " -v" x $opts{verbose};
+    }
+    verbose("passing verbosity=$opts{verbose}");
+
+    # -e : express build
+    if (defined $opts{express} or
+        ($build->{express} and $build->{express} =~ /^Y/i)) {
+        message("express mode enabled - no tests");
+        $command .= " -e";
+    }
+
+    # -R or -U
+    # Check for $build->{rebuild} or $opt{rebuild} option.  If neither is
+    # specified, then don't specify -R or -U flag.  If both are specified, then
+    # $build->{rebuild} takes precidence.  $build->{rebuild} can be "Yes" (add
+    # -R) or "No" (add -U), or non-existent (don't add either option) whereas
+    # $opt{rebuild} can only exist (add -R) or not exist (don't add either
+    # option).
+    if (defined $build->{rebuild}) {
+        if ($build->{rebuild} =~ /^Y/i) {
+            $command .= " -R";
+        }
+        else {
+            $command .= " -U";
+        }
+    }
+    else {
+        $command .= " -R" if defined $opts{rebuild};
+    }
+
+    # tag
+    $command .= " -T " . $build->{tag} if defined $build->{tag};
+
+    # targets
+    $command .= " -t $build->{targets}";
+
+    # group (what to build - can also be package)
+    $command .= " $group";
+
+    alert("final command is :'$command'");
+
+    return $command;
+}
+
+#------------------------------------------------------------------------------
+
+my $localhostname=lc((uname)[1]);
+
+++$|; #AUTOFLUSH
+
+# PIDS and Pipes of the children
+my %kids;           # hash because we don't care about order
+my %platformByPid;  # so we can log platform with pid
+my %files;          # pipe buffers are too small
+
+$ENV{TMPDIR}="/tmp" unless exists $ENV{TMPDIR};
+
+#my $foo_build = $configured_builds{"w32"};
+#$foo_build->{rsh_cmd} = "/home/osemenov/tmp/crashqwf";
+#my($foo_rc, $foo_out) = invoke("bdenydev01z", "mountzzzz", $foo_build);
+#print Dumper($foo_rc, $foo_out);
+#exit 1;
+
+# build each system
+foreach my $platform (@platforms) {
+    my $build = $configured_builds{$platform};
+    $build->{platform}=$platform;
+    $build->{FS}=($platform eq 'win')?"\\":"/";
+
+    # Avoid warnings by making sure these values are defined.
+    $build->{do_not_build} = '' unless length($build->{do_not_build});
+    $build->{no_64_groups} = '' unless length($build->{no_64_groups});
+
+    debug("for platform $platform, \$build is: ".Dumper($build));
+
+    # Create the temporary file
+    my $tempFilePattern="$ENV{TMPDIR}/bde_bldmgr_$opts{id}_${platform}_XXXXXXX";
+    $tempFilePattern=~s/[ .]/_/g;
+    my ($tempFD,$tempFilename) = tempfile($tempFilePattern, UNLINK => 0);
+    close($tempFD);
+
+    die "Where did my tempfile go?" unless -e $tempFilename;
+
+    my $pid = fork;
+
+    if ($pid == -1) {
+        fatal "fork: $!";
+    }
+
+    if ($pid > 0) {
+        # save information for later
+        if(exists $kids{$pid})
+        {
+            # PID got reused, probably because a host wasn't available and child
+            # exited too fast?
+            warn "PID $pid got reused before all platforms got forked";
+            gatherResults($pid);
+        }
+        $kids{$pid}=$pid;
+        $platformByPid{$pid}=$platform;
+        $files{$pid}=$tempFilename;
+
+        message("tempfile for $platform/$pid is $tempFilename");
+
+        next;
+    }
+
+    message("Created child PID $$ to process $platform, using tempfile $tempFilename");
+
+    my %build_results;
+    foreach my $group (@groups) {
+        message("Trying to build $group on '$platform'");
+        if(exists $build->{do_not_build}
+           and $build->{do_not_build}=~ /\b$group\b/) {
+            alert("$group in do_not_build list on '$platform'"
+                  ." - skipping");
+            next;
+        }
+        set_category($group);
+
+        # initialize local results hash
+        my %results = ( system => $platform, build_desc => $build->{build_desc} );
+
+        # targets default to config file if not on command line
+        $build->{targets} = $targets if $targets;
+        $build->{targets} =~ s/\W+/,/g;
+        my @configuredTargets = split /\W+/, $build->{targets};
+        message("$group/$platform configuredTargets are @configuredTargets");
+        foreach my $t (@configuredTargets) {
+            message("Considering build $group on '$platform' for target $t");
+            if ($t =~ /_64$/
+             && $build->{no_64_groups}=~ /\b$group\b/) {
+                alert("NOT building $group on target $t: it's in the no_64_groups list '$build->{no_64_groups}'");
+                next;
+            }
+            push @{$results{targets}}, $t;
+        }
+        # use $newBuild in any context where the targets are likely to be used.
+        # $build still needs to be used for results and feedback
+        my $newBuild = {
+            %$build,
+            targets => join ",",@{$results{targets}}
+        };
+
+        set_prefix("[$group:$platform]");
+        alert("building $group on '$platform' targets:",
+              join(" ", @{$results{targets}}));
+        my %targets_need_status=map { $_ => 1 } @{$results{targets}};
+
+        my @hosts=split(/[^\w\.\:_\-]+/, $newBuild->{hosts});
+        if (my $ohosts=$hosts_override{$platform}) {
+            @hosts=(@$ohosts,@hosts);
+        }
+
+        my @badCmdOutput = ();
+
+        # loop on hosts until good ping and execution
+        $build->{started}=time;
+        alert("$platform build started at ".
+              localtime($build->{started}));
+
+        foreach my $host (@hosts) {
+
+            set_prefix("[$group:$platform\@$host]");
+
+            my $command;
+            my $log_prefix;
+
+            $newBuild->{local} = ($host eq $localhostname)?1:0;
+
+            # ping machine, and 'next' if unreachable
+            unless ($newBuild->{local}) {
+                my $pinghost=$host;
+                $pinghost=~s/:\d+$//; #remove port if present
+                message("trying host $pinghost");
+
+                # Most pings use -c for count, but not all...
+                my $pingcmd;
+                SWITCH: foreach ($^O) {
+                    /^(dgux|solaris)$/ and $pingcmd="ping $pinghost", last;
+                    /^(hpux|MSWin32)$/ and $pingcmd="ping $pinghost -n 1", last;
+                  DEFAULT:
+                    $pingcmd="ping -c1 $pinghost";
+                }
+
+                my ($cmd_status, $cmd_out) = invoke_by_command($pingcmd);
+                if ($cmd_status) {
+                    error("ping failed for $host");
+                    for my $l (@$cmd_out) { error($l); }
+                    push @badCmdOutput, @$cmd_out;
+                    next;
+                }
+            }
+
+            alert("local build detected") if $newBuild->{local};
+
+            if ($view and not $newBuild->{local}) {
+                # TBD: these platform checks should probably be removed
+                if ($platform =~ /^win/i) {
+                } elsif ($platform =~ /^dg/i) {
+                } elsif ($platform =~ /^linux/i) {
+                } elsif (exists $newBuild->{no_clearcase}) {
+                    message("no clearcase; no view to verify");
+                    if (exists $newBuild->{prebuild_cmd}) {
+                        message("running prebuild command");
+                        my($cmd_status, $cmd_out) = invoke($host, $newBuild->{prebuild_cmd}, $newBuild);
+                        if ($cmd_status) {
+                            error("prebuild command failed");
+                            for my $l (@$cmd_out) { error($l); }
+                            push @badCmdOutput, @$cmd_out;
+# TBD: two parallel cleartool update runs fail on windows all the time
+#                            $results{unreachable_hosts} .= " $host (prebuild failed)";
+#                            unshift @$cmd_out,"prebld";
+#                            $badCmdOutput = $cmd_out;
+#                            next;
+                        }
+                    }
+                } else {
+                    #ensure clearcase view exists on remote platform under Unix
+                    message("verifying view");
+                    my $startview_cmd="/usr/atria/bin/cleartool startview $view && echo 'OK'";
+                    my ($cmd_status, $cmd_out) = invoke($host,$startview_cmd,$newBuild);
+                    unless ($cmd_status == 0 && join(' ',@$cmd_out) =~ /OK/) {
+                        error("failed - ".
+                              "trying next machine");
+                        $results{unreachable_hosts} .=
+                          " $host (view verification failed)";
+                        push @badCmdOutput, @$cmd_out;
+                        next;
+                    }
+                }
+            }
+
+            message("executing ".
+                    ($newBuild->{local}?"local":"remote")." build");
+
+            # Run an express build before building test drivers.
+            my %express_build = %$newBuild;
+            $express_build{express} = "Yes";
+            $express_build{tag} = "COMPILE ";
+            $command = assemble_command(\%express_build, $group);
+            unless ($opts{express}) {
+                # The test command does not rebuild makefiles or dependencies.
+                if(exists $newBuild->{do_not_test}
+                   and $newBuild->{do_not_test}=~ /\b$group\b/) {
+                    alert("$group in do_not_test list on '$platform'"
+                          . " - skipping tests");
+                }
+                else {
+                    my %test_build = %$newBuild;
+                    $test_build{rebuild} = "No";
+                    $test_build{nodepend} = "Yes";
+                    $test_build{tag} = "TEST-COMPILE ";
+
+                    # Append test command to express command.
+                    # if test_host exists, then build test drivers on build
+                    # farm before running them on the test_host
+                    $command .= " ; ";
+                    $command .= assemble_command({
+                                                    %test_build,
+                                                    make=>"build_test",
+                                                 }, $group);
+                }
+            }
+
+            # execute rsh - if rsh itself fails, try next host.
+            my ($cmd_status, $cmd_out) = invoke($host,$command,$newBuild);
+            if ($cmd_status) {
+                error(($newBuild->{local}?"local":"remote")." build failed to run");
+                for my $l (@$cmd_out) { error($l); }
+                error("trying next machine");
+                $results{unreachable_hosts} .= " $host (build run failed)";
+                push @badCmdOutput, @$cmd_out;
+                next;
+            }
+
+            $results{host} = $host;
+            my @cmd_out = @$cmd_out;
+
+            # in the test_host case, invoke the test run
+            unless ($opts{express}) {
+                my %test_build = %$newBuild;
+                $test_build{rebuild} = "No";
+                $test_build{nodepend} = "Yes";
+                $test_build{tag} = "TEST-RUN ";
+                if ($newBuild->{serial_tests_groups}=~ /\b$group\b/) {
+                    $test_build{force_serial} = "Yes";
+                }
+                my $test_host = $host;
+
+                # The test command does not rebuild makefiles or dependencies.
+                unless((exists $newBuild->{do_not_test}
+                        and $newBuild->{do_not_test}=~ /\b$group\b/)
+                       or (exists $newBuild->{do_not_run_tests}
+                        and $newBuild->{do_not_run_tests}=~ /\b$group\b/)
+                        ) {
+                    if(exists $test_build{test_host}
+                            && exists $test_build{test_host}{$group}) {
+                        $test_host = $test_build{test_host}{$group};
+                        my $startview_cmd="/usr/atria/bin/cleartool startview $view";
+                        my ($cmd_status, $cmd_out) = invoke($test_build{test_host}{$group},
+                                $startview_cmd,$newBuild);
+                    }
+
+                    $command = assemble_command(\%test_build, $group);
+                    my ($test_status, $test_out) = invoke($test_host,$command,$newBuild);
+                    if ($test_status) {
+                        error(($newBuild->{local}?"local":"remote")." test run failed");
+                        for my $l (@$test_out) { error($l); }
+                    }
+                    else {
+                        push @cmd_out, @$test_out;
+                    }
+                }
+            }
+
+            if (exists $build->{postbuild_cmd}) {
+                message("running postbuild command");
+                my ($cmd_status, $cmd_out) = invoke($host, $build->{postbuild_cmd}, $build);
+                if ($cmd_status) {
+                    error("Postbuild command failed");
+                    for my $l (@$cmd_out) { error($l); }
+                    $results{unreachable_hosts} .= " $host (postbuild failed)";
+                    $results{host} = undef;
+                    push @badCmdOutput, @$cmd_out;
+                    next;
+                }
+            }
+
+            my (@successes,@failures,@notsupported,%fail_msgs,@targetCombos);
+
+            foreach (@cmd_out) {
+                if (/^\W+(SUCCEEDED|FAILED|NOTSUPPORTED)\s+(\S+)\s+(\S+)(\s*(?:\[.*?\])*)/) {
+                    my ($status,$target,$phase,$message)=($1,$2,$3,$4);
+#                    print Dumper [$status,$target,$phase,$message];
+                    my $key="$target-$phase";
+                    push @targetCombos,$key;
+                    if ($status eq 'SUCCEEDED') {
+                        push @successes,$key;
+                    } elsif ($status eq 'NOTSUPPORTED') {
+                        push @notsupported,$key;
+                    } else {
+                        push @failures,$key;
+                        $fail_msgs{$key}=$message;
+                    }
+                    verbose(" Retrieved $status status for $key");
+                    delete $targets_need_status{$target};
+                }
+            }
+            $results{ok_targets} = \@successes;
+            $results{notsup_targets} = \@notsupported;
+            $results{err_targets} = \@failures;
+            $results{err_msgs} = \%fail_msgs;
+            $results{target_combos} = \@targetCombos;
+
+            $build->{finished}=time;
+            $results{elapsed}=($build->{finished} - $build->{started});
+            if (@failures) {
+                error("could not build $group target(s): @failures");
+                alert("$group build on $platform finished ".
+                      "with errors at ".localtime($build->{finished}));
+            } elsif (%targets_need_status) {
+                foreach (sort keys %targets_need_status) {
+                    push @{$results{err_targets}},"$_-COMPILE";
+                    push @{$results{target_combos}},"$_-COMPILE";
+                    $results{err_msgs}->{"$_-COMPILE"} = "No status returned from build";
+                    error("$_ target did not return a status");
+                }
+                alert("$group build on $platform finished ".
+                      "with errors at ".localtime($build->{finished}));
+            } else {
+                alert("$group build on $platform finished ".
+                      "OK at ".localtime($build->{finished}));
+            }
+
+            message("elapsed time: ". $results{elapsed} ." seconds");
+
+            last;
+        }
+
+        set_prefix("");
+
+        # can't build this system!
+        if (!defined $results{host}) {
+            error("cannot build $platform!!!");
+            $results{host}="FAILED";
+            $build->{finished}=time;
+            $results{elapsed}=($build->{finished} - $build->{started});
+            foreach my $t (@configuredTargets) {
+                push @{$results{err_targets}}, "$t-COMPILE";
+                push @{$results{target_combos}},"$t-COMPILE";
+                $results{err_msgs}->{"$t-COMPILE"} = \@badCmdOutput;
+            }
+        }
+
+        # save results
+        $build_results{$group} = \%results;
+    }
+    # we are all finished, store the results in the tmpfile
+    # (and in redundant copies to try to solve corrupted file issue)
+    store(\%build_results, $tempFilename);
+
+    set_default_category();
+
+    message("Exiting child PID $$ having processed $platform");
+
+    # end of child
+    exit(0);
+}
+
+# Gather the results from the children
+my %all_results;
+
+sub gatherResults
+{
+    my ($pid)=@_;
+
+    message("Retrieving results from child PID $pid ($platformByPid{$pid}) using tempfile $files{$pid}");
+    # read the hash over the pipe
+    my $hashref = eval { retrieve($files{$pid}) };
+    if ($@ || !$hashref) {
+       warn "retrieve failed for PID $pid (eval said $@)";
+    }
+    else {
+    # add the results to %all_result
+        foreach my $group (keys %{$hashref}) {
+            push @{$all_results{$group}}, \%{$hashref->{$group}};
+        }
+
+        # we do not need the tempfile anymore
+        unlink $files{$pid} if exists $files{$pid};
+    }
+
+    delete $files{$pid};
+    delete $kids{$pid};
+}
+
+my $startTime=time;
+
+while(scalar keys %kids) {
+    my $kid;
+    while (($kid=waitpid(-1, WNOHANG)) > 0) {
+        if(exists $kids{$kid}) {
+            message("PID $kid is ready for reaping");
+            gatherResults($kid);
+        }
+    }
+
+    sleep(10);
+
+    if(time - $startTime < 120) {
+        # don't do the slow, sequential checks until the easy processes are gone
+        next;
+    }
+
+    # check the children
+    foreach my $pid(keys %kids) {
+        # there's a hole here - $pid MIGHT exist but NOT be our process...
+        if (!kill 0,$pid) {
+            warn "process $pid already gone";
+            gatherResults($pid);
+            next;
+        }
+        if (-e "/proc/$pid") {
+            my $owner_id=(stat "/proc/$pid")[4];
+            if($owner_id != $<) {
+                warn "PID $pid does not belong to this user - gathering";
+                gatherResults($pid);
+                next;
+            }
+        }
+        message("Checking for results for PLATFORM $platformByPid{$pid} PID $pid");
+        if (waitpid($pid, WNOHANG) == $pid) {
+            gatherResults($pid);
+            next;
+        }
+    }
+}
+
+my $finished_at=time;
+alert("Build finished at ".localtime($finished_at));
+message("Total elapsed time: ".($finished_at - $started_at)." seconds");
+
+#------------------------------------------------------------------------------
+message("Sending mail or printing results");
+
+my $success = 1;
+MAIL_GROUP: foreach my $group (@groups) {
+    my $group_results=$all_results{$group};
+
+    if ($opts{mail}) {
+        my $dtag = strftime("%Y%m%d-%H%M%S",localtime);
+        my $mail_file = "$FindBin::Bin/../logs/$prog.$group.$dtag.log";
+        $mail_file =~ s|/[^/]+/\.\./|/|g;
+        debug("mail file: ".$mail_file);
+
+        my $mfh=new IO::Handle;
+        if(!open($mfh, "> $mail_file")) {
+            error("cannot open mail file $mail_file: $!");
+            next MAIL_GROUP;
+        }
+
+        my $sub;
+        my $this_success = display_results($mfh,$group,$group_results,\$sub);
+        $success = 0 unless $this_success;
+
+        # construct subject
+        if ($view) {
+            my $manually=($interactive)?" (manually invoked)":"";
+            $sub = "${manually}: $sub";
+            my $v;
+            if ($view eq "bde_devintegrator") {
+                $v = "DEV/latest";
+            }
+            elsif ($view eq "bde_integrator") {
+                $v = "BB/latest";
+            }
+            elsif ($view eq "bde_releaseintegrator") {
+                $v = "RELEASE";
+            }
+            else {
+                $v = $view;
+            }
+            $sub = "${v}${sub}";
+        }
+        print $mfh "\n=> $sub <=\n";
+
+        # append summary of our actions to end of mail file
+        print $mfh "\n=== Activity Log ===\n\n".
+            join('',@{ retrieve_messages() || [] })."\n".
+            join('',@{ retrieve_messages($group) || [] });
+        close $mfh;
+
+        my $mail_dst = join ",",@recipients;
+
+        # assume sdv2 has the right view started
+        if($mail_file =~ m{/view/([^/]+)}) {
+            system("ssh -2 sundev2 /usr/atria/bin/cleartool startview $1");
+        }
+        else {
+            system("ssh -2 sundev2 /usr/atria/bin/cleartool startview bde_devintegrator");
+        }
+        message(join " ",("ssh","-2","sundev2","/bb/bin/ratmail","-s",
+                         "\"$sub\"",$mail_file,$mail_dst)
+               );
+        system("ssh","-2","sundev2","/bb/bin/ratmail","-s","\"$sub\"",$mail_file,$mail_dst);
+        # 1/5 second speedbump to slow down mail flood
+        select undef,undef,undef,0.2;
+
+        ##debug to dump mail to screen
+        #my $fooh=new IO::Handle;
+        #open $fooh, $mail_file;
+        #print "<$group< $_" while <$fooh>;
+        #close $fooh;
+    } else {
+        my $soh=IO::Handle->new_from_fd(fileno(STDOUT),"w");
+        $success = 0 unless display_results($soh,$group,$group_results);
+    }
+}
+
+#------------------------------------------------------------------------------
+
+my $dtag = strftime("%Y%m%d-%H%M%S",localtime);
+my $resultsFile = "$resultsBase/bde_bldmgr.".($opts{id}?$opts{id}:"dev").".results.$dtag";
+message("Generating $resultsFile");
+
+my $rfh=new IO::Handle;
+open($rfh, "> $resultsFile") || fatal "cannot open results file: $!";
+
+print $rfh "#target,system,build,elapsed,failurePackage,logFile,htmlURL,unreachable,YNC-\n";
+while(my ($target, $target_ar) = each %all_results) {
+    foreach my $system_hr(@$target_ar) {
+        foreach my $build(@{$system_hr->{target_combos}}) {
+            print $rfh "$target,$system_hr->{system},$build,$system_hr->{elapsed},";
+
+            print $rfh ",,,";
+
+            if(exists $system_hr->{unreachable_hosts}) {
+                print $rfh "$system_hr->{unreachable_hosts}";
+            }
+
+            print $rfh ",";
+
+            if(grep /^$build$/,@{$system_hr->{notsup_targets}}) {
+                print $rfh "C";
+            }
+            elsif(grep /^$build$/,@{$system_hr->{ok_targets}}) {
+                print $rfh "Y";
+            }
+            elsif(grep /^$build$/,@{$system_hr->{err_targets}}) {
+                print $rfh "N";
+            }
+            else {
+                print $rfh "-";
+            }
+            if (exists $system_hr->{failure_logs}{$build}) {
+                for my $f (@{$system_hr->{failure_logs}{$build}}) {
+                    my ($dummy,$failurePackage,$logFile,$htmlURL) = @$f;
+                    #{$system_hr->{failure_logs}{$build}};
+                    print $rfh ",$failurePackage,$logFile,$htmlURL";
+                }
+            }
+            print $rfh "\n";
+        }
+    }
+}
+
+close($rfh);
+
+$|++;
+print Dumper(\@groups, \%all_results);
+print "\n";
+
+# hopefully, this will flush stdout!
+close(STDOUT);
+
+exit EXIT_FAILURE unless $success;
+exit EXIT_SUCCESS;
+
+#------------------------------------------------------------------------------
+#==============================================================================
+#------------------------------------------------------------------------------
+
+sub display_results ($$$;$) {
+    my ($fh,$group,$results_array,$subref) = @_;
+    my $oldfh=select($fh);
+
+    use constant ERR     => "N";
+    use constant OK      => "y";
+    use constant NOTSUP  => "c";
+    use constant NA      => "-";
+    use constant UNREACH => "X";
+    use constant SYSTEM  => "SYSTEM";
+    use constant DESCRIPTION  => "DESCRIPTION";
+    use constant BUILTON => "BUILD MACHINE";
+
+    # Results stored as "results per system", but we need "results per
+    # target" - so extract relevant info and store into:
+    #    @all_targets       - list of all *possible* targets
+    #    @systems           - list of systems
+    #    %results_by_target - hash of arrays
+    #
+    # NB - implicitly relies on system ordering in $results_array!
+
+    my @all_targets;
+    my @systems;
+    my $maxtargetlen = 0;
+    my $maxsystemlen = 0;
+    my $maxhostlen   = 0;
+    my $maxdesclen   = 0;
+    my %statcount=(ok=>0, err=>0, na=>0, unreach=>0,total=>0);
+
+    # get all *possible* targets (could vary per system), all systems
+    for my $result (@$results_array) {
+        for my $result_target (@{$result->{target_combos}}) {
+            push @all_targets, $result_target if
+              ! grep(/^$result_target$/, @all_targets);
+            $maxtargetlen = length($result_target) if
+              $maxtargetlen < length($result_target);
+        }
+        push @systems, $result->{system};
+        $maxsystemlen = length($result->{system}) if
+          $maxsystemlen < length($result->{system});
+        $maxhostlen = length($result->{host}) if
+          $maxhostlen < length($result->{host});
+        $maxdesclen = length($result->{build_desc}) if
+          $maxdesclen < length($result->{build_desc});
+    }
+    $maxsystemlen = length(SYSTEM)  if $maxsystemlen < length(SYSTEM);
+    $maxhostlen   = length(BUILTON) if $maxhostlen   < length(BUILTON);
+    $maxdesclen   = length(DESCRIPTION) if $maxdesclen   < length(DESCRIPTION);
+    @all_targets = sort @all_targets;
+
+    # get results per target
+    my %target_results;
+    for my $target (@all_targets) {
+        my @target_results;
+        for my $result (@$results_array) {
+            $statcount{total}++;
+            if (1 || $result->{host}) {
+                if (grep(/^$target$/, @{$result->{ok_targets}})) {
+                    push(@target_results, OK);
+                    $statcount{ok}++;
+                    next;
+                } elsif (grep(/^$target$/, @{$result->{notsup_targets}})) {
+                    push(@target_results, NOTSUP);
+                    $statcount{total}--;
+                    next;
+                } elsif (ref $result->{err_targets}) {
+                    if (grep(/^$target$/, @{$result->{err_targets}})) {
+                    push(@target_results, ERR);
+                    $statcount{err}++;
+                    next;
+                    }
+                } elsif ($result->{err_targets} eq 'ERROR') {
+                    # scalar ERROR is ERROR for everyone
+                    push @target_results, ERR;
+                    $statcount{err}++;
+                    next;
+                }
+
+                push @target_results, NA;
+                $statcount{na}++;
+                $statcount{total}--;
+            } else {
+                push @target_results, UNREACH;
+                $statcount{unreach}++;
+            }
+        }
+        $target_results{$target} = \@target_results;
+    }
+
+    my $resultstr="$group build ";
+    if ($statcount{err}+$statcount{unreach} == 0) {
+        $resultstr.="SUCCESSFUL";
+    } elsif ($statcount{ok} == 0) {
+        $resultstr.="FAILED";
+    } else {
+        my $pct=int(100*($statcount{ok}/$statcount{total}));
+        $resultstr.="$pct% [$statcount{ok} of $statcount{total}]";
+    }
+    print "** $resultstr\n\n";
+    if ($subref) {
+        $$subref=$resultstr;
+    }
+
+    # now print out matrix
+    my $indent = $maxtargetlen + 3;
+    my $colseplen = 3;
+    print " " x ($indent);
+    for (@systems) {
+        print "$_" . " " x $colseplen;
+    }
+    print "\n";
+    for my $target (@all_targets) {
+        print "$target" . " " x ($indent - length($target));
+        my $systems_i = 0;
+        for my $result (@{$target_results{$target}}) {
+            use integer;
+            my $leadspaces = length($systems[$systems_i]) / 2;
+            --$leadspaces if (length($systems[$systems_i]) % 2 == 0);
+            my $trailspaces = length($systems[$systems_i]) - $leadspaces - 1;
+            print " " x $leadspaces . "$result" . " " x $trailspaces;
+            $systems_i++;
+            print " " x $colseplen;
+        }
+        print "\n";
+    }
+    print "\n".
+      "'".OK     ."':OK  ".
+      "'".NOTSUP ."':Capabilities deny build  ".
+      "'".ERR    ."':Failed  ".
+      "'".UNREACH."':Unreachable  ".
+      "'".NA     ."':N/A  ".
+    "\n";
+
+    # print out summary of what machines were built on
+    #print "\n\n" . SYSTEM . " " x ($maxsystemlen - length(SYSTEM) + 3) .
+    #  BUILTON . "\n\n";
+    printf "\n\n%-*s %-*s %*s %*s\n\n",$maxsystemlen+2,SYSTEM,$maxdesclen+2,DESCRIPTION,$maxhostlen+3, BUILTON,15,"BUILD TIME";
+    for my $results (@$results_array) {
+        #print "$results->{system}" .
+        #  " " x ($maxsystemlen - length($results->{system}) + 3);
+        printf "%-*s %-*s ",$maxsystemlen+2,$results->{system},$maxdesclen+2,$results->{build_desc};
+        printf "%*s %*s\n",$maxhostlen+3,$results->{host},15,$results->{elapsed}." seconds";
+    }
+
+    # print out error summary per system
+    for my $results (@$results_array) {
+        next if $results->{host} and !$results->{unreachable_hosts} and
+          ! @{$results->{err_targets}};
+
+        print "\n======== ERROR SUMMARY FOR $results->{system} ($results->{build_desc}) ========\n";
+        print "\nUNREACHABLE HOSTS: $results->{unreachable_hosts}\n" if
+          $results->{unreachable_hosts};
+        if (1 || $results->{host}) {
+            my %err_targets = map { ($_, 1) } @{$results->{err_targets}};
+            foreach my $err_target (sort keys %err_targets) {
+                print "\ntarget $err_target FAILED\n";
+                # The drive part (e: or d:) sometimes goes away.
+                my $errMsgs = $results->{err_msgs}->{$err_target};
+                if ("ARRAY" eq ref $errMsgs) {
+                    if(defined $enableHtmlOutput) {
+                        my $failurePackage= "x_x";
+                        my $logFile = "Failed build output for $group $results->{system} "
+                            ."$results->{build_desc} $err_target";
+                        my $htmlURL = html_copy($logFile,"$htmlOutputBase$datePathPart", $errMsgs);
+                        print "$htmlURL\n";
+                        push @{$results->{failure_logs}{$err_target}}, [$err_target, $failurePackage, "", $htmlURL];
+                    }
+                    next;
+                }
+                for my $err ($errMsgs =~ /\[(.*?)\]/g) {
+                    # TODO quick Windows -> Unix conversion.  Parametrize this!
+                    if(  $err=~m{[DE]:[/\\]}i
+                      || $err=~m{\\}i) {
+                        my $originalErrTarget=$err;
+                        $err=~s{\\}{/}g;
+                        # w32 uses e:/clearcase/bdebuild_     prefixes
+                        # w64 uses d:/clearcase/bdebuild_w64_ prefixes
+                        # The drive part (e: or d:) sometimes goes away.
+                        $err=~s{([de]:)?/clearcase/bdebuild_(w64_)?}{/view/}i;
+                        $err=~s{(d:)?/views/}{/view/}i;
+                        $err=~s{(?<!/bbcm)/infrastructure}{/bbcm/infrastructure}i;
+                        $err=~s{(?<!/bbcm)/api}{/bbcm/api}i;
+                        print "$err_target-FIXUP: $originalErrTarget -> $err\n";
+                    }
+
+                    print "$err\n";
+                    if ($err=~m!(/view.*)!) {
+                        my $logFile = $1;
+                        deep_copy($logFile, "$logArchiveBase$datePathPart")
+                                        if defined $enableLogArchive;
+                        if(defined $enableHtmlOutput) {
+                            my $htmlURL = html_copy($logFile, "$htmlOutputBase$datePathPart");
+                            print "$htmlURL\n";
+                            my $failurePackage="??";
+                            if($logFile=~m{/(?:(?:groups|enterprise|wrappers)/[^/]+|adapters|applications|legacy)/([^/]+)}) {
+                                $failurePackage=$1;
+                            }
+                            push @{$results->{failure_logs}{$err_target}}, [$err_target, $failurePackage, $logFile, $htmlURL];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    print "\n";
+
+    select $oldfh;
+    return $statcount{err}+$statcount{unreach};
+}
+
+#------------------------------------------------------------------------------
+
+sub usage(;$) {
+    print STDERR "!! @_\n" if @_;
+
+    local $"=','; #interpolate arrays using comma separator
+    my $DEFAULT_JOBS=DEFAULT_JOBS;
+
+    print STDERR <<_USAGE_END;
+Usage: $prog [options] <group|package>
+
+Local options:
+  --config     | -k <file>      specify alternate configuration file
+  --debug      | -d             debug: may be specified multiple times
+  --help       | -h             usage information (this text)
+  --id         | -i <id>        optional configuration specialisation switch
+  --mail       | -m             send output as email (via /bb/bin/ratmail)
+  --recipients | -r <email>     send mail to the selected recipient(s)
+                                  e.g. -m foo\@bloomberg.com,bar\@bloomberg.com
+                                  default: $default_recipient
+  --platform   | -p <p>[:<h>]   build for selected <p>latform and optional
+                                <h>ost, from: $available_platforms
+                                  e.g.: -p sun,win:192.168.10.4
+                                  default: @default_platforms
+  --quiet      | -q             set no verbose even when interactive
+  --verbose    | -v             verbose: may be specified multiple times
+                                  default: 1 when interactive, 0 otherwise
+                                  meaning: 1 - basic messages
+                                           2 - add sent requests
+                                           3 - add recieved responses
+  --where      | -w <dir|view> where (dir) or who (view) to build from
+
+Passed to build:
+  --after      | -A <target>    make explicit target(s) after regular build
+  --before     | -B <target>    make explicit target(s) before regular build
+  --check      | -C             perform 'checkin' code verification
+                                (cross-platform: specify only one --platform)
+  --define     | -D <macro>     define one or more makefile macro overrides:
+                                <macro>[=<value>][,<macro>[=<value>]...]
+  --compiler   | -c <comp>      compiler definition for system (default: 'def')
+  --express    | -e             express build (do not build or run test drivers)
+  --flags      | -f <flags>     optional arbitrary flags to pass to build:
+                                <flag>[=<value>][,<flag>[=<value>]...]
+  --jobs       | -j [[-]<jobs>] build in parallel up to the specified number of
+                                jobs (default: $DEFAULT_JOBS jobs). Overridden
+                                by 'serial' option in config, may be overridden
+                                in turn by prefixing jobs number with '-'.
+  --make       | -M <target>    make explicit target(s) only (e.g.: 'buildtest')
+                                instead of entering normal build process
+  --nodepend   | -n             do not build dependent packages (not with groups)
+  --options    | -o             specify options file (default: default.opts)
+  --rebuild    | -R             force rebuild makefiles even if up to date
+  --serial     | -s             build in serial (equivalent to -j1)
+  --target     | -t <target>    build selected build-type targets, in the form:
+                                <dbg|opt>[_exc][_mt][_pure][_ndebug]
+                                e.g.: -t dbg_exc,dbg_exc_mt
+                                default: see configuration
+
+Example: $prog -p sun,ibm -t dbg_mt,dbg_mt_exc -dvvvj5 -w bde_integrator bdes
+_USAGE_END
+}
+
+#------------------------------------------------------------------------------

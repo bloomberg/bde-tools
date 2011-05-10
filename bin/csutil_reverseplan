@@ -1,0 +1,16 @@
+#!/bbs/opt/bin/perl -w -p
+
+/^op:\t/ && do {
+  chomp;
+  s/^op:\t//;
+  my %f=split /\t/;
+
+  do {
+    my $t=$f{target_path};
+    $f{target_path}=$f{source_path};
+    $f{source_path}=$t;
+  } if exists $f{target_path} && exists $f{source_path};
+
+  $_ = join("\t","op:", map { ($_=>$f{$_}) } sort keys %f).$/;
+};
+

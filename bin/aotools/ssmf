@@ -1,0 +1,469 @@
+#!/bbs/opt/bin/perl
+
+use strict;
+use warnings;
+
+#     File::Slurp not yet installed, remove the slurp subroutine and
+#     uncomment the use line when it does get installed.
+# use File::Slurp qw( slurp );
+
+use List::Util qw( first min );
+
+# slurp a file
+sub slurp {
+    my $name = shift;
+    open my $fh, '<', $name or die "failed to open $name for read: ($!)";
+    local( $\ ) unless wantarray;
+    return <$fh>;
+}
+
+# slurp the piped output of a command
+sub slurpy {
+    my $name = shift;
+    open my $fh, '-|', $name or die "failed to open $name for read: ($!)";
+    local( $\ ) unless wantarray;
+    return <$fh>;
+}
+
+sub usage {
+    print <<"END_OF_USAGE";
+Usage: $0 [options] uorlist [...]
+  Options:
+    --makefile  --mf  -m      # name[,name...] tasks to restrict makefile search
+                              # (option can be repeated or a list can be used:
+			      #  -m ibig -m jbig,ioibig
+			      # would limit the output to the 3 bigs specificed
+    --noweak                  # exclude weak deps from uor files (see below)
+    --force           -f      # refresh makefile info cache
+    --verbose         -v      # give additional output (repeat for even more)
+    --help            -h      # this help information
+
+  uorlist:
+    uor[,uor...]              # one or more uors
+    uor.dep                   # the dep file for the specified uor
+    file                      # a dependency file, does not need to be an
+                              # officially installed dep file
+
+  A uorlist can contain either the name of a uor (comtains no slash or
+  dot), or a file (contains a slash or a dot).  If a file is looks like
+  NAME.dep and there is no file in the current directory with that name,
+  then as long as NAME specifies a valid uor the .dep metadata file for
+  that uor will be used.  A file can contain comments (ignored), blank
+  lines (ignored), or normal dependency lines.  Strong dependencies (a
+  uorname by itself) will always be added to the uorlist.  Weak dependencies
+  (a uorname preceeded by "weak:") will be added to the uorlist unless
+  the --noweak option has been specified.
+
+  If there is only one uorlist, a makefile (of the filtered group if -m
+  option was specified) will be displayed if it includes any of the uors in
+  the uorlist.  With -v option, each occurence of a uor will be shown as
+  well with the position (numbered from the end to make higher numbers
+  correspond to higher level libraries) of each time it occurs.
+
+  If there is more than one uorlist, this program uses the uorlists as a
+  ordering.  Any time a uor from one list occurs in a makefile, all uors
+  from subsequent lists must follow it in that makefile.  Any time a uor
+  from a subsequent list does not show up, or does not follow the initial
+  entry of the predecessor uor, it is displayed as an error.  If a uor
+  from a subsequent list appears after the initial entry for the
+  predecessor, but does not appear after the final entry for the
+  predecessor, it is displayed as a warning.  (Multiple entries for the
+  same uor are necessary to deal with cyclic references, but ssmf does
+  not any knowledge of how to deal with cycles itself - the warnings
+  are provided to assist anyone clever enough to address the cycles.)
+
+  A cache is kept for each makefile listing the libraries in its LIBS
+  macro.  When a makefile is being considered, the original makefile
+  is examined and if the file has changed, the cache info is recomputed
+  and saved.  If the force option was specified, all makefiles being
+  used will have their cache rebuilt.
+END_OF_USAGE
+}
+
+my $help;
+my $force    = 0;
+my $verbose  = 0;
+my @mffilter = ( );
+my $weak     = 1;
+
+use Getopt::Long;
+
+unless (GetOptions(
+	     "makefile|mf|m=s@" => \@mffilter,
+	     "weak|w!"          => \$weak,
+	     "force|f"          => \$force,
+	     "verbose|v:+"      => \$verbose,
+	     "help|h"           => \$help,
+	)) {
+    usage();
+    exit 1;
+}
+
+if ($help) {
+    usage();
+    exit 0;
+}
+
+sub file_expand {
+    my $file = shift;
+    FINDFILE:
+    { unless (-f $file) {
+	if (my ($uor) = $file =~ /(.*)\.dep$/) {
+	    my $base_dir = `bde_find.pl $uor`;
+	    chomp $base_dir;
+	    if (-d "$base_dir/.") {
+		for my $try ("$base_dir/group/$uor.dep",
+			"$base_dir/package/$uor.dep") {
+		    if (-f $try) {
+			$file = $try;
+			last FINDFILE;
+		    }
+		}
+	    }
+	}
+	die "Couldn't find a file for: $file\n";
+    } }
+    open my $fd, '<', $file
+    or die "Open failed for $file ($!)\n";
+
+    my @list;
+    while (my $line = <$fd>) {
+	chomp $line;
+	next if $line =~ /^\s*$/;
+	next if $line =~ /^\s*#/;
+	$line =~ s/^\s+//;
+	$line =~ s/\s+$//;
+	if (my ($cond,$uor) = $line =~ /^([^:]+?)\s*:\s*(.*)$/) {
+	    push @list, $1 if $cond eq 'weak' && $weak;
+	}
+	else {
+	    push @list, $line;
+	}
+    }
+
+    return @list;
+}
+
+
+# We keep an array of libsets.
+# The array is indexed by the hierarchy level - we want to ensure
+# that every lib at any level is loaded after libs in earlier
+# levels, and that if any lib from an earlier level was loaded
+# then all libraries from subsequent levels must be loaded too.
+#
+# An individual libset is a hash.
+
+my @libsets;
+my %lib2level;
+
+while (@ARGV) {
+    my $level = scalar @libsets;
+    my @thislist =
+	map {
+	    die "lib ($_->[1]) listed twice at different levels"
+		if defined $lib2level{$_->[0]};
+	    $_->[0]
+	}
+	map {
+	    if (m{ [./] }x) {
+		my $file = $_;
+		map {
+		    [ $_, "$file:$_" ]
+		} file_expand($file);
+	    }
+	    else {
+		[ $_, $_ ]
+	    }
+	}
+	split ',', shift;
+    @lib2level{@thislist} = ($level) x scalar @thislist;
+    push @libsets, \@thislist;
+}
+
+unless (@libsets) {
+    print STDERR "need at least one set of libraries to search for\n";
+    usage();
+    exit 1;
+}
+
+my @biglist =   map {
+		    /^(.*)\.tsk/ ? ( $1 )
+		    :              ( )
+		} slurp( "/bbsrc/big/biglist.txt" );
+
+if (@mffilter) {
+    my %bigs;
+    @bigs{@biglist} = (1) x @biglist;
+    if (my @nonetasks = grep { ! $bigs{$_} } @mffilter) {
+	printf STDERR
+	    "Unrecognized task%s in --makefile argument: @nonetasks\n",
+	    (@nonetasks == 1 ? '' : 's');
+	exit 1;
+    }
+    @biglist = @mffilter;
+}
+
+my %is_important;
+@is_important{@biglist} = @biglist;
+
+my @makefile_dir_globs = (
+	'/bbsrc/big',
+	'/bbsrc/twoline',
+	'/bbsrc/bbdb',
+	'/bbsrc/app/rmdbex',
+	'/bbsrc/bbeserv',
+	'/bbsrc/apitradsys',
+	'/bbsrc/wgtsvr/*',
+	'/bbsrc/datalic/dllu_refresh',
+	'/bbsrc/bb_batch',
+    );
+
+my @makefiles;
+
+{
+    my %seen;
+
+    @makefiles =			#    /-> (read the comments bottom up)
+	grep {				#   / ignore anything that is not
+	    m{.*/([^/]+).mk$}		#   / important or is a dup (either both
+	    && $is_important{$1}	#   / .mk and .mk,v were found or same
+	    && ! $seen{$1}++		#   / name found in more than one dir)
+	}				#   /
+	map { $_ =~ s/,v$//; $_ }	#  /  strip any trailing ,v
+	map { glob "$_/*.mk $_/*.mk,v" }# / for *.mk and *.mk,v
+	@makefile_dir_globs;		#/scan the dirs
+}
+
+die "No makefiles were found!"
+    unless @makefiles;
+
+if ($verbose > 1) {
+    my $line1 =
+	(scalar @mffilter)
+	    ? "Requested makefiles found:"
+	    : "In use makefiles found:";
+    print( join( "\n\t", $line1, @makefiles ), "\n" );
+}
+
+# These get data of the form:
+# [ makefilename, [ [ callerlib, [ deplib ... ] ], ... ] ], ...
+# e.g.:
+#      (  [ mf1, [ [ caller1, [ dep1, dep2, dep3] ],
+#                  [ caller2, [ dep4 ] ],
+#                  [ caller3, [ dep5, dep6 ] ], ] ],
+#         [ mf2, [ [ caller4, [ dep7 ] ],
+# etc. etc.
+#
+# i.e. at each level, there is a list of pairs, within each pair the
+# first item is a single string but the second is a list of pairs
+# (at the bottom level, the list is strings).
+my @error_items;
+my @warn_items;
+
+
+sub read_makefile_liblist {
+    my ($makefile, $command_base) = @_;
+    my $errout = "/tmp/gmake.$$";
+    # $makelist = slurpy "$command_base var-xp-LINKSHLIBS var-xp-LIBS_PRE var-xp-PLINK_LIBPATH var-xp-LIBS 2>$errout";
+    my $makelist = slurpy "$command_base var-xp-LIBS 2>$errout";
+    unless( defined $makelist ) {
+	print STDERR "Failed to expand makefile: $makefile\n";
+	print STDERR "         command used was: $command_base [varname...]\n";
+	if (-s $errout) {
+	    my $err = slurpy $errout;
+	    print STDERR "        stderr output was: $err";
+	}
+	unlink $errout;
+	return;
+    }
+    unlink $errout;
+
+    return [ split /\s+/, $makelist ];
+}
+
+sub get_makefile_liblist {
+    my $makefile = shift;
+
+    my $makefile_base = $makefile;
+    $makefile_base =~ s{/$}{};
+    $makefile_base =~ s{.*/}{};
+
+    my $cache_dir = "/bb/csdata/cache/aotools/ssmf";
+    my $cache_file = "$cache_dir/$makefile_base";
+
+    use Storable;
+
+    # read in the lib list used in this makefile
+    # Usually, we use the checked out makefile, but if it isn't around
+    # we'll use the rcs original.
+    my $command_base =
+	-f $makefile
+	    ? "/usr/local/bin/gmake -f $makefile -f /bbsrc/tools/data/ap-extra.mk"
+	: -f "$makefile,v"
+	    ? "co -p -q $makefile,v | /usr/local/bin/gmake -f - -f /bbsrc/tools/data/ap-extra.mk"
+	:      undef;
+    unless( defined $command_base ) {
+	print STDERR "Can't find $makefile anymore?\n";
+	return;
+    }
+    my $use_makefile_age = -M _;	# set by the last -f that was run
+    if ( (!$force) && -f $cache_file && -M _ < $use_makefile_age ) {
+	return retrieve( $cache_file );
+    }
+    else {
+	my $makelist = read_makefile_liblist( $makefile, $command_base );
+	store( $makelist, $cache_file );
+	return $makelist;
+    }
+}
+
+
+sub scan_makefile {
+    my( $makefile ) = shift;
+
+    my $makelist = get_makefile_liblist( $makefile );
+    my $makelinepos = 0;
+    my @levelfirst;
+    my @levellast;
+    my @levellibused;
+    our %libfirst = ( );
+    my  %liblast;
+    our %libdetail = ( );
+
+    # register the position(s) of all requested libs
+    while ($makelinepos < @$makelist) {
+	my $entry = $makelist->[$makelinepos++];
+	if(        $entry =~ m{^-l([^.]*)(\..*)?$}
+	        or $entry =~ m{/lib([^/]+)\.a$} ) {
+	    my $lib = $1;
+	    my $level = $lib2level{$lib};
+	    next unless defined $level;
+	    $levelfirst[$level] ||= $makelinepos;
+	    $libfirst{$lib}     ||= $makelinepos;
+	    $levellast[$level]    = $makelinepos;
+	    $liblast{$lib}        = $makelinepos;
+	    $levellibused[$level]{$lib}++;
+	    push( @{ $libdetail{$lib} }, $makelinepos );
+	}
+    }
+
+    # We don't care too much about "early" levels.
+    # The lowest level that is actually used has no particular requirements on
+    # that use; but all subsequent levels need to have every library not only
+    # specified but also follow libraries from previous levels.
+    my $maxlevel = $#libsets;
+
+    # $minlevel is the lowest level for which libraries were found
+    my $minlevel = first { defined $levelfirst[$_] } 0..$maxlevel;
+
+    # if no specified library was found, nothing to report
+    if( ! defined $minlevel ) {
+	print "$makefile: none of the libraries requested were found\n"
+	    if $verbose > 1;
+	return;
+    }
+
+    # some libraries were found, set up the display info for each
+    for my $lib (keys %libfirst) {
+	my $mapsub =
+	    $ENV{SSMF_SEKRIT} ? sub { return $_[0] }
+	    :			sub { return $makelinepos - $_[0] }
+	    ;
+	my $detail = join( ',', map { $mapsub->($_) } @{ $libdetail{$lib} } );
+	$libdetail{$lib} = $lib."($detail)";
+    }
+
+    sub listlibs {
+	our %libfirst;
+	our %libdetail;
+	for my $lib (@_) {
+	    defined($libfirst{$lib})
+		or $libfirst{$lib} = -1;
+	    defined($libdetail{$lib})
+		or $libdetail{$lib} = $lib."()";
+	}
+	return
+	    map  { $libdetail{$_} }
+	    sort { $libfirst{$a} <=> $libfirst{$b} } @_;
+    }
+    # if only highest level libraries were found, nothing to report
+    # (there is no library that *must* follow these ones)
+    if( $minlevel == $maxlevel ) {
+	if( $maxlevel == 0 ) {
+	    if( $verbose ) {
+		print "$makefile: ",
+		    join( ", ", listlibs(keys %libfirst) ),
+		    "\n";
+	    } else {
+		print "$makefile\n";
+	    }
+	} elsif( $verbose ) {
+	    print "$makefile: ",
+		    "only lowest level libraries requested were found: ",
+		    join( ", ", listlibs(keys %libfirst) ),
+		    "\n",
+	}
+	return;
+    }
+
+    # if any library from an earlier level was found, all libraries in higher
+    # levels must also be found, and be later in the series than any earlier
+    # library.
+    my @mf_error_items;
+    my @mf_warn_items;
+
+    for my $fromlevel ( $minlevel .. ($maxlevel-1) ) {
+	for my $fromlib ( sort keys %{ $levellibused[$fromlevel] } ) {
+	    my @fl_error_items;
+	    my @fl_warn_items;
+	    my $from_first = $libfirst{ $fromlib };
+	    my $from_last  = $liblast{  $fromlib };
+	    for my $tolevel ( ($fromlevel+1) .. $maxlevel ) {
+		for my $tolib ( sort @{ $libsets[$tolevel] } ) {
+		    my $topos = $liblast{$tolib};
+		    if( (! defined $topos ) || ( $from_first > $topos ) ) {
+			push @fl_error_items, listlibs($tolib);
+		    } elsif( $from_last > $topos ) {
+			push @fl_warn_items, listlibs($tolib);
+		    }
+		}
+	    }
+	    push @mf_error_items, [ listlibs($fromlib), \@fl_error_items ]
+		if @fl_error_items;
+	    push @mf_warn_items,  [ listlibs($fromlib), \@fl_warn_items  ]
+		if @fl_warn_items;
+	}
+    }
+
+    push @error_items, [ $makefile, \@mf_error_items ]
+	if @mf_error_items;
+    push @warn_items,  [ $makefile, \@mf_warn_items  ]
+	if @mf_warn_items;
+}
+
+
+for my $makefile (@makefiles) {
+    scan_makefile( $makefile );
+}
+
+sub dump_item {
+    my( $mf_from_to, $message ) = @_;
+    print $message, "\n";
+    for my $mfset ( @$mf_from_to ) {
+	my( $mf, $from_to ) = @$mfset;
+	print "    $mf:\n";
+	for my $fromset (@$from_to) {
+	    my( $fromlib, $tolibs ) = @$fromset;
+	    print "        $fromlib\n";
+	    print "           -> ", join( " ", @$tolibs ), "\n";
+	}
+    }
+}
+
+dump_item( \@error_items, "Libraries which do not follow caller *** UPDATE REQUIRED ***" )
+    if @error_items;
+dump_item( \@warn_items, "Libraries which do not follow last occurance of caller (usually OK)" )
+    if @warn_items;
+
+
+exit 0;

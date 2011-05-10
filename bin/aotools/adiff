@@ -1,0 +1,36 @@
+#!/bin/ksh
+
+typeset co_opt=-p
+
+if [[ "$1" = -h* ]]
+then
+    sed -e 's/	//' <<EOF
+	adiff [-v<versionnumber>] file...
+	
+		compares the local copy of (each) file against the
+		version from the repository.
+	
+		If the -v option is provided, that version is compared,
+		otherwise the most recent version is compared.
+	
+		The -v option is probably not useful when multiple file
+		arguments are being provided.
+
+		When the underlying aco is converted to use the
+		subversion repository instead of the local RCS one,
+		there may be the facility for named versions instead
+		of only having per-file incrementally numbered versions.
+EOF
+    exit 0
+fi
+
+if [[ "$1" = -v* ]]
+then
+    co_opt=-p${1#-v}
+    shift
+fi
+
+for i in "$@"
+do
+    aco $co_opt $i | diff -u - $i
+done

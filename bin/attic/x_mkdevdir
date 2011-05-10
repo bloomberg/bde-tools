@@ -1,0 +1,1051 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+Getopt::Long::Configure("no_ignore_case", "bundling_override");
+
+# global variables (fake constants are capitalized
+use vars qw($EXT_DEP $DIR_LIB $DIR_INCLUDE $DIR_PACKAGE $DIR_GROUP
+            %g_option $g_prog $g_platform %g_sysIncPath
+            $g_makefileTempl @g_makeMode $g_srcExt $g_hdrExt $g_CC
+            );
+
+# ============== global var init ============== #
+
+# "fake" constants
+$EXT_DEP = "dep";
+$DIR_LIB = "lib/sun5";
+$DIR_INCLUDE = "include";
+$DIR_PACKAGE = "package";
+$DIR_GROUP = "group";
+
+# global variables
+$g_prog = "mkdevdir";
+$g_platform = "sun5";
+
+# system include path for each platform.
+# used to filter out system include files when generating dependencies
+%g_sysIncPath = ("sun5" => ["/usr/include", "/usr/local/lib"],
+                 );
+
+# the makefile template
+# p.s. remember that the commands are preceded by a TAB!!
+$g_makefileTempl = <<'TEMPL';
+CC          = ##CC##
+OPTS        = # user defined options. In command line, use 'make OPTS="..."'
+EXCEPT_OPT  = ##EXCEPT_OPT##
+CFLAGS      = $(INCLUDES) $(OPTS) $(EXCEPT_OPT)
+OBJS        = ##OBJS##
+OBJS_PURE   = ##OBJS_PURE##
+OBJS_DEBUG  = ##OBJS_DEBUG##
+OBJS_OPTIM  = ##OBJS_OPTIM##
+OBJS_NDEBUG = ##OBJS_NDEBUG##
+OBJS_QUANT  = ##OBJS_QUANT##
+HEADERS     = ##HEADERS##
+INCLUDES    = ##INCLUDES##
+LIBS        = ##LIBS##
+EXT         = ##EXT##
+
+all: a.out
+
+a.out: $(OBJS) $(HEADERS)
+	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
+
+a.out.lib: $(OBJS) $(HEADERS)
+
+##RULES##
+%.o: %.$(EXT)
+	$(CC) -c $(CFLAGS) $<
+
+%.o: %.t.$(EXT)
+	$(CC) -c $(CFLAGS) $<
+
+# rules to compile purify object and executable files
+
+a.out.pure: $(OBJS_PURE) $(HEADERS)
+	purify $(CC) $(LDFLAGS) -g $(OBJS_PURE) $(LIBS) -o $@
+
+a.out.pure.lib: $(OBJS_PURE) $(HEADERS)
+
+##RULES_PURE##
+%.pure.o: %.$(EXT)
+	purify $(CC) -c -o $@ $(CFLAGS) -g $<
+
+%.pure.o: %.t.$(EXT)
+	purify $(CC) -c -o $@ $(CFLAGS) -g $<
+
+# rules to compile debug object and executable files
+
+a.out.debug: $(OBJS_DEBUG) $(HEADERS)
+	$(CC) $(LDFLAGS) -g $(OBJS_DEBUG) $(LIBS) -o $@
+
+a.out.debug.lib: $(OBJS_DEBUG) $(HEADERS)
+
+##RULES_DEBUG##
+%.debug.o: %.$(EXT)
+	$(CC) -c -o $@ $(CFLAGS) -g $<
+
+%.debug.o: %.t.$(EXT)
+	$(CC) -c -o $@ $(CFLAGS) -g $<
+
+# rules to compile optimum object and executable files
+
+a.out.optim: $(OBJS_OPTIM) $(HEADERS)
+	$(CC) $(LDFLAGS) $(OBJS_OPTIM) $(LIBS) -o $@
+
+a.out.optim.lib: $(OBJS_OPTIM) $(HEADERS)
+
+##RULES_OPTIM##
+%.optim.o: %.$(EXT)
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+%.optim.o: %.t.$(EXT)
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+# rules to compile ndebug object and executable files
+
+a.out.ndebug: $(OBJS_NDEBUG) $(HEADERS)
+	$(CC) $(LDFLAGS) -DNDEBUG $(OBJS_NDEBUG) $(LIBS) -o $@
+
+a.out.ndebug.lib: $(OBJS_NDEBUG) $(HEADERS)
+
+##RULES_NDEBUG##
+%.ndebug.o: %.$(EXT)
+	$(CC) -c -o $@ $(CFLAGS) -DNDEBUG $<
+
+%.ndebug.o: %.t.$(EXT)
+	$(CC) -c -o $@ $(CFLAGS) -DNDEBUG $<
+
+# rules to compile quantify object and executable files
+
+a.out.quant: $(OBJS_QUANT) $(HEADERS)
+	quantify $(CC) $(LDFLAGS) $(OBJS_QUANT) $(LIBS) -o $@
+
+a.out.quant.lib: $(OBJS_QUANT) $(HEADERS)
+
+##RULES_QUANT##
+%.quant.o: %.$(EXT)
+	quantify $(CC) -c -o $@ $(CFLAGS) $<
+
+%.quant.o: %.t.$(EXT)
+	quantify $(CC) -c -o $@ $(CFLAGS) $<
+
+
+clean: FORCE
+	-for F in $(OBJS) a.out $(OBJS_PURE) $(OBJS_PURE:.pure.o=.pure_*.o) a.out.pure $(OBJS_DEBUG) a.out.debug $(OBJS_OPTIM) a.out.optim $(OBJS_NDEBUG) a.out.ndebug $(OBJS_QUANT) $(OBJS_QUANT:.quant.o=.quant_*.o) a.out.quant; do if [ -f $$F ]; then /bin/rm $$F; fi; done
+
+FORCE:
+TEMPL
+
+@g_makeMode = ("pure", "debug", "optim", "ndebug", "quant");
+
+# ============== prototypes ============== #
+
+sub usage();
+sub dbgPrint($@);
+sub getGroup($);
+sub getGroupDir($;$);
+sub getPackageDir($);
+sub parseName($);
+sub importComp($\@;$\@);
+sub cleanDir($);
+sub findInclude ($);
+sub procCompDepend($;$);
+sub procPackageDepend($;$);
+sub procGroupDepend($;$);
+sub getPackageDepend($;$);
+sub getGroupDepend($);
+sub topoSort(\%\@;$);
+sub makeMakefile($\@;\@\@$);
+sub main();
+
+# ============== subroutines ============== #
+
+sub usage() {
+  print <<"USAGE";
+$g_prog - development directory creation utility
+
+Usage: $g_prog \[options\] component
+Options:
+  --c-mode, -C             Create development directory for a C component.
+
+  --debug, -d              Print debug messages.
+
+  --dest, -D <path>        Destination path to create the files.
+
+  --exception, -E          Enable exceptions in the make file generated.
+
+  --grouppath, -G <path>   Path to search for groups.
+                           May be used multiple times to define multiple
+                           search path.
+
+  --help                   This help.
+
+  --interactive, -i        Prompt before overwriting existing files.
+
+  --notestdriver, -T       Omit build rule for test driver in the makfile.
+                           Useful for building object files for libraries.
+
+  --tree, t                Print dependency tree.
+
+Arguments:
+  component                The component name.  If a period (.) is specified,
+                           then the current directory name is used.
+USAGE
+
+  exit 0;
+}
+
+# prints formatted debug message with caller info in the msg
+sub dbgPrint($@) {
+  my $func = "dbgPrint";
+  my $caller = shift;
+  print STDERR "debug: $caller: ", @_ if $g_option{debug};
+  return 1;
+}
+
+# warns formatted message with caller info in the msg
+my @warnLevel=("Info",
+               "Warning",
+               "Error",
+               );
+
+sub Warn($$@) {
+  my $func = "Warn";
+  my $caller = shift;
+  my $mode = shift;
+  $mode = 0 unless ($mode < @warnLevel && $mode >= 0);
+  warn "$caller: ($warnLevel[$mode]) ", @_;
+}
+
+
+# gets the group from a name.  This is useful in case the naming
+# convention ever changes
+sub getGroup($) {
+  my $func = "getGroup";
+  my $name = shift || return;
+  my ($group) = $name =~ /^(.{3})/;
+  return $group;
+}
+
+
+# caches previously found valid group root path for each group
+my %groupRootCache;
+
+# gets group directory for the group.
+sub getGroupDir($;$) {
+  my $func = "getGroupDir";
+  my ($group, $emptyCache) = @_;
+  my ($groupDir, $groupRoot);
+  return unless $group;
+
+  %groupRootCache = () if ($emptyCache);
+
+  # check cache first
+  return "$groupRootCache{$group}/$group" if ($groupRootCache{$group});
+
+  # search group dir in grouppath option
+  if ($g_option{"grouppath"} && @{$g_option{"grouppath"}}) {
+    foreach my $path (@{$g_option{"grouppath"}}) {
+      if (-d "$path/$group") {
+        $groupRoot = $path;
+        chop $groupRoot if $groupRoot =~ m!/$!;
+        $groupDir = "$groupRoot/$group";
+        last;
+      }
+    }
+  }
+
+  # search group dir from current working path
+  unless ($groupDir) {
+    my $pwd = `pwd`;
+    chomp $pwd;
+    ($groupDir, $groupRoot) = $pwd =~ m!^((.*?)/$group)/!;
+  }
+
+  # search group dir in cache
+  unless ($groupDir) {
+    my %isChecked; # track which dir we have already searched
+    foreach my $grp (keys %groupRootCache) {
+      next if $isChecked{$groupRootCache{$grp}};
+      $isChecked{$groupRootCache{$grp}} = 1;
+
+      if (-d "$groupRootCache{$grp}/$group") { # found it
+        $groupRoot = $groupRootCache{$grp};
+        $groupDir = "$groupRoot/$group";
+        last;
+      }
+    }
+  }
+
+  $groupRootCache{$group} = $groupRoot if ($groupRoot);
+
+  return $groupDir;
+}
+
+# gets package directory for the package
+sub getPackageDir($) {
+  my $func = "getPackageDir";
+  my $package = shift || return;
+  my $packageDir;
+
+  my $group = getGroup($package);
+  return unless ($group && $package);
+  my $groupDir = getGroupDir($group);
+  return unless $groupDir;
+
+  $packageDir = "$groupDir/$package" if (-d "$groupDir/$package");
+
+  return $packageDir;
+}
+
+
+# Removes any symlink in the directory that looks suspiciously like a
+# component's source file
+sub cleanDir($) {
+  my $func = "cleanDir";
+  my $dir = shift || ".";
+
+  opendir(DIR, $dir) or
+    Warn($func, 2, "Failed to open directory $dir: $!\n") and return;
+
+  my @files = readdir DIR;
+  foreach (@files) {
+    my $file = "$dir/$_";
+    if (-l $file && parseName($file)) {
+      # file is a symlink and filename has similar component construct
+      my $ans;
+      my $msg = "Remove symlink $file (y/n)?";
+      if ($g_option{"interactive"}) {
+        print $msg;
+        while (<>) {
+          chomp;
+          $ans = lc($_);
+          print("Invalid answer. $msg")
+            and next unless ($ans eq "y" || $ans eq "n");
+          last;
+        }
+      }
+
+      if (!$ans || $ans eq "y") {
+        unlink $file or
+          Warn($func, 2, "Failed to remove symlink $file\n") and next;
+        dbgPrint($func, "Symlink $file is removed\n");
+      }
+    }
+  }
+
+  closedir DIR;
+}
+
+
+=parseName
+
+Parses the given name into parts of a component.  The given name can be a
+file path, or it can be a component name.  A component name is assumed to be
+in the format "xxxy_zzzz", in which xxx is the group name, xxxy is the
+package name, and zzzz is the component subname.  A component's source file
+would have the basename same as the component's name.  The returned array
+consists of the following members: (<component name>, <group>, <package>,
+<subname>, <path>, <extension>)
+
+required arg:
+@_[0] - component name or path
+return:
+undef if group, package, and subname cannot be extracted
+In list context, the array described above
+In scalar context, the reference to the array
+
+=cut
+
+sub parseName($) {
+  my $func = "parseName";
+  my $name = shift || return;
+
+  # strip path and extension if this was a file path
+  my ($path, $comp, $ext) = $name =~ m!^(.*/|)(.*)\.([^.]*)$!;
+  $comp ||= $name;
+  my $group = getGroup($comp);
+  my ($package, $subName) = $comp =~ /^(.*?)_(.*)$/;
+
+  my @parts = ($comp, $group, $package, $subName, $path, $ext);
+  unless ($package && $group && $subName) {
+    return undef
+  } else {
+    return wantarray? @parts : \@parts;
+  }
+}
+
+
+=importComp
+
+Imports a component.  Searches for the component using the current working
+path or the specified optional argument.  Creates a directory for the
+component and creates symlinks to the original source files of the component.
+Returns the list of source files that were symlinked to.
+
+required arg:
+@_[0] - component name
+@_[1] - reference to an array that will be populated with imported component
+        source file paths
+optional arg:
+@_[2] - component directory.  Destination directory where the component will be
+        created.  If not set, the component name is used as the directory name
+@_[3] - reference to a list of file extensions to import for the component.
+        If not set, only $g_srcExt and $g_hdrExt files are imported
+return:
+1 if import succeeded
+2 if component has already been processed
+undef if failed
+
+=cut
+
+sub importComp($\@;$\@) {
+  my $func = "importComp";
+  my ($comp, $imported, $compDir, $extensions) = @_;
+
+  $compDir ||= ".";
+  $extensions = [$g_srcExt, $g_hdrExt] unless ($extensions && @$extensions);
+
+  my (undef, undef, $package) = parseName($comp);
+  Warn($func, 2, "Invalid component name \"$comp\"\n") and return unless($package);
+
+  my $packageDir = getPackageDir($package);
+  Warn($func, 2, "Cannot find package directory for package \"$package\"\n")
+    and return unless $packageDir;
+
+  # create component dir if necessary
+  mkdir($compDir, 0777) or die "Failed to mkdir $comp\n"
+    unless ($compDir eq "." || -e $compDir);
+  Warn($func, 2, "Directory \"$compDir\" either is not a directory, ",
+       "not writable, or not executable\n") and return
+         unless (-d $compDir && -x _ && -w _);
+
+  # create symlinks to the original component
+  foreach (@$extensions) {
+    my $srcFile = "$packageDir/$comp.$_";
+    my $dstFile = "$compDir/$comp.$_";
+    Warn($func, 1, "File $srcFile does not exist. Skip\n") and next
+      unless (-f $srcFile);
+    Warn($func, 1, "File $dstFile already exists.  Skip\n") and next
+      if (-f $dstFile);
+    eval{ symlink($srcFile, $dstFile); 1} or
+      Warn($func, 2, "Fatal exception trapped when creating symlinks.",
+           "(Does your filesystem support symlinks?)\n") and return;
+
+    push @$imported, $srcFile if ($imported);
+    dbgPrint($func, "Created symlink $dstFile to $srcFile\n");
+  }
+
+  return 1;
+}
+
+
+=findInclude
+
+Finds include files within a C/C++ source file.
+
+required arg:
+@_[0] - file to analyze for include files
+return:
+In list context, a list of include files found
+In scalar context, the reference to the list
+
+=cut
+
+sub findInclude ($) {
+  my $func = "findInclude ";
+  my $path = shift || return;
+  my @headers;
+
+  # open file and slurp
+  open(FILE, "<$path") or Warn($func, 2, "Failed to open file $path\n")
+    and return;
+  my $tmp = $/; $/ = undef;
+  my $content = <FILE>;
+  $/ = $tmp;
+  close FILE;
+
+  # strip comment
+  $content =~ s!/\*(.*?)\*/!!gs; # /* ...*/
+  $content =~ s!//[^\n]*!!g;     # // ....
+
+  while($content =~ /#include\s+(["<])(.+?)[">]/g) {
+    push @headers, $2;
+  }
+
+  dbgPrint($func, "Found inlcudes: ", join(" ", @headers), "\n");
+
+  return wantarray ? @headers : \@headers;
+}
+
+
+=procCompDepend
+
+Process and import local package component dependencies recursively
+
+required arg:
+@_[0] - component to process
+optional arg:
+@_[1] - component destination dir
+@_[2] - parent component that depends on this component
+return:
+none
+
+=cut
+
+my %processedComp;
+my %compDepGraph;
+
+sub procCompDepend($;$) {
+  my $func = "procCompDepend";
+  my ($comp, $parent) = @_;
+
+  my (undef, $group, $package) = parseName($comp);
+  Warn($func, 2, "Invalid component name \"$comp\"\n") and
+    return unless ($comp && $group && $package);
+
+  %compDepGraph = () unless $parent; # clear graph in first use
+
+  unless (exists $compDepGraph{$comp}) {
+    dbgPrint($func, "Add component $comp to graph\n");
+    # initialize node
+    $compDepGraph{$comp}{"parent"} = {};
+    $compDepGraph{$comp}{"child"} = {};
+  }
+  # add parent and child only if they are different
+  if ($parent && $parent ne $comp) {
+    $compDepGraph{$comp}{"parent"}{$parent}++;
+    $compDepGraph{$parent}{"child"}{$comp}++;
+  }
+
+  # mark component processed so any further recursion won't process it
+  return if $processedComp{$comp};
+  $processedComp{$comp} = 1;
+
+  # import the component.  If this is the first component (the main component),
+  # then import its test driver (not imported by default) as well.
+  my @files;
+  my @ext = (!$parent) ? ($g_hdrExt, $g_srcExt, "t.$g_srcExt") : ();
+  importComp($comp, @files, $g_option{"dest"}, @ext) or
+    Warn($func, 2, "Failed to import component $comp\n") and return;
+
+  # process each imported file
+  foreach my $file (@files) {
+    next if ($file =~ /\.t\.$g_srcExt$/); # skip test driver dependencies
+    my @headers = findInclude($file); # get includes from file
+    foreach my $hdr (@headers) {
+      # check if header looks like a component header
+      my ($currComp, $currGrp, $currPkg) = parseName($hdr);
+      dbgPrint($func, "Header $hdr is not a component header\n") and
+        next unless($currComp && $currGrp && $currPkg);
+
+      # import component if it's in the same package
+      procCompDepend($currComp, $comp) if ($currPkg eq $package);
+    }
+  }
+}
+
+
+=procPackageDepend
+
+Process package dependencies recursively
+
+required arg:
+@_[0] - package name
+optional arg:
+@_[1] - parent package the depended on this package
+return:
+none
+
+=cut
+
+my %processedPackage;
+my %packageDepGraph;
+
+sub procPackageDepend($;$) {
+  my $func = "procPackageDepend";
+  my ($package, $parent) = @_;
+  return unless $package;
+
+  %packageDepGraph = () unless $parent;
+
+  # we must add package to graph before we check whether
+  # it has been processed.  The fact that this function is called
+  # signifies that it is dependent by another package
+  unless (exists $packageDepGraph{$package}) {
+    dbgPrint($func, "Add package $package to graph\n");
+    # initialize node
+    $packageDepGraph{$package}{"parent"} = {};
+    $packageDepGraph{$package}{"child"} = {};
+  }
+  if ($parent) {
+    $packageDepGraph{$package}{"parent"}{$parent}++;
+    $packageDepGraph{$parent}{"child"}{$package}++;
+  }
+
+  return if $processedPackage{$package};
+  $processedPackage{$package} = 1;
+
+  # get all package dependencies for this package
+  my @paks = getPackageDepend($package);
+  dbgPrint($func,
+           "Found ".scalar(@paks)." dependent packages for package $package: ",
+           join(", ", @paks), "\n");
+
+  # for each dependent package, process its package dependencies
+  foreach (@paks) {
+    procPackageDepend($_, $package);
+  }
+}
+
+
+=getPackageDepend
+
+Extract package dependency from dep file
+
+required arg:
+@_[0] - package name
+optional arg:
+@_[1] - package directory
+return:
+In list context, an array of packages extracted
+In scalar context, reference to the arrray
+
+=cut
+
+sub getPackageDepend($;$) {
+  my $func = "getPackageDepend";
+  my ($package, $packageDir) = @_;
+
+  return unless $package;
+
+  # get path info unless optional package dir is given
+  $packageDir = getPackageDir($package) unless ($packageDir);
+  Warn($func, 2, "Cannot find package directory for package \"$package\"\n") and
+    return unless $packageDir;
+
+  my $depFile = "$packageDir/$DIR_PACKAGE/$package.$EXT_DEP";
+  Warn($func, 1, "Dep file $depFile either does not exist or is not readable\n") and
+    return unless (-f $depFile && -r _);
+
+  # open dep file and slurp
+  open(FILE, "<$depFile") or
+    Warn($func, 2, "Failed to open file $depFile: $!\n") and return;
+  my $tmp = $/; $/ = undef;
+  my $content = <FILE>;
+  $/ = $tmp;
+  close FILE;
+
+  $content =~ s!#[^\n]*!!g; # remove comment (lines with #)
+  my @libs = split /\s+/, $content; # dependency delimited by space or newline
+
+  return wantarray? @libs : \@libs;
+}
+
+
+=procGroupDepend
+
+Process group dependencies recursively
+
+required arg:
+@_[0] - group name
+optional arg:
+@_[1] - parent group that depends on this package
+return:
+none
+
+=cut
+
+my %processedGroup;
+my %groupDepGraph;
+
+sub procGroupDepend($;$) {
+  my $func = "procGroupDepend";
+  my ($group, $parent) = @_;
+  return unless $group;
+
+  %groupDepGraph = () unless $parent;
+
+  # we must add group to graph before we check whether
+  # it has been processed.  The fact that this function is called
+  # signifies that it is dependent by another group
+  unless (exists $groupDepGraph{$group}) {
+    dbgPrint($func, "Add group $group to graph\n");
+    # initialize node
+    $groupDepGraph{$group}{"parent"} = {};
+    $groupDepGraph{$group}{"child"} = {};
+  }
+  if ($parent) {
+    $groupDepGraph{$group}{"parent"}{$parent}++;
+    $groupDepGraph{$parent}{"child"}{$group}++;
+  }
+
+  return if $processedGroup{$group};
+  $processedGroup{$group} = 1;
+
+  # get all group dependencies for this group
+  my @grps = getGroupDepend($group);
+  dbgPrint($func,
+           "Found ".scalar(@grps)." dependent groups for group $group: ",
+           join(", ", @grps), "\n");
+
+  # for each dependent group, process its group dependencies
+  foreach (@grps) {
+    procGroupDepend($_, $group);
+  }
+}
+
+
+=getGroupDepend
+
+Extract group dependency from dep file
+
+required arg:
+@_[0] - group name
+return:
+In list context, an array of groups extracted
+In scalar context, reference to the array
+
+=cut
+
+sub getGroupDepend($) {
+  my $func = "getGroupDepend";
+  my $group = shift;
+
+  return unless $group;
+
+  # get path info unless optional package dir is given
+  my $groupDir = getGroupDir($group);
+  Warn($func, 2, "Cannot find group directory for group \"$group\"\n") and
+    return unless ($groupDir);
+
+  my $depFile = "$groupDir/$DIR_GROUP/$group.$EXT_DEP";
+  Warn($func, 1,
+       "Dep file $depFile either does not exist or is not readable\n") and
+         return unless (-f $depFile && -r _);
+
+  # open dep file and slurp
+  open(FILE, "<$depFile") or
+    Warn($func, 2, "Failed to open file $depFile: $!\n") and return;
+  my $tmp = $/; $/ = undef;
+  my $content = <FILE>;
+  $/ = $tmp;
+  close FILE;
+
+  $content ||= "";
+  $content =~ s!#[^\n]*!!g; # remove comment (lines with #)
+  my @libs = split /\s+/, $content; # dependency delimited by space or newline
+
+  return wantarray? @libs : \@libs;
+}
+
+
+=topoSort
+
+Perform topological sort on graph and return sorted
+result in different structure.  The hash graph consists of
+the following format:
+Each key in the hash represents a node in the graph.  Each
+key-value consists of a reference to a hash that contains
+the key "child".  The key value of "child" is a reference to
+yet another hash, where each key is the name of a node that
+this node points to (as in a DAG).
+
+For example:
+node1->child->node2
+           +->node3
+node2->child->node3
+node3->child
+
+This graph contains 3 nodes.  Node1 depends on node2 and node3,
+node2 dependes on node3, and node3 does not depend on any node
+
+required arg:
+@_[0] - reference to hash representing the graph
+@_[1] - reference to array that will containt the sorted result
+optional arg:
+@_[1] - flags
+        bit 1 - print sorted result
+        bit 2 - reverse the final result
+        bit 3 - return an array of array, where the top level array
+                represnts levels, while the second level array
+                consists of all nodes in the level
+return:
+0 - circular dependency found
+1 - success
+2 - bad arguments
+
+=cut
+
+my $topoSortFlagPrint = 1;
+my $topoSortFlagReverse = 2;
+my $topoSortFlagKeepLevel = 4;
+
+sub topoSort(\%\@;$) {
+  my $func = "topoSort";
+  my ($graph, $sorted, $flag) = @_;
+  my (@levels, @flat, @tmp);
+
+  return 2 unless ($graph && $sorted);
+
+  my @nodes = (keys %$graph);
+  $flag ||= 0;
+
+  # while there are still nodes in the graph
+  while(scalar(@nodes)) {
+    my @deleted = ();
+    my $isDeleted;
+    # find all nodes with no child dependencies,
+    # then store and delete from graph
+    foreach my $node (@nodes) {
+      if (scalar(keys %{$graph->{$node}{"child"}}) == 0) {
+        push @deleted, $node;
+        delete $graph->{$node};
+        $isDeleted = 1;
+      }
+    }
+    return 0 unless $isDeleted; # circular dependency
+    @nodes = (keys %$graph);    # re-populate nodes since some may be deleted
+    # delete the deleted nodes from nodes that have them as child dependencies
+    foreach my $node (keys %$graph) {
+      foreach my $ele (@deleted) {
+        delete $graph->{$node}{"child"}{$ele};
+      }
+    }
+    unshift @levels, \@deleted;
+  } # while
+
+  if ($flag & $topoSortFlagPrint) {
+    for (my $i=0; $i<=$#levels; $i++) {
+      print "Level $i:\n", "\t", join("\t", @{$levels[$i]}), "\n";
+    }
+  }
+
+  # if specified, return the "leveled" array
+  if ($flag & $topoSortFlagKeepLevel) {
+    if ($flag & $topoSortFlagReverse) {
+      @tmp = reverse @levels;
+      @levels = @tmp;
+    }
+    @$sorted = @levels;
+    return wantarray? @levels : \@levels;
+  }
+
+  # by default, we flatten the "leveled" array
+  foreach my $lvl (@levels) {
+    push @flat, @$lvl; # flatten the level
+  }
+
+  if ($flag & $topoSortFlagReverse) {
+    @tmp = reverse @flat;
+    @flat = @tmp;
+  }
+  @$sorted = @flat;
+  return 1;
+}
+
+
+=makeMakefile
+
+Creates a makefile for the component.
+
+required arg:
+@_[0] - the component
+@_[1] - reference to an array populated with the list of dependent
+        components (including the main component itself)
+optional arg:
+@_[2] - reference to an array of dependent packages
+@_[3] - rerference to an array of dependent groups
+@_[4] - component directory
+return:
+none
+
+=cut
+
+sub makeMakefile($\@;\@\@$) {
+  my $func = "makeMakefile";
+  my ($mainComp, $compList, $packageList, $groupList, $compDir) = @_;
+  return unless ($mainComp && $compList && @$compList);
+  my @buildCompList = @$compList;
+  push @buildCompList, "$mainComp.t" unless $g_option{"notestdriver"};
+  $compDir ||= ".";
+  my $makefile = "$compDir/makefile";
+
+  if (-e $makefile) {
+    my $ans;
+    if ($g_option{"interactive"}) {
+      print "File $makefile exists.  Replace (y/n)?";
+      while (<>) {
+        chomp;
+        $ans = lc($_);
+        print("Invalid answer. File $makefile exists.  Replace (y/n)?")
+          and next unless ($ans eq "y" || $ans eq "n");
+        last;
+      }
+    }
+
+    Warn($func, 1,
+         "File $makefile already exists.  New makefile not created\n") and
+           return if ($ans && $ans eq 'n'); # don't replace file
+  }
+
+  # generate -I and -L options
+  my $incText = "";
+  my $libsText = "";
+  if ($packageList) {
+    foreach my $package (@$packageList) {
+      # add this package info into hash
+      my $packageDir = getPackageDir($package);
+      Warn($func, 2,
+           "Cannot find package directory for pacakge \"$package\"\n") and
+             next unless $packageDir;
+      $incText .= " -I$packageDir/$DIR_INCLUDE";
+      my ($lib) = $package =~ /^(?:lib|)(.*)$/;
+      $libsText .= " -L$packageDir/$DIR_LIB";
+      $libsText .= " -l$lib";
+    }
+  }
+  if ($groupList) {
+    foreach my $group (@$groupList) {
+      # add this group info into hash
+      my $groupDir = getGroupDir($group);
+      Warn($func, 2, "Cannot to find group directory for group \"$group\"\n")
+        and next unless $groupDir;
+      $incText .= " -I$groupDir/$DIR_INCLUDE";
+      my ($lib) = $group =~ /^(?:lib|)(.*)$/;
+      $libsText .= " -L$groupDir/$DIR_LIB";
+      $libsText .= " -l$lib";
+    }
+  }
+  $incText .= " -I.";  # include current dir
+
+  # replace all tags
+  my $templ = $g_makefileTempl;
+  $templ =~ s/##CC##/$g_CC/g;
+  $templ =~ s/##EXCEPT_OPT##/-DBDE_BUILD_TARGET_EXC -features=except/g
+    if $g_option{"exception"};
+  $templ =~ s/##EXT##/$g_srcExt/g;
+  $templ =~ s/##INCLUDES##/$incText/g;
+  $templ =~ s/##LIBS##/$libsText/g;
+  # use gcc to construct rules for each .o file.  gcc will generate
+  # header dependencies as well
+  my $rules = "";
+  foreach (@buildCompList) {
+    my $r = `gcc $incText -M $compDir/$_.$g_srcExt`;
+    $r =~ tr/\n\\/ /;  # unwrap all lines and delete '\'
+    # strip system includes from rule;
+    foreach my $path (@{$g_sysIncPath{$g_platform}}) {
+      while ($r =~ s!\s$path.*?(\s|$)! !sg) {};
+    }
+    $r =~ s/\s+/ /g; # cleanup multiple spaces
+    $rules .= "$r\n\n";
+  }
+
+  $templ =~ s/##RULES##/$rules/g;
+  $templ =~ s/##OBJS##/join(" ", map { "$_.o" } @buildCompList)/ge;
+  $templ =~ s/##HEADERS##/join(" ", map { "$_.$g_hdrExt" } @$compList)/ge;
+
+  foreach my $mode (@g_makeMode) {
+    my $modeRules = $rules;
+    $modeRules =~ s/\.o:/.$mode.o:/g;
+    my $capMode = uc $mode;
+    $templ =~ s/##RULES_$capMode##/$modeRules/g;
+    $templ =~
+      s/##OBJS_$capMode##/join(" ", map { "$_.$mode.o" } @buildCompList)/ge;
+  }
+
+  open(FH, ">$makefile") or
+    Warn($func, 2, "Failed to create file $makefile: $!\n") and return;
+  print FH $templ;
+  close FH;
+}
+
+# main - just to emulate C and make things cleaner
+
+sub main() {
+  my $func = "main";
+  my (
+      $comp,
+      @files,
+      $group,
+      $package,
+     );
+
+  # get options
+  GetOptions(\%g_option, "help|h|?", "grouppath|G=s@", "tree|t", "debug|d",
+             "dest|D=s", "exception|E", "interactive|i", "c-mode|C",
+             "notestdriver|T");
+  &usage if $g_option{'help'};
+
+  $comp = shift @ARGV;
+
+  if ($comp && $comp eq ".") {
+    # use directory name as the component name
+    my $pwd = `pwd`;
+    chomp $pwd;
+    ($comp) = $pwd =~ m!([^/]+)$!;
+  }
+  die "Missing component name.  See \"$g_prog --help\" for usage help.\n"
+    unless $comp;
+
+  # setup mode dependent variables
+  if ($g_option{"c-mode"}) {
+    $g_hdrExt = "h";
+    $g_srcExt = "c";
+    $g_CC = "cc";
+  } else {
+    $g_hdrExt = "h";
+    $g_srcExt = "cpp";
+    $g_CC = "CC";
+  }
+
+  (undef, $group, $package) = parseName($comp);
+
+  cleanDir($g_option{"dest"});
+
+  procCompDepend($comp); # component dependency
+  procPackageDepend($package); # package dependency
+  procGroupDepend($group); # group dependency
+
+  my (@compTree, @packageTree, @groupTree, $sortFlag);
+  $sortFlag |= $topoSortFlagPrint if ($g_option{"tree"});
+
+  print "Component dependency:\n" if ($g_option{"tree"});
+  unless (topoSort(%compDepGraph, @compTree, $sortFlag)) {
+    Warn($func, 2, "Circular dependency found in component dependencies\n");
+    foreach (keys %compDepGraph) {
+      Warn($func, 2, "$_ depends on ",
+           join(", ", keys %{$compDepGraph{$_}{"child"}}), "\n");
+    }
+    return;
+  }
+
+  print "Package dependency:\n" if ($g_option{"tree"});
+  unless(topoSort(%packageDepGraph, @packageTree, $sortFlag)) {
+    Warn($func, 2, "Circular dependency found in package dependencies\n");
+    foreach (keys %packageDepGraph) {
+      Warn($func, 2, "$_ depends on ",
+           join(", ", keys %{$packageDepGraph{$_}{"child"}}), "\n");
+    }
+    return;
+  }
+  shift @packageTree; # remove package of this component from dependency list
+
+  print "Group dependency:\n" if ($g_option{"tree"});
+  unless(topoSort(%groupDepGraph, @groupTree, $sortFlag)) {
+    Warn($func, 2, "Circular dependency found in group dependencies\n");
+    foreach (keys %groupDepGraph) {
+      Warn($func, 2, "$_ depends on ",
+           join(", ", keys %{$groupDepGraph{$_}{"child"}}), "\n");
+    }
+    return;
+  }
+  shift @groupTree; # remove group of this component from dependency list
+
+  makeMakefile($comp, @compTree, @packageTree, @groupTree, $g_option{"dest"});
+}
+
+# ============== program starts here ============== #
+
+&main();

@@ -1,0 +1,30 @@
+#!/bbs/opt/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use Change::DB;
+
+my @getopt = qw(count|n=n);
+my %opt = (count => 1);
+
+GetOptions(\%opt, @getopt) or die usage();
+
+my $i = 0;
+
+while ($opt{count} < 0 || $i++ < $opt{count}) {
+  print STDOUT Change::DB->_generateChangeSetID($ENV{USER}) . $/;
+}
+
+sub usage {
+  my $usage = '';
+  $usage .= $_.$/ for @_;
+  $usage .= $/;
+  $usage .= (split m{/}, $0)[-1] . " [OPTIONS]" . $/;
+  $usage .= join $/, map{"  --$_"} @getopt;
+  return $usage.$/;
+}
+

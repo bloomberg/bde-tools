@@ -1,0 +1,33 @@
+#!/bin/ksh
+
+if [ $1 ]; then
+    for PACKAGE in $@; do
+
+        PACKAGEGROUP=`echo $PACKAGE | cut -c1-3`
+            if [ -d /bbcm/infrastructure/groups/$PACKAGEGROUP ]; then
+                if [ -d /bbcm/infrastructure/groups/$PACKAGEGROUP/$PACKAGE ]; then
+                    echo "cleaning $PACKAGE..."
+                else 
+                    echo "$0: package '$PACKAGE' does not exist in package group $PACKAGEGROUP"
+                    exit 2
+                fi
+            else
+                echo "$0: package group '$PACKAGEGROUP' does not exist"
+                exit 2
+            fi
+
+        echo "    package $PACKAGE build directories";
+        rm -rf /bbcm/infrastructure/groups/$PACKAGEGROUP/$PACKAGE/unix-*
+        echo "    installed package $PACKAGE includes";
+        rm -rf /bbcm/infrastructure/groups/$PACKAGEGROUP/$PACKAGE/include/*
+        echo "    installed package $PACKAGE libraries";
+        rm -rf /bbcm/infrastructure/groups/$PACKAGEGROUP/$PACKAGE/lib/*
+        echo "...done"
+
+    done
+else
+  echo "usage: $0 <package> [<package> ...]"
+  exit 1
+fi
+
+exit 0;

@@ -1,0 +1,1775 @@
+#! /bb/csdata/scm/bin/perl -w
+# These three things should be changed!
+use strict;
+use FindBin;
+use lib '/home/dsugalsk/perl/lib/perl5/site_perl';
+use lib '/bbcm/infrastructure/tools/lib/perl';
+#use lib '/bbsrc/bin/prod/lib/perl';
+use lib '/home/dsugalsk/src';
+
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+use Symbols qw(
+    EXIT_SUCCESS EXIT_FAILURE DEFAULT_FILESYSTEM_ROOT
+);
+use Carp;
+#$SIG{__WARN__} = sub {confess};
+use Util::File::Basename qw(basename);
+
+use Getopt::Long;
+
+use Binary::PGAnalysis;
+
+use Text::Wrap;
+
+my $db;
+my $changes;
+
+#==============================================================================
+
+=head1 NAME
+
+validate_setofchanges - Check to see if a set of changes is allowed.
+
+=head1 SYNOPSIS
+
+    $ validate_setofchanges [-b database] [-c] descfile [desfile...]
+
+=head1 DESCRIPTION
+
+Checks to see what a set of proposed hierarchy changes will do.
+
+The C<-b> option lets you specify an alternate database to use.
+
+The C<-c> option causes the output to use comment symbols on lines
+that describe problems, and no comment on lines that propose ways
+to fix the problems found.  This option is needed to allow the output
+to be processed by the C<splicso> command (which separates the output
+into 3 files - problems with a simple proposed response, problems
+with no or alternatives choices of response, and proposed metadat
+deletion.  It also is useful if you want to just merge the output
+into the source file, and then repeat the validate_setofchanges
+analysis, eventually being able to use the input file (once there
+are no more remaining problems being found) as input to acsplan
+to actually carry out the changes.
+
+If no C<descfile> is specified, or if a C<descfile> is specified as
+'-' (a single dash), then standard input will used.
+
+This tool can check the result of a group of changes of various types:
+
+=over 4
+
+=item * library addition
+
+=item * library deletion
+
+=item * strong dependency addition
+
+=item * strong dependency deletion
+
+=item * weak dependency addition
+
+=item * weak dependency deletion
+
+=item * weak dependency detail addition
+
+=item * weak dependency detail deletion
+
+=item * system library dependency addition
+
+=item * system library dependency deletion
+
+=item * object file move
+
+=item * object file deletion
+
+=back
+
+The description file uses a format similar to can_movethings,
+with a number of extensions.  It can contain the following commands:
+
+=over 4
+
+=item addlib libname [attribute ...]
+
+Add the library I<library> to the list of libraries. A space-separated
+list of library attributes that should be applied to the new library
+is optional and follows the library name. At the moment only
+C<offlineonly> and C<gtkbuild> are checked.  The earlier name of this
+command, newlib, is still accepted as an alternative.
+
+=item checklib libname [libname ...]
+
+Checks one or more libraries I<libname> as if a major change had been
+specified, which lets you examine whether there are any
+dependency problems in the existing library that need to
+be fixed.
+
+=item dellib libname [libname ...]
+
+Deletes one or more libraries I<libname> from the list of
+libraries.  This provides a convenient way to delete all of the
+object files in a library.  Any object files that are separately
+mentioned in explicit C<moveobj> or C<delobj> directives will be
+handled as specified in those directives - this directive will
+only be applied to objects in I<libname> that remain after the
+individual directives are carried out.
+
+=item movelib libname [libname ...] destlib
+
+Deletes one or more libraries I<libname> from the list of
+libraries, after moving all of their contained object files to
+another library, I<destlib>.  Any object files that are
+separately mentioned in explicit C<moveobj> or C<delobj>
+directives will be handled as specified in those directives -
+the only objects that will be moved by this directive will be
+those in I<libname> that remain after explicit directives are
+carried out.
+
+=item adddep sourcelib destlib [destlib ...]
+
+Add a new strong dependency to C<sourcelib>, to make it be validated
+as if it depended on
+C<destlib>.  Multiple destlib target can be specified, sourcelib
+will be validated as if it depended upon each of them.
+
+=item deldep sourcelib destlib [destlib ...]
+
+Remove a strong dependency for (one or more) C<destlib> from C<sourcelib>
+and validate the resulting status.
+
+=item addweak sourcelib destlib [destlib ...]
+
+Add a new weak dependency on (one or more) C<destlib> to C<sourcelib>.
+The specifically permitted links should also be declared (using one
+or more adddetail commands).
+
+=item delweak sourcelib destlib [destlib ...]
+
+Remove a weak dependency on (one or more) C<destlib> from C<sourcelib>.
+Any existing specifically permitted links should also be removed
+(using one or more deldetail commands).
+
+=item adddetail libname callobj [callobj ...] symbol
+
+Add a new detail item to the .opts file that allows a specific weak
+dependency from specified calling object(s) on a particular symbol.  If
+it does not already exist, the weak dependency should also be declared
+(with an addweak command).
+
+=item deldetail libname callobj [callobj ...] symbol
+
+Remove detail item from the .opts file that allowed a specific weak
+dependency from specified calling object(s) on a particular symbol.
+If all detail items for symbols in a single target library are deleted,
+it is then permitted to delete the weak dependency.
+
+=item addsyslib sourcelib syslib [syslib ...]
+
+Add the system library (libraries) C<syslib> (i.e. 'm', 'pthread', or suchlike
+things) to the list of dependencies for C<sourcelib>.
+
+=item delsyslib sourcelib syslib [syslib ...]
+
+Remove the system library (libraries) C<syslib> (i.e. 'm', 'pthread', or suchlike
+things) from the list of dependencies for C<sourcelib>.
+
+=item moveobj [srclib:]filename [[srclib:]filename ...] destlib
+
+Move one or more object files named or derived from C<filename> to
+library C<destlib>.
+Each object file may be optionally qualified with a library name
+C<srclib> -- this B<must> be done if there are multiple object files with the
+same name in different libraries.
+
+You may specify a source filename (.f, .c, .cpp, or .gob) instead of
+an object filename and the program will do its best to figure out the
+object file(s) that the source file generates.  For Fortran source
+files, it will almost always be necessary to explicitly specify the
+library that it is coming from.
+
+If multiple files are getting moved to the destination library they
+can be put on a single moveobj line.  Originally, they were required
+to be specified as a single argument, with the items separated by
+commas -- that form is still supported, but using multiple arguments
+is also allowed.
+
+=item delobj [library:]ofilename [[library:]ofilename ...]
+
+Delete one or more objectfile C<ofilename> from its library. You may specify a
+source filename (.f, .c, .cpp, or .gob) instead of an object filename
+and the program will do its best to figure out the object file(s) the
+source file generates.
+
+=item blank and comment
+
+A line which is blank is ignored.
+
+A line which has a comment symbol (#) as the first
+non-blank character is ignored.
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item splitcso - split output into separate files to ease analysis
+
+=item acsplan - carry out a validated plan
+
+=back
+
+
+
+=cut
+
+#==============================================================================
+
+sub usage(;$) {
+    print STDERR "!! @_\n" if @_;
+
+    my $prog = basename $0;
+
+    print <<_USAGE_END;
+Usage: $prog -h | [changefile ...]
+  --debug      | -d           enable debug reporting
+  --help       | -h           usage information (this text)
+  --database   | -b           database to use for analysis
+
+  changefile                  file containing directives ("-" or no argument
+			      will read directives from stdin)
+
+See 'perldoc $prog' for more information.
+
+_USAGE_END
+}
+
+#------------------------------------------------------------------------------
+
+my $code_prefix = '';
+my $error_prefix = '!!!';
+
+sub getoptions {
+    my %opts;
+
+    Getopt::Long::Configure("bundling");
+    unless (GetOptions(\%opts, qw[
+        debug|d+
+        help|h
+	code|c
+	verbose|v
+        database|b=s
+    ])) {
+        usage();
+        exit EXIT_FAILURE;
+    }
+
+    # help
+    usage(), exit EXIT_SUCCESS if $opts{help};
+
+    # debug mode
+#    $opts{debug} = 1 if exists $opts{debug};
+
+    return \%opts;
+}
+
+{
+  my (%addlibs, %attribs,
+      %movelibs, %dellibs,
+
+      %checklibs,
+
+      %addstrong,       %addweak,       %adddetail,
+      %addstrongparent, %addweakparent,
+      %delstrong,       %delweak,       %deldetail,
+      %delstrongparent, %delweakparent,
+
+      %addsyslibs,
+      %delsyslibs,
+
+      %moveobj,
+      %delobj,
+
+      );
+
+  my (%valid_attribs) = (offlineonly => 1,
+			   gtkbuild => 1);
+
+  # %addlibs - added library names.
+  #
+  # %attribs - maps added library name to the attributes it will have
+  #
+  # %movelibs - list of deleted libraries.  Hash where a
+  # key specifies a deleted library, and its value specifies the
+  # target library for object modules that do not have an explicit
+  # moveobj or delobj command specied.
+  #
+  # %dellibs - list of deleted libraries.  Hash with a key
+  # for each deleted library where objects that have not
+  # have an explicit moveobj or delobj command specified
+  # will be deleted.
+  #
+  # %checklibs - list of libraries that should be checked as if
+  # a major change had occurred.  That will display the missing
+  # dependency info that is present in the existing structure.
+  #
+  # %addstrong - list of added strong dependencies. two level hash,
+  # level 1 is the from library, level 2 is the to library.
+  #
+  # %addweak - like %addstrong, only weak dependencies
+  #
+  # %adddetail - like %addstrong, detail info for weak deps
+  #
+  # %addsyslib - like %addstrong, only system libraries
+  #
+  # %delstrong - like %addstrong, only strong dependencies to delete.
+  #
+  # %delweak - like %addstrong, only weak dependencies to delete
+  #
+  # %deldetail - like %addstrong, detail info for weak deps to delete
+  #
+  # %delsyslib - like %addstrong, only system libraries to delete
+  #
+  # %<NAME>parent - a duplicate hash of %<NAME>, except that it
+  # reverses the source and target libraries as key and value
+  # so the the reverse lookup is easy to make.
+  #
+  # %moveobj - key is the object filename, value is the library to
+  # move it to.
+  #
+  # %delobj - key is the object filename, value is empty.
+
+  sub exist_keys {
+    my $hash = shift;
+    defined $hash or return undef;
+    while( my $key = shift ) {
+      return undef unless exists $hash->{$key};
+      $hash = $hash->{$key};
+    }
+    return 1;
+  }
+
+  sub die_unless_valid_libs {
+    foreach my $lib (@_) {
+      die "$lib is not a valid package or group"
+	if !$db->validEntity($lib) && !exists $addlibs{$lib};
+    }
+  }
+
+  sub die_if_multilib {
+    my $lib = shift;
+    foreach my $hash ( \%addlibs, \%movelibs, \%dellibs ) {
+      die "multiple library changes for $lib"
+	if exists $hash->{$lib};
+    }
+  }
+
+  sub parse_addlib {
+    my( $command, $args ) = @_;
+    die "No library for addlib command"
+      if !@$args;
+    my $addlib = shift @$args;
+    die "$addlib already exists"
+      if $db->validEntity($addlib);
+    die_if_multilib( $addlib );
+    $addlibs{$addlib}++;
+    $attribs{$addlib} = {};
+    foreach my $attrib (@$args) {
+      die "Attribute $attrib (for addlib $addlib) is invalid\n"
+	if !exists $valid_attribs{$attrib};
+      $attribs{$addlib}{$attrib} = 1;
+    }
+  }
+
+  sub parse_movelib {
+    my( $command, $args ) = @_;
+    if (@$args < 2) {
+      die ("movelib needs at least two library names, source(s) and destination\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    die_unless_valid_libs( @$args );
+    my $target = pop @$args;
+    foreach my $dellib (@$args) {
+      my $dellib = shift @$args;
+      die_if_multilib( $dellib );
+      $movelibs{$dellib} = $target;
+    }
+  }
+
+  sub parse_dellib {
+    my( $command, $args ) = @_;
+    if (@$args < 1) {
+      die ("dellib needs one or more library names to be deleted\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    die_unless_valid_libs( @$args );
+    foreach my $dellib (@$args) {
+      my $dellib = shift @$args;
+      die_if_multilib( $dellib );
+      $dellibs{$dellib}++;
+    }
+  }
+
+  sub parse_checklib {
+    my( $command, $args ) = @_;
+    if (@$args < 1) {
+      die ("checklib needs one (or more) object names tro be deleted\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    @checklibs{ @$args } = (1) x @ARGV;
+  }
+
+  sub parse_adddep {
+    my( $command, $args ) = @_;
+    if (@$args < 2) {
+      die ("adddep needs two (or more) library names, source and destination(s)\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    die_unless_valid_libs( @$args );
+    my $source = shift @$args;
+    foreach my $dest ( @$args ) {
+      next  if exist_keys( \%addstrong, $source, $dest )
+	    && $addstrong{$source}{$dest};
+      die "multiple dependency changes for $source->$dest"
+	if exist_keys( \%delstrong, $source, $dest )
+	|| exist_keys( \%addweak,   $source, $dest );
+      $addstrong{$source}{$dest}++;
+      $addstrongparent{$dest}{$source}++;
+    }
+  }
+
+  sub parse_deldep {
+    my( $command, $args ) = @_;
+    if (@$args < 2) {
+      die ("deldep needs two (or more) library names, source and destination(s)\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    die_unless_valid_libs( @$args );
+    my $source = shift @$args;
+    foreach my $dest ( @$args ) {
+      next  if exist_keys( \%delstrong, $source, $dest )
+	    && $delstrong{$source}{$dest};
+      die "multiple dependency changes for $source->$dest"
+	if exist_keys( \%addstrong, $source, $dest )
+	|| exist_keys( \%delweak,   $source, $dest );
+      $delstrong{$source}{$dest}++;
+      $delstrongparent{$dest}{$source}++;
+    }
+  }
+
+  sub parse_addweak {
+    my( $command, $args ) = @_;
+    if (@$args < 2) {
+      die ("addweak needs two (or more) library names, source and destination(s)\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    die_unless_valid_libs( @$args );
+    my $source = shift @$args;
+    foreach my $dest ( @$args ) {
+      next  if exist_keys( \%addweak, $source, $dest )
+	    && $addweak{$source}{$dest};
+      die "multiple dependency changes for $source->$dest"
+	if exist_keys( \%addstrong, $source, $dest )
+	|| exist_keys( \%delweak,   $source, $dest );
+      $addweak{$source}{$dest}++;
+      $addweakparent{$dest}{$source}++;
+    }
+  }
+
+  sub parse_delweak {
+    my( $command, $args ) = @_;
+    if (@$args < 2) {
+      die ("delweak needs two (or more) library names, source and destination(s)\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    die_unless_valid_libs( @$args );
+    my $source = shift @$args;
+    foreach my $dest ( @$args ) {
+      next  if exist_keys( \%delweak, $source, $dest )
+	    && $delweak{$source}{$dest};
+      die "multiple dependency changes for $source->$dest"
+	if exist_keys( \%delstrong, $source, $dest )
+	|| exist_keys( \%addweak,   $source, $dest );
+      $delweak{$source}{$dest}++;
+      $delweakparent{$dest}{$source}++;
+    }
+  }
+
+  sub parse_adddetail {
+    my( $command, $args ) = @_;
+    if (@$args < 3) {
+      die ("adddetail needs three (or more) arguments, srclib, srcobj(s) and destsymbol\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    my $source = shift @$args;
+    my $symbol = pop @$args;
+    die_unless_valid_libs( $source );
+    foreach my $obj ( @$args ) {
+      next  if exist_keys( \%adddetail, $source, $obj, $symbol )
+	    && $adddetail{$source}{$obj}{$symbol};
+      die "multiple dependency changes for $source($obj)->$symbol"
+	if exist_keys( \%deldetail, $source, $obj, $symbol );
+      $adddetail{$source}{$obj}{$symbol}++;
+    }
+  }
+
+  sub parse_deldetail {
+    my( $command, $args ) = @_;
+    if (@$args < 3) {
+      die ("deldetail needs three (or more) arguments, srclib, srcobj(s) and destsymbol\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    my $source = shift @$args;
+    my $symbol = pop @$args;
+    die_unless_valid_libs( $source );
+    foreach my $obj ( @$args ) {
+      next  if exist_keys( \%deldetail, $source, $obj, $symbol )
+	    && $deldetail{$source}{$obj}{$symbol};
+      die "multiple dependency changes for $source($obj)->$symbol"
+	if exist_keys( \%adddetail, $source, $obj, $symbol );
+      $deldetail{$source}{$obj}{$symbol}++;
+    }
+  }
+
+  sub parse_addsyslib {
+    my( $command, $args ) = @_;
+    if (@$args < 2) {
+      die ("addsyslib needs two (or more) library names, source and destination(s)\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    my $source = shift @$args;
+    die_unless_valid_libs( $source );
+    foreach my $syslib ( @$args ) {
+      my $sysname = "Library::$syslib";
+      next  if exist_keys( \%addsyslibs, $source, $sysname )
+	    && $addsyslibs{$source}{$sysname};
+      die  "$syslib is not a valid system library"
+	if !$db->validEntity($sysname);
+      die "multiple system library changes for $source->$sysname"
+	if exist_keys( \%delsyslibs, $source, $sysname );
+      $addsyslibs{$source}{$sysname}++;
+    }
+  }
+
+  sub parse_delsyslib {
+    my( $command, $args ) = @_;
+    if (@$args < 2) {
+      die ("delsyslib needs two (or more) library names, source and destination(s)\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    my $source = shift @$args;
+    die_unless_valid_libs( $source );
+    foreach my $syslib ( @$args ) {
+      my $sysname = "Library::$syslib";
+      next  if exist_keys( \%delsyslibs, $source, $sysname )
+	    && $delsyslibs{$source}{$sysname};
+      die  "$syslib is not a valid system library"
+	if !$db->validEntity($sysname);
+      die "multiple system library changes for $source->$sysname"
+	if exist_keys( \%addsyslibs, $source, $sysname );
+      $delsyslibs{$source}{$sysname}++;
+    }
+  }
+
+  sub parse_moveobj {
+    my( $command, $args ) = @_;
+    if (@$args < 2) {
+      die ("moveobj needs one (or more) object names, and a destination library\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    my (@objects);
+    my $dest = pop @$args;
+    die_unless_valid_libs( $dest );
+    foreach my $thing (map {split /,/} @$args) {
+	@objects = $db->sourceToObject($thing);
+	foreach my $object (@objects) {
+	  $object =~ s/^.*://;
+	  die "multiple object changes for $object"
+	    if exists $delobj{$object};
+	  $moveobj{$object} = $dest;
+	}
+    }
+  }
+
+  sub parse_delobj {
+    my( $command, $args ) = @_;
+    if (@$args < 1) {
+      die ("delobj needs one (or more) object names tro be deleted\n"
+	  . "    found: ("
+	  . join( ", ", @$args ) . ")"
+      );
+    }
+    my (@objects);
+    foreach my $thing (map {split /,/} @$args) {
+	@objects = $db->sourceToObject($thing);
+	foreach my $object (@objects) {
+	  $object =~ s/^(.*)://;
+	  die "multiple object changes for $object"
+	    if exists $moveobj{$object};
+	  $delobj{$object} = 1;
+	}
+    }
+  }
+
+  sub parse_command_command {
+    my( $command, $args ) = @_;
+    while( @$args ) {
+      my @newargs;
+      my $nextarg;
+      push @newargs, $nextarg
+	while ($nextarg = shift @$args) && $nextarg ne ';';
+      if(@newargs) {
+	$command = shift @newargs;
+	parse_command( $command, \@newargs );
+      }
+    }
+  }
+
+  my %known_commands = (
+    addlib	=> \&parse_addlib,
+    newlib	=> \&parse_addlib,	# support old command name
+    movelib	=> \&parse_movelib,
+    dellib	=> \&parse_dellib,
+    adddep	=> \&parse_adddep,
+    addweak	=> \&parse_addweak,
+    adddetail	=> \&parse_adddetail,
+    deldep	=> \&parse_deldep,
+    delweak	=> \&parse_delweak,
+    deldetail	=> \&parse_deldetail,
+    addsyslib	=> \&parse_addsyslib,
+    delsyslib	=> \&parse_delsyslib,
+    moveobj	=> \&parse_moveobj,
+    delobj	=> \&parse_delobj,
+    checklib	=> \&parse_checklib,
+    command	=> \&parse_command_command,
+  );
+
+  sub valid_command {
+    my ($command) = @_;
+    return defined $known_commands{$command};
+  }
+
+  sub parse_command {
+    my ($command, $args) = @_;
+
+    if( defined $known_commands{$command} ) {
+      $known_commands{$command}( $command, $args );
+    } else {
+      warn "Invalid command $command";
+    }
+  }
+
+  sub command_info {
+    return({addlibs		=> \%addlibs,
+	    attribs		=> \%attribs,
+	    movelibs		=> \%movelibs,
+	    dellibs		=> \%dellibs,
+	    checklibs		=> \%checklibs,
+	    addstrong		=> \%addstrong,
+	    addweak		=> \%addweak,
+	    adddetail		=> \%adddetail,
+	    addstrongparent	=> \%addstrongparent,
+	    addweakparent	=> \%addweakparent,
+	    delstrong		=> \%delstrong,
+	    delweak		=> \%delweak,
+	    deldetail		=> \%deldetail,
+	    delstrongparent	=> \%delstrongparent,
+	    delweakparent	=> \%delweakparent,
+	    moveobj		=> \%moveobj,
+	    delobj		=> \%delobj,
+	    addsyslib		=> \%addsyslibs,
+	    delsyslib		=> \%delsyslibs,
+	   });
+  }
+}
+
+sub parse_changefile {
+  while (<>) {
+    chomp;
+    s/^\s+//;
+    s/#.*//;
+    s/\s+/ /g;
+    next unless $_;
+    my ($command, @param) = split(/\s/, $_);
+    parse_command( $command, \@param );
+  }
+}
+
+{
+  my $header_printed = 0;
+  my $last_parent = '';
+  sub print_sym_missing {
+    my (%bad) = @_;
+    print_sym_missing_header();
+    foreach my $parent (keys %bad) {
+      my $parentstring = $parent . ' ' x 13;
+      $parentstring = substr($parentstring, 0, 13);
+      foreach my $object (keys %{$bad{$parent}}) {
+	print $parentstring;
+	$parentstring = ' ' x 13;
+	my $objectstring = $object;
+	$objectstring .= ' ' x 64;
+	$objectstring = substr($objectstring, 0, 64);
+	print $objectstring, "\n";
+	my $maxlength = 0;
+	map {$maxlength = length($_) if length($_) > $maxlength} @{$bad{$parent}{$object}};
+	my $columns = int(60 / ($maxlength + 1));
+	my $symcount = 0; print ' ' x 20;
+	foreach my $sym (@{$bad{$parent}{$object}}) {
+	  print $sym;
+	  $symcount++; $symcount %= $columns;
+	  print $symcount ? ' ' : "\n" . (' ' x 20);
+	}
+	print "\n" if $symcount;
+      }
+    }
+  }
+
+  sub print_sym_missing_header {
+    return if $header_printed;
+    print "Library      Object\n";
+    $header_printed++;
+  }
+}
+
+{
+  # A cache
+  my (%parents, %weakparents, %children, %weakchildren);
+  my (%details, %symbol_details);
+  my %sym_to_uor_list;
+
+  sub sortunique {
+    my %temp;
+    @temp{@_} = ();
+    return sort keys %temp;
+  }
+
+  sub sym_provided_by_uors {
+    my( $sym ) = @_;
+    return $sym_to_uor_list{$sym}
+	||= [ $db->symbolProvidedByUOR($sym),
+	      $db->symbolProvidedByUOR($sym,'D')];
+  }
+
+  sub get_parents {
+    my $uor = shift;
+    if (exists $parents{$uor}) {
+      return @{$parents{$uor}};
+    }
+    my (@parents) = ($db->findParents($uor));
+    if (exists $changes->{addstrongparent}{$uor}) {
+      push @parents, keys %{$changes->{addstrongparent}{$uor}};
+    }
+    @parents = sortunique(
+      grep {!exists $changes->{delstrongparent}{$_}} @parents
+    );
+
+    $parents{$uor} = \@parents;
+    return @parents;
+  }
+
+  sub get_weak_parents {
+    my $uor = shift;
+    if (exists $weakparents{$uor}) {
+      return @{$weakparents{$uor}};
+    }
+    my (@weakparents) = ($db->findWeakParents($uor));
+    if (exists $changes->{addweakparent}{$uor}) {
+      push @weakparents, keys %{$changes->{addweakparent}{$uor}};
+    }
+    @weakparents = sortunique(
+      grep {!exists $changes->{delweakparent}{$_}} @weakparents
+    );
+
+    $weakparents{$uor} = \@weakparents;
+    return @weakparents;
+  }
+
+  sub get_details {
+    my $uor = shift;
+    if (exists $details{$uor}) {
+      return $details{$uor};
+    }
+    my %object_details;
+
+    foreach my $object ( $db->getWeakLinkedObjects($uor) ) {
+      @{$object_details{$object}}{
+	  $db->getWeakLinkedSymbols($uor,$object)
+	} = ();
+    }
+
+    foreach my $object ( keys %{$changes->{adddetail}{$uor}} ) {
+      @{$object_details{$object}}{
+	  keys %{$changes->{adddetail}{$uor}{$object}}
+	} = ();
+    }
+
+    foreach my $object ( keys %{$changes->{deldetail}{$uor}} ) {
+      foreach my $symbol ( keys %{$changes->{deldetail}{$uor}{$object}} ) {
+	delete $object_details{$object}{$symbol};
+      }
+    }
+
+    my %sym_set;
+    foreach my $object ( keys %object_details ) {
+      foreach my $symbol ( keys %{ $object_details{$object} } ) {
+	$symbol_details{$uor}{$symbol} = { }
+	  unless $sym_set{$symbol}++;
+	my $children_ref = sym_provided_by_uors( $symbol );
+	foreach my $child (@$children_ref) {
+	  $object_details{$object}{$symbol}{$child}++;
+	  $symbol_details{$uor}{$symbol}{$child}++;
+	}
+      }
+    }
+
+    return( $details{$uor} = \%object_details );
+  }
+
+  sub get_symbol_details {
+    my ($uor) = @_;
+    return $symbol_details{$uor};
+  }
+
+  sub get_children {
+    my $uor = shift;
+
+    confess "undefined uor!" if !defined $uor;
+    if (exists $children{$uor}) {
+      return @{$children{$uor}};
+    }
+    my @children = ($db->findChildren($uor), $db->findExtraChildren($uor));
+    unshift @children, "Library::c"; # Everyone gets libc
+    unshift @children, "Library::Crun"; # Everyone gets libCrun too
+    if (exist_keys( $changes, 'addstrong', $uor )) {
+      push @children, keys %{$changes->{addstrong}{$uor}};
+    }
+    if (exist_keys( $changes, 'addsyslibs', $uor )) {
+      push @children, keys %{$changes->{addsyslibs}{$uor}};
+    }
+    if (exist_keys( $changes, 'delstrong', $uor )) {
+      @children = grep {!exists $changes->{delstrong}{$uor}{$_}} @children;
+    }
+    if (exist_keys( $changes, 'delsyslibs', $uor )) {
+      @children = grep {!exists $changes->{delsyslibs}{$uor}{$_}} @children;
+    }
+
+    @children = sortunique @children;
+
+    $children{$uor} = \@children;
+    return @children;
+  }
+
+  sub get_weak_children {
+    my $uor = shift;
+
+    confess "undefined uor!" if !defined $uor;
+    if (exists $weakchildren{$uor}) {
+      return @{$weakchildren{$uor}};
+    }
+    my @weakchildren = $db->findWeakChildren($uor);
+    if (exists $changes->{addweak}{$uor}) {
+      push @weakchildren, keys %{$changes->{addweak}{$uor}};
+    }
+    if( exist_keys( $changes, 'delweak', $uor ) ) {
+      @weakchildren =
+	  grep {!exists $changes->{delweak}{$uor}{$_}} @weakchildren;
+    }
+    @weakchildren = sortunique @weakchildren;
+
+    $weakchildren{$uor} = \@weakchildren;
+    return @weakchildren;
+  }
+
+  my $attribs;
+
+  sub init_attribs {
+    $attribs = shift;
+  }
+
+  sub get_attribs {
+    my $lib = shift;
+    if (!exists $attribs->{$lib}) {
+      @{$attribs->{$lib}}{$db->getAttributes($lib)} = ();
+    }
+    return $attribs->{$lib};
+  }
+
+  sub compare_attribs {
+    my( $from , $to ) = @_;
+    my $from_att = get_attribs( $from );
+    my $to_att   = get_attribs( $to   );
+    my @bad;
+    my %article = ( gtk=>'a', offline=>'an' );
+    foreach my $att ( qw( offline gtk ) ) {
+      push @bad, "Linking from a non-$att library $from to $article{$att} $att library $to\n"
+	if $from_att->{$att} && ! $to_att->{$att};
+    }
+    return @bad;
+  }
+
+}
+
+#------------------------------------------------------------------------------
+
+MAIN: {
+  my $opts=getoptions();
+  my $inithash = {};
+  if (exists $opts->{database}) {
+    $inithash->{datafile} = $opts->{database};
+  } else {
+    $inithash->{datafile} = 'performance';
+  }
+  $inithash->{debug} = 1 if $opts->{debug};
+  $code_prefix = '#*#' if $opts->{code};
+  $db = Binary::Analysis->new($inithash);
+  my $found_trouble;
+
+  # If the program is linked to a directive name, it takes a single
+  # directive on the command line (including the command name in $0).
+  # Otherwise, @ARGV is a list of filenames that are to be concatenated
+  # together and parsed for their directives.
+  my $name = $0;
+  # remove any pathname component
+  $name =~ s{.*/}{};
+  # allow leading validate_ (or val_, check_, can_, etc. spelling variants)
+  1 while $name =~ s{^(val|validate|vet|can|check|bde)_}{};
+  $name = shift @ARGV if $name eq 'bde_vet';
+  if( valid_command $name ) {
+    parse_command( $name, \@ARGV );
+  } else {
+    parse_changefile();
+  }
+
+  $changes = command_info( );
+
+  init_attribs( $changes->{attribs} );
+
+  foreach my $lib (keys %{$changes->{addlibs}}) {
+    $db->addTempUOR($lib);
+  }
+
+  # As we process directives, we have to accumlate info on
+  # validation tests that need to be carried out
+  my %check_libs;
+
+  # Any library checks requested?
+  ++$check_libs{$_} foreach keys  %{$changes->{checklibs}};
+
+  # Any strong hierarchy changes?
+  if (%{$changes->{addstrong}} || %{$changes->{delstrong}}) {
+
+    # Get some information about the current state of the database
+    my $graph = $db->getGraph();
+    my (%levels) = $db->allLevels();
+
+    # Okay, now we need to do validation
+
+    # Assign levels to the added libraries
+    my (@addlibs) = keys %{$changes->{addlibs}};
+    while (@addlibs) {
+      my @libsleft;
+    NEWLIBLOOP:
+      foreach my $lib (@addlibs) {
+	if (exists $changes->{addstrong}{$lib}) {
+	  my $liblevel = 0;
+	  foreach my $child (keys %{$changes->{addstrong}{$lib}}) {
+	    if (!exists $levels{$child}) {
+	      push @libsleft, $lib;
+	      next NEWLIBLOOP;
+	    }
+	    $liblevel = $levels{$child} if $levels{$child} > $liblevel;
+	  }
+	  $levels{$lib} = $liblevel + 1;
+	} else {
+	  $levels{$lib} = 1;
+	}
+      }
+      # If we didn't remove any libraries from the list to check then
+      # there must be a cycle.
+      if (@addlibs == @libsleft) {
+	$found_trouble++;
+	die "Cycle in the newly added libraries";
+      }
+      @addlibs = @libsleft;
+    }
+
+    # Delete links and add links
+    my $newgraph = $graph->copy;
+    foreach my $from (sort keys %{$changes->{addstrong}}) {
+      ++$check_libs{$from};
+      foreach my $to (sort keys %{$changes->{addstrong}{$from}}) {
+	$newgraph->add_edge($from, $to);
+	$db->addStrongDep($from, $to);
+	my @bad_attr = compare_attribs( $from, $to );
+	print "$error_prefix$_" for @bad_attr;
+	$found_trouble += scalar(@bad_attr);
+	# Validate that the added strong dependencies don't violate
+	# levelization
+	$levels{$from} = 0
+	    unless defined $levels{$from};
+	$levels{$to} = 0
+	    unless defined $levels{$to};
+	if ($levels{$from} <= $levels{$to}) {
+	  print "${code_prefix}Levelization (warning only): Linking from $from (level ",
+	      $levels{$from},
+	      ") to $to (level ",
+	      $levels{$to},
+	      ")\n";
+	}
+      }
+    }
+    foreach my $from (keys %{$changes->{delstrong}}) {
+      ++$check_libs{$from};
+      foreach my $to (keys %{$changes->{delstrong}{$from}}) {
+	$newgraph->delete_edge($from, $to);
+	$db->delStrongDep($from, $to);
+      }
+    }
+
+    # Validate the hierarchy to see if it's gotten worse
+    sub graph_details {
+      my $graph = shift;
+      my $max = [ 0, 0];
+      my $tot = [ 0, 0];
+      my $numcycles = scalar( @$graph );
+      my @edges    = map { scalar $_->edges    } @$graph;
+      my @vertices = map { scalar $_->vertices } @$graph;
+      my $edges    = 0;
+      map { $edges    += $_ } @edges;
+      my $vertices = 0;
+      map { $vertices += $_ } @vertices;
+      my $maxe = 0;
+      map { $maxe = $_ if $_ > $maxe } @edges;
+      my $maxv = 0;
+      map { $maxv = $_ if $_ > $maxv } @vertices;
+      my @nodes = map { [ $vertices[$_], $edges[$_] ] } 0..($numcycles-1);
+
+      return {  cycles => $numcycles,
+		nodes  => \@nodes,
+		max    => [ $maxv, $maxe ],
+		tot    => [ $vertices, $edges ],
+	};
+    }
+    sub graph_fine_details {
+	my $graph = shift;
+	my @outlist;
+	my $cyc_count = 0;
+	foreach my $cycle (@$graph) {
+	  my $edges = scalar $cycle->edges;
+	  my $nodes = scalar $cycle->vertices;
+	  my %node2node;
+	  map { ++$node2node{$_->[0]}{$_->[1]} } $cycle->edges;
+	  my $cyc_message
+	    = sprintf "  cycle %d [$nodes/$edges]", ++$cyc_count;
+	  push @outlist, $cyc_message;
+	  foreach my $node (sort keys %node2node) {
+	    my @dests = sort
+			keys %{ $node2node{$node} } ;
+	    push @outlist, join( ' ', "    $node: ", @dests );
+	  }
+	}
+	return \@outlist;
+    }
+    sub graph_line {
+      my $prefix1 = shift;
+      my $prefix2 = shift;
+      my $info = shift;
+      my $output = sprintf "%2s cycles (", $info->{cycles};
+      foreach my $node ( @{$info->{nodes}} ) {
+	$output .= sprintf " [%s/%s]", @$node;
+      }
+      $output .=
+	sprintf  " ) worst [%s//%s] total [%s/%s]",
+		  @{ $info->{max} },
+		  @{ $info->{tot} };
+      print $prefix1,$output,"\n";
+      if (my $extra = shift) {
+	foreach my $item (@$extra) {
+	  print $prefix2,$item,"\n";
+	}
+      }
+    }
+
+    my $before_cycles_ref = [ $db->getCycles($graph   ) ];
+    my $after_cycles_ref  = [ $db->getCycles($newgraph) ];
+
+    my $bef = graph_details( $before_cycles_ref );
+    my $aft = graph_details( $after_cycles_ref  );
+
+    my $before_fine_details;
+    my $after_fine_details;
+
+    if ($opts->{verbose}) {
+      $before_fine_details = graph_fine_details( $before_cycles_ref );
+      $after_fine_details  = graph_fine_details( $after_cycles_ref  );
+    }
+
+    graph_line( "${code_prefix}Hierarchy went from ",
+                "${code_prefix}                    ",
+		$bef,
+		$before_fine_details,
+    );
+    graph_line( "${code_prefix}                 to ",
+                "${code_prefix}                    ",
+		$aft,
+		$after_fine_details,
+    );
+
+    # #cycles changing is okay, as long as the biggest and the total
+    # don't get worse
+    if( $bef->{max}[0] < $aft->{max}[0] ) {
+      ++$found_trouble;
+      print "$error_prefix  The largest number of libraries in a single cycle has increased\n";
+    }
+    if( $bef->{max}[1] < $aft->{max}[1] ) {
+      ++$found_trouble;
+      print "$error_prefix  The largest number of strong dependencies in a single cycle has increased\n";
+    }
+    if( $bef->{tot}[0] < $aft->{tot}[0] ) {
+      ++$found_trouble;
+      print "$error_prefix  The number of libraries in all the cycles has increased\n";
+    }
+    if( $bef->{tot}[1] < $aft->{tot}[1] ) {
+      ++$found_trouble;
+      print "$error_prefix  The number of strong dependencies in all the cycles has increased\n";
+    }
+  }
+
+  # delete and add weak links
+  foreach my $from (keys %{$changes->{addweak}}) {
+    ++$check_libs{$from};
+    foreach my $to (keys %{$changes->{addweak}{$from}}) {
+      $db->addWeakDep($from, $to);
+      my @bad_att = compare_attribs( $from, $to );
+      print "$error_prefix$_" for @bad_att;
+      $found_trouble += scalar(@bad_att);
+    }
+  }
+
+  foreach my $from (keys %{$changes->{delweak}}) {
+    ++$check_libs{$from};
+    foreach my $to (keys %{$changes->{delweak}{$from}}) {
+      $db->delWeakDep($from, $to);
+    }
+  }
+
+  # delete and add weak link details
+  foreach my $from (keys %{$changes->{adddetail}} ) {
+    ++$check_libs{$from};
+    foreach my $object (keys %{$changes->{adddetail}{$from}} ) {
+      foreach my $symbol (keys %{$changes->{adddetail}{$from}{$object}} ) {
+	# my $to = sym_provided_by_uors( $symbol );
+	$db->addWeakLinkedSymbol($from, $object, $symbol);
+	# my @bad_att = compare_attribs( $from, $to );
+	# print "$error_prefix$_" for @bad_att;
+	# $found_trouble += scalar(@bad_att);
+      }
+    }
+  }
+
+  foreach my $from (keys %{$changes->{deldetail}} ) {
+    ++$check_libs{$from};
+    foreach my $object (keys %{$changes->{deldetail}{$from}} ) {
+      foreach my $symbol (keys %{$changes->{deldetail}{$from}{$object}} ) {
+	# my $to = sym_provided_by_uors( $symbol );
+	$db->delWeakLinkedSymbol($from, $object, $symbol);
+      }
+    }
+  }
+
+  # We process object file deletions and moves atomically
+
+  my (%removed_syms, %added_undefs);
+
+  sub split_obj_desc {
+      my( $objdesc ) = @_;
+      my ($uor, $obj);
+      if ($objdesc =~ /:/) {
+	($uor, $obj) = split(":", $objdesc, 2);
+      } else {
+	$obj = $objdesc;
+	$uor = $db->getUORForObject($obj);
+      }
+      return( $uor, $obj );
+  }
+
+  sub handle_object_delete {
+      my( $uor, $obj ) = @_;
+
+      # Note the symbols this object file defined for this UOR
+      my @syms;
+      @syms = ($db->getSymbolsForObject($obj, $uor, 'T'),
+	       $db->getSymbolsForObject($obj, $uor, 'D'));
+      @{ $removed_syms{$uor} }{@syms}  = ($obj) x @syms;
+      $db->deleteObject($obj, $uor);
+      ++$check_libs{$uor};
+      for my $lib ( get_parents( $uor ),
+		    get_weak_parents( $uor )) {
+	++$check_libs{$lib};
+      }
+  }
+
+  sub handle_object_move {
+      my( $fromuor, $obj, $touor ) = @_;
+
+      # Note the defined symbols that are going away with the move
+      my @syms;
+      @syms = ($db->getSymbolsForObject($obj, $fromuor, 'T'),
+	       $db->getSymbolsForObject($obj, $fromuor, 'D'));
+      if (@syms) {
+	@{ $removed_syms{$fromuor} }{@syms}  = ($obj) x @syms;
+      } else {
+	print "${code_prefix}$obj had no symbols\n";
+      }
+      # Note the new added undefined symbols in our destination libraries
+      for my $sym ($db->getUndefinedSymbolsForObject($obj, $fromuor)) {
+	$added_undefs{$changes->{moveobj}{$obj}}{$sym} = $obj;
+      }
+
+      $db->moveObject($obj, $touor, $fromuor);
+      ++$check_libs{$touor};
+      ++$check_libs{$fromuor};
+      for my $lib ( get_parents( $fromuor ),
+		    get_weak_parents( $fromuor )) {
+	++$check_libs{$lib};
+      }
+  }
+
+  $db->debug("Deleting object files (".time.")\n");
+  # Delete object files
+  foreach my $object (keys %{$changes->{delobj}}) {
+    handle_object_delete( split_obj_desc( $object ) );
+  }
+
+  $db->debug("Moving object files (".time.")\n");
+  # Move object files
+  while( my( $object, $toUor ) = each %{$changes->{moveobj}} ) {
+    handle_object_move( split_obj_desc( $object ), $toUor );
+  }
+
+  $db->debug("Deleting object library remaining files (".time.")\n");
+  # Delete remaining object files from deleted libraries
+  foreach my $dellib (keys %{$changes->{dellibs}}) {
+    foreach my $object ( $db->getObjects( $dellib ) ) {
+      handle_object_delete( $dellib, $object );
+    }
+  }
+
+  $db->debug("Moving object library remaining files (".time.")\n");
+  # Move remaining object files from deleted libraries
+  while( my( $fromlib, $tolib ) = each %{$changes->{movelibs}} ) {
+    foreach my $object ( $db->getObjects( $fromlib ) ) {
+      handle_object_delete( $fromlib, $object, $tolib );
+    }
+  }
+
+    # This was to check a special case for Tom, but took a huge
+    # amount of time for each object being moved.  Kept only for
+    # archaeological interest...
+    #   # Now that the objects are moved, check for dependency issues from them
+    #   foreach my $object (keys %{$changes->{moveobj}}) {
+    #     my ($fromuor, $objfile) = split_obj_desc( $object );
+    #     my (@circ) = $db->getCircularDependantsForObject($objfile, $fromuor);
+    #     if (@circ) {
+    #       print "$objfile is circularly dependent with ",
+    #             join(', ', @circ),
+    #             "\n";
+    #     }
+    #   }
+
+  # A private cache of the symbols a UOR provides. We're gonna check a
+  # bunch, so we might as well have it handy
+  my %prov_syms;
+  my %needs_syms;
+  
+  sub prov_syms_for {
+    my( $uor ) = @_;
+    $db->debug("  Adding $uor into provided symbol cache (".time.")\n");
+    if (!exists $prov_syms{$uor}) {
+      @{$prov_syms{$uor}}{$db->getDefinedSymbols($uor, 'T'),
+			    $db->getDefinedSymbols($uor, 'D')} = ();
+    }
+  }
+
+  # Handle full library checks - utility functions
+
+  sub display_recommend {
+    my( $base_indent, $detail_indent, $intro, $details ) = @_;
+    if( @$details ) {
+	print $code_prefix,$base_indent,"### ",$_,"\n" for @$intro, "Perhaps you need:";
+	print $detail_indent,$_,"\n" for @$details;
+	print $code_prefix,$base_indent,"### ### (End of recommendations)\n";
+    }
+    else {
+	print $code_prefix,$base_indent,"### ### (No recommendations to offer)\n";
+    }
+  }
+
+  sub display_missing_symbol {
+    my( $sym, $uor, $solution_ref, $intro_ref ) = @_;
+    my (@uor) = $db->symbolProvidedByUOR($sym);
+    @uor = map { $_
+		  . " ("
+		  . join(', ', $db->symbolProvidedForUOR($sym, $_, 'T'))
+		  . ")"
+		} @uor;
+    push @uor, $db->symbolProvidedByUOR($sym, 'D');
+
+    my (@objs);
+    @objs = $db->symbolUsedInUOR($sym, $uor);
+    unless( @objs ) {
+      @objs = $db->symbolUsedInUOR($sym, $uor, 'D')
+	and unshift @objs, 'DATA:';
+      splice( @objs, 5, scalar(@objs), '...' )
+	if @objs > 6;
+    }
+    my $thing = "$sym (". join(', ', sort @objs) . ')';
+
+    if (@uor) {
+      print wrap( $code_prefix,
+		  "$code_prefix  ",
+		  "Symbol [for $uor] $thing\n"),
+
+	    "$code_prefix  isn't satisfied by declared dependencies,\n",
+
+	    wrap( "$code_prefix  ",
+		  "$code_prefix  ",
+		    "provided by "
+		    . join(", ", sort @uor). "\n" ),
+            ;
+    } else {
+      print wrap( $code_prefix,
+		  "$code_prefix  ",
+		  "Symbol [for $uor] $sym\n" ),
+	    "$code_prefix  isn't satisfied anywhere in the hierarchy\n",
+	    ;
+    }
+    display_recommend(
+	'  ',
+	'        ',
+	(ref($intro_ref) ? $intro_ref : [ ]),
+	$solution_ref );
+  }
+
+  my %bad;
+
+  sub log_bad_sysm {
+    my( $sym, $uor ) = @_;
+    my (@objs) = $db->symbolUsedInUOR($sym, $uor);
+    foreach my $obj (@objs) {
+      push @{$bad{$uor}{$obj}}, $sym;
+    }
+  }
+
+  my %lib_undefined;
+
+  sub get_lib_undefined {
+    my( $lib ) = @_;
+
+    return $lib_undefined{$lib} if exists $lib_undefined{$lib};
+
+    my @defs = (  $db->getDefinedSymbols($lib),
+		  $db->getDefinedSymbols($lib,'D') );
+    my @undefs = $db->getUndefinedSymbols($lib);
+    my %def_hash;
+    @def_hash{@defs} = ( );
+    return $lib_undefined{$lib} = [ grep { ! exists $def_hash{$_} } @undefs ];
+  }
+
+  sub choose_one {
+    my $list = shift;
+    if( @$list > 1 ) {
+      my $prefix_line = "## >>> one of (START)";
+      my $indent_line = "         ";
+      my $suffix_line = "## <<< one of (END)";
+
+      s/^/$indent_line/ for @$list;
+      unshift @$list, $prefix_line;
+      push    @$list, $suffix_line;
+    }
+    return;
+  }
+
+  # Covered Symbols - if there have been deleted deps for a
+  # library, that might have left some formerly resolved symbols
+  # hanging.
+
+  foreach my $uor (sort keys %check_libs) {
+    my $undef_syms_ref = get_lib_undefined( $uor );
+    my @children = get_children( $uor );
+    my @weak_children = get_weak_children( $uor );
+    my %weak_children;
+    @weak_children{@weak_children} = (1) x @weak_children;
+    my $details = get_details( $uor );
+    my $symbol_details = get_symbol_details( $uor );
+    my( %child_used, %weak_child_used, %detail_used );
+
+  CHECKSYMLOOP:
+    foreach my $sym (sort @$undef_syms_ref) {
+
+      # There can be a number of possibilities to resolve a symbol.
+      #
+      # 1. If the symbol provider is known
+      #
+      #    1a - it could be satisified through a strong dependency on
+      #         one of the symbol providers
+      #
+      #    1b - it could be satisified through a weak dependency on
+      #         one of the symbol providers, along with a detail line
+      #         for each calling object
+      #
+      #    1c - if the provider is in an offline or gtk library and
+      #         the caller is not, the call is invalid.  If it is to
+      #         be allowed (for the moment only, one would hope), it
+      #         should be done with a detail line but specifying *no*
+      #         weak dependency (and a warning is issued about the
+      #         situation)
+      #
+      # 2. If the symbol provider is unknown - it can only be satisified
+      #    through a detail line for each calling object, but in this
+      #    case, with no weak dependency specified.
+      #
+      # We check to see if one of these is already specified (in which
+      # case, we just note that the corresponding mechanism has been
+      # used, so it won't be flagged as unnecessary), or guess which
+      # mechanism might be the "best" alternative to provide the symbol.
+
+      # (1a) look for a strong dep that resolves the symbol
+      foreach my $child (@children) {
+	prov_syms_for( $child );
+	if( exists $prov_syms{$child}{$sym} ) {
+	  # a strong dep resolves $sym
+	  ++$child_used{$child};
+
+	  next CHECKSYMLOOP;
+
+	}
+      }
+
+      # Check whether the symbol provider is known
+      my $tolib_ref = sym_provided_by_uors( $sym );
+
+      # Check which calling objects might need detail lines
+      my @fromobjs = $db->symbolUsedInUOR($sym, $uor );
+      my @detail_resolves_objs;
+      my @no_detail_resolves_objs;
+      foreach my $obj (@fromobjs) {
+	if( exist_keys( $details, $obj, $sym ) ) {
+	  ++$detail_used{$obj}{$sym};
+	  push @detail_resolves_objs, $obj;
+	} else {
+	  push @no_detail_resolves_objs, $obj;
+	}
+      }
+
+      my @solutions;
+      my @intro_items;
+      if( @$tolib_ref ) {
+	# (1b) look for a complete or partial weak dep and
+	#      detail line solution.
+	my @found_weak_children
+	    = grep {
+		      exists $weak_children{$_}
+	      } @$tolib_ref;
+	if( @found_weak_children) {
+	  # a weak dep is present, is there a complete set of detail lines?
+	  foreach my $tolib (@found_weak_children) {
+	    ++$weak_child_used{$tolib};
+	  }
+
+	  next CHECKSYMLOOP
+	    unless @no_detail_resolves_objs;
+
+	  # not all of the objects calling this symbol have a detail item
+	  push( @intro_items, 'weak link exists, but (at least some) detail lines do not' );
+	  while( @no_detail_resolves_objs ) {
+	    push @solutions,
+	      join( ' ',
+		      "adddetail $uor",
+		      splice( @no_detail_resolves_objs, 0, 5 ),
+		      "$sym"
+		  );
+	  }
+	} elsif( @detail_resolves_objs ) {
+	  # a (whole or partial) set of detail line(s) is present, but
+	  # (at least) a weak dep is required
+	  my $useable_tolib_ref =
+	      [ grep { ! compare_attribs( $uor, $_) } @$tolib_ref ];
+	  if( @$useable_tolib_ref ) {
+	    push( @intro_items, 'no weak link exists, but (at least some) detail lines do' );
+	    @solutions = map { "addweak $uor $_" } @$tolib_ref;
+	    choose_one( \@solutions );
+	  } else {
+	    # There are no valid weak dep libs - note this
+	    if( scalar(@$tolib_ref) == 1 ) {
+	      print "$error_prefix Symbol $sym only available from invalid library $tolib_ref->[0]\n";
+	      my @bad = compare_attribs( $uor, $tolib_ref->[0] );
+	      print "$error_prefix $_" for @bad;
+	    } else {
+	      print "$error_prefix Symbol $sym only available from invalid libraries:\n";
+	      for my $to (@$tolib_ref ) {
+		my @bad = compare_attribs( $uor, $tolib_ref->[0] );
+		print "$error_prefix $_" for @bad;
+	      }
+	    }
+	  }
+	  # perhaps not all of the objects calling this symbol have a
+	  # detail item already provided
+	  while( @no_detail_resolves_objs ) {
+	    push @solutions,
+	      join( ' ',
+		      "adddetail $uor",
+		      splice( @no_detail_resolves_objs, 0, 5 ),
+		      "$sym"
+		  );
+	  }
+	}
+      } else {
+	# (2) look for a complete or partial detail line only specification
+
+	next CHECKSYMLOOP
+	  unless @no_detail_resolves_objs;
+
+	while( @no_detail_resolves_objs ) {
+	  push @solutions,
+	    join( ' ',
+		    "adddetail $uor",
+		    splice( @no_detail_resolves_objs, 0, 5 ),
+		    "$sym"
+		);
+	}
+      }
+      $found_trouble++;
+      display_missing_symbol( $sym, $uor, \@solutions, \@intro_items );
+    }
+
+    # ++$child_used{'Library::Crun'};
+    my @deldep = (
+	  map { "deldep $uor $_" }
+	    sort
+	      grep { ! $child_used{$_} and ! /^Library::/ }
+		@children
+    );
+    if( @deldep ) {
+      display_recommend(
+	'  ',
+	'        ',
+	[ 'Unused Strong Dependencies' ],
+	\@deldep
+      );
+      # $found_trouble++;
+    }
+
+    my @delweak = (
+	  map { "delweak $uor $_" }
+	    sort
+	      grep { ! $weak_child_used{$_} and ! /^Library::/ }
+		@weak_children
+    );
+    if( @delweak ) {
+      display_recommend(
+	'  ',
+	'        ',
+	[ 'Unused Weak Dependencies' ],
+	\@delweak
+      );
+      # $found_trouble++;
+    }
+
+
+    my %deldetail;
+    foreach my $obj (keys %$details) {
+      foreach my $sym
+	  (grep { ! $detail_used{$obj}{$_} } keys %{$details->{$obj}} ) {
+	push @{$deldetail{$sym}}, $obj;
+      }
+    }
+    if( %deldetail ) {
+      my @deldetail = (
+	  map { join( ' ', "deldetail", $uor, (sort @{$deldetail{$_}}), "$_" ) }
+	    sort keys %deldetail
+      );
+      display_recommend(
+	'  ',
+	'        ',
+	[ 'Unused Weak Details' ],
+	\@deldetail
+      );
+      # $found_trouble++;
+    }
+  }
+
+  # Hanging Links - if deps have been added, or after various
+  # objects have been moved, there can be deps that are no
+  # longer (or not yet) used.
+
+  # Hanging Weak details - if a weak dep has been removed, or
+  # after objects have been moved in various ways, there can
+  # be weak dependency detail items that are no longer needed
+  # (or perhaps the weak dep was needed).
+
+
+  # Checks related to symbols that were affect by moves (but skipping
+  # those that have already been handled by the full library checks).
+
+  $db->debug("Cleaning out removed symbols still provided (".time.")\n");
+
+  # Trim the removed symbol list
+  foreach my $uor (keys %removed_syms) {
+    prov_syms_for( $uor );
+    foreach my $sym (keys %{$removed_syms{$uor}}) {
+      delete $removed_syms{$uor}{$sym} if exists $prov_syms{$uor}{$sym};
+    }
+  }
+
+
+  $db->debug("Cleaning out extra undefs (". time.")\n");
+
+  # Go clear out the parts of the undefs list that are already
+  # resolved by the library that the object files moved into.
+  foreach my $uor (keys %added_undefs) {
+    $db->debug("Processing $uor for undefs (".time.")\n");
+    prov_syms_for( $uor );
+    foreach my $sym (keys %{$added_undefs{$uor}}) {
+      delete $added_undefs{$uor}{$sym} if exists $prov_syms{$uor}{$sym};
+    }
+  }
+
+  $db->debug("Looking for children providing dependencies (".time.")\n");
+
+  # Check to see if the undefs are provided by the child libraries
+  foreach my $uor (sort keys %added_undefs) {
+
+  NEWUNDEFSYMLOOP:
+    foreach my $sym (sort keys %{$added_undefs{$uor}}) {
+      foreach my $child ( get_children( $uor ) ) {
+	prov_syms_for( $child );
+	next NEWUNDEFSYMLOOP if exists $prov_syms{$child}{$sym};
+      }
+      my $obj = $added_undefs{$uor}{$sym};
+      foreach my $child ( get_weak_children( $uor ) ) {
+	prov_syms_for( $child );
+	if( exists $prov_syms{$child}{$sym} ) {
+	  my $details = get_details( $uor );
+	  next NEWUNDEFSYMLOOP
+	    if exist_keys( $details, $obj, $sym );
+	}
+      }
+      display_missing_symbol( $sym, $uor );
+      $found_trouble++;
+    }
+  }
+
+  $db->debug("Looking for unresolved syms because of removals (".time.")\n");
+
+  # Check to see if the removal of symbols cause parent libraries to
+  # have unresolved symbol problems
+  foreach my $uor (sort keys %removed_syms) {
+    my $details = get_details( $uor );
+    foreach my $parent ($uor, get_parents( $uor )) {
+      if (!exists $needs_syms{$parent}) {
+	@{$needs_syms{$parent}}{ @{get_lib_undefined( $parent )} } = ();
+      }
+
+    REMSYMLOOP:
+      foreach my $sym (sort keys %{$removed_syms{$uor}}) {
+	if (exists $needs_syms{$parent}{$sym}) {
+	  foreach my $child (get_children( $parent )) {
+	    prov_syms_for( $child );
+	    next REMSYMLOOP if exists $prov_syms{$child}{$sym};
+	  }
+	  my $obj = $removed_syms{$uor}{$sym};
+	  my $detail_child;
+	  next REMSYMLOOP
+	    if exist_keys( $details, $obj, $sym )
+	    and $detail_child = $details->{$obj}{$sym}
+	    and grep { $detail_child eq $_ }
+		      get_weak_children( $parent );
+	  log_bad_sym( $sym, $parent );
+	  $found_trouble++;
+	}
+      }
+    }
+  }
+  if (%bad) {
+    print_sym_missing(%bad);
+  }
+
+  # Check to see if the removal of symbols caused random libraries in
+  # the system to have unresolved symbol problems.
+
+  # %removed_syms has a per-uor list of removed symbols. Unique 'em
+  my %removedsymbols;
+  foreach my $uor (keys %removed_syms) {
+    @removedsymbols{keys %{$removed_syms{$uor}}} = ();
+  }
+
+  # clear out anything that's moved -- what the heck, we're checking
+  # for random untagged usage, so why should we care about more of it?
+  foreach my $sym (sort keys %removedsymbols) {
+    foreach my $otheruor (sort keys %prov_syms) {
+      delete $removedsymbols{$sym} if exists $prov_syms{$otheruor}{$sym};
+    }
+  }
+  $db->debug("checking for still-provided symbols (".time.")\n");
+  # So now %removedsymbols has a list of what we allegedly
+  # removed. See if someone else provides them. (Remember we're in the
+  # "what the heck, let's check everyone" part of the program)
+  foreach my $sym (keys %removedsymbols) {
+    my (@obj) = ($db->symbolProvided($sym, 'T'),
+		 $db->symbolProvided($sym, 'D'));
+    if (@obj && $db->getSymbolType($sym) eq 'T') {
+      print wrap( $code_prefix,
+		  "$code_prefix  ",
+		  "$sym is still provided by ".  scalar(@obj). " objects\n");
+      $found_trouble++;
+      next;
+    }
+    # Right, does anyone *use* this symbol?
+    @obj = $db->symbolUsedUOR($sym);
+    next unless @obj;
+    print wrap( $code_prefix,
+		"$code_prefix  ",
+		"Symbol $sym still used by ". join(' ', sort(@obj)). "\n");
+    $found_trouble++;
+  }
+
+  $db->closeDB();
+
+  if (!$found_trouble) {
+    print wrap( $code_prefix,
+		$code_prefix,
+		"Done. $0 has not identified any issues with the requested structural changes"
+	  ),
+	  "\n";
+  }
+
+}

@@ -1,0 +1,25 @@
+#!/bbs/opt/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Change::Set;
+use Change::DB;
+use Change::Symbols qw/DBPATH/;
+use Util::SCMControl qw/acceptSCMUser/;
+use Util::Message qw/fatal/;
+use strict;
+
+acceptSCMUser()  or  fatal "user not authorized";
+
+my $db = Change::DB->new(DBPATH) or
+  die "Error opening change db.".$/;
+
+for my $metafile (@ARGV ? @ARGV : qw(-)) {
+  my $cs = Change::Set->load($metafile);
+  $db->addChangeSet($cs) or
+    die "Error adding changeset database record.".$/;
+}
+

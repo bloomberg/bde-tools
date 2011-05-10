@@ -1,0 +1,90 @@
+#!/bin/ksh
+
+typeset USAGE
+USAGE="Usage: $0 [-c] [-d] [-l] [-o] [-s] [-q] lib [lib...]
+   where lib is a short uor library name known to symfind
+   (e.g. gtkapp [ not gtk/gtkapp!])
+"
+
+# if [[ "$1" = "-h" ]] || [[ "$1" = "--help" ]]
+# then
+    # echo $USAGE
+    # return 0
+# fi
+
+libnames=libnames
+deflist=yes
+callers=
+deps=
+echo=echo
+q=
+
+function mycat
+{
+    # ignore arguments, like that pesky -q
+    cat
+}
+
+while getopts "cdhlsoq" opt
+do
+    case $opt in
+	l )
+	    libnames=libnames
+	    ;;
+	s )
+	    libnames=mycat
+	    ;;
+	o )
+	    libnames=objnames
+	    ;;
+	c )
+	    callers=yes
+	    deflist=
+	    ;;
+	d )
+	    deps=yes
+	    deflist=
+	    ;;
+	h )
+	    echo "$USAGE"
+	    return 0
+	    ;;
+	q )
+	    echo=:
+	    q=-q
+	    ;;
+	\?)
+	    echo "$USAGE"
+	    return 1
+	    ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+typeset uselib
+
+for lib in "$@"
+do
+    uselib=/bbs/lib/lib$lib.a
+    [[ -f $uselib ]] || uselib=$lib
+    if [[ -f $uselib ]]
+    then
+	if [[ -n "$callers$deflist" ]]
+	then
+	    $echo ==== $lib callers
+	    symfind --callers $uselib | $libnames $q
+	    $echo
+	fi
+	if [[ -n "$deps$deflist" ]]
+	then
+	    $echo ==== $lib deps
+	    symfind --deps $uselib | $libnames $q
+	    $echo
+	fi
+    else
+	echo "Cannot find $lib"
+	echo $USAGE
+	return 1
+    fi
+done

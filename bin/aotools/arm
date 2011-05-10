@@ -1,0 +1,8 @@
+#!/bin/ksh
+
+# Arch group source code remove.
+# It uses scmrm to do the work.
+
+PATH=/bbsrc/bin/prod/bin/robo:$PATH
+
+scmrm "$@"

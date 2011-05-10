@@ -1,0 +1,60 @@
+#!/bbs/opt/bin/perl -w
+
+use Getopt::Long;
+use SCM::CSDB::Lock;
+use SCM::Symbols qw/$SCM_CSDB $SCM_CSDB_DRIVER/;
+use strict;
+
+my @getopt = qw/verbose help/;
+my %opt;
+
+GetOptions(\%opt, @getopt) or die usage();
+do { print usage(); exit 0 } if $opt{help};
+
+my $lockdb = SCM::CSDB::Lock->new(
+  driver => $SCM_CSDB_DRIVER,
+  database => $SCM_CSDB
+);
+
+# import all locks in one big transaction
+my $txn = $lockdb->txn;
+my %args = ( notxn => 1 );
+my $me = getpwuid($<);
+
+while (<>) {
+  chomp;
+  my ($path, $user) = split;
+
+  if (defined $user) {
+    verbose("lock $path for $user");
+    $lockdb->force({ path => $path, user => $user }, %args);
+  }
+  else {
+    verbose("unlock $path");
+    $lockdb->mklockable({ path => $path }, %args);
+    $lockdb->unlock({ path => $path, user => $me }, %args);
+  }
+}
+
+$txn->commit;
+
+sub verbose {
+  print STDERR (shift).$/ if $opt{verbose};
+}
+
+sub usage {
+  my $prog = (split m{/}, $0)[-1];
+  my $usage = <<EOUSAGE;
+
+  $prog - forcibly set locks in SCM
+
+  \$ $prog lockfile.list
+  \$ cat lockfile.list | $prog -v   # report on progress
+  \$ echo "/foo/bar jdoe" | $prog   # give john doe the lock on /foo/bar 
+  \$ echo "/foo/bar" | $prog        # unlock the path /foo/bar
+
+EOUSAGE
+
+  return join $/, (map { s/^\s{2}//; $_ } split /\n/, $usage), '';
+}
+

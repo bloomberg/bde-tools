@@ -1,0 +1,102 @@
+=head1 NAME
+
+cstest - cstools unit testing framework
+
+=head1 SYNOPSIS
+
+  $ cstest_setup /bbsrc/bin/prod/lib/perl ./t
+  $ cstest_run /bbsrc/bin/prod/lib/perl ./t
+  $ cstest_teardown /bbsrc/bin/prod/lib/perl ./t
+
+=head1 DESCRIPTION
+
+This document is for two kinds of people:
+
+=over 4
+
+=item 1 people who aren't familiar with the cstools codebase, and just want to gauge its quality (or lack thereof).
+
+=item 2 cstools module authors who wish to participate in unit testing.
+
+=item 3 people who can't count, but like it when test drivers count for them.
+
+=back
+
+=head1 RUNNING THE TESTS
+
+=over 4
+
+=item $ cstest_setup libdir testdir
+
+Populates C<testdir> with drivers for all unit tests beneath C<libdir>. The test drivers are symlinks numbered via a topological sort of the perl module dependency graph. This ensures that test failures in basic modules are discovered before failures in modules which may rely on them. When investigating test failures, always start with the first failure and work your way down the list.
+
+L</cstest_setup> also provisions any resources which must persist across multiple tests. For example, if there are tests which expect to connect to a database with a particular schema, the database schema will be set up at this time.
+
+L</cstest_setup> should only be run once on C<testdir>. If the C<libdir> tree has changed, use a new test area and clean up the old one with L</cstest_teardown>.
+
+=item $ cstest_run [-v] libdir testdir [testdir/test1 ...]
+
+Run tests in the test area established by L</cstest_setup>. With C<-v>, report each test as it's run (each unit test driver typically contains many). Otherwise, just report the overall outcome of each unit test. To run specific tests, specify only those C<testdir>-relative drivers you are interested in. The default is to run all tests.
+
+=item $ cstest_teardown libdir testdir
+
+Cleans up any persistent resources acquired by L</cstest_setup> and removes C<testdir>.
+
+=back
+
+=head1 WRITING TESTS
+
+  "The essence of testing is writing testable code."
+
+L</cstest> is not a totally generic testing framework. It can only test perl modules. It can't test perl scripts. It therefore encourages you to factor code complicated enough to need testing into separate modules. This has other nice side effects, like enabling reuse. Try it--you'll like it.
+
+Once you have a module (let's call it C<My/Greatest/Module.pm>), writing a unit test for it is as simple as writing a L<TAP|Test::Harness::TAP>-compliant driver located at C<My/Greatest/t/Module.t>. L<TAP|Test::Harness::TAP> is just a simple output format that declares how many tests you're planning to run and the outcome of each in turn. For example, your test driver might output:
+
+  1..4
+  ok 1 - Input file opened
+  not ok 2 - First line of the input valid
+  ok 3 - Read the rest of the file
+  not ok 4 - Summarized correctly # TODO Not written yet
+
+That's really all there is to it. Of course, within your test driver you can use modules like L<Test::More|Test::More> or L<Test::Simple|Test::Simple> to make emitting L<TAP|Test::Harness::TAP> even more painless. There are also some general principles that can help make your tests more effective.
+
+=over 4
+
+=item * Only test the module you've set out to test.
+
+You shouldn't be testing C<Bobs/Awesome/Module.pm> in C<My/Greatest/t/Module.t>, even if you know parts of your module will explode when Bob's doesn't work. Your job is to test your module. Because of dependency ordering, Bob's module will fail first if it's broken. People who run the cstools test suite know that after the first test failure, all bets are off.
+
+=item * Write at least one test for each subroutine and method.
+
+This is standard unit testing practice. When a test fails, you want to localize the failure to the smallest possible region in the module's code. It's no different than debugging in this sense. If you write a single test that involves calling 10 different methods in turn on an object, which of the 10 was the culprit when that test fails? Don't make people go through a police lineup if there's no need to.
+
+=item * Be stateless.
+
+For similar reasons, sharing state across multiple tests can be dangerous. Perhaps test #1 succeeded, but it left the object in an inconsistent state. If test #2 reuses the object and fails, who's to blame? Whenever possible, it's better to fabricate fresh data to pass to each test, and throw it away afterwards.
+
+=item * Avoid I/O, especially interactive I/O.
+
+Never use interactive I/O in the main test driver. People should be able to run the test suite unattended. For that matter, if you can avoid doing any kind of I/O, you should, since I/O involves reading and writing state and can compromise statelessness.
+
+=item * Always clean up after each test.
+
+If you must do I/O, clean up any output at the earliest possible opportunity. Lingering output may affect future tests or interfere with test teardown. Your test driver is run inside a temporary directory, so writing out files beneath the current working directory is recommended when the need arises.
+
+=item * Check against known, embedded results.
+
+When you test a method or subroutine, you call it with certain inputs and expect certain outputs. How do you know what the correct output is for a given input? You should hardcode the answer into your test driver. Don't rely on another tool which is "known to be correct" to provide the answer, and don't store the answer in a separate file. Both of these introduce new failure modes in situations where your test would otherwise succeed.
+
+=item * Propagate exceptions as failed tests.
+
+Failure in perl is often communicated via C<die> rather than via return code. If this happens and you're not catching exceptions (via C<eval>), your test driver will come to a screeching halt, regardless of whether or not there are still more independent tests that could be performed. You want to test as much as you can. Your test driver should probably loop over the tests, running them in an inner eval block. When an exception is thrown, output C<$@> along with the standard "not ok" line.
+
+=item * Skip tests where appropriate.
+
+If you can reliably detect that resources needed for certain tests are not available, skip those tests with an informative message. For instance, if you're writing an mp3 tagger that can optionally query a cddb datasource specified via C<$ENV{CDDB_URL}>, it doesn't make sense to fail all the other tests just because C<$ENV{CDDB_URL}> is not defined. Skip it.
+
+=back
+
+=head1 AUTHORS
+
+Alan Grow E<lt>agrow@bloomberg.netE<gt>
+

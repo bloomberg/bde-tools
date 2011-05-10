@@ -1,0 +1,46 @@
+#!/bin/sh
+
+logdir="${CSRELEASEBIN_LOG_DIR-/bb/csdata/logs/csreleasebin}"
+
+exec_toolsgw() {
+  release=$1 && shift
+  basename=$1 && shift
+  log_and_exec /bbsrc/bin/toolsgw/$release/$basename ${1+"$@"}
+}
+
+log_and_exec() {
+  ts=`date '+%Y%m%d%H%M%S'`
+  pid=$$
+  host="`hostname`"
+  user=$LOGNAME
+  logfile=$ts'_'$user'_'$pid'_'$host
+
+  touch $logdir/$logfile
+  echo ${1+"$@"} > $logdir/$logfile
+  exec ${1+"$@"}
+}
+
+basename=`basename $0`
+
+case "$0" in
+    */prod/$basename)
+      exec_toolsgw prod $basename ${1+"$@"}
+      ;;
+    */beta/$basename)
+      exec_toolsgw beta $basename ${1+"$@"}
+      ;;
+    */alpha/$basename)
+      exec_toolsgw alpha $basename ${1+"$@"}
+      ;;
+    */lgood/$basename)
+      exec_toolsgw lgood $basename ${1+"$@"}
+      ;;
+    */cstest/$basename)
+      exec_toolsgw cstest $basename ${1+"$@"}
+      ;;
+    *)
+      echo "Error: please run prod, beta, alpha, lgood or cstest version of $basename."
+      exit 1
+      ;;
+esac
+

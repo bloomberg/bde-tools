@@ -1,0 +1,126 @@
+#!/bb/csdata/scm/bin/perl -w
+# FIXME - make shebang standard once we're on 5.8.8
+
+my $format = 'line';
+
+while (@ARGV) {
+  if ($ARGV[0] eq '-F') {
+    shift; $format = shift;
+  }
+  elsif ($ARGV[0] eq '-I') {
+    shift; unshift @INC, shift;
+  }
+  else {
+    last;
+  }
+}
+
+process(@ARGV);
+
+sub process {
+  my $argc = @_;
+
+  while (local $_ = $argc ? shift : <>) {
+    chomp;
+    my $pid = fork;
+
+    if (!defined $pid) {
+      die "fork: $!".$/ if !defined $pid;
+    }
+    elsif ($pid > 0) {
+      while (my $wait = wait) {
+        last if $wait == $pid;
+        last if $wait < 0;
+      }
+      exit $? >> 8 if $?;
+    }
+    else {
+      my ($mod, $pm) = incpair($_);
+      my @deps = deps($pm);
+      output(\*STDOUT, $mod, @deps);
+      exit 0;
+    }
+  }
+}
+
+sub deps {
+  my $pm = shift;
+
+  local %INC;
+
+  for (grep -f, map { "$_/$pm" } @INC) {
+    $INC{$pm} = $_;
+    do $_ or delete $INC{$pm};
+    delete $INC{$_};
+    last;
+  }
+
+  die "error loading module $pm: $!: $@.".$/ unless $INC{$pm};
+  return sort map { pm2mod($_) } keys %INC;
+}
+
+sub output {
+  my ($fh, $mod, @deps) = @_;
+
+  if ($format eq 'line') {           # paste(1)-friendly output format
+    print $fh join(' ', @deps).$/;
+  }
+  elsif ($format eq 'pairs') {       # tsort(1)-friendly output format
+    print $fh $mod.' '.$_.$/ for @deps;
+  }
+  else {
+    die "error, bad output format: $format$/";
+  }
+}
+
+sub incpair {
+  my $unit = shift;
+  return $unit =~ /\.pm$/ ? (pm2mod($unit), $unit) : ($unit, mod2pm($unit));
+}
+
+sub pm2mod {
+  my $m = shift;
+  $m =~ s{/}{::}g;
+  $m =~ s{\.pm$}{};
+  return $m;
+}
+
+sub mod2pm {
+  my $m = shift;
+  $m =~ s{::}{/}g;
+  $m .= '.pm';
+  return $m;
+}
+
+=head1 NAME
+
+perldeps - print compile-time dependencies for module(s)
+
+=head1 SYNOPSIS
+
+perldeps [OPTIONS] First::Module Second/Module.pm ...
+
+=over 4
+
+=item -F line|pairs
+
+output in paste(1) or tsort(1) friendly format, resp.
+
+=item -I incpath
+
+just like perl -I incpath
+
+=back
+
+=head1 NOTES
+
+perldeps can't detect runtime dependencies. Runtime dependencies are nasty anyway. Consider making all dependencies explicit at compile-time.
+
+Since perl can't reliably unload modules, module loading and dependency detection must be performed in a separate child process. perldeps forks, serially, for each module argument given.
+
+=head1 AUTHORS
+
+Alan Grow (agrow@bloomberg.net)
+
+=cut
+

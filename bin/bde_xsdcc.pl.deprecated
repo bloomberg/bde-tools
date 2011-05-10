@@ -1,0 +1,3301 @@
+#! /bbs/opt/bin/perl -w
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+
+use English;
+use Carp;
+use Data::Dumper;
+use File::Basename;
+use File::Find;
+use File::Spec;
+use IO::File;
+use XML::Simple;
+use Template;
+
+use constant BDENS => 'http://bloomberg.com/schemas/BdeSchemaX';
+use constant XMLNS => 'http://www.w3.org/2001/XMLSchema';
+use constant WSDLNS => 'http://schemas.xmlsoap.org/wsdl/';
+
+use constant NESTED_ENUM_TYPE => 'Value';
+
+use constant CPP_KEYWORDS => [qw(
+bool break case catch char class const const_cast continue default delete do
+double dynamic_cast else enum explicit extern false float for friend goto if
+inline int long mutable namespace new operator private protected public
+register reinterpret_cast return short signed sizeof static static_cast struct
+switch template this throw true try typedef typeid typename union unsigned
+using virtual void volatile wchar_t while
+)];
+
+use constant TYPE_INFO => {
+                'boolean'               =>  {
+                                             cpptype => 'bool',
+                                             formattingMode => 'text',
+                                            },
+                'byte'                  =>  {
+                                             cpptype => 'char',
+                                             formattingMode => 'dec',
+                                            },
+                'date'                  =>  {
+                                             cpptype => 'bdet_DateTz',
+                                            },
+                'dateTime'              =>  {
+                                             cpptype => 'bdet_DatetimeTz',
+                                            },
+                'decimal'               =>  {
+                                             cpptype => 'double',
+                                             formattingMode => 'dec',
+                                            },
+                'double'                =>  {
+                                             cpptype => 'double',
+                                            },
+                'float'                 =>  {
+                                             cpptype => 'float',
+                                            },
+                'int'                   =>  {
+                                             cpptype => 'int',
+                                             formattingMode => 'dec',
+                                            },
+                'integer'               =>  {
+                                             cpptype => 
+                                                 'bdes_PlatformUtil::Int64',
+                                             formattingMode => 'dec',
+                                            },
+                'long'                  =>  {
+                                             cpptype => 
+                                                 'bdes_PlatformUtil::Int64',
+                                             formattingMode => 'dec',
+                                            },
+                'negativeInteger'       =>  {
+                                             cpptype => 
+                                                 'bdes_PlatformUtil::Int64',
+                                             formattingMode => 'dec',
+                                            },
+                'nonNegativeInteger'    =>  {
+                                             cpptype => 
+                                                 'bdes_PlatformUtil::Uint64',
+                                             formattingMode => 'dec',
+                                            },
+                'nonPositiveInteger'    =>  {
+                                             cpptype => 
+                                                 'bdes_PlatformUtil::Int64',
+                                             formattingMode => 'dec',
+                                            },
+                'normalizedString'      =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'positiveInteger'       =>  {
+                                             cpptype => 
+                                                 'bdes_PlatformUtil::Uint64',
+                                             formattingMode => 'dec',
+                                            },
+                'short'                 =>  {
+                                             cpptype => 'short',
+                                             formattingMode => 'dec',
+                                            },
+                'string'                =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'normalizedString'      =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'token'                 =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'language'              =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'Name'                  =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'NMTOKEN'               =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'NCName'                =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'NMTOKENS'              =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'ID'                    =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'IDREF'                 =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'ENTITY'                =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'IDREFS'                =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'ENTITIES'              =>  {
+                                             cpptype => 'std::string',
+                                             formattingMode => 'text',
+                                            },
+                'time'                  =>  {
+                                             cpptype => 'bdet_TimeTz',
+                                            },
+                'unsignedByte'          =>  {
+                                             cpptype => 'unsigned char',
+                                             formattingMode => 'dec',
+                                            },
+                'unsignedInt'           =>  {
+                                             cpptype => 'unsigned int',
+                                             formattingMode => 'dec',
+                                            },
+                'unsignedLong'          =>  {
+                                             cpptype => 
+                                                 'bdes_PlatformUtil::Uint64',
+                                             formattingMode => 'dec',
+                                            },
+                'unsignedShort'         =>  {
+                                             cpptype => 'unsigned short',
+                                             formattingMode => 'dec',
+                                            },
+                'base64Binary'          =>  {
+                                             cpptype => 'std::vector<char>',
+                                             formattingMode => 'base64',
+                                             noListSupport => 1,
+                                            },
+                'hexBinary'             =>  {
+                                             cpptype => 'std::vector<char>',
+                                             formattingMode => 'hex',
+                                             noListSupport => 1,
+                                            },
+                'bdeut_BigEndianInt16'  =>  {
+                                             cpptype => 'bdeut_BigEndianInt16',
+                                             formattingMode => 'dec',
+                                            },
+                'bdeut_BigEndianUint16'  =>  {
+                                             cpptype =>
+                                              'bdeut_BigEndianUint16',
+                                             formattingMode => 'dec',
+                                            },
+                'bdeut_BigEndianInt32'  =>  {
+                                             cpptype => 'bdeut_BigEndianInt32',
+                                             formattingMode => 'dec',
+                                            },
+                'bdeut_BigEndianUint32'  =>  {
+                                             cpptype =>
+                                              'bdeut_BigEndianUint32',
+                                             formattingMode => 'dec',
+                                            },
+                'bdeut_BigEndianInt64'  =>  {
+                                             cpptype => 'bdeut_BigEndianInt64',
+                                             formattingMode => 'dec',
+                                            },
+                'bdeut_BigEndianUint64'  =>  {
+                                             cpptype =>
+                                              'bdeut_BigEndianUint64',
+                                             formattingMode => 'dec',
+                                            },
+               };
+
+use constant CPPTYPE_ALLOCATES_MEMORY =>
+  {
+   'bool' => '',
+   'int' => '',
+   'char' => '',
+   'short' => '',
+   'bdes_PlatformUtil::Int64' => '',
+   'unsigned int' => '',
+   'unsigned char' => '',
+   'unsigned short' => '',
+   'bdes_PlatformUtil::Uint64' => '',
+   'float' => '',
+   'double' => '',
+   'bdet_Date' => '',
+   'bdet_DateTz' => '',
+   'bdet_Time' => '',
+   'bdet_TimeTz' => '',
+   'bdet_Datetime' => '',
+   'bdet_DatetimeTz' => '',
+   'bdeut_BigEndianInt16' => '',
+   'bdeut_BigEndianUint16' => '',
+   'bdeut_BigEndianInt32' => '',
+   'bdeut_BigEndianUint32' => '',
+   'bdeut_BigEndianInt64' => '',
+   'bdeut_BigEndianUint64' => '',
+   'std::string' => 'allocates memory',
+   'std::vector' => 'allocates memory',
+  };
+
+use constant CPPTYPE_PASSBYVAL =>
+  {
+   'bool' => 'pass by value',
+   'int' => 'pass by value',
+   'char' => 'pass by value',
+   'short' => 'pass by value',
+   'int' => 'pass by value',
+   'bdes_PlatformUtil::Int64' => 'pass by value',
+   'unsigned int' => 'pass by value',
+   'unsigned char' => 'pass by value',
+   'unsigned short' => 'pass by value',
+   'bdes_PlatformUtil::Uint64' => 'pass by value',
+   'float' => 'pass by value',
+   'double' => 'pass by value',
+   'bdeut_BigEndianInt16' => 'pass by value',
+   'bdeut_BigEndianUint16' => 'pass by value',
+   'bdeut_BigEndianInt32' => 'pass by value',
+   'bdeut_BigEndianUint32' => 'pass by value',
+   'bdeut_BigEndianInt64' => 'pass by value',
+   'bdeut_BigEndianUint64' => 'pass by value',
+  };
+
+use constant CPPTYPE_HEADER => 
+  {
+   'bool' =>  '',
+   'int' =>  '',
+   'char' => '',
+   'short' => '',
+   'bdes_PlatformUtil::Int64' => 'bdes_platformutil.h',
+   'unsigned int' => '',
+   'unsigned char' => '',
+   'unsigned short' => '',
+   'bdes_PlatformUtil::Uint64' => 'bdes_platformutil.h',
+   'float' => '',
+   'double' => '',
+   'bdet_Date' => 'bdet_date.h',
+   'bdet_DateTz' => 'bdet_datetz.h',
+   'bdet_Time' => 'bdet_time.h',
+   'bdet_TimeTz' => 'bdet_timetz.h',
+   'bdet_Datetime' => 'bdet_datetime.h',
+   'bdet_DatetimeTz' => 'bdet_datetimetz.h',
+   'std::string' => 'string',
+   'std::vector' => 'vector',
+   'bdeut_NullableValue' => 'bdeut_nullablevalue.h',
+   'bdeut_NullableAllocatedValue' => 'bdeut_nullableallocatedvalue.h',
+   'bdeut_BigEndianInt16' => 'bdeut_bigendian.h',
+   'bdeut_BigEndianUint16' => 'bdeut_bigendian.h',
+   'bdeut_BigEndianInt32' => 'bdeut_bigendian.h',
+   'bdeut_BigEndianUint32' => 'bdeut_bigendian.h',
+   'bdeut_BigEndianInt64' => 'bdeut_bigendian.h',
+   'bdeut_BigEndianUint64' => 'bdeut_bigendian.h',
+  };
+
+use constant TARGETS =>
+  {
+#  'report' => {
+#               'sequence' => {
+#                              'template' => 'sequence_report.t',
+#                              'ext'      => '.txt'
+#                             },
+#               'choice' => {
+#                            'template' => 'choice_report.t',
+#                            'ext'      => '.txt'
+#                           },
+#               'enumeration' => {
+#                                 'template' =>
+#                                 'enumeration_report.t',
+#                                 'ext'      => '.txt'
+#                                },
+#               'customizedtype' => {
+#                                    'template' =>
+#                                    'customizedtype_report.t',
+#                                    'ext'      => '.txt'
+#                                   },
+#              },
+   'h' => {
+           'complexType' => {
+                          'template' => 'complex_h.t',
+                          'ext'      => '.h'
+                         },
+           'sequence' => {
+                          'template' => 'sequence_h.t',
+                          'ext'      => '.h'
+                         },
+           'choice' => {
+                        'template' => 'choice_h.t',
+                        'ext'      => '.h'
+                       },
+           'enumeration' => {
+                             'template' => 'enumeration_h.t',
+                             'ext'      => '.h'
+                            },
+           'customizedtype' => {
+                                'template' => 'customizedtype_h.t',
+                                'ext'      => '.h'
+                               },
+          },
+   'cpp' => {
+             'complexType' => {
+                          'template' => 'complex_cpp.t',
+                          'ext'      => '.cpp'
+                         },
+             'sequence' => {
+                            'template' => 'sequence_cpp.t',
+                            'ext'      => '.cpp'
+                           },
+             'choice' => {
+                          'template' => 'choice_cpp.t',
+                          'ext'      => '.cpp'
+                         },
+             'enumeration' => {
+                               'template' => 'enumeration_cpp.t',
+                               'ext'      => '.cpp'
+                              },
+             'customizedtype' => {
+                                  'template' => 'customizedtype_cpp.t',
+                                  'ext'      => '.cpp'
+                                 },
+            },
+   't' => {
+           'complexType' => {
+                             'template' => 'complex_t.t',
+                             'ext'      => '.t.cpp'
+                            },
+           'sequence' => {
+                          'template' => 'sequence_t.t',
+                          'ext'      => '.t.cpp'
+                         },
+           'choice' => {
+                        'template' => 'choice_t.t',
+                        'ext'      => '.t.cpp'
+                       },
+           'enumeration' => {
+                             'template' => 'enumeration_t.t',
+                             'ext'      => '.t.cpp'
+                            },
+           'customizedtype' => {
+                                'template' => 'customizedtype_t.t',
+                                'ext'      => '.t.cpp'
+                               },
+          },
+   'configschema_h' => {
+                      'schema' => {
+                                   'template' => 'configschema_h.t',
+                                   'ext'      => '_configschema.h'
+                                  },
+                     },
+   'configschema_cpp' => {
+                   'schema' => {
+                                'template' => 'configschema_cpp.t',
+                                'ext'      => '_configschema.cpp'
+                               },
+                  },
+   'configschema_t' => {
+                   'schema' => {
+                                'template' => 'configschema_t.t',
+                                'ext'      => '_configschema.t.cpp'
+                               },
+                  },
+   'xsd' => {
+             'schema' => {
+                          'template' => 'schema.t',
+                          'ext'      => '_processed.xsd'
+                         },
+            },
+   'svcmain' => {
+             'svc' => {
+                          'template' => 'svcmain_cpp.t',
+                          'ext'      => '.m.cpp',
+                         },
+            },
+   'svctest' => {
+             'svc' => {
+                          'template' => 'svctest_cpp.t',
+                          'ext'      => '_test.m.cpp',
+                         },
+            },
+   'svccfg_xsd' => {
+             'backup' => 1,
+             'svc' => {
+                          'template' => 'svccfg_xsd.t',
+                          'ext'      => '.cfg.xsd',
+                         },
+            },
+   'svccfg_xml' => {
+             'backup' => 1,
+             'svc' => {
+                          'template' => 'svccfg_xml.t',
+                          'ext'      => '.cfg.xml',
+                         },
+            },
+   'svcproc_h' => {
+             'backup' => 1,
+             'svc' => {
+                          'template' => 'svcproc_h.t',
+                          'ext'      => '_requestprocessor.h',
+                         },
+            },
+   'svcproc_cpp' => {
+             'backup' => 1,
+             'svc' => {
+                          'template' => 'svcproc_cpp.t',
+                          'ext'      => '_requestprocessor.cpp',
+                         },
+            },
+   'svcproc_t' => {
+             'backup' => 1,
+             'svc' => {
+                          'template' => 'svcproc_t.t',
+                          'ext'      => '_requestprocessor.t.cpp',
+                         },
+            },
+   'svctestproc_h' => {
+             'svc' => {
+                          'template' => 'svctestproc_h.t',
+                          'ext'      => '_testrequestprocessor.h',
+                         },
+            },
+   'svctestproc_cpp' => {
+             'svc' => {
+                          'template' => 'svctestproc_cpp.t',
+                          'ext'      => '_testrequestprocessor.cpp',
+                         },
+            },
+   'svctestproc_t' => {
+             'svc' => {
+                          'template' => 'svctestproc_t.t',
+                          'ext'      => '_testrequestprocessor.t.cpp',
+                         },
+            },
+   'svctestpairs_xsd' => {
+             'svc' => {
+                          'template' => 'svctest_xsd.t',
+                          'ext'      => '.tst.xsd',
+                         },
+            },
+   'svctestpairs_xml' => {
+             'svc' => {
+                          'template' => 'svctest_xml.t',
+                          'ext'      => '.tst.xml',
+                         },
+            },
+   'svcvers_h' => {
+             'svc' => {
+                          'template' => 'svcvers_h.t',
+                          'ext'      => '_version.h'
+                         },
+            },
+   'svcvers_cpp' => {
+             'svc' => {
+                          'template' => 'svcvers_cpp.t',
+                          'ext'      => '_version.cpp'
+                         },
+            },
+   'svcvers_t' => {
+             'svc' => {
+                          'template' => 'svcvers_t.t',
+                          'ext'      => '_version.t.cpp'
+                         },
+            },
+   'start_script' => {
+             'svc' => {
+                          'template' => 'start_svc.t',
+                          'prefix'   => 'start_',
+             },
+            },
+   'pstart_script' => {
+             'svc' => {
+                          'template' => 'pstart_svc.t',
+                          'prefix'   => 'pstart_',
+             },
+            },
+   'stop_script' => {
+             'svc' => {
+                          'template' => 'stop_svc.t',
+                          'prefix'   => 'stop_',
+             },
+            },
+   'svcmake_mk' => {
+             'plink' => {
+                          'template' => 'svcmake_mk.t',
+                          'ext'      => '.mk'
+                         },
+            },
+   'svctest_mk' => {
+             'plink' => {
+                          'template' => 'svctest_mk.t',
+                          'ext'      => '_test.mk'
+                         },
+            },
+   'svcmake_dums' => {
+             'backup' => 1,
+             'plink' => {
+                          'template' => 'svcmake_dums.t',
+                          'ext'      => '_dum.c'
+                         },
+             'pkg' => {
+                          'template' => 'svcmake_dums.t',
+                          'ext'      => '.dums',
+                          'prefix'   => 'package/',
+                         },
+            },
+   'svcmake_refs' => {
+             'backup' => 1,
+             'plink' => {
+                          'template' => 'svcmake_refs.t',
+                          'ext'      => '_refs.c'
+                         },
+             'pkg' => {
+                          'template' => 'svcmake_refs.t',
+                          'ext'      => '.refs',
+                          'prefix'   => 'package/',
+                         },
+            },
+   'svcmake_dep' => {
+             'pkg' => {
+                          'template' => 'svcmake_dep.t',
+                          'ext'      => '.dep',
+                          'prefix'   => 'package/',
+                         },
+            },
+   'svcmake_mem' => {
+             'pkg' => {
+                          'template' => 'svcmake_mem.t',
+                          'ext'      => '.mem',
+                          'prefix'   => 'package/',
+                         },
+            },
+   'svcmake_opts' => {
+             'backup' => 1,
+             'pkg' => {
+                          'template' => 'svcmake_opts.t',
+                          'ext'      => '.opts',
+                          'prefix'   => 'package/',
+                         },
+            },
+  };
+
+use constant MODES =>
+  {
+   'cfg' => {
+             'inline' => 1,
+             'extended' => 1,
+             'strip' => 1,
+             'generate' => [
+                            'configschema_h',
+                            'configschema_cpp',
+                            'configschema_t',
+                            'xsd',
+                            'h',
+                            'cpp',
+                            't',
+                           ],
+            },
+   'msg' => {
+             'checkTopLevelTypes' => 1,
+             'extended' => 1,
+             'generate' => [
+                            'h',
+                            'cpp',
+                            't',
+                           ],
+            },
+   'svc' => {
+             'checkTopLevelTypes' => 1,
+             'extended' => 1,
+             'generate' => [
+                            'svcmain',
+#                           'svcmake_mk',
+                            'svctest',
+#                           'svctest_mk',
+#                           'svcmake_dum',
+#                           'svcmake_refs',
+                            'svcproc_h',
+                            'svcproc_cpp',
+                            'svcproc_t',
+                            'svcvers_h',
+                            'svcvers_cpp',
+                            'svcvers_t',
+                            'svccfg_xsd',
+                            'svccfg_xml',
+                            'start_script',
+                            'pstart_script',
+                            'stop_script',
+                            'svctestpairs_xsd',
+                           ],
+            },
+   'tst' => {
+             'extended' => 1,
+             'generate' => [
+                            'svcmain',
+                            'svcmake_mk',
+                            'svctestproc_h',
+                            'svctestproc_cpp',
+                            'svctestproc_t',
+#                           'svctestpairs_xml',
+                            'h',
+                            'cpp',
+                            't',
+                           ],
+            },
+    'plink' => {
+             'extended' => 1,
+             'generate' => [
+                            'svctest_mk',
+                            'svcmake_mk',
+                            'svcmake_dums',
+                            'svcmake_refs',
+                            ],
+    },
+    'pkg' => {
+             'extended' => 1,
+             'generate' => [
+                            'svcmake_dep',
+                            'svcmake_mem',
+                            'svcmake_opts',
+                            'svcmake_dums',
+                            'svcmake_refs',
+                            ],
+    },
+  };
+
+use constant CUSTOMIZEDTYPE_CONVERT_FUNCTIONS =>
+  {
+   'bool'                      => {
+                                   'from' => 'fromBool',
+                                   'to'   => 'toBool',
+                                  },
+   'int'                       => {
+                                   'from' => 'fromInt',
+                                   'to'   => 'toInt',
+                                  },
+   'char'                      => {
+                                   'from' => 'fromChar',
+                                   'to'   => 'toChar',
+                                  },
+   'short'                     => {
+                                   'from' => 'fromShort',
+                                   'to'   => 'toShort',
+                                  }
+   ,
+   'bdes_PlatformUtil::Int64'  => {
+                                   'from' => 'fromInt64',
+                                   'to'   => 'toInt64',
+                                  },
+   'unsigned int'              => {
+                                   'from' => 'fromUnsignedInt',
+                                   'to'   => 'toUnsignedInt',
+                                  },
+   'unsigned char'             => {
+                                   'from' => 'fromUnsignedChar',
+                                   'to'   => 'toUnsignedChar',
+                                  },
+   'unsigned short'            => {
+                                   'from' => 'fromUnsignedShort',
+                                   'to'   => 'toUnsignedShort',
+                                  },
+   'bdes_PlatformUtil::Uint64' => {
+                                   'from' => 'fromUnsignedInt64',
+                                   'to'   => 'toUnsignedInt64',
+                                  },
+   'float'                     => {
+                                   'from' => 'fromFloat',
+                                   'to'   => 'toFloat',
+                                  },
+   'double'                    => {
+                                   'from' => 'fromDouble',
+                                   'to'   => 'toDouble',
+                                  },
+   'bdet_Date'                 => {
+                                   'from' => 'fromDate',
+                                   'to'   => 'toDate',
+                                  },
+   'bdet_DateTz'               => {
+                                   'from' => 'fromDateTz',
+                                   'to'   => 'toDateTz',
+                                  },
+   'bdet_Time'                 => {
+                                   'from' => 'fromTime',
+                                   'to'   => 'toTime',
+                                  },
+   'bdet_TimeTz'               => {
+                                   'from' => 'fromTimeTz',
+                                   'to'   => 'toTimeTz',
+                                  },
+   'bdet_Datetime'             => {
+                                   'from' => 'fromDatetime',
+                                   'to'   => 'toDatetime',
+                                  },
+   'bdet_DatetimeTz'           => {
+                                   'from' => 'fromDatetimeTz',
+                                   'to'   => 'toDatetimeTz',
+                                  },
+   'std::string'               => {
+                                   'from' => 'fromString',
+                                   'to'   => 'toString',
+                                  },
+  };
+
+#==============================================================================
+#                         GLOBAL TYPES AND VARIABLES
+
+$Data::Dumper::Indent = 1;
+
+SCHEMAPARSER: {
+  package SchemaParser;
+  our @ISA = qw(XML::Simple);
+
+  my $verbose = 0;
+  my $schemaComplete = 0;
+
+  sub end_element {
+    my $self    = shift;
+    my $element = shift;
+
+    my $curlist = $self->{curlist};
+
+    $self->{curlist} = pop @{ $self->{lists} };
+    $self->{schemaComplete} = 1 if $element->{Name} =~ /schema$/;
+    return if $self->{schemaComplete};
+
+    my $parentName = $self->{lists}[$#{$self->{lists}}]->[3];
+    return unless defined $parentName;
+
+    # Make anonymous choices look like nested element types.
+    if ($parentName =~ /sequence$/ and $element->{Name} =~ /choice$/) {
+      # splice off 'choice' and its list representation, and push on a nested
+      # element with the (anonymous) choice type
+      splice(@{$self->{curlist}}, $#{@{$self->{curlist}}} - 1);
+
+      my $elementTag = 'element';
+      my $choiceTag  = 'choice';
+      my $typeTag    = 'complexType';
+      if ($self->{opt}->{nsexpand} and $element->{NamespaceURI}) {
+        $elementTag = "{$$element{NamespaceURI}}element"; 
+        $choiceTag  = "{$$element{NamespaceURI}}choice"; 
+        $typeTag    = "{$$element{NamespaceURI}}complexType"; 
+      }
+
+      push(@{$self->{curlist}},
+           $elementTag, [ {%{$curlist->[0]}}, 0, '',
+                          $typeTag, [ {}, 0, '', $choiceTag, $curlist ]]);
+    }
+  }
+
+  sub end_document {
+    my $self = shift;
+    my $tree = $self->SUPER::end_document(@_);
+
+    $self->{schemaComplete} = 0;
+    print main::Dumper($tree) if $self->{verbose};
+    return $tree;
+  }
+
+  sub new {
+    my $class = shift;
+    my %options = @_;
+    my $verbosity = delete $options{verbose} || 0;
+  
+    my $self = $class->SUPER::new(%options);
+    $self->{verbose} = $verbosity;
+    return $self;
+  }
+}
+
+my $parser = new SchemaParser(verbose => 0);    # global parser instance
+
+#==============================================================================
+
+=head1 NAME
+
+bde_xsdcc.pl - schema processor/code generator
+
+=head1 SYNOPSIS
+
+    # generate message components in the 'a_foomsg' package from the
+    # 'foosvc.xsd' schema
+    $ bde_xsdcc.pl -p a_foomsg -m msg foosvc.xsd
+
+    # generate service components, including the "testpair" schema, in the
+    # 'm_foosvc' package, that use message components in the 'a_foomsg' package
+    $ bde_xsdcc.pl -p m_foosvc -P a_foomsg -m svc foosvc.xsd    
+
+    # generate configuration components in the 'm_foosvc' package
+    $ bde_xsdcc.pl -p m_foosvc -m cfg m_foosvc.cfg.xsd    
+
+    # generate testpair components in the 'm_foosvc' package
+    $ bde_xsdcc.pl -p m_foosvc -m tst m_foosvc.tst.xsd    
+
+    # generate a header for 'mycomponent' only, and print the header to stdout
+    $ bde_xsdcc.pl -o -p m_foomsg -g h -c mycomponent foosvc.xsd    
+
+=head1 DESCRIPTION
+
+C<bde_xsdcc.pl> processes XML and WSDL schema files, and generates various
+files as specified by the options.
+
+=cut
+
+#==============================================================================
+
+sub usage (;$) {
+    print STDERR "!! @_\n" if @_;
+
+    my $prog = basename $0;
+
+    my $targets = join('|', ('all', sort keys(%{(TARGETS)})));
+    my $modes = join('|', sort keys(%{(MODES)}));
+
+    print <<_USAGE_END;
+Usage: $prog -h | [-p <package>] [-a author] (-c <component>)*
+             (-g <$targets>)* 
+             [-x] (-I <dir>)* [-s] 
+             [-m <$modes>] [-F] [-M] <schema file>...
+
+  --help         | -h                usage information (this text)
+  --package      | -p <package>      use specified package prefix
+  --msgpackage   | -P <package>      use specified package prefix for message
+                                     library
+  --author       | -a <author>       use specified author name
+  --component    | -c <component>    generate specified components only
+  --generate     | -g <target>       generate any of report, C++ component
+                                     header, C++ component implementation,
+                                     and C++ component test driver
+  --print        | -o                send generated text to stdout
+  --extended     | -x                generate elements as well as types
+  --recurse      | -r                generate for included schema as well
+  --inline       | -i                expand included schema
+  --includedir   | -I <dir>          search dir for included schema files
+  --strip        | -s                strip converted schema of bdem-specific
+                                     elements and attributes
+  --mode         | -m                use specified mode
+  --noFastSend   | -F                do not use FastSend transport
+  --bdeMetadata  | -M                generate BDE metadata instead of makefiles
+  --serviceName  | -S <name>         specify service name
+  --requestType  | -z <name>         specify top-level request type
+  --responseType | -Z <name>         specify top-level response type
+
+See 'perldoc $prog' for more information.
+
+_USAGE_END
+}
+
+#------------------------------------------------------------------------------
+
+sub getoptions () {
+
+  my %opts;
+
+  Getopt::Long::Configure("bundling");
+  unless (GetOptions(\%opts, qw[
+           help|h
+           package|p=s
+           msgpackage|P=s
+           author|a=s
+           component|c=s@
+           generate|g=s@
+           print|o
+           extended|x
+           recurse|r
+           inline|i
+           includedir|I=s@
+           strip|s
+           mode|m=s@
+           bdeMetadata|M
+           noFastSend|F
+           testpairs|T
+           serviceName|S=s
+           requestType|z=s
+           responseType|Z=s
+           debug|d=s
+          ])) {
+
+    usage();
+    exit 1;
+  }
+
+  # help
+  usage(), exit 0 if $opts{help};
+
+  if (!defined $opts{author}) {
+    $opts{author} = 'Author Unknown';
+  }
+
+  if (scalar (@ARGV) == 0) {
+    usage("Unexpected number of arguments");
+    exit 1;
+  }
+
+# $opts{schemaFile} = shift @ARGV;
+  @{$opts{schemaFile}} = @ARGV;
+
+  $opts{noFastSend} = 0 unless defined $opts{noFastSend};
+
+  return \%opts;
+}
+
+sub adjustOpts ($) {
+  my ($opts) = @_;
+
+  if (defined $opts->{mode}) {
+    my $mode = MODES->{$opts->{mode}};
+
+    if (!defined $mode) {
+      usage("Unrecognized mode $opts->{mode}");
+      exit 1;
+    }
+    $opts->{$opts->{mode}} = 1;
+
+    my %mergedOpts = %$mode;
+    foreach my $key (keys %$opts) {
+      if ("ARRAY" eq ref $opts->{$key}) {
+        push(@{$mergedOpts{$key}}, @{$opts->{$key}});
+      } else {
+        $mergedOpts{$key} = $opts->{$key};
+      }
+    }
+
+    %$opts = %mergedOpts;
+  }
+
+  if (! defined $opts->{generate}) {
+    $opts->{generate} = [];
+  } else {
+    foreach my $gen (@{$opts->{generate}}) {
+      if (! defined TARGETS->{$gen}) {
+        usage("Unsupported target $gen");
+        exit 1;
+      }
+    }
+  }
+}
+
+#------------------------------------------------------------------------------
+
+sub splitName ($) {
+  my ($name) = @_;
+
+  my @pieces;
+
+  if ($name =~ /\s/) {
+    @pieces = split (/\s+/, $name); # for 'my name' style names
+  } elsif ($name =~ /_/) {
+    @pieces = split (/_/, $name); # for 'my_name' style names
+  } elsif ($name =~ /-/) {
+    @pieces = split (/-/, $name); # for 'my-name' style names
+  } elsif (($name =~ /[a-z]/) && ($name =~ /[A-Z]/)) {
+    @pieces = $name =~ /.[a-z0-9]*/g; # for 'MyName' style names
+  } else {
+    @pieces = ( $name );
+  }
+
+  if (scalar(@pieces) > 1) {
+    @pieces = map { splitName($_) } @pieces;
+  }
+
+  return @pieces;
+}
+
+#----
+
+sub UPPER_UPPER ($) {
+  my ($name) = @_;
+
+  return join('_', map {uc $_} splitName($name));
+}
+
+#----
+
+sub MixedMixed ($) {
+  my ($name) = @_;
+
+  return join('', map {ucfirst lc $_} splitName($name));
+}
+
+#----
+
+sub mixedMixed ($) {
+  my ($name) = @_;
+
+  return lcfirst join('', map {ucfirst lc $_} splitName($name));
+}
+
+#----
+
+sub c_str ($) {
+  my ($text) = @_;
+
+  $text =~ s/\\/\\\\/sg;
+  $text =~ s/"/\\"/sg;
+  $text =~ s/^(.*)$/"$1\\n"/mg;
+
+  return $text;
+}
+
+#----
+
+sub uniqueIncludes (\@$) {
+  my ($array, $deleteKey) = @_;
+
+  return @$array unless @$array;
+
+  my %elements;
+  map { $_->{file} && ($elements{$_->{file}} = $_) } @$array;
+  delete $elements{$deleteKey};
+  return sort { $a->{file} cmp $b->{file} } values %elements;
+}
+
+#------------------------------------------------------------------------------
+
+sub encloseTemplateArgs($) {
+  my ($args) = @_;
+
+  if (substr($args, -1) eq '>') {
+    return '<' . $args . ' >';
+  } else {
+    return '<' . $args . '>';
+  }
+}
+
+#------------------------------------------------------------------------------
+
+sub buildSearchTree_CheckChar ($);
+sub buildSearchTree_CheckChar ($) {
+  my ($data) = @_;
+
+  my $numElements = scalar(@$data);
+
+  # establish len
+  $numElements > 0 or croak 'cannot build an empty tree';
+  my $len = length($data->[0]->{key});
+
+  if ($len == 0) {
+    $numElements == 1 or croak 'cannot build a tree with duplicates';
+    return { type => 'val', val => $data->[0]->{val} };
+  } else {
+
+    # collect first chars
+    my %m;
+    foreach my $item (@$data) {
+      length($item->{key})==$len or
+        croak 'varying length elements encountered';
+
+      my $firstChar = substr($item->{key},0,1);
+      push @{ $m{ $firstChar } },
+        { key => substr($item->{ key },1),
+          val => $item->{val}
+        };
+    }
+
+    # sort
+    my @keys = sort { $a cmp $b } keys(%m);
+
+    if (scalar(@keys) == 1) {
+
+      my $k = $keys[0];
+      my $node = buildSearchTree_CheckChar($m{$k});
+
+      if ($node->{type} eq 'matchText') {
+        return { type => 'matchText',
+                 text => $k . $node->{text},
+                 node => $node->{node} };
+      } else {
+        return { type => 'matchText',
+                 text => $k,
+                 node => $node };
+      }
+    } else {
+      my $branches = [];
+      foreach my $k (@keys) {
+        push @$branches,
+             { char => $k, node => buildSearchTree_CheckChar($m{$k})}
+      }
+
+      return { type => 'checkChar', branches => $branches };
+    }
+  }
+}
+
+#----
+
+sub buildSearchTreeNode_CheckLen ($) {
+  my ($data) = @_;
+
+  # bucket by length
+  my %b;
+  foreach my $item (@$data) {
+    push @{ $b{ length($item->{key}) } }, $item; 
+  };
+
+  my $branches = [];
+  foreach my $k (sort { $a <=> $b} keys(%b)) {
+    push @$branches, { len => $k, node => buildSearchTree_CheckChar($b{$k}) };
+  }
+
+  return { type => 'checkLen', branches => $branches };
+}
+
+#----
+
+sub buildSearchTree ($) {
+  my ($data) = @_;
+
+  return buildSearchTreeNode_CheckLen($data);
+}
+
+#------------------------------------------------------------------------------
+
+sub stripXmlNs ($);
+sub stripXmlNs ($) {
+  my ($data) = @_;
+
+  my $type = ref $data;
+  if (defined $type) {
+    if ($type eq 'HASH') {
+      my $updated = {};
+      while (my ($k, $v) = each %$data) {
+        $k =~ s/^\{.*?}//;
+        $updated->{$k} = stripXmlNs($v);
+      }
+      return $updated;
+    } elsif ($type eq 'ARRAY') {
+      my $updated = [];
+      foreach my $v (@$data) {
+        push @$updated, stripXmlNs($v);
+      }
+      return $updated;
+    } else {
+      return $data;
+    }
+  } else {
+    return $data;
+  }
+}
+
+#------------------------------------------------------------------------------
+
+sub configureIncludes($\@) {
+  my ($elem, $includeFiles) = @_;
+
+  my @incs;
+
+  my @incFiles = @$includeFiles;
+  if (defined $elem->{extraIncludes}) {
+    push @incFiles, split(/\s+/, $elem->{extraIncludes});
+  }
+
+  foreach my $includeFile (@incFiles) {
+    my $inc = {};
+    $inc->{file} = $includeFile;
+    $inc->{guard} = deduceIncludeGuard($includeFile);
+    $inc->{defineGuardExternally} =
+      deduceIncludeDefineGuardExternalyFlag($includeFile);
+    push @incs, $inc;
+  }
+
+  $elem->{include} = \@incs;
+}
+
+sub deduceIncludeFile ($$);
+sub deduceIncludeFile ($$) {
+  my ($cpptype, $defaultPackage) = @_;
+
+  $cpptype =~ s/^\s*(.*\S)\s*$/$1/; # trim spaces
+
+  my @includeFiles;
+
+  my $nested_enum_type = NESTED_ENUM_TYPE;
+  if (defined CPPTYPE_HEADER->{$cpptype}) {
+    my $header = CPPTYPE_HEADER->{$cpptype};
+    if ($header) {
+      push @includeFiles, $header;
+    }
+  } elsif (my ($template, $args) =
+              ($cpptype =~ /^([^<]+)<(.*)>$/ )) {
+
+    push @includeFiles, deduceIncludeFile($template, $defaultPackage);
+    my @argList = split(/,/, $args); # todo: more sophisticated parsing
+    foreach my $arg (@argList) {
+      push @includeFiles, deduceIncludeFile($arg, $defaultPackage);
+    }
+  } elsif (my ($wrapperType) = ($cpptype =~ /^(.*)\:\:$nested_enum_type$/)) {
+    # enumeration
+    push @includeFiles, deduceIncludeFile($wrapperType, $defaultPackage);
+  } else {
+    my $header = $cpptype;
+    $header =~ s/\:\:/_/g;
+    if (! ($header =~ /_/)) {
+      $header = $defaultPackage . '_' .  $header;
+    }
+    $header = lc $header;
+    $header = $header . '.h';
+    push @includeFiles, $header;
+  }
+
+  return @includeFiles;
+}
+
+#----
+
+sub deduceIncludeGuard ($) {
+  my ($file) = @_;
+
+  my $guard = $file;
+  $guard =~ s/\..*//;
+  $guard = 'INCLUDED_' . $guard;
+  $guard = uc $guard;
+  return $guard;
+}
+
+#----
+
+sub deduceIncludeDefineGuardExternalyFlag ($) {
+  my ($file) = @_;
+
+  my $defineGuardExternally = 0;
+  if (! ($file =~ /\./)) {
+    $defineGuardExternally = 1;
+  }
+
+  return $defineGuardExternally;
+}
+
+#------------------------------------------------------------------------------
+
+sub adjustDocumentation(\$);
+
+sub adjustDocumentation(\$) {
+  my ($documentation) = @_;
+
+  my $refType = ref(${$documentation});
+
+  if ($refType eq "HASH") {
+    ${$documentation} = ${$documentation}->{content};
+  } elsif ($refType eq "ARRAY") {
+    ${$documentation} =  
+      join("\n\n ", map { adjustDocumentation($_); $_ } @${$documentation});
+  }
+}
+
+sub adjustAnnotation ($$) {
+  my ($element, $author) = @_;
+
+  if (!defined $element->{annotation}) {
+    $element->{annotation} = {};
+  }
+
+  if (!defined $element->{annotation}->{documentation}) {
+    $element->{annotation}->{documentation} = 'todo: provide annotation';
+  }
+
+  if (!defined $element->{annotation}->{purpose}) {
+    $element->{annotation}->{purpose} = 'todo: provide purpose';
+  }
+
+  if ($author && !defined $element->{annotation}->{author}) {
+    $element->{annotation}->{author} = $author;
+  }
+
+  adjustDocumentation($element->{annotation}->{documentation});
+}
+
+sub adjustAppInfo ($) {
+  my ($element) = @_;
+
+  if(! defined $element->{appInfoConstants}) {
+
+    $element->{appInfoConstants} = [];
+
+    if (defined $element->{annotation}->{appinfo}) {
+      my $appinfo = $element->{annotation}->{appinfo};
+
+      foreach my $c (keys %$appinfo) {
+        if ($c eq 'source' || $c =~ /rawCpp/) {
+          next;
+        }
+
+        my $value = $appinfo->{$c};
+
+        my $cppValue = $value;
+        $cppValue =~ s/"/\\"/g;
+        $cppValue = '"' . $cppValue . '"';
+
+        push (@{ $element->{appInfoConstants} }, {
+                                                  name => $c,
+                                                  value => $value,
+                                                  cppValue => $cppValue,
+                                                 });
+      }
+    }
+  }
+}
+
+#------------------------------------------------------------------------------
+
+sub adjustElementType ($$$\%);
+
+sub adjustCpptype ($$$\%) {
+  my ($member, $package, $author, $elementTypes) = @_;
+
+  if (!defined $member->{cpptype}) {
+
+    my $t = $member->{type};
+    $t =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+
+    if (defined TYPE_INFO->{$t}) {
+      $member->{cpptype} = TYPE_INFO->{$t}->{cpptype};
+    } elsif (defined $elementTypes->{$t}) {
+      
+      my $elemType = $elementTypes->{$t};
+      adjustElementType($elemType, $package, $author, %$elementTypes);
+      
+      my $cpptype;
+      
+      if (defined $elemType->{cpptype}) {
+        if ($elemType->{external}) {
+          $cpptype = $elemType->{package} . '::' . $elemType->{cpptype};
+        }
+        else {
+          $cpptype = $elemType->{cpptype};
+        }
+      } else {
+        $cpptype = MixedMixed($elemType->{name});
+      }
+      
+      if ($elemType->{trait} eq 'enumeration') {
+        $cpptype = $cpptype . '::' . NESTED_ENUM_TYPE;
+      }
+      
+      $cpptype =~ s/[^\$]+\$\$//;
+      $member->{cpptype} = $cpptype;
+      
+    } else {
+      $t =~ s/[^\$]+\$\$//;
+      $member->{cpptype} = MixedMixed($t);
+    }
+  }
+}
+
+sub adjustMember ($$\%\%) {
+  my ($member, $currentMemberId, $element, $elementTypes) = @_;
+
+  my $nestedEnumType = NESTED_ENUM_TYPE;
+
+  adjustAnnotation ($member, '');
+
+  if (!defined $member->{name}) {
+    if (!defined $member->{ref}) {
+      die "ERR: Unnamed complex type element\n";
+    }
+
+    my $ref = $member->{ref};
+    $ref =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+    $member->{name} = $ref;
+  }
+
+  if (!defined $member->{memberName}) {
+    my $name = $member->{name};
+    my $isKeyword = grep { $_ eq $name } @{ CPP_KEYWORDS() };
+    if ($isKeyword) {
+      $member->{memberName} = mixedMixed($name) . 'Value';
+    }
+    else {
+      $member->{memberName} = $member->{name};
+    }
+  }
+
+  if (!defined $member->{type} && defined $member->{ref}) {
+
+    my $ref = $member->{ref};
+    $ref =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+    $member->{type} = 'element$$' . $ref;
+  }
+
+  if (!defined $member->{type}) {
+
+    if (defined $member->{simpleType}->[0]->{list}->{itemType}) {
+
+      my $t = $member->{simpleType}->[0]->{list}->{itemType};
+      $t =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+
+      if (!defined TYPE_INFO->{$t} || 
+          defined TYPE_INFO->{$t}->{noListSupport} &&
+          TYPE_INFO->{$t}->{noListSupport}) {
+
+          die "ERR: Unsupported list type: $member->{list}->{itemType}\n";
+      }
+
+      if (!defined $member->{formattingMode}) {
+        $member->{formattingMode} = 'list';
+      }
+
+      if (!defined $member->{cpptype}) {
+        $member->{cpptype} = 
+          'std::vector' .
+          encloseTemplateArgs(TYPE_INFO->{$t}->{cpptype});
+      }
+    }
+  }
+  else {
+
+    my $t = $member->{type};
+    $t =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+
+    if (!defined $member->{formattingMode}) {
+      if (defined TYPE_INFO->{$t}) {
+        $member->{formattingMode} = TYPE_INFO->{$t}->{formattingMode};
+      }
+    }
+
+    adjustCpptype ($member, $element->{package}, $element->{author}, %$elementTypes);
+  }
+
+  if (!defined $member->{cpptype}) {
+    $member->{cpptype} = 'PleaseSpecifyType';
+  }
+
+  if (!defined $member->{requiresDestruction}) {
+
+    (my $adjustedCppType = $member->{cpptype}) =~ s/([^<]+).*/$1/;
+    if (defined CPPTYPE_ALLOCATES_MEMORY->{$adjustedCppType} &&
+        !CPPTYPE_ALLOCATES_MEMORY->{$adjustedCppType}) {
+
+      $member->{requiresDestruction} = 0;
+    }
+    else {
+      $member->{requiresDestruction} = 1;
+    }
+  }
+
+  if (!defined $member->{formattingMode}) {
+    $member->{formattingMode} = 'default';
+  }
+
+  if (!defined $member->{minOccurs}) {
+    $member->{minOccurs} = '1';
+  }
+
+  if (!defined $member->{maxOccurs}) {
+    $member->{maxOccurs} = '1';
+  }
+
+  if (!defined $member->{defaultCppVal}) {
+    if (defined $member->{default}) {
+
+      if ($member->{cpptype} =~ /string/) {
+        my $defaulStr = $member->{default};
+        $defaulStr =~ s/"/\\"/g;
+        $defaulStr = '"' . $defaulStr . '"';
+        $member->{defaultCppVal} = $defaulStr;
+      }
+      elsif (my ($enumWrapper) = 
+                ($member->{cpptype} =~ /^(\w+)::$nestedEnumType$/)) {
+
+        $member->{defaultCppVal} = $enumWrapper . '::' . 
+                                        UPPER_UPPER($member->{default});
+      }
+      else {
+        $member->{defaultCppVal} = $member->{default};
+      }
+    }
+  }
+
+  if (!defined $member->{isNullable}) {
+
+    if ($member->{maxOccurs} eq '1' &&
+        $member->{minOccurs} == 0 &&
+        !defined $member->{defaultCppVal}) {
+      $member->{isNullable} = 1;
+    }
+    else {
+      $member->{isNullable} = 0;
+    }
+  }
+
+  if ($member->{minOccurs} != 0 && $member->{minOccurs} != 1) {
+    die "ERR: Unsupported minOccurs value: $member->{minOccurs}\n";
+  }
+
+  if ($member->{maxOccurs} eq 'unbounded'
+   || $member->{maxOccurs} > 1)
+  {
+    $member->{cpptype} = 'std::vector' .
+                         encloseTemplateArgs($member->{cpptype});
+  } elsif ($member->{maxOccurs} !=  1) {
+    die "ERR: Unsupported maxOccurs value: $member->{maxOccurs}\n";
+  }
+
+  if ($member->{typeref}->{isAllocated}
+   && $member->{cpptype} !~ /std::vector/)
+  {
+    $member->{allocatedType} = $member->{cpptype};
+  }
+
+  if ($member->{isNullable}) {
+    if ($member->{typeref}->{isAllocated}
+     && $element->{component} eq $member->{typeref}->{component})
+    {
+      $member->{allocatedType} = undef;
+      $member->{cpptype} = 'bdeut_NullableAllocatedValue' .
+        encloseTemplateArgs($member->{cpptype});
+    } elsif ($member->{isNullable}) {
+      $member->{cpptype} = 'bdeut_NullableValue' .
+        encloseTemplateArgs($member->{cpptype});
+    }
+  }
+
+  my $nested_enum_type = NESTED_ENUM_TYPE;
+  if (!defined $member->{cppargtype}) {
+
+    if (defined CPPTYPE_PASSBYVAL->{$member->{cpptype}} &&
+        CPPTYPE_PASSBYVAL->{$member->{cpptype}}) {
+      $member->{cppargtype} = $member->{cpptype};
+    } elsif (my ($wrapperType) =
+           ($member->{cpptype} =~ /^(.*)\:\:$nested_enum_type$/)) {
+      $member->{cppargtype} = $member->{cpptype};
+    } else {
+      if ($member->{allocatedType}) {
+        $member->{cppargtype} = 'const ' . $member->{allocatedType} . '&';
+      } else {
+        $member->{cppargtype} = 'const ' . $member->{cpptype} . '&';
+      }
+    }
+  }
+
+  if (!defined $member->{id}) {
+    $member->{id} = ${ $currentMemberId };
+  } else {
+    ${ $currentMemberId } = $member->{id}
+  }
+
+  if (!defined $member->{bdexVersion}) {
+    $member->{bdexVersion} = 1;
+  }
+
+  if (!defined $member->{allowsDirectManipulation}) {
+    $member->{allowsDirectManipulation} = 1;
+  }
+
+  if (defined $member->{defineAssociatedType}) {
+    $member->{defineAssociatedType} = 1;
+  }
+
+  # Add type reference to 'member'.
+  if (! defined $member->{typeref}) {
+    if (defined $member->{type}
+     && 0 == scalar(grep /$member->{type}/, @{CPP_KEYWORDS()}))
+    {
+      $member->{typeref} = $elementTypes->{$2}
+          if $member->{type} =~ /(.+:)?([^:].+)/;
+    }
+  }
+}
+
+#----
+
+sub adjustComplexType ($$$\%) {
+  my ($complex, $package, $author, $elementTypes) = @_;
+
+  my $trait = $complex->{trait};
+
+  adjustAnnotation ($complex, $author);
+  adjustAppInfo($complex);
+
+  if (!defined $complex->{package}) {
+    $complex->{package} = $package;
+  }
+
+  if (!defined $complex->{cpptype}) {
+    $complex->{cpptype} = MixedMixed($complex->{name});
+  }
+
+  if (!defined $complex->{bdexVersion}) {
+    $complex->{bdexVersion} = 1;
+  }
+
+  if (!defined $complex->{omitIntrospection}) {
+    $complex->{omitIntrospection} = 0;
+  }
+
+  my $currentMemberId = 0;
+
+  if (ref ($complex->{$trait}) ne 'ARRAY') {
+    die "ERR: Unsupported or ill-formed element type \"$complex->{name}\"\n";
+  }
+
+  foreach my $member (@{$complex->{$trait}}) {
+    adjustMember($member, \$currentMemberId, %$complex, %$elementTypes);
+    if ($member->{allocatedType}) {
+      $complex->{allocatesMemory} = 1;
+      $complex->{holdsAllocator}  = 1;
+    }
+    ++$currentMemberId;
+  }
+
+  if (!defined $complex->{include}) {
+
+    my @includeFiles;
+
+    foreach my $member (@{$complex->{$trait}}) {
+      push @includeFiles, deduceIncludeFile($member->{cpptype},
+                                            $package);
+      if (defined $member->{typeref}->{component}
+       && $package eq $member->{typeref}->{package})
+      {
+        my $component = $member->{typeref}->{component};
+        pop @includeFiles;
+        push @includeFiles, $package . '_' . $component . ".h";
+      }
+    }
+
+    # remove duplicates
+    my $i = $#includeFiles;
+    while ($i >= 0) {
+      my $c = grep { $_ eq $includeFiles[$i]} @includeFiles;
+      if ($c > 1) {
+        splice @includeFiles, $i, 1;
+      }
+
+      --$i;
+    }
+
+    configureIncludes($complex, @includeFiles);
+  }
+}
+
+#----
+
+sub adjustEnumerator ($$$) {
+  my ($enumerator, $currentEnumeratorId, $elementTypes) = @_;
+
+  adjustAnnotation ($enumerator, '');
+
+  if (!defined $enumerator->{id}) {
+    $enumerator->{id} = ${ $currentEnumeratorId };
+  } else {
+    ${ $currentEnumeratorId } = $enumerator->{id}
+  }
+
+  if (!defined $enumerator->{value}) {
+    $enumerator->{value} = 'value' . $enumerator->{id};
+  }
+
+  if (!defined $enumerator->{name}) {
+    $enumerator->{name} = $enumerator->{value};
+  }
+}
+
+#----
+
+sub adjustEnumeration ($$$\%) {
+  my ($enum, $package, $author, $elementTypes) = @_;
+
+  adjustAnnotation ($enum, $author);
+  adjustAppInfo($enum);
+
+  my $trait = $enum->{trait};
+
+  if (!defined $enum->{package}) {
+    $enum->{package} = $package;
+  }
+
+  if (!defined $enum->{cpptype}) {
+    $enum->{cpptype} = MixedMixed($enum->{name});
+  }
+
+  if (!defined $enum->{bdexVersion}) {
+    $enum->{bdexVersion} = 1;
+  }
+
+  if (!defined $enum->{omitIntrospection}) {
+    $enum->{omitIntrospection} = 0;
+  }
+
+  if (!defined $enum->{allocatesMemory}) {
+    $enum->{allocatesMemory} = 0;
+  }
+
+  if (!defined $enum->{preserveEnumOrder} ||
+      !$enum->{preserveEnumOrder}) {
+    
+    my @sortedEnumerators = sort { $a->{value} cmp $b->{value} }
+                                 @{ $enum->{restriction}->{enumeration} };
+    $enum->{restriction}->{enumeration} = \@sortedEnumerators;
+  }
+
+  my $currentEnumeratorId = 0;
+  foreach my $enumerator (@{ $enum->{restriction}->{enumeration} }) {
+    adjustEnumerator($enumerator, \$currentEnumeratorId, $elementTypes);
+    ++$currentEnumeratorId;
+  }
+}
+
+#----
+
+sub adjustCustomizedTypeEnumerator($$) {
+  my ($enumerator, $base) = @_;
+
+  adjustAnnotation ($enumerator, '');
+
+  if (!defined $enumerator->{value}) {
+    die "ERR: enumeration has no value!\n";
+  }
+
+  if (!defined $enumerator->{cppValue}) {
+    if ($base eq "float") {
+      $enumerator->{cppValue} = $enumerator->{value} . "f";
+    } else {
+      $enumerator->{cppValue} = $enumerator->{value};
+    }
+  }
+}
+
+#----
+
+sub adjustCustomizedType($$$\%) {
+  my ($customizedtype, $package, $author, $elementTypes) = @_;
+
+  adjustAnnotation ($customizedtype, $author);
+  adjustAppInfo($customizedtype);
+
+  my $trait = $customizedtype->{trait};
+
+  if (!defined $customizedtype->{package}) {
+    $customizedtype->{package} = $package;
+  }
+
+  if (!defined $customizedtype->{cpptype}) {
+    $customizedtype->{cpptype} = MixedMixed($customizedtype->{name});
+  }
+
+  if (!defined $customizedtype->{baseType}) {
+    my $t = $customizedtype->{restriction}->{base};
+    $t =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+
+    if (defined TYPE_INFO->{$t}) {
+        $customizedtype->{baseType} = TYPE_INFO->{$t}->{cpptype};
+    } else {
+      die "ERR: Invalid base type '$t' for '$customizedtype->{name}'\n";
+    }
+  }
+
+  if (!defined $customizedtype->{baseArgType}) {
+    if (defined CPPTYPE_PASSBYVAL->{$customizedtype->{baseType}} &&
+        CPPTYPE_PASSBYVAL->{$customizedtype->{baseType}}) {
+      $customizedtype->{baseArgType} = $customizedtype->{baseType};
+    } else {
+      $customizedtype->{baseArgType} = 'const ' .
+                                       $customizedtype->{baseType} . '&';
+    }
+  }
+
+  if (!defined $customizedtype->{fromFunction}) {
+    my $t = $customizedtype->{restriction}->{base};
+    my $bt = $customizedtype->{baseType};
+
+    if (defined CUSTOMIZEDTYPE_CONVERT_FUNCTIONS->{$bt}) {
+      $customizedtype->{fromFunction} = 
+        CUSTOMIZEDTYPE_CONVERT_FUNCTIONS->{$bt}->{from};
+    } else {
+      die "ERR: Unsupported base type '$t' for '$customizedtype->{name}'. " . 
+          "You must specify 'fromFunction'.\n";
+    }
+  }
+
+  if (!defined $customizedtype->{toFunction}) {
+    my $t = $customizedtype->{restriction}->{base};
+    my $bt = $customizedtype->{baseType};
+
+    if (defined CUSTOMIZEDTYPE_CONVERT_FUNCTIONS->{$bt}) {
+      $customizedtype->{toFunction} = 
+        CUSTOMIZEDTYPE_CONVERT_FUNCTIONS->{$bt}->{to};
+    } else {
+      die "ERR: Unsupported base type '$t' for '$customizedtype->{name}'. " .
+          "You must specify 'toFunction'.\n";
+    }
+  }
+
+  if (!defined $customizedtype->{bdexVersion}) {
+    $customizedtype->{bdexVersion} = 1;
+  }
+
+  if (!defined $customizedtype->{omitIntrospection}) {
+    $customizedtype->{omitIntrospection} = 0;
+  }
+
+  if (!defined $customizedtype->{allocatesMemory}) {
+
+    my $bt = $customizedtype->{baseType};
+
+    if (defined CPPTYPE_ALLOCATES_MEMORY->{$bt} &&
+        CPPTYPE_ALLOCATES_MEMORY->{$bt}) {
+      $customizedtype->{allocatesMemory} = 1;
+    }
+    else {
+      $customizedtype->{allocatesMemory} = 0;
+    }
+  }
+
+  if (!defined $customizedtype->{allowsDirectManipulation}) {
+    $customizedtype->{allowsDirectManipulation} = 1;
+  }
+
+  if (defined $customizedtype->{defineAssociatedType}) {
+    $customizedtype->{defineAssociatedType} = 1;
+  }
+
+  if (defined $customizedtype->{restriction}->{enumeration}
+   && scalar(@{ $customizedtype->{restriction}->{enumeration} }) != 0) {
+
+    foreach my $enumerator 
+                    (@{ $customizedtype->{restriction}->{enumeration} }) {
+      adjustCustomizedTypeEnumerator($enumerator,
+                                     $customizedtype->{restriction}->{base});
+    }
+  }
+
+  if (defined $customizedtype->{restriction}->{maxLength}
+   && !defined $customizedtype->{restriction}->{maxLength}->{value}) {
+      die "ERR: Max length has no value!\n";
+  }
+
+  if (defined $customizedtype->{restriction}->{mimLength}
+   && !defined $customizedtype->{restriction}->{mimLength}->{value}) {
+      die "ERR: Min length has no value!\n";
+  }
+
+  if (defined $customizedtype->{restriction}->{length}
+   && !defined $customizedtype->{restriction}->{length}->{value}) {
+      die "ERR: Length has no value!\n";
+  }
+
+  if (defined $customizedtype->{restriction}->{minInclusive}
+   && !defined $customizedtype->{restriction}->{minInclusive}->{value}) {
+      die "ERR: Min inclusive has no value!\n";
+  }
+
+  if (defined $customizedtype->{restriction}->{maxInclusive}
+   && !defined $customizedtype->{restriction}->{maxInclusive}->{value}) {
+      die "ERR: Max inclusive has no value!\n";
+  }
+
+  if (defined $customizedtype->{restriction}->{minExclusive}
+   && !defined $customizedtype->{restriction}->{minExclusive}->{value}) {
+      die "ERR: Min exclusive has no value!\n";
+  }
+
+  if (defined $customizedtype->{restriction}->{maxExclusive}
+   && !defined $customizedtype->{restriction}->{maxExclusive}->{value}) {
+      die "ERR: Max exclusive has no value!\n";
+  }
+
+  if (!defined $customizedtype->{include}) {
+
+    my @includeFiles;
+
+    push @includeFiles, deduceIncludeFile($customizedtype->{baseType},
+                                          $package);
+
+    configureIncludes($customizedtype, @includeFiles);
+  }
+}
+
+#----
+
+sub adjustAlias($$$\%) {
+  my ($alias, $package, $author, $elementTypes) = @_;
+
+  adjustCpptype ($alias, $package, $author, %$elementTypes);
+}
+
+#----
+
+sub deduceAllocatesMemory (\%) {
+  my ($elementTypes) = @_;
+
+  my @edges;
+
+  foreach my $elementType (values %$elementTypes) {
+
+    my $members;
+
+    if ($elementType->{typeCategory} eq 'complexType') {
+      $members = $elementType->{$elementType->{trait}};
+    }
+    elsif ($elementType->{typeCategory} eq 'alias') {
+      $members = [ $elementType ];
+    }
+    else {
+      next;
+    }
+
+    foreach my $member (@$members) {
+
+      if (!defined $elementType->{allocatesMemory}) {
+         # if member allocates so does container
+        push @edges, [$member, $elementType];
+      }
+
+      if (!defined $member->{allocatesMemory}) {
+        my $cpptype = $member->{cpptype};
+        if ($cpptype =~ /^\s*bdeut_Nullable(Allocated)?Value\s*<\s*(.*\S)\s*>\s*$/) {
+          $cpptype = $2;
+        }
+
+        (my $adjustedCppType = $cpptype) =~ s/([^<]+).*/$1/;
+        if (defined CPPTYPE_ALLOCATES_MEMORY->{$adjustedCppType}) {
+          if (CPPTYPE_ALLOCATES_MEMORY->{$adjustedCppType}) {
+            $member->{allocatesMemory} = 1;
+          } else {
+            $member->{allocatesMemory} = 0;
+          }
+        } else {
+          if (defined $member->{maxOccurs} &&
+              $member->{maxOccurs} eq 'unbounded') {
+            $member->{allocatesMemory} = 1;
+          } elsif (defined $member->{type}) {
+            my $t = $member->{type};
+            $t =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+            if (defined $elementTypes->{$t}) {
+              push @edges, [$elementTypes->{$t}, $member];
+            } else {
+              $member->{allocatesMemory} = 1;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  while (1) {
+    my $deductionCount = 0;
+    my $index = 0;
+
+    while ($index < scalar(@edges)) {
+      if (defined $edges[$index]->[1]->{allocatesMemory}) {
+        splice @edges, $index, 1;
+      } else {
+        if (defined $edges[$index]->[0]->{allocatesMemory}) {
+          if ($edges[$index]->[0]->{allocatesMemory}) {
+            $edges[$index]->[1]->{allocatesMemory} = 1;
+            ++$deductionCount;
+            splice @edges, $index, 1;
+          } else {
+            ++$index;
+          }
+        } else {
+          ++$index;
+        }
+      }
+    }
+
+
+    last if 0 == $deductionCount;
+  }
+
+  foreach my $edge (@edges) {
+    if (!defined $edge->[0]->{allocatesMemory}) {
+      $edge->[0]->{allocatesMemory} = 0;
+    }
+  }
+}
+
+#----
+
+sub adjustElementType ($$$\%) {
+
+  my ($elementType, $package, $author, $elementTypes) = @_;
+
+  if (defined $elementType->{elementTypeAdjustmentCompleted}) {
+    return;
+  }
+
+  $elementType->{elementTypeAdjustmentCompleted} = 0;
+
+  if ($elementType->{typeCategory} eq 'complexType') {
+
+    if (defined $elementType->{sequence}) {
+      $elementType->{trait} = 'sequence';
+      adjustComplexType($elementType, $package, $author, %$elementTypes);
+    } elsif (defined $elementType->{choice}) {
+      $elementType->{trait} = 'choice';
+      adjustComplexType($elementType, $package, $author, %$elementTypes);
+    } else {
+      $elementType->{trait} = 'unsupported';
+    }
+
+  } elsif ($elementType->{typeCategory} eq 'simpleType') {
+
+    if (defined $elementType->{restriction}->{base}) {
+      if ($elementType->{restriction}->{base} =~ /(\w+:)?string/
+          && defined $elementType->{restriction}->{enumeration}) {
+        $elementType->{trait} = 'enumeration';
+        adjustEnumeration($elementType, $package, $author, %$elementTypes);
+      } else {
+        $elementType->{trait} = 'customizedtype';
+        adjustCustomizedType($elementType, $package, $author, %$elementTypes);
+      }
+    } else {
+      $elementType->{trait} = 'unsupported';
+    }
+  } elsif ($elementType->{typeCategory} eq 'alias') {
+
+    $elementType->{trait} = 'alias';
+    adjustAlias($elementType, $package, $author, %$elementTypes);
+  }
+
+
+  $elementType->{elementTypeAdjustmentCompleted} = 1;
+}
+
+#------------------------------------------------------------------------------
+
+sub assignComponentLocations_visit ($\@\$\@);
+
+my $level = 0;
+sub assignComponentLocations_visit ($\@\$\@) {
+  my ($v, $stack, $rank, $components) = @_;
+
+  $$rank++;
+
+  $v->{component__componentRoot} = $v;
+  $v->{component__visitRank} = $$rank;
+  $v->{component__inComponent} = 0;
+
+  push(@$stack, $v);
+
+  my $trait = $v->{trait};
+  foreach my $member (@{$v->{$trait}}) {
+    my $w = $member->{typeref};
+    if (defined $w && $w->{typeCategory} eq 'complexType') {
+      if (!$w->{component__visitRank}) {
+        assignComponentLocations_visit($w, @$stack, $$rank, @$components);
+      }
+      if (!$w->{component__inComponent} &&
+          ($w->{component__componentRoot}->{component__visitRank} < 
+           $v->{component__componentRoot}->{component__visitRank}))
+      {
+        $v->{component__componentRoot} = $w->{component__componentRoot};  
+      }
+    }
+  }
+  if ($v->{component__componentRoot} == $v) {
+    my @component;
+    while(1) {
+      my $w = pop(@$stack);
+      @component = ($w, @component);
+      $w->{component__componentRoot} = $v;
+      $w->{component__inComponent} = 1;
+      if ($w == $v) { last };
+    }
+
+    push(@$components, \@component);
+  }
+}
+
+sub assignComponentLocations (\%\%) {
+  my ($data, $elementTypes) = @_;
+
+  my $schema = $data->{types}->{schema} || $data;
+  my $complexTypes = $schema->{complexType};
+
+  my @visitStack = ();
+  my $visitRank = 0;
+  my @components;
+
+  foreach my $complexType (@$complexTypes) {
+    my $trait = 'undefined';
+    $trait = 'sequence' if defined $complexType->{sequence};
+    $trait = 'choice'   if defined $complexType->{choice};
+    $complexType->{trait} = $trait;
+
+    # Add type reference to each 'member' of 'complexType'.
+    foreach my $member (@{$complexType->{$trait}}) {
+      if (defined $member->{type}
+       && 0 == scalar(grep /$member->{type}/, @{CPP_KEYWORDS()}))
+      {
+        $member->{typeref} = $elementTypes->{$2}
+            if $member->{type} =~ /(.+:)?([^:].+)/;
+      }
+    }
+  }
+
+  foreach my $complexType (@$complexTypes) {
+    if (!$complexType->{component__visitRank}) {
+      assignComponentLocations_visit($complexType, @visitStack, 
+                                     $visitRank, @components);
+    }
+  }
+
+  foreach my $component (@components) {
+    my $name;
+    my $root;
+    my @named = grep { $_->{component} } @$component;
+    if (@named) {
+      $root = $named[0];
+      $name = $root->{component};
+
+      foreach (@named) {
+        if ($name ne $_->{component}) {
+          die "ERR: Elements '$$root{name}' and '$$_{name}' ",
+              "have conflicting component names\n";
+        }
+      }
+    }
+    else {
+      $root = $component->[0];
+      $name = lc $root->{name};
+    }
+    foreach my $type (@$component) {
+      $type->{component} = $type->{component} || $name;
+      $type->{isAllocated} = 1 if $#{@$component};  # only multi-class comonents
+    }
+  }  
+}
+
+sub getComponents (\%) {
+  my ($elementTypes) = @_;
+
+  my $components = {};
+  foreach my $type (values %{$elementTypes}) {
+    if (!$type->{component}) {
+      $type->{component} = lc $type->{cpptype};
+    }
+
+    my $component = $type->{component};
+    if (!defined $components->{$component}) {
+      $components->{$component} = [];
+    }
+
+    push (@{$components->{$component}}, $type);
+  }
+
+  return $components;
+}
+
+#------------------------------------------------------------------------------
+
+sub adjustData (\%\%$$) {
+  my ($opts, $elementTypes, $data, $external) = @_;
+
+  if (!defined $data->{author}) {
+    $data->{author} = $opts->{author};
+  }
+
+  if (!defined $data->{package}) {
+    if ($opts->{package}) {
+      $data->{package} = $opts->{package};
+    } else {
+      my ($name, $dir, $ext) = fileparse($opts->{schemaFile}, qr/\..*/);
+      $data->{package} = $name;
+    }
+  }
+
+  if (!defined $data->{msgpackage}) {
+      if ($opts->{msgpackage}) {    
+          $data->{msgpackage} = $opts->{msgpackage};
+      } else {
+          $data->{msgpackage} = $data->{package};
+      }
+  }
+
+  my $schema = $data->{types}->{schema} || $data;
+  my @elementTypesArray;
+
+  if (defined $data->{types}->{schema}) {
+      $data->{WSDL} = 1;
+
+      if (!defined $data->{portType}) {
+        die "ERR: Undefined portType\n";
+      }
+      if (scalar @{ $data->{portType} }!=1) {
+        die "ERR: Only one portType definition per WSDL\n";
+      }
+
+      my $serviceName = $opts->{serviceName}
+                     || $data->{serviceName}
+                     || $data->{service}->{name};
+      $data->{serviceName} = $serviceName;
+
+      my $requestType = $opts->{requestType}
+                     || $data->{requestType}
+                     || MixedMixed($data->{portType}->[0]->{name}).'Request';
+      $data->{requestType} = $requestType;
+
+      my $responseType = $opts->{responseType}
+                      || $data->{responseType}
+                      || MixedMixed($data->{portType}->[0]->{name}).'Response';
+      $data->{responseType} = $responseType;
+  }
+  else {
+      $schema->{WSDL} = '';
+
+      my $serviceName =  $opts->{serviceName}
+                      || $data->{serviceName}
+                      || 'PleaseSpecifyServiceName';
+      $data->{serviceName} = $serviceName;
+
+      my $requestType =  $opts->{requestType}
+                      || $data->{requestType}
+                      || 'Request';
+      $data->{requestType} = $requestType;
+
+      my $responseType =  $opts->{responseType}
+                       || $data->{responseType}
+                       || 'Response';
+      $data->{responseType} = $responseType;
+  }
+
+  if ($data->{WSDL}) {
+    foreach my $message (@{$data->{message}}) {
+      my %gen = %$message;
+      delete $gen{part};
+      $gen{sequence} = [];
+      foreach my $part (@{$message->{part}}) {
+        my %element = %$part;
+        if (defined $element{element}) {
+          my $t = $element{element};
+          $t =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+          $element{type} = 'element$$' . $t;
+          $element{name} = $t;
+        }
+        push @{$gen{sequence}}, \%element;
+      }
+      $gen{typeCategory} = 'complexType';
+      $gen{refname} = 'message$$' . $message->{name};
+      push @elementTypesArray, \%gen;
+    }
+  }
+
+  if ($data->{WSDL}) {
+    foreach my $portType (@{$data->{portType}}) {
+      my %gen = %$portType;
+      delete $gen{operation};
+      $gen{choice} = [];
+      foreach my $op (@{$portType->{operation}}) {
+        my %element = %$op;
+        my $t = $element{input}->{message};
+        $t =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+        $element{type} = 'message$$' . $t;
+        push @{$gen{choice}}, \%element;
+      }      
+      $gen{name} = MixedMixed($portType->{name}) . "Request";
+      $gen{typeCategory} = 'complexType';
+      $gen{refname} = 'request$$' . $data->{requestType};
+      push @elementTypesArray, \%gen;
+    }
+  }
+
+  if ($data->{WSDL}) {
+    foreach my $portType (@{$data->{portType}}) {
+      my %gen = %$portType;
+      delete $gen{operation};
+      $gen{choice} = [];
+      foreach my $op (@{$portType->{operation}}) {
+        my %element = %$op;
+        my $t = $element{output}->{message};
+        $t =~ s/^\w+\://; # strip namespace prefix (e.g., "xs:")
+        $element{type} = 'message$$' . $t;
+        push @{$gen{choice}}, \%element;
+      }      
+      $gen{name} = MixedMixed($portType->{name}) . "Response";
+      $gen{typeCategory} = 'complexType';
+      $gen{refname} = 'response$$' . $data->{responseType};
+      push @elementTypesArray, \%gen;
+    }
+  }
+
+  foreach my $elementType (@{$schema->{complexType}}) {
+    $elementType->{typeCategory} = 'complexType';
+    $elementType->{refname} = $elementType->{name};
+
+    # Transform 'ref' attributes to 'type' attributes.
+    if (defined $elementType->{sequence}) {
+      map {$_->{type} = 'element$$' . $_->{ref} if defined $_->{ref}}
+          @{$elementType->{sequence}};
+    }
+
+    unshift @elementTypesArray, $elementType;
+  }
+
+  foreach my $elementType (@{$schema->{simpleType}}) {
+    $elementType->{typeCategory} = 'simpleType';
+    $elementType->{refname} = $elementType->{name};
+    unshift @elementTypesArray, $elementType;
+  }
+
+  foreach my $elementType (@elementTypesArray) {
+    if (defined $elementTypes->{$elementType->{refname}}) {
+      die "ERR: duplicate type definition $elementType->{name}\n";
+    }
+
+    $elementType->{external} = $external;
+    $elementTypes->{$elementType->{refname}} = $elementType;
+  }
+
+  resolveDuplicateTypeNames(\@elementTypesArray);
+
+  assignComponentLocations(%$data, %$elementTypes);
+
+  foreach my $elementType (@elementTypesArray) {
+    adjustElementType($elementType, $data->{package}, $data->{author},
+                      %$elementTypes);
+  }
+
+  deduceAllocatesMemory(%$elementTypes);
+}
+
+#------------------------------------------------------------------------------
+
+sub loadIncludes (\%\%\%$);
+
+sub loadSchemaFile (\%\%\%$$) {
+  my ($elementTypes, $includes, $opts, $schemaFile, $external) = @_;
+
+  my $bdens = BDENS;
+  my $xmlns = XMLNS;
+  my $wsdlns = WSDLNS;
+
+  my $data = $parser->XMLin($schemaFile,
+                   NSExpand => 1,
+                   ForceArray => [
+                       "\{$xmlns\}include",
+                       "\{$xmlns\}complexType",
+                       "\{$xmlns\}simpleType",
+                       "\{$xmlns\}enumeration",
+#                      "\{$xmlns\}sequence",      # intentionally commented out
+                       "\{$xmlns\}choice",
+                       "\{$xmlns\}attribute",
+                       "\{$xmlns\}element",
+                       "\{$wsdlns\}message",
+                       "\{$wsdlns\}part",
+                       "\{$wsdlns\}portType",
+                       "\{$wsdlns\}operation",
+                   ],
+                   KeyAttr => [],
+                   GroupTags => {},
+                  );
+
+  $data = stripXmlNs($data);
+  loadIncludes(%$elementTypes, %$includes, %$opts, $data);
+
+  my $schema = $data->{types}->{schema} || $data;
+  my $verbose = $opts->{debug} || 0;
+  print Dumper('--------->', $schema, '<---------') if 1 < $verbose;
+
+  $schema->{element}     = [] unless defined $schema->{element};
+  $schema->{simpleType}  = [] unless defined $schema->{simpleType};
+  $schema->{complexType} = [] unless defined $schema->{complexType};
+  
+  if ($opts->{extended}) {
+    modifyElementTypes($schema->{element},
+                       $schema->{complexType},
+                       $schema->{simpleType});
+  }
+  modifyNestedTypes($schema->{complexType}, $schema->{simpleType});
+  modifySimpleContent($schema->{complexType});
+  modifyAttributes($schema->{complexType});
+
+  # Check once more for nested elements generated by attributes for choices.
+  modifyNestedTypes($schema->{complexType}, $schema->{simpleType});
+
+  modifyNillableTypes($schema->{complexType});
+
+  adjustSchema($schema->{complexType});
+  print Dumper('>>>>>>>>>>', $schema, '<<<<<<<<<<') if 1 < $verbose;
+
+  adjustData(%$opts, %$elementTypes, $data, $external);
+
+  return $data;
+}
+
+sub uniqueName ($$) {
+  my ($typeName, $typeList) = @_;
+  my $baseName = $typeName;
+  my $counter  = 1;
+  
+  while (scalar(grep {$_ eq $typeName} @$typeList)) {
+    $typeName = $baseName . $counter++;
+  }
+  if ($baseName ne $typeName) {
+    print "Warning: substituting '$typeName' ",
+          "for duplicate typename '$baseName'.\n";
+  }
+  return $typeName;
+}
+
+sub adjustSchema (\@) {
+  my $typeList = shift @_;
+
+  foreach my $type (@$typeList) {
+    if (defined $type->{sequence}) {
+      die "ERR: $$type{name}: expecting sequence to have HASH type\n"
+          unless "HASH" eq ref($type->{sequence});
+      my $hashRef = $type->{sequence};
+      $type->{sequence} = $type->{sequence}->{element};
+    } elsif (defined $type->{choice}) {
+      die "ERR: $$type{name}: expecting a choice of one\n"
+          unless 1 == scalar @{$type->{choice}};
+      $type->{choice} = $type->{choice}[0]->{element};
+    }
+  }
+}
+
+sub resolveDuplicateTypeNames (\@) {
+  my $typeList = shift;
+
+  my %typeHash = ();
+
+  # Make all (non-element) names unique.
+  foreach my $type (@$typeList) {
+    my $typeName = MixedMixed($type->{name});
+    if (defined $typeHash{$typeName}) {
+      $typeName = uniqueName($typeName, [keys %typeHash]);
+      $type->{name} = $typeName;
+      $type->{refname} = $typeName;
+    }
+    $typeHash{$typeName} = 1;
+  }
+
+  # Find all element types, and store a unique name (generated, if necessary)
+  # for each in the 'elementTypeHash'.
+  my %elementTypeHash;
+  foreach my $type (@$typeList) {
+    my $typeName = $type->{name};
+    if ($typeName =~ s/^element\$\$(.+)/$1Element/) {
+      if (defined $typeHash{$typeName}) {
+        $typeName = uniqueName($typeName, [keys %typeHash]);
+        $elementTypeHash{$type->{name}} = $typeName;
+      }
+      $type->{name} = $typeName;
+      $type->{refname} = $typeName;
+      $typeHash{$typeName} = 1;
+    }
+  }
+
+  # Resolve all references from element 'type' attributes to element types
+  # through the 'elementType' attribute.
+  foreach my $type (@$typeList) {
+    next if defined $type->{restriction};
+
+    my $trait;
+    $trait = 'choice'   if defined $type->{choice};
+    $trait = 'sequence' if defined $type->{sequence};
+    
+    map {$_->{type} = $elementTypeHash{$_->{type}}
+             if defined $_->{type} and defined $elementTypeHash{$_->{type}}}
+         @{$type->{$trait}};
+  }
+}
+
+sub modifyNillableTypes (\@) {
+  my $typeList = shift @_;
+
+  foreach my $type (@$typeList) {
+    next unless defined $type->{sequence};
+
+    foreach my $element (@{$type->{sequence}->{element}}) {
+      if (defined $element->{nillable} and 'true' eq $element->{nillable}) {
+        $element->{isNillable} = 1;
+        $element->{minOccurs}  = 0;
+        delete $element->{nillable}
+      }
+    }
+  }
+}
+
+sub modifySimpleContent (\@) {
+  my $typeList = shift @_;
+
+  foreach my $type (@$typeList) {
+    next unless defined $type->{simpleContent};
+
+    $type->{sequence} =
+        { element  => [ { isSimpleContent => 1,
+                          name => 'TheContent',
+                          type => $type->{simpleContent}->{extension}->{base},
+                        }]};
+    $type->{attribute} = $type->{simpleContent}->{extension}->{attribute};
+    delete $type->{simpleContent};
+  }
+}
+
+sub modifyAttributes (\@) {
+  my $typeList = shift @_;
+
+  # Modify 'data' to support attributes
+  foreach my $type (@$typeList) {
+    next unless defined $type->{attribute};
+
+    my @attributes;
+    foreach my $attribute (@{$type->{attribute}}) {
+      $attribute->{isAttribute} = 1;
+      $attribute->{minOccurs} = 0;
+
+      if (defined $attribute->{fixed}) {
+        $attribute->{default} = $attribute->{fixed};
+        delete $attribute->{minOccurs};
+      }
+      if (defined $attribute->{use}) {
+        if ('prohibited' eq $attribute->{use}) { next }
+        if ('required'   eq $attribute->{use}) { delete $attribute->{minOccurs} }
+      }
+
+      push(@attributes, $attribute);
+    }
+
+    $type->{sequence} = {} unless defined $type->{sequence};
+    $type->{sequence}->{element} = []
+         unless defined $type->{sequence}->{element};
+    unshift(@{$type->{sequence}->{element}}, @attributes);
+
+    # Add choices
+    if (defined $type->{choice}) {
+      push(@{$type->{sequence}->{element}},
+           { complexType => [ { choice => $type->{choice} } ] });
+      delete $type->{choice};
+    }
+    delete $type->{attribute};
+  }
+}
+
+sub modifyElementTypes (\@\@\@) {
+  my ($elementList, $complexTypes, $simpleTypes) = @_;
+
+  foreach my $element (@{$elementList}) {
+    next unless defined $element->{complexType}
+             or defined $element->{simpleType};
+
+    my $typetype = (defined $element->{complexType}) ? 'complexType'
+                                                     : 'simpleType';
+    my $typeRef;
+    if ("HASH" eq ref $element->{$typetype}) {
+      $typeRef = $element->{$typetype};
+    } else {
+      die "ERR: expected 1 element, found ", scalar(@{$element->{$typetype}}),
+          "\n"
+          unless 1 == scalar(@{$element->{$typetype}});
+      $typeRef = $element->{$typetype}[0];
+    }
+
+    $element->{type} = 'element$$' . $element->{name};
+    $typeRef->{name} = $element->{type};
+
+    my $typeList = ('complexType' eq $typetype) ? $complexTypes : $simpleTypes;
+    push(@$typeList, $typeRef);
+    delete $element->{$typetype};
+  }
+}
+
+sub modifyNestedTypes (\@\@) {
+  my ($complexTypes, $simpleTypes) = @_;
+
+  foreach my $type (@{$complexTypes}) {
+    next unless defined $type->{sequence}
+             or defined $type->{choice};
+
+    my $typeRef;
+    if (defined $type->{sequence}) {
+      $typeRef = $type->{sequence};
+    } else {
+  die "ERR: expected 1 element, found ", scalar(@{$type->{choice}}), "\n"
+          unless 1 == scalar(@{$type->{choice}});
+      $typeRef = $type->{choice}[0];
+    }
+
+    $typeRef->{element} = [] unless defined $typeRef->{element};
+    my $newElemList = [];
+    modifyNestedType($complexTypes,
+                     $simpleTypes,
+                     $typeRef->{element},
+                     $type->{name},
+                     $newElemList);
+    $typeRef->{element} = $newElemList;
+  }
+}
+
+sub modifyNestedType (\@\@\@\@\@$) {
+  my ($complexTypes,
+      $simpleTypes,
+      $elemList,
+      $parentTypeName,
+      $newElemList) = @_;
+
+  # Modify 'data' to support nested types.
+  my $counter = 0;
+  foreach my $element (@$elemList) {
+    unless (defined $element->{complexType} or defined $element->{simpleType})
+    {
+      push(@$newElemList, $element);
+      next;
+    }
+
+    my $typetype = (defined $element->{complexType}) ? 'complexType'
+                                                     : 'simpleType';
+
+    # Simple types with 'list' item type are special cases.
+    if ('simpleType' eq $typetype
+        and defined $element->{$typetype}->[0]->{list})
+    {
+      push(@$newElemList, $element);
+      next;
+    }
+
+    die "ERR: expected 1 type, found ", scalar(@{$element->{$typetype}}), "\n"
+        unless 1 == scalar(@{$element->{$typetype}});
+    my $typeRef = $element->{$typetype}[0];
+
+    my $isUntaggedFlag = 0;
+    my $elemName;
+    my $typeName;
+    if (defined $element->{name}) {
+      $elemName = $element->{name};
+      $typeName = $element->{name};
+    } else {
+      # The element is an anonymous choice.  TBD sequence
+
+      my $incrementCounterFlag = 0;
+
+      if (defined $typeRef->{choice}->[0]->{elementName}) {
+        $elemName = $typeRef->{choice}->[0]->{elementName};
+      } else {
+        $elemName = 'Choice';
+        $elemName .= '-' . $counter if 0 < $counter;
+        $incrementCounterFlag = 1;
+      }
+
+      if (defined $typeRef->{choice}->[0]->{cpptype}) {
+        $typeRef->{name} = $typeRef->{choice}->[0]->{cpptype};
+      } else {
+        $typeName = 'Choice';
+        $typeName .= '-' . $counter if 0 < $counter;
+        $incrementCounterFlag = 1;
+      }
+      $isUntaggedFlag = 1;
+      ++$counter if $incrementCounterFlag;
+    }
+
+    if (defined $typeRef->{name}) {
+      $typeName = $typeRef->{name};
+    } else {
+      $typeName = $parentTypeName . ucfirst $typeName;
+    }
+    $typeRef->{name} = $typeName;
+
+    $element->{name} = $elemName;
+    $element->{type} = $typeRef->{name};
+    $element->{isUntagged} = $isUntaggedFlag;
+    delete $element->{$typetype};
+
+    my $typeList = ('complexType' eq $typetype) ? $complexTypes : $simpleTypes;
+    push(@$typeList, $typeRef);
+    push(@$newElemList, $element);
+  }
+}
+
+sub loadIncludes (\%\%\%$) {
+  my ($elementTypes, $includes, $opts, $data) = @_;
+
+  if (defined $data->{include}) {
+
+    foreach my $inc (@{$data->{include}}) {
+      my $fullpath = '';
+      foreach my $dir (@{$opts->{includedir}}) {
+        my $trypath =File::Spec->catfile($dir, $inc->{schemaLocation});
+        if (-r $trypath) {
+          $fullpath = $trypath;
+          last;
+        }
+      }
+      if (! $fullpath) {
+        die "ERR: Cannot find $inc->{schemaLocation}\n";
+      }
+
+      if (defined $includes->{$fullpath}) {
+        print "Skipping $fullpath -- already included\n";
+      }
+      else {
+        $includes->{$fullpath} = {};
+        print "Including $fullpath\n";
+        my $includedSchema = 
+          loadSchemaFile(%$elementTypes, %$includes, %$opts, $fullpath, 1);
+        $includes->{$fullpath} = $includedSchema;
+      }
+    }
+  }
+}
+
+#------------------------------------------------------------------------------
+
+sub generateSchemaComponent (\%$\@) {
+  my ($opts, $componentName, $classes) = @_;
+
+  my $trait = (1 < scalar(@$classes)) ? 'complexType'
+                                      : $classes->[0]->{trait};
+  if ('sequence' eq $trait || 'choice' eq $trait) {
+    $trait = 'complexType';
+  }
+
+  my $config = {
+                INCLUDE_PATH => "$FindBin::Bin/../etc/bde_xsdcc",
+                INTERPOLATE  => 1,
+                EVAL_PERL    => 1,
+                FILTERS => {
+                            UPPER_UPPER => \&UPPER_UPPER,
+                            MixedMixed  => \&MixedMixed,
+                            mixedMixed  => \&mixedMixed,
+                            c_str       => \&c_str,
+                           }
+               };
+
+  my $template = Template->new($config);
+
+  my $package = $classes->[0]->{package};
+  my @include;
+  defined($_->{include}) && push @include, @{$_->{include}} foreach @$classes;
+  @include = uniqueIncludes(@include, $package.'_'.$componentName.'.h');
+  my $component = {
+      component         => $componentName,
+      package           => $package,
+      purpose           => $classes->[0]->{annotation}->{purpose},
+      author            => $classes->[0]->{annotation}->{author},
+      omitIntrospection => scalar(grep {$_->{omitIntrospection}} @$classes),
+      allocatesMemory   => scalar(grep {$_->{allocatesMemory}} @$classes),
+      include           => \@include,
+      classes           => [ sort {$a->{name} cmp $b->{name}} @$classes],
+  };
+
+  foreach my $gen (@{ $opts->{generate} }) {
+
+    if (defined TARGETS->{$gen}->{$trait}) {
+
+      my $vars = {
+                  UPPER_UPPER     => \&UPPER_UPPER,
+                  MixedMixed      => \&MixedMixed,
+                  mixedMixed      => \&mixedMixed,
+                  buildSearchTree => \&buildSearchTree,
+                  cmp             => $component,
+                 };
+
+      if ($opts->{print}) {
+        print "Generating $gen\n";
+
+        $template->process(TARGETS->{$gen}->{$trait}->{template}, $vars)
+          || die "ERR: " . $template->error() . "\n";
+      } else {
+        my $outputFile = lc ($package . '_' .
+                             $componentName .
+                             TARGETS->{$gen}->{$trait}->{ext});
+
+        print "Generating $outputFile\n";
+
+        $template->process(TARGETS->{$gen}->{$trait}->{template},
+                           $vars,
+                           $outputFile)
+          || die "ERR: " . $template->error() . "\n";
+      }
+    }
+  }
+}
+
+#----
+
+sub generateSchemaComponents (\%\%) {
+  my ($opts, $schemaComponents) = @_;
+
+  if (scalar(keys %$schemaComponents) == 0) {
+    die "ERR: No element types defined in the schema\n";
+  }
+
+  my @selectedComponents;
+
+  my @components = $opts->{component} ? @{$opts->{component}} : keys %$schemaComponents;
+  foreach my $component (@components) {
+    if (! defined $schemaComponents->{$component}) {
+      die "ERR: Component '$component' could not be identified.\n";
+    }
+
+    if ($opts->{recurse} || !$schemaComponents->{$component}->[0]->{external}) {
+      generateSchemaComponent(%$opts, $component,
+                              @{$schemaComponents->{$component}});
+    }
+  }
+}
+
+#------------------------------------------------------------------------------
+
+sub collectNsTags (\%\%$) {
+
+  my ($nsTags, $nsTagsReversed, $schema) = @_;
+
+  # process default namespace
+  if (defined $schema->{xmlns}) {
+
+    if (defined $nsTags->{''} &&
+        $nsTags->{''} ne $schema->{xmlns}) {
+      die "ERR: default namespace mismatch\n";
+    }
+    else {
+      $nsTags->{''} = $schema->{xmlns};
+      $nsTagsReversed->{ $schema->{xmlns} } = '';
+    }
+  }
+
+  my @nstags = map { s/^xmlns\:// && $_ } grep /^xmlns\:\w+$/, keys %$schema;
+
+  foreach my $tag (@nstags) {
+    my $k = 'xmlns:' . $tag;
+
+    if (defined $nsTags->{$tag}) {
+      if ($nsTags->{$tag} ne $schema->{$k}) {
+        die "ERR: namespace $tag mismatch\n";
+      }
+    }
+    else {
+      $nsTags->{$tag} = $schema->{$k};
+      $nsTagsReversed->{ $schema->{$k} } = $tag;
+    }
+  }
+}
+
+#----
+
+sub processSchemaText(\%$) {
+  my ($opts, $originalSchemaFile) = @_;
+
+  my $original = new IO::File "< $originalSchemaFile";
+  $original or die "ERR: Cannot open $originalSchemaFile for reading\n";
+
+  # build ns tag maps
+  my $schemaParser = new SchemaParser;
+  my $topschema = $schemaParser->XMLin($originalSchemaFile);
+  my %nsTags;
+  my %nsTagsReversed;
+  if (defined $topschema->{xmlns}) {
+    if (!defined $topschema->{targetNamespace}) {
+      die "ERR: $originalSchemaFile must define targetNamespace " .
+          "to use default xmlns\n";
+    }
+  }
+
+  collectNsTags(%nsTags, %nsTagsReversed, $topschema);
+
+  local $/; # enable "slurp" mode
+  my $text = <$original>;
+
+  if ($opts->{strip}) {
+    $text =~ s/<bdem:\w+\s*>[^<]*<\/bdem\:\w+\s*>//sg;
+    $text =~ s/<bdem:\w+\s*\/>//sg;
+    $text =~ s/bdem:\w+='[^']*'//sg;
+  }
+
+  $text =~ s/<!--.*?-->//sg;
+
+  if ($opts->{inline}) {
+
+    my @inlineSchemaList;
+
+    while (my ($head, $inc, $tail) = 
+           ($text =~ /(.*)(<(?:\w+:)?include.*?(?:\/>|\/include>))(.*)/s)) {
+
+      if (my ($incfile) = ($inc =~ /schemaLocation='(.*?)'/s)) {
+
+        my $fullpath = '';
+        foreach my $dir (@{$opts->{includedir}}) {
+          my $trypath =File::Spec->catfile($dir, $incfile);
+          if (-r $trypath) {
+            $fullpath = $trypath;
+            last;
+          }
+        }
+        if (! $fullpath) {
+          die "ERR: Cannot find $incfile\n";
+        }
+
+        if (grep {$fullpath eq $_}  @inlineSchemaList) {
+          $text = $head . "\n" . $tail;
+          last;
+        }
+
+        push @inlineSchemaList, $fullpath;
+
+        my $incschema = $schemaParser->XMLin($fullpath);
+        my $targetNsTag = '';
+
+        if (defined $incschema->{targetNamespace}) {
+          if (!defined $topschema->{targetNamespace} ||
+              $topschema->{targetNamespace} ne $incschema->{targetNamespace}) {
+            die "ERR: targetNamespace mismatch while including $fullpath\n";
+          }
+        }
+        else {
+          if (defined $incschema->{xmlns}) {
+            die "ERR: $fullpath must define targetNamespace " . 
+                "to use default xmlns\n";
+          }
+          if (defined $topschema->{targetNamespace} &&
+              defined $nsTagsReversed{$topschema->{targetNamespace}}) {
+            $targetNsTag = $nsTagsReversed{$topschema->{targetNamespace}};
+          }
+        }
+
+        collectNsTags(%nsTags, %nsTagsReversed, $incschema);
+
+        my $inchandle = new IO::File "< $fullpath";
+        my $inctext = <$inchandle>;
+        $inctext =~ s/<!--.*?-->//sg;
+
+        $inctext =~ s/^\s*<\?xml.*?\?>//s;
+        $inctext =~ s/^\s*<(\w+:)?schema.*?>//s;
+        $inctext =~ s/<\/(\w+:)?schema>//s;
+
+        if ($targetNsTag) {
+          $inctext =~ s/type='([^:]+)'/type='$targetNsTag:$1'/g;
+        }
+
+        $text = $head . $inctext . $tail;
+      }
+      else {
+        die "ERR: Cannot parse include directive: $inc\n";
+      }
+    }
+  }
+
+  # expand namespace declartions
+
+  if (my ($head, $schemaElement, $tail) = 
+      ($text =~ /(.*)(<(?:\w+:)?schema.*?>)(.*)/s)) {
+
+    $schemaElement =~ s/xmlns(:\w+)?=(?:(?:'.*?')|(?:".*?"))\s*//sg;
+
+    my $nsDecls = join ("\n", 
+                        map {
+                          my $n = 'xmlns' . ($_ ?  ':' . $_ : '');
+                          "$n='$nsTags{$_}'"
+                        } keys %nsTags);
+
+    $schemaElement =~ s/>/\n$nsDecls\n>/s;
+
+    $text = $head . $schemaElement . $tail;
+  }
+
+  return $text;
+}
+
+#----
+
+sub generateSchema(\%$) {
+  my ($opts, $schema) = @_;
+
+  my $config = {
+                INCLUDE_PATH => "$FindBin::Bin/../etc/bde_xsdcc",
+                INTERPOLATE  => 1,
+                EVAL_PERL    => 1,
+                FILTERS => {
+                            UPPER_UPPER => \&UPPER_UPPER,
+                            MixedMixed  => \&MixedMixed,
+                            mixedMixed  => \&mixedMixed,
+                            c_str       => \&c_str,
+                           }
+               };
+
+
+  my $template = Template->new($config);
+
+  foreach my $gen (@{ $opts->{generate} }) {
+
+    if (defined TARGETS->{$gen}->{schema}) {
+
+      my $vars = {
+                  UPPER_UPPER     => \&UPPER_UPPER,
+                  MixedMixed      => \&MixedMixed,
+                  mixedMixed      => \&mixedMixed,
+                  buildSearchTree => \&buildSearchTree,
+                  schema          => $schema,
+                 };
+      if ($opts->{print}) {
+        print "Generating $gen\n";
+
+        $template->process(TARGETS->{$gen}->{schema}->{template},
+                           $vars)
+          || die "ERR: " . $template->error() . "\n";
+      } else {
+        my $outputFile = lc ($schema->{package} .
+                             TARGETS->{$gen}->{schema}->{ext});
+
+        print "Generating $outputFile\n";
+
+        $template->process(TARGETS->{$gen}->{schema}->{template},
+                           $vars,
+                           $outputFile)
+          || die "ERR: " . $template->error() . "\n";
+      }
+    }
+  }
+}
+
+#----
+
+sub generateService(\%\%\@$) {
+  my ($opts, $components, $fileList, $data) = @_;
+
+  my $config = {
+                INCLUDE_PATH => "$FindBin::Bin/../etc/bde_xsdcc",
+                INTERPOLATE  => 1,
+                EVAL_PERL    => 1,
+                FILTERS => {
+                            UPPER_UPPER => \&UPPER_UPPER,
+                            MixedMixed  => \&MixedMixed,
+                            mixedMixed  => \&mixedMixed,
+                            c_str       => \&c_str,
+                           }
+               };
+
+  my $template = Template->new($config);
+
+  # Start and stop script filenames are suffixed by task name.
+  my $taskName = $data->{package};  $taskName =~ s/^..//;
+  
+  foreach my $gen (@{$opts->{generate}}) {
+
+    if (defined TARGETS->{$gen}->{svc}) {
+
+      my $vars = {
+                  UPPER_UPPER     => \&UPPER_UPPER,
+                  MixedMixed      => \&MixedMixed,
+                  mixedMixed      => \&mixedMixed,
+                  buildSearchTree => \&buildSearchTree,
+                  svc             => $data,
+                  opts            => $opts, 
+                  componentNames  => [ sort keys %$components ],
+                 };
+      if ($opts->{print}) {
+        print "Generating $gen\n";
+
+        $template->process(TARGETS->{$gen}->{svc}->{template},
+                           $vars)
+          || die "ERR: " . $template->error() . "\n";
+      } else {
+        my $outputFile;
+        
+        $outputFile = lc ($data->{package} . TARGETS->{$gen}->{svc}->{ext})
+            if defined(TARGETS->{$gen}->{svc}->{ext});
+
+        $outputFile = lc (TARGETS->{$gen}->{svc}->{prefix} . $taskName)
+            if defined(TARGETS->{$gen}->{svc}->{prefix});
+
+        my $generation = scalar(grep /$outputFile/, @$fileList);
+        if (0 < $generation and
+            TARGETS->{$gen}->{backup} and
+            0 == system("cp $outputFile $outputFile.bak.$generation"))
+        {
+          print "Generating $outputFile ",
+                "(previous version copied to $outputFile.bak.$generation)\n";
+        } else {
+          print "Generating $outputFile\n";
+        }
+
+        $template->process(TARGETS->{$gen}->{svc}->{template},
+                           $vars,
+                           $outputFile)
+          || die "ERR: " . $template->error() . "\n";
+      }
+    }
+  }
+}
+
+#----
+
+sub generateMakefiles(\%\%\@$) {
+  my ($opts, $components, $fileList, $data) = @_;
+
+  my $config = {
+                INCLUDE_PATH => "$FindBin::Bin/../etc/bde_xsdcc",
+                INTERPOLATE  => 1,
+                EVAL_PERL    => 1,
+                FILTERS => {
+                            UPPER_UPPER => \&UPPER_UPPER,
+                            MixedMixed  => \&MixedMixed,
+                            mixedMixed  => \&mixedMixed,
+                            c_str       => \&c_str,
+                           }
+               };
+
+  my $template = Template->new($config);
+
+  my @componentNames;
+  foreach my $component (keys %$components) {
+    if ($opts->{recurse} || !$components->{$component}->[0]->{external}) {
+      push(@componentNames, $component);
+    }
+  }
+
+  my $mode = 'undefined';
+  {
+    $mode = 'plink', last if $opts->{plink};
+    $mode = 'pkg',   last if $opts->{pkg};
+  }
+  system("mkdir -p package") if $opts->{pkg};
+
+  foreach my $gen (@{$opts->{generate}}) {
+
+    if (defined TARGETS->{$gen}->{$mode}) {
+
+      my $vars = {
+                  UPPER_UPPER     => \&UPPER_UPPER,
+                  MixedMixed      => \&MixedMixed,
+                  mixedMixed      => \&mixedMixed,
+                  buildSearchTree => \&buildSearchTree,
+                  svc             => $data,
+                  opts            => $opts, 
+                  componentNames  => [ sort @componentNames ],
+                 };
+      if ($opts->{print}) {
+        print "Generating $gen\n";
+
+        $template->process(TARGETS->{$gen}->{$mode}->{template},
+                           $vars)
+          || die "ERR: " . $template->error() . "\n";
+      } else {
+        my $outputFile = TARGETS->{$gen}->{$mode}->{prefix} || '';
+        
+        $outputFile .= lc ($data->{package} . TARGETS->{$gen}->{$mode}->{ext})
+            if defined(TARGETS->{$gen}->{$mode}->{ext});
+
+        my $generation = scalar(grep /$outputFile/, @$fileList);
+        if (0 < $generation and
+            TARGETS->{$gen}->{backup} and
+            0 == system("cp $outputFile $outputFile.bak.$generation"))
+        {
+          print "Generating $outputFile ",
+                "(previous version copied to $outputFile.bak.$generation)\n";
+        } else {
+          print "Generating $outputFile\n";
+        }
+
+        $template->process(TARGETS->{$gen}->{$mode}->{template},
+                           $vars,
+                           $outputFile)
+          || die "ERR: " . $template->error() . "\n";
+      }
+    }
+  }
+}
+
+#------------------------------------------------------------------------------
+
+sub processSchema (\%\%\%$) {
+  my ($data, $elementTypes, $opts, $schemaFile) = @_;
+
+}
+
+MAIN: {
+  my $opts = getoptions();
+  my $verbose = $opts->{debug} || 0;
+
+  push(@{$opts->{includedir}}, split(/:/, $ENV{BDE_XSDCC_INCLUDE_PATH}))
+      if defined $ENV{BDE_XSDCC_INCLUDE_PATH};
+
+  my $modes = $opts->{mode} || [];
+  foreach my $mode (@$modes) {
+    $opts->{mode} = $mode;
+    adjustOpts($opts);
+  }
+  if ($opts->{svc} and !($opts->{plink} or $opts->{pkg})) {
+    $opts->{mode} = $opts->{bdeMetadata} ? 'pkg' : 'plink';
+    adjustOpts($opts);
+  }
+
+  my %elementTypes;
+  my %includes;
+  my $data;
+
+  # Note that only the last schema will be represented by 'data'.
+  foreach my $schemaFile (@{$opts->{schemaFile}}) {
+    print "Loading schema from $schemaFile\n";
+    $data = loadSchemaFile(%elementTypes, %includes,
+                           %$opts, $schemaFile, 0);
+    $data->{text} = processSchemaText(%$opts, $schemaFile);
+    $data->{schemaFile} = $schemaFile;
+    $data->{schemaFilename} = basename($schemaFile);
+  }
+
+  my $requestType  = $data->{requestType};
+  my $responseType = $data->{responseType};
+
+  # Check for top-level request and response types.  These must be defined as
+  # 'complexType's.
+  if ($opts->{checkTopLevelTypes}) {
+    die "ERR: top-level request type '$$data{requestType}' is not defined\n"
+        unless grep {$requestType  eq $_->{name} and
+                     'complexType' eq $_->{typeCategory}} values %elementTypes;
+  
+    die "ERR: top-level response type '$$data{responseType}' is not defined\n"
+        unless grep {$responseType eq $_->{name} and
+                     'complexType' eq $_->{typeCategory}} values %elementTypes;
+  }
+
+  my $schema = $data->{types}->{schema} || $data;
+  my $components = getComponents(%elementTypes);
+
+  if (0 < $verbose) {
+    foreach my $c (keys %$components) {
+      print "Component: $c\n";
+      print "[", join(' ', map { $_->{refname} } @{$components->{$c}}), "]\n";
+    }
+  }
+  print Dumper(%$components) if 2 < $verbose;
+
+  generateSchemaComponents(%$opts, %$components);
+
+  # Add the list of request names to 'data'.
+  {
+    $requestType  =~ s/(.+Request)/request\$\$$1/   if $data->{WSDL};
+    $responseType =~ s/(.+Response)/response\$\$$1/ if $data->{WSDL};
+
+    if (defined($elementTypes{$requestType})) {
+      $data->{requests} =
+          [ map { $_->{name} } @{$elementTypes{$requestType}->{choice}} ];
+
+      $data->{requestAllocatesMemory} = 0;
+      if (defined($elementTypes{$requestType}->{allocatesMemory})) {
+        $data->{requestAllocatesMemory} =
+            $elementTypes{$requestType}->{allocatesMemory};
+      }
+
+      $data->{responseAllocatesMemory} = 0;
+      if (defined($elementTypes{$responseType}->{allocatesMemory})) {
+        $data->{responseAllocatesMemory} =
+            $elementTypes{$responseType}->{allocatesMemory};
+      }
+    }
+  }
+
+  my @files = ();
+  File::Find::find(sub { $File::Find::name =~ s:\./:: and
+                         push(@files, $File::Find::name)
+                       }, '.');
+
+  generateService(%$opts, %$components, @files, $data);
+  generateMakefiles(%$opts, %$components, @files, $data);
+  generateSchema(%$opts, $data) unless $data->{WSDL};
+
+  if (defined $opts->{convert}) {
+    my $convertedSchemaFile = $opts->{convert};
+    print "Writting $convertedSchemaFile\n";
+    convertSchema(%$opts, $data->{schemaFile}, $convertedSchemaFile);
+  }
+}
+
+#==============================================================================
+
+=head1 AUTHOR
+
+Vladimir Kliatchko (vkliatchko@bloomberg.net)
+
+David Rubin (drubin6@bloomberg.net)
+
+=cut

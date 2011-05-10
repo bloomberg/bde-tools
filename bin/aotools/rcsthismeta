@@ -1,0 +1,60 @@
+#!/bin/ksh
+
+typeset curdir=`pwd`
+typeset firstdir=${curdir##*/}
+typeset abovefirstdir=${curdir%/*}
+typeset seconddir=${abovefirstdir##*/}
+typeset uor
+
+case $firstdir in
+    (package|group)
+	uor=$seconddir
+	;;
+    (*)
+	uor=$firstdir
+	if [[ -d package ]]
+	then
+	    cd package
+	elif [[ -d group ]]
+	then
+	    cd group
+	else
+	    echo You must run $0 within a uor metadata directory
+	    return 1
+	fi
+	;;
+esac
+
+typeset list
+
+for i in $uor.*
+do
+    case $i in
+	( *.*.* | *~ | $uor.lck )
+	    ;;
+	( * )
+	    list="$list $i"
+	    ;;
+    esac
+done
+
+for i in $list
+do
+    if grep '\$Id' $i >/dev/null
+    then
+	:
+    else
+	echo '# $Id$' >tmp.id
+	cat $i >>tmp.id
+	mv $i tmp.noid
+	mv tmp.id $i
+	rm tmp.noid
+    fi
+done
+
+[[ -d RCS ]] || mkdir RCS
+
+for i in $list
+do
+    aci -u -m'initial setup' "$i" </dev/null
+done

@@ -1,0 +1,14 @@
+#!/bbs/opt/bin/perl -w
+
+use strict;
+ 
+my $branch = shift or die "missing argument: branch".$/;
+my $branchre = qr{^(.*)\@\@\Q$branch\E/(\d+)$};
+
+while (<>) {
+  chomp;
+  next unless /$branchre/;
+  next unless -d;
+  print $1.$/;
+}
+

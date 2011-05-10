@@ -1,0 +1,67 @@
+#!/bbs/opt/bin/perl
+
+use warnings;
+use strict;
+
+use Getopt::Long;
+
+sub usage {
+    return <<EOUSAGE;
+$0 [opts] symbols...
+
+Dump the value or location of symbols from the 
+SIBUILD Perl symbol modules maze.
+
+Options:
+
+    --stage     | -s <stage>    one of dev, alpha, beta, prod, lgood
+    --where     | -w            print module which defines the symbol
+
+    --help      | -h            this screen
+EOUSAGE
+}
+
+my %opts;
+my $stage;
+
+BEGIN {
+    my %stages = (
+            alpha   => '/bbsrc/bin/alpha/lib/perl',
+            beta    => '/bbsrc/bin/beta/lib/perl',
+            prod    => '/bbsrc/bin/prod/lib/perl',
+            lgood   => '/bbsrc/bin/lgood/lib/perl',
+            dev     => '/bbcm/infrastructure/tools/lib/perl',
+    );
+    my @opts = qw/stage|s=s where|w help|h/;
+    GetOptions(\%opts, @opts) or die usage();
+    print usage() and exit if $opts{help};
+
+    die "$opts{stage}: Invalid stage\n\n", usage() 
+        if exists $opts{stage} and not exists $stages{ $opts{stage} };
+
+    $opts{stage} ||= 'prod';
+
+    $stage = $stages{ $opts{stage} };
+
+}
+
+use lib $stage;
+
+my @mods = qw/Symbols Production::Symbols SCM::Symbols Change::Symbols/;
+
+SYM: for my $s (@ARGV) {
+MOD:    for my $m (@mods) {
+        (my $e = $m) =~ s#::#/#g;
+        delete $::{$e};
+        my $v = eval "use $m qw/$s/; $s";
+        next MOD if $@;
+        if (defined $v) {
+            if ($opts{where}) {
+                print "$s => $m\n";
+            } else {
+                print "$s => $v\n";
+            }
+            next SYM;
+        }
+    }
+}

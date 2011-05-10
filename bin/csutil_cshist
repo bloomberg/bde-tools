@@ -1,0 +1,58 @@
+#!/bbs/opt/bin/perl -w
+
+use warnings;
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+
+use Production::Services;
+use Production::Services::ChangeSet     qw(getChangeSetHistory);
+
+my @opts = qw(uuid|i user|u date|d status|s help|h);
+die usage() if not GetOptions(\my %opts, @opts);
+
+print usage() and exit 0 if $opts{help};
+
+die usage() if @ARGV != 1;
+
+my $svc = Production::Services->new;
+my ($hist, $err) = getChangeSetHistory($svc, shift, 1);
+
+die "Could not retrieve change set history: $err" if $err;
+
+for (@$hist) {
+    $_->[3] ||= '';
+    my $tab = '';                           
+    print $_->[0]       and $tab ||= "  "   if $opts{date};
+    print "$tab$_->[1]" and $tab ||= "  "   if $opts{status};
+    print "$tab$_->[2]" and $tab ||= "  "   if $opts{uuid};
+    print "$tab$_->[3]" and $tab ||= "  "   if $opts{user};
+    
+    print "\n" and next if $tab;
+
+    print join "  ", @$_;
+    print "\n";
+}
+
+sub usage {
+    return <<EOUSAGE;
+Usage: $0 \$csid
+       $0 [ opts ] \$csid
+
+Display the history of a change set. Options:
+
+    --uuid      | -i    Display UUID
+    --user      | -u    display username
+    --status    | -s    display status
+    --date      | -d    display date
+
+    --help  | -h        this help screen
+
+No options is equivalent to '-i -u -s -d'.
+EOUSAGE
+}

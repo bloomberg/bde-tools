@@ -1,0 +1,205 @@
+#!/bbs/opt/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use Change::File;
+use Change::Set;
+use Change::DB;
+use Change::Identity         qw/identifyProductionName/;
+use BDE::Util::Nomenclature  qw/getType getCanonicalUOR getSubdirsRelativeToUOR/;
+use Symbols                  qw/$CONSTANT_PATH/;
+use Change::Symbols          qw/STAGE_PRODUCTION MOVE_REGULAR STATUS_SUBMITTED
+                                FILE_IS_REMOVED FILE_IS_RENAMED
+                                FILE_IS_NEW FILE_IS_CHANGED FILE_IS_COPIED
+			        $ROBOSCM_MESSAGE/;
+use strict;
+
+my @getopt = qw(dir=s);
+my %opt;
+
+GetOptions(\%opt, @getopt) or die "Bad options.";
+
+# HACK--find good place for this, or do it some other way
+my @tsv_table = do {
+  my @table = map chr, (0..255);
+  $table[ord 't'] = "\t";
+  $table[ord 'n'] = "\n";
+  @table;
+};
+
+for my $planfile (@ARGV ? @ARGV : qw(-)) {
+  my $plan = do {
+    open my $fh, $planfile or die "Error opening $planfile: $!.".$/;
+    (scmplan_fromfh($fh), close $fh)[0];
+  };
+
+  my $cs = changeset_fromplan($plan);
+
+  if ($opt{dir}) {
+    my $metapath = join '/', $opt{dir}, $cs->getID;
+    open my $metafh, '>', $metapath or die "Error opening $metapath: $!.".$/;
+    print $metafh $cs->serialise . $/;
+    close $metafh or die "Error closing $metapath: $!.".$/;
+  }
+  else {
+    print STDOUT $cs->serialise . $/;
+  }
+}
+
+sub scmplan_fromfh {
+  my $fh = shift;
+  my %meta;
+  my @ops;
+
+  while (<$fh>) {
+    chomp;
+    next if /^#/;
+
+    my ($prefix, $rest) = /^([^:]+):\t(.*)$/ or
+      die "Bad scm plan format: $_".$/;
+
+    if ($prefix eq 'meta') {
+      %meta = tsv_to_list($rest);
+    }
+    elsif ($prefix eq 'op') {
+      push @ops, { tsv_to_list($rest) };
+    }
+    else {
+      die "Bad scm plan format: $_".$/;
+    }
+  }
+
+  return { meta => \%meta, ops => \@ops };
+}
+
+sub tsv_to_list {
+  return map { tsv_unescape($_) } split "\t", $_[0];
+}
+
+sub tsv_unescape {
+  my $stuff = shift;
+  $stuff =~ s!\\(.)!$tsv_table[ord($1)]!ge;
+  return $stuff;
+}
+
+sub changeset_fromplan {
+  my $plan = shift;
+  my @cf = map { changefile_fromop($_) } @{$plan->{ops}};
+  my %csinit =
+    ( message => $plan->{meta}->{message},
+      user => $plan->{meta}->{author} ); 
+  return changeset_fromfiles(\@cf, %csinit);
+}
+
+sub changeset_fromfiles {
+  my @files = @{ shift @_ };
+  my %arg = @_;
+
+  $arg{user} ||= $ENV{USER} || $ENV{LOGNAME};
+  $arg{stage} ||= STAGE_PRODUCTION;
+  $arg{move} ||= MOVE_REGULAR;
+  defined($arg{message})  or  $arg{message} = '';
+  #$arg{message} =~ m/^$ROBOSCM_MESSAGE/  or  $arg{message} = "$ROBOSCM_MESSAGE $arg{message}";
+  $arg{message} ||= $ROBOSCM_MESSAGE;
+  $arg{status} ||= STATUS_SUBMITTED;
+  $arg{csid} = Change::DB->_generateChangeSetID($ENV{USER});
+  $arg{when} = scalar localtime;
+  $arg{ticket} ||= 'TREQ550740';
+
+  my $cs = Change::Set->new(\%arg);
+  $cs->addFiles(@files);
+  return $cs;
+}
+
+sub changefile_fromop {
+  my $op = shift;
+  my %cfinit;
+
+  my %cfstatus =
+  ( 
+    add   => FILE_IS_NEW,
+    mk    => FILE_IS_NEW,
+    mkdir => FILE_IS_NEW,       # HACK - redundant, but just in case
+    write => FILE_IS_CHANGED,
+    patch => FILE_IS_CHANGED,
+    rm    => FILE_IS_REMOVED,
+    mv    => FILE_IS_RENAMED,
+    cp    => FILE_IS_COPIED,
+  );
+
+  my %hascontent = map { ($_=>1) } qw(add write patch); 
+
+  # determine value of Change::File::getSource
+
+  if ($op->{action} eq 'cp' or $op->{action} eq 'mv') {
+    # FIXME for copies, overload source to hold the temporal origin
+    # FIXME C::F->serialise does not escape colons :(
+    $cfinit{source} = $op->{source_path};
+    $cfinit{source} =~ s{([^/])$}{$1/} if $op->{node_kind} eq 'dir';
+    $cfinit{source} .= '@@'.$op->{source_temporal};
+    $cfinit{source} =~ s/:/_/g; 
+  }
+  elsif ($op->{node_kind} eq 'file' && $hascontent{$op->{action}}) {
+    $cfinit{source} = $op->{content_path} or
+      die "Content path required for file changes.";
+  }
+  else {
+    $cfinit{source} = $op->{target_path};
+  }
+
+  $cfinit{destination} = $op->{target_path};
+  $cfinit{destination} =~ s{([^/])$}{$1/} if $op->{node_kind} eq 'dir';
+  $cfinit{type} = $cfstatus{$op->{action}};
+
+  my $badfile_re = qr/(?:,v|\.o(?:bj)?|\.a|[^\w|\/]|\.log|\.lockdir|\.finditcheck)$/;
+  if ($cfinit{source} =~ $badfile_re  or  $cfinit{destination} =~ $badfile_re) {
+    $cfinit{source} =~ $badfile_re  and  print STDERR "source\n";
+    $cfinit{destination} =~ $badfile_re  and print STDERR "dest\n";
+    # Exclude this item from the resultant change set.
+    return ();
+  }
+
+  # if pre-canonicalized, use uor to sensibly fill in remaining fields
+  # otherwise, failure (for now)
+
+  if (index($op->{target_path}, $CONSTANT_PATH.'/') == 0) {
+    my $uor = $op->{target_uor}||default_uor(@{$op}{qw/target_path node_kind/});
+    my %id = identify_uor($op->{target_path}, $uor, $op->{node_kind});
+    $cfinit{$_} = $id{$_} for keys %id;
+  }
+  else {
+    die "Not enough information to identify $op->{target_path}.";
+  }
+
+  return Change::File->new(\%cfinit);
+}
+
+sub identify_uor {
+  my ($path, $uor, $kind) = @_;
+  my %id;
+
+  $path =~ s{/[^/]+$}{} if $kind eq 'file';
+  $id{target} = substr($path, index($path, $uor));
+  $id{production} = str_after($path, '/'.(split m{/}, $CONSTANT_PATH)[1].'/');
+  $id{library} = $uor;
+
+  return %id;
+}
+
+sub default_uor {
+  my ($path, $kind) = @_;
+  $path =~ s{/[^/]+$}{} if $kind eq 'file';
+  return str_after($path, $CONSTANT_PATH.'/');
+}
+
+sub str_after {
+  my ($str1, $str2) = @_;
+  my $index = index($str1, $str2);
+  die "$str2 not in $str1" if $index == -1;
+  return substr($str1, $index + length $str2);
+}
+

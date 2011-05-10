@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+if [ $# -eq 1 ]; then
+  ccroot="$1" && shift
+else
+  ccroot="."
+fi
+
+(
+  cd "$ccroot" >/dev/null
+  cleartool lshist -r -nco -minor -fmt '%o\t%m\t%n\t%On\t%Nd\t%u\t%Nc&&&' | \
+    perl -e '$/="&&&"; while (<>) { chomp; s/\\/\\\\/g; s/\n/\\n/mg; print "$_\n" }'
+)
+

@@ -1,0 +1,24 @@
+#!/bbs/opt/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Change::Util::Bundle qw/unbundleChangeSetMeta/;
+use Change::Util::InterfaceSCM qw/postBundleSCM/;
+use File::Temp qw/tempdir/;
+use Util::SCMControl qw/acceptSCMUser/;
+use Util::Message qw/fatal/;
+use strict;
+
+acceptSCMUser()  or  fatal "user not authorized";
+
+for my $bundle (@ARGV ? @ARGV : qw(-)) {
+  my ($cs, $dir) = (Change::Set->new, tempdir(CLEANUP => 1));
+  unbundleChangeSetMeta($cs, $bundle, $dir) or
+    die "Error unbundling ".$bundle.$/;
+  postBundleSCM($bundle, $cs->getID) or
+    die "Error posting changeset ".$cs->getID.$/;
+}
+

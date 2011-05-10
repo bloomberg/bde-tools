@@ -1,0 +1,24 @@
+How to do that disk swing thing
+-------------------------------
+Alan Grow, 02/11/2007
+
+* Get op windows to the old machine and the new machine.
+
+* Find your man in the console room. This has been Terrence Kenney for me in the past. When in doubt call down there, or file a DRQS CR to group 83 asking who's on duty.
+
+* Announce the downtime on ROBO.
+
+* Mark cscheckin as locked in beta and prod. You do this by moving a file containing the downtime message into the location given by $Change::Symbols::CSCHECKIN_LOCKED, for each release. There is usually a stock one sitting alongside named cscheckin_lock.scheduled. TODO: this is cscheckin-specific, implement a cstools-wide lockout mechanism so tools besides cscheckin won't fail inexplicably.
+
+* Tell the console room to swing the disks. In addition to umounting and remounting, they also bring down and resurrect the services via tools we have provided them. These are scm/admin/scm_* in the cstools source tree.
+
+* Watch for the disk (/bb/csdata/scm) to get mounted on the new machine, and watch for the services to come back up (top -U cstools).
+
+* Test. A simple end-to-end test might be: (1) unmark cscheckin as locked in beta (2) /bbsrc/bin/beta/cscheckout test/somefile.c (3) edit test/somefile.c (4) /bbsrc/bin/beta/cscheckin test/somefile.c. Watch the apache2 logs on the scm machine to see that requests are being served.
+
+* Unmark cscheckin as locked in beta and prod. Tell the console room everything is ok and thank them warmly.
+
+* Announce cstools as up on ROBO.
+
+* Go back to nursing your hangover.
+

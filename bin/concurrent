@@ -1,0 +1,87 @@
+#!/usr/bin/ksh
+
+
+CHANGE_XARGS_TOOL=${CHANGE_XARGS_TOOL:-/bbs/opt/bin/xargs}
+
+
+typeset -i jobs
+typeset args
+typeset redirection='>/dev/null 2>&1'
+typeset trace=""
+
+function usage
+{
+    cat >&2 <<EOF
+Usage:  $(basename ${0}) [--noredirect] [--trace] <jobs> <prog> [<arg1..argn>]
+
+Read list of one-line shell commands from stdin and execute:
+   <prog> <arg1..argn> <one-line-cmd>
+for each line in the list.
+
+Output:
+    <exit status>: <one-line-cmd>
+for each input line.
+
+
+Options
+    --noredirect    don't redirect commands' stdout+stderr to /dev/null.  The
+                    default is to redirect.
+
+    --trace         turn on command tracing (both for xargs and for the
+                    underlying shell)
+EOF
+
+}   # usage
+
+
+#
+# Main
+#
+
+if [[ -z "${1}" ]]
+then
+    usage
+    exit 1
+fi
+
+
+# Consume option(like) things
+while [[ "${1}" = --* ]]
+do
+    case "${1}" in
+        --noredirect)
+            redirection=""
+            ;;
+
+        --trace)
+            trace=1
+            ;;
+
+        --)         # delimit options from non-options
+            shift
+            break
+            ;;
+    esac
+
+    shift
+done
+
+
+if (( ${#@} < 2 ))
+then
+    usage
+    exit 2
+fi
+
+
+# Consume arguments
+jobs="${1}"
+shift
+
+set -A args "${@}"
+
+
+# Ready to evaluate input
+cat | tr '\n' '\0' | ${CHANGE_XARGS_TOOL} ${trace:+-t} -0 -n 1 -P ${jobs} \
+  /usr/bin/ksh ${trace:+-x} -c '( eval "${@}" '"${redirection}"' ) ; \
+    print "${?}: ${@}"' dummy "${args[@]}"

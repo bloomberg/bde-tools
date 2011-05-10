@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -e
+
+usage() {
+  echo "$0 path/to/module/tree path/to/test/harness/style/t/dir"
+}
+
+t2pm() {
+  perl -pe 's!(^|/)t/([^/]+)\.t$!${1}${2}.pm!'
+}
+
+mod2t() {
+  perl -pe 'chomp; s{::}{/}g; s!(^|/)([^/]+)$!${1}t/${2}.t!x; $_.=$/'
+}
+
+tsort=/home/agrow/bin/gtsort     # FIXME
+
+test $# -ne 2 && { usage 1>&2; exit 1; }
+lib="$1" && shift
+tdir="$1" && shift
+
+test -d "$tdir" || mkdir "$tdir"
+
+( cd "$lib" >/dev/null && find * -type f -name "*.t" ) | \
+t2pm | while read pm; do test -f "$lib/$pm" && echo "$pm"; done | \
+perldeps -I "$lib" -F pairs | "$tsort" | \
+mod2t | while read t; do test -f "$lib/$t" && echo "$t"; done | \
+nl -ba -nrz -w3 | \
+while read i tpath; do
+  tflat="$tdir/$i"_`basename "$tpath" | lc`
+  echo "$tflat -> $tpath"
+  ln -s "$lib/$tpath" "$tflat"
+done
+

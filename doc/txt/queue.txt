@@ -1,0 +1,272 @@
+Repository Queue
+================
+William Baxter 20060405
+
+
+A CS arrives.  How does it get applied to the relevant development branch?
+
+
+Notation
+========
+
+  CS  change set
+  DB  development branch
+  UOR unit of release
+
+
+Change Sets
+===========
+The cscheckin program queues a CS and may poll for status thereafter.  The
+implementation consists of an asynchronous queue that handles changesets once
+they appear in the queue.  Any illusion of interactive operation results from
+polling.
+
+In the SCM a CS is a tarball called CSID_TAI_$$_HOST_PRIO_extra.  At minimum
+the name must be unique per CS, and hold enough information to sort in priority
+order.  The tarball contains:
+
+  meta	    initial meta-data file for CS
+
+  lroot	    Subdirectory w/ data files.  Unneeded for rollback CS.
+
+The meta file contains several sections:
+
+  ##movetype
+    The move type for this CS: DC (dev change), BF (bug fix), EM (emergency
+    move), RB (rollback).
+
+  ##target
+    The development branch this CS should apply to.
+
+  ##files
+    A list of files contained in this CS, one per line.
+
+  ##dependencies
+    A list of dependencies, other CSs that must succeed before this one can be
+    processed, one per line.
+
+  ##approval
+    A ticket reference indicating the approval of this CS, if applicable.
+
+  ##precursors
+    Probably absent initially.  Augmented or created by the queueing process.
+
+We assume that any line beginning with ## is a section boundary, and will do
+something more general as the need arises.  We may define additional sections
+as necessary.  Not all sections need to appear in every meta file.  (FIXME:
+Maybe alter to employ what Peter wrote for source-code meta files.)
+
+The interpretation of ##dependencies depends on the value of ##movetype.  If a
+CS has ##movetype of RB then ##dependencies lists the CSs selected for
+rollback.  Otherwise it lists the CSs that must succeed before this one can be
+processed.  A rollback CS need not contain an lroot directory.
+
+The PRIO portion of the name is the move type possibly plus some auxiliary
+information.  The move type priority order is: RB, EM, BF, DC.
+
+
+Queuing Management
+==================
+The queue consists of several directories.  All directories appear in some base
+directory BASE.  The queue processor can run from cron or listen to a trigger
+pull.  It scans new CSs from the prequeue/ directory and stages them into
+queue/.
+
+  BASE/tmp
+  BASE/data
+  BASE/prequeue
+  BASE/queue
+  BASE/staging
+  BASE/pending
+  BASE/run
+  BASE/done
+  BASE/fail
+  BASE/term
+  BASE/abandon
+  BASE/ctrl
+  
+We may have one queue per move priority, or a single queue that carries all
+move priorities.  This is an implementation detail TBD.  Only the (here
+abstract) priority ordering changes.
+
+Two daemons split processing duties in the queue.  The queueing daemon looks
+for job files in queue/, performs any necessary preprocessing, and moves them
+to pending/.  The execution daemon looks for jobs in pending/, executes them in
+run/ and ultimately dispenses them to done/, fail/, or term/.  Each daemon runs
+with concurrency 1.  The latter daemon forks some configurable number of
+children to handle parallel queue processing.
+
+Managing the daemons
+====================
+
+BASE/ctrl contains administratory files used to manage the daemons. In 
+particular there are:
+
+  BASE/ctrl/prequeue_fifo:  FIFO for triggering a preque daemon run
+  BASE/ctrl/queue_fifo:	    FIFO for triggering a queueing daemon run
+  BASE/ctrl/exec_fifo:	    FIFO for triggering an execution daemon run
+
+The two PID files should only exist when the two daemons are running. 
+Stale PID files might be detectable via some clever flocking scheme.
+
+The prequeue daemon might eventually have a FIFO there, too. 
+  
+How the queue operates
+======================
+
+1. The cscheckin program constructs a CS tarball as above and calls the CSS
+server, sending the tarball with the request.  The CSS server writes the CS to
+the tmp/ directory, optionally performs some elementary consistency checks
+(e.g. files named in the meta file are present in the tarball, some or all of
+these may be deferred to staging) and moves the tarball to the data/ directory.
+
+2. A prequeue-daemon will constantly scan the prequeue/ directory for
+new entries. If a new entry arrives, the daemon checks if the new entry's file
+has zero size. If so, it will grab the corresponding tarball from data/ and 
+create a job-file (SCM::Queue::Job) from it and move it to queue/. If the
+file is non-zero, it is already a proper a job-file and it's moved to
+queue/ as well.
+
+The CS is now in state Q (queued).
+
+3. The queueing daemon covers steps 3--4. At the end of its run, 
+job files are in one of: staging/ fail/ pending/
+
+Scan queue/ in priority order.  If the job has type RB, move it to pending/,
+trigger the execution daemon, and move to the next entry.  If a job lacks a
+precursor record, compare with downstream but not yet completed entries.  Scan
+jobs in priority order and construct a hash mapping source file name to an
+array of CSs.  Ignore RBs in this calculation.  If hash entry exists for file
+in current CS, push the hash value list onto the current CSs precursor list.
+Update the job file atomically and in situ.
+
+Now the job has a freshly-constructed or pre-existing precursor list.  Push the
+CS onto the hash entry for each file it contains.  Move the job to staging/.
+The job is now in state S (staged).
+
+4. Scan the staging/ directory in priority order.  Check whether precursors
+remain in the queue: a precursor changeset remains in the queue when it has not
+yet been moved to either done/, fail/, term/ or abandon/.  If it remains in the
+queue, skip.  If not, check whether dependencies have succeeded.  If not, move
+to fail/.  Otherwise move the job to pending/.  The job is now in state P
+(pending).  Pull the job-execution trigger.
+
+
+The execution daemon covers steps 5--8.
+
+5. Upon startup (probably as service), scan the run/ directory in arbitrary
+order.  Attempt a non-blocking lock on each job file.  If lock succeeds move
+file back to pending/.  (Previous run failed.)  This approach means failed jobs
+do not always take higher proirity than other pending/ items.  It costs an extra
+scan and lock attempt.
+
+6. Scan the pending/ directory in priority order.  If job is RB, then go to
+step 7.  Fork a child to process it (Step 8).  Child must set handling of TERM
+and HUP. In case of TERM, move the currently processing job file to term/, in
+case of HUP to abandon/. Move file to run/ and process job.  Job is now in state X (execution).
+Run as many jobs as are available within concurrency and required by job count.
+Repeat this step each time a child process completes without abnormal
+termination (success or failure).  In the case of abnormal termination, move
+the job back into pending/.  If the queue is empty and all children have
+exited, then exit.
+
+7.  Processing for an RB job requires serialization and therefore takes place
+primarily in the parent.  Identify all primary rollback CSIDs and construct the
+transitive closure of dependencies.  If too large, move rollback CS to fail/.
+Otherwise, find CSs in queue and move them to abandon/.  Find CSs in run/, send
+them send them SIGHUP, and reap children (FIXME: timeout?  SVK well behaved?),
+moving to abandon/.  Construct merge from all committed CSs and use SVK to
+apply reverse merge.  If this succeeds, move rollback CS to done/.  Otherwise,
+move abandoned CSs back into pending/ and move rollback CS to fail.
+
+Construct list of primary and dependent CSs starting from the
+oldest CS.   Locate dependent and primary CSs still queue.  Locate the abandon/
+directory.  Locate dependent 
+
+8. Child process takes job name as argument and attempts to lock.  If lock
+fails, another process is running the job.  Exit 99 (skip).  Upon successful
+lock, set handling of TERM to stop job and move to term/, and HUP to stop job
+and move to abandon/.  Move job to run/ and process.  If command cannot be
+executed, move to fail and exit 100 (perm: should never happen).  If there is a
+temporary error move back to pending/ and exit 111 (temp).  If processing
+completes sucessfully, move the job to done/.  If job fails, move to fail/.
+Upon exit, return to parent in step 5.
+
+
+Rollback Interface
+==================
+TBD.
+
+
+Logging
+=======
+Certain events must log state transitions directly to the CSDB or to an area
+scanned for the CSDB results.  Additionally, we would like to be able to
+reconstruct the necessary event history from the SCM.  We have at least the
+following states:
+
+  Q queued
+  S staged
+  P pending
+  X execution
+  D done
+  F failed
+  T terminated
+
+State is readily determined from the job file in the queue.  Each stage
+corresponds to a directory, except under error conditions.  Should the job file
+include a history of the state?  For reporting purposes the states may be
+grouped together as:
+
+  Q	  submitted
+  S,P,X	  in progress
+  D	  applied
+  F	  failed
+  T	  terminated (mutant form of in progress)
+
+In addition there is the rollback consideration.
+
+to the CSDB or to an area swept there or both.  Record at least status to CSID.
+
+Job file records deps.  Need to invert this to support lookup of dependent CSs.
+Can build CDB that maps:
+  dCS => dependencies (CSs that this one depends on)
+  sCS => supports (CSs that depend on this one)
+
+Can do this per branch and drop old data.  Could write to file also if data are small.
+  
+Write to a log directory a file named per CSID that contains CSID and list of
+deps CSs.  Could include status, but not necessary. 
+
+What depends on a given CS?  This requires scanning CSs subsequent to the given
+CS.  Alternatively, when processing a CS, record the dependency somewhere
+(revprop of independent CS or file).
+
+What does a given CS depend on?  The dependency list for a CS answers this
+question.
+
+
+Reporting
+=========
+TBD.
+
+
+Approval
+========
+There are two types of approval in the current system: managerial approval of
+changes (handled in cscheckin) and selection for sweeping (handled by robocop).
+The former remains unchanged as a front-end constraint.  The latter runs afoul
+of the new model.  Ask Alan under what circumstances he would approve or reject
+a changeset.  Ideally he wants all EMOVs and simply uses approval to get them.
+Assuming that to be the case, simple roll forward and selective roll back
+should suffice.
+
+Approval is required for certain types of CSs.  If we permit queueing of
+unapproved CSs then we must provide an avenue for approval for elements already
+in the queue.  If we stick to the current model, the initial cscheckin reqires
+approval, therefore the queue need not accommodate it.
+
+
+####
+
+

@@ -1,0 +1,99 @@
+#!//bbs/opt/bin/perl -w
+
+use strict;
+
+
+my @level_list;
+my %level_of;
+my %position_of;
+my $this_level = 0;
+my $this_position = 0;
+
+sub build_level_list {
+    my $fd = shift;
+    while( my $line = <$fd> ) {
+	# clean up the line
+	chomp $line;
+	$line =~ s/#.*$//;
+	$line =~ s/^\s+//;
+	$line =~ s/\s+/ /;
+
+	# skip blank and comment only lines
+	next if $line =~ m/^$/;
+
+	++$this_level;
+
+	# add this list to the next level
+	my $this_list = [ sort split / /, $line ];
+	push( @level_list, @$this_list );
+
+	# remember the level for each of the libraries in it
+	for my $j ( @$this_list ) {
+	    die "Dup entry ($j) in level_list" if exists $level_of{$j};
+	    $level_of{$j} = $this_level;
+	    $position_of{$j} = ++$this_position;
+	}
+    }
+}
+
+my $file = shift;
+open my $fd, "<", $file or die "cannot open $file ($!)";
+
+build_level_list( $fd );
+
+for my $lib ( @level_list ) {
+    my @objdeps = `symfind --deps /bbs/lib/lib$lib.a | libnames -q`;
+    chomp @objdeps;
+    my %objdeps;
+    @objdeps{@objdeps} = (1) x @objdeps;
+
+    my @olddeps = `catDeps $lib 2>/dev/null | grep -v '^#'`;
+    chomp @olddeps;
+    my %olddeps;
+    for my $dep (@olddeps) {
+	$dep =~ s/ +//g;
+	$olddeps{$dep} = ($dep =~ s/^weak://) ? 'weak' : 'strong';
+    }
+
+    my $liblv = $level_of{$lib};
+    my %status;
+    for my $dep (grep {exists $objdeps{$_}} @level_list) {
+	my $deplv = $level_of{$dep};
+	my $curstatus;
+	if( defined $olddeps{$dep} ) {
+	    $curstatus = $olddeps{$dep};
+	    delete $olddeps{$dep};
+	} else {
+	    $curstatus = 'undef';
+	}
+	my $newstatus;
+	if(    $liblv < $deplv ) {
+	    $newstatus = 'strong';
+	} elsif( $liblv > $deplv ) {
+	    $newstatus = 'weak';
+	} else {
+	    if( $curstatus eq 'undef' ) {
+		warn qq{"equal level" dependency from $lib to $dep created as weak\n};
+		$newstatus = 'weak';
+	    } else {
+		warn qq{"equal level" dependency from $lib to $dep left as $curstatus\n};
+		$newstatus = $curstatus;
+	    }
+	}
+
+	my %delcommand = ( strong => 'deldep', weak => 'delweak' );
+	my %addcommand = ( strong => 'adddep', weak => 'addweak' );
+
+	my @commands;
+	if( $curstatus eq $newstatus ) {
+	    push @commands, "# ($curstatus)";
+	} else {
+	    my $command;
+	    push @commands, $command
+		if defined ($command = $delcommand{$curstatus} );
+	    push @commands, $command
+		if defined ($command = $addcommand{$newstatus} );
+	}
+	printf( "%-10s %-10s %s\n", $_, $lib, $dep ) for @commands;
+    }
+}

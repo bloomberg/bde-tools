@@ -1,0 +1,59 @@
+#!/bbs/opt/bin/perl 
+
+# a cheap perldoc-wrapper for accessing the documentation
+# for the SIBUILD modules and tools
+# Tassilo von Parseval (tvonparseval@bloomberg.net)
+
+use warnings;
+use strict;
+
+# PERL5LIB settings for the various stages
+my %stage2perl5lib = (
+        prod    => '/bbsrc/bin/prod/lib/perl:' . 
+                   '/bbsrc/bin/prod/bin',
+        alpha   => '/bbsrc/bin/alpha/lib/perl:' . 
+                   '/bbsrc/bin/alpha/bin',
+        beta    => '/bbsrc/bin/beta/lib/perl:' .
+                   '/bbsrc/bin/beta/bin',
+        dev     => '/bbcm/infrastructure/tools/lib/perl:' . 
+                   '/bbcm/infrastructure/tools/bin',
+);
+
+# a list of tools whose production name is
+# different from their internal name
+my %alias = qw/csalter          bde_altercs.pl
+               cscheckin        bde_createcs.pl 
+               cscheckout       bde_checkoutcs.pl
+               cscompile        bde_compilecs.pl
+               csdbdiff         bde_diffcsdb.pl
+               csfind           bde_findcs.pl
+               cshistory        bde_getcshistory.pl
+               csquery          bde_querycs.pl
+               csrecover        bde_recovercs.pl 
+               csrollback       bde_rollbackcs.pl
+               csuncheckout     bde_uncheckoutcs.pl
+               isapprover       isapprover.pl
+               isbetaday        isbetaday.pl
+               islockdown       islockdown.pl
+               istester         istested.pl
+               uordepends       bde_uordepends.pl
+               uorusersof       bde_uorusersof.pl/;
+sub alias {
+    return $alias{$_} || $_;
+}
+
+
+my $stage = 'dev';
+my @perldocopts;
+while (@ARGV) {
+    $_ = shift;
+    if (/^-s/) {
+        $stage = shift;
+        next;
+    }
+    s/^csutil.*/csutils/;
+    $_ = alias;
+    unshift @perldocopts, $_;
+}
+
+exec "PERL5LIB=$stage2perl5lib{$stage} perldoc @perldocopts";

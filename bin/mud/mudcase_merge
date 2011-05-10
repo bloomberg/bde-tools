@@ -1,0 +1,33 @@
+#!/bbs/opt/bin/perl 
+
+use strict;
+use warnings;
+
+sub run {
+    my $cmd = shift;
+    print "$cmd\n";
+    system($cmd) == 0 or die "Couldn't run '$cmd': $! . $?";
+}
+
+my ($branch, $file, $version) = @ARGV;
+
+$version = 'LATEST' if not defined $version;
+
+print "Merging $file\@\@/main/bb/dev/$branch/$version to dev\n";
+
+open my $cc, '-|', "cleartool lshist -branch $branch -fmt \"%Vn:%c\" $file";
+
+my $comment;
+while (<$cc>) {
+    my ($ver, $com) = /(\d+):(.*)/;
+    next if $ver != $version and 
+            $version ne 'LATEST';
+    $comment = $com if not defined $comment;
+}
+close $cc;
+
+$comment =~ s/"/\\"/g;
+
+run("cleartool co -c \"Merge from $branch: $comment\" $file");
+run("cleartool merge -to $file $file\@\@/main/bb/dev/$branch/$version");
+run("cleartool ci -nc $file");

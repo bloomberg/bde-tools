@@ -1,0 +1,74 @@
+#!/bbs/opt/bin/perl
+
+use warnings;
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Production::Services;
+use Production::Services::ChangeSet qw(alterChangeSetDbRecordStatus);
+use Change::Symbols                 qw(/^\$STATUS_.*/);
+use Util::SCMControl qw/acceptSCMUser/;
+use Util::Message qw/fatal/;
+
+acceptSCMUser()  or  fatal "user not authorized";
+
+my %string2status = (
+        submitted   => $STATUS_SUBMITTED,
+        waiting     => $STATUS_WAITING,
+        active      => $STATUS_ACTIVE,
+        rolledback  => $STATUS_ROLLEDBACK,
+        reinstated  => $STATUS_REINSTATED,
+        inprogress  => $STATUS_INPROGRESS,
+        complete    => $STATUS_COMPLETE,
+);
+my %status2string = reverse %string2status;
+
+if (@ARGV) {
+  die usage() if @ARGV & 1;
+
+  while (my ($csid, $status) = splice(@ARGV, 0, 2)) {
+    update_status($csid, $status);
+  }
+}
+else {
+  while (<>) {
+    chomp;
+    my ($csid, $status) = split;
+    update_status($csid, $status);
+  }
+}
+
+sub update_status {
+    my ($csid, $status) = @_;
+
+    $status = $string2status{ $status } || $status;
+
+    die "$status: Invalid status\n\n", usage()
+        if not exists $status2string{ $status };
+
+    my $svc = Production::Services->new;
+
+    die $svc->getError, "\n" 
+        if not alterChangeSetDbRecordStatus($svc, $csid, $status);
+}
+
+sub usage {
+    return <<EOUSAGE;
+$0 \$csid1 \$status1 [ csid2 status2 ... ]
+
+
+Change status of \$csid in the changesetdb to \$status which is one of:
+
+    S | submitted
+    N | waiting
+    A | active
+    R | rolledback
+    I | reinstated
+    P | inprogress
+    C | complete
+EOUSAGE
+}

@@ -1,0 +1,89 @@
+#!/bbs/opt/bin/perl -w
+
+# NEVER remove the -w in the shebang line!!
+# Our error-detection scheme depends on this.
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Change::Set;
+use Change::File;
+use Change::Util::Bundle qw/convertChangeSetSCM/;
+use Change::Util::Interface qw/getCanonicalPath/;
+use Change::Symbols
+  qw/$FILE_IS_RENAMED $FILE_IS_COPIED $FILE_IS_CHANGED $STAGE_PRODUCTION/;
+use Change::Identity         qw/identifyProductionName/;
+use BDE::Util::Nomenclature  qw/getCanonicalUOR getSubdirsRelativeToUOR/;
+
+use strict;
+
+# The shebang line has to include -w for this as we want to die whenever
+# any code in any outside module issues a warning. We therefore can't do
+#   use warnings FATAL => ...;
+$SIG{__WARN__} = sub {
+    die "Warning: @_\n";
+};
+
+for my $metafile (@ARGV ? @ARGV : qw(-)) {
+
+  my $meta = slurpfile($metafile); # IO::File sucks: doesn't grok '-'
+  my $cs = Change::Set->new($meta);
+
+  $cs = convertChangeSetSCM($cs) or
+    die "Error canonicalizing changeset ".$cs->getID.$/;
+
+  # HACK HACK canonicalize source field specially in case of mv or cp
+  for ($cs->getFiles) {
+    if ($_->getType eq $FILE_IS_RENAMED || $_->getType eq $FILE_IS_COPIED) {
+      my ($source, $temporal) = ($_->getSource =~ /^(.*?)\@\@(.*)$/);
+      my $cf = create_changefile
+      (
+        source => $_->getDestination,
+        destination => $source,
+        type => $_->getType,
+      );
+      my $canon = getCanonicalPath($cf);
+      $_->setSource('root/'.$canon.'@@'.$temporal);
+    }
+  }
+
+  print STDOUT $cs->serialise.$/;
+}
+
+sub slurpfile {
+  my $file = shift;
+  open my $fh, $file or die "error opening $file: $!$/";
+  my $content = do { local $/; <$fh> };
+  close $fh or die "error closing $file: $!$/";
+  return $content;
+}
+
+sub create_changefile {
+  my %arg = @_;
+
+  $arg{type} ||= $FILE_IS_CHANGED;
+  $arg{target} ||= guess_target($arg{destination});
+
+  my $cf = Change::File->new(\%arg) or return undef;
+
+  if (not $cf->getProductionLibrary) {
+    my $prod = identifyProductionName($cf->getLibrary, $STAGE_PRODUCTION);
+    $cf->setProductionLibrary($prod);
+  }
+
+  return $cf;
+}
+
+sub guess_target {
+  my $path = shift;
+  my @parts = split m{/}, $path;
+  pop @parts;
+  my $basename = join '/', @parts;
+  pop @parts if @parts && {qw(group 1 package 1)}->{$parts[-1]};
+  my $uor = getCanonicalUOR(join '/', @parts);
+  my $subdirs = getSubdirsRelativeToUOR($basename) || '';
+  return $subdirs ? $uor.'/'.$subdirs : $uor;
+}
+

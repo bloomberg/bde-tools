@@ -1,0 +1,54 @@
+#!/usr/bin/perl -w
+
+# make ct lshistory order view private events after corresponding checkin events
+
+use strict;
+
+my %pathseen = ('.' => 1);
+my @army;
+
+while (<>) {
+  chomp;
+  my %event;
+  @event{qw/op kind target rest/} = split /\t/, $_, 4;
+
+  if (!discharge(\%pathseen, \%event)) {
+    push @army, \%event;
+  }
+
+  @army = grep !discharge(\%pathseen, $_), @army;
+}
+
+sub discharge {
+  my ($pathseen, $event) = @_;
+  my $path = $event->{target};
+  $path = nxname($path) if $path =~ /@@/; # normalize path if it's a pname
+  my $parent = dirname($path);
+
+  if (!$parent || $pathseen{$parent}) {
+    $pathseen{$path} = $event->{op} eq 'rmname' ? undef : 1;
+    print join("\t", @{$event}{qw/op kind target rest/}).$/;
+    return 1;
+  }
+
+  return 0;
+}
+
+sub dirname {
+  my @parts = split m{/}, shift;
+  pop @parts;
+  return join '/', @parts;
+}
+
+# remove trailing @@/branch/n(/name@@)?
+sub nxname {
+  my @parts = nxsplit(shift);
+  return $parts[0] if @parts < 3;
+  return "$parts[0]/".(split m{/}, $parts[1])[-1];
+}
+
+sub nxsplit {
+  return split /@@/, shift, -1;
+}
+
+

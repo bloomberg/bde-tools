@@ -1,0 +1,406 @@
+#!/bbs/opt/bin/perl -w
+
+use strict;
+use FindBin;
+use File::Path;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Util::File::Basename qw(basename);
+
+use Getopt::Long;
+
+use POSIX qw(strftime);
+
+use Data::Dumper;
+
+use BDE::Build::Ufid;
+
+use BDE::FileSystem;
+
+use BDE::Util::DependencyCache qw(
+    getMultipleDependencyBuildOrder
+);
+
+use Util::Message qw(
+    set_debug debug fatal
+);
+
+use Symbols qw(
+    CONSTANT_PATH
+);
+
+# from configuration file
+use vars qw(
+             $view $path %configured_builds @default_units
+             $enableLogArchive $logArchiveBase
+             $enableHtmlOutput $htmlOutputBase $htmlOutputBaseURL
+             $resultsBase
+           );
+
+my @otherBuilds = qw(
+        nextrel
+        nextrel-api
+        dev-nextrel-api
+        robo
+        dev
+        dev-api
+        dev-bus
+        dev-fde
+        );
+
+my $configFile = $FindBin::Bin;
+$configFile =~s|bin/?$|etc|;
+$configFile .= "/bde_bldmgr.config";
+
+require $configFile or fatal "Failed to load configuration '$configFile':".
+  "\n\t$!";
+
+sub usage {
+    print STDERR <<_USAGE_END;
+    USAGE: $0 inputFile outputFile outputURL
+_USAGE_END
+}
+
+sub generateCrosslinks {
+    # we'll establish date crosslinks based on the existence of earlier files.
+    # If no "next" file exists, we'll assume that the next day will have
+    # results.
+    my ($file,$URL)=@_;
+    my $results="";
+
+    $file=~m{(.*/)};
+    my $basedir=$1;
+
+    my %prevDates;
+    my %nextDates;
+
+    my %fileDates;
+
+    foreach my $resultsfile (grep /bde_bldmgr\..*\.results.*/, <$basedir/*>) {
+        $resultsfile=~/bde_bldmgr\..*\.results\.(\d{8})/ or next;
+        $fileDates{$1}=undef;
+    }
+
+    my @fileDates = sort keys %fileDates;
+
+    # special case first date, doesn't get prevDate
+    $nextDates{$fileDates[0]} = $fileDates[1];
+
+    foreach my $dateNdx (1..$#fileDates) {
+        $prevDates{$fileDates[$dateNdx]} = $fileDates[$dateNdx-1];
+        $nextDates{$fileDates[$dateNdx]} = $fileDates[$dateNdx+1];
+    }
+
+    # special case "next" for last date
+    $nextDates{$fileDates[$#fileDates]} = strftime("%Y%m%d",localtime(time + 86400));
+
+    # that was overkill, since we now have prev<->next links for all dates, not
+    # just the ones we care about.  But it's easier to get them all than figure
+    # out which ones we need
+
+    $file=~/bde_bldmgr\.(.*?)\.results\.(\d{8})/ or die "Unable to extract date and build type from file name $file";
+    my ($type,$date)=($1,$2);
+
+    die "No next date for $date (extracted from $file)" unless exists $nextDates{$date};
+
+    $results.="<TABLE WIDTH=100%><TR>";
+    $results.="<TD ALIGN=LEFT WIDTH=20%>";
+    if(exists $prevDates{$date}) {
+        my $prevDateURL=$URL;
+        $prevDateURL =~ s/$date(-\d+)?/$prevDates{$date}/;
+
+        $results.=qq{<A HREF="$prevDateURL">previous date</A>};
+    }
+    else {
+        $results.=qq{(no previous date)};
+    }
+    $results.="</TD>";
+
+    # cross-type links
+    $results.="<TD ALIGN=CENTER>";
+    $results.="<BR>This date: ";
+    foreach my $otherType(@otherBuilds) {
+        my $target=$URL;
+        $target=~s/-$type-(\d+)(?:-\d+)?/-$otherType-$1/;
+        $results.=qq{<A HREF="$target">$otherType</A> };
+    }
+    $results.="<BR>Latest report: ";
+    foreach my $otherType(@otherBuilds) {
+        my $target=$URL;
+        $target=~s/-$type-/-$otherType-/;
+        $target=~s/-\d+//g;
+        $results.=qq{<A HREF="$target">$otherType</A> };
+    }
+    $results.="</TD>";
+
+    $results.="<TD ALIGN=RIGHT WIDTH=20%>";
+    my $nextDateURL=$URL;
+    $nextDateURL =~ s/$date(-\d+)?/$nextDates{$date}/;
+
+    $results.=qq{<A HREF="$nextDateURL">next date</A>};
+    $results.="</TD>\n";
+    $results.="</TR></TABLE>\n";
+
+    return $results;
+}
+
+if(@ARGV != 3) {
+    usage();
+    exit(-2);
+}
+
+my ($file, $outputFile, $outputURL)=@ARGV;
+
+open(INPUT, "<$file") or die "Can't open input $file, error $!";
+open(OUTPUT, ">$outputFile") or die "Can't open output $file, error $!";
+
+my $title;
+
+if($file=~/bde_bldmgr\.([^.]+)\.results/) {
+    $title=$1;
+}
+else {
+    $title="DEFAULT";
+}
+
+my $date;
+
+if($file=~/bde_bldmgr.*results\.(.*)/) {
+    $date=$1;
+}
+
+my %data;
+my %platforms;
+my %buildTargets;
+
+my %timingData;
+
+#target,system,build,elapsed,failurePackage,logFile,htmlURL,unreachabe,YNC-
+
+while(<INPUT>) {
+    #bte,i6,dbg_exc_mt,4135,bteso,/view/bde_devintegrator/bbcm/infrastructure/groups/bte/bteso/unix-AIX-powerpc-5.3-xlc-6.0/make.test.bteso.dbg_exc_mt.log,http://sundev3.bloomberg.com/~bdebuild/fail/20060619/_7FhWb2D5zXTw.html,,N
+
+    next if /^#/;
+    next if /^$/;
+    s/[\r\n]+//g;
+
+    my @line = split /,/;
+    my ($target,$system,$build,$elapsed,$failurePackage,$logFile,$htmlURL,$unreachable,$result) = 
+        splice @line, 0, 9;
+
+    $buildTargets{$target}++;
+    $platforms{$system}{$build}++;
+
+    $result="" if !defined $result;
+
+    $elapsed=0 unless length($elapsed);
+
+    if(!exists $timingData{$system}{$target}) {
+        $timingData{$system}{$target}=$elapsed;
+        $timingData{$system}{TOTAL} +=$elapsed;
+        $timingData{TOTAL}{$target} +=$elapsed;
+        $timingData{TOTAL}{TOTAL}   +=$elapsed;
+    }
+    
+    my $thisData = {
+        elapsed        => $elapsed,
+        failure        => [ ],
+        unreachable    => $unreachable,
+        result         => $result,
+        failed         => (length($elapsed)==0 || $result eq "N"),
+    };
+    
+    while(@line) {
+        my ($package,$logFile,$url) = splice @line, 0, 3;
+        push @{$thisData->{failure}}, {
+            package => $package, 
+            logFile => $logFile,
+            url     => $url
+        };
+    }
+    $data{$target}{$system}{$build} = $thisData;
+}
+
+close(INPUT);
+
+#print Dumper(\%data);
+
+my %preferredTargets = (
+    i8       => 1,
+    i10      => 1,
+    i10_opt  => 1,
+    i10_safe => 1,
+    s12      => 1,
+    s12_opt  => 1,
+    s12_safe => 1,
+);
+
+my %cellColors = (
+    "Y" => ["Green", "buildok"],
+    "N" => ["Red",   "buildfail"],
+    "C" => ["Gray",  "buildblah"],
+    "-" => ["Gray",  "buildblah"],
+);
+
+sub targetCmp {
+# assume $a/$b
+    #print "Comparing $a/$b: ";
+    if(exists $preferredTargets{$a}) {
+        if(exists $preferredTargets{$b}) {
+            #print (-($a cmp $b),"\n");
+            return ($a cmp $b);
+        }
+        #print "-1\n";
+        return -1;
+    }
+    if(exists $preferredTargets{$b}) {
+        #print "1\n";
+        return 1;
+    }
+
+    #print (-($a cmp $b),"\n");
+    return ($a cmp $b);
+}
+
+my @columns=sort targetCmp keys %platforms;
+
+print OUTPUT "<HTML>\n";
+print OUTPUT "<HEAD>\n";
+print OUTPUT "<!-- Generated via $0 @ARGV -->\n";
+print OUTPUT "<TITLE>Build results for $title";
+print OUTPUT " as of $date" if $date;
+print OUTPUT "</TITLE>\n";
+print OUTPUT "</HEAD>\n";
+
+print OUTPUT "<BODY>\n";
+
+# crosslinks
+
+print OUTPUT generateCrosslinks($file, $outputURL);
+
+# title
+print OUTPUT "<H1>Build results for $title";
+print OUTPUT " as of $date" if $date;
+print OUTPUT "</H1>\n";
+print OUTPUT "<P>\n";
+
+# results table
+
+print OUTPUT qq{<TABLE BORDER="1" class="buildreport">\n};
+
+# headers!
+my %buildOrder; # map build targets => levels
+
+$buildOrder{$_}=999 foreach keys %buildTargets;
+
+set_debug(1);
+
+my $root=new BDE::FileSystem($ENV{BDE_ROOT});
+$root->setPath(CONSTANT_PATH);
+
+BDE::Util::DependencyCache::setFileSystemRoot($root);
+debug "Using groups = ".$root->getGroupsLocation();
+my @rawBuildOrder=getMultipleDependencyBuildOrder(keys %buildTargets);
+my @groupOrder=grep {exists $buildTargets{$_} && $_ ne "zde"} @rawBuildOrder;
+
+my %seenGroups;
+$seenGroups{$_}=1 foreach @groupOrder;
+
+push @groupOrder,grep !$seenGroups{$_},sort keys %buildTargets;
+
+#printf STDERR "Raw build order is (%d entries) %s\n\n",(scalar @rawBuildOrder),join " ",@rawBuildOrder;
+#printf STDERR "Group order is (%d entries) @groupOrder\n", scalar @groupOrder;
+#printf STDERR "Build targets were (%d entries) %s\n", (scalar keys %buildTargets), join " ",sort keys %buildTargets;
+#exit 1;
+
+foreach my $column(@columns) {
+    print OUTPUT "<TR>\n";
+    print OUTPUT "<TD></TD>\n";
+    print OUTPUT "<TD></TD>\n";
+    foreach my $group(@groupOrder) {
+        print OUTPUT qq{<TD align="center" class="buildpackagegrp">$group</TD>\n};
+    }
+    print OUTPUT "<TD></TD>\n";
+    print OUTPUT "<TD></TD>\n";
+    print OUTPUT "</TR>\n";
+
+    my $colPrinted=0;
+    my $colPrinted2=0;
+    foreach my $target(sort keys %{$platforms{$column}}) {
+        print OUTPUT "<TR>\n";
+        printf OUTPUT qq{<TD rowspan="%d" valign="center" class="buildplatform">$configured_builds{$column}->{build_desc} ($column)</TD>\n},(scalar keys %{$platforms{$column}}) unless $colPrinted++;
+        print  OUTPUT qq{<TD class="buildoptions">$target</TD>\n};
+        foreach my $build(@groupOrder) {
+            my $h_r = $data{$build}{$column}{$target};
+            my $result=$h_r->{result} || "";
+            my $endAnchor="";
+            my $color="";
+            if(exists $cellColors{$result}) {
+                $color=qq{ bgcolor="$cellColors{$result}[0]"};
+                $color.=qq{ class="$cellColors{$result}[1]"};
+            }
+
+            print OUTPUT qq{<TD align="center"$color>};
+            print OUTPUT qq{<B>$result</B>};
+            if (ref($h_r->{failure}) eq "ARRAY" and @{$h_r->{failure}}) {
+                print OUTPUT "(",
+                    join(" ",map { qq{<A HREF="$_->{url}">$_->{package}</A>} } 
+                                 @{$h_r->{failure}}),
+                    ")";
+            }
+            print OUTPUT "</TD>\n";
+        }
+        print  OUTPUT qq{<TD class="buildoptions">$target</TD>\n};
+        printf OUTPUT qq{<TD rowspan="%d" valign="center" class="buildplatform">$configured_builds{$column}->{build_desc} ($column)</TD>\n},(scalar keys %{$platforms{$column}}) unless $colPrinted2++;
+        print OUTPUT "</TR>\n";
+    }
+}
+
+
+print OUTPUT "</TABLE>\n";
+
+
+print OUTPUT "<H1>Build times</H1>\n";
+
+print OUTPUT qq{<TABLE BORDER="1" class="timereport">\n};
+
+my @systems=sort {$timingData{$b}{TOTAL} <=> $timingData{$a}{TOTAL}} grep !/TOTAL/,keys %timingData;
+my @targets=sort {$timingData{TOTAL}{$b} <=> $timingData{TOTAL}{$a}} grep !/TOTAL/,keys %{$timingData{TOTAL}};
+
+push @systems,'TOTAL';
+push @targets,'TOTAL';
+
+# headers!
+print OUTPUT "<TR>\n";
+print OUTPUT "<TD></TD>\n";
+
+foreach my $target(@targets) {
+    print OUTPUT qq{<TD align="center" class="target">$target</TD>\n};
+}
+
+print OUTPUT "</TR>\n";
+
+foreach my $system(@systems) {
+    print OUTPUT "<TR>\n";
+    print OUTPUT qq{<TD align="left" class="system">$system</TD>\n};
+    foreach my $target(@targets) {
+        print OUTPUT qq{<TD align="right" class="buildtime">};
+
+        if(exists $timingData{$system}{$target}) {
+            print OUTPUT $timingData{$system}{$target};
+        }
+
+        print OUTPUT qq{</TD>\n};
+    }
+    print OUTPUT "</TR>\n";
+}
+
+print OUTPUT "</TABLE>\n";
+
+print OUTPUT "</BODY>\n";
+
+print OUTPUT "</HTML>\n";
+
+close(OUTPUT);

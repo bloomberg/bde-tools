@@ -1,0 +1,206 @@
+#!/usr/bin/perl -w
+
+use strict;
+use File::Basename;
+
+#=============================================================================#
+#                              GLOBAL VARIABLES                               #
+#=============================================================================#
+
+my $SP = qr/[ \t]/;
+my $NONL = qr/[^\n]/;
+my $COMMENT_LEN = 6;  # the length of "/* " and " */"
+
+
+#=============================================================================#
+#                                 SUBROUTINES                                 #
+#=============================================================================#
+
+sub ask($;$)
+{
+  my $msg = shift || "y/n? ";
+  my $validRe = shift || qr/[yn]/i;
+  my $ans;
+  print $msg;
+  while (<STDIN>) {
+    chomp;
+    $ans = $_;
+    print("Invalid response.\n$msg")
+      and next unless ($ans =~ /$validRe/);
+    last;
+  }
+  return $ans;
+}
+
+sub replCout($$)
+{
+  my $func = shift;
+  my $args = shift;
+  my $res .= ($func && $func eq "cerr") ? "fprintf(stderr, " : "printf(";
+
+  $args =~ s/\\\n/ /g; # remove continuation '\'
+
+  # interleave string literals "..." "..." or "..." MACRO w/ <<
+  $args =~ s/"($NONL*?[^\\])"/\01$1\02/g;
+  my $sre = qr/\01$NONL*?\02/;     my $vre = qr/\#?\w+/;
+  while($args =~ s/($sre)\s*($sre)/$1 << $2/sg ||
+        $args =~ s/($sre)\s*($vre)/$1 << $2/sg ||
+        $args =~ s/($vre)\s*($sre)/$1 << $2/sg) {}
+  $args =~ tr/\01\02/"/;
+
+  # split into tokens of args and determine what to do w/ each
+  my @args = split /<</, $args;
+  my ($str, @pargs);
+  foreach my $arg (@args) {
+    if ($arg =~ /^\s*$/s) {
+      next;
+    } elsif ($arg =~ /^\s*endl\s*/s) {
+      $str .= "\\n";  next;
+    } elsif ($arg =~ /^\s*flush\s*/s) {
+      next;
+    } elsif ($arg =~ /^\s*([\"\'])($NONL*?[^\\])\1\s*$/s) {
+      $str .= "\\" if ($1 eq "'" && $2 eq '"');
+      $str .= $2;     next;
+    } elsif ($arg =~ /^\s*(.*?)\s*$/s) {
+      push @pargs, $1;
+      $str .= "\%@";
+      next;
+    }
+  }
+  $res .= "\"$str\"".((@pargs > 0) ? ", ".join(", ", @pargs) : "").")";
+  return $res;
+}
+
+sub multiComment($$)
+{
+  my $content = shift;
+  my $space = shift;
+  my $cnt = 0;
+  my $res;
+
+  # Note that $content starts w/ a '\n', therefore, when 'split /\n/, $content'
+  # the first element is actually empty.  If we want the actual first line,
+  # it will be the second element in the list.
+  my @lines = split /\n/, $content;
+
+  # single line comment ('\n' and comment), return it as is.
+  return $content if (@lines <= 2);
+
+  foreach my $line (@lines) {
+    $cnt++;
+    my $repl = ($cnt == 2) ? "/*" : " *";
+    $line =~ s!//!$repl!;
+    $res .= "$line\n";
+  }
+  $res .= "$space */"; # last line does not have a newline
+  return $res;
+}
+
+sub replBanner($$$$$$$)
+{
+  my ($initSp, $topBar, $topBarCh, $trailSp, $title, $botBar, $botBarCh) = @_;
+  if (0 == length($initSp)) {
+    $topBar = $topBarCh x (79 - $COMMENT_LEN);
+    $botBar = $botBarCh x (79 - $COMMENT_LEN);
+    my $titleInitSpLen = (79 - $COMMENT_LEN - length($title)) / 2;
+    my $titleTrailSpLen = $titleInitSpLen +
+                          (79 - $COMMENT_LEN - length($title)) % 2;
+    $title = (" " x $titleInitSpLen).$title.(" " x $titleTrailSpLen);
+    $trailSp = "";
+  } else {
+    my $barLen = length($topBar);
+    my $titleInitSpLen = ($barLen - length($title)) / 2;
+    my $titleTrailSpLen = $titleInitSpLen + ($barLen - length($title)) % 2;
+    $title = (" " x $titleInitSpLen).$title.(" " x $titleTrailSpLen);
+  }
+  return "\n$initSp/* $topBar */$trailSp".
+         "\n$initSp/* $title */$trailSp".
+         "\n$initSp/* $botBar */$trailSp\n";
+}
+
+#=============================================================================#
+#                                MAIN PROGRAM                                 #
+#=============================================================================#
+
+die "Usage: cpp2c <cpp_file> [<cpp_file>...]" unless (@ARGV > 0);
+
+foreach my $srcFile (@ARGV) {
+  open(SRC, "<$srcFile") or
+    warn "Failed to open \"$srcFile\" for reading: $!\n" and next;
+
+  my ($base, undef, $ext) = fileparse($srcFile, '\.[cC].*');
+  warn "Cannot parse file basename for \"$srcFile\". Skipping file.\n" and next
+    unless ($base);
+
+  # note that for .h files, we will create result file as <file>.h.c
+  # this will prevent us from clobbering the original .h file
+  my $dstFile = "$base.c";
+  if (-f $dstFile) {
+    my $ans = ask("File $dstFile exists.  Replace (y/n)? ");
+    next if (lc($ans) eq 'n');
+  }
+
+  open(DST, ">$dstFile") or
+    warn "Failed to open \"$dstFile\" for writing: $!\n" and next;
+
+  my $content;
+  {
+    local($/) = undef;
+    $content = <SRC>; # slurp whole file
+  }
+  close SRC;
+
+  # replace first line of file:
+  # // filename.cpp    -*-C++-*-
+  # to
+  # /* filename.c      -*-C-*-
+  #  */
+  $content =~
+    s!^//$SP*(\S*?)\.(cpp|h)($NONL*?)-\*-C\+\+-\*-!
+      "/* $1\.".(($2 eq "cpp") ? "c" : "h")."$3-*-C-*-\n */"!es;
+
+  # replace banners
+  $content =~
+  s:\n($SP*) //$SP* ((=|-)+) ($SP*)   # // ====== or -----
+    \n  \1   //$SP* ($NONL+)  $SP*    # // banner
+    \n  \1   //$SP* ((=|-)+)  $SP*\n  # // ====== or -----
+    (?!$SP*  //)                      # ensure next line is not a comment
+    :replBanner($1, $2, $3, $4, $5, $6, $7):egsx;
+
+  # replace comments within comments in the format |* ... *|
+  while ($content =~ s!^(.*?//.*?)//(.*?)$!$1|*$2 *|!gm) {};
+
+  # replace /// with //
+  $content =~ s!///!// !gm;
+
+  # replace multi-line comments before replacing single-line comments, else
+  # the last line of a multi-line comment will be considered as a single-line
+  # comment.
+  $content =~ s!((?:\n($SP*?)//$NONL*?$)+)!&multiComment($1, $2)!egms;
+
+  # resize single line bars // ==== or // ----
+  $content =~
+  s:^($SP*)//$SP*(=|-)+$SP*$:
+      "$1/* ".($2 x (79 - length($1) - $COMMENT_LEN))." */":egm;
+
+  # resize bars inside multi-line comments
+  $content =~ s:^($SP*/?\*[ ]?)(=|-)+$:$1.($2 x (79 - length($1))):egm;
+
+  # single line comments
+  $content =~ s:^($NONL*?)//($NONL*?)$:$1/*$2 */:gms;
+
+  # convert :: to __.  Look out for ::= in EBNF notation
+  $content =~ s/::(?!=)/__/g;
+
+  # replace cout and cerr
+  $content =~ s&(cout|cerr)(?:\s*<<)           # cout|cerr <<
+                ((?:\s*
+                  (?:<<                        # << operator
+                    |([\"\'])$NONL*?[^\\]\3    # string (watch for "..\"..")
+                    |[^;]+)                    # any expression
+                 \s*)+);
+               &replCout($1, $2).";"&egsx;
+
+  print DST $content;
+  close DST;
+}

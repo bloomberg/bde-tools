@@ -1,0 +1,1014 @@
+#! /bb/csdata/scm/bin/perl -w
+#! /bbs/opt/bin/perl -w
+# These three things should be changed!
+use strict;
+use FindBin;
+use lib '/home/dsugalsk/perl/lib/perl5/site_perl';
+use lib '/bbcm/infrastructure/tools/lib/perl';
+#use lib '/bbsrc/bin/prod/lib/perl';
+use lib '/home/dsugalsk/src';
+
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+use Symbols qw(
+    EXIT_SUCCESS EXIT_FAILURE DEFAULT_FILESYSTEM_ROOT
+);
+use Carp;
+#$SIG{__WARN__} = sub {confess};
+use Util::File::Basename qw(basename);
+use Getopt::Long;
+use Binary::PGAnalysis;
+use Graph;
+use Text::Wrap;
+use List::Util qw( max min );
+
+my $db;
+my $changes;
+
+#==============================================================================
+
+my ($database, $help, $verbose, $debug);
+
+my $prog = basename $0;
+
+my @option_list = (
+		    'debug|d+'	=> \$debug,
+		    'help|h'	=> \$help,
+		    'verbose|v+'	=> \$verbose,
+		    'database|b=s'	=> \$database,
+		);
+
+my $usage_display = <<"_USAGE_END";
+Usage: $prog -h | [commandfile ...]
+  --debug      | -d           enable debug reporting
+  --help       | -h           usage information (this text)
+  --database   | -b           database to use for analysis
+
+  commandfile                 file containing directives (when no argument
+			      provided, will read directives from stdin
+			      interactively)
+
+See 'perldoc $prog' for more information.
+
+_USAGE_END
+
+sub usage(;$) {
+    print STDERR "!! @_\n" if @_;
+
+    print $usage_display;
+}
+
+sub getoptions {
+    Getopt::Long::Configure("bundling");
+    unless (GetOptions(@option_list)) {
+        usage();
+        exit EXIT_FAILURE;
+    }
+    if ($help) {
+	usage();
+	exit EXIT_SUCCESS;
+    }
+}
+
+sub exist_keys {
+    my $hash = shift;
+    defined $hash or return;
+    while( my $key = shift ) {
+	return unless exists $hash->{$key};
+	$hash = $hash->{$key};
+    }
+    return wantarray ? ( 1, $hash ) : 1;
+}
+
+sub sortunique {
+    my %temp;
+    @temp{@_} = ();
+    return sort keys %temp;
+}
+
+sub duplicates {
+    my %temp;
+    return grep { $temp{$_}++ } @_;
+}
+
+my %valid_format = (
+	l      => 'list',
+	list   => 'list',
+	c      => 'grep',
+	column => 'grep',
+	g      => 'grep',
+	'grep' => 'grep',
+    );
+
+my %valid_direction = (
+	c         => 'canonical',
+	canonical => 'canonical',
+	h         => 'high',
+	high      => 'high',
+	l         => 'low',
+	low       => 'low',
+	r         => 'rev_canon',
+	rev_canon => 'rev_canon',
+    );
+
+my %reverse_direction = (
+	canonical => 'high',
+	high      => 'canonical',
+	rev_canon => 'low',
+	low       => 'rev_canon',
+    );
+
+my %valid = ( format => \%valid_format, direction => \%valid_direction );
+
+
+{   # caching functions
+
+    my %l2o;
+    my %o2l;
+
+    sub l2o {
+	my $lib = shift;
+	unless (exists $l2o{$lib}) {
+	    my @objs = $db->getObjects($lib);
+	    $l2o{$lib} = \@objs;
+	    @objs = grep {
+		    ! (exists $o2l{$_}
+			 && print STDERR "Skipping duplicate object ($lib:$_) already found in lib ($o2l{$_})\n"
+		    )
+		} @objs;
+	    @o2l{@objs} = ($lib) x @objs;
+	}
+	$l2o{$lib};
+    }
+
+    my %o2s;
+    my %s2lo;
+
+    my $data = [ 'data' ];
+    my $notype = [ 'notype' ];
+    my $notext = [ 'notext' ];
+
+    sub lo2s {
+	my $lib = shift;
+	my $obj = shift;
+	unless (exists $o2s{$obj}) {
+	    my @syms;
+
+	    # get the text symbols
+	    @syms = $db->getSymbolsForObject( $obj, $lib, 'T' );
+	    $o2s{$obj}{T} = \@syms;
+	    @syms = grep { !exists $s2lo{$_} } @syms;
+	    # for my $sym (@syms) {
+		# if (exists $s2lo{$sym}) {
+		    # my $h = $s2lo{$sym}[1];
+		    # my $dlib = $h->{lib};
+		    # my $dobj = $h->{obj};
+		    # die "In obj ($lib:$obj) found duplicate text symbol ($sym) already in ($dlib:$dobj)\n"
+			# unless $lib eq $dlib && $obj eq $dobj;
+		# }
+	    # }
+	    my $lo = [ text=> { lib=>$lib, obj=>$obj } ];
+	    @s2lo{@syms} = ($lo) x @syms;
+
+	    # get the data symbols
+	    @syms = $db->getSymbolsForObject( $obj, $lib, 'D' );
+	    $o2s{$obj}{D} = \@syms;
+	    @s2lo{@syms} = ($data) x @syms;
+
+	    # get the undefined symbols
+	    @syms = $db->getUndefinedSymbolsForObject( $obj, $lib );
+	    $o2s{$obj}{U} = \@syms;
+	}
+	$o2s{$obj};
+    }
+
+    sub s2lo {
+	my $sym = shift;
+	unless (exists $s2lo{$sym}) {
+	    my $type = $db->getSymbolType( $sym );
+	    if (!defined $type) {
+		$s2lo{$sym} = $notype;
+	    }
+	    elsif ($type eq 'D') {
+		$s2lo{$sym} = $data;
+	    }
+	    else {
+		my @libs = $db->symbolProvidedByUOR( $sym, 'T' );
+		if (scalar(@libs) == 0) {
+		    print STDERR "No provider found for symbol $sym\n";
+		    $s2lo{$sym} = $notext;
+		}
+		else {
+		    if (my @rlibs = grep { !/^Library\:\:/ } @libs) {
+			@libs = @rlibs;
+		    }
+		    else {
+			@libs = ( $libs[0] );
+		    }
+		    my $lib = shift @libs;
+		    if (scalar @libs) {
+			print STDERR "Multiple providing libraries found for symbol $sym\n"
+				. "  Using first ($lib) skipping rest (@libs)\n";
+		    }
+		    my @objs = $db->symbolProvidedForUOR($sym,$lib,'T');
+		    if (@objs) {
+			my $obj = shift @objs;
+			if (@objs) {
+			    print STDERR "Multiple providing objects found for lib:symbol ($lib:$sym)\n"
+				. "  Using first ($obj) skipping rest (@objs)\n";
+			}
+			$s2lo{$sym} = [ text=> { lib=>$lib, obj=>$obj } ];
+		    }
+		    else {
+			print STDERR "No object found for symbol $sym in library $lib\n";
+			$s2lo{$sym} = $notext;
+		    }
+		}
+	    }
+	}
+	$s2lo{$sym};
+    }
+
+    sub vet_lib {
+	my $lib = shift;
+
+	# print "vetting/adding lib $lib\n";
+	unless ($db->validEntity($lib)) {
+	    print STDERR "$lib is not a valid package or group\n";
+	    return;
+	}
+	return l2o($lib);
+    }
+
+    sub vet_lib_obj {
+	my $lib = shift;
+	my $obj = shift;
+
+	if (exists $o2l{$obj} and $o2l{$obj} eq $lib) {
+	    return $obj;
+	}
+	else {
+	    print STDERR "$obj is not a valid object in $lib\n";
+	    return;
+	}
+    }
+
+    sub compute_graph_hierarchy {
+	my $graph   = shift;
+	my $cycle_index = 'A';
+	my %uor2cycle;
+	my %cycle2uor;
+	my %cycle2name;
+	my %cycle2graph;
+	my %cyclesize;
+	for my $connected_group ($graph->strongly_connected_components) {
+	    my $this_name;
+	    my $cycle_name = '';
+	    if (@$connected_group == 1) {
+		$this_name = $connected_group->[0];
+	    }
+	    else {
+		$cycle_name = 'cycle_' . $cycle_index++;
+		$this_name = "$cycle_name=[ "
+			. join(' ',sort @$connected_group)
+			. ' ]';
+		$cycle2graph{$cycle_name}
+		    = $cycle2graph{$this_name}
+		    = Graph->new;
+	    }
+	    $uor2cycle{$_} = $this_name for @$connected_group;
+	    $cycle2name{$this_name} = $cycle_name;
+	    $cycle2uor{$this_name} = $connected_group;
+	    $cyclesize{$this_name} = scalar @$connected_group;
+	    # printf "%3d: [%s]\n", ++$index, join(',',@$conn);
+	}
+
+	# Copy the graph into an acyclic graph, plus separate
+	# cyclic graphs.
+	#
+	# For each cycle, produce a separate graph with all of the edges
+	# between nodes within the cycle, but for the acyclic graph
+	# coalesce all of the nodes of the cycle into a single node,
+	# and only keep the edges that come in or go out, skipping the
+	# internal edges.
+	#
+	# Thus, each edge is copied once, either into the acyclic
+	# graph if it is not an edge internal to a single cycle, or
+	# to the separate graph for that cycle if it is internal.
+	#
+	# The separate graphs were created in the loop above.
+	my $acyclic_graph = Graph->new;
+	for my $edge_ref ($graph->edges) {
+	    my ($from,$to) = @$edge_ref;
+	    my ($cfrom,$cto) = map { $uor2cycle{$_} } @$edge_ref;
+	    if ($cfrom ne $cto) {
+		# edge is not inside a cycle
+		$acyclic_graph->add_edge( $cfrom, $cto );
+	    }
+	    elsif ($from ne $to) {
+		# edge is inside a cycle
+		$cycle2graph{$cfrom}->add_edge( $from, $to );
+	    }
+	}
+	$acyclic_graph->add_vertex($_) for $graph->isolated_vertices;
+
+	my @to_propagate;
+	my %low_bottom;
+	my %low_top;
+
+	for my $v ($acyclic_graph->successorless_vertices) {
+	    $low_bottom{$v} = 1;
+	    push @to_propagate, $v;
+	}
+
+	my $highest_level = 0;
+
+	while (my $v = shift @to_propagate) {
+	    my $next_level = $low_bottom{$v} + $cyclesize{$v};
+	    $highest_level = max( $highest_level, $next_level-1);
+	    $low_top{$v} = $next_level - 1;
+	    for my $pre ($acyclic_graph->predecessors($v)) {
+		unless (exists $low_bottom{$pre}
+			&& $low_bottom{$pre} >= $next_level) {
+		    push @to_propagate, $pre;
+		    $low_bottom{$pre} = $next_level;
+		}
+	    }
+	}
+
+	my %high_bottom;
+	my %high_top;
+
+	for my $v ($acyclic_graph->predecessorless_vertices) {
+	    $high_top{$v} = $highest_level;
+	    push @to_propagate, $v;
+	}
+
+	while (my $v = shift @to_propagate) {
+	    my $next_level = $high_top{$v} - $cyclesize{$v};
+	    $high_bottom{$v} = $next_level + 1;
+	    for my $succ ($acyclic_graph->successors($v)) {
+		unless (exists $high_top{$succ}
+			&& $high_top{$succ} <= $next_level) {
+		    push @to_propagate, $succ;
+		    $high_top{$succ} = $next_level;
+		}
+	    }
+	}
+
+	return {
+		 cycle2name    => \%cycle2name,
+		 cycle2uor     => \%cycle2uor,
+		 cycle2graph   => \%cycle2graph,
+		 highest_level => $highest_level,
+
+	         canonical     => \%high_top,
+	         rev_canon     => \%low_bottom,
+	         low           => \%high_bottom,
+	         high          => \%low_top,
+	    };
+    }
+
+    sub display_graph_hierarchy {
+	my $hier_info = shift;
+	my $opts      = shift;
+	my %opts      = ( format  => 'list', direction => 'canonical' );
+
+	if (defined $opts && ref $opts) {
+	    for my $opt ('format','direction') {
+		$opts{$opt} = $valid{$opt}{ $opts->{$opt} } 
+		    if exists $opts->{$opt}
+		    && exists $valid{$opt}{ $opts->{$opt} };
+	    }
+	}
+	my $direction = $reverse_direction{$opts{direction}};
+	my $highest_level = $hier_info->{highest_level};
+	my $numwidth = length $highest_level;
+
+	my @level_level;
+	my @level_elements;
+
+	while (my ($elem,$level) = each %{ $hier_info->{$direction} } ) {
+	    push @{ $level_elements[$level] }, $elem;
+	    $level_level[$level] = $level;
+	}
+
+	for my $index (reverse 0..$#level_level) {
+	    unless (defined $level_level[$index]) {
+		# delete $level_elements[$index];
+		# delete $level_level[$index];
+		splice @level_elements, $index, 1;
+		splice @level_level, $index, 1;
+	    }
+	}
+
+	if ($opts{format} eq 'list') {
+	    for my $index (reverse 0..$#level_elements) {
+		my $elems = $level_elements[$index];
+		my @cycs = sort grep { /=/ } @$elems;
+		my @noncycs = sort grep { ! /=/ } @$elems;
+		my $leader
+		    = sprintf( "%*d: ", $numwidth, $level_level[$index] );
+		my $other_leader = ' ' x length($leader);
+		my $follower = "$other_leader  ";
+		for my $cyc (@cycs) {
+		    print wrap( $leader, $follower, $cyc ),
+			"\n";
+		    $leader = $other_leader;
+		}
+		print wrap( $leader, $follower, @noncycs ), "\n"
+		    if @noncycs;
+		print "\n";
+	    }
+	}
+	elsif ($opts{format} eq 'grep') {
+	    my $cycle2name = $hier_info->{cycle2name};
+	    my $cycle2uor  = $hier_info->{cycle2uor};
+	    my $uorwidth = 0;
+	    my @all_display;
+	    for my $index (reverse 0..$#level_elements) {
+		my $lvl = $level_level[$index];
+		my $elems = $level_elements[$index];
+		my @level_display;
+		for my $elem (@$elems) {
+		    my $cycle_name = $cycle2name->{$elem};
+		    for my $uor (@{ $cycle2uor->{$elem} }) {
+			push @level_display,
+			    [ $uor, $lvl, $cycle_name ];
+			$uorwidth = max( $uorwidth, length($uor) );
+		    }
+		}
+		push @all_display, sort { $a->[0] cmp $b->[0] } @level_display;
+		push @all_display, undef;
+	    }
+	    for my $item (@all_display) {
+		if (ref $item) {
+		    my ($uor,$lvl,$cycle_name) = @$item;
+		    printf( "%-*s %*d %s\n",
+			    $uorwidth, $uor,
+			    $numwidth, $lvl,
+			    $cycle_name);
+		}
+		else {
+		    print "\n";
+		}
+	    }
+	}
+    }
+
+    sub do_libsneeded {
+	my $command = shift;
+	my $opts    = shift;
+
+	my $todo;
+	my %done;
+	my $graph = Graph->new();
+
+	my $startlist = '';
+
+	my $process_obj = sub {
+	    my ($lib, $obj) = @_;
+	    my $syms = lo2s( $lib, $obj )->{U};
+	    for my $sym (@$syms) {
+		my $sinfo = s2lo( $sym );
+		if ($sinfo->[0] eq 'text') {
+		    my $si_hash = $sinfo->[1];
+		    my $call_lib = $si_hash->{lib};
+		    if ($call_lib !~ /^Library\:\:/) {
+			my $call_obj = $si_hash->{obj};
+			push @$todo, [ obj=> $call_lib, $call_obj ]
+			    unless $done{$call_lib}{$call_obj};
+			$graph->add_edge( $lib, $call_lib )
+			    unless $lib eq $call_lib;
+		    }
+		}
+	    }
+	};
+
+
+	ARG_LOOP:
+	while (my $arg = shift) {
+	    my( $lib, $obj, $rest );
+	    if ( ($lib,$obj) = $arg =~ m/ ^ ( [^[]+ ) \[ ( [^]]+ ) \] $ /x ) {
+		$startlist .= " ${lib}[$obj]";
+		vet_lib_obj($lib,$obj)
+		    or next ARG_LOOP;
+		push @$todo, [ obj=> $lib, $obj ];
+	    }
+	    elsif ( ($lib,$rest) = $arg =~ m/ ^ ( [^:]+ ) : ( .* ) $ /x ) {
+		for my $obj (split /,/, $rest) {
+		    $startlist .= " ${lib}[$obj]";
+		    vet_lib_obj($lib,$obj)
+		    or next ARG_LOOP;
+		    push @$todo, [ obj=> $lib, $obj ];
+		}
+	    }
+	    else {
+		$lib = $arg;
+		$startlist .= " $lib";
+		my $objs;
+		$objs = vet_lib($lib)
+		    or next ARG_LOOP;
+		push @$todo, [ lib=> $lib, $objs ];
+	    }
+	    $graph->add_vertex( $lib );
+	}
+	while (my $item = shift @$todo) {
+	    my $type = $item->[0];
+	    my $lib = $item->[1];
+	    next if $lib =~ /^Library\:\:/;
+	    if ($type eq 'lib') {
+		my $objs = $item->[2];
+		for my $obj (@$objs) {
+		    $process_obj->( $lib, $obj )
+			unless $done{$lib}{$obj}++;
+		}
+	    }
+	    else {
+		my $obj = $item->[2];
+		$process_obj->( $lib, $obj )
+		    unless $done{$lib}{$obj}++;
+	    }
+	}
+	print "Libs needed when starting from: $startlist\n";
+	display_graph_hierarchy(
+		compute_graph_hierarchy($graph),
+		$opts );
+    }
+
+    my $full_level_graph;
+
+    sub do_level {
+	my $command = shift;
+	my $opts    = shift;
+	$full_level_graph ||= $db->getGraph();
+	display_graph_hierarchy(
+		compute_graph_hierarchy($full_level_graph),
+		$opts );
+    }
+
+    sub read_graph {
+	my $file = shift;
+	open my $fd, "<", $file
+	    or die "open failed for $file: ($!)\n";
+	my $graph = Graph->new;
+	while ( <$fd> ) {
+	    s/^\s*//;
+	    next if /^$/;
+	    next if /^#/;
+	    my ($from, @to) = split /[\s,:]+/;
+	    $graph->add_vertex( $from );
+	    $graph->add_edge( $from, $_ ) for @to;
+	}
+	return $graph;
+    }
+
+    sub do_graph {
+	my $command = shift;
+	my $opts    = shift;
+	my $file    = shift;
+	my $graph   = read_graph( $file );
+	display_graph_hierarchy(
+		compute_graph_hierarchy($graph),
+		$opts );
+    }
+
+}
+
+# The key for each command is the command name.
+# The value is a list:
+#       0   function_ref    The function to call to handle the command
+#       1   str             one-line help description
+#       2   str             long help description
+#       3.. str             key for which options can be provided to command
+#                           (used to augment long help)
+#
+# The function will be called as:
+#    $func_ref->( $command, \%options, @args )
+
+my %known_commands = (
+	libsneeded	=> { func  => \&do_libsneeded,
+			     args  => 'lib[:obj] [...]',
+			     long  => undef,
+			     opts  => [ 'f', 'd' ],
+			     order => 1,
+			   },
+	# objsneeded	=> { func  => \&do_libsneeded,
+			     # args  => 'lib[:obj] [...]',
+			     # long  => undef,
+			     # opts  => [ 'f', 'd' ],
+			     # order => 1,
+			   # },
+	level		=> { func  => \&do_level,
+			     args  => '',
+			     long  => undef,
+			     opts  => [ 'f', 'd' ],
+			     order => 1,
+			   },
+	# libscalled      => { func  => \&do_libscalled,
+			     # args  => 'lib',
+			     # long  => undef,
+			     # opts  => [ 'f', 'd' ],
+			     # order => 1,
+			   # },
+	# objscalled      => { func  => \&do_objscalled,
+			     # args  => 'lib',
+			     # long  => undef,
+			     # opts  => [ 'f', 'd' ],
+			     # order => 1,
+			   # },
+	# symscalled      => { func  => \&do_symscalled,
+			     # args  => 'lib',
+			     # long  => undef,
+			     # opts  => [ 'f', 'd' ],
+			     # order => 1,
+			   # },
+	graph		=> { func  => \&do_graph,
+			     args  => 'file',
+			     long  => [ 'load and disdplay a graph from a file',
+					'(mainly used for debugging display formats)' ],
+			     opts  => [ 'f', 'd' ],
+			     order => 50,
+			   },
+	help            => { func  => \&do_help,
+			     args  => '[command]',
+			     long  => [ 'Provide a summary of all commands,',
+					 'or details about a specific command' ],
+			     opts  => [ ],
+			     order => 98,
+			   },
+	quit            => { func  => \&do_quit,
+			     args  => '',
+			     long  => [ 'Terminate this program.' ],
+			     opts  => [ ],
+			     order => 99,
+			   },
+    );
+
+my @optinfo = ( qw[ f d ] );
+my %optinfo = (
+    f   =>	{ key=> 'format',
+		  valid=> \%valid_format,
+		  long=> <<END_OF_FORMAT,
+  [format]    The way that a hierarchical group of items is displayed.
+
+              list    (default) A concise format with multiple elements per line
+
+	      column  A multi-column format with on element per line,  The
+	              columns are element, level, cycle-ID
+
+	      A hierarchical group can be given an ordering, in which most
+	      elements appear in a level higher than any element on which it
+	      depends.  Sometimes that is not possible because there are one or
+	      more groups of elements that have a cyclic "order".  A group of
+	      such elements will be displayed together at a single level, and
+	      identified by a unique group name (cycle_A, cycle_B, ...).
+END_OF_FORMAT
+		},
+
+    d   =>	{ key=> 'direction',
+		  valid=> \%valid_direction,
+		  long=> <<END_OF_DIRECTION,
+  [direction] Except for elements involved in the longest possible calling
+              chain,  an element is not forced into a single level.  The
+	      direction is used to choose where such elements are placed.
+
+	      low     Each element is placed in the lowest possible level.
+
+	      high    Each element is placed in the highest possible level.
+
+	      canonical Each element is placed at the lowest possible level,
+		      but cycles are placed at the level at the top of their
+		      range when it is in the lowest position.
+
+	      reverse (Reverse of canonical) Each element is placed at the
+	              highest possible level, except that cycles are placed
+		      at the bottom of their range when it is in the highest
+		      position.
+END_OF_DIRECTION
+		},
+
+);
+
+sub cmd_sort {
+    $known_commands{$a}{order} <=> $known_commands{$b}{order} || $a cmp $b
+}
+
+sub displayable_cmd_line {
+    my $command = shift;
+    my $cmdinfo = $known_commands{$command};
+    my @optdetail;
+    for my $optkey (@{$cmdinfo->{opts}}) {
+	push @optdetail, "[-$optkey $optinfo{$optkey}{key}]";
+    }
+    my $disp = sprintf "  %-11s %s\n",
+	$command,
+	join( ' ', @optdetail, $known_commands{$command}{args} );
+    if (exists $cmdinfo->{long} && $cmdinfo->{long}) {
+	$disp .= sprintf "  %11s   - %s\n", "", $_ for @{ $cmdinfo->{long} };
+    }
+    return $disp;
+}
+
+sub do_help {
+    my $help = shift;
+    my $opts = shift;
+    if (!@_) {
+	# no args, give a full command summary
+	for my $command (sort cmd_sort keys %known_commands) {
+	    print displayable_cmd_line( $command );
+	}
+	print "\n";
+	for my $optinfo (@optinfo) {
+	    my $info;
+	    $info = $optinfo{$optinfo}{long}
+		and print "\n$info\n";
+	}
+    }
+    else {
+	my %opt_used;
+	while (my $command = shift) {
+	    if ( (undef, my $cmdinfo)
+		    = exist_keys( \%known_commands, $command ) ) {
+		print displayable_cmd_line( $command, 1 );
+		++$opt_used{$_} for @{$cmdinfo->{opts}};
+	    }
+	    else {
+		print "Unknown command: $command\n";
+	    }
+	}
+	print "\n";
+	for my $optinfo (grep { $opt_used{$_} } @optinfo) {
+	    my $info;
+	    $info = $optinfo{$optinfo}{long}
+		and print "\n$info\n";
+	}
+    }
+}
+
+sub process_commandfile {
+    my $file = shift;
+    my $fdin;
+    if ($file ne '-') {
+	open $fdin, '<', $file
+	or die "Failed to open file $file: ($!)\n";
+    }
+    else {
+	open $fdin, '<-'
+	or die "Failed to reopen STDIN: ($!)\n";
+    }
+    my $prompt;
+    local ($|) = $|;
+    if ($prompt = -t $fdin) {
+	$| = 1;
+    }
+
+    my $at_eof = 0;
+    COMMANDLOOP:
+    while ( !$at_eof ) {
+	if ($prompt) {
+	    print "Command? ";
+	}
+	my $line;
+	defined( $line = <$fdin> )
+	    or last COMMANDLOOP;
+	my $lineno = $.;
+	chomp $line;
+	next if $line =~ /^\s*$/;
+	next if $line =~ /^\s*#/;
+	while ($line =~ s/\\$/ /) {
+	    my $nextline;
+	    if ($nextline = <$fdin>) {
+		chomp $nextline;
+		$line .= $nextline;
+	    }
+	    else {
+		$at_eof = 1;
+	    }
+	}
+	my ($w1, @words) = split ' ', $line;
+	if ($w1 eq 'q' || $w1 =~ /^quit$/i) {
+	    last COMMANDLOOP;
+	}
+	my $cmdinfo;
+	unless ( (undef, $cmdinfo) = exist_keys( \%known_commands, $w1 ) ) {
+	    print STDERR "Unknown command ($w1)";
+	    print STDERR " at line $lineno of file $file"
+		unless $prompt;
+	    print STDERR "\n";
+	    next COMMANDLOOP;
+	}
+	my %opts;
+	# collect options
+	while (@words
+		and my ($optkey,$optval)
+			= $words[0] =~ /^-([^=]*)(?:=(.*))?/) {
+	    my $optinfo_key;
+	    unless ((undef, $optinfo_key) = exist_keys( \%optinfo, $optkey )) {
+		print STDERR "Unrecognized option ($optkey) for command ($w1)";
+		print STDERR " at line $lineno of file $file"
+		    unless $prompt;
+		print STDERR "\n";
+		next COMMANDLOOP;
+	    }
+	    shift @words;
+	    my $optname = $optinfo_key->{key};
+	    unless (defined $optval) {
+		$optval = shift @words;
+	    }
+	    if (exists $optinfo_key->{valid}) {
+		unless (exists $optinfo_key->{valid}{$optval}) {
+		    print STDERR "Invalid value ($optval) for option (-$optkey)";
+		    print STDERR " at line $lineno of file $file"
+			unless $prompt;
+		    print STDERR "\n";
+		    next COMMANDLOOP;
+		}
+		$optval = $optinfo_key->{valid}{$optval};
+	    }
+	    $opts{$optname} = $optval;
+	}
+	print "# Executing command: $line\n";
+	$cmdinfo->{func}($w1, \%opts, @words);
+    }
+}
+
+sub process_commandfiles {
+    for my $file (@ARGV) {
+	process_commandfile( $file );
+    }
+}
+
+
+#==============================================================================
+
+MAIN: {
+    getoptions();
+    {
+	my $inithash = {};
+	$inithash->{datafile} = defined $database ? $database : 'performance';
+	$inithash->{debug} = 1 if $debug;
+	$db = Binary::Analysis->new($inithash);
+    }
+
+    unshift @ARGV, '-' unless @ARGV;
+    process_commandfiles(@ARGV);
+
+    $db->closeDB();
+}
+
+__END__
+
+=head1 NAME
+
+code_anal - analyse hierarchies of code in various ways
+
+=head1 SYNOPSIS
+
+    $ code_anal
+    <command> ...
+
+=head1 DESCRIPTION
+
+Provides a number of commands for analysing hierarchies of code.
+
+=over 4
+
+=item * libsneeded
+
+Accepts a list of library and/or library:object arguments.  Determines
+the full list of objects that are called (directly or indirectly) from
+any of the objects in the arg list.  Displays the libraries containing
+all of the determined objects, in hierarchy order.  The hierarchy for this
+display is <B>not</B> the official level hierarchy (derived for the
+dependency info), <B>nor</B> is it the actual symbol calling hierarchy
+for the universe of all objects.  It is the caller-callee hierarchy for
+the determined object/libraries, using only the calls that actually occur
+in those objects.  For example, the displayed hierarchy might not show
+a cycle between two libraries, even though there are objects in each of
+the libraries that call to the other library.  This would happen in none
+of the objects that call in the reverse direction are ever called from
+the original starting point.  See below, for a description of the ways
+that the hierarchy can be displayed.
+
+This command is generally useful only for libraries that are low in the
+overall hierarchy, because libraries that are higher up tend to have
+calls to an huge number of libraries.  This can take an extremely long
+time to compute, and provides an extremely long output.
+
+=item * objsneeded
+
+Currently, this is a synonym for libsneeded.  It was intended to have it
+display the hierarchy of object modules (not their containing libraries)
+but that code has not yet been written.  In that intended use, it would
+suffer even more from the hazards of starting from a high-level object, and would benefit even more from the depth limitation cutoff.
+
+=item * level
+
+Displays the dependency hierarchy.  The only reason for using this
+instead of the level_report program is to get an alternate view of
+the hierarchy (comparing the "high" and "low" views lets you distinguish
+between libraries that are tightly bound to the hierarchy and cannot
+be moved up or down without a good chance of creating cycles from one
+that are loosely bound (e.g. a biglet that only calls very low level
+libraries shows up as very low in the official hierarchy, but at the
+very top of a reversed hierarchy - it call most middle level libraries
+without creating a cycle, even though they are higher in the official
+ranking).
+
+=item * graph
+
+Reads a graph from a file and displays it.  Within the file, each line
+is a list of nodes - the first calls all of the others on the line.
+This command was added to be able to test hierarchy displays without
+having to use the entire dependency graph or some hard to verify
+libsneeded call graph.
+
+=back
+
+Each command accept s options to control the hierarchy display.
+
+=over 4
+
+=item * -f (format)
+
+There are two display formats:
+
+=over 4
+
+=item - list
+
+A compact list with multiple elements on each line and a heading for
+level number.
+
+=item - column
+
+A tabular format with one item per line and a column for the element
+name, the level, and (if appropriate) the cycle name.
+
+=back
+
+=item * -d (direction)
+
+There are a number of ways of computing a level number for the elements
+in a hierarchy.  Elements can be given as low a number as possible, or
+as high a number as possible.  An element that is not in a cycle is
+treated alone so it adds one to the height of the hierarchy. Elements that
+are in a cycle are always treated as a collective group that adds more
+than one to the hieght of the hierarchy - it adds the number of elements
+in the cycle instead.  That means that a cycle effictively occupies a
+range of levels, not just a single level.  They can be given the number
+at the bottom of their range, or at the top.
+
+=over 4
+
+=item - canonical
+
+The Bloomberg canonical numbering.  Non-cyclic elements are given as
+low a number as possible.  Cyclic elements are given the number at the
+top of the range (but the range is at the lowest possible level).
+
+=item - reverse
+
+The reverse of the Bloomberg canonical ordering.  Non-cyclic elements
+are given as high a number as possible.  Cyclc elements are given the
+number at the bottom of the range (where the range is as high as possible).
+
+=item - low
+
+Each element is given as low a number as possible; cyclic elements are
+given the number at the bottom of the lowest possible range.
+
+=item - high
+
+Each element is given as high a number as possible; cyclic elemewnts are
+given the number at the top of the highest possible range.
+
+=back
+
+=back
+
+=head1 FUTURE
+
+A couple of options were planned to deal with the "too large to be useful"
+issues of objects near the top of the hierarchy.
+
+=over 4
+
+=item * depth
+
+a depth limitiation that stops the indirect calling search
+after a specificed number of subroutines/objects/libraries would allow
+scanning the calling neighourhood of a higher up starting point without
+having to indirectly scan the entire universe.
+
+=item * callers,deps,neighbourhood
+
+instead of just the current default (<I>deps</I>) of finding all of the
+(recursively) called objects, there would be a choice of instead finding
+all of the (recursively) calling objects (<I>callers</I>) or of finding
+both calling and called objects (<I>neighbourhood</I>).  The last would
+especially work well with the depth limitation.
+
+=back

@@ -1,0 +1,124 @@
+#!/bbs/opt/bin/perl -w
+
+use warnings;
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+
+use Production::Services;
+use Production::Services::ChangeSet     qw(deleteDependencyFromChangeSet
+                                           getChangeSetDbRecord);
+use Change::Symbols                     qw(/\$DEPENDENCY_TYPE_.*/);
+use Util::SCMControl qw/acceptSCMUser/;
+use Util::Message qw/fatal/;
+
+acceptSCMUser()  or  fatal "user not authorized";
+
+my @opts = qw(all|a help|h dependency|d=s on|o=s);
+die usage() if not GetOptions(\my %opts, @opts);
+
+print usage() and exit 0 if $opts{help};
+
+die usage() if @ARGV != 1;
+
+@$_{$DEPENDENCY_TYPE_NONE, $DEPENDENCY_TYPE_ROLLBACK, 
+    $DEPENDENCY_TYPE_CONTINGENT, $DEPENDENCY_TYPE_DEPENDENT,
+    $DEPENDENCY_TYPE_SIBLING} = () for \my %deps;
+
+my %string2dep = (
+        none          => $DEPENDENCY_TYPE_NONE,
+        rollback      => $DEPENDENCY_TYPE_ROLLBACK,
+        contingent    => $DEPENDENCY_TYPE_CONTINGENT,
+        dependent     => $DEPENDENCY_TYPE_DEPENDENT,
+        sibling       => $DEPENDENCY_TYPE_SIBLING,
+        all           => undef,
+);
+
+print usage() and exit if $opts{help};
+
+init_svc();
+
+my $csid = shift;
+
+exit delete_all($csid)                          
+    if $opts{all};
+exit delete_dep($csid, @opts{qw/on dependency/})
+    if $opts{on} and $opts{dependency};
+exit delete_all_type($csid, $opts{dependency})  
+    if $opts{dependency};
+exit delete_any_on($csid, $opts{on})
+    if $opts{on};
+
+sub delete_all {
+    my ($csid) = @_;
+    my %deps = get_deps($csid);
+    while (my ($on, $type) = each %deps) {
+        del_dep($csid, $on, $type);
+    }
+    return 0;
+}
+
+sub delete_dep {
+    my ($csid, $on, $type) = @_;
+    del_dep($csid, $on, $type);
+    return 0;
+}
+
+sub delete_all_type {
+    my ($csid, $type) = @_;
+    $type = $string2dep{$type} || $type;
+    die "$type: Invalid dependency type\n\n", usage() 
+        if not exists $deps{$type};
+    my %deps = get_deps($csid);
+    while (my ($on, $t) = each %deps) {
+        del_dep($csid, $on, $t) if $t eq $type;
+    }
+    return 0;
+}
+
+sub delete_any_on {
+    my ($csod, $on) = @_;
+    my %deps = get_deps($csid);
+    my $type = $deps{$on} or return 0;
+    del_dep($csid, $on, $type);
+    return 0;
+}
+
+{
+    my $svc;
+    sub init_svc {
+        $svc = Production::Services->new;
+    }
+    sub get_deps {
+        my ($csid) = shift;
+        my $cs = getChangeSetDbRecord($svc, $csid) or
+            die "$csid does not refer to an existing change set\n";
+        return %{ $cs->getDependencies };
+    }
+    sub del_dep {
+        my ($csid, $on, $type) = @_;
+        deleteDependencyFromChangeSet($svc, $csid, $on, $type)
+            or die "Could not delete dependency $string2dep{$type} on $on " .
+                   "from $csid\n";
+    }
+}
+
+sub usage {
+    return <<EOUSAGE;
+Usage: $0 \$csid --all
+       $0 \$csid --on \$dep_onN --dep \$type
+
+Delete dependencies from a change set. Options:
+
+    --on    | -o <csid> delete dependency on <csid>
+    --dep   | -d <type> delete dependency of type <type>
+    --all   | -a        delete all dependencies
+
+    --help  | -h        this help screen
+EOUSAGE
+}

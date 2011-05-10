@@ -1,0 +1,48 @@
+#!/bbs/opt/bin/perl -w
+
+use Getopt::Long;
+use Net::SMTP;
+use strict;
+
+my @getopt = qw/subject=s from=s help/;
+my %opt = ( subject => '', from => $ENV{USER} );
+
+GetOptions(\%opt, @getopt) or die usage("error: bad options.");
+do { print usage(); exit 0; } if $opt{help};
+@ARGV > 0 or die usage("error: arguments expected.");
+
+my %to;
+
+for (@ARGV) {
+  my ($user, $host) = /^([^\@]+)\@([^\@]+)$/ ? ($1, $2) : ($_, 'localhost');
+  $to{$host} ||= [];
+  push @{$to{$host}}, $user;
+}
+
+while (my ($host, $users) = each(%to)) {
+  my $smtp = Net::SMTP->new($host) or die;
+
+  $smtp->mail($opt{from});
+  $smtp->recipient(@$users);
+
+  $smtp->data;
+  $smtp->datasend("To: ".join(', ', @ARGV).$/);
+  $smtp->datasend("Subject: $opt{subject}".$/);
+
+  while (<>) {
+    $smtp->datasend($_);
+  }
+
+  $smtp->dataend;
+  $smtp->quit;
+}
+
+sub usage {
+  my $prog = (split m{/}, $0)[-1];
+  my @usage;
+  push @usage, @_, '' if @_;
+  push @usage, "$prog - simple smtp client with sender control";
+  push @usage, "$prog [-s subject] [-f sender] recipients ...";
+  return join $/, @usage, '';
+}
+

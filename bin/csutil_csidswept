@@ -1,0 +1,85 @@
+#!/bbs/opt/bin/perl 
+ 
+use strict;
+use warnings;
+
+use FindBin;
+
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Production::Services;
+use Production::Services::ChangeSet qw/getChangeSetDbRecord/;
+use Change::Util::InterfaceRCS      qw/getFileVersionForCSID/;
+use Util::Message      qw/set_verbose verbose/;
+use Getopt::Long;
+
+my %opt = ();
+
+my @getopt = qw(
+  verbose|v+
+  all|a
+);
+GetOptions(\%opt, @getopt) or die usage();
+
+my $IN_PIPELINE = 0;
+
+
+Util::Message::set_verbose($opt{verbose} || 0);
+
+my $svc;
+sub get_rec {
+    my $csid = shift;
+    $svc ||= Production::Services->new;
+
+    return getChangeSetDbRecord($svc, $csid);
+}
+
+my @csid = get_csids() or die usage();
+
+for my $csid (@csid) {
+    my $rec = get_rec($csid) or warn "$_: no such change set\n" and next;
+    my $stage = $rec->getStage;
+    my $ok = 1;
+    for my $file ($rec->getFiles) {
+        next if $file->isUnchanged;
+        if (not defined getFileVersionForCSID($file, $csid, $stage)) {
+            $ok = 0;
+	    verbose "not swept: $csid $file";
+            $opt{all}  or  last;
+        }
+    }
+    if ($ok) {
+        print "$csid swept\n" and next if not $IN_PIPELINE;
+        print $csid, "\n";
+    } elsif (not $IN_PIPELINE) {
+        print "$csid not swept\n";
+    }
+}
+
+sub get_csids {
+    return @ARGV if @ARGV;
+    chomp(my @csids = <STDIN>);
+    $IN_PIPELINE = 1;
+    return @csids;
+}
+
+sub usage {
+    return <<EOUSAGE;
+$0 csid1 csid2 ...
+
+    or
+
+some_program | $0 | some_other_program
+
+Check if a change set given through its CSID has been swept into RCS.
+
+When CSIDs are passed via command-line paramaters, prints whether each
+CSID has been swept or not. When CSIDs are fed via stdin, it will
+effectively act as a filter and print only the CSIDs if the change sets
+that were fully swept.
+
+EOUSAGE
+}
+

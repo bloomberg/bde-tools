@@ -1,0 +1,183 @@
+#!/usr/local/bin/perl -w
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use IO::File;
+use IO::Select;
+use Util::Message qw(fatal error);
+use Util::Retry qw(retry_open3);
+
+#------------------------------------------------------------------------------
+
+=head1 SYNOPSIS
+
+Compare a label to RELEASE-CURRENT:
+
+    $ bde_lbdiff BLP_LIB_BDE_0.01.8
+
+    $ bde_lbdiff BLP_LIB_BDE_0.01.8 RELEASE-CURRENT
+
+Compare two labels:
+
+    $ bde_lbdiff BLP_LIB_BDE_0.01.8 BLP_LIB_BDE_0.01.7
+
+Compare a label within a specific subdirectory:
+
+    $ bde_lbdiff --root /bbcm/infrastructure/groups/bde BLP_LIB_BDE_0.01.8
+
+=head1 DESCRIPTION
+
+This tool generates a list of all elements with a version associated with the
+label I<newlabel> but where the label I<oldlabel> is B<not> associated with the
+same version.  This may be either because an element does not have I<oldlabel>
+associated with any version, or because I<oldlabel> is associated with a
+different, presumed previous, version.
+
+If unspecified, I<oldlabel> defaults to I<RELEASE-CURRENT>.
+
+=head1 NOTES
+
+Although this tool generates a list of changed elements between two versions,
+it does not check nor guarantee that the version associated with I<oldlabel> is
+actually older than the version associated with I<newlabel>. Only elements
+that have I<newlabel> associated with a version will be listed, however:
+elements which have I<oldlabel> but not I<newlabel> will not be listed.
+
+=head1 AUTHOR
+
+  Peter Wainwright (pwainwright@bloomberg.net)
+
+=cut
+
+#------------------------------------------------------------------------------
+
+sub usage {
+print <<_USAGE_END;
+Usage: $0 --help|-h | [--root|-r <dir>] newlabel [oldlabel]
+  --help|-h        Usage information (this text)
+  --root|-r <dir>  Base directory for comparison
+
+See 'perldoc $0' for more information.
+
+_USAGE_END
+}
+
+sub getoptions {
+    my %opts;
+
+    Getopt::Long::Configure("bundling");
+    unless (GetOptions(\%opts,qw[
+	help|h
+        root|r=s
+    ])) {
+	usage(),exit 1;
+    }
+
+    $opts{help} and usage(),exit 0;
+
+    return \%opts;
+}
+
+#------------------------------------------------------------------------------
+
+# parse an output line
+sub parse ($) {
+    my $text=shift;
+    chomp($text);
+
+    if ($text =~ m|^(.*)/([^/]+)\@\@([^\@]+)$|) {
+	return ($2,$1,$3); #file,path,version
+    } else {
+	fatal "Could not parse '$text'";
+    }
+}
+
+sub print_parse ($) {
+    my $text=shift;
+
+
+    my ($file,$path,$version)=parse($text);
+    return unless $file;
+    return if -d "$path/$file";
+    return if $path=~m|/releases/|;
+    return if $file=~m|\.t\.cpp$|;
+
+    print "$file $path $version\n";
+}
+
+#------------------------------------------------------------------------------
+
+BEGIN: {
+    my $opts=getoptions();
+    my $root=$opts->{root} || "/bbcm/infrastructure/groups";
+    if ($root=~/^[a-z]+$/) {
+	if (-d $root) {
+	    # already exists here
+	} elsif (-d "/bbcm/infrastructure/groups/$root") {
+	    # shorthand for groups subdir
+	    $root="/bbcm/infrastructure/groups/$root";
+	} elsif (-d "/bbcm/infrastructure/$root") {
+	    # shorthand for infrastructure subdir
+	    $root="/bbcm/infrastructure/$root";
+	}
+    }
+
+    die "Specified root '$root' does not exist or is not a directory\n"
+      unless -d $root;
+
+    usage() and exit 1 unless @ARGV;
+    my $newlb=shift(@ARGV);
+    my $oldlb=shift(@ARGV) || 'RELEASE-CURRENT';
+
+    my @command=split / /,
+      qq[cleartool find $root -element '{lbtype_sub($newlb)}' ].
+      qq[-version '{(lbtype($newlb)__&&__!lbtype($oldlb))}' -print];
+    map { s/__/ /g; s/'//g } @command;
+
+    my ($wrh,$rdh,$erh)=(new IO::Handle,new IO::Handle,new IO::Handle);
+    my $pid=retry_open3($rdh,$wrh,$erh,@command);
+    unless (defined $pid) {
+	fatal "Failed to open command: $!\n";
+    }
+
+    my $select=new IO::Select($rdh,$erh);
+    my ($text,$remainder)=("","");
+    while (my @waiting=$select->can_read()) {
+	foreach my $fh (@waiting) {
+	    my $read=sysread($fh,$text,1024);
+
+	    if ($fh == $rdh) {
+		if ($text) {
+		    if ($remainder) {
+			$text=$remainder.$text;
+			$remainder="";
+		    }
+
+		    while ($text=~s/^([^\n]*)\n//s) {
+			print_parse $1;
+		    }
+		
+		    $remainder=$text;
+		    next;
+		}
+	    } else {
+		error($text) if $text;
+	    }
+
+	    $select->remove($fh) if defined($read) and $read==0;
+	}
+    }
+
+    while ($text=~s/^([^\n]*)\n//s) {
+	print_parse $1;
+    }
+}
+
+#------------------------------------------------------------------------------
+
+exit $?;

@@ -1,0 +1,36 @@
+#!/bin/ksh
+
+IN=tmp/in
+OUT=tmp/out
+H_UPDATE=bde2doxy_h_update_inplace
+BASE=/bbcm/infrastructure
+
+function repop {
+  rm -rf $IN
+  rm -rf $OUT
+  mkdir -p $IN $OUT
+
+  for i in bde bce bte bae
+  do
+    cp groups/$i/include/b*.h $IN
+  done
+
+  find enterprise -name "*.h" -exec cp {} $IN \;
+  #rm $IN/bdemf_typelist.h
+
+  chmod 664 $IN/*
+}
+
+cd $BASE
+
+if [[ -n $1 ]]; then
+  print "repopulating $IN..."
+  repop
+else
+  print "not repopulating"
+fi
+
+cd tmp
+$H_UPDATE in out
+cd out
+doxygen $BASE/bin/bde2doxy.template

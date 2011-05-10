@@ -1,0 +1,70 @@
+#!/bbs/opt/bin/perl
+
+sub usage {
+    if (@_) {
+	print @_, "\n\n";
+    }
+    print "Usage: splitcso NAME [input]
+	creates files NAME.good NAME.analyse and NAME.del which contain
+	the 3-way split of the input file (which must have been created
+	by validate_setofchanges).\n";
+    exit (@_ == 0);
+}
+
+usage() if $ARGV[0] =~ /-+h/;
+
+my $base = shift or usage "Need a base file NAME";
+
+open my $good,    ">", "$base.good";
+open my $analyse, ">", "$base.analyse";
+open my $del,     ">", "$base.del";
+
+my $in_between = 0;
+my $to_analyse = 1;
+my $to_good    = 2;
+my $to_del     = 3;
+
+my $state = $in_between;
+
+my @collection;
+
+my @printer;
+$printer[$in_between] = $analyse;
+$printer[$to_analyse] = $analyse;
+$printer[$to_good]    = $good;
+$printer[$to_del]     = $del;
+
+while( <> ) {
+    my $symswitch = /^\s*\#\*\#Sym/;
+    my $delswitch = /^\s*\#\*\#\s*\#\#\# Unused/;
+    if ($symswitch || $delswitch) {
+	if( @collection ) {
+	    print {$printer[$state]} @collection;
+	}
+	@collection = ( $_ );
+	$state = $delswitch ? $to_del : $to_good;
+	next;
+    }
+    push @collection, $_;
+    unless ($state == $in_between) {
+	my $termswitch
+	    = /^\s*\#\*\#\s*\#\#\#\s*\#\#\# \(End of recommendations\)/;
+	$termswitch
+	    ||= my $termswitch_anal
+	    = /^\s*\#\*\#\s*\#\#\#\s*\#\#\# \(No recommendations to offer\)/;
+	if( $termswitch_anal && $state == $to_good ) {
+	    $state = $to_analyse;
+	}
+	if( $termswitch ) {
+	    print {$printer[$state]} @collection;
+	    @collection = ( );
+	    $state = $in_between;
+	}
+	elsif( /^[ 	]+#.*START/ ) {
+	    $state = $to_analyse;
+	}
+    }
+}
+if( @collection ) {
+    print $analyse @collection;
+}

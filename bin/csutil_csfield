@@ -1,0 +1,29 @@
+#!/usr/bin/env perl
+
+use Getopt::Long;
+use strict;
+
+my @getopt = qw(showfile|n showcsid|c);
+my %opt;
+
+Getopt::Long::Configure(qw(pass_through));
+GetOptions(\%opt, @getopt) or die;
+
+my $field = shift;
+my $re = qr/:$field=(.*?):/;
+my $csid;
+
+while (<>) {
+  chomp;
+  if (/^[A-Z]:([A-F0-9]{18}):/) {
+    $csid = $1;
+  }
+  if (my ($value) = /$re/) {
+    print join " ",
+      ($opt{showfile} ? $ARGV : ()),
+      ($opt{showcsid} && defined $csid ? $csid : ()),
+      $value;
+    print $/;
+  }
+}
+

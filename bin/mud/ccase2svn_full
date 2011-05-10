@@ -1,0 +1,280 @@
+#!/usr/bin/perl -w
+
+use Getopt::Long;
+use SVN::Core;
+use SVN::Repos;
+use SVN::Fs;
+use SVN::Delta;
+use IO::File;
+use strict;
+
+my @getopt = qw(fatal! verbose branch);
+my %opt = (fatal => 1);
+
+GetOptions(\%opt, @getopt) or die usage();
+
+sub usage {
+
+  return <<'EOF';
+suggested usage:
+
+$ mudcase_dumphist /path/to/mounted/view | \
+    tee cc.rhist.dump | perl -e 'print reverse <>' | ccase2svn file:///repo/trunk
+
+EOF
+}
+
+my $url = shift or die usage();
+my ($fsfspath, $importpath) = parse_fsfs_url($url);
+my $repo = SVN::Repos::open($fsfspath) or die "error opening repository: $!";
+
+while (<>) {
+  chomp;
+  my %event;
+  my @fields = split /\t/;
+
+  @event{qw/op kind target/} = splice @fields, 0, 3;
+  $event{source} = shift @fields if $event{op} eq 'lnname';
+  @event{qw/date user comment/} = @fields;
+  $event{comment} =~ s/\\n/\n/g if $event{comment};
+  $event{comment} =~ s/\\\\/\\/g if $event{comment};
+
+  local $@;
+  eval { svn_commit($repo, $importpath, \%event); };
+
+  if ($@) {
+    print STDERR "error on line: $_".$/;
+    $opt{fatal} ? die $@.$/ : print STDERR "error: $@".$/;
+  }
+}
+
+# commit a single cc history event
+sub svn_commit {
+  my ($repo, $importpath, $event) = @_;
+  my $eventkey = $event->{op}.' '.$event->{kind};
+
+  my %dispatch =
+  (
+    'mkelem file element' => \&svn_mkfile,
+    'mkelem directory element' => \&svn_mkdir,
+    'checkin version' => \&svn_checkin,
+    'lnname directory version' => \&svn_lnname,
+    'rmname directory version' => \&svn_rmname
+  );
+
+  return if !exists $dispatch{$eventkey};
+  return unless nxname($event->{target});
+
+  print join(' ', 'commit', @{$event}{qw/op kind target/}).$/;
+
+  my $rev; 
+  my $pool = SVN::Pool->new_default;
+  my ($edelta, $ebaton) = $repo->get_commit_editor(
+    sprintf('file://%s', $repo->path),
+    '/'.$importpath,
+    $event->{user},
+    $event->{comment},
+    sub {
+      $rev = shift;
+      my ($date, $author) = @_;
+      print sprintf 'committed %s on %s by %s'.$/, $rev, $date, $author;
+    },
+  );
+
+  my $editor = SVN::Delta::Editor->new($edelta, $ebaton);
+  my $yrev = $repo->fs->youngest_rev;
+  my $baton = $editor->open_root($yrev);
+
+  $dispatch{$eventkey}->($editor, $baton, $yrev,
+    grep defined, @{$event}{qw/target source/});
+
+  $editor->close_edit;
+
+  # go back and falsify the commit time
+  my ($Y,$M,$D,$h,$m,$s) = 
+    $event->{date} =~ /(\d{4})(\d{2})(\d{2})\.(\d{2})(\d{2})(\d{2})/;
+  my $svndate = join('-',$Y,$M,$D).'T'.join(':',$h,$m,$s).'.000000Z';
+  $repo->fs->change_rev_prop($rev, 'svn:date', $svndate);
+}
+
+sub svn_checkin {
+  my ($editor, $baton, $baserev, $pname) = @_;
+  my $pool = SVN::Pool->new_default;
+  my $path = pname2svn($pname);
+  my $dbaton = $editor->open_directory(dirname($path), $baton, $baserev);
+  my $fbaton = $editor->open_file($path, $dbaton, $baserev);
+  my $handle = $editor->apply_textdelta($fbaton, undef);
+  my $fh = IO::File->new($pname) or die "error opening $pname for read: $!.";
+  SVN::TxDelta::send_stream($fh, @$handle);
+  undef $fh;
+
+  $editor->close_directory($dbaton);
+}
+
+sub svn_mkfile {
+  my ($editor, $baton, $baserev, $pname) = @_;
+  my $pool = SVN::Pool->new_default;
+  my $path = pname2svn($pname);
+  my $dbaton = $editor->open_directory(dirname($path), $baton, $baserev);
+
+  $editor->add_file($path, $dbaton, undef, -1);
+  $editor->close_directory($dbaton);
+}
+
+sub svn_mkdir {
+  my ($editor, $baton, $baserev, $pname) = @_;
+  my $pool = SVN::Pool->new_default;
+  my $path = pname2svn($pname);
+
+  my $dbaton = $editor->open_directory(dirname($path), $baton, $baserev);
+  $editor->add_directory($path, $dbaton, undef, -1);
+  $editor->close_directory($dbaton);
+}
+
+sub svn_lnname  {
+  my ($editor, $baton, $baserev, $dst, $src) = @_;
+  my $pool = SVN::Pool->new_default;
+  my $srcpath = "file://".$repo->path.'/'.pname2svn($src);
+  my $srcrev = $baserev; # safely assume node exists in prior rev
+  my $dstpath = pname2svn($dst);
+  my $dbaton = $editor->open_directory(dirname($dstpath), $baton, $baserev);
+
+  $editor->add_file($dstpath, $dbaton, $srcpath, $srcrev);
+  $editor->close_directory($dbaton);
+}
+
+sub svn_rmname {
+  my ($editor, $baton, $baserev, $pname) = @_;
+  my $pool = SVN::Pool->new_default;
+  my $path = pname2svn($pname);
+  my $dbaton = $editor->open_directory(dirname($path), $baton, $baserev);
+
+  $editor->delete_entry($path, $baserev, $dbaton);
+  $editor->close_directory($dbaton);
+}
+
+sub svn_mkbranch {
+  die 'not implemented yet.'.$/;
+}
+
+sub svn_mklabel {
+  die 'not implemented yet.'.$/;
+}
+
+sub svn_rmbranch {
+  die 'not implemented yet.'.$/;
+}
+
+sub svn_rmlabel {
+  die 'not implemented yet.'.$/;
+}
+
+# pure screenscraping
+sub parse_entry {
+  my ($pname, $comment) = @_;
+  return $1 if $comment =~ m{(?:Uncataloged|Added) file element "(.*)"\.$};
+  return undef;
+}
+
+sub parse_fsfs_url {
+  my $url = shift;
+
+  $url =~ s{^file://}{} or die "error, only file:// urls are supported.".$/; 
+
+  my @parts = split m{/}, $url;
+  my @realparts = shift @parts;
+
+  while (@parts && -d (my $realpath = join '/', @realparts, $parts[0])) {
+    push @realparts, (shift @parts);
+    last if -f "$realpath/db/uuid"; # if your repo looks like this, sorry :)
+  }
+
+  die "error parsing fsfs url $url.".$/ if !-d join '/', @realparts;
+
+  return (join '/', @realparts), (join '/', @parts);
+}
+
+sub pname2svn {
+  my $pname = shift;
+  my $path = nxname($pname);
+
+  if ($opt{branch}) {
+    if (my $branch = nxbranch($pname)) {
+      $branch = join '_', grep length, split m{/}, $branch;
+      $path = join '/', 'branches', $branch, $path;
+    }
+    else {
+      $path = join '/', 'trunk', $path;
+    }
+  }
+
+  return $path; 
+}
+
+# remove trailing @@/branch/n(/name@@)?
+sub nxname {
+  my @parts = nxsplit(shift);
+  my $path;
+  $path = "$parts[0]/".(split m{/}, $parts[1])[-1] if @parts == 3;
+  $path = $parts[0] if @parts < 3;
+  return canonpath($path);
+}
+
+sub nxbranch {
+  my @parts = nxsplit(shift);
+  return undef if @parts < 2;
+
+  my @verparts = split m{/}, $parts[1];
+  my @brparts;
+
+  for (@verparts) {
+    last if /^\d+$/;
+    push @brparts, $_;
+  }
+
+  return join '/', @brparts;
+}
+
+sub nxver {
+  my @parts = nxsplit(shift);
+  pop @parts if !$parts[-1]; # trailing @@-form
+  my @verparts = split m{/}, $parts[-1];
+  for (reverse @verparts) { return $_ if /^\d+$/; }
+  return undef;
+}
+
+sub nxsplit {
+  return split /@@/, shift, -1;
+}
+
+sub nxjoin {
+  return join '@@', @_;
+}
+
+sub dirname {
+  my $path = shift;
+  my @parts = split m{/}, $path;
+  pop @parts;
+  return join '/', @parts;
+}
+
+sub canonpath {
+  my $path = shift;
+  my @parts;
+
+  for (split m{/}, $path) {
+    if ($_ eq '..') {
+      @parts ? pop @parts : push @parts, $_;
+    }
+    elsif ($_ ne '.') {
+      push @parts, $_;
+    }
+  }
+
+  return join '/', @parts;
+}
+
+=head1 BUGS
+* --branch doesn't really work: mkelem becomes hard to interpret in this case
+=cut
+

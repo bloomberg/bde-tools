@@ -1,0 +1,129 @@
+#!/bbs/opt/bin/perl
+
+use strict;
+use warnings;
+
+use Getopt::Std;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Change::Symbols                 qw/$CS_DATA/;
+use Production::Services;
+use Production::Services::ChangeSet qw/getChangeSetDbRecord/;
+
+getopts('d:o:hwl', \my %opts) or die usage(); # heh...
+
+print usage() and exit if $opts{h};
+
+$opts{d} ||= "\t";
+
+my %get = (
+    csid        => sub { shift->getID },
+    user        => sub { shift->getUser },
+    group       => sub { shift->getGroup || ''},
+    move        => sub { shift->getMoveType },
+    status      => sub { shift->getStatus },
+    date        => sub { shift->getTime },
+    tstamp      => sub { shift->getTsp },
+    stage       => sub { shift->getStage },
+    ticket      => sub { shift->getTicket },
+    ref         => sub { shift->getReferences || ''},
+    task        => sub { shift->getTasks || ''},
+    function    => sub { shift->getFunctions || '' },
+    approver    => sub { shift->getApprover || '' },
+    tester      => sub { shift->getTesters || '' },
+);
+
+my @fields = grep exists $get{$_}, 
+             split /,/, ($opts{o} || 'csid,move,status,user,date');
+
+my $svc = Production::Services->new;
+
+for my $csid (get_csids()) {
+    my $cs = getChangeSetDbRecord($svc, $csid)
+        or warn "$csid: No such change set\n";
+    $opts{l} and write_log($cs, $opts{w}) and next;
+    print join $opts{d} => map $get{$_}->($cs), @fields;
+    print "\n";
+}
+
+sub get_csids {
+    return @ARGV if @ARGV;
+    chomp(my @csids = <STDIN>);
+    return @csids;
+}
+
+sub write_log {
+    my ($cs, $standard_loc) = @_;
+
+    my $status  = $cs->getStatus || 'X';
+    my $csid    = $cs->getID;
+    my $time    = $cs->getTime;
+    my $user    = $cs->getUser;
+    my $ticket  = $cs->getTicket;
+    my $stage   = $cs->getStage;
+    my $move    = $cs->getMoveType;
+    my $depend  = $cs->getDependencies;
+    my $dep     = join ',' => map "$_|$depend->{$_}", keys %$depend;
+    my $msg     = Change::Set->flatten($cs->getMessage);
+    my $nfiles  = $cs->getFiles;
+    my $refs    = $cs->getReferences || '';
+
+    my $fh;
+    if ($standard_loc) {
+        my $dir = substr $csid, -2;
+        open $fh, '>', "$CS_DATA/logs/db/$dir/$csid.log"
+            or die "Could not open $CS_DATA/logs/db/$dir/$csid.log for writing: $!";
+    } else {
+        $fh = \*STDOUT;
+    }
+
+    print $fh join ':' => $status, $csid, "created=\"$time\"", "user=$user", 
+                          "ticket=$ticket", "stage=$stage", "move=$move",
+                          "depends=$dep", "message=\"$msg\"", "files=$nfiles", 
+                          "reference=$refs";
+    print $fh "\n";
+
+    # write files
+    for my $file ($cs->getFiles) {
+        my $target  = $file->getTarget;
+        my $source  = $file->getSource;
+        my $dest    = $file->getDestination;
+        my $lib     = $file->getLibrary || $target;
+        my $type    = $file->getType;
+        my $prdlib  = $file->getProductionLibrary || $lib;
+
+        print $fh join ':' => $status, $csid, "target=$target", "from=$source",
+                              "to=$dest", "library=$lib", "production=$prdlib",
+                              "type=$type";
+        print $fh "\n";
+    }
+
+    return 1;
+}
+
+sub usage {
+    return <<EOUSAGE;
+$0 [-d <delimiter> ] [-o <format>] csids...
+$0 -l [-w] csids...
+
+Dump information about CSIDs.
+
+    -l                  Dump change set conforming to flatfile DB .log format
+    -w                  Additionally, write above to standard log file location
+                        instead of stdout.
+    
+    -o  <format>        Print according to <format>
+    -d  <delimiter>     Use <delimiter> as field delimiter (defaults to tab)
+
+    -h                  This screen
+
+<format> is a comma-separated list of one or more of the following:
+    csid user move status date tstamp stage 
+    ticket ref task function approver tester
+EOUSAGE
+}
+

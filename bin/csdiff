@@ -1,0 +1,45 @@
+#!/bin/ksh
+#
+# csdiff - primitive initial implementation
+
+usage()
+{
+    echo >&2 "Usage: csdiff <localfile> [<library>] [-m <move|bugf|emov>] [cslookat options]";
+    echo >&2 "  (see 'cslookat -h' for other cslookat options)";
+    exit 1;
+}
+
+
+echo >&2 "csdiff v0.1 beta";
+
+if [ $# -ge 1 ]; then
+    case "$1" in
+        -h) usage;;
+        -*) NO_LIBRARY=1;;
+        *) LOCALFILE=$1; shift ;;
+    esac
+else
+    echo >&2 "Nothing to do!"
+    usage
+fi
+
+if [ $# -ge 1 ]; then
+    case "$1" in
+        -*) NO_LIBRARY=1;;
+        *) LIBRARY=$1; shift ;;
+    esac
+else
+    NO_LIBRARY=1;
+fi
+
+if [ $NO_LIBRARY ]; then
+    echo >&2 "?? Warning: guessing the library is deprecated.";
+    LIBRARY=`checkin_guess_lib $LOCALFILE`;
+    LIBRARY=${LIBRARY#/bbsrc/}
+    if [ -z $LIBRARY ]; then
+        exit 2; #couldn't guess lib, error was already printed
+    fi
+fi
+
+echo >&2 ">> cslookat -e cat $LOCALFILE $LIBRARY "$@"| mgdiff $LOCALFILE -";
+cslookat -e cat $LOCALFILE $LIBRARY "$@"| mgdiff $LOCALFILE -;

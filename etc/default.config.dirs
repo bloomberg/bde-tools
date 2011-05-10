@@ -1,0 +1,125 @@
+# BDE development config.dirs
+#------------------------------------------------------------------------------
+# This config spec provides a template to allow different directories (and
+# their contents) in a view to be set to the dev, bb, or main branches on an
+# individual basis. A developer working in a given package group may set its
+# directory contents to dev, but keep all other package group directories
+# set to bb to build from known-good releases of required software.
+#
+# To use this file:
+#
+# 1 - Run 'cp default.config.dirs bde.config.dirs'
+# 2 - Edit bde.config.dirs.  By default all directories are taken from the bb
+#     branch. To view the dev branch enable (uncomment) all three lines for
+#     the appropriate directory. If it is not present, duplicate and edit an
+#     existing set of lines.
+#      * To take the dev branch, uncomment all three lines   : dev, bb, main 
+#      * To take the bb branch, comment the first line only  : #dev, bb, main 
+#      * To take the main branch, comment the first two lines: #dev, #bb, main 
+#      * To use the default group settings, comment all three: #dev, #bb, #main 
+#     Packages can be individually specialised in the same way if needed.
+# 3 - Run 'ct setcs bde.config.spec'. Please note this is *not the same file*,
+#     but the master file from which this file is included.
+# 4 - In case of problems, repeat steps 1 and 3 (skipping 2).  In case of
+#     serious problems (e.g. the spec files themselves have become invisible)
+#     run 'ct setcs vanilla.spec' to get a temporary dev view for all files.
+#
+# Note 1: To verify the view is working correctly use 'ctls' to determine where
+#         a file is coming from. However, remember that files that have never
+#         been checked out into the dev branch will still come from bb.
+# Note 2: Never comment a lower line in a given set of three if an higher one
+#         is uncommented. This may lead to unpredicatable results. A given set
+#         should always have three lines: comment or uncomment, do not remove.
+# Note 3: THE ORDER OF LINES IS IMPORTANT: NEVER ALTER THE LINE ORDERING
+#
+# Queries: contact Peter Wainwright (pwainwright@bloomberg.net)
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+# Optionally look for a label
+#------------------------------------------------------------------------------
+#
+### Everything
+#element *                                      BLP_LIB_BDE_1.00.0
+#
+### bde group only (copy and edit for other groups)
+#element /bbcm/infrastructure/groups/bde/...    BLP_LIB_BDE_1.00.0
+#
+### Tools release
+#element *                                      BLP_TOOLS_BDE_1.0.0
+
+#------------------------------------------------------------------------------
+# Specific groups - duplicate and (un)comment as needed for each group that
+# needs to be handled specially:
+#------------------------------------------------------------------------------
+
+### bde:
+#element /bbcm/infrastructure/groups/bde/... 	/main/bb/dev/LATEST
+element /bbcm/infrastructure/groups/bde/... 	/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/groups/bde/... 	/main/LATEST -mkbranch bb
+
+### bce:
+#element /bbcm/infrastructure/groups/bce/... 	/main/bb/dev/LATEST
+element /bbcm/infrastructure/groups/bce/... 	/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/groups/bce/... 	/main/LATEST -mkbranch bb
+
+### bte:
+#element /bbcm/infrastructure/groups/bte/... 	/main/bb/dev/LATEST
+element /bbcm/infrastructure/groups/bte/... 	/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/groups/bte/... 	/main/LATEST -mkbranch bb
+
+### bae:
+#element /bbcm/infrastructure/groups/bae/... 	/main/bb/dev/LATEST
+element /bbcm/infrastructure/groups/bae/... 	/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/groups/bae/... 	/main/LATEST -mkbranch bb
+
+### bse:
+#element /bbcm/infrastructure/groups/bse/... 	/main/bb/dev/LATEST
+element /bbcm/infrastructure/groups/bse/... 	/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/groups/bse/... 	/main/LATEST -mkbranch bb
+
+### zde:
+#element /bbcm/infrastructure/groups/zde/... 	/main/bb/dev/LATEST
+element /bbcm/infrastructure/groups/zde/... 	/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/groups/zde/... 	/main/LATEST -mkbranch bb
+
+#------------------------------------------------------------------------------
+# General group defaults (other than those listed above):
+#------------------------------------------------------------------------------
+
+#element /bbcm/infrastructure/groups/...	/main/bb/dev/LATEST
+element /bbcm/infrastructure/groups/...		/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/groups/...		/main/LATEST -mkbranch bb
+
+#------------------------------------------------------------------------------
+# Groups directory:
+#------------------------------------------------------------------------------
+
+#element /bbcm/infrastructure/groups/		/main/bb/dev/LATEST
+element /bbcm/infrastructure/groups/		/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/groups/		/main/LATEST -mkbranch bb
+
+#------------------------------------------------------------------------------
+# Build tools (bin lib & etc):
+#------------------------------------------------------------------------------
+
+#element /bbcm/infrastructure/bin/...		/main/bb/dev/LATEST
+element /bbcm/infrastructure/bin/...		/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/bin/...		/main/LATEST -mkbranch bb
+
+#element /bbcm/infrastructure/lib/...		/main/bb/dev/LATEST
+element /bbcm/infrastructure/lib/...		/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/lib/...		/main/LATEST -mkbranch bb
+
+#element /bbcm/infrastructure/etc/...		/main/bb/dev/LATEST
+element /bbcm/infrastructure/etc/...		/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/etc/...		/main/LATEST -mkbranch bb
+
+#------------------------------------------------------------------------------
+# Infrastructure directory
+#------------------------------------------------------------------------------
+
+#element /bbcm/infrastructure/			/main/bb/dev/LATEST
+element /bbcm/infrastructure/			/main/bb/LATEST -mkbranch dev
+element /bbcm/infrastructure/			/main/LATEST -mkbranch bb

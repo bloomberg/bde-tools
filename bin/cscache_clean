@@ -1,0 +1,57 @@
+#!/bin/sh
+shout() { echo "cscache_clean: $@" >&2; }
+barf() { shout "fatal: $@"; exit 111; }
+safe() { "$@" || barf "cannot $@"; }
+#
+usage () {
+  shout 'usage: cscache_clean bugf|emov|move|stpr|tmp';
+  exit 100;
+}
+[ $# -gt 0 ] || usage;
+dryrun=""
+case "$1" in
+  -n)
+    dryrun=echo
+    shift
+    ;;
+esac
+[ $# -gt 0 ] || usage;
+cachetype="$1"
+shift
+cutoff="`date '+%Y%m%d'`1200"
+# avoid safe because of potential quoting problems and long arg lists
+case "$cachetype" in
+  emov)
+    # Remove headers and symbols from before cutoff today.
+    for subdir in include symbols
+    do
+      dir="/bb/csdata/robo/$cachetype/$subdir"
+      tfile="$dir/.dummy"
+      safe touch -t $cutoff "$tfile"
+      /usr/bin/find $dir -type f \! -newer "$tfile" \
+	-exec $dryrun /usr/bin/rm -f '{}' \; \
+      || barf "cannot rm files under $dir"
+    done
+    ;;
+  bugf|move|stpr)
+    # Remove files older than now.
+    dir="/bb/csdata/robo/$cachetype/include"
+    /usr/bin/find $dir -type f \
+      -exec $dryrun /usr/bin/rm -f '{}' \; \
+    || barf "cannot rm files under $dir"
+    ;;
+  tmp)
+    # Cribbed directly from the C program.
+    /usr/bin/find /bb/csdata/tmp \
+      \( -group general -prune -o -group sibuild \) \
+      \( -name bde_compilecs.pl.\* \
+	 -o -name cscompile.\* \
+	 -o -name objectset.\*.cs \) -prune \
+      -mtime +14 -exec $dryrun /usr/bin/rm -rf '{}' \; \
+    || barf "cannot find /bb/csdata/tmp/..."
+    ;;
+  *)
+    barf "unrecognized cache type: $cachetype"
+    ;;
+esac
+exit 0

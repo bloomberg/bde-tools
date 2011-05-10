@@ -1,0 +1,140 @@
+#!/usr/local/bin/perl -w
+use strict;
+
+#==============================================================================
+
+=head1 NAME
+
+  bulkrename - rename files in bulk using partial filename matches
+
+=head1 SYNOPSIS
+
+  bulkrename foo bar *.[ch]               - names with 'foo' anywhere in them
+  bulkrename ^foo bar *.[ch]              - names starting with 'foo'
+  bulkrename ^ bar *.[ch]                 - add bar to the front of all files
+  bulkrename \.foo$ .bar *                - names ending in '.foo'
+  bulkrename 'foo(?=\.[^.]+$)' bar *.[ch] - names ending with 'foo.<anything>'
+
+  bulkrename -l foo bar *.[ch]            - list what would happen, don't do it
+
+=head1 DESCRIPTION
+
+bulkrename renames a set of specified files by matching part of the original
+name and replacing it to generate the destination name. Each file matched is
+renamed.
+
+The first argument is a regular expression, and should be escaped or
+single-quoted to protect it from shell interpretation if it contains
+metacharacters significant to the shell (e.g. C<$>).
+
+See C<perldoc perlre> for details on how to control what the source regular
+expression (C<foo> in this example) matches. For example only files ending
+in 'foo' plus an extension, rather than files that contain 'foo' anywhere
+inside them use a command such as:
+
+  bulkrename 'foo(?=\.[^.]+$)' bar *.[ch]
+
+(This regular expression means 'replace foo with bar but only if the foo is
+followed by a literal dot, followed by any number of characters (but at least
+one) that is I<not> a literal dot, followed by the end of the filename'.
+See 'zero-width positive lookahead assertion' in C<perldoc perlre> for more
+info.)
+
+=head2 Listing renames without performing them
+
+If the C<--list> or C<-l> option is supplied first on the command line,
+C<bulkrename> will list the actions it would perform but will not rename any
+files.
+
+=head2 Renaming content
+
+C<bulkrename> renames files but does not touch their content. To convert
+internal content use a Perl one-line command such as:
+
+  perl -p -i -e 's/foo/bar/g' *.[ch]
+
+As for C<bulkrename>, the regular expression can be smarter to provide more
+control over what is matched and substituted:
+
+  perl -p -i -e 's/\bfoo\b/bar/g' *.[ch]
+
+=head1 EXIT STATUS
+
+=over 4
+
+=item C<2> if a system error was encountered renaming any file.
+
+=item Otherwise C<1> if no files were renamed.
+
+=item Otherwise C<0> if at least one file was renamed.
+
+=back
+
+=cut
+
+#==============================================================================
+
+MAIN: {
+    @ARGV>2 or die "Usage: $0 <oldpartname> <newpartname> <files>\n";
+
+    my ($testing,$count,$error)=(0,0,0);
+
+    if ($ARGV[0]=~/-l|--list/) {
+	$testing=1; shift @ARGV;
+    }
+
+    my $from=shift @ARGV;
+    my $to=shift @ARGV;
+
+    my @files=@ARGV;
+
+    print "** renaming ",scalar(@files)," files from $from to $to\n";
+
+    foreach (@files) {
+	my $in=$_;
+	my $out=$_; $out=~s/$from/$to/;
+
+	if ($out ne $in) {
+	    $count++;
+	    if ($testing) {
+		print "-- $in would be renamed to $out\n";
+	    } else {
+		if (link $in,$out) {
+		    if (unlink $in) {
+			print "-- $in renamed to $out\n";
+		    } else {
+			$error++;
+			print "!! failed to rename $in to $out: $!\n";
+		    }
+		} else {
+		    $error++;
+		    print "!! failed to rename $in to $out: $!\n";
+		}
+	    }
+	} else {
+	    if ($testing) {
+		print "?? $in would not be renamed\n";
+	    } else {
+		print "!! $in not renamed\n";
+	    }
+	}
+    }
+
+    print "!! $error errors encountered\n" if $error;
+    print "** $count of ".scalar(@files)." files ".($testing?"would be ":"").
+      "renamed\n";
+
+    exit ($error ? 2 : ($count ? 0 : 1));
+}
+
+#==============================================================================
+
+=head1 AUTHOR
+
+Peter Wainwright (pwainwright@bloomberg.net)
+
+=head1 SEE ALSO
+
+perldoc perl
+
+=cut

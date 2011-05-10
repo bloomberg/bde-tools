@@ -1,0 +1,2 @@
+#!/bin/bash
+grep $1 /bbsrc/lroot/*/{index/,}*/{group,package}/*.dep

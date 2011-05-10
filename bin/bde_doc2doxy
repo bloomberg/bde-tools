@@ -1,0 +1,526 @@
+#!/bbs/opt/bin/perl -w
+use strict;
+
+use FindBin qw($Bin);
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use File::Basename;
+use BDE::Component;
+use BDE::FileSystem::MultiFinder;
+use BDE::Util::Nomenclature qw[
+    isPackage isGroup isComponent isIsolatedPackage
+    getPackageGroup getComponentPackage getComponentGroup
+];
+use BDE::FileSystem;
+
+use Symbols qw(
+    EXIT_SUCCESS EXIT_FAILURE
+    DEFAULT_JOBS
+    FILESYSTEM_NO_DEFAULT DEFAULT_FILESYSTEM_ROOT
+);
+use Util::Message qw(fatal error warning alert verbose message debug);
+use BDE::Util::DependencyCache qw(getCachedGroup getCachedPackage);
+use BDE::Build::Invocation qw($FS);
+
+use BDE::Util::Doxygen qw(bde2doxygen);
+
+use Task::Manager;
+use Task::Action;
+
+$|=1;
+
+#==============================================================================
+
+=head1 NAME
+
+bde2doxygen - Translate BDE documentation into Doxygen
+
+=head1 SYNOPSIS
+
+  $ bde2doxygen -o outdir bdes/*.h btemt bce
+
+=head1 DESCRIPTION
+
+This script translates BDE-style documentation into a format that can be
+processed by the Doxygen tool.
+
+=head2 Input Files
+
+Input arguments may be either package groups, packages, components, or raw
+files (presumably containing documentation). For package groups and packages,
+additional group- and package-level documentation is also looked for in
+addition to their component members.
+
+=head2 Filter Mode and Output Directory
+
+If the C<--filter> or C<-F> option is used to put the script into filter mode,
+all processed file content is written to standard output. Generally speaking
+this makes sense only for single files. In this mode the script can be used
+as a Docygen prefilter.
+
+Otherwise, processed files are written out to an output directory specified by
+the invoker. If the C<--output> or C<-o> option is not specified then the
+first argument is taken to be the desired output directory. If the output
+directory is does not exist, is not a directory, or is not writable, the script
+will abort.
+
+=head2 Output File Suffix
+
+If the C<--suffix> or <-s> option is used, the specified suffix is appended
+to each file written out. A literal period is prepended to the suffix if not
+already present, so C<-sext> is the same as C<-s.ext>. If no suffix is
+specified the output filename is the same as the input filename.
+
+=cut
+
+#==============================================================================
+
+sub usage {
+    print STDERR "!! @_\n" if @_;
+
+    my $prog = basename $0;
+
+    print STDERR<<_USAGE_END;
+
+Usage: $prog -h | [-v] [-d] [-s|-j<N>] [-S[.]<ext>] [-w<root>]
+                        [-o]<dir> <dir|pat> [<dir|pat> ...]
+  --help       | -h            display usage information (this text)
+  --debug      | -d            enable debug reporting
+  --filter     | -F            run as filter (not with --output)
+  --jobs       | -j [<jobs>]   build in parallel up to the specified number of
+                               jobs (default: ${\DEFAULT_JOBS} jobs)
+  --output     | -o <dir>      output directory to write file(s) to
+                               (not with --filter)
+  --[no]quick  | -q <filename> name of 'quick links' navigation file (not with
+                               --filter, default: BDEQuicklinks.header)
+  --serial     | -s            serial build (equivalent to -j 1)
+  --suffix     | -S <[.]ext>   optional extension to append to output files
+  --where      | -w <dir>      specify explicit alternate local root
+  --verbose    | -v            enable verbose reporting
+  --exclude    | -x <file>     exclude list file
+  --include    | -i <file>     include list file
+
+
+See 'perldoc $prog' for more information.
+
+_USAGE_END
+}
+
+#------------------------------------------------------------------------------
+
+sub getoptions {
+    my %opts;
+
+    Getopt::Long::Configure("bundling");
+    unless (GetOptions(\%opts, qw[
+        help|h|?
+        debug|d+
+        filter|F
+        jobs|j=i
+        output|o=s
+        quick|q=s
+        noquick
+        suffix|S=s
+        serial
+        verbose|v+
+        exclude|x=s
+        include|i=s
+    ])) {
+        usage(), exit EXIT_FAILURE;
+    }
+
+    # help
+    usage(), exit EXIT_SUCCESS if $opts{help};
+
+    # no arguments
+    usage("nothing to do!"), exit EXIT_FAILURE if @ARGV<1;
+    usage("specify item(s) to process and output directory"), exit EXIT_FAILURE
+      if @ARGV<2 and not $opts{output} and not $opts{filter};
+
+    # filesystem root
+    $opts{where} = DEFAULT_FILESYSTEM_ROOT unless $opts{where};
+
+    # debug mode
+    Util::Message::set_debug($opts{debug} || 0);
+
+    # verbose mode
+    Util::Message::set_verbose($opts{verbose} || 0);
+
+    # output
+    if ($opts{filter} and $opts{output}) {
+        fatal "--filter and --output are mutually exclusive";
+    }
+    if ($opts{filter} and $opts{quick}) {
+        fatal "--filter and --quick are mutually exclusive";
+    }
+    unless ($opts{filter}) {
+        $opts{output} ||= shift @ARGV;
+    }
+
+    # suffix
+    if ($opts{suffix}) {
+        $opts{suffix} = ".".$opts{suffix} unless $opts{suffix}=~/^\./;
+    } else {
+        $opts{suffix}="";
+    }
+
+    # quicklinks file
+    if ($opts{noquick} or $opts{filter}) {
+        $opts{quick}="";
+    } else {
+        $opts{quick} ||= "BDEQuickLinks.header";
+    }
+
+    # jobs
+    $opts{jobs}=DEFAULT_JOBS unless $opts{jobs};
+    $opts{jobs}=1 if $opts{serial};
+
+    return \%opts;
+}
+
+#==============================================================================
+
+# closure for docfiles
+{ my @grouplist;
+  my @packagelist;
+
+  # get the interface file for a component
+  sub get_component_docfiles($$) {
+      my ($root,$component) = @_;
+
+      return if $component eq "bdemf_typelist";
+
+      my $path=$root->getComponentIntfFilename($component);
+      fatal "Component $component not found" unless $path;
+      return $path;
+  }
+
+  # get the interface and doc files for a package
+  sub get_package_docfiles($$) {
+      my ($root,$package) = @_;
+      my @files;
+
+      if (isIsolatedPackage $package) {
+          push @grouplist, $package;
+      } else {
+          push @packagelist, $package;
+      }
+
+      my $pdir = $root->getPackageLocation($package);
+      fatal "Package $package not found" unless $pdir;
+
+      # package docs
+      my $pdoc = "$pdir/doc/$package.txt";
+      if (-r $pdoc) {
+          push @files, $pdoc;
+      } else {
+          warning "No package doc for $package";
+      }
+
+      my $pkg=getCachedPackage($package);
+      if ($pkg->isCompliant) {
+          push @files, map {
+              get_component_docfiles($root,$_);
+          } $pkg->getMembers();
+      }
+
+      return @files;
+  }
+
+    # get list of files for a package group
+    sub get_group_docfiles($$) {
+        my ($root,$group) = @_;
+        my @files;
+
+        push @grouplist, $group;
+
+        my $gdir = $root->getGroupLocation($group);
+        fatal "Group $group not found" unless $gdir;
+
+        # package group docs
+        my $gdoc = "$gdir/doc/$group.txt";
+        if (-r $gdoc) {
+            push @files, $gdoc;
+        } else {
+            warning "No package group doc for $group";
+        }
+
+        my $grp=getCachedGroup($group);
+        push @files, map {
+            get_package_docfiles($root,$_)
+        } $grp->getMembers();
+
+        return @files;
+    }
+
+    #-------------------------------------------------------------------------
+
+    sub include_files($$) {
+        my ($files_ref, $includeListFile) = @_;
+    
+        open(INCLUDE_LIST, $includeListFile) || 
+                warn "cannot open for reading: $includeListFile: $!", return;
+        my @includeFiles = <INCLUDE_LIST>; chomp @includeFiles;
+        close EXCLUDE_LIST;
+
+        my %files_hash = map {$_, 1} @$files_ref;
+
+        foreach my $file (@includeFiles) {
+            if (exists($files_hash{$file})) {
+                debug "exclude_files: included: $file: already there";
+            } else {
+                $files_hash{$file} = 2;
+            }
+        }
+        @$files_ref = keys %files_hash;
+    }
+
+    sub exclude_files($$) {
+        my ($files_ref, $excludeListFile) = @_;
+    
+        open(EXCLUDE_LIST, $excludeListFile) || 
+                warn "cannot open for reading: $excludeListFile: $!", return;
+        my @excludeFiles = <EXCLUDE_LIST>; chomp @excludeFiles;
+        close EXCLUDE_LIST;
+    
+        my %files_hash = map {$_, 1} @$files_ref;
+
+        foreach my $file (@excludeFiles) {
+            if (exists($files_hash{$file})) {
+                delete($files_hash{$file});
+                debug "exclude_files: excluded: $file";
+            } else {
+                debug "exclude_files: not found: $file";
+            }
+        }
+        @$files_ref = keys %files_hash;
+    }
+
+    #-------------------------------------------------------------------------
+
+    sub get_docfiles ($$$@) {
+        my ($root, $excludeListFile, $includeListFile, @args) = @_;
+
+        my @files;
+
+        # generate list of filenames
+        message "* Finding source files in ".join(", ", @args);
+        foreach my $arg (@args) {
+            if (isGroup $arg) {
+                message "* Finding source files in package group $arg";
+                push @files, get_group_docfiles($root,$arg);
+            } elsif (isPackage $arg) {
+                # <<<TODO: won't work for isolated pkgs!
+                message "* Finding source files in package $arg";
+                push @files, get_package_docfiles($root,$arg);
+            } elsif (isComponent $arg)    {
+                message "* Finding source file(s) for component $arg";
+                push @files, get_component_docfiles($root,$arg);
+            } elsif (-f $arg) {
+                push @files,$arg;
+            }
+        }
+
+        include_files(\@files, $includeListFile) if defined($includeListFile);
+        exclude_files(\@files, $excludeListFile) if defined($excludeListFile);
+
+        foreach (sort @files) {
+            debug "processing file $_";
+        }
+
+        return @files;
+    }
+
+    #-------------------------------------------------------------------------
+
+    # if neither array is defined, assume user only asked for a component
+    sub create_quick_links($) {
+        my $hfile = shift;
+
+        message "* Generating quick links navigation";
+
+        open(HEADER, "> $hfile") || fatal "cannot create $hfile: $!";
+        print HEADER<<_HEADER_1_END;
+<html>
+ <head>
+   <title>Bloomberg Development Environment</title>
+   <link href="doxygen.css" rel="stylesheet" type="text/css">
+ </head>
+<body bgcolor="#FFFFFF">
+
+ <div class="qindex">
+_HEADER_1_END
+        my @list;
+        if (@grouplist > 1)  {
+            @list = @grouplist;
+        } elsif (@packagelist > 1)  {
+            @list = @packagelist;
+        }
+        if (@list > 0) {
+            print HEADER "<table border=2 cellspacing=0 cellpadding=0 " .
+                "align=center>\n" .
+                " <tr>\n" .
+                "  <td valign=top align=center>\n" .
+                "   <p align=center><b><i>Quick Links:</i></b></p>\n" .
+                "  </td>\n" .
+                "  <td valign=top align=center>\n" .
+                "   <p align=center>\n";
+            print HEADER
+                join ' | ',map {
+                    my $name = $_; # preserve "normal" name in a temp.
+                    s/_/__/g; # doxygen turns _ into __ so mimic it
+                    qq[<a class="qindex" href="group__${_}.html">$name</a>]
+                } @list;
+            print HEADER
+                "\n" .
+                " </td>\n" .
+                " </tr>\n" .
+                " </table>\n";
+        }
+        print HEADER "\n  </div>\n";
+        close HEADER;
+    }
+} # docfiles closure
+
+#------------------------------------------------------------------------------
+
+sub convertC2CppComments($)
+{
+    my $line = shift;
+    $line =~ s|/\* |// |;
+    $line =~ s| \*/$||;
+    $line =~ s|^( *) \*\*|$1///|;
+    $line =~ s|^( *) \*|$1//|;
+    $line =~ s|^/\*|//|;
+    $line =~ s| *$||;
+    return $line;
+}
+
+sub isZdeFile($) 
+{
+    my $line = shift;
+    return $line =~ m|/zde/|;
+}
+
+#------------------------------------------------------------------------------
+
+sub readFile ($) {
+    my $fname = shift;
+    my @lines;
+
+    fatal "$fname not regular file" if ! -f $fname;
+    open(FH, "< $fname") or fatal "!! cannot open $fname for reading: $!";
+    while (<FH>) {
+        my $line = $_; chomp $line;
+
+        if (isZdeFile($fname)) {
+            $line = convertC2CppComments($line);
+        }
+
+        push @lines, $line;
+    }
+    close(FH);
+    return \@lines;
+}
+
+sub writeFile($$) {
+    my ($fname,$lines) = @_;
+
+    open(FH, "> $fname") or fatal "!! cannot open $fname for writing: $!";
+    print FH "$_\n" foreach @$lines;
+    close(FH);
+}
+
+#------------------------------------------------------------------------------
+
+sub processFile ($$$) {
+    my ($file,$outdir,$suffix)=@_;
+
+    my $basename=basename($file);
+
+    verbose "Processing $basename...";
+
+    my $lines = readFile($file);
+    $lines = bde2doxygen($lines,$basename);
+    if ($lines) {
+        $basename =~ s/\.[a-zA-Z]+$//;        # replace non-*.h extensions
+        if ($outdir) {
+            writeFile("$outdir/$basename.h".$suffix, $lines);
+        } else {
+            print STDOUT map { "$_\n" } @$lines;
+        }
+    } else {
+        warning "No identifying name found in $file, skipped";
+    }
+
+    return 0;
+}
+
+MAIN: {
+    my $opts=getoptions();
+
+    my $root = new BDE::FileSystem($opts->{where});
+    $root->setSearchMode(FILESYSTEM_NO_DEFAULT);
+    BDE::Util::DependencyCache::setFileSystemRoot($root);
+
+    my @inlocs=@ARGV;
+    my $outdir=$opts->{output} || shift(@inlocs);
+
+    unless ($opts->{filter}) {
+        fatal "Directory $opts->{output} does not exist or is not a directory"
+          unless (-d $opts->{output}) or
+                  (-l $opts->{output} and -d readlink($opts->{output}));
+        fatal "Directory $opts->{output} is not writable" unless -w _;
+    }
+
+    my @files;
+    if ($opts->{filter}) {
+        @files = @ARGV;
+    } else {
+        alert "Scanning ",join (', ',@inlocs);
+    my $excludeListFile = $opts->{exclude};
+    my $includeListFile = $opts->{include};
+    
+        # Note: get_docfiles has the side-effect of collecting
+        #       package groups and packages.  It must be called
+        #       before create_BDE_quick_links, which uses these lists.
+        @files = get_docfiles($root,
+                              $excludeListFile,
+                              $includeListFile,
+                              @inlocs);
+    
+        create_quick_links($opts->{output}.$FS.$opts->{quick})
+                                                     if $opts->{quick};
+    
+        fatal "No file files found in ".(join ', ',@inlocs) unless @files;
+    }
+
+    if ($opts->{jobs}==1) {
+        processFile($_,$opts->{output},$opts->{suffix}) foreach sort @files;
+    } else {
+        my $mgr=new Task::Manager("doc-to-doxygen");
+
+        foreach my $file (@files) {
+            $mgr->addAction(new Task::Action ({
+                name   => "doc-to-doxygen($file)",
+                action => \&processFile,
+                args   => [$file,$opts->{output},$opts->{suffix}],
+            }));
+        }
+
+        $mgr->run($opts->{jobs});
+    }
+
+    alert "Processed ".scalar(@files)." files";
+}
+
+#==============================================================================
+
+=head1 SEE ALSO
+
+L<BDE::Util::Doxygen>
+
+=cut

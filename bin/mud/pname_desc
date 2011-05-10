@@ -1,0 +1,5 @@
+#!/bin/sh
+
+xargs cleartool desc -fmt '%n\t%Nd\t%u\t%Nc&&&' | \
+  perl -e '$/="&&&"; while(<>){ chomp; s/\\/\\\\/g; s/\n/\\n/mg; print "$_\n" }'
+

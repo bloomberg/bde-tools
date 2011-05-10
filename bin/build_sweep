@@ -1,0 +1,3 @@
+#!/bin/sh
+
+bde_sweep build "$@"

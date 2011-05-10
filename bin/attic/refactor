@@ -1,0 +1,386 @@
+#!/usr/bin/perl -w
+use strict;
+use Getopt::Long;
+use Text::Wrap qw(wrap);
+$Text::Wrap::columns=80;
+
+require 5.004;
+
+=head1 SYNOPSIS
+
+  refactor -w /bbcm/infrastructure/groups/*/*/*
+
+  refactor -m REFACTORED /bbcm/infrastructure/groups/bde/bdes/bdes_*.cpp
+
+  refactor -d my_interface.h
+
+=head1 DESCRIPTION
+
+This program analyses BDE source code and makes corrective changes to them to
+conform with modern style conventions. It takes one or more header,
+implementation or test driver files as input.
+
+  1. [HCT] Convert standard header includes to remove '.h'
+  2. [H--] Replace 'class ostream' with include-guarded '#include <iodfwd.h>'
+  3. [HC-] Add 'Bloomberg' namespace if not present 
+  4. [--T] Add std:: qualifier to standard types
+  5. [--T] Add 'using' declarations for Bloomerg and std namespaces
+  6. [HCT] Reflow comment blocks to 80 character line width
+
+     H=header file, C=implementation file, T=test driver
+
+Use the -w option to backup and replace the original files. Otherwise, files
+with an additional .out extension are placed next to the originals.
+
+Use the -m option to see what changes have actually been made to the file
+(Note that this will cause reflowed comment blocks to be reflowed differently.)
+
+Use the -d option to enable some additional debugging messages; currently these
+chiefly concern the reflowing of text blocks and are somewhat verbose.
+
+Use the -x option to enable optional extra processing steps.
+
+=cut
+
+#-------------------------------------------------------------------------------
+
+die usage() unless @ARGV;
+
+my %opts;
+
+unless (GetOptions(\%opts,qw[
+    debug
+    write
+    marker=s
+    extras|x=s
+])) {
+    die usage();
+}
+
+my $RAWMARKER = $opts{marker} || "";
+my $MARKER = $RAWMARKER ? " //$RAWMARKER" : "";
+my $INCMARKER = $RAWMARKER ? "\t//$RAWMARKER-include" : "";
+my $STDMARKER = $RAWMARKER ? "/*$RAWMARKER*/ " : "";
+$opts{extras} ||= "";
+
+#-------------------------------------------------------------------------------
+
+# the file types we handle
+use constant FTYPE_HDR => 1;
+use constant FTYPE_CPP => 2;
+use constant FTYPE_TST => 3;
+
+#-------------------------------------------------------------------------------
+
+# headers to fix
+my @headers = qw(
+    iostream exception fstream iomanip ios iosfwd istream locale
+    new ostream sstream stdexcept streambuf typeinfo strstream
+);
+my $header_re = join '|',@headers;
+
+# std namespace types
+my @stdtypes=qw(
+    cout cerr endl ends flush hex setw setfill
+    istream streambuf strstream fstream 
+    ostream& ios&
+    ostream\s+&\w+ ios\s+&\w+
+);
+my $stdtype_re = join '|',@stdtypes;
+
+# header: class ostream replacement
+my $IOSFWD_DEFINE  = '#ifndef INCLUDED_IOSFWD'."\n".
+                     '#include <iosfwd>'."\n".
+                     '#define INCLUDED_IOSFWD'."\n".
+                     '#endif '.$MARKER;
+
+my $BDES_IOSFWD_RE = '#ifndef INCLUDED_BDES_IOSFWD[^\n]*\n'.
+                     '#include [^\n]+\n'.
+                     '#endif[^\n]*';
+
+# Inserting into .h & .cpp files
+my $START_NAMESPACE = "\n\nnamespace BloombergLP {$MARKER\n\n";
+my $END_NAMESPACE = "\n\n}; // close namespace BloombergLP$MARKER\n\n";
+
+# 'using' declarations
+my $USING_NS_BB = "using namespace BloombergLP;$MARKER";
+my $USING_NS_STD = "using namespace std;$MARKER";
+my $USING_NS="$USING_NS_BB\n$USING_NS_STD\n\n";
+
+#-------------------------------------------------------------------------------
+
+sub message ($) {
+    my $message=shift;
+
+    print "    " unless $message=~/^[-!?<>=*]\s/;
+    print $message,"\n";
+
+    return 1;
+}
+
+sub fixed ($) {
+    return message("Fixed: @_");
+}
+
+sub nop ($) {
+    return message("No op: @_");
+}
+
+sub error ($) {
+    return message("ERROR: @_");
+}
+
+sub debug ($) {
+    return message($_[0]) if $opts{debug};
+}
+
+sub extra ($) {
+    return message("Extra: step '$_[0]' enabled");
+}
+
+#-----
+
+sub read_file ($) {
+    my $fname=shift;
+
+    local $/=undef;
+
+    open(FILE, $fname) || die "Failed to open $fname: $!\n";
+    my $content=<FILE>;
+    close FILE || die "Failed to close $fname: $!\n";
+
+    return $content;
+}
+
+sub write_file ($$) {
+    my ($fname,$content)=@_;
+
+    open(FILE, ">$fname") || die "Failed to open $fname for writing: $!\n";
+    print FILE $content;
+    close FILE || die "Failed to close $fname: $!\n";
+
+    return 1;
+}
+
+sub copy_file ($$) {
+    my ($from,$to)=@_;
+
+    write_file($to,read_file($from));
+
+    return 1;
+}
+
+#-------------------------------------------------------------------------------
+
+sub process ($$) {
+    my ($content,$filetype)=@_;
+
+    # all files - upgrade includes (even in comments)
+    if ($content =~ s[#include\s+<($header_re)\.h>]
+                 [#include <$1>$INCMARKER]ogm) {
+        fixed "standard headers -> remove .h";
+    } else {
+        nop "standard headers : no obsolete directives detected";
+    }
+
+    if ($filetype == FTYPE_HDR) {
+        # class ostream
+
+        my $matches=0;
+        while ($content =~ s[^([ \t]*)class\s+ostream\s*;.*$]
+                            [IOSFWD_DEFINE_MARK]om) {
+            my $indent=$1;
+            my $sub=$IOSFWD_DEFINE;
+            $sub =~ s[^#][$indent#]ogm;
+            $content =~ s[IOSFWD_DEFINE_MARK][$sub]ogm;
+
+            fixed "class ostream -> #include <iosfwd.h> (".++$matches.")";
+        }
+        nop "class ostream : no instances detected" unless $matches;
+
+        if ($opts{extras}=~/bdes_iosfwd/) {
+            extra("bdes_iosfwd");
+            if ($content =~ s[$BDES_IOSFWD_RE][$IOSFWD_DEFINE]ogs) {
+                fixed "bdes_iosfwd -> iosfwd";
+            } else {
+                nop "bdes_iosfwd : no instances detected";
+            }
+        }
+
+        my $ns_to_hdr=0;
+        # add namespace start - header version - just before the first class
+        if ($content =~ m[$START_NAMESPACE]) {
+            nop   ".h namespace start : already present";
+        } elsif ($content =~ s[\n+((\s*//\s*[=-]+\n)(\s*//[^\n]\n)+(\s*//\s*[=-]+\n)\n+\s*(?:template|class|struct))\b][$START_NAMESPACE$1]osm) {
+            fixed ".h namespace start -> added before title";
+            $ns_to_hdr=1;
+        } elsif ($content =~ s[\n+(\s*(?:template|class|struct))\b][$START_NAMESPACE$1]osm) {
+            fixed ".h namespace start -> added";
+            $ns_to_hdr=1;
+        } else {
+            error ".h namespace start : unable to detect code in header";
+        }
+
+        if ($ns_to_hdr) {
+            # add namespace end - header version - just before the last #endif
+            if ($content =~ m[$END_NAMESPACE]) {
+                nop   ".h namespace end : already present";
+            } elsif ($content =~ s[^(.*[^\n])\n+#endif][$1$END_NAMESPACE#endif]os) {
+                fixed ".h namespace end -> added";
+            } else {
+                error ".h namespace end : unable to detect code";
+            }
+        } else {
+            nop ".h namespace end : start unavailable";
+        }
+    }
+
+    if ($filetype == FTYPE_CPP) {
+        my $ns_to_cpp=0;
+        # add namespace start - implementation version - just before first code
+        if ($content =~ m[$START_NAMESPACE]) {
+            nop   ".cpp namespace start : already present";
+        } elsif ($content =~ s[\n+([ \t]*\w)][$START_NAMESPACE$1]os) {
+            fixed ".cpp namespace start -> added";
+            $ns_to_cpp=1;
+        } elsif ($content =~ s[\n+([ \t]*\w)][$START_NAMESPACE$1]os) {
+            fixed ".cpp namespace start -> added";
+            $ns_to_cpp=1;
+        } else {
+            error ".cpp namespace start : unable to detect code in header";
+        }
+
+        if ($ns_to_cpp) {
+            # add namespace end - implementation version - just before closing comments
+            if ($content =~ m[$END_NAMESPACE]) {
+                nop   ".cpp namespace end : already present";
+            } elsif ($content =~ s[\n+(((//[^\n]*)?\n)*)$][$END_NAMESPACE$1]os) {
+                fixed ".cpp namespace end -> added";
+            } else {
+                error ".cpp namespace end : unable to detect code";
+            }
+        } else {
+            nop ".cpp namespace end : start unavailable";
+        }
+    }
+
+    if ($filetype == FTYPE_HDR or $filetype == FTYPE_CPP) {
+        # 'std' namespace fix
+        if ($content =~ s[\b($stdtype_re)([,; \n])]
+                         [${STDMARKER}std::$1$2]ogm) {
+            fixed "standard types -> std namespace";
+
+            # just in case
+            $content =~ s[std::std::][std::]ogm;
+        } else {
+            nop   "standard types: no unqualified types detected";
+        }
+    }
+
+    if ($filetype == FTYPE_TST) {
+        # 1 - strip out any existing 'std':
+        $content =~ s{^using namespace std;[^\n]*\n}{}ogm;
+
+        # 2 - add 'using' declarations: put above first instance of
+        # two contiguous comment lines
+        if ($content =~ m[$USING_NS_BB] and $content =~ m[$USING_NS_STD]) {
+            nop   "add 'using' : declarations already present";
+        } elsif ($content =~ s[(\n//[^\n]+\n//)]
+                         [$USING_NS$1]os) {
+            fixed "add 'using' -> declarations added";
+        } else {
+            error "add 'using' : unable to detect contiguous comment block";
+        }
+    }
+
+    if ($opts{extras}=~/reflow/) {
+        extra("reflow");
+
+        # all files - fix long comment lines
+        my @blocks=();
+        my $block=0;
+        # 1 - extract all paragraph blocks (that is '// foo' but not '//..'
+        #     or '//   ' etc. An optional //@ line may start the block.
+        while ($content =~ s[(\n(?://(?:\@| )\w[^\n]+\n)(?:// \w[^\n]+\n)*)]
+                              ["REFACTOR_".$block++."_BLOCK\n"]ose) {
+            push @blocks,$1;
+            debug("GOT BLOCK $block >>>$1<<<");
+        }
+
+        if (@blocks) {
+
+            # 2 - reflow blocks
+            foreach (@blocks) {
+                debug("Before:\n>>>$_<<<");
+                s[\n// ][ ]osg;
+                my $labelled= s[^\n//@][@]o;
+                # $_ = "\n".wrap("//$RAWMARKER".($labelled?'':' '), "//$RAWMARKER ",$_);
+
+                $_ = "\n".wrap("//$RAWMARKER".($labelled?'':''), "//$RAWMARKER ",$_);
+
+                debug("Reflowed:\n>>>$_<<<");
+            }
+
+            # 3 - put them back
+            foreach my $block (0..$#blocks) {
+                my $marker="REFACTOR_${block}_BLOCK";
+                my $text=$blocks[$block];
+                debug("Replacing $marker >>>$text<<<");
+                $content =~ s/$marker\n/$text/s; #no 'o' flag here!
+            }
+
+            fixed "reflow -> ".scalar(@blocks)." blocks reflowed";
+        } else {
+            nop "reflow : no comment blocks found";
+        }
+    }
+
+    return $content;
+}
+
+#-------------------------------------------------------------------------------
+
+sub usage {
+    $0 =~ m[([^/]+)$];
+
+    return "Usage: $1 [-w] [-m=<marker>] <file.[cpp|t.cpp|h]> [<file> ...]\n\n"
+    . "  -d           debug mode\n"
+    . "  -m <marker>  insert marker text comments on modified lines\n"
+    . "  -x <extras>  enable extra (comma-separated) processing steps:\n"
+    . "                 'bdes_iosfwd' - rewrite includes to <iosfwd>\n"
+    . "                 'reflow'      - reflow comment lines <80 characters\n"
+    . "  -w           write mode - backup original files and overwrite\n"
+    . "\n"
+    . "By default $1 creates .out files adjacent to the originals,\n"
+    . "for checking purposes. To actually replace the original files, use\n"
+    . "-w. See 'perldoc $1' or view the source for additional notes.\n\n";
+}
+
+#-------------------------------------------------------------------------------
+
+MAIN: {
+    foreach my $fname (<@ARGV>) {
+        next unless $fname =~ /\.((t\.)?cpp|h)$/;
+
+        my $filetype = ($1 eq 'h')?FTYPE_HDR:(($1 eq 't.cpp')?FTYPE_TST:FTYPE_CPP);
+        message "* Processing $fname type $filetype";
+
+        my $content=read_file($fname);
+        message length($content)." characters in file";
+
+        $content=process($content,$filetype);
+        message length($content)." characters after processing";
+
+        if ($opts{write}) {
+            if (copy_file($fname,"$fname.bak")) {
+                write_file($fname,$content);
+            } else {
+                die "Failed to backup $fname: $!\n";
+            }
+        } else {
+            write_file("$fname.out",$content);
+        }
+    }
+}
+
+exit 0;

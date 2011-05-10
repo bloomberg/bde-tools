@@ -1,0 +1,31 @@
+#!/bbs/opt/bin/perl -w
+
+use warnings;
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Change::Util::InterfaceSCM  qw/pathExistsSCM/;
+
+my @lroot = @ARGV or die usage();
+
+if (pathExistsSCM(@lroot)) {
+    warn "Paths exist\n";
+    exit 0;
+} else {
+    warn "Paths do not exist\n";
+    exit 1;
+}
+
+sub usage {
+    return <<EOWARN;
+$0 paths...
+
+Prints to stderr if all paths exists or not in the SCM repository. Exits with 0
+if it exists, 1 otherwise.
+EOWARN
+}
+

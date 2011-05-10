@@ -1,0 +1,730 @@
+SCM Overview
+============
+20061227
+William Baxter
+wbaxter1@bloomberg.net
+
+
+Contents
+========
+Introduction
+
+Architecture
+  Overview
+  Hardware
+  Directory structure
+  Apache server
+  CSDB Access
+  PRLS Access
+  SCM queue
+  SVN repository
+  Web interface
+  Cached data
+
+Queue Operation
+  The prequeued server
+  The testd server
+  The commitd server
+  The sweepd server
+
+Administration
+  Daemontools services
+  Error notification
+  Known problems
+  Master failover:
+    Console room instructions
+    Admin programs:
+      scm_master, scm_status, scm_start, scm_stop, scm1_down, scm2_down
+    Master discovery
+    Status web page
+
+*Troubleshooting
+  Failed commits
+  Emergency failover
+
+*Cut Corners
+  An endless list.
+
+*Future Developments
+  Split change sets
+  Branching
+  Declared dependencies
+  Compile testing from testd
+  Continuous build
+  Replace csdbsrv.tsk
+  Replace m_csproxy.tsk
+  UUID translation
+
+*Implementation
+  API
+  Code structure
+  Basic queue facilities
+
+
+Introduction
+============
+The SCM (Source Control Management) system supports the suite of cstools that
+developers use contribute source code at Bloomberg (cscheckin, cscheckout,
+csrecover, etc) via HTTP requests to the SCM hosts.  The system runs on a pair
+of Sun/Solaris hosts that share SRDF storage mounted on /bb/csdata/scm.  These
+hosts operate in a symmetric master/backup configuration.  Each server is
+equally capable of operating as the master host, and at any one time one is
+master and the other backup.  
+
+An Apache2 server provides the HTTP interface.  A set of loosely-coupled
+daemons manages the software staging queue.  A Subversion repository provides
+the underlying versioned source-code storage.  Access to production services
+operates via an Informix DB client and a BAS tunnel to production.  All custom
+software resides on the SRDF partition and is replicated synchronously to the
+two hosts. 
+
+The master server runs two independent instances of the SCM servers, one as the
+production instance, the other as a staging and test area.  The two instances
+share no code on the SCM system proper, although they use the same
+production-system resources (CSDB and BAS server).
+
+The robocop team sweeps source code into /bbsrc/checkin to feed their software
+build using the command-line program robo_sweep.  This program also works via
+the HTTP interface.  A web interface provides reporting on queue status for
+developers, robocop, and SCM administrators.
+
+The cstools programs comprise the developer interface to the SCM.  One of the
+primary yet easily overlooked features of the SCM system is that this interface
+remains almost entirely unchanged by the transition to the SCM.
+
+The most visible changes to the developer interface relax constraints imposed
+in the pre-SCM system by use of a single directory /bbsrc/checkin as the queue.
+The SCM system permits a developer to check in a single file under two
+different move types in parallel.  Additionally, it permits developers to check
+in the same file under the same move type multiple times within a single
+software build cycle.
+
+
+Architecture
+============
+
+Overview
+--------
+The cstools suite provides the developer interface to the SCM system.  An
+Apache2 server handles all requests, acting on some directly and passing others
+to other servers via reverse-proxy rules.   The staging queue consists of a set
+of loosely-coupled servers, each handling a single stage triggering the
+execution of the next stage as its final act.  This design permits an
+administrator to shut down, upgrade, or restart one stage independent of the
+others.  It also facilitates the addition of new stages to the queue.
+
+Ownership is split across two accounts.  The rpbuild account owns all custom
+SCM software.  The cstools user owns the source code in the repository.  All of
+the SCM servers run as cstools.  The reposito user is not used at present.  
+
+The SCM system runs two independent instances of the local server software.
+The instance rooted at /bb/csdata/scm/scm1_njsbvn1 provides production
+services.  The instance rooted at /bb/csdata/scm/scm2_njsbvn1 serves as a
+staging and test server.  Software deployments go first to the scm2 instance
+for testing and then to the scm1 instance for production.  In what follows the
+installation root will be referred to as ROOT.
+
+The the string "njsbvn1" appears in each of the root paths for historical
+reasons.  This does not indicate that the instance runs only on the njsbvn1
+host.  The paths are identical on both njsbvn1 and nysbvn1.
+
+A job run once per minute from the cstools crontab file on each SCM host starts
+services if they are not already running.  If the host is not master, the cron
+job does nothing.  If a machine reboots or disk swing occurs, the cron job will
+restart services in at most one minute.  The same cron jobs starts both
+instances of the SCM servers.
+
+All SCM servers run under svscan from the daemontools package.  The svscan
+directory is ROOT/service.  Following normal daemontools convention, this
+directory holds symlinks to a different directory that contains the underlying
+service installation, namely ROOT/etc/service.  Logs appear in
+ROOT/service/<server>/log/main/.  All carry standard multilog timestamps.
+Logging configuration should save at least one week's worth of material.  The
+parameters available to adjust the amount are "n" (number of files to save) and
+"s" (size of files to save).  Services were initially configured to save 100
+files of 1MB each.  If you increase the verbosity of logs, adjust these
+parameters upward to compensate for the increased data flux.
+
+Individual servers use one of three methods to listen for requests: the apache
+server binds TCP/IP ports itself.  Other TCP/IP servers run under tcpserver
+from the ucspi-tcp package.  Queue servers run under trigger-listen from the
+trigger package.  Daemons running under trigger-listen are configured to
+execute periodically even in the absence of an external trigger pull.
+
+Hardware
+--------
+Two Solaris 10 servers power SCM: njsbvn1 and nysbvn1.  These share SRDF
+storage mounted on /bb/csdata/scm as rpbuild.  This storage holds all checkin-
+and repository-related data.  The storage is mounted on at most one machine at
+a time.  Every two weeks on Sunday at noon the console room swings the storage
+from one machine to the other.  This downtime is the subject of a
+regularly-scheduled NLRT, posted on Friday preceding the swing.  The details of
+swing are the subject of another document.  The two machines are equivalent and
+each is fully capable of acting as the master SCM system provided it mounts the
+storage disk.
+
+
+The directory structure
+-----------------------
+The ROOT directory resides on SRDF storage mounted on one or the other of
+njsbvn1 and nysbvn1.  The mount point is /bb/csdata/scm, which is owned by
+rpbuild:rpbuild.  FIXME: Tassilo: selectable-version require updates to paths.
+
+  ROOT/bin	  SCM instance-specific executables.  Owned by rpbuild:rpbuild.
+      /lib/perl	  Perl modules that implement SCM functionality.  Owned by rpbuild:rpbuild.
+      /data	  The queue and repository.  Owned by cstools:cstools.
+      /apache2	  The apache installation root.  Owned by rpbuild:rpbuild,
+		    except log/ owned by cstools:cstools.
+
+Within the data directory there are subdirectories
+
+      /repository   The SVN respository, normally a link to a dated snapshot directory
+      /queue	    The SCM queue.  Subdirectories hold staged job files.
+	  /tmp		What it says
+	  /prequeue	Destination for enqueue operation.  Input for prequeued.
+	  /queue	Destination for prequeued.  Source for testd.
+	  /pending	Destination for testd.  Source for commitd.
+	  /precommit	Intermediate staging area for commitd.
+	  /committed	Destination for commitd.  Source for sweepd.
+	  /swept	Destination for sweepd.
+	  /abandon	Job files abandoned by early rollback.
+	  /fail		Job files for which processing failed.
+	  /data		Change set bundle tree.
+          /compile      Pessimistic compile test related data
+          /compile/fail Contains copies of job files that failed compile testing
+          /compile/ok   Contains copies of job files that passed their compile test
+          /compile/logs Contains log files for each compile test
+      /uuid2unix    The translation cache.
+      /unix2uuid    The translation cache.
+      /rev2csid	    The translation cache.
+      /csid2rev	    The translation cache.
+
+Apache server
+-------------
+An Apache2 server provides the public interface for the SCM system.  HTTP
+requests are handled by a combination of CGI scripts and proxy to other servers
+listening on loopback addresses.  These proxy services provide access to the
+CSDB (change set database), to the BAS tunnel to production, and to the
+UUID-to-username translation facility.
+
+The apache server is installed under ROOT/apache2.  It writes separate logs for
+access, error, and URL rewrites in ROOT/apache2/logs/.  The two apache
+instances listen on allocated ports 28270 (scm1) and 28275 (scm2).  Reverse
+proxy rules forward URLs with certain prefixes to proxy servers running on
+loopback addresses:
+
+  Bas  -> 28271 (scm1) or 28276 (scm2)
+  Csq  -> 28272 (scm1) or 28277 (scm2)
+  Csdb -> 28273 (scm1) or 28278 (scm2)
+
+Csdb has been obsoleted by Csq and all change set database requests are now
+handled by csqd instead of csdbsrv.tsk.
+
+Ports 28270 and 28275 are registered for use in the public interface.  Per the
+SA group the SCM system can make free use of high ports on the loopback
+interface.  FIXME: WEB: find drqs.
+
+Two cgi scripts, scm and info, handle all non-proxy requests.  These are static
+scripts that pass control on to the appropriate Perl module to satisfy a
+request.  The first handles requests in support of checkin tools.  The latter
+handles requests in support of reporting functionality.
+
+CSDB Access
+-----------
+
+The csqd service runs under tcpserver on the loopback interface on ports 
+28272 (scm1) and 28277 (scm2). Each connection executes bin/csq which parses
+a prlspd-style HTTP request, calls underlying methods of SCB::CSDB::* and
+returns the results as HTTP response. SCM::CSDB uses vanilla DBI to access
+the Informix database. This makes the SCM side independent of stored 
+procedures. It also turned out to be a lot faster.
+
+The old csdbsrv service runs under tcpserver on the loopback interface on ports
+28273 (scm1) and 28278 (scm2). For now, it is kept around as a backup mechanism
+if something serious should turn out to be broken in csqd.
+
+The Apache server uses reverse proxy rules to forward CGI requests beginning
+with Csq to the csqd running in the same server instance.  Apache rewrites
+headers in passing, something perfectly legal by CGI spec and apparently not
+possible to turn off. Csqd is relying on a patched HTTP::Message::parse() method
+to handle these rewritten requests. In particular, multi-value fields (where
+the values are separated by ', ') are otherwise not properly handled by libwww.
+
+The prlspd-style of HTTP request does not use a generic mechanism such as POST
+parameters to pass information to the server.  Instead it places information
+into HTTP request headers, and expects to find result information in the
+response headers.  Over time we will convert these services and their clients
+to a simpler and more standard request/response format. For the time being, 
+some methods of libwww are redefined to handle very large HTTP request headers.
+All the modifications to libwww can be found in Production::Services::LWPHack.
+
+PRLS Access
+-----------
+The csproxy service runs under tcpserver on the loopback interface on ports
+28271 (scm1) and 28276 (scm2).  Each connection executes ROOT/bin/bas.  This
+program first invokes the m_csproxy.tsk program with a standard request to
+discover the correct server to use.  It then wraps the HTTP request as an XML
+request as required by BAS and invokes the BAS proxy again to convey the
+request.  A success response is passed directly back to the client.  An error
+response is reformatted in the prlspd style before passing to the client.
+
+This system is extremely slow.  It requires two executions of an 80MB
+executable per request.  At present we do not have any other means of access to
+the PRLS services in production.  Splitting the discovery request from the
+service request potentially saves half the current effort.  One way is to
+create a forking client that discovers the correct server upon startup and then
+forks children to handle individual requests.  This requires the client to
+handle binding and listening on the loopback address internally.  Not much is
+saved by forking, because IIRC Solaris fork still does a full process copy
+before executing the child.  Another approach is to create a separate process
+that writes the current server name to a file, and read this file per request.
+This eliminates the overhead but leaves the current server otherwise intact.
+
+The SCM Queue
+-------------
+The SCM Queue consists of four stages, each with its own controlling daemon:
+prequeued, testd, commitd, and sweepd.  An enqueued submission is represented
+by a job file in a set of directories that correspond to the stages of the
+queue.  The job file contains a serialized change set plus auxiliary
+information.  The job file name has the format
+FIXME: WEB: check.
+
+  CSID_ENQUEUETIME_HOST_PID_STATUS_REVISION_??
+
+Each daemon works from a single input directory under ROOT/data/queue.  When
+processing is complete for that stage, the daemon moves the file to input
+directory for another stage.  The staging directories in ROOT/data/queue and
+the daemons using them for input are:
+
+  prequeue    prequeued
+  test	      testd
+  precommit   precommitd
+  pending     commitd
+  committed   sweepd
+  swept
+
+precommitd is a special case as it is, as of now, running parallel to commitd.
+testd therefore duplicates each job file and places a copy in precommit/.
+
+The queue recovers automatically from unanticipated failure (e.g. machine
+crash) without administrative intervention.  Each server runs under
+trigger-listen and listens to the trigger named
+ROOT/service/<servername>/trigger.  Each server pulls the trigger for the next
+stage as its dying act.
+
+The commitd daemon makes use of an inprogress directory while considering a job
+for commit to the repository.  Several directories hold completed jobs:
+
+  fail		Jobs failing to commit to the SVN repository
+  abandoned	Jobs rolled back before SVN commit
+  swept		Jobs swept into RCS by robocop
+
+Change sets are stored in bundles, tarballs that contain the source files
+submitted by the developer and stored along canonical path within a top-level
+"root" directory, and a top-level file "meta" that contains the serialized
+change set object.  These bundles are stored in ROOT/data/queue/data/%/CSID
+(hashed subdirs of data).  The commitd daemon uses the bundle to obtain content
+for commit to the SVN repository.  Programs that fetch enqueued content pull
+this from the bundles.  Once a bundle is committed to the SVN repository it is
+expendable.
+
+Note: This is not yet strictly true. In practice, the bundles are still needed
+as they are currently the only source of canonicalized paths. The change set 
+database contains robo-style paths which cannot be canonicalized on the SCM
+side.
+
+SVN repository
+--------------
+The source code repository is a Subversion repository using FSFS, rooted in
+ROOT/data/repository.  The Perl module Repository.pm provides an interface that
+works in terms of CSID rather than Subversion revision number.  Move types are
+translated to branch names early (FIXME: Alan: True now?) and thereafter branch
+names are used to identify the target of a submission.
+
+The access modules make extensive use of the native SVN bindings, and support
+operations required for SCM operation: calculation of the current version of a
+file, the previous version, the version associated with or prior to a CSID.
+
+This module will soon support a branching operation that promotes the current
+bug fix branch to emov, promots the current dev branch to bug fix, and copies
+the current dev branch to the new dev branch.  Because of early binding of move
+type to branch, moves will follow this branch operation, except for the final
+copy.  Pending submissions should be split to apply to both the new bug fix
+mainline and the new dev branch, with notification to the submitters.  Any
+lingering emov belongs to a branch that is no longer active.  This should also
+trigger notification.
+
+Web interface support
+---------------------
+Support for HTTP interaction uses a static CGI script that dispatches to a
+separate module per request.  This approach makes adding new requests, a
+frequent operation to date, extremely easy to accommodate.  It requires only
+the addition of a new handler module.  Aggressive consolidation of common code
+elements into utility modules for use in the handler modules should accompany
+this approach.  This is mostly the case.  In particular, the info CGI script
+is modelled after that so adding a new request is as simple as dropping a Perl
+module of the same name into ROOT/SCM/Info/.
+
+Csqd is modularized in the same fashion: Adding a new request is as simple as
+dropping a perl module of the same name into ROOT/SCM/CSDB/Handlers/.
+
+It is not yet true for the scm CGI script. This is unfortunate as the
+functionality of SCM::Server is used frequently but its monolithical design
+has made it grow past the 70k bytes boundary. The problem with excessive
+compile time has partly been remedied by converting all instances of 'use'
+to 'require' so that module dependencies are resolved at runtime. This was done
+as a short-term solution. The proper approch will be a refactoring of
+ROOT/SCM/Server.pm into SCM/Server/*.pm.
+
+The web interface is divided into two functional branches, one for reporting,
+the other for queue access.  Code to support reporting resides under
+ROOT/SCM/Info/, while code for queue access resides under ROOT/SCM/Queue/.
+
+Cached data
+-----------
+Translation between unix login and UUID requires connecting to a production DB
+via the bas tunnel.  These are expensive operations to obtain what amounts to
+static data.  Therefore the system caches results in a CDB file for fast
+lookup.  Results looked up from production are written to the file system and
+periodically incorporated into the CDB.  When a cache miss occurs, then the
+code looks first in the file system.  If that probe also misses, then it
+performs the lookup via production.  The database was seeded with the set of
+existing users, and grows to include new users as they perform checkin
+operations.
+
+Similarly, translation between CSID and revision requires crawling the revision
+list in the SVN repository.  This data is also static, and therefore amenable
+to caching.  Cache maintenance resembles the above, with fallback to a probe of
+the repository in the case of cache miss.
+
+Miscellaneous services
+----------------------
+Due to the lack of proper branching, some operations have become surprisingly
+complex, in particular the backend of cscheckout. In order to avoid checking out
+a too recent version of a file (namely when the FindInc plugin is used with an 
+emov to prod), the SCM system has to keep track of so called cutoff CSIDs which 
+roughly signify when branch promotion happened in roboland.
+
+Updating this cutoff CSID happens in two places and two different times: One is
+an scm request triggered from the robocop script backlibs_bbsrc, run every
+Thursday night. The other one is triggered from a cronjob on the SCM side. The
+cronjob pulls the trigger of the laymark service every day at 11pm. A new
+cutoff CSID is only recorded when this day happens to be a beta-day (usually on
+a Tuesday, therefore).
+
+Queue Operation
+===============
+A cscheckin call posts a change set bundle to the SCM as soon as it has
+constructed it.  This is stored in ROOT/data/queue/data/%/CSID.  After running
+tests on the submission, cscheckin completes its operation by enqueueing the
+change set on the SCM system by writing a job file into the queue/prequeue
+directory and pulling the prequeued trigger.  Each stage in the queue acts in
+turn on its input directory as described below, passing control to the next
+stage by moving files to the input directory of the next stage and pulling the
+trigger for that stage.
+
+This design permits stopping and starting individual stages in the queue
+without any effect directly visible to developers.  In fact, only the httpd and
+proxy servers must run in order to support checkin operations; checkins can
+continue even when all queue stage services are down.  Additionally, this
+design should make it relatively easy to inject a new queue stage at any point.
+
+The prequeued server
+--------------------
+The prequeued daemon handles the initial SCM submission in the prequeue
+subdirectory.  It calculates overlap with items already in the queue but not
+yet committed and creates the corresponding contingent dependencies in the
+CSDB.  It will handle declared dependencies in similar fashion.  As it
+processes jobs it moves them to the test directory.  When it has finished a
+pass over its source directory it pulls the testd trigger.
+
+Dependency calculation takes into account the status of files, i.e. UNCHANGED
+files will not lead to a contingent dependencies. As contingent dependencies
+only ensure correct ordering of change set committal to subversion, they will
+be calculated over enqueued change sets as opposed to staged ones.
+
+Likewise, UNCHANGED files are skipped when a rollback change set is processed.
+
+The processing of rollback change sets depends on whether the change set to 
+be rolledback has already been committed to subversion or whether it still
+sits in the commitd queue: In the latter case, the corresponding jobfile
+is merely moved to abandon/.
+
+In the former case, prequeued queries the SVN repository to retrieve the prior
+of each file in the original change set. The rollback change set which contains
+no files initially, will be 'upgraded' and the prior version of the files are
+added to the bundle and the change set meta information stored inside the 
+job file. A thusly generated job file is then moved to testd/. As of now, no
+contingency calculation happens on rollback change sets.
+
+The testd server
+----------------
+The testd daemon handles compile tests in queue context.  It processes files
+from the test directory.  At present this daemon does nothing but act as a
+placeholder for future testing facilities.  It will make calls to build-farm
+machines to conduct file tests in a context consisting of a current repository
+snapshot augmented by material in the queue.  As it processes jobs it moves
+them to the pending directory.  When it completes a pass over its input
+directory it pulls the commitd trigger.
+
+The commitd server
+------------------
+The commitd daemon handles commit of change sets to the Subversion repository.
+It reads jobs from the pending directory and determines which is the next
+available for commit.  When it commits a job it moves that job to the committed
+directory.  When it completes a pass over the its input directory it pulls the
+sweepd trigger.  FIXME: Tassilo: Should it pull the sweepd trigger for each
+commit?
+
+FIXME: Alan: Repository interaction.
+
+The sweepd server
+-----------------
+The sweepd daemon calculates the material currently available for sweep.  It
+moves material no longer available for sweep to the done directory.  (FIXME:
+Tassilo: Eclipsed material moved to swept/ is not marked into status C.)
+
+The algorithm for selecting materal available for sweep is documented in detail
+in SCM/Queue/Sweep.pm.  There are three modes of operation:
+  1. Run as a service and assemble file lists for the StagedBy interface.
+  2. Run on demand and produce a bundle of files available for sweep.
+  3. Run on demand and mark files into status P if available for sweep.
+
+The StagedBy interface uses Mode 1, and is also responsible for moving
+non-contributing job files into the swept/ directory.  The old variant of
+robo_sweep uses Mode 2 to pull from SCM the set of files available for sweep
+within a particular move type.  The "continuous build" process uses this mode.
+The current production sweep employs robo_mark to set change set status to P
+using Mode 3.  After that a robo_sweep call simply takes all pending material
+with status P.
+
+
+Administration
+==============
+
+Daemontools services
+--------------------
+All servers run under svscan from the daemontools package.  To test whether
+main services or log services are up, run (in the ROOT directory)
+
+  bin/svstat service/*
+  bin/svstat service/*/log
+
+To bring a service down, run
+  bin/svc -d service/<servicename>
+
+To bring a service up, run
+  bin/svc -u service/<servicename>
+
+Although use of wildcards is possible with svc, it requires caution to avoid
+bringing down or up services that should remain in their current state.  Naming
+each target services explicitly is generally safer.  For similar reasons the
+two instances of SCM on the machine have separate ROOT directories, and
+therefore use independent svscan instances.  This makes it much more difficult
+to affect services in one instance when attempting to work with the other.
+
+Logs for each service appear in service/<servicename>/log/main/ and follow
+standard multilog conventions.  Old log files are named for the time that they
+were completed.  The current log file is called "current".  Anything written to
+standard error by the service ends up in these logs (apache is exceptional and
+does its own log handling).  These logs are written in accordance with standard
+multilog convention to place timestamps at the start of each line.  As written,
+the timestamps are not particularly reader-friendly.  To translate them into
+human-readable local times, pipe the log file through bin/tai64nlocal, as in:
+
+  bin/tai64nlocal < service/<servicename>/log/main/current | less
+
+Terse but complete documentation daemontools is available at
+http://cr.yp.to/daemontools.html.
+
+Error notification
+------------------
+Each queue stage is designed to recover gracefully from temporary errors, and
+consequently most errors in queue processing are self-correcting.  Some cause
+individual servers to fail, in which case they restart and carry out the action
+in the next attempt.  Failure to commit a change set triggers notification via
+MSG to the SCM administrators, presently Alan Grow, and Tassilo von Parseval.
+
+Email is unavailable on SCM as a notification mechanism, however, we do have
+the ability to send a MSG send via the bas tunnel to production.  Unexpected
+failure to commit to the Subversion repository produces error notification to
+the SCM administrators via MSG.  In future other error conditions should also
+produce MSG notification, including repeated failures of a particular queue
+stage.  FIXME: Tassilo: Where does this stand?
+
+We do not fully utilize console room monitoring of act.log at present.  In
+future monitoring services will write act.log notes indicating conditions that
+require administrator attention.  The console room will notify administrators
+as appropriate.  (FIXME: Alan and Tassilo: When you are ready.)
+
+
+Known problems
+--------------
+Core dumps, and no ulimits:
+
+The csdbsrv.tsk program handles HTTP requests formatted per the old prlspd
+server.  Rather than following standard practice and putting information into
+CGI parameters, this format passes all information in headers.  This causes at
+least three problems.  First, headers are limited in number and size.  Second,
+Apache rewrites headers when acting as proxy, and there is no way to disable
+this behavior (which is perfectly standard).  Third, header parsing is
+significantly more complex than POST parameter parsing.  Consequently, the
+csdbsrv.tsk program parser sometimes fails on a message.  When this occurs, it
+is typically a permanent error, but not easily identifiable as such.  Therefore
+the request is retried repeatedly.  Parsing failure like this ordinarily
+results in a core dump, producing an unreadable, unwritable file on the
+/bb/cores/ partition.
+
+These core files are of nearly no use to us.  Therefore we put into place a
+ulimit of 0 on core size.  This should prevent the production of any core size.
+Unfortunately the machine configuration ignores this limit, and produces the
+core file.  (Lou Iacapone also confirmed this).
+
+The console room threshold for reporting limited space on /bb/cores is 93%
+full.  We have requested notification when it reaches 60% full.  In response
+they said that they notify when it is 93% full.  We should add our own
+monitoring and send a MSG when /bb/cores use crosses some lower threshold.  To
+date we have received two WPs because the core partition filled up, despite the
+fact that this has zero direct client impact.  Early warning is key.  The
+aforementioned notifications for repeated failures should also bring such
+events to light.
+
+Duplicate BREG requests:
+
+When BREG creation requrests arrive, they often do so repeatedly for the same
+switch.  This appears to be a problem on the PRQS side, but Anton and Shubha
+asked for help in solving this problem at some point.  I believe that they
+ultimately solved the problem on the client side, and therefore nothing remains
+to do on the SCM side.  FIXME: Dig up details.
+
+Duplicate NEW requests:
+
+The test for existence of a file relies on the RCS repository under /bbsrc.
+Therefore when a new file is submitted but not yet swept into RCS by robocop,
+a second submission of the same file counts also considers the file as new.
+This constitutes one simple way in which a file marked NEW may correspond to an
+extant path at the commit stage.  In order to accommodate this behavior we made
+the repository code accept a file marked NEW as if it were marked CHANGED when
+the file already exists in the repository.  This is a horrible hack and should
+die as quickly as possible.  Note that the file marked incorrectly as NEW may
+be either CHANGED or UNCHANGED.
+
+CHANGED submitted as UNCHANGED:
+
+The test for changedness of a file uses comparison with the current RCS
+version.  If a file is submitted CHANGED but not yet swept, then a reversion of
+the same file to its previous content occurs before the first is swept, then
+the comparison with RCS determines that the second submission is UNCHANGED.
+Recent updates to the handling of UNCHANGED cause this situation to leave the
+earlier changes in RCS.
+
+A file marked UNCHANGED now conveys only a rebuild request and no content.
+Such files are committed neither to SCM nor to RCS.  Instead, their presence
+causes checkin.robocop to delete the corresponding object file, causing a
+recompile.  Thus in the above scenario, the UNCHANGED file does not in fact
+revert the changes made by its predecessor, and there is no warning to the
+developer apart from seeing the file marked UNCHANGED in MYCS.
+
+
+Master failover
+---------------
+Failover of the master SCM machine between njsbvn1 and nysbvn1 means shutting
+down services on the current master machine, swinging the SRDF storage to the
+new master, and bringing services up on the new master machine.  This sequence
+of operations occurs once per fortnight, per decree of Shawn Edwards.  A
+regularly scheduled NLRT announces the scheduled cstools outage on Friday
+before a scheduled swing.
+
+Unscheduled swings occur in the event of machine or network failure; any event
+that renders the current master unreachable or unusable.  These require the
+same set of steps as described above, skipping those that require working on
+the old master host.  Per James Rieger the console room is fully aware of the
+necessity to skip instructions that require access to the old master host and
+do not need any explicit mention of this in their instruction sheet.  If they
+need help they are instructed to contact SIBUILD.
+
+Console room instructions:
+
+The console room instructions read roughly as follows:
+  1. Run ~cstools/admin/scm_stop to shut down services on the old master.
+  2. Swing the SRDF storage to the new machine.
+  3. Run ~cstools/admin/scm_start to start up services on the new master.
+  4. Run ~cstools/admin/scm_status to verify that the new master is up.
+In case of any difficulty with SRDF swing they are to use MSG6 saoncall.  In
+case of any other difficulty they are instructed to contact a member of the
+SIBUILD team.  A fax copy of the genuine console room instructions can seen
+from the desktop as P:\sibuild\SCMSwing.tif.
+
+These operations take approximately 15 minutes.  Because they are not
+automated, we schedule 1 hour of outage time to allow for conflicting
+priorities and other emergencies in the console room that may perturb the start
+time.
+
+From the SIBUILD perspective the procedure is as follows:
+  1. Contact the console room to confirm who will conduction the disk swing on Sunday.
+     To date the answer has been Terence Kenney.
+  2. Shortly before the scheduled outage, announce the impending outage on ROBO.
+     If developers write to request an extension of the deadline, say no.
+  3. At noon, set the cscheckin lock in the config directories, and announce
+     the start the outage on ROBO.
+  4. Contact the console room to give them the all clear.  This serves mostly
+     to prompt them to begin the operation.
+  5. When swing is complete, verify funtionality of the new master and release
+     the lock.
+  6. Announce on ROBO the end of the outage.
+
+It may be useful in future to create an API that permits the console room to
+set and release the cscheckin locks so that they can conduction the entire
+operation unattended.
+
+Admin programs:
+
+Several programs for administering SCM hosts live in ~cstools/admin/ on njsbvn1
+and nysbvn1.  These programs are identical on the two machines and vary their
+behavior according to the local hostname.  Four programs are of greatest
+interest: scm_master, scm_stop, scm_start, scm_status.
+
+The scm_master program indicates whether the current host is master or not.  It
+does so by examining whether the SRDF storage is a writable mount, the only
+reliable test per Narendra Narang.  By default the result is indicated by
+return code alone: 0 for yes, non-zero for no.  Use the -v option to indicate
+the answer by text output.
+
+The scm_stop program takes down all services related to SCM operation.  It
+marks the local master as down by touching scm1_down and scm2_down in
+~cstools/admin/, and then invokes svc to terminate all SCM services.
+
+The scm_start program removes the scm1_down and scm2_down files from
+~cstools/admin/.  In the absence of those files a cron job that runs once per
+minute on each SCM host launches svscan to bring up SCM services.
+
+The scm_status program prints svstat output for all of the services required to
+operate the scm queue.  This indicates whether each service is presently up or
+down.  The console room runs this program on the new master host to determine
+whether their swing operation has completed successfully.
+
+Master host discovery:
+
+The development machines keep track of which SCM host is currently master.
+They calculate this value based on a hostname saved in the file
+/bbsrc/bin/cstools/conf/scm/scm.master.  A cron job that runs once per minute
+on each of sundev1 and sundev13 checks whether this file points to the correct
+master host, and updates it if not.  All programs use Change/Symbols.pm to
+calculate the SCM master host name on demand, and thereby track the change from
+one host to the other.  The proxy services that run on sundev13 to provide the
+web interface calculate the master host name at startup time.  The cron job
+that updates scm.master also indicates the need to restart the apache server on
+sundev13, and this in turn is done via sundev13 cron.  These mechanisms ensure
+that any program automatically tracks failover from one SCM master to another
+with at most 2 minutes delay.
+
+Status web page:
+
+The information provided by scm_status is also available via a web interface at
+http://sundev13.bloomberg.com:32375/info?command=Status&presentation=user.
+Because use of the web interface tests the proxy services on sundev13, looking
+at the web page will indicate not only that SCM services are up and available,
+but also that the proxy service has restarted and sees the correct master host
+name.  Looking at the StagedBy interface also fulfills this last purpose, but
+at potentially much higher cost.
+

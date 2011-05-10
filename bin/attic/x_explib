@@ -1,0 +1,219 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+use Cwd 'abs_path';
+
+# global variables (fake constants are capitalized
+use vars qw($g_prog %g_option $g_platform $g_makefileTempl @g_makeMode
+            $g_tmpDir $g_mkdevdir
+           );
+
+$g_prog = "explib";
+$g_platform = "sun5";
+$g_tmpDir = "libtmp";
+$g_mkdevdir = "mkdevdir"; # user just have to have path setup right
+
+sub usage()
+{
+  print <<"USAGE";
+
+$g_prog - library building and exporting utility
+
+   '$g_prog' builds and exports member components for each of the
+   specified packages.  The packages are specified as their paths in
+   the command line arguments.  For each package, '$g_prog' determines
+   the member components by first reading the package's members file.
+   If the file does not exist, it considers all existing header files
+   as member components.  '$g_prog' then builds all member components,
+   creates a library file in the package's 'lib' directory, and copies
+   all member component header files to the package's 'include'
+   directory.
+
+Usage: $g_prog \[options\] <lib_path> \[<lib_path>\] ...
+Options:
+  --help, h         This help.
+
+  --c-mode, C       Build and export C libraries.
+
+  --CC, p           Use 'CC' to compile.  This is forces 'make' to use
+                    'CC' regardless of language.
+
+  --no-error, e     Continue even when error is encoutered.
+
+  --expcetion, E    Enable exceptions.
+
+  --interactive, i  Prompt before overwriting existing files.
+
+  --keep, k         Do not cleanup temporary build directory when done.
+
+  --mkdevdir=<path>, m
+                    Specify path for the tool 'mkdevdir'.  By default,
+                    $g_prog assumes 'mkdevdir' can be found in the
+                    user's path environment variable.
+
+  --targemode=<mode>, t
+                    Specify the target when building the components.
+                    The default is 'a.out.lib'.  The mode specified in
+                    this option will be inserted into the target as:
+                    'a.out.<mode>.lib'.  For example, the command:
+
+                        explib --targetmode=debug
+
+                    will build the target 'a.out.debug.lib' for eahc
+                    component.
+
+  --test-driver, T  Build with test driver (but not include it in the
+                    library.
+
+  --verbose, v      Verbose mode.
+
+USAGE
+
+  exit 0;
+}
+
+# warns formatted message with caller info in the msg
+my @warnLevel=("--INFO--  ",
+               "**WARN**  ",
+               "!!ERROR!! ",
+               "--CMD--   ",
+               "!!FATAL!! ",
+               );
+
+sub prn($@) {
+  my $mode = shift;
+  $mode = 0 unless ($mode < @warnLevel && $mode >= 0);
+  if (($mode == 0 || $mode == 3)) {
+    print STDERR "$warnLevel[$mode] ", @_ if ($g_option{verbose});
+  } elsif ($mode == 1 || $mode == 2) {
+    warn "$warnLevel[$mode] ", @_;
+  } elsif ($mode == 4) {
+    die "$warnLevel[$mode] ", @_;
+  }
+  return 1; # in case this is used in a boolean statement
+}
+
+sub exportLib($)
+{
+  my $path = shift;
+  prn(2, "Directory $path does not exist.\n") and return unless (-d $path);
+
+  my $libPath = abs_path($path);
+  my ($libName) = $libPath =~ m!.*?([^/]+)$!; # get last dir name as lib name
+
+  my @members;
+  my $memFile = "$libPath/package/$libName.mem";
+  if (-f $memFile) {
+    # members file exists, read it for members
+    prn(0, "Reading members files $memFile.\n");
+    open(FILE, "<$memFile") or
+      prn(2, "Failed to open file $memFile: $!\n") and return;
+
+    local $/ = undef;
+    my $content = <FILE>;
+    close FILE;
+    @members = map { lc($_) } split /\s+/, $content;
+  } else {
+    # no members file, read all .h files in dir
+    prn(0, "Missing members files. Using all source files.\n");
+    opendir(DIR, $libPath) or
+      prn(2, "Failed to open directory $libPath: $!\n") and return;
+
+    @members = grep { /(.*?)\.h$/ && ($_ = $1) } readdir(DIR);
+    closedir(DIR);
+  }
+
+  my $cmd;
+  # create tmp dir for building
+  my $tmpDir = "$libPath/$g_tmpDir";
+  if (-d $tmpDir) {
+    $cmd = "/bin/rm -fr $tmpDir/*";                           prn(3, "$cmd\n");
+    system($cmd) == 0 or prn(2, "Failed to execute '$cmd': $?\n") and return;
+  } else {
+    mkdir($tmpDir, 0777) or prn(2, "Failed to mkdir $tmpDir: $!\n") and return;
+  }
+
+  my $mkdevdirOpt .= $g_option{"test-driver"} ? "" : " --notestdriver ";
+  $mkdevdirOpt .= $g_option{"c-mode"} ? " -C " : "";
+  $mkdevdirOpt .= $g_option{"exception"} ? " -E " : "";
+
+  my $buildDir = "$tmpDir/build";
+  mkdir($buildDir, 0777) or
+    prn(2, "Failed to mkdir $buildDir: $!\n") and return;
+
+  my $makeArg = $g_option{"CC"} ? "CC=CC" : "";
+  my $targetExt = $g_option{"targetmode"} ? ".$g_option{'targetmode'}" : "";
+  my $target = "a.out$targetExt.lib";
+  foreach my $comp (@members) {
+    prn(0, "Building component $comp.\n");
+    $cmd = "cd $buildDir; $g_mkdevdir $mkdevdirOpt $comp";    prn(3, "$cmd\n");
+    system($cmd) == 0 or prn(2, "Failed to execute '$cmd': $?\n") and return;
+    $cmd = "cd $buildDir; make $makeArg $target";             prn(3, "$cmd\n");
+    system($cmd) == 0 or prn(2, "Failed to execute '$cmd': $?\n") and return;
+    $cmd = "cp $buildDir/$comp$targetExt.o $tmpDir";          prn(3, "$cmd\n");
+    system($cmd) == 0 or prn(2, "Failed to execute '$cmd': $?\n") and return;
+  }
+
+  # archive all .o's
+  $cmd = "cd $tmpDir; ar -r $tmpDir/lib$libName$targetExt.a ".
+    join(" ", map { "$_$targetExt.o" } @members);             prn(3, "$cmd\n");
+  system($cmd) == 0 or prn(2, "Failed to execute '$cmd': $?\n") and return;
+
+  # copy archive to lib/<platform>
+  my $cpOpt = ($g_option{interactive}) ? "-i" : "-f";
+  my $libDir = "$libPath/lib";
+  mkdir($libDir, 0777) or prn(2, "Failed to mkdir $libDir: $!\n") and return
+    if (! -d $libDir);
+
+  $libDir .= "/$g_platform";
+  mkdir($libDir, 0777) or prn(2, "Failed to mkdir $libDir: $!\n") and return
+    if (! -d $libDir);
+
+  $cmd = "cp $cpOpt $tmpDir/lib$libName$targetExt.a $libDir"; prn(3, "$cmd\n");
+  system($cmd) == 0 or prn(2, "Failed to execute '$cmd': $?\n") and return;
+
+  # copy all include files to include/
+  my $incDir = "$libPath/include";
+  mkdir($incDir, 0777) or
+    prn(2, "Failed to mkdir $incDir: $!\n") and return if (! -d $incDir);
+  foreach my $comp (@members) {
+    $cmd = "cp $cpOpt $libPath/$comp.h $incDir";              prn(3, "$cmd\n");
+    system($cmd) == 0 or prn(2, "Failed to execute '$cmd': $?\n") and return;
+  }
+
+  unless($g_option{keep}) {
+    $cmd = "/bin/rm -fr $tmpDir";                             prn(3, "$cmd\n");
+    system($cmd) == 0 or prn(2, "Failed to execute '$cmd': $?\n") and return;
+  }
+}
+
+sub main()
+{
+  # get options
+  GetOptions(\%g_option, "help|h|?", "c-mode|C", "CC|p", "no-error|e",
+             "exception|E", "interactive|i", "keep|k", "mkdevdir|m=s",
+             "targetmode|t=s", "test-driver|T", "verbose|v");
+  &usage if ($g_option{'help'} || @ARGV < 1);
+
+  # determine a valid mkdevdir path
+  if ($g_option{'mkdevdir'}) {
+    $g_mkdevdir = "$g_option{'mkdevdir'}";
+    $g_mkdevdir .= "/mkdevdir" if ($g_mkdevdir !~ /mkdevdir$/);
+  } else {
+    $g_mkdevdir = `which mkdevdir`;
+    chomp $g_mkdevdir;
+  }
+
+  prn(4, "$g_mkdevdir does not exist or is not executable.\n") and return
+    unless ($g_mkdevdir !~ /no mkdevdir/ && -x $g_mkdevdir);
+
+  foreach my $lib (@ARGV) {
+    last unless (exportLib($lib) || $g_option{"no-error"});
+  }
+}
+
+
+# ============== program starts here ============== #
+
+&main();

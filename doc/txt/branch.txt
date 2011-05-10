@@ -1,0 +1,135 @@
+Branching SCM - An Incremental Plan of Attack
+---------------------------------------------
+
+Outline
+=======
+
+(some of these steps can go in parallel)
+
+- Eliminate drift & causes of drift.
+- Remove lockstep commit at the repository layer.
+- Write the branch tracking facility.
+- Write branch promotion tool(s) with input from robocop.
+- Branch bind at the time of canonicalization.
+- Roll out branch promotion and branch tracking.
+- Introduce sibling changeset creation from cscheckin time.
+
+
+Detailed Plan
+=============
+
+* Fully address repository drift issues
+
+The drift problem multiplied by the branching factor equals nuclear support winter: drift will manifest itself differently on different branches. See drift.txt for the plan.
+
+
+* Write a branch tracking facility. It should provide these basic operations:
+
+  1. Given a branch alias + a UTC time, map it to a numbered branch
+  2. Given a numbered branch, return its full branch lineage (see below)
+  3. Given a numbered branch, create a new child branch from it
+  4. Update a branch alias to point at a different branch
+  5. Query all branch mappings as they looked at UTC time t (t=now by default)
+
+All of these operations should be atomic, and they should be re-combinable atomically. For example, branch promotion creates a new branch (3) and then adjusts some set of branch mappings via (4). It must do all this inside one transaction. It should also perform well under heavy concurrent read activity. All this argues in favor of using a real database, given the difficulty of doing reliable locking on BB NFS. The current changesetdb can be used.
+
+Via (1) we can ensure that a changeset fully determines a branch (since it bears a creation time and a movetype). Further extending the changesetdb or Change::Set to carry branch information would introduce a redundant, cached value. We should avoid this.
+
+Branch lineage (4) is a time-ordered list of branches + UTC time intervals that gives the ancestry of code on a branch b. This operation parallels svn's ability to query node ancestry. It's unlikely it will be used by itself, but will instead figure into the many historical queries that support operations like checkout, rollback, recover prior, etc.
+
+All this suggests a schema like the following:
+
+create table branch
+(
+  branch_id serial primary key,
+  parent_id integer references branch(branch_id),
+  t0 datetime not null
+);
+
+create table branch_map
+(
+  map_id serial primary key,
+  branch_alias varchar(254) not null,
+  branch_id integer references branch(branch_id),
+  t0 datetime not null,
+  t1 datetime
+);
+
+Given a numbered branch x, here's how to query for the lineage of x:
+
+select
+  br1.branch_id, br1.t0, br2.t0
+from
+  branch as br1, branch as br2
+where
+  br1.branch_id = br2.parent_id and
+  br1.branch_id < x;
+
+This assumes that a branch gives birth to at most one other branch before it spins off in the direction of infertility and obsolescence--a condition which happens to be true in our case.
+
+Unit tests should be written for the branch tracking facility. A simple command line tool (csbranch?) should provide access to the query operations, as users will eventually need to be made aware of the current & historical branch mappings.
+
+
+* Write branch promotion tool(s) with input from robocop.
+
+Using the branch tracking facility, a simple command line tool to promote branches should be written. This tool should also formulate the promotion as a changeset which is posted and enqueued to SCM.
+
+
+* Branch bind at the time of canonicalization.
+
+The movetype => branch mapping logic is currently scattered throughout the system, most notoriously in the deep layers of SCM::Repository. Branch awareness should be avoided as much as possible in favor of "just operating on paths."
+
+This is one lesson we can learn from ClearCase: in spite of the emphasis on the unix filesystem as interface to all aspects of the version control system (still a good idea), branching was determined to be an architectural exception. As a result it suffers from performance and complexity problems. Subversion, on the other hand, implements branching totally via its versioned filesystem--in fact, it is merely a convention for repository layout. The result is performant and convenient to work with. (N.B., ct lnname might be used to do svn-style branching in ClearCase, though one would be far off the beaten path with this approach. N.B.: I take that back, lnname is not the same as a cheap copy in svn, which is more like an overlay filesystem in the spirit of unionfs than a hardlink.)
+
+The natural place to branch-qualify paths is during canonicalization. At this point, the changeset creation time and movetype can be resolved by the branch tracking facility to a branch number n. Every canonicalized path then has "root/branches/n/" prepended instead of just "root/". The SCM repository and queue subsystems then operate on these paths as plain paths & so remain branch agnostic.
+
+Operations like cscheckout, csrollback, and csrecover should always act on a branch. Currently this means they have a --movetype switch with a sensible default value. They already must pass canonical paths to SCM, so by providing the movetype and current time to getCanonicalPath, they will make use of branch binding.
+
+Looking ahead a bit, there are likely problems down the road here due to (a) developers not understanding branching (b) lack of checkout tracking / proper out-of-date tests. A developer could easily cscheckout code under the --move switch and submit it under the --emov switch, inadvertently wiping out changes on the emov branch. Checkout tracking (which would record full repository paths, and hence ignore the cscheckin --emov switch in this case) would help with this, but the current impossibility of proper out-of-date tests presents a real problem. Checkout tracking is a prerequisite to proper out-of-date tests. It is not sufficient, however, due to the requirements imposed by the approval process and optimistic compile tests.
+
+A strong argument in favor of branch binding through canonicalization is the desire to formulate all repository operations as changesets. Extending Change::Set or Change::File to carry a special branch field can only hope to clumsily express operations like branch promotion, which involve 2 branches, the parent branch and the new child branch to introduce. Cross-branch changesets would suffer from similar problems of expression via special-casing. However, if canonicalization implies branch binding, pre-canonicalized changesets which involve multiple branches in interesting ways can be passed through many layers at no extra charge.
+
+
+* Introduce sibling changeset creation from cscheckin time.
+
+This logic is already present but inactive.
+
+Possible TREQs
+==============
+
+1) Create a branch tracking infrastructure
+------------------------------------------
+Branch tracking will happen in the changeset database. The following basic
+operations are needed:
+
+  1. Given a branch alias + a UTC time, map it to a numbered branch
+  2. Given a numbered branch, return its full branch lineage
+  3. Given a numbered branch, create a new child branch from it
+  4. Update a branch alias to point at a different branch
+  5. Query all branch mappings as they looked at UTC time t (t=now by default)
+
+Each of these operations must be atomic so that they can be recombined to
+higher-level operations acting under a database transaction.
+
+2) Port client-side programs to use branch tracking backend
+-----------------------------------------------------------
+Change set generation tools (cscheckin/csrollback) will bind a change
+set to a particular numbered branch early (at canonicalization time) and
+additionally need to split higher-branch change sets into lower-movetype
+siblings. Thus, change sets spanning branch promotion will automatically
+be committed to the next-higher branch.
+
+File-retrieval tools (cscheckout/csrecover) must make use of the
+branch-tracking backend to retrieve file-versions from the correct branch.
+
+3) Provide a branch-promotion interface to robocop
+--------------------------------------------------
+Write a program (cspromote) run by privileged users that triggers the creation
+of a new branch on the SCM side and the update of all branch aliases. This tool
+should be called from whatever tools robocop uses to promote source to stage.
+
+4) Clean up movetypes to cleanly correspond to branches
+-------------------------------------------------------
+Update all cstools and documentation so that emovs always map to the current
+production branch, bugfs always map to alpha/beta and regular moves go to
+the development branch (trunk).

@@ -1,0 +1,187 @@
+#!/bin/ksh
+#
+# See {PWHO LOCUM<GO>} for information.
+
+# LOCUM_REMOTED=1 is used to indicate that script is already being run by locum
+
+#------------------------------------------------------------------------------
+
+function usage {
+    if [[ $# != 0 ]]; then
+        echo >&2 $@
+    fi
+
+    echo >&2 "Usage: locum <command> <command args>..."
+    echo >&2 "   Or: ln -s locum<command> locum"
+    echo >&2 "       locum<command> <command args>..."
+    echo >&2 
+    echo >&2 "  Set: LOCUM_LOCAL  to stay on the local host"
+    echo >&2 "       LOCUM_ARCH   to restrict machine architecture"
+    echo >&2 "       LOCUM_RING   to select a specific LNKW ring"
+    echo >&2 "                    (default: LNKW-BLDO)"
+    echo >&2 "       LOCUM_CCVIEW to select a specific ClearCase view"
+    echo >&2 "                    (default: auto. 'none' disables use of CC)"
+    echo >&2 "       LOCUM_QUIET  to suppress all normal tool messages"
+    echo >&2 "       LOCUM_DEBUG  to view tool diagnostic messages"
+    echo >&2 "       LOCUM_SSH    to set the ssh tool and its options"
+    echo >&2 "                    (default: /opt/ssh/bin/ssh -x -n)"
+    echo >&2
+    echo >&2 "  E.g: LOCUM_ARCH=SunOS LOCUM_RING=LNKW-TS locum gmake -j8"
+    echo >&2
+    exit 1;
+}
+
+function debug {
+    if (( $LOCUM_DEBUG )); then
+        echo >&2 $@
+    fi
+}
+
+function notice {
+    if [[ -z $LOCUM_QUIET ]]; then
+        echo >&2 '--' $@
+    fi
+}
+
+function error {
+    if [[ -z $LOCUM_QUIET ]]; then
+        echo >&2 '!!' $@
+    fi
+}
+
+#------------------------------------------------------------------------------
+
+# this tmpdir must be NFS-mounted
+if [[ -z $LOCUM_TMPDIR ]]; then
+    LOCUM_TMPDIR=/bb/devsrc/argvexec
+fi
+
+LOCUM_SSH=${LOCUM_SSH:-/opt/ssh/bin/ssh -x -n}
+
+### detect invokation: can be called as '$0 cmd ...' or 'cmd ...'
+BASENAME=`/usr/bin/basename $0`
+LOCUM=$BASENAME
+case "$BASENAME" in
+    locum)  if [[ $# == 0 || $1 == "-h" || $1 == "--help" ]]; then
+                usage
+            else
+                PROGRAM=$1; BASENAME=`/usr/bin/basename $PROGRAM`; shift;
+            fi
+            break;;
+    locum*) PROGRAM=${BASENAME#locum}; BASENAME=$PROGRAM; break;;
+    *) PROGRAM=$0; break;;
+esac
+debug program=$PROGRAM
+
+### find the program
+if [[ -x $PROGRAM ]]; then
+    FULLNAME=$PROGRAM
+else
+    FULLNAME=`whence -p $PROGRAM`
+    if (( $? ))
+    then
+        error "$LOCUM: failed to resolve executable location for $PROGRAM"
+        exit 1
+    fi
+fi
+debug resolved=$FULLNAME
+
+### identify lnkw ring
+if [[ -z $LOCUM_RING ]]; then
+    LOCUM_RING="LNKW-BLDO"
+fi
+debug ring=$LOCUM_RING
+
+### identify host to use. Allow stay-local override
+LOCLHOST=${HOSTNAME:-`/usr/bin/hostname`}
+if [ $LOCUM_REMOTED ]; then
+    LOCUMHOST=$LOCLHOST
+    debug already-remote=on
+elif [ $LOCUM_LOCAL ]; then
+    LOCUMHOST=$LOCLHOST
+    debug stay-local=on
+elif [ $LOCUM_HOST ]; then
+    debug override host=$LOCUM_HOST
+    LOCUMHOST=$LOCUM_HOST
+else
+    if [ $LOCUM_ARCH ]; then
+        debug arch=$LOCUM_ARCH
+        LOCUMHOST=`/bb/shared/bin/get_best_host --ring $LOCUM_RING --arch $LOCUM_ARCH`
+    else    
+        LOCUMHOST=`/bb/shared/bin/get_best_host --ring $LOCUM_RING`
+    fi
+fi
+if [[ $? != 0 ]]; then
+    error "$LOCUM: failed to resolve best host";
+    exit 1
+fi
+debug besthost=$LOCUMHOST
+if [[ -z $LOCUM_REMOTED ]]; then
+    notice $LOCUM: executing $BASENAME on $LOCUMHOST
+fi
+
+### check for a ClearCase view, wd or set
+CLEARTOOL=/usr/atria/bin/cleartool
+if [[ -z $LOCUM_CCVIEW ]]; then
+    if [[ -x $CLEARTOOL ]]; then 
+        LOCUM_CCVIEW=`$CLEARTOOL pwv -short -wdview`
+        if [[ $LOCUM_CCVIEW == "** NONE **" ]]; then
+            LOCUM_CCVIEW=`$CLEARTOOL pwv -short -setview`
+            if [[ $LOCUM_CCVIEW == "** NONE **" ]]; then
+                LOCUM_CCVIEW=""
+                debug "no ClearCase view preset or detected"
+            else
+                debug "using preset view: $LOCUM_CCVIEW"
+            fi
+        else
+            debug "using working directory view: $LOCUM_CCVIEW"
+        fi
+    else
+        debug "cleartool not found, assuming not installed"
+    fi
+else
+    debug "using preset LOCUM_CCVIEW: $LOCUM_CCVIEW"
+fi
+if [ $LOCUM_CCVIEW ]; then
+    if [[ $LOCUM_CCVIEW != "none" ]]; then
+        PRECMD="$PRECMD $CLEARTOOL setview -exec \""
+        POSTCMD="\" $LOCUM_CCVIEW $POSTCMD"
+    fi
+fi
+
+if [[ -f /usr/ucb/whoami ]]; then
+    USER=${USER:-`/usr/ucb/whoami`}
+else
+    USER=${USER:-`/usr/bin/whoami`}
+fi
+debug "user=$USER"
+
+# construct tempfile name
+DATE=`/usr/bin/date +%Y%m%d%H%M%S`
+TMPFILE=$LOCUM_TMPDIR/$DATE.$USER.$$.$LOCLHOST-$LOCUMHOST.$BASENAME.cmd
+debug tmpfile=$TMPFILE
+
+# write the command file 
+LOCUM_REMOTED_SAVED=$LOCUM_REMOTED
+export LOCUM_REMOTED=1
+/bb/bin/argvwrite $TMPFILE $FULLNAME ${1+"$@"}
+LOCUM_REMOTED=$LOCUM_REMOTED_SAVED
+
+# remotely (or locally) execute it
+PRECMD="$PRECMD umask $(umask); cd $PWD &&"
+CMD="$PRECMD /bb/bin/argvexec $TMPFILE $POSTCMD"
+debug "cmd=$CMD"
+if [[ -n $LOCUM_LOCAL || -n $LOCUM_REMOTED ]]; then
+    export LOCUM_REMOTED=1
+    eval "$CMD"
+    RC=$?
+else
+    ${LOCUM_SSH} $LOCUMHOST $CMD
+    RC=$?
+fi
+
+if [[ -z $LOCUM_REMOTED ]]; then
+    notice $LOCUM: returned from executing $BASENAME on $LOCUMHOST
+fi
+
+exit $RC

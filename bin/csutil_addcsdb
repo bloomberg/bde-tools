@@ -1,0 +1,33 @@
+#!/bbs/opt/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Change::Set;
+use Change::Symbols qw/STATUS_ACTIVE/;
+use Production::Services;
+use Production::Services::ChangeSet qw/createChangeSetDbRecord
+                                       alterChangeSetDbRecordStatus/;
+use Util::SCMControl qw/acceptSCMUser/;
+use Util::Message qw/fatal/;
+use strict;
+
+acceptSCMUser()  or  fatal "user not authorized";
+
+my $svc = Production::Services->new or
+  die "Error creating production services connection.".$/;
+
+for my $metafile (@ARGV ? @ARGV : qw(-)) {
+  my $cs = Change::Set->load($metafile);
+
+  unless (createChangeSetDbRecord($svc, $cs)) {
+    die "Could not add change set to csdb: ".$svc->getError.$/;
+  }
+
+  unless (alterChangeSetDbRecordStatus($svc, $cs, STATUS_ACTIVE, $cs->getUser)) {
+    die "Could not change status to active: ".$svc->getError.$/;
+  }
+}
+

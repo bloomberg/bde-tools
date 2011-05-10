@@ -1,0 +1,70 @@
+#!/bbs/opt/bin/perl
+
+use warnings;
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+
+use Production::Services;
+use Production::Services::ChangeSet qw(getChangeSetStatus);
+use Change::Symbols                 qw(/^\$STATUS_.*/);
+
+my @opts = qw/pretty|p help|h ignore-errors|i csid|c/;
+
+die usage() if not GetOptions(\my %opts, @opts);
+print usage() and exit if $opts{help};
+
+my %status2string = (
+        $STATUS_SUBMITTED   => 'Submitted',
+        $STATUS_WAITING     => 'Waiting for approval',
+        $STATUS_ACTIVE      => 'Active',
+        $STATUS_ROLLEDBACK  => 'Rolledback',
+        $STATUS_REINSTATED  => 'Reinstated',
+        $STATUS_INPROGRESS  => 'Inprogress',
+        $STATUS_COMPLETE    => 'Complete',
+        $STATUS_UNKNOWN     => 'Unknown',
+);
+
+my @csids = !@ARGV || $ARGV[0] eq '-' ? from_stdin() : @ARGV;
+
+my $svc = Production::Services->new;
+for (@csids) {
+    my $status = getChangeSetStatus($svc, $_);
+    output($status, $_);
+}
+
+
+sub output {
+    my ($status, $csid) = @_;
+
+    die "$_: Could not retrieve status\n"
+        if not defined $status and not $opts{'ignore-errors'};
+
+    $status .= " - $status2string{$status}" if $opts{pretty};
+    print $status;
+    print "  $csid" if $opts{csid};
+    print "\n";
+}
+
+sub from_stdin {
+    my @csids;
+    while (<STDIN>) {
+        chomp;
+        push @csids, $_;
+    }
+    return @csids;
+}
+
+sub usage {
+    return <<EOUSAGE;
+$0 \$csid1 \$csid2 ...
+$0 -
+
+Retrieve and print the status of the change sets specified through their CSID.
+EOUSAGE
+}

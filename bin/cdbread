@@ -1,0 +1,45 @@
+#!/bb/csdata/scm/bin/perl -w
+
+use Getopt::Long;
+use CDB_File;
+use strict;
+
+my @getopt = qw/keys values escape!/;
+my %opt = ( escape => 1 );
+
+GetOptions(\%opt, @getopt) or die "bad options.".$/;
+
+my $path = shift or die "usage: $0 file.cdb".$/;
+tie my %h, 'CDB_File', $path or die "error tieing cdb at $path: $@".$/;
+
+if ($opt{keys}) {
+  print join $/, (map { escape($_) } keys %h), '';
+}
+elsif ($opt{values}) {
+  print join $/, (map { escape($_) } values %h), '';
+}
+else {
+  if (@ARGV) {
+    # lookup mode
+    print escape($h{$_}).$/ for @ARGV;
+  }
+  else {
+    # dump mode
+    print escape($_).' '.escape($h{$_}).$/ for keys %h;
+  }
+}
+
+sub escape {
+  my $x = shift;
+  return $x if !$opt{escape};
+  $x =~ s/\\/\\\\/g;
+  $x =~ s/\n/\\\n/g;
+  $x =~ s/ /\\ /g;
+  $x =~ s/(.)/isgraph($1) ? '\\x'.sprintf("%04x", ord($1)) : $1/ge;
+  return $x;
+}
+
+sub isgraph {
+  return ord $_[0] < 0x20 || ord $1 >= 0x7f;
+}
+

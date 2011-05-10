@@ -1,0 +1,798 @@
+#!/bbs/opt/bin/perl -w
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Config; # for signal name<=>number mapping
+use Getopt::Long;
+use IO::Handle;
+use IO::Select;
+use IPC::Open3;
+use POSIX qw(:sys_wait_h);
+
+use Util::Retry qw(retry_open3);
+
+#------------------------------------------------------------------------------
+
+use constant EXIT_BAD_ARGS   => 108;
+use constant EXIT_ALIMIT     => 109;
+use constant EXIT_PLIMIT     => 110;
+use constant DEFAULT_TIMEOUT => 300;
+use constant NORETRY         => $ENV{RETRY_NORETRY} || 0; #Retry::Symbols later
+
+#------------------------------------------------------------------------------
+
+$|=1;
+
+#------------------------------------------------------------------------------
+
+=head1 SYNOPSIS
+
+  retry -h | [-s [!]<sig>,<sig>...] [-m [!]'pattern'] [-x [!]<n>,<n>...] \
+             [-i <n>] [-p <n>] [-r <n>] [-l <n>] [-a <n>] [-t <n>] \
+             [-f <n>] [-d] [-v] [-X] -- <command> <arg> <arg> ...
+
+Run 'retry -h' for brief usage information.
+
+=head1 DESCRIPTION
+
+C<retry> is a wrapper script that allows commands will repeatedly invoke a
+target command under specified conditions until it either succeeds or a failure
+threshold is reached. It allows commands that are expected to fail transiently
+to be retried transparently without the knowledge of the invoking process.
+
+Success is defined I<purely> in terms of not matching the retry criteria, which
+may consist of a list of specified signals, a list of specified exit statuses,
+a text match on the command's output, or any combination of the three. A return
+status of zero is not considered success unless C<retry> is instructed to treat
+it as such.
+
+Each of the three types of criteria may be independantly inverted, triggering
+a retry in the event that the specified criteria are not satisfied, instead of
+triggering if they are.
+
+If C<retry> determines the target command is to be reinvoked it will pause for
+a number of seconds initially determined by the C<--intial> option. On each
+subsequent attempt the value of C<--pause> is added, producing incrementally
+longer pauses between each retry and the next. If specified, C<--random> will
+add an additional random delay to that provided by C<--pause> that can be used
+to avoid invokation resource bottlenecks.
+
+C<retry> will stop retrying a command and return when one of the following
+conditions becomes true:
+
+=over 4
+
+=item * None of the signal, exit status, or text match criteria are satisfied.
+
+=item * The number of retry attempts exceeds the defined attempt limit.
+
+=item * The accumulated pause interval exceeds the defined pause limit.
+
+=back
+
+Both the pause limit (C<--limit>) and attempt limit (C<--attempts>) can be
+disabled by setting them to zero. However, at least one of the two must be
+positive or C<retry> will not start.
+
+The output and error text of the target command is passed back to the invoking
+process via standard output and standard error respectively. The final exit
+status of a succeeding command (as defined above) is also passed back. In the
+event that neither debug nor verbose output is enabled this causes C<retry> to
+be entirely transparent to the calling process. If the verbose option
+(C<--verbose>) is specified output and error lines are prefixed with C<OO> and
+C<EE> respectively.
+
+=head1 OPTIONS
+
+C<retry> supports the following limit, criteria, timing and general options:
+
+=head2 LIMIT OPTIONS
+
+The C<--attempts> and C<--limit> are used to provide upper limits to how long
+C<retry> will attempt to reinvoke the target command. The more restrictive of
+the two limits will dominate.
+
+=over 4
+
+=item --limit | -l <seconds>
+
+Abort once the cumulative pause (I<initial> + (I<pause>+I<random>)*I<attempts>)
+exceeds the specified value. For example, with an initial pause of 10 seconds
+and an incremental pause of zero seconds, a limit of 60 seconds will cause the
+command to be tried six times:
+
+  $ retry -i 10 -p 0 -l 60 ...
+
+Default: C<--initial>*10
+
+=item --attempts | -a <integer>
+
+Abort once the number of retry attempts exceeds the specified number. For
+example, to have C<retry> attempt a command ten times irrespective of the
+accumulated pause interval, use:
+
+  $ retry -a 10 ...
+
+Default: 100 attempts
+
+=item --noretry | -X
+
+Disables all retry attempts and executes the supplied command directly via
+C<exec>. Permits but nullifies the effect of all other flags.
+
+=back
+
+=head2 CRITERIA OPTIONS
+
+The C<--onsignal>, C<--match>, C<--exitstatus> (or C<--exits>), and C<--timeout>
+options are used to determine under which circumstances the target command
+should be retried. A new attempt will be made if any one of the four criteria
+are met, unless 
+
+=over 4
+
+=item --onsignal | -s [!]<signal>[,<signal>...]
+
+Retry on receiving one of the specified comma-seperated signal numbers or
+names. A prefix of C<!> retries if the signal is not in the list. For example:
+
+  $ retry -s !SEGV,BUS,9,11 ...
+
+The special keyword 'nonzero' matches any signal and is exactly equivalent to
+specifying C<!0>. It overrides any other status specified:
+
+  $ retry -s nonzero ...
+
+Note that this is the default operation, just defined explicitly.
+
+Either names or numbers may be used, with or without a C<SIG> prefix, and
+independent of case: 1, HUP, hup, SIGHUP and SigHup are all valid ways to
+define the hangup signal. Note that debug mode will list the specified signals
+by name in their numeric order, and will also list a signal mask.
+
+Default: all signals
+
+=item --match | -m [!]<pattern>
+
+Retry if the specified pattern is matched by the command's output or error
+text. A prefix of C<!> retries if the match fails. For example:
+
+  $ retry -m 'not found' ...
+
+The match text is a regular expression, so all metacharacter and escaping
+conditions apply as usual. In shell context it may be necessary to apply
+multiple metacharacter escapes (for example C<\\w> for C<\w> and C<\\\\> for a
+literal C<\>). To specify flags use the C<(?flags)> notation at the start of
+the pattern, e.g. C<"(?i)not\sfound"> for a case-insensitive match.
+
+=item --exits | -x [!]<status>[,<status>...]
+
+Retry if command returns one of the specified comma-seperated non-zero
+statuses. A prefix of C<!> retries if the exit status is not in the list. For
+example:
+
+  $ retry -x 1,2,5,6,10,11 ...
+
+  $ retry -x !0,4 ...
+
+The special keyword 'nonzero' matches any non-zero exit status and is exactly
+equivalent to specifying C<!0>. It overrides any other status specified:
+
+  $ retry -x nonzero ...
+
+Note that C<retry> does I<not> automatically retry on a non-zero status, nor
+succeed on a zero exit status - it must be configured to do so.
+
+=item --timeout | -t <seconds>
+
+Fail current invokation of the target command if it does not complete in the
+specified time. For example:
+
+  $ retry -t 120 ...
+
+This can be used with a limit of one attempt to try a command that may hang
+just once before returning to the invoking process:
+
+  $ retry -a 1 -t 120 ...
+
+The default timeout is 300 seconds (5 minutes). To disable the timeout,
+specify C<-t 0>.
+
+=back
+
+=head2 TIMING OPTIONS
+
+The C<--pause>, C<--initial>, and C<--random> options control the lengths of
+the pauses between the first invokation of the target command and each
+subsequent invokation:
+
+=over 4
+
+=item --initial | -i <seconds>
+
+The initial fixed pause between the first and second attempts. See below for
+an example.
+
+Default: The value (default or specified) of C<--pause>
+
+=item --pause | -p <seconds>
+
+The pause increment for subsequent attempts, and the initial pause if none
+is otherwise specified. For example, to pause 1 minute after the first attempt,
+90 seconds after the second, 2 minutes after the third, and so on:
+
+  $ retry -p 30 -i 60 ...
+
+Default: 5 seconds.
+
+=item --random | -r <seconds>
+
+An optional additional random increment from zero to the specified number of
+seconds. For example:
+
+  $ retry -i 10 -p 0 -r 5
+
+The random increment is applied each time the pause time is increased and is
+additional to the increment specified by C<--pause>. It is also added to
+C<--initial> to determine the initial pause.
+
+=back
+
+=head2 GENERAL OPTIONS
+
+The following general invokation options are also supported:
+
+=over 4
+
+=item --help | -h
+
+Print brief usage information
+
+=item --debug | -d
+
+Enable debug messages, including exact status information. All debug messages
+are prefixed with C<[[>.
+
+=item --verbose  | -v
+
+Enable verbose reporting. Standard messages are prefixed with C<-->. Important
+messages are prefixed with C<**>. Standard output and error text of the target
+command are prefixed with C<OO> and C<EE> respectively.
+
+=item --failstatus | -f <status>
+
+Override all non-zero exit status codes for C<retry> with the specified value.
+This allows C<retry> to differentiate local error conditions (such as reaching
+the retry attempt limit) from an error exit status from the target command in
+the event that the target command can return statuses that coincide with those
+of C<retry>. For example:
+
+  $ retry -f 99 ...
+
+=back
+
+=head1 USAGE EXAMPLES
+
+The following are some examples of how retry can be used:
+
+  # retry a make command on signals other than 1,2,3 or 15
+  retry -s !HUP,INT,3,15 -i 120 -l 600 -m 'not found' -- make -f mymake.mk
+
+  # retry scp command on non-zero exit status
+  retry -x nonzero -i 600 -p 0 -l 0 -a 12 -- scp -QpBC file remote:~/file
+
+  # abort a command if it does not complete in 2 minutes
+  retry -a 1 -t 120 testall.pl
+
+  # reinvoke a command every minute while it succeeds, abort on failure
+  retry -x 0 -l 0 -a 10000 -i 60 -p 0 onceaminute.pl
+
+Note that the C<--> command separation argument is not necessary if the target
+command does not require minus-prefixed arguments, as shown in the last two
+examples above. However, it is strongly recommended if the command is capable
+of taking arguments.
+
+=head1 EXIT STATUS
+
+Unlike most programs, zero is not automatically returned on success. Instead,
+the exit status of the invoked command is returned. This is often zero in any
+case, but it is neither required of the target program or treated as a special
+case by C<retry>. This allows C<retry> to operate transparently.
+
+The following exit statuses are returned for error conditions:
+
+=over 4
+
+=item * 108 - bad arguments
+
+=item * 109 - attempt limit reached
+
+=item * 110 - pause limit reached
+
+=back
+
+In the event that these statuses are also returned by the target command, and
+so returned to the invoking process on success, the C<--failstatus> option may
+be used to override them with a new value that is not valid as a return status
+by the target command. For example:
+
+  $ retry -f 99 returns108onfatalerror.sh
+
+Note that all local exit statuses are overridden with the specified value.
+
+=head1 AUTHOR
+
+  Peter Wainwright (pwainwright@bloomberg.net)
+
+=cut
+
+## <<< possible improvement:
+## It might make more sense (or at least utility) to return the reason for
+## the last failed try, i.e. EXIT_TIMEOUT, EXIT_SIGNAL, EXIT_STATUS, EXIT_MATCH
+
+#------------------------------------------------------------------------------
+
+{
+    # raw signal info from Config module
+    my @sig_nos=split ' ',$Config{sig_num};
+    my @sig_nms=split ' ',$Config{sig_name};
+
+    # processed signal info
+    my %sig_numbers;
+    @sig_numbers{@sig_nms}=@sig_nos;
+    my $max_signo=-1;
+    my @sig_names=();
+    foreach (@sig_nos) {
+	# signal nos may not be monotonically contiguous
+	$sig_names[$_]=$sig_nms[$_];
+	$max_signo=$_ if $_>$max_signo;
+    }
+
+    # return signal name from signal number (or valid name)
+    sub signal_name ($) {
+	my $signo=shift;
+
+	if ($signo=~/^\D+$/) {
+	    return $signo if exists $sig_numbers{$signo};
+	    return undef;
+	}
+
+	if (defined $sig_names[$signo]) {
+	    return $sig_names[$signo];
+	}
+
+	return undef;
+    }
+
+    # return signal number from name (or valid number)
+    sub signal_number ($) {
+	my $signm=shift;
+
+	if ($signm=~/^\d+$/) {
+	    return $signm if defined $sig_names[$signm];
+	    return undef;
+	}
+
+	if (exists $sig_numbers{$signm}) {
+	    return $sig_numbers{$signm};
+	}
+
+	return undef;
+    }
+
+    # return the highest recognized signal number on this platform
+    sub max_signal () {
+	return $max_signo;
+    }
+}
+
+# generate a list of signal names from a string spec
+sub signal_list ($) {
+    my $sigspec=shift;
+    my @signals=();
+
+    if (defined $sigspec) {
+	@signals=split /\W+/,$sigspec;
+	foreach (@signals) {
+	    if (/^\d+$/) {
+		signal_name($_) or usage("Bad signal number $_"),
+		  exit(EXIT_BAD_ARGS);
+		$_ = signal_name($_);
+	    } else {
+		$_ = uc($_);
+		$_ =~s/^SIG//;
+		signal_number($_) or usage("Bad signal name $_"),
+		  exit(EXIT_BAD_ARGS);
+	    }
+	}
+    }
+
+    # return list in signal number order
+    @signals = sort { signal_number($a) <=> signal_number($b) } @signals;
+
+    return @signals;
+}
+
+# generate a mask of signals to retry on
+sub signal_mask {
+    my @siglist=@_;
+    my @sigmask;
+    my $maxsig=max_signal();
+
+    if (@siglist) {
+	@sigmask=map { 0 } 0..$maxsig;
+	foreach my $signo (@siglist) {
+	    $signo=signal_number($signo); #if a name, convert to no.
+	    $sigmask[$signo]=1;
+	}
+    } else {
+	# never mask signal 0
+	@sigmask=(0, map { 1 } 1..$maxsig);
+    }
+
+    return @sigmask;
+}
+
+#------------------------------------------------------------------------------
+
+sub get_options () {
+    my $opts={};
+
+    Getopt::Long::Configure("bundling");
+    GetOptions($opts,qw[
+        help|h
+        debug|d
+        exitstatus|x=s
+	failstatus|f=i
+        verbose|v
+        onsignal|s=s
+        initial|i=i
+        pause|p=i
+        limit|l=i
+        random|r=i
+        attempts|a=i
+        match|m=s
+	timeout|t=i
+        noretry|X
+    ]) or return undef;
+
+    if (defined $opts->{timeout}) {
+	usage("Timeout must be zero or positive"), exit(EXIT_BAD_ARGS)
+	  unless $opts->{timeout}>=0;
+    } else {
+	$opts->{timeout} = DEFAULT_TIMEOUT;
+    }
+
+    # time
+    $opts->{pause}=5 unless defined $opts->{pause};
+    usage("Bad pause interval $_"), exit(EXIT_BAD_ARGS)
+      unless $opts->{pause}>=0;
+    $opts->{initial}=$opts->{pause} unless defined $opts->{initial};
+    usage("Bad initial interval $_"), exit(EXIT_BAD_ARGS)
+      unless $opts->{initial}>=0;
+    $opts->{limit}=$opts->{pause}*10 unless defined $opts->{limit};
+    $opts->{timeout} ||= 0;
+
+    # attempts
+    $opts->{attempts}=100 unless defined $opts->{attempts};
+    unless ($opts->{attempts} || $opts->{limit}) {
+	usage("One of --attempts or --limit must be positive"),
+	  exit(EXIT_BAD_ARGS);
+    }
+
+    # signals
+    if ($opts->{onsignal} and $opts->{onsignal}=~/^nonzero$/i) {
+	$opts->{onsignal}="!0";
+    }
+    if ($opts->{onsignal} and $opts->{onsignal}=~s/^!//) {
+	$opts->{invertedsignallist}=1;
+    }
+    $opts->{signallist}=[ signal_list($opts->{onsignal}) ];
+    $opts->{signalmask}=[ signal_mask(@{$opts->{signallist}}) ];
+    if ($opts->{invertedsignallist}) {
+	$opts->{signalmask}=[ map { $_?0:1 } @{$opts->{signalmask}} ];
+	$opts->{signalmask}->[0]=0;
+    }
+
+    # match
+    if (defined $opts->{match}) {
+	if ($opts->{match} =~ s/^!//) {
+	    $opts->{invertedmatch}=1;
+	}
+
+	usage("Match text is empty"), exit(EXIT_BAD_ARGS)
+	  unless length($opts->{match});
+    }
+
+    # exit stati
+    if (defined $opts->{exitstatus}) {
+	my @stati;
+
+	if ($opts->{exitstatus}=~/^nonzero$/i) {
+	    @stati=( 'nonzero' );
+	} else {
+	    if ($opts->{exitstatus}=~s/^!//) {
+		$opts->{invertedexitstatus}=1;
+	    }
+
+	    @stati=split /\W+/,$opts->{exitstatus};
+	    foreach (@stati) {
+		next if /^nonzero$/i;
+		usage("Bad exit status $_"), exit(EXIT_BAD_ARGS)
+		  unless /^\d+$/;
+		usage("Bad exit status $_"), exit(EXIT_BAD_ARGS)
+		  if $_>255 or $_<-254;
+	    }
+	}
+
+	# convert into a hash map
+	$opts->{exitstatus}={ map { $_ => 1 } @stati };
+    }
+
+    # fail status
+    if (defined $opts->{failstatus}) {
+	usage("Bad fail status $opts->{failstatus}"), exit(EXIT_BAD_ARGS)
+	  unless $opts->{failstatus}=~/^\d+$/;
+	set_failstatus($opts->{failstatus});
+    }
+
+    $opts->{noretry}=1 if NORETRY;
+    return $opts;
+}
+
+#------------------------------------------------------------------------------
+
+sub usage (;$) {
+    my $message=shift;
+    print "!! $$ Error: $message\n" if $message;
+
+    print <<_USAGE_END;
+Usage: retry -h | [-s [!]<sig>,<sig>...] [-m [!]'pattern'] [-x [!]<n>,<n>...] \
+                  [-i <n>] [-p <n>] [-r <n>] [-l <n>] [-a <n>] [-t <n>] \
+                  [-f <n>] [-d] [-v] -- <command> <arg> <arg> ...
+
+  --help     | -h              usage information (this text)
+  --debug    | -d              enable debug messages
+  --verbose  | -v              enable verbose reporting
+  --onsignal | -s [!]<signals> retry on receiving one of the specified comma-
+                               seperated signal numbers or names. A prefix of
+                               '!' retries if the signal is not in the list.
+                               (default: all signals)
+  --match    | -m [!]<pattern> retry if pattern is matched by command output.
+                               A prefix of '!' retries if the match fails.
+  --exits    | -x [!]<stati>   retry if command returns one of the specified
+                               comma-seperated non-zero statuses. 'nonzero'
+                               matches any non-zero status. A prefix of '!'
+                               retries if the exit status is not in the list.
+  --fails    | -f <status>     Override all non-zero exit status codes for
+                               $0 with specified value
+  --initial  | -i <seconds>    initial pause between first and second attempts
+                               (default: <pause>)
+  --pause    | -p <seconds>    pause increment for subsequent attempts
+                               (default: 5 seconds)
+  --limit    | -l <seconds>    abort once cumulative pause exceeds this value
+                               (default: <initial>*10)
+  --random   | -r <seconds>    optional additional random increment 0-<seconds>
+  --attempts | -a <integer>    abort once attempts exceed specified number
+                               (default: 100 attempts)
+  --timeout  | -t <seconds>    abort if command does not complete in time
+                               (*not yet implemented*)
+
+Run 'perldoc $0' for detailed information.
+
+_USAGE_END
+}
+
+#------------------------------------------------------------------------------
+
+{
+    my $failstatus=0;
+
+    sub set_failstatus ($) {
+        $failstatus=shift;
+    }
+
+    END {
+	$?=$failstatus if $failstatus;
+    }
+}
+
+#------------------------------------------------------------------------------
+
+MAIN: {
+    usage(),exit(0) unless @ARGV;
+
+    my $opts=get_options();
+    usage(),exit(EXIT_BAD_ARGS) unless $opts;
+
+    my @command=@ARGV or usage("Specify a command"),exit(EXIT_BAD_ARGS);
+
+    exec @command if $opts->{noretry}; #totally disable wrapper for -X
+
+    my $program=$ARGV[0];
+    $program=~m|([^/]+)$| and $program=$1;
+
+    if ($opts->{debug} and $opts->{verbose}) {
+        if ($opts->{signallist}) {
+	    print STDERR "[[ $$ ($program) Signals: ",
+	      (join ', ',@{$opts->{signallist}}),
+		($opts->{invertedsignallist}?" (inverted)":""),"\n";
+        }
+	print STDERR "[[ $$ ($program)    Mask: ",
+	  (join '',@{$opts->{signalmask}}),"\n";
+	print STDERR "[[ $$ ($program)   Exits: ",
+	  (join '',(keys %{$opts->{exitstatus}})),
+	    ($opts->{invertedexitstatus}?" (inverted)":""),"\n";
+	if ($opts->{match}) {
+	    print STDERR "[[ $$ ($program)   Match: $opts->{match}",
+                ($opts->{invertedmatch}?" (inverted)":""),"\n";
+	}
+	print STDERR "[[ $$ ($program)   Limit: $opts->{attempts} attempts, ".
+	  "$opts->{limit} seconds, Timeout: $opts->{timeout} seconds\n";
+    }
+
+    print STDERR "** Executing: @command\n" if $opts->{verbose};
+
+    my $attempts=0;
+    my $pause=$opts->{initial};
+    if ($opts->{random}) {
+	$pause += int (rand $opts->{random});
+    }
+    my $cumulativepause=0;
+
+    my ($status,$signal);
+    my ($command_output,$command_errors);
+    # future development: collect stdin data for repeated submissions
+    my $command_input=""; #join('',<STDIN>) || undef;
+
+    my $retry=1;
+    while ($retry) {
+	$retry=0;
+	$attempts++;
+
+	print STDERR "!! $$ Attempt limit exceeded running \n!! $$        @command\n" and exit(EXIT_ALIMIT)
+	  if $opts->{attempts} and $attempts > $opts->{attempts};
+	print STDERR "-- $$ Attempt $attempts\n" if $opts->{verbose};
+
+	# initiate a new command child process
+	my ($wrh,$rdh,$erh)=(new IO::Handle,new IO::Handle,new IO::Handle);
+	my $pid=retry_open3($rdh,$wrh,$erh,@command);
+	unless (defined $pid) {
+	    print STDERR "!! $$ Failed to open command: $!\n";
+	    print STDERR "-- $$ Retrying on IPC failure\n"
+	      if $opts->{verbose};
+	    $retry=1;
+	} else {
+	    print STDERR "[[ $$ ($program) Child process $pid\n" if $opts->{debug};
+
+	    # write previously gathered input to command <<< not yet implemented
+	    if ($command_input) {
+		print $wrh $command_input;
+	    }
+	    close $wrh;
+
+	    # gather output and errors -.do both together to avoid deadlocks
+	    ($command_output,$command_errors)=("","");
+	    my $select=new IO::Select($rdh,$erh);
+	    my $text;
+	    while (my @waiting=$select->can_read($opts->{timeout} || undef)) {
+		foreach my $fh (@waiting) {
+		    my $read=sysread($fh,$text,1024);
+		    $select->remove($fh) if defined($read) and $read==0;
+		
+		    next unless $text;
+		    if ($fh == $rdh) {
+			$command_output .= $text;
+		    } else {
+			$command_errors .= $text;
+		    }
+		}
+	    }
+	
+	    # check for a timeout - a handle still in the select array
+	    if ($select->handles) {
+		print STDERR "[[ $$ ($program) timed out ".
+		  "on attempt $attempts\n" if $opts->{debug};
+		kill 9,$pid;
+		sleep 5;
+		waitpid $pid,&WNOHANG; #try to reap, but don't insist on it
+		print STDERR "-- $$ Retrying on timeout\n"
+		  if $opts->{verbose};
+		$retry=1;
+	    }
+
+	    # gather and process exit status
+	    waitpid $pid,0;
+
+	    my $result=$?;
+	    $status=$result >> 8;
+	    $signal=$result & 127;
+	    my $cored=($result & 128)?1:0;
+
+	    print STDERR "[[ $$ ($program) X$status/S$signal/C$cored ".
+	      "on attempt $attempts\n" if $opts->{debug};
+	
+	    # write command output back to original invoker
+	    if ($opts->{verbose}) {
+		$command_output=~s|^|OO |mg;
+		$command_errors=~s|^|EE |mg;
+	    }
+	    print $command_output;
+	    print STDERR $command_errors;
+	}
+
+	# should we retry this command?
+	if ($signal and $opts->{signalmask}->[$signal]) {
+	    print STDERR "-- $$ Retrying on signal $signal\n"
+	      if $opts->{verbose};
+	    $retry=1;
+	}
+	if ($opts->{exitstatus}) {
+	    if ($opts->{exitstatus}{nonzero} and $status) {
+		print STDERR "-- $$ Retrying on nonzero exit status $status\n"
+		  if $opts->{verbose};
+		$retry=1;
+	    } else {
+		if ($opts->{invertedexitstatus}) {
+		    if (not exists $opts->{exitstatus}{$status}) {
+			print STDERR "-- $$ Retrying on unlisted exit status".
+			  $status."\n" if $opts->{verbose};
+			$retry=1;
+		    }
+		} else {
+		    if (exists $opts->{exitstatus}{$status}) {
+			print STDERR
+			  "-- $$ Retrying on exit status $status\n"
+			  if $opts->{verbose};
+			$retry=1;
+		    }
+		}
+	    }
+	}
+	if ($opts->{match}) {
+	    if ($opts->{invertmatch}) {
+		if ($command_output !~ /$opts->{match}/s
+		  and $command_errors !~ /$opts->{match}/s) {
+		    print STDERR "-- $$ Retrying on failed match\n";
+		    $retry=1;
+		}
+	    } else {
+		if ($command_output =~ /$opts->{match}/s
+		  or $command_errors =~ /$opts->{match}/s) {
+		    print STDERR "-- $$ Retrying on successful match '$&'\n";
+		    $retry=1;
+		}
+	    }
+	}
+
+	# sleep, perchance to retry
+	if ($retry) {
+	    my $thispause=$pause;
+	    $pause+=$opts->{pause};
+	    if ($opts->{random}) {
+		$pause+=int (rand $opts->{random});
+	    }
+	    print STDERR "!! $$ Pause limit exceeded while running\n!! $$       @command\n"
+	      and exit(EXIT_PLIMIT)
+	      if $opts->{limit} and $pause > $opts->{limit};
+	    $cumulativepause+=$pause;
+
+	    print STDERR "-- $$ Sleeping $thispause seconds\n"
+	      if $opts->{verbose};
+            print STDERR "[[ $$ ($program) Retry\n" if $opts->{debug};
+	    my $slept=sleep($thispause);
+	}
+    }
+
+    print STDERR "** Done ($status) on attempt $attempts\n"
+      if $opts->{verbose};
+
+    #we are transparent
+    exit $status;
+}
+
+#------------------------------------------------------------------------------

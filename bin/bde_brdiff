@@ -1,0 +1,138 @@
+#!/bin/ksh
+#
+#------------------------------------------------------------------------------
+#
+# Compare the latest checked-in versions on the 'bb' and 'dev' branches for the
+# specified file or files.
+#
+# Options:
+#   -R : recurse - scan checked-in subdirectories
+#   -o : output  - show diff output 
+#   -q : quiet   - emit no output
+#   -v : verbose - report unchanged files also
+#   -l : list    - list changed files on a single line without markup
+#
+# The exit status is 0 if no differences were found, -1 if there is a command
+# line syntax error, or a positive number corresponding to the number of files
+# with differing versions found.
+#
+#------------------------------------------------------------------------------
+
+verbose() {
+    if [ $VERBOSE ]; then
+        echo $*
+    fi
+}
+
+usage() {
+    echo "Usage: bde_brdiff [-R] [-q | [-o][-v]] <file|dir> [<file|dir> ...]"
+}
+
+do_diff() {
+    DF=$1
+    shift
+
+    RESULT=$(diff $DF@@/main/bb/dev/LATEST $DF@@/main/bb/LATEST 2>&1)
+    while [ $1 ]; do
+        RESULT=`echo "${RESULT}" 2>&1 | grep -v $1`
+        shift
+    done
+
+    if [[ -n $RESULT ]]; then
+        if [[ -z $QUIET ]]; then
+            if [ $LIST ]; then
+                print -n "$DF "
+            else
+                echo "** '$DF' differs"
+                if [ $OUTPUT ]; then
+                    echo "$RESULT"
+                fi
+            fi
+        fi
+        DIFFERENCES=$(($DIFFERENCES+1))
+    else 
+        verbose "-- '$DF' is unchanged"
+    fi
+}
+
+#------------------------------------------------------------------------------
+
+while [[ $1 = @(-*) ]]; do
+    case $1 in
+        -R) RECURSE="-R";;
+        -r) RECURSE="-R";;
+        -o) OUTPUT="-o";;
+        -q) QUIET="-q";;
+        -v) VERBOSE="-v";;
+        -l) LIST="-l";;
+        -*) (echo "Invalid option $1"; usage); exit -1;
+    esac
+    shift
+done
+
+if [ $QUIET ]; then
+    if [ $VERBOSE ]; then
+        echo "Options -q and -v are incompatible"; usage; exit -1
+    fi
+    if [ $OUTPUT ]; then
+        echo "Options -q and -o are incompatible"; usage; exit -1
+    fi
+    if [ $LIST ]; then
+        echo "Options -q and -l are incompatible"; usage; exit -1
+    fi
+fi
+if [ $LIST ]; then
+    if [ $VERBOSE ]; then
+        echo "Options -l and -v are incompatible"; usage; exit -1
+    fi
+    if [ $OUTPUT ]; then
+        echo "Options -l and -o are incompatible"; usage; exit -1
+    fi
+fi
+
+DIFFERENCES=0
+
+if [ $1 ]; then
+    for FILE in $@; do
+        if [ -f $FILE ]; then
+            if [ -f $FILE@@/main/bb/LATEST ]; then
+                if [ -f $FILE@@/main/bb/dev/LATEST ]; then
+                    do_diff $FILE
+                else
+                    verbose "!! '$FILE' does not exist on dev branch"
+                fi
+            else
+                verbose "!! '$FILE' does not exist on bb branch"
+            fi
+        else
+            if [ -d $FILE ]; then
+                if [ -d $FILE@@/main/bb/LATEST ]; then
+                    if [ -d $FILE@@/main/bb/dev/LATEST ]; then
+                        do_diff $FILE "Common"
+                    else
+                        verbose "!! '$FILE' directory does not exist on dev branch"
+                    fi
+                    if [ $RECURSE ]; then
+                        $0 -R $LIST $QUIET $VERBOSE $OUTPUT $FILE/*
+                    fi
+                else
+                    verbose "!! '$FILE' directory does not exist on bb branch"
+                fi
+            else 
+                if [ -e $FILE ]; then
+                    verbose "!! '$FILE' is not a file or directory"
+                else
+                    verbose "!! '$FILE' does not exist"
+                fi
+            fi
+        fi
+    done
+else
+    echo "bde_brdiff: Insufficient arguments"
+    usage
+    exit -1
+fi
+
+exit $DIFFERENCES
+
+#------------------------------------------------------------------------------

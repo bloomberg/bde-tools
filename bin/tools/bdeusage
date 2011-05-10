@@ -1,0 +1,103 @@
+#!/usr/local/bin/perl -w
+
+use IO::File;
+use File::Basename;
+use Getopt::Long;
+
+use strict;
+
+sub usage();
+
+my %opts;
+unless (GetOptions(
+                   \%opts,
+		   "help|h|?",
+		   "comments|c",
+                  )) {
+    usage();
+    exit 1;
+}
+usage(), exit 0 if $opts{help};
+usage(), exit 1 if @ARGV != 1;
+my $comments = $opts{comments};
+my $f = $ARGV[0];
+my @f = open(FH, "<$f") or die "cannot open $f: $!";
+@f = <FH>;
+close(FH) or die "cannot close $f: $!";
+
+# print standard comments
+print STDOUT <<EOF if $comments;
+        // --------------------------------------------------------------------
+        // TESTING USAGE EXAMPLE
+        // Concerns:
+        //   The usage example provided in the component header file must
+        //   compile, link, and run on all platforms as shown.
+        //
+        // Plan:
+        //   Incorporate usage example from header into driver, remove leading
+        //   comment characters, and replace 'assert' with 'ASSERT'.  Suppress
+        //   all 'cout' statements in non-verbose mode, and add streaming to
+        //   a buffer to test programmatically the printing examples.
+        //
+        // Testing:
+        //   USAGE EXAMPLE
+        // --------------------------------------------------------------------
+
+        if (verbose) cout << "\\nTesting Usage Examples"
+                          << "\\n======================" << endl;
+
+EOF
+
+#print STDOUT <<EOF;
+#        char buf[100];  memset(buf, 0xff, sizeof buf);  // Scribble on buf.
+#        ostrstream out(buf, sizeof buf);
+#EOF
+
+# extract USAGE lines of code
+my $inusage;
+my $indots;
+for my $line (@f) {
+  next if !$inusage and $line !~ m|^///USAGE|;
+  last if $line =~ m|^\s|;
+  if ($line =~ m|^///USAGE|) {
+    $inusage = 1;
+  }
+  elsif ($indots and $line =~ m|^//\.\.|) {
+    $indots = 0;
+  }
+  elsif ($line =~ m|^//\.\.|) {
+    $indots = 1;
+  }
+  elsif ($indots) {
+    $line =~ s|^//[ \t]*$||;
+    $line =~ s|^// |   |;
+    $line =~ s/assert\(/ASSERT\(/g;
+#    $line =~ s/std::cout|cout/out/g;
+    $line =~ s/(std::cout|cout)/if (verbose) $1/;
+    print STDOUT $line;
+  }
+}
+
+
+exit 0;
+
+# -----------------------------------------------------------------------------
+# usage()
+# -----------------------------------------------------------------------------
+sub usage() {
+  print <<EOF;
+
+usage: getusage [-c] <file>
+
+Extracts .h USAGE snippets to stdout. '-c' also outputs comments.
+   
+EOF
+}
+
+
+
+
+
+
+
+

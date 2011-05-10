@@ -1,0 +1,92 @@
+SCM Queue Notifications
+=======================
+William Baxter, Tassilo von Parseval
+
+
+
+Developers need notification of SCM queue status for submissions not swept
+because of late approval, etc.  Robocop wants notification for large change
+sets.
+
+Develop a generic notification mechanism based on SCM queue scan.
+
+
+
+Requirements:
+- Notify developers and robocop of enqueued change sets that may require
+  special action.
+
+Deliverables:
+- Generic method that scans queue for jobs matching external criteria
+  and sends message constructed from the job by external criteria.
+- Notification hooks at queue boundaries.
+- Cron jobs that notify, frequency TBD:
+    for unapproved submissions
+    for stale submissions (bugf lingering past monday, CS more than 2 weeks
+    old)
+- Notification to robocop of staged material likely to require attention (CSIDs
+  lingering in state P).
+- Notification to robocop of committed CSIDs with large file lists upon commit.
+
+Implementation:
+- Developer: Tassilo
+- Design: .5 day
+- Implementation: 1 day
+- Testing: .5 days
+- Straightforward using existing SCM facilities.  Highly visible when including
+  notifications to developers.
+
+Proposed implementation:
+========================
+
+1) hooks at queue boundary:
+
+In order to minimize changes to the queue daemons itself, the core of these
+hooks can be implemented inside SCM::Queue::Job. Here's an example hook that
+could show up like this in prequeued:
+
+    sub send_message_on_big_cs {
+        my $job = shift;
+        my $num_files = () = $job->cs->getFiles;
+        return if $num_files < 20;
+
+        require SCM::Message;
+
+        my $csid = $job->id;
+        SCM::Message->send(
+                -to         => 'alan',
+                -from       => 'alan',
+                -subject    => 'Big change set',
+                -body       => "$csid has $num_files files.",
+        );
+    }
+
+    sub run {
+        ...
+        for my $job (@jobs) {
+            $job->hook( run             => \&send_message_on_big_cs,
+                        when_moved_to   => "$SCM_QUEUE/$SCM_DIR_QUEUE", );
+            ...
+        }
+        ...
+    }
+
+One can add an arbitry amount of hooks. The hooks will not be stored in the
+job files so they only exist for the lifetime of the SCM::Queue::Job object.
+They act like temporary jobfile properties with lifetime limited by queue
+context.
+
+Job files are moved from one directory to the next by using the
+SCM::Queue::Job::move_to() method. This method needs to be extended to check
+for the presence of hooks and which ones are imminent for the given move 
+operation.
+
+2) notification from cron:
+
+These will be supported through a method in SCM::Queue::Util that scans the
+queue and presents each job it finds to a closure.  It may be useful to
+prefabricate some functionality such as message send, so that the caller can
+define a closure merely to select jobs.  It may also be useful to provide
+closures that select certain slices of the queue, so that the caller can pass a
+closure that operations on the results without worrying about selection.
+

@@ -1,0 +1,270 @@
+#!/usr/bin/perl -w
+
+# "Teddy: don't believe his lies."
+# --Memento
+
+use strict;
+
+my $histfile = shift or die "usage: $0 cthist.dump".$/;
+my $fh;
+
+# pass one: compute true node + path history
+
+open $fh, "$histfile" or die "open: $!".$/;
+my $nodes = nodehist($fh);
+close $fh or die "close: $!".$/;
+
+# pass two: rewrite history to refer to historical paths, not current paths
+
+open $fh, "$histfile" or die "open: $!".$/;
+rewritehist($fh, $nodes);
+close $fh or die "close: $!".$/;
+
+sub usage {
+  return "usage: $0 cthist.reversed.dump".$/;
+}
+
+# gather history about what cc inodes were exposed under what paths, when
+sub nodehist {
+  my $fh = shift;
+  my %mkelem;
+  my %nodes;
+  my $rev;
+
+  while (<$fh>) {
+    chomp;
+    $rev++;
+
+    my ($op, $kind, $pname, $oid, $rest) = split /\t/, $_, 5;
+    my $fullpname = full_pname($pname, $op, $rest);
+
+    if ($pname ne $fullpname) {
+      $pname = $fullpname;
+      $oid = pname2oid($fullpname);
+      next unless $oid;
+    }
+
+    my $path = nxname($pname);
+
+    if ($op eq 'mkelem') {
+      # cannot trust path in mkelem line: name is reported under current
+      # name, not historical name. matters with ct mv / lnname / rmname.
+      $mkelem{$oid} = [ $path, $rev ];
+    }
+    elsif ($op eq 'lnname') {
+      $nodes{$oid} ||= {};
+      $nodes{$oid}->{$path} ||= [];
+      push @{$nodes{$oid}->{$path}}, [ $rev, undef ];
+    }
+    elsif ($op eq 'rmname') {
+      if (exists $nodes{$oid}->{$path}) {
+        # we are uncataloguing a hardlink to the node
+        $nodes{$oid}->{$path}->[-1]->[1] = $rev;
+      }
+      else {
+        # we are removing the original node made by mkelem
+        $nodes{$oid}->{$path} = [[ $mkelem{$oid}->[1], $rev ]];
+        delete $mkelem{$oid};
+      }
+    }
+  }
+
+  # all outstanding mkelems have persisted up until the present
+  while (my ($oid, $v) = each %mkelem) {
+    $nodes{$oid}->{$v->[0]} = [[ $v->[1], undef ]];
+  }
+ 
+  return \%nodes;
+}
+
+# rewrite ct lshist paths to refer to historical, not current, pathnames
+sub rewritehist {
+  my ($fh, $nodes) = @_;
+  my $rev;
+
+  while (<$fh>) {
+    chomp;
+    $rev++;
+
+    my ($op, $kind, $pname, $oid, $rest) = split /\t/, $_, 5;
+    my $fullpname = full_pname($pname, $op, $rest);
+
+    if ($pname ne $fullpname) {
+      $pname = $fullpname;
+      $oid = pname2oid($fullpname);
+      next unless $oid;
+    }
+
+    my $histpname = histpname($nodes, $pname, $oid, $rev);
+
+    if ($op eq 'lnname' && $pname eq $histpname) {
+      # this happens when links and unlinks happen inside one checkin
+      $op = 'mkelem';
+      $kind = 'file element';
+    }
+
+    if ($op eq 'lnname' && $kind eq 'directory version') {
+      print join("\t" => $op, $kind, $pname, $histpname, $rest).$/;
+    }
+    elsif ($op eq 'rmname' && $kind eq 'directory version') {
+      print join("\t" => $op, $kind, $histpname, $rest).$/;
+    }
+    else {
+      print join("\t" => $op, $kind, $pname, $rest).$/;
+    }
+  }
+}
+
+# a given node at a given rev should be covered by exactly one VOB obj
+sub pathat {
+  my ($node, $rev) = @_;
+  my @pathcover = grep cover($node->{$_}, $rev), keys %$node;
+  return $pathcover[0];
+}
+
+# given a list of interval keyed by name, and a point, return closed cover
+sub cover {
+  my $i = shift;
+  my $x = shift;
+
+  return grep(
+    (!defined $_->[0] || $_->[0] <= $x) &&
+    (!defined $_->[1] || $x <= $_->[1]), @$i
+  );
+}
+
+sub full_pname {
+  my ($pname, $op, $comment) = @_;
+
+  return nxprior($pname).'/'.parse_entry($pname, $comment).'@@'
+    if $op eq 'rmname';
+  return $pname.'/'.parse_entry($pname, $comment).'@@'
+    if $op eq 'lnname';
+  return $pname;
+}
+
+# pure screenscraping
+sub parse_entry {
+  my ($pname, $comment) = @_;
+  return $1 if $comment =~ m{(?:Uncataloged|Added) file element "(.*)"\.};
+  return undef;
+}
+
+# we regret to inform you that we must invoke cleartool...
+sub pname2oid {
+  my $pname = shift;
+  my $oid;
+
+  local ($@, $!);
+  open my $fh, "cleartool dump $pname 2>/dev/null |" or die "open: $!".$/;
+  while (<$fh>) { $oid = $1 if /^oid=(\S+)/; }
+  close $fh;
+
+  return $oid;
+}
+
+sub histpname {
+  my ($nodes, $pname, $oid, $rev) = @_;
+
+  if (my $histpath = pathat($nodes->{$oid}, $rev)) {
+    my @parts = nxsplit($pname);
+
+    if (@parts == 1) {
+      # old path was a plain path - shouldn't happen, but if so...
+      return $histpath;
+    }
+    elsif (@parts == 2) {
+      # old path was version extended - replace path part wholesale
+      return nxjoin($histpath, $parts[1]);
+    }
+    elsif (@parts == 3) {
+      # the old path was a versioned dir entry e.g. foo@@/main/br1/0/bar@@
+      # replace only the trailing entry component
+      my @verparts = split m{/}, $parts[1];
+      $verparts[-1] = (split m{/}, $histpath)[-1];
+      return nxjoin($parts[0], join('/',@verparts), '');
+    }
+  }
+
+  return undef;
+}
+
+sub nxver {
+  my @parts = nxsplit(shift);
+  pop @parts if !$parts[-1];
+  return (split m{/}, $parts[-1])[-1];
+}
+
+sub nxprior {
+  my @parts = nxsplit(shift);
+  pop @parts if !$parts[-1];
+  my @verparts = split m{/}, $parts[-1];
+  $verparts[-1]--;
+  $parts[-1] = join '/', @verparts;
+  return nxjoin(@parts);
+}
+
+# remove trailing @@/branch/n(/name@@)?
+sub nxname {
+  my @parts = nxsplit(shift);
+  return $parts[0] if @parts < 3;
+  return "$parts[0]/".(split m{/}, $parts[1])[-1];
+}
+
+sub nxsplit {
+  return split /@@/, shift, -1;
+}
+
+sub nxjoin {
+  return join '@@', @_;
+}
+
+__END__
+
+=head1 SYNOPSIS
+
+Pass me a file containing the line-reversed output of mudcase_dumphist.
+
+ClearCase lshist -minor reports directory entries under their current name,
+not under their historical name. I.e.
+
+$ ct co -nc .
+$ ct mkelem -nc foo
+$ ct ci -nc .
+
+$ ct co -nc .
+$ ct mv foo bar
+$ ct ci -nc .
+
+Results in:
+
+$ ct lshist -minor -fmt '%n %o %Nc\n'
+
+.@@/some/branch/1/bar@@ mkelem 
+.@@/some/branch/2/bar@@ lnname Added file element "bar".
+.@@/some/branch/2/bar@@ rmname Uncataloged file element "foo".
+
+All record of "foo" is gone, except that it appears in the checkin
+comment generated by ct mv. This can be correlated with other ct lshist
+records via ClearCase OIDs (the equivalent of inode #s inside the VOB
+storage pool).
+
+If you're trying to dump a ClearCase VOB and replay it into some other
+version control system that also does filesystem versioning, this will
+wreak havoc: historical entry names which have been rmnamed will
+be reported under their current entry name.
+
+This is an artifact of two ClearCase design decisions: (1) that
+"ct mv src dest" would be implemented as "ct ln src dest; ct rmname src"
+and (2) filesystem versioning would be implemented via versioned
+directories, not a versioned tree.
+
+There is no stream mode for this tool because it must make two passes
+over the input file. The first pass resolves OIDs to pathnames existing 
+for specific time intervals. The second pass uses this information to
+correct the names reported by ct lshist.
+
+=head1 AUTHORS
+
+Alan Grow, E<lt>agrow@bloomberg.netE<gt>
+

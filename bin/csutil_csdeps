@@ -1,0 +1,54 @@
+#!/bbs/opt/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use Production::Services;
+use Production::Services::ChangeSet qw/getChangeSetDbRecord/;
+use Change::Symbols qw($DEPENDENCY_TYPE_NONE
+                       $DEPENDENCY_TYPE_ROLLBACK
+                       $DEPENDENCY_TYPE_CONTINGENT
+                       $DEPENDENCY_TYPE_DEPENDENT
+                       $DEPENDENCY_TYPE_SIBLING);
+use Util::Message qw/warning/;
+use strict;
+
+my %deptypes = (
+        'none'          => $DEPENDENCY_TYPE_NONE,
+        'rollback'      => $DEPENDENCY_TYPE_ROLLBACK,
+        'contingent'    => $DEPENDENCY_TYPE_CONTINGENT,
+        'dependent'     => $DEPENDENCY_TYPE_DEPENDENT,
+        'sibling'       => $DEPENDENCY_TYPE_SIBLING,
+);
+my @getopt = (qw(help all), map {"$_!"} keys %deptypes);
+my %opt;
+
+die usage() if !GetOptions(\%opt, @getopt) || $opt{help};
+
+my @types = map { $deptypes{$_} } 
+  ($opt{all} ? keys %deptypes : grep $opt{$_}, keys %deptypes);
+
+die usage("No dependency types specified, exiting.") unless @types;
+
+my $svc = Production::Services->new;
+my @csids = @ARGV ? @ARGV : map {chomp; $_} <>;
+
+for my $csid (@csids) {
+  my $cs = getChangeSetDbRecord($svc, $csid) or
+    die "Error getting changeset for $csid.".$/;
+  my @deps = map { $cs->getDependenciesByType($_) } @types;
+  print "$csid $_".$/ for @deps;
+}
+
+sub usage {
+  my $usage = '';
+  $usage .= $_.$/ for @_;
+  $usage .= $/;
+  $usage .= (split m{/}, $0)[-1] . " [OPTIONS] csid1 csid2 ..." . $/;
+  $usage .= join $/, map{"  --$_"} @getopt;
+  return $usage.$/;
+}
+

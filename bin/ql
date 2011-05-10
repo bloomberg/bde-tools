@@ -1,0 +1,45 @@
+#!/bin/ksh
+#
+# ql: quick label one or more files
+# IMPORTANT: Run this from a 'bb' view
+
+if [[ $1 = "-c" ]]; then
+    CHECK_MODE=1
+    shift
+fi
+
+if [ $2 ]; then
+    case $CLEARCASE_ROOT in
+        /view/bb-*) ROOT_OK=1;;
+        /view/bde_integrator) ROOT_OK=1;;
+        *) echo "ql: $CLEARCASE_ROOT is not a 'bb' view"; exit 2;;
+    esac
+
+    LABEL=$1
+    shift
+    if [ -e $LABEL ]; then
+        echo "specified label '$LABEL' is a file - omitted label?";
+        exit 1;
+    fi
+
+    for FILE in $@; do
+        if [ -e $FILE ]; then
+            if [ $CHECK_MODE ]; then
+                echo "would label $FILE"
+            else
+                echo "labelling $FILE with '$LABEL'..."
+                /usr/atria/bin/cleartool mklabel -recurse -replace $LABEL $FILE
+                echo "...done"
+            fi
+
+        else
+            echo "'$FILE' does not exist"
+        fi
+    done
+else
+    echo "ql: Insufficient arguments"
+    echo "Usage: ql [-c] <label> <file> [<file> ...]"
+    exit 1
+fi
+
+exit 0;

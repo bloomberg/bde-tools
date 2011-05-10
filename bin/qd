@@ -1,0 +1,185 @@
+#!/bin/ksh
+#
+# qd: quick deliver (move to bb branch) one or more files
+# IMPORTANT: Run this from a 'bb' view
+#
+# Usage: qd [-c] [-r] file ...
+#    -c: check mode -- no merges or checkins performed
+#    -r: recursive directory move (use with care)
+# 
+# This script is used only to move files from the /main/bb/dev branch to the
+# /main/bb branch where the common ancester between /main/bb/LATEST and
+# /main/bb/dev/LATEST is identical to /main/bb/LATEST.  Because this script
+# invokes irreversable actions, the following safety rules are enforced:
+#
+# 1. The current view must be a bb view.
+# 2. A merge is rejected if the target file is checked out in the current view.
+# 3. A merge is considered suspect (not checked in) if it is not a trivial
+#    merge from the dev branch.
+# 4. Checkin is atomic: if any merge is rejected or is considered suspect,
+#    nothing is checked in (but merges are left checked out in the current
+#    view).
+
+usage()
+{
+    echo >&2 "Usage: qd [-c] [-r] file ..."
+    echo >&2 "    -c: check mode -- no merges or checkins performed"
+    echo >&2 "    -r: recursive directory move (use with care)"
+    exit 1
+}
+
+CHECK_MODE=false
+RECURSIVE=false
+
+# Function to run findmerge on arg in test (print) mode
+testmerge()
+{
+    typeset recursiveopt=
+    if $RECURSIVE; then
+        if [ -d "$1" ]; then
+            # Recursive directory merges are sometimes slow:
+            echo "-- Checking directory $1.  This make take a minute..."
+        fi
+    else
+        recurseopt=-directory
+    fi
+
+    /usr/atria/bin/cleartool findmerge "$1" $recurseopt -nc \
+        -fversion /main/bb/dev/LATEST -log /dev/null -print
+}
+
+# Function to run findmerge on arg. Will automatically check out and merge arg.
+domerge()
+{
+    typeset recursiveopt=
+    if $RECURSIVE; then
+        if [ -d "$1" ]; then
+            # Recursive directory merges are sometimes slow:
+            echo "-- Merging directory $1.  This make take a minute..."
+        fi
+    else
+        recurseopt=-directory
+    fi
+
+    /usr/atria/bin/cleartool findmerge "$1" $recurseopt -nc \
+        -fversion /main/bb/dev/LATEST -log "$1.qd.log" -merge -abort
+}
+
+set -A MOVED_FILES        # ksh syntax for declaring an array
+# declare -a MOVED_FILES  # bash syntax for declaring an array
+
+addToMovedFiles()
+{
+    # ksh syntax for appending to an array:
+    set -A MOVED_FILES "${MOVED_FILES[@]}" "$@"
+
+    # bash syntax for appending to an array:
+    # MOVED_FILES=("${MOVED_FILES[@]}" "$@")
+}
+
+# Parse arguments.
+# Can't use getopts because it breaks up arguments with embedded spaces.
+while [ $# != 0 ]; do
+    case "$1" in
+        -c) CHECK_MODE=true; shift                   ;;
+        -r) RECURSIVE=true;  shift                   ;;
+        -cr) CHECK_MODE=true; RECURSIVE=true; shift  ;;
+        -rc) CHECK_MODE=true; RECURSIVE=true; shift  ;;
+        --) shift; break                             ;;
+        -*) echo >&2 "qd: invalid option: $1"; usage ;;
+        *)  break                                    ;;
+    esac
+done
+
+if [ $# -lt 1 ]; then
+    echo >&2 "qd: Specify one or more files or directories"
+    usage
+fi
+
+case "$CLEARCASE_ROOT" in
+    /view/bb*-*) ;;
+    *) echo >&2 "qd: $CLEARCASE_ROOT is not a 'bb' view"; exit 2;;
+esac
+
+CANCEL_CHECKIN=false
+
+for FILE in "$@"; do
+    if [ ! -e "$FILE" ]; then
+        echo >&2 "!! '$FILE' does not exist.  (Directory merge needed?)"
+        CANCEL_CHECKIN=true
+    elif [ ! -z "$(cleartool lsco -short -cview -me -directory "$FILE")" ];then
+        echo >&2 "!! $FILE is checked out in this view.  Not moved."
+        CANCEL_CHECKIN=true
+    elif $RECURSIVE && [ -d "$FILE" ]; then
+        # Recursive directory move
+
+        # See if any nested files are checked out.
+        PRE_CHECKEDOUT=$(cleartool lsco -short -cview -me -r "$FILE")
+        if [ ! -z "$PRE_CHECKEDOUT" ]; then
+            for NFILE in $PRE_CHECKEDOUT; do
+                echo >&2 "!! $NFILE is checked out in this view.  Not moved."
+            done
+            CANCEL_CHECKIN=true
+        elif $CHECK_MODE; then
+            echo "** would recursively move directory $FILE"
+            testmerge "$FILE"
+            addToMovedFiles "$FILE"
+        else
+            echo "** recursively moving directory $FILE"
+            domerge "$FILE" || CANCEL_CHECKIN=true
+            # Add directory and nested files to list of files to check in
+            addToMovedFiles $(cleartool lsco -short -cview -me -r "$FILE")
+        fi
+    else
+        if [ -f "$FILE" ] && cmp -s "$FILE" "$FILE@@/main/bb/dev/LATEST"
+        then
+            echo "-- $FILE is unchanged"
+        elif $CHECK_MODE; then
+            echo "** would move $FILE"
+            testmerge "$FILE"
+            addToMovedFiles "$FILE"
+        else
+            echo "** moving $FILE"
+            domerge "$FILE" || CANCEL_CHECKIN=true
+            # If file didn't need to move (e.g. because it is newer than dev)
+            # then it will not have been checked out.  Only add file to the
+            # MOVED_FILES list if it has been checked out by findmerge.
+            addToMovedFiles $(cleartool lsco -short -cview -me -directory "$FILE")
+        fi
+    fi
+done
+
+# For each file that has been moved, ensure that that merge was trivial.
+if ! $CHECK_MODE; then
+    for FILE in "${MOVED_FILES[@]}"; do
+        if [ -f "$FILE" ] && ! cmp -s "$FILE" "$FILE@@/main/bb/dev/LATEST";then
+            # Merged file is not identical to /main/bb/dev/LATEST
+            echo >&2 "!! Merge of $FILE was not trivial.  Not checking in."
+            CANCEL_CHECKIN=true
+        fi
+    done
+fi
+
+if $CANCEL_CHECKIN; then
+    if $CHECK_MODE; then
+        echo >&2 "!! Move would have been cancelled due to errors"
+    else
+        echo >&2 "!! Checkin was cancelled. " \
+                 "Merges are checked out in current view."
+    fi
+    exit 2
+elif [ -z "${MOVED_FILES[*]}" ]; then
+    echo "-- No moves were necessary."
+    exit 0
+elif $CHECK_MODE; then
+    echo "-- Would check in ${MOVED_FILES[*]}"
+    exit 0
+fi
+
+echo "-- Checking in moved files"
+/usr/atria/bin/cleartool ci -nc "${MOVED_FILES[@]}" || exit $?
+for FILE in "${MOVED_FILES[@]}"; do
+    rm -f "$FILE.contrib" "$FILE.qd.log"
+done
+
+exit 0;

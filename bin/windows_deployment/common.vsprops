@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="common"
+	>
+	<Tool Name="VCCLCompilerTool"
+		PreprocessorDefinitions="NOMINMAX;BDE_BUILD_TARGET_EXC;BDE_BUILD_TARGET_MT;BDE_HIDE_COMMON_WINDOWS_WARNINGS;BSL_LEGACY=0;"
+		MinimalRebuild="false"
+		RuntimeTypeInfo="true"
+		WarningLevel="4"
+		DebugInformationFormat="1"
+		CompileAs="2"
+		Detect64BitPortabilityProblems="false"
+	/>
+	<Tool Name="VCResourceCompilerTool"
+		PreprocessorDefinitions=""
+		Culture="1033"
+	/>
+	<Tool Name="VCLibrarianTool"
+		AdditionalOptions="/IGNORE:4221"
+	/>
+	<Tool Name="VCLinkerTool"
+		AdditionalDependencies="ws2_32.lib"
+		GenerateDebugInformation="true"
+		LinkIncremental="2"
+		SuppressStartupBanner="true"
+		SubSystem="1"
+		RandomizedBaseAddress="1"
+		DataExecutionPrevention="0"
+	/>
+	
+	<UserMacro
+		Name="DEV_PATH"
+		Value="../../infrastructure/groups"
+	/>
+	<UserMacro
+		Name="ADAPT_PATH"
+		Value="../../infrastructure/adapters"
+	/>
+	
+</VisualStudioPropertySheet>

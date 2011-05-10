@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="common_debug"
+	InheritedPropertySheets=".\common.vsprops;"	
+	>
+	<Tool Name="VCCLCompilerTool"
+		PreprocessorDefinitions="_DEBUG;BDE_BUILD_TARGET_DBG;"
+		Optimization="0"
+		BasicRuntimeChecks="3"
+		RuntimeLibrary="1"
+	/>
+</VisualStudioPropertySheet>

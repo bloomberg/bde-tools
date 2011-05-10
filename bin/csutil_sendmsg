@@ -1,0 +1,59 @@
+#!/bbs/opt/bin/perl
+
+use warnings;
+use strict;
+
+use Getopt::Long;
+
+BEGIN {
+  $ENV{ PRODUCTION_SCM_HOST } = 'http://sundev13:28270';
+}
+
+use SCM::Message;
+use Symbols         qw/USER/;
+use Util::SCMControl qw/acceptSCMUser/;
+use Util::Message qw/fatal/;
+
+acceptSCMUser()  or  fatal "user not authorized";
+
+my @opts = qw/to|t=s
+from|f=s
+subject|s=s 
+help|h/;
+
+die usage() if not GetOptions(\my %opts, @opts);
+print usage() and exit if $opts{help};
+die "No recipient specified\n\n", usage() if not $opts{to};
+
+my $recpt   = $opts{to};
+my $sender  = $opts{from} || USER;
+my $subj    = defined $opts{subject} && $opts{subject} eq '' ? undef 
+: $opts{subject};
+my $body    = slurp_body();
+
+exit !SCM::Message->send(
+    -to         => $recpt,
+    -from       => $sender,
+    -subject    => $subj,
+    -body       => $body);
+
+sub slurp_body {
+  return do {
+    local $/;
+    <STDIN>;
+  };
+}
+
+sub usage {
+  return <<EOUSAGE;
+  $0 --to <rec> [ --from <from> ] [ --subject <subj> ] < file_with_body
+
+    Send a Bloomberg message. The message body is read from stdin.
+
+    --to        | -t <rec>      recipient of the message
+    --from      | -f <from>     sender of message (defaults to current user)
+    --subject   | -s <subject>  subject of the message (defaults to empty)
+
+    --help      | -h            this help screen
+EOUSAGE
+}

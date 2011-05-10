@@ -1,0 +1,252 @@
+#!/usr/local/bin/perl -w
+use strict;
+
+use IO::File;
+use File::Basename;
+use Getopt::Long;
+
+sub usage();
+sub getviewname($$);
+
+my %opts;
+unless (GetOptions(
+                   \%opts,
+		   "help|h|?",
+		   "printer|p=s",
+		   "all|a",
+                  )) {
+    usage();
+    exit 1;
+}
+usage(), exit 0 if $opts{help};
+usage(), exit 1 if !@ARGV or @ARGV > 2;
+my $printer = $opts{printer};
+my $all = $opts{all};
+die "printer not set" if !$printer and !$ENV{LPDEST};
+$ENV{LPDEST} = $printer if $printer;
+print "output will be sent to $ENV{LPDEST}\n";
+
+# -------------------------------
+# determine what versions to diff
+# -------------------------------
+
+my $f1 = $ARGV[0];
+my $f2 = $ARGV[1];
+$f1 =~ /(\S+):(\d+)|(\S+)/;
+if ($2) {
+  usage(), exit 1 if !$f2;
+  $f1 = getviewname($1, $2);
+}
+if ($f2) {
+  $f2 =~ /(\S+):(\d+)|(\S+)/;
+  $f2 = getviewname($1, $2) if $2;
+}
+die "$f1 not found, or not readable" if ! -r $f1;
+die "$f2 not found, or not readable" if $f2 and ! -r $f2;
+if (!$f2) {
+  print STDERR "diff'ing $f1 against predecessor...\n";
+}
+else{
+  print STDERR "diff'ing $f1 against $f2...\n";
+}
+
+if ($f2) {
+   die "files the same" if !system("cmp $f1 $f2 > /dev/null 2>&1");
+}
+
+# ------------------------------------
+# do ctdiff and save diff line numbers
+# ------------------------------------
+
+my $cmd = $f2 ? "cleartool diff $f1 $f2" : "cleartool diff -predecessor $f1";
+my @ctdiff = `$cmd`;
+chomp(@ctdiff);
+my @diffs;
+my @patt;
+$patt[0] = "-+\\[[^|]+ (\\d+-\\d+|\\d+)\\]";
+$patt[1] = "\\|-+\\[.+ (\\d+-\\d+|\\d+)\\]";
+for my $filei (0..1) {
+  my @diff;
+  for my $line (@ctdiff) {
+    next if $line !~ m/\[(?:changed|deleted|moved|after|inserted)/;
+    $line =~ /$patt[$filei]/;
+    my $i = $1;
+    my @i = split/-/, $i;
+
+    # set diff[linenumber - 1] = 1
+    if (@i == 1) {  # single line number
+      $diff[$i[0]-1]++;
+    }
+    else {  # range n-m
+      for (my $i = $i[0]; $i <= $i[1]; $i++) {
+        $diff[$i-1]++;
+      }
+    }
+  }
+  $diffs[$filei] = \@diff;
+}
+
+# ---------------------------------------------------------
+# get real filenames from ctdiff and read files into arrays
+# ---------------------------------------------------------
+
+my $tmpdir = "/bb/data/tmp/bde/$>";  # append user-id just in case...
+if (! -d $tmpdir) {
+  system("mkdir -p $tmpdir");
+  die "cannot mkdir $tmpdir: $?" if $?;
+}
+my @outputfiles;
+for my $filei (0..1) {
+  my $srch = !$filei ? "<<< file 1: " : ">>> file 2: ";
+
+  # extract full file name, which may be in form "file@@/branch/version"
+  my @t = grep /$srch/, @ctdiff;
+  die "diff failed" if ! @t;
+
+  # make up output filenames
+  $t[0] =~ s/$srch(\S+)/$1/;
+  $t[0] =~ m|\S+/(\d+)$|;  # get ccase version number
+  my $t = $1;
+  $t = "" if $t !~ /^\d+$/;
+  (my $tt = $t[0]) =~ s/^([\w\.\/]+)\@?\@?.*/$1/;
+  $tt = basename($tt);
+  $tt .= ".$t" if $t;
+  unlink("$tmpdir/$tt");
+
+  # do ct get
+  $cmd = "cleartool get -to $tmpdir/$tt $t[0];chmod 664 $tmpdir/$tt";
+  system($cmd);
+  $outputfiles[$filei] = $tt;
+}
+chdir $tmpdir or die "cannot cd to $tmpdir: $!";
+
+
+# ------------
+# write output
+# ------------
+
+for my $filei (0..1) {
+
+  # mpage file and read that in
+  system("mpager -ts 4 -sh $outputfiles[$filei] > tmp 2>/dev/null");
+  open(FH, "<tmp") or die "cannot open tmp: $!";
+  my @ps = <FH>;
+  chomp(@ps);
+  close(FH) or die "cannot close tmp: $!";
+  unlink("tmp");
+
+  # read in original file then re-use name
+  my @file_text;
+  open(FH, "<$outputfiles[$filei]") or
+    die "cannot open $outputfiles[$filei]: $!";
+  @file_text = <FH>;
+  chomp(@file_text);
+  close(FH) or die "cannot open $outputfiles[$filei]: $!";
+  open(FH, ">$outputfiles[$filei]") or 
+    die "cannot open $outputfiles[$filei]: $!";
+
+  # process postscript
+  my $bold;
+  my $i = 0;
+  for my $line (@ps) {
+    if ($line =~ /^0 \d+ .*M\(.*\)S.*$/) {
+      while ($i < @file_text and $file_text[$i] =~ /^\s*$/) {
+        $i++;
+      }
+      if (!$bold and $diffs[$filei]->[$i]) {
+        print FH "/Courier-Bold findfont 12 scalefont setfont\n";
+        $bold = 1;
+      }
+      elsif ($bold and !$diffs[$filei]->[$i]) {
+        print FH "/Courier findfont 12 scalefont setfont\n";
+        $bold = 0;
+      }
+      print FH "$line\n";
+      $i++;
+    }
+    else {
+      print FH "$line\n";
+    }
+
+    # for some reason setfont goes back to Courier...
+    if ($bold and $line =~ /^gsave$/) {
+        print FH "/Courier-Bold findfont 12 scalefont setfont\n";
+    }
+  }
+  close(FH) or die "cannot open $outputfiles[$filei]: $!";
+}
+
+
+# ----------------------
+# print postscript files
+# ----------------------
+
+print "output saved in $tmpdir: $outputfiles[0], $outputfiles[1]\n";
+my $str = "printing ";
+$str .= "$outputfiles[0], " if $all;
+$str .= "$outputfiles[1]";
+print "$str\n";
+system("/usr/ucb/lpr $outputfiles[0]") if $all;
+system("/usr/ucb/lpr $outputfiles[1]");
+exit 0;
+
+# -----------------------------------------------------------------------------
+# usage()
+# -----------------------------------------------------------------------------
+sub usage() {
+  print <<EOF;
+
+usage: bdediff [options] <file1>
+usage: bdediff [options] <file1>:<ver> <file2>:<ver>
+
+First form diffs ClearCase <file1> against predecessor.
+
+Second form accepts ClearCase version number(s), e.g. "myfile.cpp:3".  
+The version is looked for on /main/bb/dev first, followed by /main/bb.
+Note that one, or both, of these files need NOT be in ClearCase.
+
+Options:
+
+ --all,     -a            - print all output (default: second output file only)
+ --printer, -p <printer>  - printer          (default: envvar \$LPDEST)
+ --help,    -h
+
+
+NOTES:
+
+1. Filename banners on output will have ClearCase version appended as 
+   appropriate.  Examples:
+
+   - bdem_elemtype.h, with latest checkin at version 7:
+
+     command:  bdediff bdem_elemtype.h
+     banners:  bdem_elemtype.h.6, bdem_elemtype.h
+
+     command:  bdediff bdem_elemtype.h:6 bdem_elemtype.h
+     banners:  same
+
+     command:  bdediff bdem_elemtype.h:6 bdem_elemtype.h:7
+     banners:  bdem_elemtype.h.6, bdem_elemtype.h.7
+
+2. bdediff can be run against non-ClearCase files, but only if the two files
+   have different basenames.  This limitation will be addressed if the need
+   arises. 
+   
+EOF
+}
+
+
+# -----------------------------------------------------------------------------
+# getviewname()
+# -----------------------------------------------------------------------------
+sub getviewname($$) {
+  my $file = shift;
+  my $ver = shift;
+  my $temp = "$file\@\@/main/bb/dev/$ver";
+  $temp = "$file\@\@/main/bb/$ver" if ! -f $temp;
+  die "no version $ver found for $file" if ! -f $temp;
+  return $temp;
+}
+
+
+__END__

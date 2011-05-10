@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# recursively create a new ClearCase branch under the current view
+
+set -e
+
+die() { echo "$@" 1>&2; exit 111; }
+usage() { echo "usage: $self branchname element1 [ element2 ... ]"; }
+
+self="`basename $0`"
+test $# -gt 0 || { usage 1>&2; die "error: branch argument required."; }
+branch="$1" && shift
+test $# -gt 0 || { usage 1>&2; die "error: element argument required."; }
+
+mkbrtype() {
+  branch="$1" && shift
+  cleartool lstype -kind brtype -s | grep '^'"$branch"'$' >/dev/null && {
+    die "error: branch $branch already exists." # sanity check
+  }
+  cleartool mkbrtype -c "branch type autocreated by $self" "$branch"
+  return 0
+}
+
+mkbranch() {
+  branch="$1" && shift
+  element="$1" && shift
+  cleartool ls -vob -r -s "$element" | \
+    xargs cleartool mkbranch -nco -c "autobranched by $self" "$branch"
+}
+
+mkconfigspec() {
+  branch="$1" && shift
+  cleartool catcs | \
+    perl -e 'while (<STDIN>) { print; print $ARGV[0].$/ if /CHECKEDOUT$/ }' \
+      "element * .../$branch/LATEST"
+}
+
+mkview() {
+  view="$1" && shift
+  configspec="$1" && shift
+  cleartool mkview -tag "$view" -stgloc -auto
+  cleartool setcs -tag "$view" "$configspec"
+}
+
+if [ $# -gt 0 ]; then
+  # make the branch off in typespace
+  mkbrtype "$branch"
+
+  # with arguments, branch each element recursively
+  for element in "$@";
+    do mkbranch "$branch" "$element"
+  done
+
+  # save config spec for the new branch
+  mkdir -p "$HOME/.clearcase" || echo > /dev/null
+  configspec="$HOME/.clearcase/$branch.configspec"
+  mkconfigspec "$branch" > "$configspec"
+
+  # make a new view for the branch, and activate it
+  view="$branch"-"$USER"
+  mkview "$view" "$branch"
+  echo "View $view created for $branch. See $configspec."
+  exec cleartool setview "$view"
+else
+  usage
+  die "error: element argument required."
+fi
+

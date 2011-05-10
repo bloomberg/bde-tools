@@ -1,0 +1,20 @@
+#!/bbs/opt/bin/perl -w
+
+use strict;
+ 
+my $branch = shift or die "missing argument: branch".$/;
+my $branchre = qr{^(.*)\@\@\Q$branch\E/(\d+)$};
+
+while (<>) {
+  chomp;
+  next unless /$branchre/;
+  next unless -f;
+
+  my ($path, $ver) = ($1, $2);
+
+  for (my $i=$ver; $i>=1; $i--) {
+    my $pname = "$path\@\@$branch/$i";
+    -f $pname ? (print $pname.$/) : (print STDERR "error: $pname".$/);
+  }
+}
+

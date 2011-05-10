@@ -1,0 +1,47 @@
+#!/bin/ksh
+
+if [ $1 ]; then
+    for GROUP in $@; do
+        if [ -d /bbcm/infrastructure/groups/$GROUP ]; then
+            echo "cleaning $GROUP..."
+        else
+            echo "package group '$GROUP' does not exist"
+            exit 2
+        fi
+
+        echo "    installed $GROUP group includes";
+        rm -rf /bbcm/infrastructure/groups/$GROUP/include/*
+        rm -rf /bbcm/infrastructure/include/$GROUP/*
+        echo "    installed $GROUP group libraries";
+        rm -rf /bbcm/infrastructure/groups/$GROUP/lib/*
+        rm -rf /bbcm/infrastructure/lib/unix-*/*$GROUP*
+        echo "    $GROUP package build directories";
+        rm -rf /bbcm/infrastructure/groups/$GROUP/$GROUP*/unix-*
+        echo "    $GROUP package check files";
+        rm -f  /bbcm/infrastructure/groups/$GROUP/$GROUP*/.$GROUP*.chk
+        echo "    installed $GROUP package includes";
+        rm -rf /bbcm/infrastructure/groups/$GROUP/$GROUP*/include/*
+        echo "    installed $GROUP package libraries";
+        rm -rf /bbcm/infrastructure/groups/$GROUP/$GROUP*/lib/*
+        echo "    $GROUP generated documentation";
+        rm -rf /bbcm/infrastructure/groups/$GROUP/doxygen/*
+        echo "...done";
+    done
+else
+    echo "usage: cleanup <package group> [<package group> ...]"
+    exit 1
+fi
+
+exit 0;
+        echo "    installed $GROUP package includes";
+        rm -rf /bbcm/infrastructure/groups/$GROUP/$GROUP*/include/*
+        echo "    installed $GROUP package libraries";
+        rm -rf /bbcm/infrastructure/groups/$GROUP/$GROUP*/lib/*
+        echo "...done";
+    done
+else
+    echo "usage: cleanup <package group> [<package group> ...]"
+    exit 1
+fi
+
+exit 0;

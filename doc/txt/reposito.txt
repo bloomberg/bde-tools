@@ -1,0 +1,631 @@
+Repository Access
+=================
+20060405 William Baxter
+
+
+The source code repository will be based on SVK.  One or more perl modules will
+provide a uniform access interface.  The basic unit of operation is the change
+set (CS).
+
+
+Repository Module Operations
+============================
+
+Questions:
+
+  What is the current branch corresponding to EM, BF, RM?
+
+  What files have changed on branch X since last sweep (since CS X, since rev X)?
+
+  What was the last sweep on branch X?  (return CSID?)
+
+  What is the history of branch X since last promotion, branch?
+
+  What is the precursor to (set of) CSID on branch X?
+
+  Is CS permitted (constraint on submission)?
+
+Operations:
+
+  Promote branch X to EM, BF, RM.
+
+  Commit CS.
+
+  Create dev branch X.
+
+  Sweep files for EM, BF, RM.
+
+
+Do we need a general revID that is typically CSID but may be SWEEPID or
+PROMOTEID?
+
+
+Change Set
+==========
+In the repository context a CS is a tarball of source-code files expressed as
+canonical paths (relative to /bbsrc/bde/registry/lroot) plus a file of meta
+data:
+
+  lroot/...
+  meta
+
+This tarball is manufactured by cscheckin, and delivered atomically to the
+queueing mechanism via ssh or https.  The queue manager employs the
+Repository.pm module when processing the CS.  Each change set has a unique ID
+associated with it (CSID), allocated by cscheckin.  The tarball is called
+CSID.tgz.
+
+
+Repository Structure
+====================
+The basic repository structure consists of the standard directory structure
+plus an auxiliary directory for version-controlled meta data:
+
+  /trunk/
+  /branches/
+  /tags/
+  /meta/
+
+The structure of trunk, and by implication all other branches, is:
+
+  /trunk/lroot/...
+  /trunk/meta/...
+
+The lroot directory holds files expressed as canonical paths as in the tarball.
+The meta directory holds meta data for the entire branch.  Think of it as the
+accumulator for contributing CS meta files.
+
+
+Code Branches
+=============
+A code branch is a continuous line of development that evolves by the
+application of CSs.  These are ordinary SVK branches.  The normal branch model
+looks like
+
+ dev(RM)             beta(BF)              prod(EM)
+  |		      |			    |
+  |		      |			    X
+  |		      '---------------------
+  |-------------------		      	    |
+  |		      |			    |
+  |		      |			    |
+  |		      |			    |
+  |		      |			    |
+  |		      |			    X
+  |		      '---------------------
+  |-------------------		      	    |
+  |		      |			    |
+  |		      |			    |
+  |		      |			    |
+  |		      |			    |
+  |		      |			    |
+
+A single branch from the dev line (trunk) moves to beta and subsequently to
+production.  These three states are the respective targets of the three move
+types: regular moves (RM), bug fixes (BF), and emergency moves (EM),
+respectively.  These move types may be thought of as priorities listed in
+increasing order of urgency.  The rollback (RB) move type also exists, and is
+the highest priority.
+
+In principle we can branch after any changeset.  This may be useful in future
+but it is out of scope for current development.
+
+
+Change Sets and Revision Numbers
+================================
+The SVK/Subversion repository works exclusively in terms of revision numbers.
+The interface must work exclusively with CSs.  Assume that a single CSID
+corresponds to at most one revnum.  Given a CSID, how do we determine what
+revnum, if any, corresponds to the changeset?  We want to maintain a hash to
+support that lookup.  Ideally it should derive reproducibly from the
+repository.
+
+We will patch libsvn_fs_fs to pass environment variables to hook scripts.  The
+top-level hook script will cleanse the environment of all but the desirable
+variables before invoking a secondary script.  The secondary script will carry
+out processing based on the settings of one or more environment variables. 
+
+Each commit to the repository will set the BBSRC_TYPE and BBSRC_VALUE
+environment variables.  Possible settings for BBSRC_TYPE are:
+
+  csid	  This commit adds CS w/ ID of CSID.
+  sweep	  This commit tags a sweep from the branch.
+  branch  This commit creates a new branch.
+  tag	  This commit creates a new branch (maybe use branch instead).
+
+and the corresponding value appears in BBSRC_VALUE.  The pre-commit hook must
+reject any update that does not employ a valid pair of variables.
+
+The pre-commit and post-commit hooks will record in a directory in the
+repository (db/name?) a file named CSID containing the revision number.  These
+values may be swept into a CDB for high-speed access at a later date.  For now,
+read them directly from the files.
+
+
+Applying Change Sets
+====================
+To speed up change set application, we can maintain a checked-out copy of each
+live branch in volatile storage (space permitting).  Change sets applied to the
+same branch are serialized.  This is required when two change sets contain the
+same file, but also when they operate on different files in the same directory.
+In FSFS the directory holds the revision number for each files it contains,
+therefore a file update (not just an add or delete) is considered a directory
+update.  Therefore we must serialize per branch or determine that disjoint
+directories are affected.
+
+When beginning processing on a CS, grab a shared, blocking repository-level
+(global) lock.  This is shared by individual CS processes but exclusive for the
+cutover and sweep programs.  Look at the /meta/current file in the repository
+to obtain the current branch for the move type in question and grab an
+exclusive, blocking lock for the branch.  Update and/or revert the working copy
+to remove any debris left by a preceding failed commit attempt.  Perform any
+necessary testing in context.  If successful, commit.
+
+Upon commit, merge the list of files in the CS with db/checkin.  The format of
+each line is (tab-separated):
+
+  lroot_path_to_file movetype
+
+Pre-processing checks include comparing the list of files in a CS with those in
+this file.  Sort the file list from the tarball and comm w/ db/checkin.  If an
+overlap occurs, reject the changeset.  This should impose the same constraint
+as /bbsrc/checkin. (FIXME: write the file names first, then update to change
+move type from XX to a legitimate type).  This more correctly mimics
+/bbsrc/checkin.
+
+
+Chained CSs: EM => BF => RM
+
+Problem: Constraint in /bbsrc/checkin implies rejection of overlapping CSs =>
+cascading dependent CSs to multiple branches should work provided CSs arrive in
+time.  In fact cscheckin should manufacture one change set per branch
+(EM->BF->RM).  No need to lock at repository level to ensure ordering.  If
+buttons populate /bbsrc/checkin then we lose the constraint.  How to handle?
+is to have cscheckin submit multiple changesets simultaneously and hope that
+nothing intervenes
+
+Imposing /bbsrc/checkin constraints.
+
+Patches
+=======
+20060406: Applied patch to subversion-1.3.0/subversion/libsvn_repos/hooks.c:
+
+--- hooks.c	Thu Apr  6 19:32:45 2006
++++ hooks.c.new	Thu Apr  6 19:32:33 2006
+@@ -72,7 +72,7 @@
+     return svn_error_wrap_apr
+       (apr_err, _("Can't create null stdout for hook '%s'"), cmd);
+ 
+-  err = svn_io_start_cmd (&cmd_proc, ".", cmd, args, FALSE,
++  err = svn_io_start_cmd (&cmd_proc, ".", cmd, args, TRUE,
+                           stdin_handle, null_handle, write_errhandle, pool);
+ 
+   /* This seems to be done automatically if we pass the third parameter of
+
+
+
+
+####
+
+When applying a CS to a branch, append a line to the meta/history file in that
+branch:
+
+  CSID datetime branch movetype
+
+Thus the meta/history file contains the full CS history of the branch.
+
+The repository and the interface thereto must answer certain questions
+
+The cscheckin program operates via a gateway that elevates privilege to
+robocop.  It then runs the bde_createcs.pl program.
+
+The bde_createcs.pl program takes a list of files, performs some path inference
+and resolution, assigns a CSID, records the list of files in the CS DB, and
+puts files into /bbsrc/tools/data/RCS(FIXME: find correct directory).
+Subsequent robocop runs sweep files from the RCS directory into a build run.
+
+The process places some restrictions on the queueing of files.  If a file
+already exists in the RCS directory then the bde_createcs.pl rejects the
+changeset.  Developers have adapted to the actual rather than stated
+restrictions.  When robocop sweeps it removes files from the RCS directory,
+thus opening the door to further submissions in the same build cycle.
+Furthermore, robocop sweeps multiple times on Friday they day on which it
+determines the basis for the next build.  So those with rejected changes simply
+wait until Friday and push them into the queue at the last possible moment.
+
+
+Two Merge Models
+================
+We have at least two options in merging changes into the new robocop
+repository.  First, we can institute central merge control with a team whose
+role is to perform the merges.  Second, we can push the control and
+responsibility of merging out to the developers.
+
+The first option offers a higher degree of control at the cost of managing
+merges centrally.  The merge team would need exceptional skill in order to
+cover all applications.  Their speed would limit the system scalability.
+
+The second approach demands some tolerance on the part of the developer,
+because when conflicts occur, they will need to fetch merge information,
+perform the merge, and then resubmit their request.  But it scales better and
+more closely resembles the current system.
+
+We choose the second option.
+
+
+Goals
+=====
+The basic requirements center on the developers' workflow.  They need to
+maintain files in some form of source control and inject them into the
+cscheckin repository for deployment.  The system performs various validation
+tests on submissions and then merges into the appropriate development branch.
+
+There are a number major difficulties: managing submission conflicts in some
+reasonable fashion, and facilitating rollbacks, pushing the merge burden back
+onto the developers, increasing flexibility in the release process.
+
+Peter wants a system that determines the appropriate interface to cscheckin via
+Perl modules and later implements changes only behind that interface.  This may
+or may not work in the short term.  The cscheckin interface dominates because
+developers see it.  All underlying interface pales by comparison.
+
+In future the cscheckin interface will change.  Ideally these changes will
+occur only in the program itself and not also in the modules.
+
+
+One Repository
+==============
+Storing files in a single repository causes all code updates to share a single
+revision sequence and ultimately code history.  This allows the maximum
+flexibility for merging across branches.  The importance of merging is somewhat
+limited in the present case because we push the ownership of changes back onto
+the developer and don't leave them with the branch owner, aka robocop.
+
+
+Mainline and Release Candidates
+===============================
+The single mainline of the repository resides in trunk.  Ultimately all changes
+must propogate back to the mainline.  A release candidate (RC) is a branch of
+trunk that may result in an actual production deployment.  An RC is in one of
+the following states:
+
+  beta	    in beta testing and subject to BFs
+  prod	    deployed and subject to EMs
+  done	    no longer active as a development target
+
+These states form a unidirectional progression.  A candidate never reverts to a
+lesser state once it has moved to the next one.
+
+When a beta candidate is deemed ready for deployment it is elevated to prod
+state, tagged as a deployment, and deployed from the tagged version.  The
+prod-state branch lives on, as the potential target for EMs followed by a new
+deployment.
+
+It may be useful to add new states in future.  Nothing prevents this.  They are
+merely additional states.  We choose to represent the current state of a
+candidate using its name.  This makes it trivial to identify the state of an
+arbitrary candidate.  FIXME: Does the SVK repository retain branching history
+sufficient to retrace the development?  If not we may need to keep track of the
+state either in a file in the candidate or external to the repository.
+
+It may be useful to maintain multiple RCs in the same state (parallel RCs).
+Nothing prevents this, although it does require that any update identify the
+candidate to which it applies.
+
+
+Change Sets and Priorities
+==========================
+A change set (CS) consists of a set of files to update and a target branch.  We
+ignore the possibility of a multiple-target application from a single CS.
+
+The target branch is either the trunk or an RC.  Depending on the current state
+of the RC, a particular move priority is required:
+
+  DC	    normal change, apply to dev
+  BF	    bug fix, apply to beta
+  EM	    emergency move, apply to prod
+
+The move priority indicates that the change set targets an RC in a particular
+state. A DC targets the main development trunk, a BF targets a beta RC, and an
+EM targets a prod RC.  A move type also implies the additional constraints on
+the update: authorization by managers, need to cite a specific ticket,
+authentication required before applying the update, and also the need to
+propogate changes down to the development mainline.
+
+The ability to specify the move priority separately is something of a
+misfeature.  It assumes that at most one candidate exists in any given state,
+and therefore specifying the move type unambiguously identifies the target
+branch.  This approach obviously breaks down when we introduce parallel RCs.
+
+The converse is true, that identifying the RC specifies the move type
+reqirement unambiguously, because the current state of the RC implies the need
+for a particular move type.  But this sytem also breaks down if we introduce
+additional states and thereby destroy the 1--1 correspondence between states
+and move types.  We could introduce a new move type for each new state.  The
+need to do so suggests that move type is merely the shadow of RC state.
+
+Future systems should allow the user to select an RC and move changes to it,
+using the current state of the RC to determine the appropriate priority.  The
+purpose of permitting direct selection of move type seems to be to apply a CS
+to the "current" or "leading" RC in a particular state.  One can just as well
+offer this choice as a distinguished RC selection item.  Maintain a mapping
+from state to RC on the back end so that we can assume a known RC.
+
+
+Repository Structure
+====================
+The standard SVN repository structure looks like this:
+
+  trunk/	      Main development branch
+  branches/	      Branches for active work
+  tags/		      Snapshot branches
+
+The trunk directory holds the mainline of the source code.  The branches
+directory holds all branches that may receive updates, while the tags directory
+holds snapshot branches, i.e. branches that never change after creation.  The
+same branching mechanism produces entries in branches and tags.  The
+distinction is merely conventional, but useful.
+
+[[
+FIXME: Renames in an SVN repository work by copy-and-delete.  As such they are
+not atomic.  This invalidates the renaming scheme described below.  Perhaps
+keep the name as RCID and use a status file or a property on the top-level RCID
+directory to track status.  More work to do here.
+
+Store a status file in the RCID top-level directory to hold state.  May as well
+make it hold key=value pairs including state.  This may save the cost of
+building an interface to file properties at the cost of building a system to
+handle a file of key=value pairs.  Surely Peter already has one.
+]]
+
+An active RC appears in branches.  The format of the name is:
+
+  RCID-STATE[-EXTRA]
+
+where RCID identifies the RC.  It consists of EPOCH-SEQ, the creation time and
+a sequence number that differentiates same-second branches.  STATE is one of
+the states listed above.  It rises through the list of states through renaming:
+
+  RCID-beta -> RCID-prod -> RCID-done
+
+This branch receives updates per its current state under the constraints
+outlined above.
+
+When an RC is ready for sweep (typically first at elevation to prod state),
+tag it as:
+
+  tags/RCID-sweep-EPOCH
+
+and then deploy from the tagged version.  Build requires a checkout, which will
+take some time.  Maintain an external record of deployment success or failure.
+
+Failure to record deploy should simply result in a second attempt.
+
+
+Applying a Change Set
+=====================
+A changeset CSID arrives targeting RCID-STATE.  How do we apply it to the
+target RC?
+
+Assume that CSID incorporates a decodable timestamp (FIXME: does it?).  Then
+write CS to permanent storage:
+
+  cs/YYYY/MMDD/CSID-s.tgz (s == submitted)
+
+Unpack the tarball in a temporary directory.  Create empty subdirectories for
+cross-directory dependencies as needed.  For each directory in the resulting
+path tree, symlink in children not already in the tree from the main build
+directory.  We now have a minimal-copy build tree.  Build the appropriate
+targets.
+
+If things are remotely sane this should make proper use of prefabricated
+targets symlinked into the current directory.  It should not build anything
+in a symlinked directory because that risks collision with a sibling process.
+
+Since things are unlikely to be even remotely sane...FIXME: Peter! Help!
+
+Remove the temporary build directory.
+
+After passing validation move the CS to
+
+  CSID-v.tgz (v == validated)
+
+Lock for commit.  Update the staging checkout with repository (in case of
+previously failed commit attempt).  Compare CS file versions (see below) with
+repository versions.  If they fail to match, move the CS to
+
+  CSID-o.tgz (o == out of date)
+
+report out-of-date list to caller, and exit.  If they match, update the staging
+checkout with the replacement files.  Update the staging checkout file
+versions.  Commit (FIXME: failure recovery).  Update the DB state for the CS.
+Move the CS to
+
+  CSID-c.tgz (c == committed)
+
+and report success.
+
+This queue is sloppy.  Failure before commit leaves the CS under an
+intermediate name.  We don't care.  The user doesn't see success.
+
+
+CSID
+====
+FIXME: Details of CSID assignment and content.
+Some module supplies a CSID to bde_createcs.pl.  At some point the program also
+writes the changeset to the DB file, one line per file.  The format in the DB
+looks poor.  How is it employed in the current context?  Does it support
+translation of CSID to file list?  Should it split to normalize the data: one
+table for CSID and related data, the other for CSID,file pairs?  What are the
+sorting properties of CSID?
+
+Dawit reports problems with DB corruption that smells like NFS.  Probably
+better to write update files and merge and unique with DB on demand.  An
+asynchronous process local to storage can perform the DB rewrite.
+
+
+
+Detecting Conflicts
+===================
+The present system uses a rather crude mechanism to detect conflicts.  If a
+file exists in the RCS repository, then the user may not submit an update.  It
+appears that the system does not reject an entire change set because of this
+policy, but instead removes the offending file from the submission list.  This
+is entirely broken.
+
+Updates occur by full-file substitution.  The problem is knowing what old file
+we are replacing.  If the repository file has changed between the time of
+developer checkout and time of update, we have a collision.  How do we detect
+collisions?
+
+Assuming that each file can support an RCSid, we could use that or a new
+version of same to identify the current version of the file in the repository.  
+If we inject the ID into the file upon checkout to the developer we can test
+against it prior to replacement into the repository.
+
+What to use for the ID?  We could simply record the revision when the file last
+changed.  This assumes invariance of the revision number, probably safe, but
+possibly brittle.  More expensive and more robust would be an MD5 hash of the
+file.  In either case, store the ID in the file in the repository or in a file
+property or in a status file in the repository.
+
+In principle we could maintain a record of what each developer had checked out
+and thus hide the entire ID-checking mechanism from the developer.  This seems
+like too much work, although it does permit the use of the ID entirely external
+to the individual file.  How do we add an ID when a new file arrives?
+
+What is the current rate of collision?  How often does a single developer
+perform multiple updates on a file?  How often do multiple developers perform
+updates on a single file?
+
+Suppose the user maintains files in an external repository and checks out files
+with $Id:$ substitution.  Only the ID of the file has changed, not the content.
+Should the file be considered changed?  Yes.  Unexpanding the substitution
+requires rewrites and complicates the update logic.  The solution is simply to
+turn off substitution when extracting from the external repository, something
+that the appropriate plugin will facilitate.
+
+Check for ID conflicts before running validation and again before commit.  The
+former test may or may not abort the run.  Validation tests may have utility
+even in this context.  The latter check runs with a commit lock and therefore
+sees only up-to-date repository data.
+
+
+Rigging the Incentives
+======================
+
+Submitting one file at a time risks rejection of one file among several with
+interdependencies.  Submitting a full CS at once permits rejection of the
+entire CS in case of a collision.  Similarly, rollback of one-by-one
+submissions requires external tracking of a set of CS, because it bypasses the
+system's tracking mechanism, namely the CS.
+
+The system is generally cooperative and not competing among developers.
+Therefore we can use systems that allow those who play by the rules some
+advantage and simply make it more difficult for the rest.  Hashing to detect
+collision is one such system.
+
+Recovery of submissions from an arbitrary CS is easy.  Validation may have
+value even if the commit attempt fails early because original files are out of
+date.  Could add an option to fail on early out-of-date detection.  FIXME: How
+to support fetch of merge data.
+
+
+
+Communicating Updates
+=====================
+User runs of cscheckin employ a gateway to elevate privilege to robocop.
+Assume that we are running as robocop in what follows.  The ssh setup requires
+empty passphrase access from each development machine to the repository server,
+but only for robocop.
+
+Construct the CS bundle as CSID.tar.gz.  Use an atomic remote-delivery file
+handle a la Isaac to deliver to the SVK server, and invoke the update attempt.
+This approach requires ssh access from each server where a developer runs
+cscheckin, but only as robocop.
+
+
+Questions
+=========
+How often do CSs overlap?  This information should be available somewhere.  In
+the DB?
+
+Assume that the user checks out from the repository.  Rather than taint the
+file with an ID that they might change anyway, maintain a hidden record of the
+latest checkout per (file,user).  When testing a CS, locate the origin version
+to make sure that the change is not out of date.
+
+In current bde_createcs.pl, pruning of files occurs by file time and by RCSid
+comparison.  Files are tested individually and perhaps dropped on the basis of
+these tests.  This may destroy the integrity of a CS.  Should we reject the
+entire set?  Moving to the new (lesser) update constraints corresponds to
+moving them from the front-end as now to the back end (repository server).  If
+we deploy with front-end constraints and simply remove them later do we have an
+acceptable upgrade path?
+
+What is the current timing of CS reporting via Ellen's tool?  Does the system
+attempt real-time updates to those reports?  Can we simplify by making these
+pseudo-realtime?
+
+
+####
+
+TODO
+====
+More detail on application of updates. 
+Cover other tools in cscheckin family.
+Test implementation.
+Rollbacks, reverse updates, or ...
+Given CS, find revision that applied it.
+Synchronizing repositories between machines: can we guarantee identical
+revision numbers?
+Enforcing propogation of high-priority changes to lower-priority RCs.
+
+
+Other Resources
+===============
+Peter W, Subversion Repository -- Objectives and Overview
+http://www.perforce.com/perforce/bestpractices.html
+
+
+#### Rework
+
+CSID Database
+=============
+A change set CSID arrives.  Create a branch of the target mainline called
+mainline-CSID:
+
+  svk update mainline
+  svk copy mainline branches/mainline-CSID
+
+Each branch contains a status file that contains current and perhaps historical
+status information.  Status values are
+  m	mainline
+  q	queued
+  v	validated
+  c	committed
+  f	failed (split or qualify this?)
+  r	rolled back
+  a	abandoned
+
+FIXME: Made these up.  What are the real values?  Name the status file for CS?
+Look at the DB subsystem for state values.
+
+Initial or default status is "m", probably inherited from the mainline status
+file.  Move CS files into the new branch.  Update the status to "q" and commit.
+Perform validation.  If any stage fails, update status to "f", otherwise to
+"v".  Commit.
+
+  svk commit branches/mainline-CSID
+  svk smerge branches/mainline-CSID mainline
+
+A regular move applies only to the single dev mainline.  A bug fix applies both
+to beta and dev mainlines.  An emove applies to all three.  Rather than attempt
+to bundle all changes and risk delay because of failure to merge the
+lower-priority branch, a priority CS should have a status that indicates the
+need to follow up with each lower-priority update.
+
+For bug fix and emove CSs the current mainline branch appears in current/beta
+and current/prod, respectively.  Also record there the CSs applied in the
+branch?
+

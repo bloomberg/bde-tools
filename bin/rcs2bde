@@ -1,0 +1,62 @@
+#!/bin/ksh
+
+function die {
+  print "$1 at line $2"
+  exit 1
+}
+
+#[[ -n $1 ]] || die "usage: $(basename $0) <rcsdir>" $LINENO
+
+dirs=\
+"icpputil/l_gui   \
+ icpputil/l_isa   \
+ icpputil/l_fix   \
+ icpputil/l_itu   \
+ icpputil/l_fps   \
+ icpputil/l_fxo   \
+ icpputil/l_xdb   \   
+ icpplib/f_crovml \
+ icpplib/f_crxodf \
+ icpplib/f_crfxdb \ 
+ icpplib/f_xxbbpe \ 
+ icpplib/f_crovco \
+ icpplib/f_xxeonc"
+
+# copyout all files
+for j in $dirs
+do
+    j=/bbsrc/$j
+    ls $j/*.cpp,v > /dev/null 2>&1 || continue
+    dir=$(basename $j)
+    mkdir $dir
+    cd $dir
+    for i in $j/*.cpp,v $j/*.h,v
+    do
+        i=$(basename ${i%,v})
+        [[ -f $i ]] && { rm -f $i || die "cannot rm $i" $LINENO ;}
+        copyout $i ${j#/bbsrc/} || die "cannot copyout $i" $LINENO
+    done
+    chmod 664 *.cpp *.h || die "cannot chmod" $LINENO
+    cd ..
+done
+
+
+
+exit 0
+
+
+
+# make package directory etc.
+[[ ! -d package ]] && { mkdir package || die "cannot mkdir package" $LINENO ;}
+pkg=$(basename $srcDir)
+memfile=package/$pkg.mem
+>$memfile || die "cannot init $memfile" $LINENO
+for i in *.h
+do
+  print ${i%.h} >> $memfile || die "cannot init $memfile" $LINENO
+done
+depfile=package/$pkg.dep
+print bde > $depfile || die "cannot create $depfile" $LINENO
+
+rc=0
+

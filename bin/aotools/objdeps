@@ -1,0 +1,110 @@
+#!/bin/ksh
+
+typeset USAGE
+USAGE="Usage: $0 [-l|-o|-h] lib obj [obj...]
+  lib is full uorname (e.g. apputil or gtk/gtkapp)
+  obj is the name of an object file that is built in lib
+    (note that for a Fortran object, this must be the name of the separated
+    file that contains an individual subroutine, not the container file
+    that holds all of the original source subroutines at once.)
+  -l to only get library level analysis
+  -o to only get object level analysis  (default is both )
+  -h (or --help) to get this usage information
+"
+
+typeset libanal
+typeset objanal
+typeset deflist=yes
+echo=echo
+
+while getopts "lohq" opt
+do
+    case $opt
+    in
+	h )
+	    echo "$USAGE"
+	    return 0
+	    ;;
+	l )
+	    libanal=yes
+	    deflist=
+	    ;;
+	o )
+	    objanal=yes
+	    deflist=
+	    ;;
+	q )
+	    echo=:
+	    ;;
+	\?)
+	    echo "$USAGE"
+	    return 0
+	    ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+typeset trylib=$1
+shift
+
+typeset lib=
+
+if [[ -d "/bbs/$trylib" ]]
+then
+    lib=$trylib
+elif [[ -d "/bbs/gtk/$trylib" ]]
+then
+    lib=gtk/$trylib
+else
+    echo cannot find library "$trylib" in /bbs - aborting
+    echo "$USAGE"
+    return 1
+fi
+
+cd /bbs/$lib
+
+
+typeset objlist=
+for obj in "$@"
+do
+    obj=${obj%.o}
+    if [ -f tmpmake/$obj.o ]
+    then
+	objlist="$objlist tmpmake/$obj.o"
+    elif [ -f $obj.o ]
+    then
+	objlist="$objlist $obj.o"
+    elif [ -f $obj ]
+    then
+	objlist="$objlist $obj"
+    else
+	echo "no object found for $obj"
+    fi
+done
+
+if [ -z "$objlist" ]
+then
+    echo "no object files found to analyse - aborting"
+    echo "$USAGE"
+    return 1
+fi
+
+for obj in "$objlist"
+do
+    symfind --deps $obj > /tmp/jmm.d.$$
+    if [ -n "$deflist$libanal" ]
+    then
+	$echo "==== ($lib) $obj dep libraries"
+	libnames /tmp/jmm.d.$$ | tee /tmp/jmm.D.$$
+	$echo
+    fi
+    if [ -n "$deflist$objanal" ]
+    then
+	$echo "==== ($lib) $obj dep objects"
+	cat /tmp/jmm.d.$$
+	$echo
+    fi
+    $echo
+done
+rm /tmp/jmm.?.$$

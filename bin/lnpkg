@@ -1,0 +1,596 @@
+#!/usr/bin/perl -w
+
+use Errno qw/EEXIST/;
+use Cwd qw/cwd/;
+use Getopt::Long;
+use strict;
+
+my $VERSION = 0.1;
+my ($prefix, $pkgprefix, $pkgdb, %opt);
+my (@areas) = qw/bin doc etc include info lib libexec man opt sbin share/; 
+
+main(); # process command line
+
+exit 0;
+
+sub pkg_help {
+  print usage()."\n\n";
+}
+
+sub pkg_list {
+  print $_.$/ for packages();
+}
+
+sub pkg_contents {
+  cat_pkg_file(pkg_match(shift), 'contents');
+}
+
+sub pkg_provides {
+  cat_pkg_file(pkg_match(shift), 'provides');
+}
+
+sub pkg_depends {
+  cat_pkg_file(pkg_match(shift), 'depends');
+}
+
+sub pkg_add {
+  my $pkg = pkg_match(shift);
+  my ($pkgname, $pkgver) = pkg_identify($pkg);
+  my $tmpdir = tempdir();
+
+  my @contents;
+  my $finder = sub {
+    push @contents, $1 if $_[0] =~ m{^$pkgprefix/$pkg/(.*)$} && !-d $_[0];
+  };
+
+  finder("$pkgprefix/$pkg", $finder);
+
+  @contents = sort @contents;
+
+  # populate contents file. expose all files from the package by default...
+  # user can hand trim if need be. no dependencies, though eventually
+  # one could use ldd to determine some.
+
+  my %seen = map { ($_=>1) } @contents;
+  my @provides;
+
+  for (@contents) {
+    push @provides, [ $_, $_ ];
+    push @provides, [ "$_-$pkgver", $_ ] if
+      $opt{'version-links'} && !/-\Q$pkgver\E$/ && !$seen{"$_-$pkgver"};
+  }
+ 
+  dump_file("$tmpdir/contents", \@contents);
+  dump_file("$tmpdir/provides", \@provides);
+  dump_file("$tmpdir/depends", []);
+
+  # atomically register the package
+
+  act('mv', $tmpdir, "$pkgdb/$pkg");
+}
+
+sub pkg_check {
+  my $provides = {};
+  my ($installed, $unmanaged) = find_exposed();
+  my @report;
+
+  if (@_) {
+    for (map { pkg_match($_) } @_) {
+      $provides->{$_} = slurp_pkg_file($_, 'provides');
+    }
+
+    # but only compare against installed stuff for the given packages
+    do { delete $installed->{$_} unless $provides->{$_} } for keys %$installed;
+  }
+  else {
+    for (packages()) {
+      $provides->{$_} = slurp_pkg_file($_, 'provides');
+    }
+  }
+
+  # format into flat "pkg src target" records
+
+  my (@p, @i);
+
+  while (my ($pkg, $list) = each %$provides) {
+    push @p, join ' ' => $pkg, @$_ for @$list;
+  }
+
+  while (my ($pkg, $list) = each %$installed) {
+    push @i, join ' ' => $pkg, @$_ for @$list;
+  }
+
+  # compare and report records which are only in one list or the other.
+  # suppress report of records common to both. see man comm(1) for info
+  # on the trailing arguments, which are confusing but standard by now.
+
+  my $comm = comm(\@p, \@i, 3=>1);
+
+  for (@{$comm->{1}}) {
+    push @report, "provided but not installed: $_".$/;
+  }
+
+  for (@{$comm->{2}}) {
+    push @report, "installed but not provided: $_".$/;
+  }
+
+  push @report, "unmanaged link $_->[0] -> $_->[1]".$/ for @$unmanaged;
+
+  print $_ for @report;
+  print @report.' problem'.(@report==1 ? '' : 's').$/ if $opt{verbose};
+  exit 2 if @report;
+}
+
+sub pkg_install {
+  my @pkgs = @_ ? (map { pkg_match($_) } @_) : packages();
+
+  for my $pkg (@pkgs) {
+    my $provides = slurp_pkg_file($pkg, 'provides');
+
+    while (my $pair = shift @$provides) {
+      my ($src, $target) = @$pair;
+      my ($inst_pkg, $inst_src, $inst_target) = installed("$prefix/$src");
+
+      if ($inst_pkg) {
+        die "conflict: $target already provided by $inst_pkg/$inst_target" if
+          $inst_pkg ne $pkg && !$opt{force};
+        warn "skipping: $target already installed" if
+          $inst_pkg eq $pkg && $opt{verbose};
+        next unless $opt{force};
+      }
+
+      ensure_path(dirname("$prefix/$src"));
+      act('symlink', "$pkgprefix/$pkg/$target", "$prefix/$src");
+    }
+  }
+}
+
+sub pkg_uninstall {
+  my @pkgs = @_ ? (map { pkg_match($_) } @_) : packages();
+  my %dirs;
+
+  for my $pkg (@pkgs) {
+    my $provides = slurp_pkg_file($pkg, 'provides');
+
+    while (my $pair = shift @$provides) {
+      my ($src, $target) = @$pair;
+      my ($inst_pkg, $inst_src, $inst_target) = installed("$prefix/$src");
+
+      warn "skipping: $target not installed" && next if !$inst_pkg;
+
+      die "conflict: $target provided by $inst_pkg/$inst_target" if
+        $inst_pkg && $inst_pkg ne $pkg && !$opt{force};
+
+      act('unlink', "$prefix/$src");
+
+      $dirs{dirname($src)} = 1;
+    }
+  }
+
+  # remove emptied directories
+
+  for my $dir (keys %dirs) {
+    for (sort { length $b <=> length $a } ancestors($dir)) {
+      next unless $_;
+      next unless -d "$prefix/$_";
+      next unless dirempty("$prefix/$_");
+      act('rmdir', "$prefix/$_"); # FIXME not always hit in dry-run mode
+    }
+  }
+}
+
+sub pkg_exposed {
+  my $cb = sub {
+    my ($pkg, $src, $target) = @_;
+    print join(' ' => $pkg, $src, $target).$/ if $pkg;
+  };
+
+  find_exposed($cb);
+}
+
+sub pkg_match {
+  my $pkg = shift or die 'argument required: pkgname';
+
+  # packages specified as absolute paths to install area / pkgdb area
+  $pkg = $1 if $pkg =~ m{^$pkgprefix/([^/]+)/?$};
+  $pkg = $1 if $pkg =~ m{^$pkgdb/([^/]+)/?$};
+
+  # specified by full package-version name in the package database
+  return $pkg if -d "$pkgdb/$pkg" && pkg_identify($pkg);
+
+  # specified as relative path to package install dir
+  return $pkg if -d "$pkgprefix/$pkg" && pkg_identify($pkg);
+
+  # specified by regex against pkgdb area
+  my @match = grep -d "$pkgdb/$_" && /$pkg/, packages();
+  die "no package matching: $pkg" if @match == 0; 
+  die "multiple packages matching: $pkg" if @match > 1;
+  return $match[0];
+}
+
+sub pkg_identify {
+  my $pkg = shift;
+  return ($1, $2) if $pkg =~ /^(.+)-([\d\.]+)$/;
+  return undef;
+}
+
+sub act {
+  my $cmd = shift;
+  my %cmds =
+  (
+    'symlink' => sub {
+      my ($target, $src) = @_;
+      my $basename = basename($src);
+      my $tmpdir = tempdir();
+
+      symlink $target, "$tmpdir/$basename" and
+      system('mv', "$tmpdir/$basename", $src) == 0 and
+      rmdir $tmpdir;
+    },
+
+    'unlink' => sub { unlink @_ },
+    'mkdir' => sub { mkdir $_[0] },
+    'rmdir' => sub { rmdir $_[0] },
+    'mv' => sub { system('mv', @_) == 0 },
+  );
+
+  my $sub = $cmds{$cmd} or
+    die "command $cmd is not dry-run enabled.";
+
+  if ($opt{dry}) {
+    $opt{force} or predict($cmd, @_);
+    print join(' ', 'dry: ', $cmd, @_).$/;
+  }
+  else {
+    print join(' ', $cmd, @_).$/ if $opt{verbose};
+    $sub->(@_) or $opt{force} or
+      die sprintf 'failed: "%s" (%s)'.$/, join(' ', $cmd, @_), $!;
+  }
+}
+
+sub predict {
+  my $cmd = shift;
+
+  if ($cmd eq 'symlink') {
+    warn "symlink $_[1] will fail".$/ if -e $_[1];
+  }
+  elsif ($cmd eq 'unlink') {
+    do { warn "unlink $_ will fail".$/ if !-e } for @_;
+  }
+  elsif ($cmd eq 'mkdir') {
+    warn "mkdir $_[0] will fail".$/ if -d $_[0];
+  }
+  elsif ($cmd eq 'rmdir') {
+    warn "rmdir $_[0] will fail".$/ if !-d $_[0];
+  }
+  elsif ($cmd eq 'mv') {
+    my $argv = join(' ', $cmd, @_);
+    warn "$argv will fail".$/ unless @_ >= 2;
+    warn "$argv will fail".$/ if grep !-e, @_[0..$#_-1];
+    warn "$argv will fail".$/ if @_ && -f $_[-1] && grep -d, @_;
+    warn "$argv will fail".$/ if @_ >= 3 && !-d $_[-1];
+  }
+}
+
+sub packages {
+  return grep -d "$pkgdb/$_" && pkg_identify($_), dirlist($pkgdb);
+}
+
+sub installed {
+  my $path = rel2abs(shift);
+  return unless -l $path;
+
+  my $src = relpath($prefix, $path) or return;
+  my $abstarget = rel2abs(readlink $path, dirname($path));
+  my $pkgtarget = relpath($pkgprefix, $abstarget) or return;
+  my ($pkg, $target) = $pkgtarget =~ m{^([^/]+)/(.*)$};
+
+  return unless $pkg && pkg_identify($pkg);
+  return ($pkg, $src, $target);
+}
+
+sub find_exposed {
+  my $callback = shift;
+  my %installed;
+  my @unmanaged;
+
+  my $finder = sub {
+    my $path = shift;
+    return unless -l $path;
+
+    my ($pkg, $src, $target) = installed($path);
+
+    if ($callback) {
+      $callback->($pkg, $src, $target);
+    }
+    elsif ($pkg) {
+      $installed{$pkg} ||= [];
+      push @{$installed{$pkg}}, [ $src, $target ];
+    }
+    elsif (!-d $path) {
+      # file exposed but not provided by any package
+      push @unmanaged, [ $path, readlink $path ];
+    }
+  };
+
+  finder("$prefix/$_", $finder) for grep -d "$prefix/$_", @areas;
+  return \%installed, \@unmanaged;
+}
+
+sub cat_pkg_file {
+  my $pkg = shift or die 'argument required: pkgname';
+  my $file = shift or die 'argument required: file';
+  exec('cat', join '/', $pkgdb, $pkg, $file);
+  die "exec failed: $!"; # only here if exec itself failed
+}
+
+sub slurp_pkg_file {
+  my $pkg = shift or die 'argument required: pkgname';
+  my $file = shift or die 'argument required: file';
+  my $pkgfile = join '/', $pkgdb, $pkg, $file;
+
+  open my $fh, '<', $pkgfile or die "open error: $!";
+  my @data = map { chomp; /^#/ ? () : [ split /\s+/ ] } <$fh>;
+  close $fh or die "close error: $!";
+
+  return \@data;
+}
+
+sub dump_file {
+  my $file = shift or die 'argument required: file';
+  my $data = shift or die 'argument required: data';
+
+  open my $fh, '>', $file or die "open error: $!";
+  print $fh join(' ' => ref($_) eq 'ARRAY' ? @$_ : $_).$/ for @$data;
+  close $fh or die "close error: $!";
+}
+
+sub slurp_conf {
+  my $file = shift or die 'argument required: config file';
+  my %conf;
+
+  open my $fh, '<', $file or die "open error: $!";
+
+  my $header = <$fh>;
+  $header and chomp $header or die "bad config file: header expected";
+  $header =~ /version=([\d\.]+)/ or die "bad config file: version expected";
+  die "can't read config file format version $1" if $1 != $VERSION;
+
+  while (<$fh>) {
+    chomp;
+    /^([^=]+)=(.*)$/ or die "bad config file format, key=value expected: $_";
+    $conf{$1} = $2;
+  }
+
+  close $fh or die "close error: $!";
+
+  return \%conf;
+}
+
+# just like comm(1)
+sub comm {
+  my ($x1, $x2, %arg) = @_;
+  my (%seen1, %seen2, %comm);
+
+  $seen1{$_}++ for @$x1;
+  $seen2{$_}++ for @$x2;
+
+  $comm{1} = [ grep $seen1{$_} && !$seen2{$_}, @$x1 ] unless $arg{1};
+  $comm{2} = [ grep !$seen1{$_} && $seen2{$_}, @$x2 ] unless $arg{2};
+  $comm{3} = [ grep $seen1{$_} && $seen2{$_}, @$x1 ] unless $arg{3};
+
+  return \%comm;
+}
+
+sub dirempty {
+  my $dir = shift or die 'argument required: dir';
+
+  opendir my $dh, $dir or die "opendir error: $!";
+
+  while (my $entry = readdir $dh) {
+    next if $entry eq '.' || $entry eq '..';
+    return 0;
+  }
+
+  closedir $dh or die "closedir error: $!";
+
+  return 1;
+}
+
+sub dirlist {
+  my $dir = shift or die 'argument required: dir';
+
+  opendir my $dh, $dir or die "opendir error: $!";
+  my @entries = grep $_ ne '.' && $_ ne '..', readdir $dh;
+  closedir $dh or die "closedir error: $!";
+
+  return @entries;
+}
+
+sub tempdir {
+  my $basedir = $ENV{TMPDIR} || $ENV{TMP} || $ENV{TEMP};
+  my $template = shift || "$basedir/XXXXXXXX";
+  my ($base, $nfill) = ($template =~ /^(.*?)(X+)$/)[1] ? ($1, length $2) :
+    die "bad tempdir template $template";
+  my @set = ('A'..'Z', 'a'..'z', '0'..'9');
+  my $retries = shift || 1000;
+
+  for (my $i=0; $i<$retries; $i++) {
+    my $fill = join '', map { $set[int rand @set] } 1..$nfill;
+    my $dir = $base.$fill;
+    return $dir if mkdir $dir;
+    die "mkdir error: $!" unless $!{EEXIST};
+  }
+
+  die "cannot make tempdir $template after $retries retries";
+}
+
+sub finder {
+  my ($path, $f) = @_;
+
+  $f->($path);
+
+  if (-d $path) {
+    if (opendir my $dh, $path) {
+      while (my $entry = readdir $dh) {
+        next if $entry eq '.' || $entry eq '..';
+        finder("$path/$entry", $f);
+      }
+      closedir $dh or die "closedir error: $!";
+    }
+  }
+}
+
+sub ensure_path {
+  my $path = shift;
+
+  for (sort { length $a <=> length $b } ancestors($path)) {
+    -d or act('mkdir', $_);
+  }
+}
+
+sub relpath {
+  my ($base, $path) = @_;
+  return $1 if $path =~ m{^$base/(.*)$};
+  return undef;
+}
+
+sub rel2abs {
+  my ($path, $base) = @_;
+  return collapse_path($path) if $path =~ m{^/};
+  return collapse_path(($base ? $base : cwd()).'/'.$path);
+}
+
+sub collapse_path {
+  my $path = shift;
+  my @oldparts = split m{/}, $path;
+  my @newparts;
+
+  while (@oldparts) {
+    my $part = shift @oldparts;
+
+    if ($part eq '..') {
+      @newparts ? pop @newparts : push @newparts, $part;
+    }
+    elsif ($part ne '.') {
+      push @newparts, $part;
+    }
+  }
+
+  return @newparts ? join('/', @newparts) : '.';
+}
+
+sub ancestors {
+  my $path = shift;
+  my @parts = split m{/}, $path;
+  my (@trail, @ancestors);
+
+  while (@parts) {
+    push @trail, shift @parts;
+    my $ancestor = join '/', @trail;
+    push @ancestors, $ancestor if $ancestor; # avoid '' from absolute paths
+  }
+
+  return @ancestors;
+}
+
+sub basename {
+  my $path = shift;
+  my @parts = split m{/}, $path;
+  return $parts[-1];
+}
+
+sub dirname {
+  my $path = shift;
+  my @parts = split m{/}, $path;
+  pop @parts;
+  return join '/', @parts;
+}
+
+sub main {
+  my @getopt = qw(help|h list|l contents|L provides|P depends|D
+                  check|k add|a install|i uninstall|u exposed|e
+                  config|F=s prefix=s pkgprefix=s pkgdb=s verbose|v
+                  version-links! force|f dry|n);
+
+  Getopt::Long::Configure(qw/no_ignore_case bundling/);
+  GetOptions(\%opt, @getopt) or die usage();
+
+  # read config file if given
+
+  if ($opt{config}) {
+    my $conf = slurp_conf($opt{config});
+    ($prefix, $pkgprefix, $pkgdb) = @{$conf}{qw/prefix pkgprefix pkgdb/};
+    @areas = split /\s+/, $conf->{areas} if $conf->{areas};
+  }
+
+  # but options can override config file
+
+  $prefix = rel2abs($opt{prefix}) if $opt{prefix};
+  $pkgprefix = rel2abs($opt{pkgprefix}) if $opt{pkgprefix};
+  $pkgdb = rel2abs($opt{pkgdb}) if $opt{pkgdb};
+
+  die "no --prefix specified" unless $prefix;
+  die "no --pkgprefix specified" unless $pkgprefix;
+  die "no --pkgdb specified" unless $pkgdb;
+
+  @areas = grep -d "$prefix/$_", @areas; 
+
+  my %cmds = (
+    help => \&pkg_help,
+    list => \&pkg_list,
+    contents => \&pkg_contents,
+    provides => \&pkg_provides,
+    depends => \&pkg_depends,
+    add => \&pkg_add,
+    check => \&pkg_check,
+    install => \&pkg_install,
+    uninstall => \&pkg_uninstall,
+    exposed => \&pkg_exposed,
+  );
+
+  my @subs = map { $cmds{$_} || () } keys %opt;
+
+  # default command is to print usage
+  push @subs, $cmds{help} if !@subs;
+
+  # only one command at a time
+  die usage() if @subs > 1;
+
+  $subs[0]->(@ARGV);
+}
+
+sub usage {
+  my $prog = basename($0);
+
+  my $usage = qq{
+
+  $prog - simple symlink-based package management system
+
+  COMMANDS
+    $prog -l                list the current packages
+    $prog -L pkg            list full contents of a package
+    $prog -P pkg            list files package provides
+    $prog -D pkg            list files package depends on
+    $prog -k [pkg]          check for consistency
+    $prog -a pkg            add a new package to the system
+    $prog -i [pkg]          install symlinks to provided files
+    $prog -u [pkg]          uninstall symlinks to provided files
+    $prog -e                list all exposed symlinks
+    $prog -h                display help
+
+  OPTIONS
+    -F=s --config=s         load configuration from file
+    --prefix=s              root of symlink install tre
+    --pkgprefix=s           root of package install tree
+    --pkgdb=s               package database directory
+    --version-links         with -a, also register version-suffixed symlinks
+    -n --dry                report operations but don't carry them out
+    --force                 continue past conflicts and errors
+    --verbose               show tracing output};
+
+  $usage =~ s/^\n\n//;
+  $usage =~ s/^  //mg;
+  return $usage;
+}
+

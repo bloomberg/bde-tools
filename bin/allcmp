@@ -1,0 +1,66 @@
+#!/bin/ksh
+
+COMPILERS="CC|g++"
+ALLTEST=0
+
+usage()
+{
+    echo "Usage: allcmp [-options] [target] [arguments]"
+    echo "Options:"
+    echo "   -C   Compile with C compilers."
+    echo "   -h   This help."
+    echo "   -p   Compile with Purify (incompatible with a.out.pure target)."
+    echo "   -S   Compile with Sun compiler in 64-bit mode."
+    echo "   -t   Run 'all' script on target after make."
+    echo ""
+    echo "target: make target."
+    echo ""
+    echo "arguments: arguments supplied to 'all' script when -t is specified"
+    echo ""
+    exit 0
+}
+
+
+while getopts ChpSt opt
+do
+    case $opt in
+    C) # specify C compilers
+        COMPILERS="$COMPILERS|cc|gcc"
+        ;;
+    h) # help
+        usage
+        ;;
+    p) # specify Sun 64 bit compiler
+        COMPILERS="$COMPILERS|purify -windows=no CC"
+        ;;
+    S) # specify Sun 64 bit compiler
+        COMPILERS="$COMPILERS|CC -xarch=v9"
+        ;;
+    t) # all test
+        ALLTEST=1
+        ;;
+    ?) # anything else
+        echo "See allcmp -h for usage/help info"
+        exit 1
+        ;;
+    esac
+done # end-while getopts
+shift $((OPTIND-1))
+
+TARGET=${1:-a.out}
+if [ "$1" != "" ]; then
+    shift
+fi
+
+IFS="|"
+for CMP in $COMPILERS; do
+    make clean
+    make CC=$CMP $TARGET
+    if [ $? -ne 0 ]; then exit 1; fi
+    if [ $ALLTEST -eq 1 ]; then
+        all $TARGET $@;
+        if [ $? -ne 0 ]; then exit 2; fi
+    fi
+done
+
+make clean

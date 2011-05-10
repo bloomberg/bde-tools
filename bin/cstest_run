@@ -1,0 +1,24 @@
+#!/bbs/opt/bin/perl -w
+
+use Getopt::Long;
+use Test::Harness;
+use strict;
+
+my @getopt = qw/verbose/;
+GetOptions(\my %opt, @getopt) or die usage();
+
+my $lib = shift or die usage();
+my $tdir = shift or die usage();
+
+unshift @INC, $lib;
+$Test::Harness::verbose = $opt{verbose};
+
+if (@ARGV) {
+  runtests(@ARGV);
+}
+else {
+  runtests(sort glob "$tdir/*.t");
+}
+
+sub usage { return "usage: $0 [options] libdir tdir [tests]".$/; }
+

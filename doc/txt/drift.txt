@@ -1,0 +1,27 @@
+Drift Elimination Strategy
+--------------------------
+
+* scm{ci,mv,mkdir,rm} should immediately canonicalize their inputs. If any input fails to canonicalize cleanly, the tools should notify the tools-support mailing list and exit non-zero.
+
+* restructured should process pre-canonicalized inputs. It should never attempt to commit any operation which produced error output.
+
+* Test the new tool suite extensively. Insure that *every* cscheckin-enabled path (both directories and files) is canonicalized correctly by the algorithm in scmop. Ensure that there is no regression in cscheckin / cscheckout as a result of changes to BDE::Nomenclature. Do this via test-checkouts from *every* UOR in the universe.
+
+* Have a procedure for quickly recovering from scmop errors. Although scmop no longer produces destructive results in case of error, errors still imply drift. Drift should be repaired as soon as possible after it appears on the tools-support list. The repair procedure is expected to be hand-formulation, post, and enqueue of the intended changeset to scm. Do some practice runs.
+
+* Roll out and monitor restructure v3. When drift is acceptably low & recovery procedures have been put to the test, we need to resnapshot RCS -> svn.
+  
+* The current svn repository is severely drifted. This causes support burden, is non-performant (errors due to drift fallback to RCS), and undermines snapshot-based continuous build efforts. We have reached a point where a delta-based drift correction procedure is not sufficient. We must resnapshot RCS and build a new svn repository. Pros:
+
+  - Delta-based correction does not address historical drift, which would continue to cause problems for tools sensitive to svn history (e.g. cscheckout, csrecover, csrollback).
+  - The current repository does not adhere to a numbered branching scheme. This is a barrier to clean introduction of branching.
+  - To date, the delta-based approach has been as or more problematic than the snapshot-based approach. Both have had multiple trials. They both involve careful choice of material from RCS and a window of SCM queue stoppage time.
+  - Resnapshot gives us an opportunity to upgrade to svn 1.4 and benefit from new revision compression code, which reduces repository storage space by up to 50% for text files.
+
+Cons:
+
+  - Some initial performance issues after the cutover due to increased rate of fallback to RCS. This will taper off & may be offset by the performance of a fresh repository.
+  - Need to fix cscheckout to do correct historical fallbacks to RCS. Current cscheckout falls back to RCS HEAD, always, which may not be correct during the period of post-snapshot week. This change should be straightforward.
+
+* The final element in drift prevention is to remove the magic AUTOADD and AUTOCHANGE flags in the SCM::Repository layer. These flags lend moral support to drift production by silently permitting changesets which are out-of-date w.r.t the directory structure. They should be replaced by commit failure. The commit failure message should be sent to the changeset committer and the tools-support mailing list. With effective drift prevention in place, failure should be extremely rare, but still possible, due to small end-to-end lags in the restructure process, and possible future errors in the drift prevention code.
+

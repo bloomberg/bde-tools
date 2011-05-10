@@ -1,0 +1,88 @@
+#!/bin/ksh
+
+# $Header: /bb/home1/abel/cvsjl/bde_bldmgr.slave,v 1.4 2002/10/03 22:02:37 rgibbons Exp $
+
+# slave script for bde_builder - should not be directly invoked
+
+typeset ccase
+typeset bde_basedir
+typeset log_prefix
+typeset element
+
+umask 002
+
+while getopts ":cb:l:e:C:B:" opt ; do
+    case $opt in
+
+	c) ccase=y
+	   ;;
+
+	b) bde_basedir="$OPTARG"
+	   ;;
+           
+        l) log_prefix="$OPTARG"
+	   ;;
+
+        e) element="$OPTARG"
+           ;;
+          
+        C) compiler="$OPTARG"
+           ;;
+
+        B) bindir="$OPTARG"
+           ;;
+
+    esac
+done
+
+shift $((OPTIND-1))
+
+#export BUILDBIN=$bindir
+
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/ccs/bin:/opt/SUNWspro/bin
+PATH=$bindir:$PATH
+
+#export BDE_ROOT=/bbcm/infrastructure/groups
+#export BDE_DEF_OPT_FILE=$BUILDBIN/default.opts
+
+# clearcase switches
+if [[ -n $ccase ]]
+then
+    PATH=/opt/ccase/atria/bin:$PATH
+#else
+#    BDE_ROOT=/view/bde_integrator/$BDE_ROOT
+fi
+
+typeset return_string
+typeset err_targets
+typeset ok_targets
+
+for target in "$@" ; do
+
+    build_log=$log_prefix.$target
+    cmd="$bindir/bde_build.pl -t $target -v 1 -k -C $compiler $element >> $build_log 2>&1"
+
+    if [[ -n $ccase ]] 
+    then
+        eval $cmd
+        #cleartool setview -exec "$cmd" bde_integrator
+    else
+	#export TARGET_BINARY_INTERFACE=ix86_m88kdata_dg
+        eval $cmd
+    fi
+    [[ $? != 0 ]] && err_targets="$err_targets $target" ||
+        ok_targets="$ok_targets $target"
+
+done
+
+[[ -n $err_targets ]] && return_string="FAILED ${err_targets}:"
+[[ -n $ok_targets ]] && return_string="${return_string}SUCCEEDED $ok_targets"
+
+print -n $return_string
+
+
+
+
+
+
+

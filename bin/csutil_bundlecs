@@ -1,0 +1,37 @@
+#!/bbs/opt/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Change::Set;
+use Change::Util::Bundle qw/bundleChangeSet bundleChangeSetSCM/;
+use File::Temp qw/tempdir/;
+use Getopt::Long;
+use strict;
+
+my @getopt = qw/canonicalize/;
+my %opt;
+
+GetOptions(\%opt, @getopt) or die "bad options.".$/;
+
+sub usage { return "$0 [-c] metafile1 bundlefile1 [metafile2 bundlefile2 ...]"; }
+
+while (@ARGV) {
+  my $metafile = shift or die usage().$/;
+  my $bundle = shift or die usage().$/;
+
+  my $cs = Change::Set->load($metafile);
+  my $dir = tempdir(CLEANUP => 1);
+
+  if ($opt{canonicalize}) {
+    # performs a convertChangeSetSCM first, then a bundleChangeSetSCM
+    bundleChangeSet($cs, $bundle, $dir);
+  }
+  else {
+    # assumed to be already in canonical form
+    bundleChangeSetSCM($cs, $bundle, $dir);
+  }
+}
+

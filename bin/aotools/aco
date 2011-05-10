@@ -1,0 +1,8 @@
+#!/bin/ksh
+
+# Arch group source code check out
+# For now, it uses (rcs) co to do the work.
+# Some day, it will use scmco to do the work, but scmco has to be
+# written first.
+
+co "$@"

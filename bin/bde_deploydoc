@@ -1,0 +1,969 @@
+#!/bbs/opt/bin/perl -w
+use strict;
+
+use FindBin qw($Bin);
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use File::Basename;
+use File::Copy;
+use IO::Handle;
+use IO::Select;
+use Cwd;
+use POSIX qw(WNOHANG);
+
+use BDE::Component;
+use BDE::FileSystem::MultiFinder;
+use BDE::Util::Nomenclature qw[
+    isGroup isPackage isComponent
+    getPackageGroup getComponentPackage getComponentGroup
+];
+use BDE::FileSystem;
+use Symbols qw(
+    EXIT_SUCCESS EXIT_FAILURE
+    ROOT DEFAULT_JOBS
+    HOME FILESYSTEM_NO_DEFAULT
+);
+
+use Util::Message qw(fatal warning error message debug get_debug get_verbose);
+use Util::Retry qw(retry_open3);
+
+$|=1;
+
+#------------------------------------------------------------------------------
+
+use constant DOXYGEN  #=> "/usr/bin/doxygen.previous";
+                      => "/opt/swt/bin/doxygen";
+use constant BDE2DOXY => "$FindBin::Bin/bde_doc2doxy";
+use constant DOXYFILE => "$FindBin::Bin/../etc/bdedoxygen.conf";
+
+my @DEFAULT_GROUPS=qw[bde bce bte bae bse xml e_ipc bap l_ipc];
+my @DEFAULT_SERVERS=qw[bbweb1 bbweb2 sundev8];
+
+# destination email
+use constant EMAIL_ADDRESS => "bde\@devcvs.bloomberg.com";
+
+#==============================================================================
+
+sub usage(;$) {
+    print STDERR "!! @_\n" if @_;
+
+    my $prog = basename $0;
+
+    print <<EOF;
+Usage: $prog -h | [-d] [-v] [-l[<dir]] [ --noftp | -s <svr>,<svr>...]
+                          [-b <baseTitle>]
+                          [-m] [-w <dir>] [[--groups] <group|package> ...]]
+  --debug       | -d           enable debug reporting
+  --help        | -h           usage information (this text)
+  --groups      | -g <groups>  package groups to process
+                               (default: @DEFAULT_GROUPS)
+  --servers     | -s <servers> FTP servers to send documentation to
+                               (default: @DEFAULT_SERVERS)
+  --[no]process | -p           enable/disable processing (default: enabled)
+  --[no]doxygen | -d           enable/disable doxygen (default: enabled)
+  --[no]ftp     | -f           enable/disable FTP (default: disabled)
+                               (default: enabled if run as user "op")
+  --[no]mail    | -m           email results of processing (default: disabled)
+  --[no]local   | -l <dir>     enable/disable copy of HTML to target directory
+                               (default: copy to \$HOME/public_html/doxygen)
+  --verbose     | -v           enable verbose reporting
+  --where       | -w <dir>     specify explicit alternate root (default: .)
+  --original    | -o           show original headers
+  --exclude     | -x <file>    excude-list file
+  --include     | -i <file>    incude-list file
+  --outdir      | -u <dir>     directory for bde docs converted to doxygen
+                               (default: <BDE_ROOT>/doxygen)
+  --htmldir     | -t <dir>     directory for doxygen output files
+                               (default: <BDE_ROOT>/doxygen/html)
+  --tagfile     | -g <tagfile> tagfile name 
+                               (default: bde.tag)
+  --baseTitle   | -b           Base title for HTML pages
+                               (default: "Bloomberg Development Environment")
+
+EOF
+}
+
+sub getoptions () {
+    my %opts;
+
+    Getopt::Long::Configure("bundling");
+    if (!GetOptions(\%opts, qw[
+        debug|d+
+        mail|m!
+        doxygen|doxygenate|D!
+        help|?
+        groups=s@
+        ftp!
+        process|p!
+        servers|s=s
+        local|localweb|l|sundev3=s
+        nolocal
+        verbose|v+
+        where|root|w|r=s
+        original|o+
+        exclude|X=s
+        include|i=s
+        outdir|u=s
+        htmldir|t=s
+        tagfile|g=s
+        baseTitle|b=s
+    ])) {
+        usage();
+        exit(EXIT_FAILURE);
+    }
+
+    # help
+    usage(), exit EXIT_SUCCESS if $opts{help};
+
+    # filesystem root
+    $opts{where} = ROOT unless $opts{where};
+
+    # debug mode
+    Util::Message::set_debug($opts{debug} || 0);
+
+    # verbose mode
+    Util::Message::set_verbose($opts{verbose} || 0);
+    usage(), exit(EXIT_SUCCESS) if $opts{help};
+
+    # groups
+    $opts{groups}=[] unless exists $opts{groups};
+    push @{$opts{groups}},@ARGV if @ARGV;
+    @{$opts{groups}}=@DEFAULT_GROUPS unless @{$opts{groups}};
+
+    # servers
+    $opts{servers}=[] unless exists $opts{servers};
+    @{$opts{servers}}=@DEFAULT_SERVERS unless @{$opts{servers}};
+
+    if (not defined $opts{nolocal}) {
+        unless ($opts{local}) {
+            $opts{local}=HOME."/public_html/doxygen";
+        }
+    }
+
+    return \%opts;
+}
+
+#------------------------------------------------------------------------------
+# logging - this predates Util::Message, and could be removed in favour of it.
+
+{ my $logfile;
+  my $logfile_is_open = 0;
+
+  sub open_log ($) {
+      my $root=shift;
+      my $logfile = "$root/logs/".basename($0).".log";
+      open(LOG, "> $logfile") || fatal("cannot open $logfile: $!");
+
+      $logfile_is_open = 1;
+      return $logfile;
+  }
+
+  sub close_log () {
+      return unless $logfile_is_open;
+      close LOG || fatal("cannot close $logfile: $!");
+  }
+
+  sub log_file () {
+      return $logfile;
+  }
+
+  sub logmsg ($) {
+      return unless $logfile_is_open;
+
+      print LOG "[manager] $_[0]\n";
+      print     "[manager] $_[0]\n"; #SRB if -t STDIN && -t STDOUT;
+  }
+
+  sub logchildmsg ($$) {
+      return unless $logfile_is_open;
+
+      print LOG "[$_[1]] $_[0]\n";
+      print     "[$_[1]] $_[0]\n"; #SRB if -t STDIN && -t STDOUT;
+  }
+}
+
+#------------------------------------------------------------------------------
+
+sub do_mail ($$) {
+    my ($rc,$groupmsg) = @_;
+
+    my $mailfile  = $FindBin::Bin;
+    my $prog=basename($0);
+    $mailfile =~ s|/\w+$|/logs/$prog.mail|;
+    open(MFILE, "> $mailfile") or die "cannot open $mailfile: $!";
+
+    my $sub;
+    if ($rc) {
+        $sub = "BDE API DOCUMENTATION BUILD FAILED";
+        print MFILE "see ".log_file();
+    } else {
+        $sub = "BDE API DOCUMENTATION BUILD OK";
+        print MFILE "latest documentation for $groupmsg "."now on web servers";
+    }
+    close(MFILE) or die "cannot close $mailfile: $!";
+
+    return system("/bb/bin/ratmail -s \"$sub\" $mailfile ".EMAIL_ADDRESS);
+}
+
+sub exit_err ($$) {
+    my ($grpmsg,$do_mail)=@_;
+
+    logmsg "** EXITING WITH ERROR...";
+    close_log();
+    do_mail(EXIT_FAILURE,$grpmsg) if $do_mail;
+    exit EXIT_FAILURE;
+}
+
+sub exit_ok ($$) {
+    my ($grpmsg,$do_mail)=@_;
+
+    logmsg "** EXITING OK...";
+    close_log();
+    do_mail(EXIT_SUCCESS,$grpmsg) if $do_mail;
+    exit EXIT_SUCCESS;
+}
+
+#------------------------------------------------------------------------------
+
+{ my @k = ( 0xAE, 0xBD, 0xCC, 0xDB, 0xEA );
+  sub unscozzle(@) {
+      my @in=@_;
+      my $out;
+      my $kk = 0;
+      while (my $c = pop(@in)) {
+          $out .= chr($c^$k[$kk]);
+          $kk = 0 if (++$kk >= length(@k));
+      }
+      return $out;
+  }
+}
+
+sub transfer_to_servers (@) {
+    my @servers=@_;
+
+    my %serverlist = (
+          "sundev8" => [ "tmarshal", "public_html/bde_api",
+                 159, 197, 220, 207, 219, 223, 204, 204 ],
+          "bbweb1"  => [ "bbportal", "/docs/BP/bde_api/bde",
+                 245, 204, 158, 220, 202, 220, 207, 249 ],
+          "bbweb2"  => [ "bbportal", "/docs/BP/bde_api/bde",
+                 245, 204, 158, 220, 202, 220, 207, 249 ],
+         );
+
+    my $ftpIn=<<_FTP_SCRIPT_END_;
+user
+--u--
+binary
+prompt
+cd --r--
+pwd
+lcd doxygen/html
+! pwd
+mput *
+ls
+lcd ../..
+! pwd
+close
+_FTP_SCRIPT_END_
+
+    foreach my $server (@servers) {
+        if (exists( $serverlist{$server} )) {
+            my @a = @{$serverlist{$server}};
+            my $u = shift @a;
+            my $r = shift @a;
+            my $p = unscozzle(@a);
+            logmsg "-- Transfering to $server:$r";
+            my $fi = $ftpIn;
+            $fi =~ s/--u--/$u $p/;
+            $fi =~ s/--r--/$r/g;
+            my $out = `echo '$fi' | ftp -n -v $server 2>&1`;
+            logmsg $out;
+            fatal "FTP failed: $?" if $?;
+        } else {
+            logmsg "-- Server $server not configured."
+        }
+    }
+}
+
+#------------------------------------------------------------------------------
+
+sub copy_to_localweb ($$) {
+    my ($srcdir, $outdir) = @_;
+
+    logmsg "-- Copying files to $outdir";
+    # Ensure directory
+    if (-d $outdir)    {
+        # directory exists; delete previous contents
+        opendir(DIR, $outdir) or fatal "cannot open $outdir: $!";
+        my $oldfiles=0;
+        while (my $f = readdir(DIR)) {
+            next unless -f "$outdir/$f";
+            $oldfiles++;
+            unlink "$outdir/$f" or fatal "cannot unlink $f: $!";
+        }
+        closedir(DIR) or fatal "cannot close $outdir: $!";
+        logmsg "-- - $oldfiles files removed";
+    } else {
+        # directory does not exist; create it.
+        my $parent = dirname($outdir);    # above the parent, assume existence.
+        mkdir($parent,  0755) unless -d $parent;
+        mkdir($outdir, 0755)  unless -d $outdir;
+    }
+    # Copy files
+    {
+        local $/ = undef;    # read file in one go, without records
+
+        opendir(DIR, $srcdir) or fatal "cannot open $srcdir: $!";
+        my $srcfiles=0;
+        while (my $f = readdir(DIR)) {
+            next unless -f "$srcdir/$f";
+            $srcfiles++;
+            open(FIN,  "< $srcdir/$f") or fatal "cannot open $f for read: $!";
+            open(FOUT, "> $outdir/$f") or fatal "cannot open $f for write: $!";
+            print FOUT (<FIN>) or fatal "cannot copy file $srcdir/$f: $!";
+            close FIN;
+            close FOUT;
+        }
+        closedir(DIR) or fatal "cannot close $outdir: $!";
+        logmsg "-- - $srcfiles files copied";
+    }
+}
+
+#------------------------------------------------------------------------------
+
+sub ensure_directories ($$) {
+    my ($outdir,$htmldir) = @_;
+        # Set up directories, remove existing files, add symlink if needed.
+
+    #Phase 1: Cleanup
+
+    if (-d $outdir) {
+        logmsg "-- * Cleaning up $outdir";
+        opendir(DIR, $outdir) or fatal "cannot open $outdir: $!";
+        my $oldfiles=0;
+        while (my $f = readdir(DIR)) {
+            next unless -f "$outdir/$f";
+            $oldfiles++;
+            unlink "$outdir/$f" or fatal "cannot unlink $f: $!";
+        }
+        closedir(DIR) or fatal "cannot close $outdir: $!";
+        logmsg "-- - $oldfiles files removed";
+    }
+
+    if (-d $htmldir) {
+        logmsg "-- * Cleaning up $htmldir";
+        opendir(DIR, $htmldir) or fatal "cannot open $htmldir: $!";
+        my $oldfiles=0;
+        while (my $f = readdir(DIR)) {
+            next unless -f "$htmldir/$f";
+            $oldfiles++;
+            unlink "$htmldir/$f" or fatal "cannot unlink $f: $!";
+        }
+        closedir(DIR) or fatal "cannot close $htmldir: $!";
+        logmsg "-- - $oldfiles files removed";
+    }
+
+    my $doxygenatedFilesDir = $outdir."/html";
+
+    if (-l $doxygenatedFilesDir) {
+        logmsg "-- * Unlinking $doxygenatedFilesDir symlink";
+        unlink $doxygenatedFilesDir or
+                        fatal "cannot unlink symlink $doxygenatedFilesDir: $!";
+        logmsg "-- * Unlinked $doxygenatedFilesDir directory";
+    }
+    if (-d $doxygenatedFilesDir) {
+        logmsg "-- * Removing $doxygenatedFilesDir directory";
+        rmdir $doxygenatedFilesDir or
+                      fatal "cannot remove directory $doxygenatedFilesDir: $!";
+        logmsg "-- * Removed $doxygenatedFilesDir directory";
+    }
+
+    #Phase 2: Setup
+
+    if (! -d $outdir) {
+        logmsg "-- * Creating $outdir";
+        mkdir($outdir, 0777) or fatal "cannot make $outdir: $!";
+    }
+
+    if (! -d $htmldir) {
+        logmsg "-- * Creating $htmldir";
+        mkdir($htmldir, 0777) or fatal "cannot make $htmldir: $!";
+    }
+
+
+    # doxygen is run from "$outdir" and (default) configured to expect
+    # to deliver to subordinate 'html' directory.
+    if (! -d $doxygenatedFilesDir) {
+        $htmldir = $ENV{PWD}."/".$htmldir
+                                      unless $htmldir =~ /^\//;  #absolute path
+        logmsg "-- * Creating symlink $doxygenatedFilesDir to $htmldir";
+        symlink($htmldir, $doxygenatedFilesDir) or
+                   fatal "cannot symlink $doxygenatedFilesDir to $htmldir: $!";
+    }
+
+    # copy doxygen config
+    logmsg "-- * Copying Doxygen configuration";
+    copy(DOXYFILE, $outdir) or fatal "cannot copy ${\DOXYFILE}: $!";
+
+}
+
+#------------------------------------------------------------------------------
+
+# preprocess header files for doxygenation
+sub process_groups ($$$@) {
+    my ($outdir,$htmldir,$excludeListFile,$includeListFile,@grp) = @_;
+
+    ensure_directories($outdir,$htmldir);
+
+    # run our script to update .h files
+    logmsg("-- Preprocessing headers");
+
+    my @cmd=(BDE2DOXY,"-o" => $outdir);
+    push @cmd,"-".("d" x get_debug)        if get_debug();
+    push @cmd,"-".("v" x get_verbose)      if get_verbose();
+    push @cmd,"--exclude=$excludeListFile" if defined($excludeListFile);
+    push @cmd,"--include=$includeListFile" if defined($includeListFile);
+    push @cmd,@grp;
+    my ($wrfh,$rdfh)=(new IO::Handle,new IO::Handle);
+    my $pid=retry_open3($rdfh,$wrfh,$rdfh,@cmd);
+
+    debug "invoking: @cmd" if Util::Message::get_debug();
+
+    chomp, logchildmsg("<< $_","preproc") while <$rdfh>;
+    close $rdfh;
+    $?=0 if $?==-1; #autoreap
+
+    return $? ? 0 : 1;
+}
+
+#------------------------------------------------------------------------------
+
+# Run doxygen on the files
+sub doxygenate_headers ($$$@) {
+    my ($outdir, $htmldir, $baseTitle, @groups) = @_;
+
+    if (-x DOXYGEN) {
+        chdir $outdir or fatal "cannot change to $outdir: $!";
+
+        my @cmd=(DOXYGEN, DOXYFILE);
+        my ($wrfh,$rdfh,$erfh)=(new IO::Handle,new IO::Handle,new IO::Handle);
+        my $pid=retry_open3($rdfh,$wrfh,$erfh,@cmd);
+        my $select=new IO::Select($rdfh,$erfh);
+
+        my $goterrors=0;
+        while (my @waiting=$select->can_read) {
+            foreach my $fh (@waiting) {
+                if ($fh == $rdfh) {
+                    $_=<$rdfh>;
+                    $select->remove($fh),next unless $_;
+            
+                    next if m[^Generating (code|docs) for ] or
+                      m[^Preprocessing ] or
+                    m[^Parsing file ];
+                    chomp;
+                    logchildmsg("<< $_","doxygen");
+                } else {
+                    $_=<$erfh>;
+                    $select->remove($fh),next unless $_;
+                    chomp;
+                    $goterrors=1;
+                    logchildmsg("<< !! $_","logfile");
+                }
+            }
+        }
+        close $rdfh; close $erfh; close $wrfh;
+
+        $?=0 if $?==-1; #autoreap
+        my $doxystatus=$?;
+        
+        if ($doxystatus) {
+            fatal "doxygen stage failed: $doxystatus";
+        } elsif ($goterrors) {
+            error "doxygen stage encountered problems: errors in log";
+        }
+
+        logmsg "-- postprocessing output in ".Cwd::cwd();
+
+    
+        # tweak html output
+        chdir("html") or fatal "cannot change down to html: $!";
+        opendir(DIR, ".") or fatal "cannot opendir: $!";
+        while (my $f = readdir(DIR)) {
+            next if $f !~ /\.html$/ or ! -f $f;
+    
+            open(FH, "< $f") or fatal "cannot open $f: $!";
+            my $content = join '',<FH>;
+            close(FH) or fatal "cannot close $f: $!";
+            open(FH, "> $f") or fatal "cannot open $f: $!";
+
+            #optionally customize title of each page
+            if ($baseTitle) {
+                my $title =  filenameToTitle(basename($f));
+                $title    =  $title ? "$baseTitle: $title" : "$baseTitle";
+                $content  =~ s{<title>.*</title>}{<title>$title</title>}sg
+            }
+
+            $content =~
+                s{<a class="qindex[^>]+>(Main|Alpha|Namespace).*?</a>\s+\|}{}sg;
+    
+            # Module is not a BDE term so we can convert Doxygen output
+            # with impunity
+            $content =~ s{\bModule(s?)\b}{Component$1}sg;
+            $content =~ s{\bmodule(s?)\b}{component$1}sg;
+            $content =~ s{\bmain\.html\b}{components.html}sg;
+    
+            print FH $content;
+            close(FH) or fatal "cannot close $f: $!";
+        }
+        closedir(DIR) or fatal "cannot closedir: $!";
+
+        # copy modules to index
+        logmsg "-- installing main index";
+        #copy("modules.html", "index.html");
+        copy("modules.html", "components.html");
+        logmsg "-- processing index files for ".join(", ",@groups);
+        for my $g (@groups) {
+            open(INDEX,"< ./index.html") or die "Cannot read index.html!";
+            open(GINDEX,"> ./index_$g.html") or
+                                          die "Cannot write index_$g.html!";
+            my $doxy_g = $g;
+            $doxy_g =~ s/_/__/g; # doxygen turns _ into __ so mimic it
+            while (<INDEX>) {
+                s!components!group__$doxy_g!go;
+                print GINDEX $_;
+            }
+            close(INDEX) or fatal "cannot close index.html: $!";
+            close(GINDEX) or fatal "cannot close index_$g.html: $!";
+        }
+    } else {
+        logmsg "** WARNING: ${\DOXYGEN} not found - skipping page generation";
+        return;
+    }
+}
+
+#------------------------------------------------------------------------------
+
+# Return the root within the file system of the specified package group.
+sub findRoot($$) {
+    my ($finder,$uor) = @_;
+
+    my $root = isPackage($uor) ? $finder->getPackageRoot($uor)
+                               : $finder->getGroupRoot($uor);
+    fatal "Cannot find '$uor'" unless $root;
+
+    return BDE::FileSystem->new($root);
+}
+
+# Return list of units of release that could be found.
+sub findGroups ($@) {
+    my ($finder,@in)=@_;
+    my @out;
+
+    foreach my $uor (@in) {
+        my $locn=isPackage($uor) ? $finder->getPackageLocation($uor)
+                                 : $finder->getGroupLocation($uor);
+        if ($locn) {
+            push @out,$uor;
+        } else {
+            warning "Cannot find '$uor' -- ignoring" unless $locn;
+        }
+    }
+
+    return @out;
+}
+
+sub fileExists($) {
+    my ($filename) = @_;
+    return -e $filename ? "exists" : "NOT exists";
+}
+
+sub outputHtmlPrologue  (*$) {
+    my ($outPut, $title) = @_;
+    $title = "Bloomberg Development Environment" if !$title;
+    print $outPut <<END_OF_HTML_PROLOGUE
+<!doctype HTML public "-//W3C//DTD HTML 4.0 Frameset//EN">
+<html>
+<title>$title</title>
+<html>
+<pre>
+END_OF_HTML_PROLOGUE
+}
+
+sub outputHtmlEpilogue (*) {
+    my ($outPut) = @_;
+    print $outPut <<'END_OF_HTML_EPILOGUE'
+</pre>
+</body>
+</html>
+END_OF_HTML_EPILOGUE
+}
+
+sub convertAsciiToHtmlEntities ($) {
+    my ($convertedLine) = @_;
+    $convertedLine =~ s/\&/\&amp\;/g;
+    $convertedLine =~ s/\"/\&quot;/g;
+    $convertedLine =~ s/</\&lt;/g;
+    $convertedLine =~ s/>/\&gt;/g;
+    $convertedLine =~ s/\'/\&#39;/g;
+    return $convertedLine;
+}
+
+sub asciiToMinimalHtml (**$) {
+    my ($inPut, $outPut, $title) = @_;
+    my $count = 0;
+    outputHtmlPrologue($outPut, $title);
+    while (<$inPut>) {
+        print $outPut convertAsciiToHtmlEntities($_);
+        ++$count;
+    }
+    outputHtmlEpilogue($outPut);
+    return $count;
+}
+
+sub restore_original_headers ($$$$) {
+    my ($htmldir, $grouproot, $finder, $baseTitle) = @_;
+    
+    logmsg "restore_original_headers: $htmldir $grouproot\n";
+    
+    chdir($htmldir) or fatal "cannot chdir $htmldir: $!";
+    
+    my $fileCount = 0;
+    while (my $originalHtml = <*_8h_source.html>) {
+        my $component = $originalHtml;
+           $component =~ s/_8h_source.html//;
+           $component =~ s/__/_/g;
+        my $title = filenameToTitle(basename($originalHtml));
+           $title = $title ? "$baseTitle: $title" : "$baseTitle";
+        my $location = $finder->getComponentLocation($component);
+        if (defined($location)) {
+            my $originalHeader = $location . "/" . $component . ".h";
+            if (!open(INPUT, $originalHeader)) {
+                warn("cannot open $originalHeader for reading: $!");
+                next;
+            }
+            my $outputFile = $originalHtml;
+            if (!open(OUTPUT, ">".$outputFile)) {
+                warn("cannot open $outputFile for writing: $!");
+                next;
+            }
+            my $lineCount = asciiToMinimalHtml(\*INPUT, \*OUTPUT, $title);
+            logmsg "$originalHeader".": ".$lineCount;
+            close( INPUT);
+            close(OUTPUT);
+            ++$fileCount;
+        }
+    }
+    return $fileCount;
+}
+
+#==============================================================================
+sub levelOfAggregation($)
+{
+    my $uor = shift;
+
+    return $uor =~ m|^\w_\w+_\w+| ? "Component"     :
+           $uor =~ m|^\w_\w+|     ? "Package"       :
+           $uor =~ m|^\w+_\w+|    ? "Component"     :
+           $uor =~ m|^\w{3}$|     ? "Package Group" :
+           $uor =~ m|^\w{3}\w+$|  ? "Package"       :
+                                                 "" ;
+}
+
+sub markupToAscii($)
+{
+    my $str = shift;
+    $str =~ s|__|_|g;
+    $str =~ s|_1|:|g;
+    return $str;
+}
+
+sub classMembersTitle($)
+{
+    my $file = shift;
+    $file =~ m|^class.*-members$| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^class||;
+    $title =~ s|-members$||;
+    $title =  markupToAscii($title);
+    $title = "Class " . $title . " Members";
+    return $title;
+}
+
+sub classTitle($)
+{
+    my $file = shift;
+    $file =~ m|^class.*| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^class||;
+    $title =  markupToAscii($title);
+    $title = "Class " . $title;
+    return $title;
+}
+
+sub groupTitle($)
+{
+    my $file = shift;
+    $file =~ m|^group.*| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^group__||;
+    $title =  markupToAscii($title);
+    $title =  $title . " " .  levelOfAggregation($title);
+    return $title;
+}
+
+sub headerTitle($)
+{
+    my $file = shift;
+    $file =~ m|_8h-source$| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^class||;
+    $title =~ s|_8h-source$|.h|;
+    $title =  markupToAscii($title);
+    $title =  $title . " Source";
+    return $title;
+}
+
+sub fileReferenceTitle($)
+{
+    my $file = shift;
+    $file =~ m|_8h$| or die "bad pattern match on: " . $file;
+    my $title = $file;
+
+    $title =~ s|^class||;
+    $title =~ s|_8h$|.h|;
+    $title =  markupToAscii($title);
+    $title =  $title . " Reference";
+    return $title;
+}
+
+sub structMembersTitle($)
+{
+    my $file = shift;
+    $file =~ m|^struct.*-members$| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^struct||;
+    $title =~ s|-members$||;
+    $title =  markupToAscii($title);
+    $title = "Struct " . $title . " Members";
+    return $title;
+}
+
+sub structTitle($)
+{
+    my $file = shift;
+    $file =~ m|^struct.*| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^struct||;
+    $title =  markupToAscii($title);
+    $title = "Struct " . $title;
+    return $title;
+}
+
+sub namespaceTitle($)
+{
+    my $file = shift;
+    $file =~ m|^namespace.*| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^namespace||;
+    $title =  markupToAscii($title);
+    $title = "Namespace " . $title;
+    return $title;
+}
+
+sub indexTitle($)
+{
+    my $file = shift;
+    $file =~ m|^index.*| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^index_||;
+    $title =  markupToAscii($title);
+    $title =  "Index of ".  $title . " " . levelOfAggregation($title);
+    return $title;
+}
+
+sub unionMembersTitle($)
+{
+    my $file = shift;
+    $file =~ m|^union.*-members$| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^struct||;
+    $title =~ s|-members$||;
+    $title =  markupToAscii($title);
+    $title = "Union " . $title . " Members";
+    return $title;
+}
+
+sub unionTitle($)
+{
+    my $file = shift;
+    $file =~ m|^union.*| or die "bad pattern match on: " . $file;
+
+    my $title = $file;
+    $title =~ s|^union||;
+    $title =  markupToAscii($title);
+    $title = "Union " . $title;
+    return $title;
+}
+
+sub filenameToTitle($)
+{
+    my $file = shift;
+
+    $file =~ '\.html$' or die "bad filename: " . $file;
+    $file =~ s|\.html$||;
+
+    return
+        $file =~ m|^class.*-members$|  ?  classMembersTitle($file) :
+        $file =~ m|^class.*|           ?         classTitle($file) :
+        $file =~ m|^group.*|           ?         groupTitle($file) :
+        $file =~ m|_8h-source$|        ?        headerTitle($file) :
+        $file =~ m|_8h$|               ? fileReferenceTitle($file) :
+        $file =~ m|^struct.*-members$| ? structMembersTitle($file) :
+        $file =~ m|^struct.*|          ?        structTitle($file) :
+        $file =~ m|^namespace.*|       ?     namespaceTitle($file) :
+        $file =~ m|^index.*|           ?         indexTitle($file) :
+        $file =~ m|^union.*-members$|  ?  unionMembersTitle($file) :
+        $file =~ m|^union.*|           ?         unionTitle($file) :
+                                                                "" ;
+
+}
+
+#==============================================================================
+
+MAIN: {
+    my $opts=getoptions();
+
+    my $finder = new BDE::FileSystem::MultiFinder($opts->{where});
+    $finder->setSearchMode(FILESYSTEM_NO_DEFAULT);
+
+    open_log($finder);
+
+    my $started_at=time;
+    logmsg "** Started at ".localtime($started_at);
+
+    $opts->{local}=0                    unless defined $opts->{local};
+    $opts->{process}=1                  unless defined $opts->{process};
+    $opts->{doxygen}=$opts->{process}   unless defined $opts->{doxygen};
+    $opts->{tagfile}="bde.tag"          unless defined $opts->{tagfile};
+
+    logmsg "-- - Feature Email is ".($opts->{mail}?"*enabled*":"disabled");
+
+    my @servers;
+    if ($opts->{ftp}) {
+        @servers = $opts->{servers} ? split(/\W/,$opts->{servers})
+                                   : @DEFAULT_SERVERS;
+        logmsg "-- - Feature FTP is *enabled* to: @servers";
+    } else {
+        logmsg "-- - Feature FTP is disabled";
+    }
+
+    if ($opts->{local}) {
+        logmsg "-- - Feature LocalWeb is *enabled* to $opts->{local}";
+    } else {
+        logmsg "-- - Feature LocalWeb is disabled";
+    }
+
+    # -------------------------------------------------------------------------
+
+    my @groups=findGroups($finder,@{$opts->{groups}});
+    # my $doxyroot=findRoot($finder,$groups[0]);  # arbitrary "parking place"
+    my $doxyroot="/bbcm/infrastructure";
+
+    $opts->{outdir}  =  $doxyroot       unless defined $opts->{outdir};
+    $opts->{htmldir} = "$doxyroot/html" unless defined $opts->{htmldir};
+    my $outdir  = $opts->{outdir};
+    my $htmldir = $opts->{htmldir};
+
+    logmsg "-- Processing files to: $doxyroot";
+    # ---
+    if ($opts->{process}) {
+        logmsg "-- Generating documentation for: @groups";
+        my $excludeListFile = $opts->{exclude};
+        my $includeListFile = $opts->{include};
+        fatal "Error in preprocessor - aborted"
+                    unless process_groups($outdir,
+                                          $htmldir,
+                                          $excludeListFile,
+                                          $includeListFile,
+                                          @groups);
+    } else {
+        logmsg "-- Document processing disabled - skipping";
+    }
+    # ---
+    if ($opts->{doxygen}) {
+        my $doxydir   = "$doxyroot/doxygen";
+        my $baseTitle = $opts->{baseTitle};
+        logmsg "-- Running Doxygen for $doxydir";
+        doxygenate_headers($outdir,$htmldir,$baseTitle,@groups);
+
+        my $tagfile = $opts->{tagfile};
+		if (-r "$outdir/$tagfile") {
+			if (copy "$outdir/$tagfile", "$htmldir/$tagfile") {
+        		logmsg "-- Copy tagfile: $tagfile: succeeded";
+			} else {
+        		logmsg "-- Copy tagfile: $tagfile: failed";
+			}
+		} else {
+        	logmsg "-- Cannot read tagfile: $tagfile";
+		}
+
+    } else {
+        logmsg "-- Doxygen processing disabled - skipping";
+    }
+    # ---
+    if (defined $opts->{original}) {
+        #my $doxydir = "$doxyroot/doxygen";
+        #my $htmldir = "$doxydir/html";
+        logmsg "-- Restoring Original Headers to $htmldir";
+        my $baseTitle = $opts->{baseTitle};
+        my $convertedCount = restore_original_headers($htmldir,
+                                                      $doxyroot,
+                                                      $finder,
+                                                      $baseTitle);
+        logmsg "converted: $convertedCount\n";
+    }
+    # ---
+    if ($opts->{ftp}) {
+        # cd back to buildroot to do ftp's (FIXME: generate ftp command file)
+        chdir($doxyroot) or fatal "cannot chdir $doxyroot: $!";
+        transfer_to_servers(@servers);
+
+        # Ordinary copy to BDE<GO> local directory
+        my $bdego = HOME . "/public_html/BDEGO/BDE2GO/bde_api";
+        chdir($htmldir) or
+            fatal "cannot chdir $htmldir: $!";
+        copy_to_localweb($htmldir, $bdego);
+
+    } else {
+        logmsg "-- FTP transfer disabled - skipping";
+    }
+    # ---
+    if ($opts->{local}) {
+        chdir($htmldir) or
+            fatal "cannot chdir $htmldir: $!";
+        copy_to_localweb("$htmldir", $opts->{local});
+    } else {
+        logmsg "-- Local web transfer disabled - skipping";
+    }
+    # -------------------------------------------------------------------------
+
+    my $finished_at=time;
+    logmsg "** Finished at ".localtime($finished_at);
+    logmsg "-- Elapsed time: ".($finished_at-$started_at)." seconds";
+
+    exit_ok(join(" ",@{$opts->{groups}}),$opts->{mail});
+}
+
+#==============================================================================

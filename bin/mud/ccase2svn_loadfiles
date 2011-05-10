@@ -1,0 +1,121 @@
+#!/bbs/opt/bin/perl-5.8.8 -w
+
+use Getopt::Long;
+use SVN::Core;
+use SVN::Repos;
+use SVN::Fs;
+use SVN::Delta;
+use strict;
+
+my @getopt = qw(verbose fatal!);
+my %opt = (fatal => 1);
+
+GetOptions(\%opt, @getopt) or die "bad options.".$/;
+
+my $url = shift or die usage();
+my ($fsfspath, $importpath) = parse_fsfs_url($url);
+my $repo = SVN::Repos::open($fsfspath) or die "error opening repository: $!";
+
+while (<>) {
+  chomp;
+  my %event;
+
+  @event{qw/target date user comment/} = split /\t/;
+  $event{comment} =~ s/\\n/\n/g if $event{comment};
+  $event{comment} =~ s/\\\\/\\/g if $event{comment};
+
+  local $@;
+  eval { svn_commit($repo, $importpath, \%event); };
+
+  if ($@) {
+    print STDERR "error on line: $_".$/;
+    $opt{fatal} ? die $@.$/ : print STDERR "error: $@".$/;
+  }
+}
+
+sub svn_commit {
+  my ($repo, $importpath, $event) = @_;
+
+  print sprintf 'commit %s'.$/, $event->{target} if $opt{verbose};
+
+  my $rev; 
+  my $pool = SVN::Pool->new_default;
+  my ($edelta, $ebaton) = $repo->get_commit_editor(
+    sprintf('file://%s', $repo->path),
+    '/'.$importpath,
+    $event->{user},
+    $event->{comment},
+    sub {
+      $rev = shift;
+      my ($date, $author) = @_;
+      print sprintf 'committed %s on %s by %s'.$/, $rev, $date, $author;
+    },
+  );
+
+  my $editor = SVN::Delta::Editor->new($edelta, $ebaton);
+  my $yrev = $repo->fs->youngest_rev;
+  my $baton = $editor->open_root($yrev);
+
+  svn_checkin($editor, $baton, $yrev, $event->{target});
+  $editor->close_edit;
+
+  # go back and falsify the commit time
+  my ($Y,$M,$D,$h,$m,$s) = 
+    $event->{date} =~ /(\d{4})(\d{2})(\d{2})\.(\d{2})(\d{2})(\d{2})/;
+  my $svndate = join('-',$Y,$M,$D).'T'.join(':',$h,$m,$s).'.000000Z';
+  $repo->fs->change_rev_prop($rev, 'svn:date', $svndate);
+}
+
+# process a new clearcase file version
+sub svn_checkin {
+  my ($editor, $baton, $baserev, $pname) = @_;
+  my $pool = SVN::Pool->new_default;
+  my ($path, $branch, $ver) = nxsplit($pname);
+  my $dbaton = $editor->open_directory(dirname($path), $baton, $baserev);
+
+  # treat first version as a file add, subsequent as file changes
+  my $fbaton = $ver == 1 ?
+    $editor->add_file($path, $dbaton, undef, -1) :
+    $editor->open_file($path, $dbaton, $baserev);
+
+  $editor->change_file_prop($fbaton, 'svn:executable', 'ON') if
+    -f $pname && -x $pname;
+
+  my $handle = $editor->apply_textdelta($fbaton, undef);
+
+  open my $fh, $pname or die "open error: $!.";
+  SVN::TxDelta::send_stream($fh, @$handle);
+  close $fh or die "close error: $!";
+
+  $editor->close_directory($dbaton);
+}
+
+sub parse_fsfs_url {
+  my $url = shift;
+
+  $url =~ s{^file://}{} or die "error, only file:// urls are supported.".$/; 
+
+  my @parts = split m{/}, $url;
+  my @realparts = shift @parts;
+
+  while (@parts && -d (my $realpath = join '/', @realparts, $parts[0])) {
+    push @realparts, (shift @parts);
+    last if -f "$realpath/db/uuid"; # if your repo looks like this, sorry :)
+  }
+
+  die "error parsing fsfs url $url.".$/ if !-d join '/', @realparts;
+
+  return (join '/', @realparts), (join '/', @parts);
+}
+
+sub dirname {
+  my $path = shift;
+  my @parts = split m{/}, $path;
+  pop @parts;
+  return join '/', @parts;
+}
+
+sub nxsplit {
+  return $_[0] =~ qr{^(.*)\@\@(.*)/(\d+)$};
+}
+

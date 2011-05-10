@@ -1,0 +1,50 @@
+#!/bbs/opt/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use Getopt::Long;
+use Change::Util::InterfaceSCM qw/enqueueChangeSetSCM/;
+use Util::SCMControl qw/acceptSCMUser/;
+use Util::Message qw/fatal/;
+use strict;
+
+sub usedyn (*;@) {
+  my $pm = shift;
+  my $error = eval "eval { require $pm } ? 0 : \$@";
+  die $error if $error;
+  $pm->import(@_) if @_;
+  return 1;
+}
+
+my @getopt = qw(bundle);
+my %opt;
+
+acceptSCMUser()  or  fatal "user not authorized";
+
+GetOptions(\%opt, @getopt) or
+  die "usage: $0 <-b bundle1 bundle2 ...> | <csid1 csid2 ...>".$/;
+
+for (@ARGV ? @ARGV : map {chomp;$_} <>) {
+  my $csid = $opt{bundle} ? csid_from_bundle($_) : $_;
+  enqueueChangeSetSCM($csid) or
+    die "Error enqueueing changeset ".$csid.$/;
+}
+
+sub csid_from_bundle {
+  my $bundle = shift; 
+
+  usedyn File::Temp => qw/tempdir/;
+  usedyn Change::Set;
+  usedyn Change::Util::Bundle => qw/unbundleChangeSetMeta/;
+
+  my ($cs, $dir) = (Change::Set->new, tempdir(CLEANUP => 1));
+
+  unbundleChangeSetMeta($cs, $bundle, $dir) or
+    die "Error unbundling ".$bundle.$/;
+
+  return $cs->getID;
+}
+

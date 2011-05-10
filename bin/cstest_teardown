@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+lib="$1" && shift
+tdir="$1" && shift
+
+rm -rf "$tdir"
+

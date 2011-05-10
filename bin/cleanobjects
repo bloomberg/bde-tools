@@ -1,0 +1,21 @@
+#!/bin/ksh
+
+if [ $1 ]; then
+    for GROUP in $@; do
+        if [ -d $VIEWPATH/bbcm/infrastructure/groups/$GROUP ]; then
+            echo "cleaning $GROUP objects..."
+        else
+            echo "package group '$GROUP' does not exist"
+            exit 2
+        fi
+
+        echo "    $GROUP package build directories";
+        rm -rf $VIEWPATH/bbcm/infrastructure/groups/$GROUP/b*/unix-*
+        echo "...done";
+    done
+else
+    echo "usage: cleanobjects <package group> [<package group> ...]"
+    exit 1
+fi
+
+exit 0;

@@ -1,0 +1,7 @@
+#!/bin/ksh
+
+echo "==== $1 -> $2"
+symfind --callers /bbs/lib/lib$2.a | grep "^$1\\[" | objnames
+
+echo "==== $2 -> $1"
+symfind --callers /bbs/lib/lib$1.a | grep "^$2\\[" | objnames

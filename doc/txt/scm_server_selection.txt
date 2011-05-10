@@ -1,0 +1,79 @@
+Client-Selectable SCM Server Versions
+=====================================
+William Baxter, Tassilo von Parseval
+
+
+Requirements:
+- Deploy multiple versions of SCM software with client-side selection.
+
+Deliverables:
+- Multiple installed versions of SCM Perl modules.
+- Generic URL component to select version via terse ID.
+- Client-side configuration variable to set version ID.
+- Zero-downtime upgrade path for deployment.
+
+Comments:
+- This development creates a generic means to roll versions forward on SCM
+  under client control.  It does not require but will benefit from completion
+  of the SCM code release development in TREQ #FIXME.
+
+Implementation:
+- Developer: Tassilo
+- Design: .5 day
+- Implementation: 1 day
+- Testing: .5 day
+- Relatively easy to do.  Invisible if handled correctly.
+
+Limitations:
+- Client-selectable SCM versions will only work for software that is triggered
+  client-side, that is: SCM::Server and SCM::Info. There is no obvious way to
+  have the queue daemons run off a different library-tree.
+
+Possible implementation:
+========================
+
+It should be possible to make SCM server versions client-selectable by a simple
+tweak of the apache-configuration: It needs to be told that everything under
+a given directory shall be treated as CGI scripts.
+
+Having done this, the following directory layout (resembling that of cstools)
+would look like this:
+
+    $SCM_ROOT/versions/ver1/cgi-bin/
+                            bin/
+                            css/
+                            scripts/
+                            lib/
+    $SCM_ROOT/versions/ver2/cgi-bin/
+                            bin/
+                            css/
+                            scripts/
+                            lib/
+    ...
+    $SCM_ROOT/stable => versions/$stable_version
+
+For the above layout, version/ (and possibly the symlink stable/) need to
+be reckognizable as CGI directories to apache. Once this is done, a 
+particular version can be chosen in the URL:
+
+    http://$host:$post/versions/ver42/cgi-bin/scm
+
+The queue daemons and all other software that is not directly triggered from
+the client side will also live in multiple versions according to the above
+scheme. The service/*/run files will use the symlink stable/ to reference
+the version of the software to run.
+
+Scripts will use the same @INC-magic as the cstools on the client-side,
+that is: @INC will contain paths relative from $FindBin::Bin.
+
+The above allows release procedures similar to those of the cstools
+client-wise. On SCM, a simple 'cp -r' from SCM2 to a new directory 
+under $SCM_ROOT/versions/ will do, followed by adjusting the symlink
+$SCM_ROOT/stable.
+
+Should stable/ turn out to be buggy (highly visible for SCM::Server and
+SCM::Info), an ad-hoc fix would be to change SCM_HOST_SCM accordingly to no
+longer use 'stable' but rather 'versions/$stable-1'. Optionally, one could
+adjust the symlink but this would also affect the queue daemons. Effectively,
+this scheme allows to run the queues in a different version than the CGI
+scripts.

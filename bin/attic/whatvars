@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# This is a convenience script for mortals to see what is going on.
+# It passes the same list as bde_build.pl and sorts the output for
+# easier digestion. Pass the target (e.g. 'dbg_exc') to use it.
+
+echo "Getting build variables for $1..."
+getbldvar.pl -x $1 AR AR_INSTALL AS ASFLAGS BDE_CFLAGS BDE_CXXFLAGS BDE_LDFLAGS CC CXX CXXLINK EXE_OPT LIB_EXT LIB_FLAG LIB_PREFIX LIBPATH_FLAG LINK_LIB_EXT MKDIR OBJ_OPT PURIFYOPTIONS RANLIB | sort -
+echo "...done";

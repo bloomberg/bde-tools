@@ -1,0 +1,19 @@
+SI Build ClearCase -> SVN migration plan
+----------------------------------------
+
+Import current VOB with full back history into SVN. Scripts for doing so exist in the vob under tools/bin/mud. ccase2svn is the top-level script.
+
+Create real alpha, beta and prod branches in SVN. Make sure their contents match the contents of the current releases.
+
+New release procedure: tag the branch to be released (a simple "svn cp /branches/foo /tags/foo-123"), export the tag directory to disk, and tarball it. The tarball should resemble the output of cstools-package, i.e. the cstools-install and cstools-release scripts should operate on it unchanged.
+
+Release manager should never have to merge or cherry-pick code. Release manager only needs to bundle the appropriate branches & file the necessary tickets.
+
+All significant work should be done on a private branch. By convention "significant work" could be defined to be all TREQ work and any DRQS work which spans multiple files. The obvious choice for branch names in these cases would be e.g. t123456 and d123456 respectively.
+
+To signal that changes are ready for release, developers merge their private branch to a central branch like prod. Release manager picks them up from there and releases them according to schedule. Under the old process, developers communicated each file in need of release to the release manager, who performed a file-wise merge on their behalf. This central mergemastering was both error prone and time-consuming.
+
+Merging changes to a central branch also makes them available to other developers. Sharing changes is accomplished by a merge in the other direction: from a central branch to a private, less-central branch under the control of the developer. Under the old process, private -mkbranch branches were invaded by checkins from other developers, and "stable" branches which branched every element were prohibitively expensive to create. Under SVN, branches can be made cheaply, and code sharing becomes intentional (via an explicit merge) rather than accidental.
+
+The cutover from ClearCase to SVN should occur cleanly, without any overlap, to avoid a messy period of merging changes between the two. A short crash course which covers merging in svn is probably sufficient for SI Build developers.
+

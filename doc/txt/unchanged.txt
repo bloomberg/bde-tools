@@ -1,0 +1,95 @@
+Updates to the Handling of Unchanged Files
+==========================================
+William Baxter
+20061208
+
+
+Problems
+========
+The handling of unchanged files has several shortcomings that we must now
+address.  These revolve around the use of ci to determine unchanged status at
+robocop sweep time.  The unchanged test should occur at checkin time and be
+respected thereafter.
+
+
+Robocop sweep
+=============
+The checkin.robocop program relies on ci to recognize an unchanged file and in
+effect do nothing.  A new version now in the hands of Alan Kaplan adds a --type
+option that supports passing the type (as recorded in the header of the
+file.checkin.sh file.  This version avoids calling c but performs all other
+actions when type is UNCHANGED.
+
+A corresponding update to Change/Util/Interface.pm will write .checkin.sh files
+that use --type.  These may be into production today.
+
+
+SCM Sweep Daemon
+================
+The current SCM sweep daemon handles unchanged files like all other files.
+This means that an unchanged file may contribute content to a sweep, thus
+overriding an earlier changed contribution.  We must extend the sweep algorithm
+to convey to sweep the latest changed file, if any, or an unchanged file.  This
+is probably not too difficult to implement in Queue::Sweep::write_filelist.
+
+
+Rollback Change Set Construction
+================================
+Rollback change set construction reinstates the priors of each file in the
+change set.  This construction is insensitive to unchanged status of a file.
+The construction should eliminate unchanged files from the change set and
+construct priors only for the remaining files.
+
+Subtle cases remain.  Suppose the queue holds a file with changed and unchanged
+versions as
+
+  U1 C1 U2
+
+If C1 is rolled back it leaves U1 and a rebuild occurs at next sweep.  But with
+
+  C1 U2
+
+the request for rebuild is lost with rollback of C1.  A rollback change set
+does not contribute to sweep, therefore it cannot contribute a request to
+rebuild.  How should the SCM preserve the rebuild request across rollback?  A
+further refinement of the sweep algorithm might suffice.  This could retain
+references to one or more unchanged contributions when popping the stack for a
+rollback.  This approach requires a change in the heart of the sweep algorithm.
+Furthermore, someone must completely think through the impact on those parts of
+the algorithm that retire change sets to the swept/ directory.  Risk is
+significant, therefore strict testing is required.
+
+
+Rollback and Locking
+====================
+Because csrollback can submit a change set, it should require that the user
+hold locks on all changed files in the original change set.  This will
+establishes better notification to submitters of overlapping material that 
+
+
+StagedBy Display
+================
+The stagedby display indicates whether a file is available for sweep.  A "Y"
+indicates yes, and a "-" indicates no.  Extend the spectrum to include "E" for
+available but eclipsed.  Update the online help accordingly.  Consider
+displaying a different color backdrop for change sets that do and do not
+contribute to sweep, so that one can determine at a glance whether a change set
+will contributes anything to a sweep.
+
+The Long Term
+=============
+Developers should have the ability to manage their own merge activity in the
+SCM repository.  This would bring our system closer to standard SCM practice.
+
+
+
+Useful TREQs
+============
+
+1. Modify rollback change set construction to exclude unchanged files.
+2. Modify sweep algorithm to deliver the latest changed version of a file from
+    SCM.
+3. Modify robocop.checkin and Change/Util/Interface.pm to support and use
+    --type.
+4. Require locks on all changed files in csrollback to act on CSID.
+

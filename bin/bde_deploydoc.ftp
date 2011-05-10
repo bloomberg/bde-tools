@@ -1,0 +1,13 @@
+user
+--u--
+binary
+prompt
+cd --r--
+pwd
+lcd doxygen/html
+! pwd
+mput *
+ls
+lcd ../..
+! pwd
+close
