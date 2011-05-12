@@ -2,10 +2,11 @@
 
 : ${BIN:=$(dirname $0)}
 
-HTML_DIR=~tmarshal/public_html/BDEGO/BDE2GO/bde_api_prod/
+HTML_DIR=/bb/bigstor5/sbreitst/bdedoc/BDEGO/BDE2GO/bde_api_2.6_beta3X/
 
-RELNUMB="2.3"
-RELTYPE="Production"
+
+RELNUMB="2.6"
+RELTYPE="Beta3"
 
 
 TITLE="Table of Contents: BDE ${RELNUMB} ${RELTYPE}"

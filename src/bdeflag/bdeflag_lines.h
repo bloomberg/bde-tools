@@ -149,6 +149,7 @@ class Lines {
     static Ut::LineNumSet      s_badlyAlignedReturns;
     static State               s_state;
     static bool                s_hasTabs;
+    static bool                s_hasTrailingBlanks;
     static bool                s_includesAssertH;
     static bool                s_includesCassert;
     static bool                s_includesDoubleQuotes;
@@ -235,6 +236,11 @@ class Lines {
     bool hasTabs();
         // Return 'true' if the current file had any tabs in it and 'false'
         // otherwise.
+
+    static
+    bool hasTrailingBlanks();
+        // Return 'true' if the file had any trailing blanks on lines and
+        // 'false' otherwise.
 
     static
     bool includesDoubleQuotes();

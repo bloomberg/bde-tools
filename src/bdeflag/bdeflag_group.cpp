@@ -1198,6 +1198,14 @@ void Group::determineGroupType()
               case BDEFLAG_ROUTINE_DECL:
               case BDEFLAG_CTOR_CLAUSE: {
                 if (BDEFLAG_ROUTINE_CALL == prevType) {
+                    if   ((BDEFLAG_CODE_BODY    == pType
+                        || BDEFLAG_ROUTINE_BODY == pType)
+                       && Ut::isUpperCaseString(prevGroup->d_prevWord)) {
+                        // code body following a macro
+
+                        d_type = BDEFLAG_CODE_BODY;
+                        break;
+                    }
                     prevGroup->d_open.error() << "apparent routine call to " <<
                        prevGroup->d_prevWord << " is followed by code block\n";
                 }
@@ -1395,14 +1403,12 @@ void Group::checkArgNames() const
                 }
                 else if ('&' == tn[tn.length() - 1] &&
                                    Ut::npos() == tn.find(MATCH[MATCH_CONST]) &&
-                        !((Ut::npos() != d_prevWord.find(MATCH[MATCH_PRINT]) ||
-                                  MATCH[MATCH_OPERATOR_SHIFT] == d_prevWord) &&
-                                 (bdeu_String::strstrCaseless(tn.c_str(),
-                                                              tn.length(),
-                                                              "stream", 6) ||
-                                  bdeu_String::strstrCaseless(an.c_str(),
-                                                              an.length(),
-                                                              "stream", 6)))) {
+                                 !(bdeu_String::strstrCaseless(tn.c_str(),
+                                                               tn.length(),
+                                                               "stream", 6) ||
+                                   bdeu_String::strstrCaseless(an.c_str(),
+                                                               an.length(),
+                                                               "stream", 6))) {
                     d_open.warning() << " first argument of routine " <<
                              d_prevWord << " is being passed as a reference" <<
                                                    " to a modifiable object\n";

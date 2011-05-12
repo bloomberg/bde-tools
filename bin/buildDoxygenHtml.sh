@@ -32,7 +32,7 @@ BDE_DEPLOYDOC=$DIR/$CMD
 EXCLUDE=$DIR/../etc/bde2doxy_exclude.txt
 BDE2GO="/bb/bigstor5/sbreitst/bdedoc/BDEGO/BDE2GO"
 
-RELNO=2.6
+RELNO=2.7
 RELTYPE=PRODUCTION
 DIR_SUFFIX=prod1
 
