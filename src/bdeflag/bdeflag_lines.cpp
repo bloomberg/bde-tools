@@ -41,6 +41,7 @@ Ut::LineNumSet      Lines::s_inlinesNotAlone;
 Ut::LineNumSet      Lines::s_badlyAlignedReturns;
 Lines::State        Lines::s_state = BDEFLAG_EMPTY;
 bool                Lines::s_hasTabs;
+bool                Lines::s_hasTrailingBlanks;
 bool                Lines::s_includesAssertH;
 bool                Lines::s_includesCassert;
 bool                Lines::s_includesDoubleQuotes;
@@ -143,6 +144,10 @@ void Lines::firstDetect()
         if (Ut::npos() != curLine.find('\t')) {
             s_hasTabs = true;
         }
+
+	if (curLine.length() > 0 && ' ' == curLine[curLine.length() - 1]) {
+	    s_hasTrailingBlanks = true;
+	}
     }
 
     s_state = BDEFLAG_FIRST_DETECTED;
@@ -629,6 +634,7 @@ Lines::Lines(const char *fileName)
     s_longLines.clear();
     s_cStyleComments.clear();
     s_hasTabs = false;
+    s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
     s_includesDoubleQuotes = false;
@@ -714,6 +720,7 @@ Lines::Lines(const bsl::string& string)
     s_longLines.clear();
     s_cStyleComments.clear();
     s_hasTabs = false;
+    s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
     s_includesDoubleQuotes = false;
@@ -766,6 +773,7 @@ Lines::~Lines()
     s_badlyAlignedReturns.clear();
     s_state = BDEFLAG_EMPTY;
     s_hasTabs = false;
+    s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
     s_includesDoubleQuotes = false;
@@ -777,6 +785,10 @@ void Lines::printWarnings(bsl::ostream *stream)
 {
     if (s_hasTabs) {
         *stream << "Warning: file " << s_fileName << " has tab(s).\n";
+    }
+    if (s_hasTrailingBlanks) {
+        *stream << "Warning: file " << s_fileName <<
+                                                   " has trailing blank(s).\n";
     }
     if (s_includesDoubleQuotes) {
         *stream << "Warning: " << s_fileName <<

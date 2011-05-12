@@ -34,6 +34,11 @@ BSLS_IDENT("$Id: $")
 #include <bsl_vector.h>
 #endif
 
+#ifndef INCLUDED_CTYPE
+#include <ctype.h>
+#define INCLUDED_CTYPE
+#endif
+
 namespace BloombergLP {
 namespace bdeFlag {
 
@@ -112,6 +117,11 @@ struct Ut {
         // greater than the length of 's'.  If 'pos' is unspecified, match to
         // the first nonwhite sequence in 's'.  Note it is alright if 'pattern'
         // begins with spaces, so long is 'pos' is specified.
+
+    static
+    bool isUpperCaseString(const bsl::string& s);
+        // Return 'true' if every alpha char in the specified string 's' is
+        // upper case.
 
     static
     char lastCharOf(const bsl::string& s);
@@ -207,6 +217,20 @@ bool Ut::frontMatches(const bsl::string& s,
     }
 
     return frontMatches(s, pattern, pos);
+}
+
+inline
+bool Ut::isUpperCaseString(const bsl::string& s)
+{
+    const char *pc           = s.data();
+    const char * const pcEnd = pc + s.length();
+    for (; pc < pcEnd; ++pc) {
+        if (isalpha(*pc) && !isupper(*pc)) {
+	    return false;
+        }
+    }
+
+    return true;
 }
 
 inline
