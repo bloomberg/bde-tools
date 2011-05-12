@@ -80,22 +80,22 @@ sub fromString ($$) {
     my ($self,$init)=@_;
 
     if (-f $init) {
-	$self->{name}=undef;
-	$self->readMembers($init);
+        $self->{name}=undef;
+        $self->readMembers($init);
     } elsif (-d $init.$FS.GROUP_META_SUBDIR) {
-	my $group=basename($init);
-	$self->{name}=$group;
-	$self->readMembers($init.$FS.GROUP_META_SUBDIR
-			   .$FS.$group.MEMFILE_EXTENSION);
-	$self->readDependants($init.$FS.GROUP_META_SUBDIR
-			   .$FS.$group.DEPFILE_EXTENSION);
-	$self->readLock($init.$FS.GROUP_META_SUBDIR
-			   .$FS.$group.LCKFILE_EXTENSION);
+        my $group=basename($init);
+        $self->{name}=$group;
+        $self->readMembers($init.$FS.GROUP_META_SUBDIR
+                           .$FS.$group.MEMFILE_EXTENSION);
+        $self->readDependants($init.$FS.GROUP_META_SUBDIR
+                           .$FS.$group.DEPFILE_EXTENSION);
+        $self->readLock($init.$FS.GROUP_META_SUBDIR
+                           .$FS.$group.LCKFILE_EXTENSION);
     } elsif (isGroup $init) {
-	$self->{name}=$init;
+        $self->{name}=$init;
     } elsif (!isLegacy(($self->{name}=substr($init,rindex($init,$FS)+1)))) {
-	warning("not a valid group location: $init");
-	return undef;
+        warning("not a valid group location: $init");
+        return undef;
     }
 
     return $self;
@@ -108,125 +108,126 @@ sub readMembers ($) {
     my ($self,$memfile)=@_;
 
     unless ($memfile) {
-	warning("cannot obtain group member list for ".$self->{name});
-	return undef;
+        warning("cannot obtain group member list for ".$self->{name});
+        return undef;
     }
 
     unless (-d dirname($memfile)) {
         warning("no group control directory (".dirname($memfile).
-		     ") for group ".$self->{name});
-	return undef;
+                     ") for group ".$self->{name});
+        return undef;
     }
 
     unless (retry_file $memfile) {
-	warning("member file $memfile not found");
-	return undef;
+        warning("member file $memfile not found");
+        return undef;
     }
 
     my $fh=new IO::File;
     unless (retry_open($fh, "< $memfile")) {
-	warning("cannot open '$memfile': $!");
-	return undef;
+        warning("cannot open '$memfile': $!");
+        return undef;
     }
 
     $self->{members}={} if exists $self->{members};
 
     my $region=$self->getDefaultRegion();
+    local $_;
     while (<$fh>) {
-	next if /^\s*$/;
+        next if /^\s*$/;
         if (/^\s*#/) {
-	    # support for special-case packages. This support is still in
+            # support for special-case packages. This support is still in
             # development. In particular, the 'thirdparty' attribute has
             # no formal use yet. Criteria are as follows:
             #   metadata + prebuilt = add -l rules
             #   metadata - prebuilt = no -l rules
-	    # not all of these properties may actually apply to groups
-	    # see BDE::Package.
-	    next unless /^\s*#\s*(\[.*\])\s*$/;
-	    my $comment=$1;
+            # not all of these properties may actually apply to groups
+            # see BDE::Package.
+            next unless /^\s*#\s*(\[.*\])\s*$/;
+            my $comment=$1;
 
-	    if ($comment eq IS_METADATA_ONLY) {
-		$self->{metadataonly}=1;
-	    } elsif ($comment eq IS_PREBUILT_LEGACY) {
-		$self->{metadataonly}=1;
-		$self->{prebuilt}=1;
-		$self->{thirdparty}=0;
-	    } elsif ($comment eq IS_PREBUILT_THIRDPARTY) {
-		$self->{metadataonly}=1;
-		$self->{prebuilt}=1;
-		$self->{thirdparty}=1;
-	    } elsif ($comment eq IS_RELATIVE_PATHED) {
-		$self->{relative}=1;
-	    } elsif ($comment eq IS_OFFLINE_ONLY) {
-		$self->{offlineonly}=1;
-	    } elsif ($comment eq IS_GTK_BUILD) {
-		$self->{gtkbuild}=1;
-	    } elsif ($comment eq IS_MANUAL_RELEASE) {
-		$self->{manualrelease}=1;
-	    } elsif ($comment eq IS_HARD_VALIDATION) {
-	        $self->{hardvalidation} = 1;
-	    } elsif ($comment eq IS_HARD_INBOUND) {
-	        $self->{hardinbound} = 1;
-	    } elsif ($comment eq IS_NO_NEW_FILES) {
-	        $self->{no_new_files} = 1;
-	    } elsif ($comment eq IS_SCREEN_LIBRARY) {
-	        $self->{screenlibrary} = 1;
-	    } elsif ($comment eq IS_BIG_ONLY) {
-	        $self->{bigonly} = 1;
-	    } elsif ($comment eq IS_CLOSED) {
-	        $self->{closed} = 1;
-	    } elsif ($comment eq IS_UNDEPENDABLE) {
-	        $self->{undependable} = 1;
-	    } elsif ($comment eq IS_MECHANIZED) {
-	        $self->{mechanized} = 1;
-	    }
-	    next;
-	}
-	foreach my $member (split) {
-	    if ($member =~ /^\[/) {
-		if ($member =~ /^\[([a-zA-Z]{3}\w*)\]$/) {
-		    $region = $1;
-		    if ($region !~ /^$self\w+/) {
-			$region = $self.'_'.$region;
-		    }
-		    $self->addRegion($region);
-		} else {
-		    warning("$memfile:$.: ".
-				 "bad region specification: $member");
-		}
-	    } else {
-		unless (isPackage($member) and $member=~/^$self->{name}/) {
-		    warning("$memfile:$.: bad package: $member");
-		    return undef;
-		}
+            if ($comment eq IS_METADATA_ONLY) {
+                $self->{metadataonly}=1;
+            } elsif ($comment eq IS_PREBUILT_LEGACY) {
+                $self->{metadataonly}=1;
+                $self->{prebuilt}=1;
+                $self->{thirdparty}=0;
+            } elsif ($comment eq IS_PREBUILT_THIRDPARTY) {
+                $self->{metadataonly}=1;
+                $self->{prebuilt}=1;
+                $self->{thirdparty}=1;
+            } elsif ($comment eq IS_RELATIVE_PATHED) {
+                $self->{relative}=1;
+            } elsif ($comment eq IS_OFFLINE_ONLY) {
+                $self->{offlineonly}=1;
+            } elsif ($comment eq IS_GTK_BUILD) {
+                $self->{gtkbuild}=1;
+            } elsif ($comment eq IS_MANUAL_RELEASE) {
+                $self->{manualrelease}=1;
+            } elsif ($comment eq IS_HARD_VALIDATION) {
+                $self->{hardvalidation} = 1;
+            } elsif ($comment eq IS_HARD_INBOUND) {
+                $self->{hardinbound} = 1;
+            } elsif ($comment eq IS_NO_NEW_FILES) {
+                $self->{no_new_files} = 1;
+            } elsif ($comment eq IS_SCREEN_LIBRARY) {
+                $self->{screenlibrary} = 1;
+            } elsif ($comment eq IS_BIG_ONLY) {
+                $self->{bigonly} = 1;
+            } elsif ($comment eq IS_CLOSED) {
+                $self->{closed} = 1;
+            } elsif ($comment eq IS_UNDEPENDABLE) {
+                $self->{undependable} = 1;
+            } elsif ($comment eq IS_MECHANIZED) {
+                $self->{mechanized} = 1;
+            }
+            next;
+        }
+        foreach my $member (split) {
+            if ($member =~ /^\[/) {
+                if ($member =~ /^\[([a-zA-Z]{3}\w*)\]$/) {
+                    $region = $1;
+                    if ($region !~ /^$self\w+/) {
+                        $region = $self.'_'.$region;
+                    }
+                    $self->addRegion($region);
+                } else {
+                    warning("$memfile:$.: ".
+                                 "bad region specification: $member");
+                }
+            } else {
+                unless (isPackage($member) and $member=~/^$self->{name}/) {
+                    warning("$memfile:$.: bad package: $member");
+                    return undef;
+                }
 
-		$self->addMember($member);
-		$self->addMemberToRegion($region => $member);
-	    }
-	}
+                $self->addMember($member);
+                $self->addMemberToRegion($region => $member);
+            }
+        }
     }
 
     close $fh;
-	
+
     my @members=$self->getMembers();
 
     if (Util::Message::get_debug()) {
-	if (@members) {
-	    debug($self->{name}." contains @members");
-	    my @regions=$self->getRegions();
-	    if (@regions) {
-		debug($self->{name}." defines regions @regions");
-		foreach my $region (@regions) {
-		    if (my @rmembers=$self->getRegionMembers($region)) {
-			verbose("  region $region contains @rmembers");
-		    } else {
-			$self->removeRegion($region);
-		    }
-		}
-	    }
-	} else {
-	    debug($self->{name}." has no members");
-	}
+        if (@members) {
+            debug($self->{name}." contains @members");
+            my @regions=$self->getRegions();
+            if (@regions) {
+                debug($self->{name}." defines regions @regions");
+                foreach my $region (@regions) {
+                    if (my @rmembers=$self->getRegionMembers($region)) {
+                        verbose("  region $region contains @rmembers");
+                    } else {
+                        $self->removeRegion($region);
+                    }
+                }
+            }
+        } else {
+            debug($self->{name}." has no members");
+        }
     }
 
     return @members if defined(wantarray);
@@ -236,9 +237,9 @@ sub getMembers ($) {
     my $self=shift;
 
     if (exists $self->{members}) {
-	return sort keys(%{ $self->{members} });
+        return sort keys(%{ $self->{members} });
     } else {
-	return ();
+        return ();
     }
 }
 
@@ -326,7 +327,7 @@ sub getRegions ($) {
     #<<<TODO: group, if that region is the default region. This is an
     #<<<TODO: assumption, revisit if this ever becomes needed (unlikely)
     if (@regions==1 and $regions[0] eq $self->getDefaultRegion) {
-	return (); # if the default region is the only region, no regions
+        return (); # if the default region is the only region, no regions
     }
 
     return @regions;
@@ -336,7 +337,7 @@ sub getRegionMembers ($$) {
     my ($self,$region)=@_;
 
     unless (exists $self->{regions}{$region}) {
-	$self->throw("$self does not define region $region"); return undef;
+        $self->throw("$self does not define region $region"); return undef;
     }
 
     return sort keys %{ $_[0]->{regions}{$region} };
@@ -353,7 +354,7 @@ sub addRegion ($$) {
     my ($self,$region)=@_;
 
     unless (exists $self->{regions}{$region}) {
-	$self->{regions}{$region}={};
+        $self->{regions}{$region}={};
     }
     return $self;
 }
@@ -362,12 +363,12 @@ sub removeRegion ($$) {
     my ($self,$region)=@_;
 
     if (exists $self->{regions}{$region}) {
-	my $region=$self->{regions}{$region};
-	my @members=keys %$region;
-	# move all members in this region to the 'base' region since they
-	# must belong to some region or other.
-	$self->addMemberToRegion($self => $_) foreach @members;
-	delete $self->{regions}{$region};
+        my $region=$self->{regions}{$region};
+        my @members=keys %$region;
+        # move all members in this region to the 'base' region since they
+        # must belong to some region or other.
+        $self->addMemberToRegion($self => $_) foreach @members;
+        delete $self->{regions}{$region};
     }
 
     return $self;
@@ -377,10 +378,10 @@ sub addMemberToRegion ($$$) {
     my ($self,$region,$member)=@_;
 
     unless (exists $self->{members}{$member}) {
-	$self->throw("$self does not contain member $member"); return undef;
+        $self->throw("$self does not contain member $member"); return undef;
     }
     unless (exists $self->{regions}{$region}) {
-	$self->throw("$self does not define region $region"); return undef;
+        $self->throw("$self does not define region $region"); return undef;
     }
 
     my $oldregion=$self->{members}{$member};
@@ -395,7 +396,7 @@ sub regionHasMember($$$) {
     my ($self,$region,$member)=@_;
 
     unless (exists $self->{members}{$member}) {
-	$self->throw("$self does not contain member $member"); return undef;
+        $self->throw("$self does not contain member $member"); return undef;
     }
 
     return 1 if $region eq $self; # member always belongs to the whole group
@@ -426,86 +427,87 @@ sub readDependants ($) {
     my ($self,$depfile)=@_;
 
     unless ($depfile) {
-	warning("cannot obtain group dependent list for ".$self->{name});
-	return undef;
+        warning("cannot obtain group dependent list for ".$self->{name});
+        return undef;
     }
 
     unless (-d dirname($depfile)) {
         warning("no group control directory (".dirname($depfile).
-		     ") for group ".$self->{name});
-	return undef;
+                     ") for group ".$self->{name});
+        return undef;
     }
 
     unless (retry_file $depfile) {
-	warning("dependent file $depfile not found");
-	return undef;
+        warning("dependent file $depfile not found");
+        return undef;
     }
 
     my $fh=new IO::File;
     unless (retry_open($fh, "< $depfile")) {
-	warning("cannot open '$depfile': $!");
-	return undef;
+        warning("cannot open '$depfile': $!");
+        return undef;
     }
 
     $self->{dependents}={} if exists $self->{dependents};
     $self->{weakdeps}={}   if exists $self->{weakdeps};
     $self->{codeps}={}     if exists $self->{codeps};
 
+    local $_;
     while (<$fh>) {
-	next if /^\s*$/ or /^\s*\#/;
-	foreach my $dependent (split) {
+        next if /^\s*$/ or /^\s*\#/;
+        foreach my $dependent (split) {
 
-	    # check for leading 'weak:' to indicate undesirable dependency
-	    if (index($dependent, ':') > 0) {  
-		my $tag;
-		($tag,$dependent) = split ':',$dependent,2;
-		$self->{weakdeps}{$dependent} = 1 if $tag eq "weak";
-		$self->{codeps}{$dependent}   = 1 if $tag eq "codep";
-	    }
+            # check for leading 'weak:' to indicate undesirable dependency
+            if (index($dependent, ':') > 0) {
+                my $tag;
+                ($tag,$dependent) = split ':',$dependent,2;
+                $self->{weakdeps}{$dependent} = 1 if $tag eq "weak";
+                $self->{codeps}{$dependent}   = 1 if $tag eq "codep";
+            }
 
-	    # look for explicit qualification
-	    my $fulldependent=$dependent;
-	    my $explicit;
-	    ($dependent,$explicit)=
-	      $fulldependent =~ m|^([^<]+)<([^>]+)>$|;
-	    $dependent=$fulldependent unless $dependent;
+            # look for explicit qualification
+            my $fulldependent=$dependent;
+            my $explicit;
+            ($dependent,$explicit)=
+              $fulldependent =~ m|^([^<]+)<([^>]+)>$|;
+            $dependent=$fulldependent unless $dependent;
 
-	    #<<TODO: look for 'special' dependencies
-	    #<<TODO: e.g. '3pty:openssl'
-	    #<<TODO: or   'bbslib:acclib'
-	    #<<TODO: extensible rules for these extensions?
+            #<<TODO: look for 'special' dependencies
+            #<<TODO: e.g. '3pty:openssl'
+            #<<TODO: or   'bbslib:acclib'
+            #<<TODO: extensible rules for these extensions?
 
-	    # only units of release in the .dep file
-	    unless ((isGroup($dependent) or isIsolatedPackage($dependent))
-		    and $dependent ne $self->{name}) {
-		    #and $dependent!~/^$self->{name}/) {
-		warning("$depfile:$.: bad group: $dependent");
-		next;
-	    }
+            # only units of release in the .dep file
+            unless ((isGroup($dependent) or isIsolatedPackage($dependent))
+                    and $dependent ne $self->{name}) {
+                    #and $dependent!~/^$self->{name}/) {
+                warning("$depfile:$.: bad group: $dependent");
+                next;
+            }
 
-	    $self->{dependents}{$dependent} = 1;
+            $self->{dependents}{$dependent} = 1;
 
-	    my @explicit=split /,/,$explicit if $explicit;
-	    if (@explicit) {
-		$self->setExplicitDependencies($dependent => @explicit);
-	    }
-	}
+            my @explicit=split /,/,$explicit if $explicit;
+            if (@explicit) {
+                $self->setExplicitDependencies($dependent => @explicit);
+            }
+        }
     }
 
     close $fh;
 
     my @dependents=$self->getDependants();
     if (Util::Message::get_debug()) {
-	if (@dependents) {
-	    debug($self->{name}." depends on @dependents");
-	    foreach my $dependent (@dependents) {
-		if (my @explicit=$self->getExplicitDependencies($dependent)) {
-		    debug "  dependency $dependent limited to @explicit";
-		}
-	    }
-	} else {
-	    debug($self->{name}." has no dependents");
-	}
+        if (@dependents) {
+            debug($self->{name}." depends on @dependents");
+            foreach my $dependent (@dependents) {
+                if (my @explicit=$self->getExplicitDependencies($dependent)) {
+                    debug "  dependency $dependent limited to @explicit";
+                }
+            }
+        } else {
+            debug($self->{name}." has no dependents");
+        }
     }
 
     return @dependents if defined(wantarray);
@@ -515,9 +517,9 @@ sub getDependants ($) {
     my $self=shift;
 
     if (exists $self->{dependents}) {
-	return sort keys(%{ $self->{dependents} });
+        return sort keys(%{ $self->{dependents} });
     } else {
-	return ();
+        return ();
     }
 }
 
@@ -561,9 +563,9 @@ sub removeDependants ($$;@) {
 
     return undef if grep { isGroup($_)==0 } @dependents;
     foreach (@dependents) {
-	delete($self->{dependents}{$_});
-	delete($self->{weakdeps}{$_});
-	delete($self->{codeps}{$_});
+        delete($self->{dependents}{$_});
+        delete($self->{weakdeps}{$_});
+        delete($self->{codeps}{$_});
     }
     return 1;
 }
@@ -621,7 +623,7 @@ sub getExplicitDependencies ($$) {
     my ($self,$dependent)=@_;
 
     unless (exists $self->{explicit}{$dependent}) {
-	return ();
+        return ();
     }
 
     return sort keys %{ $self->{explicit}{$dependent} };
@@ -631,15 +633,15 @@ sub setExplicitDependencies ($$@) {
     my ($self,$dependent,@explicit)=@_;
 
     unless (exists $self->{dependents}{$dependent}) {
-	$self->throw("$dependent is not a dependent of $self"); return undef;
+        $self->throw("$dependent is not a dependent of $self"); return undef;
     }
 
     foreach my $exp (@explicit) {
-	my $group=getPackageGroup($exp);
-	if ((not $group) or $group ne $dependent) {
-	    $self->throw("$exp is not a legal member of $dependent");
-	    return undef;
-	}
+        my $group=getPackageGroup($exp);
+        if ((not $group) or $group ne $dependent) {
+            $self->throw("$exp is not a legal member of $dependent");
+            return undef;
+        }
     }
 
     $self->{explicit}{$dependent}={ map {$_ => 1} @explicit };
@@ -653,11 +655,11 @@ sub hasExplicitDependency ($$) {
     my $dependent=getPackageGroup($explicit);
 
     unless ($dependent) {
-	# only package groups can be qualified with explicit packages
-	$self->throw("$explicit is not a grouped package"); return undef;
+        # only package groups can be qualified with explicit packages
+        $self->throw("$explicit is not a grouped package"); return undef;
     }
     unless (exists $self->{dependents}{$dependent}) {
-	$self->throw("$dependent is not a dependent of $self"); return undef;
+        $self->throw("$dependent is not a dependent of $self"); return undef;
     }
 
     return (exists $self->{explicit}{$dependent}{$explicit}) ? 1 : 0;
@@ -670,18 +672,18 @@ sub readLock ($) {
 
     unless (-d dirname($lckfile)) {
         warning("no group control directory (".dirname($lckfile).
-		     ") for group ".$self->{name});
-	return undef;
+                     ") for group ".$self->{name});
+        return undef;
     }
 
     unless (-f $lckfile) {
-	return undef;
+        return undef;
     }
 
     my $fh=new IO::File;
     unless (retry_open($fh, "< $lckfile")) {
-	warning("cannot open '$lckfile': $!");
-	return undef;
+        warning("cannot open '$lckfile': $!");
+        return undef;
     }
 
     local $/=undef;
@@ -771,10 +773,10 @@ sub test {
     print "  Filesystem located at: $root\n";
     print "  Groups located at: ",$root->getGroupsLocation(),"\n";
     foreach (qw[bde bce bte bae]) {
-	print "$_ located at: ",$root->getGroupLocation($_),"\n";
-	my $group=new BDE::Group($root->getGroupLocation($_));
-	print "  $group members   : ",join(' ',$group->getMembers()),"\n";
-	print "  $group dependents: ",join(' ',$group->getDependants()),"\n";
+        print "$_ located at: ",$root->getGroupLocation($_),"\n";
+        my $group=new BDE::Group($root->getGroupLocation($_));
+        print "  $group members   : ",join(' ',$group->getMembers()),"\n";
+        print "  $group dependents: ",join(' ',$group->getDependants()),"\n";
     }
 }
 

@@ -26,7 +26,7 @@ use Util::Retry qw(retry_file retry_open);
 use Symbols qw[
     PACKAGE_META_SUBDIR DEFAULT_FILESYSTEM_ROOT
     MEMFILE_EXTENSION DEPFILE_EXTENSION INCFILE_EXTENSION LCKFILE_EXTENSION
-    IS_PREBUILT_LEGACY IS_PREBUILT_THIRDPARTY IS_METADATA_ONLY 
+    IS_PREBUILT_LEGACY IS_PREBUILT_THIRDPARTY IS_METADATA_ONLY
     MAY_DEPEND_ON_ANY IS_MANUAL_RELEASE IS_HARD_INBOUND IS_NO_NEW_FILES
     IS_RELATIVE_PATHED IS_OFFLINE_ONLY IS_GTK_BUILD IS_HARD_VALIDATION
     IS_SCREEN_LIBRARY IS_BIG_ONLY IS_CLOSED IS_MECHANIZED IS_UNDEPENDABLE
@@ -77,43 +77,43 @@ sub fromString ($$) {
     my ($self,$init)=@_;
     my $package;
     if (isNonCompliantUOR($init)) {
-	$package = getCanonicalUOR($init);
-	$init = substr($init,0,
-		       length($init)-(length getSubdirsRelativeToUOR($init)));
+        $package = getCanonicalUOR($init);
+        $init = substr($init,0,
+                       length($init)-(length getSubdirsRelativeToUOR($init)));
     } else {
-	$package = basename($init);
+        $package = basename($init);
     }
 
     if (-f $init) {
-	# initialise directly from a members file
-	$self->{name}=undef;
-	$self->readMembers($init);
+        # initialise directly from a members file
+        $self->{name}=undef;
+        $self->readMembers($init);
     } elsif (-d $init.$FS.PACKAGE_META_SUBDIR) {
-	# initialise from a package metadata directory
-	$self->{name}=$package;
-	$self->readMembers($init.$FS.PACKAGE_META_SUBDIR
-			   .$FS.basename($package).MEMFILE_EXTENSION);
-	$self->readDependants($init.$FS.PACKAGE_META_SUBDIR
-			   .$FS.basename($package).DEPFILE_EXTENSION);
-	$self->readLock($init.$FS.PACKAGE_META_SUBDIR
-			   .$FS.basename($package).LCKFILE_EXTENSION);
-	if (isNonCompliant($package)) {
-	    # non-compliant packages may declare their includables here
-	    $self->readIncludes($init.$FS.PACKAGE_META_SUBDIR
-				  .$FS.basename($package).INCFILE_EXTENSION);
-	}
+        # initialise from a package metadata directory
+        $self->{name}=$package;
+        $self->readMembers($init.$FS.PACKAGE_META_SUBDIR
+                           .$FS.basename($package).MEMFILE_EXTENSION);
+        $self->readDependants($init.$FS.PACKAGE_META_SUBDIR
+                           .$FS.basename($package).DEPFILE_EXTENSION);
+        $self->readLock($init.$FS.PACKAGE_META_SUBDIR
+                           .$FS.basename($package).LCKFILE_EXTENSION);
+        if (isNonCompliant($package)) {
+            # non-compliant packages may declare their includables here
+            $self->readIncludes($init.$FS.PACKAGE_META_SUBDIR
+                                  .$FS.basename($package).INCFILE_EXTENSION);
+        }
     } elsif (isNonCompliantUOR($package)) {
-	# it's legacy, it's not findable, it must be a 'phantom', or otherwise
-	# an entity that corresponds to a prebuilt legacy library
-	$self->{prebuilt}=1;
-	$self->{metadataonly}=1;
-	$self->{name}=$package;
+        # it's legacy, it's not findable, it must be a 'phantom', or otherwise
+        # an entity that corresponds to a prebuilt legacy library
+        $self->{prebuilt}=1;
+        $self->{metadataonly}=1;
+        $self->{name}=$package;
     } elsif (isPackage $init) {
-	# trivially initialise from the literal name
-	$self->{name}=$init;
+        # trivially initialise from the literal name
+        $self->{name}=$init;
     } else {
-	warning("not a valid package location: $init");
-	return undef;
+        warning("not a valid package location: $init");
+        return undef;
     }
 
     return $self;
@@ -126,103 +126,104 @@ sub readMembers ($$) {
     my ($self,$memfile)=@_;
 
     unless ($memfile) {
-	warning("cannot obtain package member list for ".$self->{name});
-	return undef;
+        warning("cannot obtain package member list for ".$self->{name});
+        return undef;
     }
 
     unless (-d dirname($memfile)) {
         warning("no package control directory (".dirname($memfile).
-		     ") for package ".$self->{name});
-	return undef;
+                     ") for package ".$self->{name});
+        return undef;
     }
 
     my $debug = Util::Message::get_debug();
     unless (-f $memfile) {
-	if (isNonCompliantUOR($self)) {
-	    $self->{metadataonly}=1;
-	    $self->{prebuilt}=1;
-	    debug("member file $memfile not found for legacy package $self")
-	      if $debug;
-	    return;
-	}
-	unless (retry_file $memfile) {
-	    warning("member file $memfile not found");
-	    return undef;
-	}
+        if (isNonCompliantUOR($self)) {
+            $self->{metadataonly}=1;
+            $self->{prebuilt}=1;
+            debug("member file $memfile not found for legacy package $self")
+              if $debug;
+            return;
+        }
+        unless (retry_file $memfile) {
+            warning("member file $memfile not found");
+            return undef;
+        }
     }
 
     my $fh=new IO::File;
     unless (retry_open($fh, "< $memfile")) {
-	warning("cannot open '$memfile': $!");
-	return undef;
+        warning("cannot open '$memfile': $!");
+        return undef;
     }
 
     delete $self->{members} if exists $self->{members};
 
+    local $_;
     while (<$fh>) {
-	next if /^\s*$/;
-	if (/^\s*#/) {
-	    # support for special-case packages. This support is still in
+        next if /^\s*$/;
+        if (/^\s*#/) {
+            # support for special-case packages. This support is still in
             # development. In particular, the 'thirdparty' attribute has
             # no formal use yet. Criteria are as follows:
             #   metadata + prebuilt = add -l rules
             #   metadata - prebuilt = no -l rules
-	    next unless /^\s*#\s*(\[.*\])\s*$/;
-	    my $comment=$1;
+            next unless /^\s*#\s*(\[.*\])\s*$/;
+            my $comment=$1;
 
-	    if ($comment eq IS_METADATA_ONLY) {
-		$self->{metadataonly}=1;
-	    } elsif ($comment eq IS_PREBUILT_LEGACY) {
-		$self->{prebuilt}=1;
-		$self->{thirdparty}=0;
-	    } elsif ($comment eq IS_PREBUILT_THIRDPARTY) {
-		$self->{prebuilt}=1;
-		$self->{thirdparty}=1;
-	    } elsif ($comment eq IS_RELATIVE_PATHED) {
-		$self->{relative}=1;
-	    } elsif ($comment eq IS_OFFLINE_ONLY) {
-		$self->{offlineonly}=1;
-	    } elsif ($comment eq IS_GTK_BUILD) {
-		$self->{gtkbuild}=1;
-	    } elsif ($comment eq IS_MANUAL_RELEASE) {
-		$self->{manualrelease}=1;
-	    } elsif ($comment eq MAY_DEPEND_ON_ANY) {
-		$self->{dependsonany}=1;
-	    } elsif ($comment eq IS_HARD_VALIDATION) {
-	        $self->{hardvalidation} = 1;
-	    } elsif ($comment eq IS_HARD_INBOUND) {
-	        $self->{hardinbound} = 1;
-	    } elsif ($comment eq IS_NO_NEW_FILES) {
-	        $self->{no_new_files} = 1;
-	    } elsif ($comment eq IS_SCREEN_LIBRARY) {
-	        $self->{screenlibrary} = 1;
-	    } elsif ($comment eq IS_BIG_ONLY) {
-	        $self->{bigonly} = 1;
-	    } elsif ($comment eq IS_CLOSED) {
-	        $self->{closed} = 1;
-	    } elsif ($comment eq IS_UNDEPENDABLE) {
-	        $self->{undependable} = 1;
-	    } elsif ($comment eq IS_MECHANIZED) {
-	        $self->{mechanized} = 1;
-	    }
-	    next;
-	}
-	foreach my $member (split) {
-	    if (isCompliant $self->{name}) {
-		unless (isComponent($member) and $member=~/^$self->{name}/) {
-		    warning("$memfile:$.: bad component: $member");
-		    next;
-		}
-	    }
+            if ($comment eq IS_METADATA_ONLY) {
+                $self->{metadataonly}=1;
+            } elsif ($comment eq IS_PREBUILT_LEGACY) {
+                $self->{prebuilt}=1;
+                $self->{thirdparty}=0;
+            } elsif ($comment eq IS_PREBUILT_THIRDPARTY) {
+                $self->{prebuilt}=1;
+                $self->{thirdparty}=1;
+            } elsif ($comment eq IS_RELATIVE_PATHED) {
+                $self->{relative}=1;
+            } elsif ($comment eq IS_OFFLINE_ONLY) {
+                $self->{offlineonly}=1;
+            } elsif ($comment eq IS_GTK_BUILD) {
+                $self->{gtkbuild}=1;
+            } elsif ($comment eq IS_MANUAL_RELEASE) {
+                $self->{manualrelease}=1;
+            } elsif ($comment eq MAY_DEPEND_ON_ANY) {
+                $self->{dependsonany}=1;
+            } elsif ($comment eq IS_HARD_VALIDATION) {
+                $self->{hardvalidation} = 1;
+            } elsif ($comment eq IS_HARD_INBOUND) {
+                $self->{hardinbound} = 1;
+            } elsif ($comment eq IS_NO_NEW_FILES) {
+                $self->{no_new_files} = 1;
+            } elsif ($comment eq IS_SCREEN_LIBRARY) {
+                $self->{screenlibrary} = 1;
+            } elsif ($comment eq IS_BIG_ONLY) {
+                $self->{bigonly} = 1;
+            } elsif ($comment eq IS_CLOSED) {
+                $self->{closed} = 1;
+            } elsif ($comment eq IS_UNDEPENDABLE) {
+                $self->{undependable} = 1;
+            } elsif ($comment eq IS_MECHANIZED) {
+                $self->{mechanized} = 1;
+            }
+            next;
+        }
+        foreach my $member (split) {
+            if (isCompliant $self->{name}) {
+                unless (isComponent($member) and $member=~/^$self->{name}/) {
+                    warning("$memfile:$.: bad component: $member");
+                    next;
+                }
+            }
 
-	    #<<<TODO: for non-std packages a different attribute might be
-	    #<<<TODO: more appropriate, with getNSImpl getNSIntf methods?
-	    $self->{members}{$member} = 1;
-	}
+            #<<<TODO: for non-std packages a different attribute might be
+            #<<<TODO: more appropriate, with getNSImpl getNSIntf methods?
+            $self->{members}{$member} = 1;
+        }
     }
-	
+
     close $fh;
-	
+
     debug "$self is metadata-only" if $debug && $self->isMetadataOnly();
     debug "$self is prebuilt" if $debug && $self->isPrebuilt();
 
@@ -257,13 +258,13 @@ sub _initMembers ($) {
 
     my @members=values %{$self->{members}};
     if (@members) {
-	#if ($self->isPrebuilt() or $self->isMetadataOnly()) {
-	#    $self->throw("$self contains members but is marked ".
-	#		 "as a non-building package");
-	#}
-	debug($self->{name}." contains @members");
+        #if ($self->isPrebuilt() or $self->isMetadataOnly()) {
+        #    $self->throw("$self contains members but is marked ".
+        #                "as a non-building package");
+        #}
+        debug($self->{name}." contains @members");
     } else {
-	debug($self->{name}." has no members");
+        debug($self->{name}." has no members");
     }
 }
 
@@ -334,7 +335,7 @@ sub isMetadataOnly         ($) { return $_[0]->{metadataonly}; }
 sub isPrebuilt             ($) { return $_[0]->{prebuilt};     }
 sub isRelativePathed       ($) { return $_[0]->{relative};     }
 sub isOfflineOnly          ($) { return $_[0]->{offlineonly}||
-				        isApplication($_[0]);  }
+                                        isApplication($_[0]);  }
 sub isGTKbuild             ($) { return $_[0]->{gtkbuild};     }
 sub isManualRelease        ($) { return $_[0]->{manualrelease};}
 sub mayDependOnAny         ($) { return $_[0]->{dependsonany}; }
@@ -355,34 +356,34 @@ sub readDependants ($) {
     my ($self,$depfile)=@_;
 
     unless ($depfile) {
-	warning("cannot obtain package dependent list for ".
-		     $self->{name});
-	return undef;
+        warning("cannot obtain package dependent list for ".
+                     $self->{name});
+        return undef;
     }
 
     unless (-d dirname($depfile)) {
         warning("no package control directory (".dirname($depfile).
-		     ") for package ".$self->{name});
-	return undef;
+                     ") for package ".$self->{name});
+        return undef;
     }
 
     my $debug = Util::Message::get_debug();
     unless (-f $depfile) {
-	if (isNonCompliantUOR($self)) {
-	    debug("dependent file $depfile not found for legacy package $self")
-	      if $debug;
-	    return (wantarray ? () : undef);
-	}
-	unless (retry_file $depfile) {
-	    warning("dependent file $depfile not found");
-	    return undef;
-	}
+        if (isNonCompliantUOR($self)) {
+            debug("dependent file $depfile not found for legacy package $self")
+              if $debug;
+            return (wantarray ? () : undef);
+        }
+        unless (retry_file $depfile) {
+            warning("dependent file $depfile not found");
+            return undef;
+        }
     }
 
     my $fh=new IO::File;
     unless (retry_open($fh, "< $depfile")) {
-	warning("cannot open '$depfile': $!");
-	return undef;
+        warning("cannot open '$depfile': $!");
+        return undef;
     }
 
     delete $self->{dependents} if exists $self->{dependents};
@@ -391,119 +392,120 @@ sub readDependants ($) {
 
     my $tag;
     my $group=$self->getGroup();
+    local $_;
     while (<$fh>) {
-	next if /^\s*(?:#|$)/;
+        next if /^\s*(?:#|$)/;
 
-	foreach my $dependent (split) {
+        foreach my $dependent (split) {
 
-	    # check for leading 'weak:' to indicate undesirable dependency
-	    $tag = undef;
-	    if (index($dependent, ':') >= 0) {
-		($tag,$dependent) = split ':',$dependent,2;
-		$self->{weakdeps}{$dependent} = 1 if $tag eq "weak";
-		$self->{codeps}{$dependent}   = 1 if $tag eq "codep";
-	    }
+            # check for leading 'weak:' to indicate undesirable dependency
+            $tag = undef;
+            if (index($dependent, ':') >= 0) {
+                ($tag,$dependent) = split ':',$dependent,2;
+                $self->{weakdeps}{$dependent} = 1 if $tag eq "weak";
+                $self->{codeps}{$dependent}   = 1 if $tag eq "codep";
+            }
 
-	    if ($group) {
-		# group packages depend on packages in the same group only
- 		if (isPackage($dependent)) {
-		    if ($dependent eq $self) {
-			warning("$depfile:$.: package depends on itself");
-			next;
-		    } else {
-			my $depgroup=getPackageGroup($dependent);
-			if ($depgroup ne $group) {
-			    warning(
-					 "$depfile:$.: $dependent is not ".
-					 "a legal member of $group");
-			    next;
-			}
-		    }
-		} elsif (isGroup($dependent)) {
-		    warning("$depfile:$.: $dependent is not a package; "
-				."it must be listed in the $group.dep file");
-		    next;
-		}
-		else {
-		    warning("$depfile:$.: $dependent is not a package");
-		    next;
-		}
-	    } else {
-		# look for explicit qualification
-		my $fulldependent=$dependent;
-		my $explicit;
-		($dependent,$explicit)=
-		  $fulldependent =~ m|^([^<]+)<([^>]+)>$|;
-		$dependent=$fulldependent unless $dependent;
+            if ($group) {
+                # group packages depend on packages in the same group only
+                if (isPackage($dependent)) {
+                    if ($dependent eq $self) {
+                        warning("$depfile:$.: package depends on itself");
+                        next;
+                    } else {
+                        my $depgroup=getPackageGroup($dependent);
+                        if ($depgroup ne $group) {
+                            warning(
+                                         "$depfile:$.: $dependent is not ".
+                                         "a legal member of $group");
+                            next;
+                        }
+                    }
+                } elsif (isGroup($dependent)) {
+                    warning("$depfile:$.: $dependent is not a package; "
+                                ."it must be listed in the $group.dep file");
+                    next;
+                }
+                else {
+                    warning("$depfile:$.: $dependent is not a package");
+                    next;
+                }
+            } else {
+                # look for explicit qualification
+                my $fulldependent=$dependent;
+                my $explicit;
+                ($dependent,$explicit)=
+                  $fulldependent =~ m|^([^<]+)<([^>]+)>$|;
+                $dependent=$fulldependent unless $dependent;
 
-		#<<TODO: look for 'special' dependencies
-		#<<TODO: e.g. '3pty:openssl'
-		#<<TODO: or   'bbslib:acclib'
-		#<<TODO: extensible rules for these extensions?
+                #<<TODO: look for 'special' dependencies
+                #<<TODO: e.g. '3pty:openssl'
+                #<<TODO: or   'bbslib:acclib'
+                #<<TODO: extensible rules for these extensions?
 
-		# isolated packages depend on groups (core & dept) and adaptors
-		if ($tag && $tag eq "codep") {
-		    # ewww.
-		    # circularly codependent while developer claims to refactor.
-		} elsif (isGroup($dependent)
-		    and (!isWrapper($dependent) or isFunction($self))) {
-		    # isolated packages may depend on all groups types
-		    # except wrappers #TODO expand when we handle more C
-		} elsif (isAdapter($dependent)) {
-		    # isolated packages may depend on adapters
-		} elsif (isLegacy($dependent) || isThirdParty($dependent)) {
-		    # legacy...
-		#} elsif ($self->{weakdeps}{$dependent} &&isFunction($dependent)
-		#	 && isLegacy($self)) {
-		#   # $self is legacy; allow weak dependency on function...
-		} elsif (isLegacy($self)) {
-		    # $self is legacy;
-		} elsif (isFunction($self) && isWrapper($dependent)) {
-		    # allow biglets to depend on package wrappers (z_a_bdema)
-		} elsif (isFunction($self) && isFunction($dependent)
-			 && $tag && $tag eq "weak") {
-		    # allow biglets to depend on biglets (f_******) only if weak
-		    # Dependencies between biglets should only be on driver
-		    # entry points, which are already pulled in by the router
-		    # (and therefore will be resolved and will not break an
-		    # application link as long as all these biglets are
-		    # present in the router)
-		} elsif (isApplication($self) && isFunction($dependent)) {
-		    # allow applications to depend on biglets and wiglets (f_ws)
-		} elsif (isApplication($self) && isWrapper($dependent)) {
-		    # allow applications to depend on wrappers
-		} elsif (isApplication($self) && $tag && $tag eq "weak") {
-		    # begrudgingly permit apps to depend weakly on anything
-		} elsif ($self->mayDependOnAny()) {
-		    # $self is allowed to depend on any other UOR
-		} else {
-		    warning("$depfile:$.: $dependent is invalid");
-		    next;
-		}
+                # isolated packages depend on groups (core & dept) and adaptors
+                if ($tag && $tag eq "codep") {
+                    # ewww.
+                    # circularly codependent while developer claims to refactor.
+                } elsif (isGroup($dependent)
+                    and (!isWrapper($dependent) or isFunction($self))) {
+                    # isolated packages may depend on all groups types
+                    # except wrappers #TODO expand when we handle more C
+                } elsif (isAdapter($dependent)) {
+                    # isolated packages may depend on adapters
+                } elsif (isLegacy($dependent) || isThirdParty($dependent)) {
+                    # legacy...
+                #} elsif ($self->{weakdeps}{$dependent} &&isFunction($dependent)
+                #        && isLegacy($self)) {
+                #   # $self is legacy; allow weak dependency on function...
+                } elsif (isLegacy($self)) {
+                    # $self is legacy;
+                } elsif (isFunction($self) && isWrapper($dependent)) {
+                    # allow biglets to depend on package wrappers (z_a_bdema)
+                } elsif (isFunction($self) && isFunction($dependent)
+                         && $tag && $tag eq "weak") {
+                    # allow biglets to depend on biglets (f_******) only if weak
+                    # Dependencies between biglets should only be on driver
+                    # entry points, which are already pulled in by the router
+                    # (and therefore will be resolved and will not break an
+                    # application link as long as all these biglets are
+                    # present in the router)
+                } elsif (isApplication($self) && isFunction($dependent)) {
+                    # allow applications to depend on biglets and wiglets (f_ws)
+                } elsif (isApplication($self) && isWrapper($dependent)) {
+                    # allow applications to depend on wrappers
+                } elsif (isApplication($self) && $tag && $tag eq "weak") {
+                    # begrudgingly permit apps to depend weakly on anything
+                } elsif ($self->mayDependOnAny()) {
+                    # $self is allowed to depend on any other UOR
+                } else {
+                    warning("$depfile:$.: $dependent is invalid");
+                    next;
+                }
 
-		my @explicit=split /,/,$explicit if $explicit;
-		if (@explicit) {
-		    $self->setExplicitDependencies($dependent => @explicit);
-		}
-	    }
+                my @explicit=split /,/,$explicit if $explicit;
+                if (@explicit) {
+                    $self->setExplicitDependencies($dependent => @explicit);
+                }
+            }
 
-	    $self->{dependents}{$dependent} = 1;
+            $self->{dependents}{$dependent} = 1;
 
-	}
+        }
     }
-	
+
     close $fh;
-	
+
     my @dependents=$self->getDependants();
     if (@dependents) {
-	debug($self->{name}." depends on @dependents") if $debug;
-	foreach my $dependent (@dependents) {
-	    if (my @explicit=$self->getExplicitDependencies($dependent)) {
-		debug "  dependency $dependent limited to @explicit" if $debug;
-	    }
-	}
+        debug($self->{name}." depends on @dependents") if $debug;
+        foreach my $dependent (@dependents) {
+            if (my @explicit=$self->getExplicitDependencies($dependent)) {
+                debug "  dependency $dependent limited to @explicit" if $debug;
+            }
+        }
     } else {
-	debug($self->{name}." has no dependents") if $debug;
+        debug($self->{name}." has no dependents") if $debug;
     }
 
     return @dependents if defined(wantarray);
@@ -516,9 +518,9 @@ sub getDependants ($) {
     my $self=shift;
 
     if (exists $self->{dependents}) {
-	return sort keys(%{ $self->{dependents} });
+        return sort keys(%{ $self->{dependents} });
     } else {
-	return ();
+        return ();
     }
 }
 
@@ -526,10 +528,10 @@ sub hasDependant ($$) {
     my ($self,$dependent)=@_;
 
     if ($self->isIsolatedPackage() or $self->isGroup()) {
-	return undef unless isGroup($dependent)
-	  or isIsolatedPackage($dependent);
+        return undef unless isGroup($dependent)
+          or isIsolatedPackage($dependent);
     } else {
-	return undef unless isGroupedPackage($dependent);
+        return undef unless isGroupedPackage($dependent);
     }
 
     return 0 unless exists $self->{dependents}{$dependent};
@@ -540,10 +542,10 @@ sub addDependant ($$) {
     my ($self,$dependent)=@_;
 
     if ($self->isIsolatedPackage() or $self->isGroup()) {
-	return undef unless isGroup($dependent)
-	  or isIsolatedPackage($dependent);
+        return undef unless isGroup($dependent)
+          or isIsolatedPackage($dependent);
     } else {
-	return undef unless isGroupedPackage($dependent);
+        return undef unless isGroupedPackage($dependent);
     }
 
     $self->{dependents}{$dependent}=1;
@@ -554,11 +556,11 @@ sub addDependants ($$;@) {
     my ($self,@dependents)=@_;
 
     foreach my $dependent (@dependents) {
-	if ($self->isIsolated()) {
-	    return undef unless isGroup($dependent);
-	} else {
-	    return undef unless isPackage($dependent);
-	}
+        if ($self->isIsolated()) {
+            return undef unless isGroup($dependent);
+        } else {
+            return undef unless isPackage($dependent);
+        }
     }
 
     $self->{dependents}{$_}=1 foreach @dependents;
@@ -569,9 +571,9 @@ sub removeDependant ($$) {
     my ($self,$dependent)=@_;
 
     if ($self->isIsolated()) {
-	return undef unless isGroup($dependent);
+        return undef unless isGroup($dependent);
     } else {
-	return undef unless isPackage($dependent);
+        return undef unless isPackage($dependent);
     }
 
     return 0 unless exists $self->{dependents}{$dependent};
@@ -585,17 +587,17 @@ sub removeDependants ($$;@) {
     my ($self,@dependents)=@_;
 
     foreach my $dependent (@dependents) {
-	if ($self->isIsolated()) {
-	    return undef unless isGroup($dependent);
-	} else {
-	    return undef unless isPackage($dependent);
-	}
+        if ($self->isIsolated()) {
+            return undef unless isGroup($dependent);
+        } else {
+            return undef unless isPackage($dependent);
+        }
     }
 
     foreach (@dependents) {
-	delete($self->{dependents}{$_});
-	delete($self->{weakdeps}{$_});
-	delete($self->{codeps}{$_});
+        delete($self->{dependents}{$_});
+        delete($self->{weakdeps}{$_});
+        delete($self->{codeps}{$_});
     }
     return 1;
 }
@@ -653,7 +655,7 @@ sub getExplicitDependencies ($$) {
     my ($self,$dependent)=@_;
 
     unless (exists $self->{explicit}{$dependent}) {
-	return ();
+        return ();
     }
 
     return sort keys %{ $self->{explicit}{$dependent} };
@@ -663,15 +665,15 @@ sub setExplicitDependencies ($$@) {
     my ($self,$dependent,@explicit)=@_;
 
     unless (exists $self->{dependents}{$dependent}) {
-	$self->throw("$dependent is not a dependent of $self"); return undef;
+        $self->throw("$dependent is not a dependent of $self"); return undef;
     }
 
     foreach my $exp (@explicit) {
-	my $group=getPackageGroup($exp);
-	if ((not $group) or $group ne $dependent) {
-	    $self->throw("$exp is not a legal member of $dependent");
-	    return undef;
-	}
+        my $group=getPackageGroup($exp);
+        if ((not $group) or $group ne $dependent) {
+            $self->throw("$exp is not a legal member of $dependent");
+            return undef;
+        }
     }
 
     $self->{explicit}{$dependent}={ map {$_ => 1} @explicit };
@@ -685,11 +687,11 @@ sub hasExplicitDependency ($$) {
     my $dependent=getPackageGroup($explicit);
 
     unless ($dependent) {
-	# only package groups can be qualified with explicit packages
-	$self->throw("$explicit is not a grouped package"); return undef;
+        # only package groups can be qualified with explicit packages
+        $self->throw("$explicit is not a grouped package"); return undef;
     }
     unless (exists $self->{dependents}{$dependent}) {
-	$self->throw("$dependent is not a dependent of $self"); return undef;
+        $self->throw("$dependent is not a dependent of $self"); return undef;
     }
 
     return (exists $self->{explicit}{$dependent}{$explicit}) ? 1 : 0;
@@ -702,42 +704,42 @@ sub readIncludes ($$) {
     my ($self,$memfile)=@_;
 
     unless ($memfile) {
-	$self->throw("cannot obtain package include list for ".$self->{name});
-	return undef;
+        $self->throw("cannot obtain package include list for ".$self->{name});
+        return undef;
     }
 
     unless (-d dirname($memfile)) {
         $self->throw("no package control directory (".dirname($memfile).
-		     ") for package ".$self->{name});
+                     ") for package ".$self->{name});
     }
 
     unless (-f $memfile) {
-	if (isNonCompliantUOR($self)) {
-	    debug("include file $memfile not found for legacy package $self")
-	      if Util::Message::get_debug();
-	    return (wantarray ? () : undef);
-	}
-	unless (retry_file $memfile) {
-	    $self->throw("include file $memfile not found");
-	    return undef;
-	}
+        if (isNonCompliantUOR($self)) {
+            debug("include file $memfile not found for legacy package $self")
+              if Util::Message::get_debug();
+            return (wantarray ? () : undef);
+        }
+        unless (retry_file $memfile) {
+            $self->throw("include file $memfile not found");
+            return undef;
+        }
     }
 
     my $fh=new IO::File;
     unless (retry_open($fh, "< $memfile")) {
-	$self->throw("cannot open '$memfile': $!");
-	return undef;
+        $self->throw("cannot open '$memfile': $!");
+        return undef;
     }
 
     delete $self->{includes} if exists $self->{includes};
 
     while (<$fh>) {
-	next if /^\s*$/ or /^\s*\#/;
-	foreach my $include (split) {
+        next if /^\s*$/ or /^\s*\#/;
+        foreach my $include (split) {
             $self->addInclude($include);
-	}
+        }
     }
-	
+
     close $fh;
 
     return $self->getIncludes() if defined(wantarray);
@@ -771,9 +773,9 @@ sub _initIncludes ($) {
 
     my @includes=values %{$self->{includes}};
     if (@includes) {
-	debug($self->{name}." contains @includes");
+        debug($self->{name}." contains @includes");
     } else {
-	debug($self->{name}." has no includes");
+        debug($self->{name}." has no includes");
     }
 }
 
@@ -782,7 +784,7 @@ sub getInclude ($$) {
     $self->_initIncludes() unless exists $self->{includes};
 
     if (exists $self->{includes}{$include}) {
-	return $self->{includes}{$include};
+        return $self->{includes}{$include};
     }
     return undef;
 }
@@ -820,16 +822,16 @@ sub addInclude ($$;$) {
     $self->_initIncludes() unless exists $self->{includes};
 
     if (ref $include and $include->isa("BDE::Package::Include")) {
-	$self->{includes}{$include}=$include; #stringify hash key
+        $self->{includes}{$include}=$include; #stringify hash key
     } else {
-	$full=$include unless $full;
-	my $incobj=new BDE::Package::Include({
+        $full=$include unless $full;
+        my $incobj=new BDE::Package::Include({
             name => $include,
             fullname => $full,
             package => $self->{name},
         });
-	$incobj->setNotAComponent(1);
-	$self->{includes}{$incobj}=$incobj;
+        $incobj->setNotAComponent(1);
+        $self->{includes}{$incobj}=$incobj;
     }
 
     return 1;
@@ -840,9 +842,9 @@ sub addIncludes ($$;@) {
     $self->_initIncludes() unless exists $self->{includes};
 
     foreach (@includes) {
-	$self->throw("Not an include object: $_"), return undef
-	  unless $_->isa("BDE::Package::Include");
-	$self->{includes}{$_}=$_;
+        $self->throw("Not an include object: $_"), return undef
+          unless $_->isa("BDE::Package::Include");
+        $self->{includes}{$_}=$_;
     }
 
     return 1;
@@ -883,10 +885,10 @@ sub getGroupDependants ($) {
     return () unless @deps;
 
     if ($self->isIsolated()) {
-	return @deps;
+        return @deps;
     } else {
-	my %grps=map { getPackageGroup($_) => 1 } @deps;
-	return sort keys %grps;
+        my %grps=map { getPackageGroup($_) => 1 } @deps;
+        return sort keys %grps;
     }
 }
 
@@ -899,9 +901,9 @@ sub getPackageDependants ($) {
     return () unless @deps;
 
     if ($self->isIsolated()) {
-	return ();
+        return ();
     } else {
-	return @deps;
+        return @deps;
     }
 }
 
@@ -932,18 +934,18 @@ sub readLock ($) {
 
     unless (-d dirname($lckfile)) {
         warning("no package control directory (".dirname($lckfile).
-		     ") for package ".$self->{name});
-	return undef;
+                     ") for package ".$self->{name});
+        return undef;
     }
 
     unless (-f $lckfile) {
-	return undef;
+        return undef;
     }
 
     my $fh=new IO::File;
     unless (retry_open($fh, "< $lckfile")) {
-	warning("cannot open '$lckfile': $!");
-	return undef;
+        warning("cannot open '$lckfile': $!");
+        return undef;
     }
 
     local $/=undef;
@@ -1017,17 +1019,17 @@ sub test {
     print "  Filesystem located at: $root\n";
     print "  Groups located at: ",$root->getGroupsLocation(),"\n";
     foreach (qw[bdes bdex bdem bdet bdempu bde+stlport]) {
-	print "$_ located at: ",$root->getPackageLocation($_),"\n";
-	my $package=new BDE::Package($root->getPackageLocation($_));
-	print "  $package members   : ",join(' ',$package->getMembers),"\n";
-	unless (isNonCompliant($package)) {
-	    print "  $package dependents: ",
-	      join(' ',$package->getDependants),"\n";
-	} else {
-	    print "  $package includes  : ",join(' ',map {
-		"[".$_." => ".$_->getFullname()." (".$_->getPackage().")]"
-	    } $package->getIncludes()),"\n";
-	}
+        print "$_ located at: ",$root->getPackageLocation($_),"\n";
+        my $package=new BDE::Package($root->getPackageLocation($_));
+        print "  $package members   : ",join(' ',$package->getMembers),"\n";
+        unless (isNonCompliant($package)) {
+            print "  $package dependents: ",
+              join(' ',$package->getDependants),"\n";
+        } else {
+            print "  $package includes  : ",join(' ',map {
+                "[".$_." => ".$_->getFullname()." (".$_->getPackage().")]"
+            } $package->getIncludes()),"\n";
+        }
     }
 }
 
