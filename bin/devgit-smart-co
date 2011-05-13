@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+BRANCH=$1
+
+PREFIX="dev/$USER"
+
+if [ "$1" == "" ]
+then
+    echo USAGE: $0 branchname
+    echo    tries to check out 'branchname' and, if that fails
+    echo    tries to check out dev/$USER/branchname
+    exit 1
+fi
+
+OUTPUT=`git co $BRANCH 2>&1`
+
+if [ $? -ne 0 ]
+then
+    echo "git co $BRANCH" failed - trying dev/$USER/$BRANCH
+    git co dev/$USER/$BRANCH
+else
+    echo $OUTPUT
+fi
+
+
