@@ -1,0 +1,22 @@
+#!/usr/bin/bash
+
+BRANCH=$(git branch | awk '/\*/ { print $NF }');
+
+if [ $? -ne 0 ]
+then
+    echo Error deducing branch - exiting
+    exit 1
+fi
+
+REMOTE_BRANCH=master
+
+if [ branch != "master" ]
+then
+    REMOTE_BRANCH="dev/$USER/$BRANCH"
+    echo branch is $BRANCH - remote branch is $REMOTE_BRANCH
+    git push origin $BRANCH:$REMOTE_BRANCH
+else
+    echo branch is master - doing "bare" git push
+    git push
+fi
+
