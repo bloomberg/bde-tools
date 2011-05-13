@@ -4,6 +4,12 @@ BRANCH=$(git branch | awk '/\*/ { print $NF }');
 
 PREFIX="dev/$USER"
 
+if [ "$1" =~ "^dev/$USER" ]
+then
+    echo No prefix - branch "$1" already has a dev/$USER prefix
+    PREFIX=""
+fi
+
 if [ "$1" != "" ]
 then
     PREFIX=$1
