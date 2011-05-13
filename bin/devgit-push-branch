@@ -3,6 +3,7 @@
 BRANCH=$(git branch | awk '/\*/ { print $NF }');
 
 PREFIX="dev/$USER"
+TRACKING=-u
 
 if [[ "$BRANCH" =~ "^dev/$USER" ]]
 then
@@ -13,6 +14,7 @@ fi
 if [ "$1" != "" ]
 then
     PREFIX=$1
+    TRACKING=""
 fi
 
 if [ $? -ne 0 ]
@@ -27,7 +29,7 @@ if [ branch != "master" ]
 then
     REMOTE_BRANCH="$PREFIX/$BRANCH"
     echo branch is $BRANCH - remote branch is $REMOTE_BRANCH
-    git push origin $BRANCH:$REMOTE_BRANCH
+    git push $TRACKING origin $BRANCH:$REMOTE_BRANCH
 else
     echo branch is master - doing "bare" git push
     git push
