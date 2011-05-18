@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+mkdir -p /bbs/opt
+mkdir -p /opt/swt/bin
+
+ln -s /opt/swt/bin /bbs/opt/
+
+ln -s /usr/bin/perl /opt/swt/bin/
+ln -s /usr/bin/rsync /opt/swt/bin/
+
