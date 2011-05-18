@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
 
+if [ ! -x /usr/bin/perl ]
+then \
+    echo perl is missing.  You may need to use apt-get to install it.
+    exit 1
+fi
+
+if [ ! -x /usr/bin/make ]
+then \
+    echo make is missing.  You may need to use apt-get to install it.
+    exit 1
+fi
+
+if [ ! -x /usr/bin/rsync ]
+then \
+    echo rsync is missing.  You may need to use apt-get to install it.
+    exit 1
+fi
+
 mkdir -p /bbs/opt
 mkdir -p /opt/swt/bin
 
@@ -8,3 +26,4 @@ ln -s /opt/swt/bin /bbs/opt/
 ln -s /usr/bin/perl /opt/swt/bin/
 ln -s /usr/bin/rsync /opt/swt/bin/
 
+ln -s /usr/bin/make /opt/swt/bin/gmake
