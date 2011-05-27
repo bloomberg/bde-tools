@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+BRANCH=$(git branch | awk '/\*/ { print $NF }');
+
+PREFIX="dev/$USER"
+TRACKING=-u
+
+if [[ "$BRANCH" =~ "^dev/$USER" ]]
+then
+    echo No prefix - branch "$BRANCH" already has a dev/$USER prefix
+    PREFIX=""
+fi
+
+if [ "$1" != "" ]
+then
+    PREFIX=$1
+    TRACKING=""
+fi
+
+if [ $? -ne 0 ]
+then
+    echo Error deducing branch - exiting
+    exit 1
+fi
+
+REMOTE_BRANCH=master
+
+if [ branch != "master" ]
+then
+    REMOTE_BRANCH="$PREFIX/$BRANCH"
+    echo branch is $BRANCH - remote branch is $REMOTE_BRANCH
+    git push $TRACKING origin $BRANCH:$REMOTE_BRANCH
+else
+    echo branch is master - doing "bare" git push
+    git push
+fi
+

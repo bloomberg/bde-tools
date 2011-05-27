@@ -381,7 +381,7 @@ sub read_symbols {
                 close $fh;
             } elsif ( $^O =~ /win/i ) {
             } else {
-                die "Unable to open symbol definition file" . " '$file': $!\n";
+                warn "Unable to open symbol definition file" . " '$file': $!\n";
             }
         } else {
 
