@@ -145,9 +145,9 @@ void Lines::firstDetect()
             s_hasTabs = true;
         }
 
-	if (curLine.length() > 0 && ' ' == curLine[curLine.length() - 1]) {
-	    s_hasTrailingBlanks = true;
-	}
+        if (curLine.length() > 0 && ' ' == curLine[curLine.length() - 1]) {
+            s_hasTrailingBlanks = true;
+        }
     }
 
     s_state = BDEFLAG_FIRST_DETECTED;
@@ -242,7 +242,7 @@ void Lines::identifyStatements()
     }
 
     s_state = BDEFLAG_STATEMENTS_IDENTIFIED;
-}           
+}
 
 void Lines::identifyStatementEnds()
 {
@@ -361,7 +361,9 @@ void Lines::killQuotesComments()
         { " NOT IMPLEMENTED",         BDEFLAG_NOT_IMPLEMENTED },
 
         { " close namespace",         BDEFLAG_CLOSE_NAMESPACE },
-        { " close unnamed namespace", BDEFLAG_CLOSE_UNNAMED_NAMESPACE } };
+        { " close unnamed namespace", BDEFLAG_CLOSE_UNNAMED_NAMESPACE },
+        { " close enterprise namespace",
+                                      BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE } };
 
     enum { NUM_LEGAL_COMMENTS = sizeof legalComments / sizeof *legalComments };
 
@@ -521,7 +523,7 @@ void Lines::wipeOutMacros()
                 int li2;
                 for (li2 = li + 1; li2 < lineCount; ++li2) {
                     bsl::string& curLine2 = s_lines[li2];
-                    
+
                     if (curLine.length() > 0) {
                         col = Lines::lineIndent(li2);
                         if ('#' == curLine2[col]) {

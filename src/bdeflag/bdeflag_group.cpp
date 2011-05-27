@@ -190,7 +190,7 @@ StartProgram::StartProgram()
 
     static const char *arrayUnaryOperators[] = {
         "*", "+", "-", "&", "!", "~", "++", "--" };
-       
+
     enum { NUM_ARRAY_UNARY_OPERATORS = sizeof arrayUnaryOperators /
                                                  sizeof *arrayUnaryOperators };
     for (int i = 0; i < NUM_ARRAY_UNARY_OPERATORS; ++i) {
@@ -814,7 +814,7 @@ void Group::determineGroupType()
                                                d_prevWordBegin.col());
                     int iPos = pos;
                     if (Ut::npos() != pos) {
-                        const bsl::string& sub = 
+                        const bsl::string& sub =
                               curLine.substr(iPos,
                                              d_prevWordBegin.col() + 1 - iPos);
                         const bsl::string op = Ut::spacesOut(sub);
@@ -958,7 +958,7 @@ void Group::determineGroupType()
                     }
                 }
                 if (d_prevWordBegin !=
-                               d_statementStart.findFirstOf("=", 
+                               d_statementStart.findFirstOf("=",
                                                             true,
                                                             d_prevWordBegin)) {
                     d_type = BDEFLAG_ROUTINE_CALL;
@@ -997,7 +997,7 @@ void Group::determineGroupType()
         }
 
         return;                                                       // RETURN
-    }            
+    }
     else {
         // braces based
 
@@ -1541,7 +1541,7 @@ void Group::checkArgNames() const
                     }
                 }
                 if (copyCtor) {
-                    if (!notImplemented &&              
+                    if (!notImplemented &&
                                         MATCH[MATCH_ORIGINAL] != argNames[0]) {
                         d_open.warning() << d_prevWord << " copy c'tor arg"
                                                       " name not 'original'\n";
@@ -1620,8 +1620,8 @@ void Group::checkArgNames() const
         }
       } break;
     }
-}                
-    
+}
+
 void Group::checkBooleanRoutineNames() const
 {
     if (BDEFLAG_ROUTINE_DECL != d_type) {
@@ -2001,13 +2001,28 @@ void Group::checkNamespace() const
     if ("namespace" == d_prevWord) {
         // unnamed namespace
 
+        if (Lines::BDEFLAG_DOT_H == Lines::fileType()) {
+            d_open.warning() << "unnamed namespace in .h file\n";
+        }
+
         if (Lines::BDEFLAG_CLOSE_UNNAMED_NAMESPACE !=
                                            Lines::comment(d_close.lineNum())) {
             d_close.warning() << "when closed, the unnamed namespace should"
                             " have the comment '// close unnamed namespace'\n";
         }
-        else if (Lines::BDEFLAG_DOT_H == Lines::fileType()) {
-            d_open.warning() << "unnamed namespace in .h file\n";
+        else {
+            commentFound = true;
+        }
+    }
+    else if ("BloombergLP" == d_prevWord) {
+        // enterprise namespace
+
+        Lines::CommentType closingCmt = Lines::comment(d_close.lineNum());
+        if (Lines::BDEFLAG_CLOSE_NAMESPACE != closingCmt
+           && Lines::BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE != closingCmt) {
+            d_close.warning() << "when closed, the BloombergLP namespace"
+                       " should have the comment '// close namespace"
+                       " BloombergLP' or '// close enterprise namespace'\n";
         }
         else {
             commentFound = true;

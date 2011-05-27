@@ -175,7 +175,7 @@ Place Place::findFirstOf(const char *target,
                    ? curLine.find_first_of(    target, cursor.d_col)
                    : curLine.find_first_not_of(target, cursor.d_col); // not of
         if (Ut::npos() != pos) {
-            
+
             return bsl::min(Place(cursor.d_lineNum, pos), endPlace);  // RETURN
         }
         cursor.d_col = Lines::lineLength(cursor.d_lineNum) - 1;
@@ -280,7 +280,7 @@ bsl::string Place::nameAfter(Place *end, bool known) const
             return tempRet;                                           // RETURN
         }
     }
-        
+
     *end = retEnd;
     return ret;
 }

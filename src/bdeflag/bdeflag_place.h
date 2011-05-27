@@ -50,7 +50,7 @@ namespace bdeFlag {
 
 class Place {
     // CLASS DATA
-    static Place        s_rEnd;     // before the first 
+    static Place        s_rEnd;     // before the first
     static Place        s_end;
 
     // DATA

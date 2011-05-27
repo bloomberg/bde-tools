@@ -226,7 +226,7 @@ bool Ut::isUpperCaseString(const bsl::string& s)
     const char * const pcEnd = pc + s.length();
     for (; pc < pcEnd; ++pc) {
         if (isalpha(*pc) && !isupper(*pc)) {
-	    return false;
+            return false;                                             // RETURN
         }
     }
 

@@ -81,6 +81,7 @@ class Lines {
         BDEFLAG_FREE_OPERATOR,
         BDEFLAG_CLOSE_NAMESPACE,
         BDEFLAG_CLOSE_UNNAMED_NAMESPACE,
+        BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE,
         BDEFLAG_UNRECOGNIZED };
 
     enum StatementType {
@@ -321,7 +322,7 @@ class Lines {
     // ACCESSORS
     void printWarnings(bsl::ostream *stream);
         // Print warnings according to the static data in this class.
-        
+
 };
 
 // CLASS METHODS
