@@ -148,6 +148,7 @@ class Lines {
     static Ut::LineNumSet      s_cStyleComments;
     static Ut::LineNumSet      s_inlinesNotAlone;
     static Ut::LineNumSet      s_badlyAlignedReturns;
+    static Ut::LineNumSet      s_tbds;
     static State               s_state;
     static bool                s_hasTabs;
     static bool                s_hasTrailingBlanks;
@@ -302,6 +303,11 @@ class Lines {
     bool statementEnds(int index);
         // Return 'true' if the line specified by 'index' ends a statement.
 
+    static
+    const Ut::LineNumSet& tbds();
+        // Return the set of line #'s containing comments with the string 'tbd'
+        // in them.
+
     // Initializes static data structures.  Aborts on failure.
 
     // CREATORS
@@ -409,7 +415,8 @@ const Ut::LineNumSet& Lines::longLines() {
 }
 
 inline
-const Ut::LineNumSet& Lines::cStyleComments() {
+const Ut::LineNumSet& Lines::cStyleComments()
+{
     return s_cStyleComments;
 }
 
@@ -423,6 +430,12 @@ inline
 bool Lines::statementEnds(int index)
 {
     return s_statementEnds[index];
+}
+
+inline
+const Ut::LineNumSet& Lines::tbds()
+{
+    return s_tbds;
 }
 
 }  // close namespace bdeFlag
