@@ -541,6 +541,7 @@ Usage: $prog -h | [-c <comp>] [-d] [-s|-j<n>] [-t <tgt>] [-u <upl>]
                               at <path>
                               If ~/.bde_build_output_location is a symlink, its
                               target will be used if -o is not specified
+  --path       | -p           override BDE_PATH
   --quit       | -Q           quit immediately on failure (see also -F)
   --serial     | -s           serial build (equivalent to -j 1)
                               default if platform is 'windows'
@@ -3187,6 +3188,7 @@ unless (GetOptions(\%opts, qw[
     nolog|N
     output|o=s
     options|O=s
+    path|p=s
     production|P
     quit|q|Q
     rebuild|R
@@ -3368,7 +3370,10 @@ else {
 
 $root=new BDE::FileSystem($root);
 # BDE_PATH is probably wrong since proot got nuked
-if(exists $ENV{BDE_PATH}) {
+if(exists $opts{path}) {
+    $root->setPath($opts{path}.":".CONSTANT_PATH);
+}
+elsif(exists $ENV{BDE_PATH}) {
     $root->setPath($ENV{BDE_PATH}.":".CONSTANT_PATH);
 }
 else {
