@@ -584,6 +584,18 @@ void Lines::wipeOutMacros()
         }
     }
 
+    // Remove any residual trailing slashes that might have been left over
+    // after comments (comments ending with '\' were preserved as just the
+    // the '\' in case they were within macros.
+
+    for (int li = 1; li < lineCount; ++li) {
+        bsl::string& curLine = s_lines[li];
+
+        while ('\\' == Ut::lastCharOf(curLine)) {
+	    curLine.resize(curLine.length() - 1);
+        }
+    }
+
     s_state = BDEFLAG_MACROS_WIPED_OUT;
 }
 
