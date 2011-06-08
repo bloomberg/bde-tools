@@ -93,6 +93,7 @@ static Ut::LineNumSet assertsNeedBlankLine;
 static Ut::LineNumSet strangelyIndentedComments;
 static Ut::LineNumSet strangelyIndentedStatements;
 static Ut::LineNumSet commentNeedsBlankLines;
+static Ut::LineNumSet badlyAlignedFuncStartBrace;
 
 static bsl::set<bsl::string> routinesNeedDoc;
 static bsl::set<bsl::string> routinesDocced;
@@ -535,6 +536,10 @@ void Group::checkAllCodeIndents()
 
 void Group::checkAllFunctionDoc()
 {
+    if (Lines::BDEFLAG_DOT_T_DOT_CPP == Lines::fileType()) {
+        return;
+    }
+
     topLevel().recurseMemTraverse(&Group::checkFunctionDoc);
 
     routinesNeedDoc.erase(MATCH[MATCH_OPERATOR]);
@@ -621,8 +626,6 @@ void Group::checkAllRoutineCallArgLists()
 
 void Group::checkAllStartingAsserts()
 {
-    typedef bsl::set<int>::iterator IntSetIt;
-
     assertsNeedBlankLine.clear();
 
     topLevel().recurseMemTraverse(&Group::checkStartingAsserts);
@@ -634,6 +637,21 @@ void Group::checkAllStartingAsserts()
         cerr << assertsNeedBlankLine << endl;
 
         assertsNeedBlankLine.clear();
+    }
+}
+
+void Group::checkAllStartingBraces()
+{
+    badlyAlignedFuncStartBrace.clear();
+
+    topLevel().recurseMemTraverse(&Group::checkStartingBraces);
+
+    if (!badlyAlignedFuncStartBrace.empty()) {
+        cerr << "Warning: " << Lines::fileName() <<
+                ": opening '{' of function should be properly aligned alone"
+                " at start of line(s): " << badlyAlignedFuncStartBrace << endl;
+
+        badlyAlignedFuncStartBrace.clear();
     }
 }
 
@@ -738,6 +756,7 @@ void Group::doEverything()
     checkAllNotImplemented();
     checkAllNamespaces();
     checkAllStartingAsserts();
+    checkAllStartingBraces();
     checkAllTemplateOnOwnLine();
     checkAllCodeComments();
     checkAllArgNames();
@@ -2216,6 +2235,50 @@ void Group::checkStartingAsserts() const
             break;
         }
         li = Place(li, 0).findFirstOf(";").lineNum() + 1;
+    }
+}
+
+void Group::checkStartingBraces() const
+{
+    if (BDEFLAG_ROUTINE_BODY != d_type) {
+        return;                                                       // RETURN
+    }
+
+    int indent = 0;
+    switch (d_parent->d_type) {
+      case BDEFLAG_TOP_LEVEL:
+      case BDEFLAG_NAMESPACE: {
+        indent = 0;
+      }  break;
+      case BDEFLAG_CLASS: {
+        if (Lines::BDEFLAG_DOT_H != Lines::fileType() &&
+                                       d_close.lineNum() == d_open.lineNum()) {
+            // It's evidently a one line function definition not in a .h file,
+            // allow it.
+
+            return;
+        }
+
+        indent = d_parent->d_close.col() + 4;
+      }  break;
+      case BDEFLAG_UNKNOWN_BRACES: {
+        // Somewhat confused.  Give up.
+
+        return;
+      }  break;
+      default: {
+        // Really confused.  Complain.
+
+        d_open.error() << "Confused -- function within brace pair of type \""
+                                      << typeToStr(d_parent->d_type) << "\"\n";
+        return;
+      }
+    }
+
+    if (d_open.col() != indent ||
+                        Lines::lineIndent(d_open.lineNum()) != indent ||
+                        Lines::line(d_open.lineNum()).length() != indent + 1) {
+        badlyAlignedFuncStartBrace.insert(d_open.lineNum());
     }
 }
 

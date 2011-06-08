@@ -592,7 +592,7 @@ void Lines::wipeOutMacros()
         bsl::string& curLine = s_lines[li];
 
         while ('\\' == Ut::lastCharOf(curLine)) {
-	    curLine.resize(curLine.length() - 1);
+            curLine.resize(curLine.length() - 1);
         }
     }
 
