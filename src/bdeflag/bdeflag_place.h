@@ -59,16 +59,19 @@ class Place {
 
   public:
     // CREATORS
-    Place() : d_lineNum(0), d_col(0) {}
+    Place();
         // Construct a place at 'rEnd()'.
 
-    Place(int line, int col) : d_lineNum(line), d_col(col) {}
+    Place(int line, int col);
         // Construct a place at the specified '(line number, column)' position.
 
     // CLASS METHODS
     static
     const Place& rEnd();
         // The place at '(0, 0)' before the first char of source in the file.
+        // The name 'rEnd' is it's like 'end()' for a reverse iterator, it's
+        // not 'begin()' because 'begin()' would be AT the first char of data,
+        // 'rEnd' is BEFORE the first char of data.
 
     static
     const Place& end();
@@ -285,6 +288,17 @@ bsl::ostream& operator<<(bsl::ostream& stream, const Place& place)
     stream << "(" << place.lineNum() << ", " << place.col() << ")";
 
     return stream;
+}
+
+// CREATORS
+inline
+Place::Place() : d_lineNum(0), d_col(0)
+{
+}
+
+inline
+Place::Place(int line, int col) : d_lineNum(line), d_col(col)
+{
 }
 
 // CLASS METHODS

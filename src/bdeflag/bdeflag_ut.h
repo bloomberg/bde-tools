@@ -193,7 +193,8 @@ bsl::ostream& operator<<(bsl::ostream& stream, const Ut::LineNumSet& set);
 
 // CLASS METHODS
 inline
-bool Ut::alphaNumOrColon(char c) {
+bool Ut::alphaNumOrColon(char c)
+{
     return s_alphaNumOrColon.d_stateRef[c];
 }
 

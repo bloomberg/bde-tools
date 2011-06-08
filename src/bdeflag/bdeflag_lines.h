@@ -305,8 +305,8 @@ class Lines {
 
     static
     const Ut::LineNumSet& tbds();
-        // Return the set of line #'s containing comments with the string 'tbd'
-        // in them.
+        // Return the set of line #'s containing comments with the abbreviation
+        // for 'To Be Done' in them.
 
     // Initializes static data structures.  Aborts on failure.
 
@@ -345,7 +345,8 @@ int Lines::commentIndent(int index)
 }
 
 inline
-const bsl::string& Lines::fileName() {
+const bsl::string& Lines::fileName()
+{
     return s_fileName;
 }
 
@@ -390,27 +391,32 @@ bool Lines::isProtectionLine(int index)
 }
 
 inline
-const bsl::string& Lines::line(int index) {
+const bsl::string& Lines::line(int index)
+{
     return s_lines[index];
 }
 
 inline
-int Lines::lineCount() {
+int Lines::lineCount()
+{
     return s_lineCount;
 }
 
 inline
-int Lines::lineIndent(int index) {
+int Lines::lineIndent(int index)
+{
     return s_lineIndents[index];
 }
 
 inline
-int Lines::lineLength(int index) {
+int Lines::lineLength(int index)
+{
     return index >= s_lineCount ? 0 : s_lines[index].length();
 }
 
 inline
-const Ut::LineNumSet& Lines::longLines() {
+const Ut::LineNumSet& Lines::longLines()
+{
     return s_longLines;
 }
 

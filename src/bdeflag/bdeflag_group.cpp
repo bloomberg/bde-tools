@@ -537,7 +537,7 @@ void Group::checkAllCodeIndents()
 void Group::checkAllFunctionDoc()
 {
     if (Lines::BDEFLAG_DOT_T_DOT_CPP == Lines::fileType()) {
-        return;
+        return;                                                       // RETURN
     }
 
     topLevel().recurseMemTraverse(&Group::checkFunctionDoc);
@@ -2256,7 +2256,7 @@ void Group::checkStartingBraces() const
             // It's evidently a one line function definition not in a .h file,
             // allow it.
 
-            return;
+            return;                                                   // RETURN
         }
 
         indent = d_parent->d_close.col() + 4;
@@ -2264,14 +2264,14 @@ void Group::checkStartingBraces() const
       case BDEFLAG_UNKNOWN_BRACES: {
         // Somewhat confused.  Give up.
 
-        return;
+        return;                                                       // RETURN
       }  break;
       default: {
         // Really confused.  Complain.
 
         d_open.error() << "Confused -- function within brace pair of type \""
                                       << typeToStr(d_parent->d_type) << "\"\n";
-        return;
+        return;                                                       // RETURN
       }
     }
 

@@ -163,22 +163,26 @@ bsl::string Ut::nthString(int n)
     }
 }
 
-bool Ut::p(const char *name, const char *value) {
+bool Ut::p(const char *name, const char *value)
+{
     bsl::cerr << name << " = " << value << bsl::endl;
     return false;
 }
 
-bool Ut::p(const char *name, char value) {
+bool Ut::p(const char *name, char value)
+{
     bsl::cerr << name << " = " << value << bsl::endl;
     return false;
 }
 
-bool Ut::p(const char *name, double value) {
+bool Ut::p(const char *name, double value)
+{
     bsl::cerr << name << " = " << value << bsl::endl;
     return false;
 }
 
-bool Ut::p(const char *name, const bsl::string& value) {
+bool Ut::p(const char *name, const bsl::string& value)
+{
     bsl::cerr << name << " = " << value << bsl::endl;
     return false;
 }
