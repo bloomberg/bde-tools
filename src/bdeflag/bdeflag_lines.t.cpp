@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
             { L_, 0, 0, 0, 1, "\n#include<cassert>\n" },
             { L_, 0, 0, 0, 1, "\n#     include<cassert>\n" },
             { L_, 0, 0, 0, 1, "\n   #     include<cassert>\n" } };
-        
+
         enum { DATA_LEN = sizeof DATA / sizeof *DATA };
 
         for (int i = 0; i < DATA_LEN; ++i) {

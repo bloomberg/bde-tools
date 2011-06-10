@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
             { L_, "dkafjlfdajs\"fajkkfad\"afd",
                                   "dkafjlfdajs\"\"\"\"\"\"\"\"\"\"afd", 0, 0 },
             { L_, "'\\''",              "''''", 0, 0 },
-            { L_, "asdf\"1234\\\"1234\"asdf",   
+            { L_, "asdf\"1234\\\"1234\"asdf",
                                     "asdf\"\"\"\"\"\"\"\"\"\"\"\"asdf", 0, 0 },
             { L_, "endMatches(woof, \"woof\")",
                                       "endMatches(woof, \"\"\"\"\"\")", 0, 0 },

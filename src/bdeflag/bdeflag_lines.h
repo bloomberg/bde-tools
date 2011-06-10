@@ -81,6 +81,7 @@ class Lines {
         BDEFLAG_FREE_OPERATOR,
         BDEFLAG_CLOSE_NAMESPACE,
         BDEFLAG_CLOSE_UNNAMED_NAMESPACE,
+        BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE,
         BDEFLAG_UNRECOGNIZED };
 
     enum StatementType {
@@ -147,6 +148,7 @@ class Lines {
     static Ut::LineNumSet      s_cStyleComments;
     static Ut::LineNumSet      s_inlinesNotAlone;
     static Ut::LineNumSet      s_badlyAlignedReturns;
+    static Ut::LineNumSet      s_tbds;
     static State               s_state;
     static bool                s_hasTabs;
     static bool                s_hasTrailingBlanks;
@@ -301,6 +303,11 @@ class Lines {
     bool statementEnds(int index);
         // Return 'true' if the line specified by 'index' ends a statement.
 
+    static
+    const Ut::LineNumSet& tbds();
+        // Return the set of line #'s containing comments with the abbreviation
+        // for 'To Be Done' in them.
+
     // Initializes static data structures.  Aborts on failure.
 
     // CREATORS
@@ -321,7 +328,7 @@ class Lines {
     // ACCESSORS
     void printWarnings(bsl::ostream *stream);
         // Print warnings according to the static data in this class.
-        
+
 };
 
 // CLASS METHODS
@@ -338,7 +345,8 @@ int Lines::commentIndent(int index)
 }
 
 inline
-const bsl::string& Lines::fileName() {
+const bsl::string& Lines::fileName()
+{
     return s_fileName;
 }
 
@@ -383,32 +391,38 @@ bool Lines::isProtectionLine(int index)
 }
 
 inline
-const bsl::string& Lines::line(int index) {
+const bsl::string& Lines::line(int index)
+{
     return s_lines[index];
 }
 
 inline
-int Lines::lineCount() {
+int Lines::lineCount()
+{
     return s_lineCount;
 }
 
 inline
-int Lines::lineIndent(int index) {
+int Lines::lineIndent(int index)
+{
     return s_lineIndents[index];
 }
 
 inline
-int Lines::lineLength(int index) {
+int Lines::lineLength(int index)
+{
     return index >= s_lineCount ? 0 : s_lines[index].length();
 }
 
 inline
-const Ut::LineNumSet& Lines::longLines() {
+const Ut::LineNumSet& Lines::longLines()
+{
     return s_longLines;
 }
 
 inline
-const Ut::LineNumSet& Lines::cStyleComments() {
+const Ut::LineNumSet& Lines::cStyleComments()
+{
     return s_cStyleComments;
 }
 
@@ -422,6 +436,12 @@ inline
 bool Lines::statementEnds(int index)
 {
     return s_statementEnds[index];
+}
+
+inline
+const Ut::LineNumSet& Lines::tbds()
+{
+    return s_tbds;
 }
 
 }  // close namespace bdeFlag

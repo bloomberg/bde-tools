@@ -180,6 +180,10 @@ class Group {
         // If this is a routine body, check any asserts starting it out are
         // followed by a blank line.
 
+    void checkStartingBraces() const;
+        // If this is a routine body, check that the starting '{' is on its own
+        // line and properly indented.
+
     void getArgList(bsl::vector<bsl::string> *typeNames,
                     bsl::vector<bsl::string> *names,
                     bsl::vector<int>         *lineNums) const;
@@ -237,6 +241,11 @@ class Group {
     void checkAllStartingAsserts();
         // Check all asserts at the start of routine bodies are followed by
         // blank lines.
+
+    static
+    void checkAllStartingBraces();
+        // Check all routines have (with some exceptions) starting braces
+        // properly aligned and on their own lines.
 
     static
     void checkAllStatics();

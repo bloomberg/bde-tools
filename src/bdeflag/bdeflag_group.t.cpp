@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
                 cerr << "Error: " << argv[f] << " has tab(s) -- ignored\n";
                 continue;
             }
-                
+
             Group::initGroups();
 
             if ("bool" == cmd) {

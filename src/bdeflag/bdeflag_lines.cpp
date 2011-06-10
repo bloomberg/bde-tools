@@ -2,6 +2,8 @@
 
 #include <bdeflag_lines.h>
 
+#include <bdeu_string.h>
+
 #include <bslma_allocator.h>
 #include <bslma_default.h>
 
@@ -39,6 +41,7 @@ Ut::LineNumSet      Lines::s_longLines;
 Ut::LineNumSet      Lines::s_cStyleComments;
 Ut::LineNumSet      Lines::s_inlinesNotAlone;
 Ut::LineNumSet      Lines::s_badlyAlignedReturns;
+Ut::LineNumSet      Lines::s_tbds;
 Lines::State        Lines::s_state = BDEFLAG_EMPTY;
 bool                Lines::s_hasTabs;
 bool                Lines::s_hasTrailingBlanks;
@@ -145,9 +148,9 @@ void Lines::firstDetect()
             s_hasTabs = true;
         }
 
-	if (curLine.length() > 0 && ' ' == curLine[curLine.length() - 1]) {
-	    s_hasTrailingBlanks = true;
-	}
+        if (curLine.length() > 0 && ' ' == curLine[curLine.length() - 1]) {
+            s_hasTrailingBlanks = true;
+        }
     }
 
     s_state = BDEFLAG_FIRST_DETECTED;
@@ -242,7 +245,7 @@ void Lines::identifyStatements()
     }
 
     s_state = BDEFLAG_STATEMENTS_IDENTIFIED;
-}           
+}
 
 void Lines::identifyStatementEnds()
 {
@@ -361,7 +364,9 @@ void Lines::killQuotesComments()
         { " NOT IMPLEMENTED",         BDEFLAG_NOT_IMPLEMENTED },
 
         { " close namespace",         BDEFLAG_CLOSE_NAMESPACE },
-        { " close unnamed namespace", BDEFLAG_CLOSE_UNNAMED_NAMESPACE } };
+        { " close unnamed namespace", BDEFLAG_CLOSE_UNNAMED_NAMESPACE },
+        { " close enterprise namespace",
+                                      BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE } };
 
     enum { NUM_LEGAL_COMMENTS = sizeof legalComments / sizeof *legalComments };
 
@@ -402,6 +407,14 @@ void Lines::killQuotesComments()
                         s_comments[li] = BDEFLAG_UNRECOGNIZED;
                         s_commentIndents[li] = col - 2;
                         bsl::string comment = curLine.substr(col);
+
+                        if (bdeu_String::strstrCaseless(comment.c_str(),
+                                                        comment.length(),
+                                                        "tbd",
+                                                        3)) {
+                            s_tbds.insert(li);
+                        }
+
                         CommentMapCIt it = commentMap.upper_bound(comment);
 
                         // 'it' now points to the lowest key > comment
@@ -521,7 +534,7 @@ void Lines::wipeOutMacros()
                 int li2;
                 for (li2 = li + 1; li2 < lineCount; ++li2) {
                     bsl::string& curLine2 = s_lines[li2];
-                    
+
                     if (curLine.length() > 0) {
                         col = Lines::lineIndent(li2);
                         if ('#' == curLine2[col]) {
@@ -568,6 +581,18 @@ void Lines::wipeOutMacros()
             if (!lastCharContinues) {
                 inMacro = false;
             }
+        }
+    }
+
+    // Remove any residual trailing slashes that might have been left over
+    // after comments (comments ending with '\' were preserved as just the
+    // the '\' in case they were within macros.
+
+    for (int li = 1; li < lineCount; ++li) {
+        bsl::string& curLine = s_lines[li];
+
+        while ('\\' == Ut::lastCharOf(curLine)) {
+            curLine.resize(curLine.length() - 1);
         }
     }
 
@@ -771,6 +796,7 @@ Lines::~Lines()
     s_cStyleComments.clear();
     s_inlinesNotAlone.clear();
     s_badlyAlignedReturns.clear();
+    s_tbds.clear();
     s_state = BDEFLAG_EMPTY;
     s_hasTabs = false;
     s_hasTrailingBlanks = false;
@@ -819,9 +845,13 @@ void Lines::printWarnings(bsl::ostream *stream)
                 " line ('inline static' is OK): " << s_inlinesNotAlone << endl;
     }
     if (!s_badlyAlignedReturns.empty()) {
-        *stream << "Warning: in " << s_fileName << "'// RETURN' comment not"
+        *stream << "Warning: in " << s_fileName << " '// RETURN' comment not"
                                  " right-justified to 79 chars at line(s): " <<
                                                  s_badlyAlignedReturns << endl;
+    }
+    if (!s_tbds.empty()) {
+        *stream << "Warning: in " << s_fileName << " 'TBD' comments found on"
+                                                 " line(s) " << s_tbds << endl;
     }
 }
 
