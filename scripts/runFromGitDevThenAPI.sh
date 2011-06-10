@@ -1,8 +1,10 @@
 #!/usr/bin/bash
 
+SCRIPT_NAME=runFromGitDevThenAPI
+
 # redirect outputs so we can track failures - nysbldo2 does
 # not mail cron job results
-exec > ~bdebuild/logs/log.runDevThenAPI.`date +"%Y%m%d-%H%M%S"` 2>&1
+exec > ~bdebuild/logs/log.runFromGitDevThenAPI.`date +"%Y%m%d-%H%M%S"` 2>&1
 
 /usr/atria/bin/cleartool startview bde_devintegrator
 
@@ -29,14 +31,6 @@ export PATH
         < /dev/null 2>&1                                                \
    | /home/bdebuild/bin/logTs.pl /home/bdebuild/logs/log.dev-api   \
    && /home/bdebuild/bin/report-latest dev-api &
-
-#/view/bde_devintegrator/bbcm/infrastructure/tools/bin/bde_bldmgr -v                \
-#        -k /view/bde_devintegrator/bbcm/infrastructure/tools/etc/bde_bldmgr.config \
-#        -f -k -m -idev-bus -wbde_devintegrator                                     \
-#        bus z_bus                                                                  \
-#        < /dev/null 2>&1                                           \
-#   | /home/bdebuild/bin/logTs.pl /home/bdebuild/logs/log.dev-bus   \
-#   && /home/bdebuild/bin/report-latest dev-bus &
 
 /view/bde_devintegrator/bbcm/infrastructure/tools/bin/bde_bldmgr -v                \
         -k /view/bde_devintegrator/bbcm/infrastructure/tools/etc/bde_bldmgr.config \
