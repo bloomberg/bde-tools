@@ -1,0 +1,4 @@
+This directory contains scripts used to drive other tools
+(which typically live in bin, although they may themselves
+be written in a scripting language) to perform tasks like
+the nightly builds.
