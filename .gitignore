@@ -1,0 +1,8 @@
+# ignore objects, archives, tasks, and backups anywhere in the tree
+*.[oa]
+*.lib
+*.obj
+*.tsk
+*.exe
+*~
+.*.sw?
