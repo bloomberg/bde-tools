@@ -1,12 +1,24 @@
 #!/usr/bin/bash
 
 SCRIPT_NAME=runFromGitDevThenAPI
+VIEW_NAME=bde_devintegrator
+GIT_REPO=~/bs/git-bde-dev
+
+/usr/atria/bin/cleartool startview bde_devintegrator
+
+cd $GIT_REPO 2> /dev/null
+git pull
 
 # redirect outputs so we can track failures - nysbldo2 does
 # not mail cron job results
 exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
-/usr/atria/bin/cleartool startview bde_devintegrator
+SCRIPT_PATH=$(dirname $0)
+
+if [ ! -z "$SCRIPT_PATH" ]
+then \
+    SCRIPT_PATH="$SCRIPT_PATH/"
+fi
 
 PATH="/opt/SUNWspro/bin/:/bbcm/infrastructure/tools/bin:/usr/bin:/usr/sbin:/sbin:/usr/bin/X11:/usr/local/bin:/bb/bin:/bb/shared/bin:/bb/shared/abin:/bb/bin/robo:/bbsrc/tools/bbcm:/bbsrc/tools/bbcm/parent:/usr/atria/bin"
 export PATH

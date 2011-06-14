@@ -67,7 +67,8 @@ cd $OUTPUTPATH 2>/dev/null || (echo Unable to cd to $OUTPUTPATH; exit 1)
 
 export BDE_PATH=/view/$VIEWNAME/bbcm/infrastructure:/view/$VIEWNAME/bbcm/api:$BDE_PATH
 
-$SNAPSHOT -w $GITPATH -t . -c -j 12 $UORLIST
+# the -e option makes bde_snapshot.pl snapshot the "etc" directory as well
+$SNAPSHOT -e -w $GITPATH -t . -c -j 12 $UORLIST
 
 if [ $? -ne 0 ]
 then \
