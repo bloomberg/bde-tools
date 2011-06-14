@@ -2,7 +2,42 @@
 
 if [ -z "$4" ]
 then \
-    echo "USAGE: $0 gitpath viewname outputPath tarName uor [uor...]"
+    echo "USAGE: $0 tarName outputPath rootpath [path [path...]] -- uor [uor...]"
+    exit 1
+fi
+
+TARNAME=$1
+shift
+
+OUTPUTPATH=$1
+shift
+
+ROOTPATH=$1
+shift
+
+PATHSEP=""
+
+while [ "$1" != "--" ]
+do \
+    PATHS="$PATHS$PATHSEP$1"
+    PATHSEP=":"
+    shift
+done
+
+if [ "$1" != "--" ]
+then \
+    echo missing -- separator between paths and uors
+    exit 1
+fi
+
+# skip the -- separator
+shift
+
+UORLIST="$*"
+
+if [ -z "$UORLIST" ]
+then \
+    echo No UORs specified
     exit 1
 fi
 
@@ -22,53 +57,20 @@ fi
 D=$(dirname $SNAPSHOT)
 SNAPSHOT=$(cd "$D" 2>/dev/null && pwd || echo "$D")/bde_snapshot.pl
 
-GITPATH=$1
-VIEWNAME=$2
-OUTPUTPATH=$3
-TARNAME=$4
+mkdir -p $OUTPUTPATH 2>/dev/null
 
-shift 4
-
-UORLIST="$*"
-
-/usr/atria/bin/cleartool startview $VIEWNAME
+cd $OUTPUTPATH 2>/dev/null
 
 if [ $? -ne 0 ]
 then \
-    echo startview $VIEWNAME failed
+    echo Unable to cd to $OUTPUTPATH
     exit 1
 fi
 
-cd $GITPATH
-
-if [ $? -ne 0 ]
-then \
-    echo cd to git repo $GITPATH failed
-    exit 1
-fi
-
-/opt/swt/bin/git pull
-
-if [ $? -ne 0 ]
-then \
-    echo git pull failed
-    exit 1
-fi
-
-echo \$0 is $0, snapshot is $SNAPSHOT
-#echo GITPATH=$GITPATH
-#echo VIEWNAME=$VIEWNAME
-#echo OUTPUTPATH=$OUTPUTPATH
-#echo UORLIST=$UORLIST
-
-mkdir -p $OUTPUTPATH
-
-cd $OUTPUTPATH 2>/dev/null || (echo Unable to cd to $OUTPUTPATH; exit 1)
-
-export BDE_PATH=/view/$VIEWNAME/bbcm/infrastructure:/view/$VIEWNAME/bbcm/api:$BDE_PATH
+export BDE_PATH="$PATHS:$BDE_PATH"
 
 # the -e option makes bde_snapshot.pl snapshot the "etc" directory as well
-$SNAPSHOT -e -w $GITPATH -t . -c -j 12 $UORLIST
+$SNAPSHOT -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 
 if [ $? -ne 0 ]
 then \
