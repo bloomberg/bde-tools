@@ -13,9 +13,6 @@
 #include <bslmf_assert.h>
 #include <bsls_assert.h>
 
-#include <bsl_list.h>
-#include <bsl_string.h>
-
 #include <bsl_algorithm.h>
 #include <bsl_iostream.h>
 #include <bsl_string.h>
@@ -24,10 +21,10 @@
 
 #define P(x)          Ut::p(#x, (x))
 
+namespace BloombergLP {
+
 using bsl::cerr;
 using bsl::endl;
-
-namespace BloombergLP {
 
 namespace bdeFlag {
 
