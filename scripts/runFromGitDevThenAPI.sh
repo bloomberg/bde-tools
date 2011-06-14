@@ -4,7 +4,7 @@ SCRIPT_NAME=runFromGitDevThenAPI
 
 # redirect outputs so we can track failures - nysbldo2 does
 # not mail cron job results
-exec > ~bdebuild/logs/log.runFromGitDevThenAPI.`date +"%Y%m%d-%H%M%S"` 2>&1
+exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
 /usr/atria/bin/cleartool startview bde_devintegrator
 
