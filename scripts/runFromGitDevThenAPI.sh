@@ -7,9 +7,10 @@ TOOLSPATH=/home/bdebuild/bde-tools
 VIEW_NAME=bde_devintegrator
 GIT_REPO=/home/bdebuild/bs/git-bde-${BUILD_TYPE}
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
+LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 
 W32_BUILD_DIR=bdenydev01:/e/nightly_builds/${BUILD_TYPE}
-W32_BUILD_DIR=apinydev01:/d/nightly_builds/${BUILD_TYPE}
+W64_BUILD_DIR=apinydev01:/d/nightly_builds/${BUILD_TYPE}
 
 SNAPSHOT_DIR=/home/bdebuild/bs/snapshot-${BUILD_TYPE}
 TARBALL=/home/bdebuild/bs/tars-${BUILD_TYPE}/snapshot-${BUILD_TYPE}.`date +"%Y%m%d"`.tar.gz
@@ -55,8 +56,8 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
        -f -k -m -i${BUILD_TYPE}             \
        $DEV_UORS                            \
        < /dev/null 2>&1                     \
-   | /home/bdebuild/bin/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE} \
-   && /home/bdebuild/bin/report-latest ${BUILD_TYPE}
+   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE} \
+   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}
 
 # THEN run api and fde builds
 $TOOLSPATH/bin/bde_bldmgr -v                \
@@ -64,18 +65,18 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
         -f -k -m -i${BUILD_TYPE}-api        \
         $API_UORS                           \
         < /dev/null 2>&1                    \
-   | /home/bdebuild/bin/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-api   \
-   && /home/bdebuild/bin/report-latest ${BUILD_TYPE}-api &
+   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-api   \
+   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-api &
 
 $TOOLSPATH/bin/bde_bldmgr -v                \
         -k $TOOLSPATH/etc/bde_bldmgr.config \
         -f -k -m -i${BUILD_TYPE}-fde        \
         $FDE_UORS                           \
         < /dev/null 2>&1                    \
-  | /home/bdebuild/bin/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-fde       \
-  && /home/bdebuild/bin/report-latest ${BUILD_TYPE}-fde &
+  | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-fde       \
+  && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-fde &
 
 wait
 
-~bdebuild/bin/generateGccWarningsLogs.pl ${BUILD_TYPE} bde_devintegrator
+$TOOLSPATH/scripts/generateGccWarningsLogs.pl ${BUILD_TYPE} ${LOG_DIR}
 

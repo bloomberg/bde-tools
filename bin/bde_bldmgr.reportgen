@@ -180,8 +180,6 @@ my %timingData;
 #target,system,build,elapsed,failurePackage,logFile,htmlURL,unreachabe,YNC-
 
 while(<INPUT>) {
-    #bte,i6,dbg_exc_mt,4135,bteso,/view/bde_devintegrator/bbcm/infrastructure/groups/bte/bteso/unix-AIX-powerpc-5.3-xlc-6.0/make.test.bteso.dbg_exc_mt.log,http://sundev3.bloomberg.com/~bdebuild/fail/20060619/_7FhWb2D5zXTw.html,,N
-
     next if /^#/;
     next if /^$/;
     s/[\r\n]+//g;
