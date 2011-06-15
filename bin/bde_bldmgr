@@ -102,7 +102,6 @@ unless (GetOptions(\%opts,qw[
     serial|s
     targets|t=s@
     verbose|v+
-    where|who|w=s
 ])) {
     usage(), exit(EXIT_BAD_OPT);
 }
@@ -152,7 +151,7 @@ foreach my $pi (0..$#platforms) {
 }
 
 ($path,$view)=(undef,undef);
-$view=$opts{where} if defined $opts{where};
+#$view=$opts{where} if defined $opts{where};
 
 my $started_at=time;
 alert("Build started at ".localtime($started_at));
@@ -1528,7 +1527,6 @@ Local options:
                                   meaning: 1 - basic messages
                                            2 - add sent requests
                                            3 - add recieved responses
-  --where      | -w <dir|view> where (dir) or who (view) to build from
 
 Passed to build:
   --after      | -A <target>    make explicit target(s) after regular build
