@@ -40,12 +40,12 @@ die "Cannot find input file" unless defined $inputFile;
 
 my $fileCount=1;
 my $outputFile = "/home/bdebuild/public_html/results-${target}-${date}.html";
-my $outputURL = "http://sundev3.bloomberg.com/~bdebuild/results-${target}-${date}.html";
+my $outputURL = "http://sundev3.dev.bloomberg.com/~bdebuild/results-${target}-${date}.html";
 
 while(-e $outputFile) {
     $outputFile = "/home/bdebuild/public_html/results-${target}-${date}-${fileCount}.html";
     #$outputURL = "http://sundev3.bloomberg.com/~bdebuild/results-${target}-${date}-${fileCount}.html";
-    $outputURL = "http://sundev3.bloomberg.com/~bdebuild/results-${target}-${date}-${fileCount}.html";
+    $outputURL = "http://sundev3.dev.bloomberg.com/~bdebuild/results-${target}-${date}-${fileCount}.html";
     ++$fileCount;
 }
 

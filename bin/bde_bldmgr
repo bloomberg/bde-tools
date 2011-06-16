@@ -733,8 +733,10 @@ foreach my $platform (@platforms) {
     $build->{FS}=($platform eq 'win')?"\\":"/";
 
     # Avoid warnings by making sure these values are defined.
-    $build->{do_not_build} = '' unless length($build->{do_not_build});
-    $build->{no_64_groups} = '' unless length($build->{no_64_groups});
+    $build->{do_not_build} = '' unless exists($build->{do_not_build})
+                                    && length($build->{do_not_build});
+    $build->{no_64_groups} = '' unless exists($build->{no_64_groups})
+                                    && length($build->{no_64_groups});
 
     debug("for platform $platform, \$build is: ".Dumper($build));
 
