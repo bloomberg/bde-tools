@@ -56,6 +56,7 @@ use vars qw(
              $enableLogArchive $logArchiveBase
              $enableHtmlOutput $htmlOutputBase $htmlOutputBaseURL
              $resultsBase
+             $mailLogPath
            );
 
 #------------------------------------------------------------------------------
@@ -1157,7 +1158,7 @@ MAIL_GROUP: foreach my $group (@groups) {
 
     if ($opts{mail}) {
         my $dtag = strftime("%Y%m%d-%H%M%S",localtime);
-        my $mail_file = "$FindBin::Bin/../logs/$prog.$group.$dtag.log";
+        my $mail_file = "$mailLogPath/$prog.$group.$dtag.log";
         $mail_file =~ s|/[^/]+/\.\./|/|g;
         debug("mail file: ".$mail_file);
 
@@ -1201,12 +1202,12 @@ MAIL_GROUP: foreach my $group (@groups) {
         my $mail_dst = join ",",@recipients;
 
         # assume sdv2 has the right view started
-        if($mail_file =~ m{/view/([^/]+)}) {
-            system("ssh -2 sundev2 /usr/atria/bin/cleartool startview $1");
-        }
-        else {
-            system("ssh -2 sundev2 /usr/atria/bin/cleartool startview bde_devintegrator");
-        }
+        #if($mail_file =~ m{/view/([^/]+)}) {
+        #    system("ssh -2 sundev2 /usr/atria/bin/cleartool startview $1");
+        #}
+        #else {
+        #    system("ssh -2 sundev2 /usr/atria/bin/cleartool startview bde_devintegrator");
+        #}
         message(join " ",("ssh","-2","sundev2","/bb/bin/ratmail","-s",
                          "\"$sub\"",$mail_file,$mail_dst)
                );

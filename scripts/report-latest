@@ -34,7 +34,7 @@ $ENV{BDE_ROOT}=$ENV{BUILD_DIR};
 
 my %or_cache;
 #my $inputFile = (sort {my $s_a = $or_cache{$a}||-s $a; my $s_b = $or_cache{$b}||-s $b; $a<=>$b;} glob("/home/bdebuild/public_html/results/bde_bldmgr.${target}.results.${date}*"))[-1];
-my $inputFile = (sort {my $s_a = $or_cache{$a}||-s $a; my $s_b = $or_cache{$b}||-s $b; $s_b<=>$s_a;} glob("/home/bdebuild/public_html/results/bde_bldmgr.${target}.results.${date}*"))[-1];
+my $inputFile = (sort {my $s_a = $or_cache{$a}||-s $a; my $s_b = $or_cache{$b}||-s $b; $s_b<=>$s_a;} glob("/home/bdebuild/public_html/results/bde_bldmgr.${target}.results.${date}*"))[0];
 
 die "Cannot find input file" unless defined $inputFile;
 

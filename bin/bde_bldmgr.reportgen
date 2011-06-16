@@ -293,7 +293,7 @@ my %buildOrder; # map build targets => levels
 
 $buildOrder{$_}=999 foreach keys %buildTargets;
 
-set_debug(1);
+#set_debug(1);
 
 my $root=new BDE::FileSystem($ENV{BDE_ROOT});
 $root->setPath(CONSTANT_PATH);

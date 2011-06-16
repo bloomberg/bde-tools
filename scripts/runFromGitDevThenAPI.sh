@@ -55,7 +55,8 @@ rsync -av --delete $SNAPSHOT_DIR/ $BUILD_DIR/ 2>&1 | perl -pe's/^/UNIX-CP: /'
 rsync -av --delete --rsync-path=/usr/bin/rsync \
     $SNAPSHOT_DIR/ $W32_BUILD_DIR/ 2>&1 | perl -pe's/^/W32-CP: /'
 
-#rsync -av --delete $SNAPSHOT_DIR/ $W64_BUILD_DIR/ 2>&1 | perl -pe's/^/W64-CP: /'
+rsync -av --delete --rsync-path=/usr/bin/rsync \
+    $SNAPSHOT_DIR/ $W64_BUILD_DIR/ 2>&1 | perl -pe's/^/W64-CP: /'
 
 # run dev build
 $TOOLSPATH/bin/bde_bldmgr -v                \
