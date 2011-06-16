@@ -49,13 +49,13 @@ $SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR $GIT_REPO /view/$VIEW_NAME/
 
 cd $BUILD_DIR
 echo synchronizing $OUTPUTPATH and $BUILD_DIR
-# add --delete switch to make sure deleted files are reflected
-rsync -av --delete $SNAPSHOT_DIR/ $BUILD_DIR/ 2>&1 | perl -pe's/^/UNIX-CP: /'
 
-rsync -av --delete --rsync-path=/usr/bin/rsync \
+rsync -av $SNAPSHOT_DIR/ $BUILD_DIR/ 2>&1 | perl -pe's/^/UNIX-CP: /'
+
+rsync -av --rsync-path=/usr/bin/rsync \
     $SNAPSHOT_DIR/ $W32_BUILD_DIR/ 2>&1 | perl -pe's/^/W32-CP: /'
 
-rsync -av --delete --rsync-path=/usr/bin/rsync \
+rsync -av --rsync-path=/usr/bin/rsync \
     $SNAPSHOT_DIR/ $W64_BUILD_DIR/ 2>&1 | perl -pe's/^/W64-CP: /'
 
 # run dev build
