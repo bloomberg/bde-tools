@@ -2,10 +2,10 @@
 
 TOOLSPATH=/home/mgiroux/bs/bde-tools
 
-SCRIPT_NAME=runFromGitDevThenAPI
-BUILD_TYPE=dev
+SCRIPT_NAME=runFromGitNextrel
+BUILD_TYPE=nextrel
 
-VIEW_NAME=bde_devintegrator
+VIEW_NAME=bde_releaseintegrator2
 GIT_REPO=/home/bdebuild/bs/git-bde-${BUILD_TYPE}
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
 LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
