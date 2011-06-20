@@ -293,9 +293,11 @@ sub expand_macros($$) {
 
     return $platform->{$key} unless $platform->{$key}=~/\[/;
 
-    debug "Expanding $key <- '$platform->{$key}'";
+    # When/if problems occur, it's too late to toggle debug on for
+    # these.  Better to print them out every time.
+    message "Expanding $key <- '$platform->{$key}'";
     $platform->{$key} =~ s/\[(\w+)\]/expand_macros($platform,$1)/esg;
-    debug "Expanded  $key -> '$platform->{$key}'";
+    message "Expanded  $key -> '$platform->{$key}'";
 
     return $platform->{$key}
 }
@@ -963,7 +965,8 @@ foreach my $platform (@platforms) {
                         and $newBuild->{do_not_run_tests}=~ /\b$group\b/)
                         ) {
                     if(exists $test_build{test_host}
-                            && exists $test_build{test_host}{$group}) {
+                            && exists $test_build{test_host}{$group}
+                            && !exists $test_build{no_clearcase}) {
                         $test_host = $test_build{test_host}{$group};
                         my $startview_cmd="/usr/atria/bin/cleartool startview $view";
                         my ($cmd_status, $cmd_out) = invoke($test_build{test_host}{$group},
@@ -1173,21 +1176,15 @@ MAIL_GROUP: foreach my $group (@groups) {
         $success = 0 unless $this_success;
 
         # construct subject
-        if ($view) {
+        if ($opts{id}) {
             my $manually=($interactive)?" (manually invoked)":"";
             $sub = "${manually}: $sub";
             my $v;
-            if ($view eq "bde_devintegrator") {
-                $v = "DEV/latest";
+            if ($opts{id} =~ /dev/) {
+                $v = "dev-integration";
             }
-            elsif ($view eq "bde_integrator") {
-                $v = "BB/latest";
-            }
-            elsif ($view eq "bde_releaseintegrator") {
-                $v = "RELEASE";
-            }
-            else {
-                $v = $view;
+            elsif ($opts{id} =~ /nextrel/) {
+                $v = "master";
             }
             $sub = "${v}${sub}";
         }
