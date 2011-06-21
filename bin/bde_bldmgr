@@ -1472,7 +1472,7 @@ sub display_results ($$$;$) {
                     }
 
                     print "$err\n";
-                    if ($err=~m!(/view.*)!) {
+                    if ($err=~m!(/home.*)! || $err=~m!(/view.*)!) {
                         my $logFile = $1;
                         deep_copy($logFile, "$logArchiveBase$datePathPart")
                                         if defined $enableLogArchive;

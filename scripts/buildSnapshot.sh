@@ -74,6 +74,8 @@ $SNAPSHOT -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 
 # bde_snapshot.pl doesn't get the subdirs correct for bsl+apache
 rsync -av $ROOTPATH/groups/bsl/bsl+apache/ ./groups/bsl/bsl+apache/
+# bde_snapshot.pl doesn't get .s files for bces
+rsync -av $ROOTPATH/groups/bce/bces/*.s ./groups/bce/bces/
 
 if [ $? -ne 0 ]
 then \
