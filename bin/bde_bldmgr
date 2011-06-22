@@ -1461,13 +1461,10 @@ sub display_results ($$$;$) {
                       || $err=~m{\\}i) {
                         my $originalErrTarget=$err;
                         $err=~s{\\}{/}g;
-                        # w32 uses e:/clearcase/bdebuild_     prefixes
-                        # w64 uses d:/clearcase/bdebuild_w64_ prefixes
                         # The drive part (e: or d:) sometimes goes away.
                         $err=~s{([de]:)?/clearcase/bdebuild_(w64_)?}{/view/}i;
-                        $err=~s{(d:)?/views/}{/view/}i;
-                        $err=~s{(?<!/bbcm)/infrastructure}{/bbcm/infrastructure}i;
-                        $err=~s{(?<!/bbcm)/api}{/bbcm/api}i;
+                        $err=~s{([de]:)?/nightly_builds/}{/home/bdebuild/bs/build-};
+                        $err=~s{([de]:)?/nightly_logs/}{/home/bdebuild/bs/nightly-logs/};
                         print "$err_target-FIXUP: $originalErrTarget -> $err\n";
                     }
 
