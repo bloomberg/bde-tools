@@ -57,6 +57,7 @@ use vars qw(
              $enableHtmlOutput $htmlOutputBase $htmlOutputBaseURL
              $resultsBase
              $mailLogPath
+             %opts
            );
 
 #------------------------------------------------------------------------------
@@ -75,7 +76,10 @@ set_default_category();
 
 # parse options
 my $prog = basename $0;
-my %opts;
+
+# Note that there are 2 environment variables also used for configuration:
+# BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
+# LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 
 Getopt::Long::Configure("bundling");
 unless (GetOptions(\%opts,qw[
