@@ -43,7 +43,6 @@ my @otherBuilds = qw(
         nextrel
         nextrel-api
         dev-nextrel-api
-        robo
         dev
         dev-api
         dev-bus
