@@ -56,6 +56,8 @@ use vars qw(
              $enableLogArchive $logArchiveBase
              $enableHtmlOutput $htmlOutputBase $htmlOutputBaseURL
              $resultsBase
+             $mailLogPath
+             %opts
            );
 
 #------------------------------------------------------------------------------
@@ -74,7 +76,10 @@ set_default_category();
 
 # parse options
 my $prog = basename $0;
-my %opts;
+
+# Note that there are 2 environment variables also used for configuration:
+# BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
+# LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 
 Getopt::Long::Configure("bundling");
 unless (GetOptions(\%opts,qw[
@@ -102,7 +107,6 @@ unless (GetOptions(\%opts,qw[
     serial|s
     targets|t=s@
     verbose|v+
-    where|who|w=s
 ])) {
     usage(), exit(EXIT_BAD_OPT);
 }
@@ -152,7 +156,7 @@ foreach my $pi (0..$#platforms) {
 }
 
 ($path,$view)=(undef,undef);
-$view=$opts{where} if defined $opts{where};
+#$view=$opts{where} if defined $opts{where};
 
 my $started_at=time;
 alert("Build started at ".localtime($started_at));
@@ -293,9 +297,11 @@ sub expand_macros($$) {
 
     return $platform->{$key} unless $platform->{$key}=~/\[/;
 
-    debug "Expanding $key <- '$platform->{$key}'";
+    # When/if problems occur, it's too late to toggle debug on for
+    # these.  Better to print them out every time.
+    message "Expanding $key <- '$platform->{$key}'";
     $platform->{$key} =~ s/\[(\w+)\]/expand_macros($platform,$1)/esg;
-    debug "Expanded  $key -> '$platform->{$key}'";
+    message "Expanded  $key -> '$platform->{$key}'";
 
     return $platform->{$key}
 }
@@ -734,8 +740,10 @@ foreach my $platform (@platforms) {
     $build->{FS}=($platform eq 'win')?"\\":"/";
 
     # Avoid warnings by making sure these values are defined.
-    $build->{do_not_build} = '' unless length($build->{do_not_build});
-    $build->{no_64_groups} = '' unless length($build->{no_64_groups});
+    $build->{do_not_build} = '' unless exists($build->{do_not_build})
+                                    && length($build->{do_not_build});
+    $build->{no_64_groups} = '' unless exists($build->{no_64_groups})
+                                    && length($build->{no_64_groups});
 
     debug("for platform $platform, \$build is: ".Dumper($build));
 
@@ -961,7 +969,8 @@ foreach my $platform (@platforms) {
                         and $newBuild->{do_not_run_tests}=~ /\b$group\b/)
                         ) {
                     if(exists $test_build{test_host}
-                            && exists $test_build{test_host}{$group}) {
+                            && exists $test_build{test_host}{$group}
+                            && !exists $test_build{no_clearcase}) {
                         $test_host = $test_build{test_host}{$group};
                         my $startview_cmd="/usr/atria/bin/cleartool startview $view";
                         my ($cmd_status, $cmd_out) = invoke($test_build{test_host}{$group},
@@ -1156,7 +1165,7 @@ MAIL_GROUP: foreach my $group (@groups) {
 
     if ($opts{mail}) {
         my $dtag = strftime("%Y%m%d-%H%M%S",localtime);
-        my $mail_file = "$FindBin::Bin/../logs/$prog.$group.$dtag.log";
+        my $mail_file = "$mailLogPath/$prog.$group.$dtag.log";
         $mail_file =~ s|/[^/]+/\.\./|/|g;
         debug("mail file: ".$mail_file);
 
@@ -1171,21 +1180,15 @@ MAIL_GROUP: foreach my $group (@groups) {
         $success = 0 unless $this_success;
 
         # construct subject
-        if ($view) {
+        if ($opts{id}) {
             my $manually=($interactive)?" (manually invoked)":"";
             $sub = "${manually}: $sub";
             my $v;
-            if ($view eq "bde_devintegrator") {
-                $v = "DEV/latest";
+            if ($opts{id} =~ /dev/) {
+                $v = "dev-integration";
             }
-            elsif ($view eq "bde_integrator") {
-                $v = "BB/latest";
-            }
-            elsif ($view eq "bde_releaseintegrator") {
-                $v = "RELEASE";
-            }
-            else {
-                $v = $view;
+            elsif ($opts{id} =~ /nextrel/) {
+                $v = "master";
             }
             $sub = "${v}${sub}";
         }
@@ -1200,12 +1203,12 @@ MAIL_GROUP: foreach my $group (@groups) {
         my $mail_dst = join ",",@recipients;
 
         # assume sdv2 has the right view started
-        if($mail_file =~ m{/view/([^/]+)}) {
-            system("ssh -2 sundev2 /usr/atria/bin/cleartool startview $1");
-        }
-        else {
-            system("ssh -2 sundev2 /usr/atria/bin/cleartool startview bde_devintegrator");
-        }
+        #if($mail_file =~ m{/view/([^/]+)}) {
+        #    system("ssh -2 sundev2 /usr/atria/bin/cleartool startview $1");
+        #}
+        #else {
+        #    system("ssh -2 sundev2 /usr/atria/bin/cleartool startview bde_devintegrator");
+        #}
         message(join " ",("ssh","-2","sundev2","/bb/bin/ratmail","-s",
                          "\"$sub\"",$mail_file,$mail_dst)
                );
@@ -1462,18 +1465,15 @@ sub display_results ($$$;$) {
                       || $err=~m{\\}i) {
                         my $originalErrTarget=$err;
                         $err=~s{\\}{/}g;
-                        # w32 uses e:/clearcase/bdebuild_     prefixes
-                        # w64 uses d:/clearcase/bdebuild_w64_ prefixes
                         # The drive part (e: or d:) sometimes goes away.
                         $err=~s{([de]:)?/clearcase/bdebuild_(w64_)?}{/view/}i;
-                        $err=~s{(d:)?/views/}{/view/}i;
-                        $err=~s{(?<!/bbcm)/infrastructure}{/bbcm/infrastructure}i;
-                        $err=~s{(?<!/bbcm)/api}{/bbcm/api}i;
+                        $err=~s{([de]:)?/nightly_builds/}{/home/bdebuild/bs/build-};
+                        $err=~s{([de]:)?/nightly_logs/}{/home/bdebuild/bs/nightly-logs/};
                         print "$err_target-FIXUP: $originalErrTarget -> $err\n";
                     }
 
                     print "$err\n";
-                    if ($err=~m!(/view.*)!) {
+                    if ($err=~m!(/home.*)! || $err=~m!(/view.*)!) {
                         my $logFile = $1;
                         deep_copy($logFile, "$logArchiveBase$datePathPart")
                                         if defined $enableLogArchive;
@@ -1528,7 +1528,6 @@ Local options:
                                   meaning: 1 - basic messages
                                            2 - add sent requests
                                            3 - add recieved responses
-  --where      | -w <dir|view> where (dir) or who (view) to build from
 
 Passed to build:
   --after      | -A <target>    make explicit target(s) after regular build

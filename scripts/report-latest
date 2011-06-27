@@ -1,0 +1,60 @@
+#!/usr/bin/perl -w
+
+use strict;
+use POSIX qw(strftime);
+
+my %acceptableArgs = (
+    dev       => 1,
+    zev       => 1,
+    'dev-bus' => 1,
+    'dev-api' => 1,
+    'zev-api' => 1,
+    'nextrel-api' => 1,
+    'dev-nextrel-api' => 1,
+    'dev-fde' => 1,
+    api       => 1,
+    nextrel   => 1,
+    bus       => 1,
+);
+
+if(!((@ARGV==1 || @ARGV==2) && exists $acceptableArgs{$ARGV[0]})) {
+    print STDERR "USAGE: $0 <" . (join "|",sort keys %acceptableArgs) . "> [date]\n";
+    exit 1;
+}
+
+my $target=shift;
+
+my $date  =strftime("%Y%m%d",localtime);
+if(@ARGV) {
+    $date=shift;
+}
+
+$ENV{BDE_ROOT}=$ENV{BUILD_DIR};
+
+my %or_cache;
+#my $inputFile = (sort {my $s_a = $or_cache{$a}||-s $a; my $s_b = $or_cache{$b}||-s $b; $a<=>$b;} glob("/home/bdebuild/public_html/results/bde_bldmgr.${target}.results.${date}*"))[-1];
+my $inputFile = (sort {my $s_a = $or_cache{$a}||-M $a; my $s_b = $or_cache{$b}||-M $b; $s_b<=>$s_a;} glob("/home/bdebuild/public_html/results/bde_bldmgr.${target}.results.${date}*"))[-1];
+
+die "Cannot find input file" unless defined $inputFile;
+
+print "Input file for $0: $inputFile\n";
+
+my $fileCount=1;
+my $outputFile = "/home/bdebuild/public_html/results-${target}-${date}.html";
+my $outputURL = "http://sundev3.dev.bloomberg.com/~bdebuild/results-${target}-${date}.html";
+
+while(-e $outputFile) {
+    $outputFile = "/home/bdebuild/public_html/results-${target}-${date}-${fileCount}.html";
+    #$outputURL = "http://sundev3.bloomberg.com/~bdebuild/results-${target}-${date}-${fileCount}.html";
+    $outputURL = "http://sundev3.dev.bloomberg.com/~bdebuild/results-${target}-${date}-${fileCount}.html";
+    ++$fileCount;
+}
+
+my $cmd = "/bbs/opt/bin/perl $ENV{TOOLSPATH}/bin/bde_bldmgr.reportgen $inputFile $outputFile $outputURL";
+system($cmd);
+print("$0 RAN: $cmd\n");
+
+my $outputLink = "/home/bdebuild/public_html/results-${target}.html";
+
+unlink($outputLink);
+system("ln -sf $outputFile $outputLink");

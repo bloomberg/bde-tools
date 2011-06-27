@@ -43,7 +43,6 @@ my @otherBuilds = qw(
         nextrel
         nextrel-api
         dev-nextrel-api
-        robo
         dev
         dev-api
         dev-bus
@@ -180,8 +179,6 @@ my %timingData;
 #target,system,build,elapsed,failurePackage,logFile,htmlURL,unreachabe,YNC-
 
 while(<INPUT>) {
-    #bte,i6,dbg_exc_mt,4135,bteso,/view/bde_devintegrator/bbcm/infrastructure/groups/bte/bteso/unix-AIX-powerpc-5.3-xlc-6.0/make.test.bteso.dbg_exc_mt.log,http://sundev3.bloomberg.com/~bdebuild/fail/20060619/_7FhWb2D5zXTw.html,,N
-
     next if /^#/;
     next if /^$/;
     s/[\r\n]+//g;
@@ -295,7 +292,7 @@ my %buildOrder; # map build targets => levels
 
 $buildOrder{$_}=999 foreach keys %buildTargets;
 
-set_debug(1);
+#set_debug(1);
 
 my $root=new BDE::FileSystem($ENV{BDE_ROOT});
 $root->setPath(CONSTANT_PATH);
