@@ -2,8 +2,17 @@
 
 if [ -z "$4" ]
 then \
-    echo "USAGE: $0 tarName outputPath rootpath [path [path...]] -- uor [uor...]"
+    echo "USAGE: $0 [-d] tarName outputPath rootpath [path [path...]] -- uor [uor...]"
+    echo "    -d: also snapshot docs (optional, and slow)"
     exit 1
+fi
+
+if [ "$1" == "-d" ]
+then \
+    GET_DOCS=1
+    shift
+else
+    GET_DOCS=0
 fi
 
 TARNAME=$1
@@ -75,13 +84,45 @@ $SNAPSHOT -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 # bde_snapshot.pl doesn't get the subdirs correct for bsl+apache
 rsync -av $ROOTPATH/groups/bsl/bsl+apache/ ./groups/bsl/bsl+apache/
 # bde_snapshot.pl doesn't get .s files for bces
-rsync -av $ROOTPATH/groups/bce/bces/*.s ./groups/bce/bces/
+#rsync -av $ROOTPATH/groups/bce/bces/*.s ./groups/bce/bces/
 
 if [ $? -ne 0 ]
 then \
     echo bde_snapshot.pl failed
     exit 1
 fi
+
+PREV_PWD=$PWD
+
+if [ $GET_DOCS -ne 0 ]
+then \
+    echo snapshotting doc files
+
+    export PATHS
+    PATHS="$ROOTPATH:$PATHS"
+
+    for uor in $UORLIST;
+    do \
+        UOR_PATH=$(perl -e'$uor=$ARGV[0]; foreach(split /:/,$ENV{PATHS}) { foreach $part (qw(groups enterprise adapters wrappers legacy)) {if(-e "$_/$part/$uor") {print "$_/$part/$uor"; exit 0;}}} exit 1;' $uor)
+
+        if [ ! -z "$UOR_PATH" ]
+        then \
+            UOR_BASE=$(perl -e'$ARGV[0]=~m{(.*)/([^/]+/[^/]+)$} or die; print $1' $UOR_PATH)
+            UOR_TRAIL=$(perl -e'$ARGV[0]=~m{.*/([^/]+/[^/]+)$} or die; print $1' $UOR_PATH)
+            echo "$uor found at $UOR_PATH ($UOR_BASE $UOR_TRAIL)"
+
+            cd $UOR_BASE 2>/dev/null
+
+            for dir in $(find $UOR_TRAIL -type d -name doc)
+            do \
+                mkdir -p $OUTPUTPATH/$dir
+                rsync -av $dir/ $OUTPUTPATH/$dir/
+            done
+        fi
+    done
+fi
+
+cd $PREV_PWD 2>/dev/null
 
 /opt/swt/bin/tar czf $TARNAME $(ls | grep -v \.tar)
 
