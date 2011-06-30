@@ -82,6 +82,18 @@ if ($^O =~ /aix/) {
     $ENV{EXTSHM} = "on";
 }
 
+if ($^O =~ /hpux/) {
+    #DRQS 25995466 Updated. OU Q 'bdet_Datetime::printToBuffer' not returning expect
+    #'bdet_Datetime::printToBuffer' not returning expected value on Windows and HP
+    # 6/29/11   14:02:53   RAYMOND SEEHEI CHIU (PROG)
+    # Mike G.,
+    # Can you see if we can compile with macro _XOPEN_SOURCE=600 and environment
+    # variable UNIX_STD=2003 for HP?
+    # This is documented in the manual page ("man standards 5")
+
+    $ENV{UNIX_STD} = "2003";
+}
+
 #------------------------------------------------------------------------------
 # Process command line
 
