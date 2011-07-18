@@ -38,7 +38,8 @@ export PATH
 /usr/atria/bin/cleartool startview $VIEW_NAME
 
 pushd $GIT_REPO 2> /dev/null
-/opt/swt/bin/git pull
+/opt/swt/bin/git fetch
+/opt/swt/bin/git checkout remotes/origin/master
 popd
 
 SCRIPT_PATH=$TOOLSPATH/scripts
