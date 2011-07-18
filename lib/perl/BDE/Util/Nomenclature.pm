@@ -151,9 +151,9 @@ Return true if the supplied name is a valid package name, or false otherwise.
 { my %packageCache;
 
   sub isPackage($) {
-      return $packageCache{$_[0]} if exists $packageCache{$_[0]};
-
       fatal "Undefined package" unless defined $_[0];
+
+      return $packageCache{$_[0]} if exists $packageCache{$_[0]};
 
       return ($packageCache{$_[0]}=0) if isGroup($_[0]);
 
