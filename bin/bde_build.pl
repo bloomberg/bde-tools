@@ -1167,10 +1167,12 @@ sub makePackageDependencyMacros ($$$;$$) {
         @builtgroups=@reggroups;
 
         # library flags for link line
+        my %seen_locations;
+        my @grp_lib_locations = grep {!$seen_locations{$_}++} ($root->getRootLocation(),split /:/,$root->getPath());
         print $fh "GRP_LIBS     = ",join(" \\\n               ", map {
-            "\$(LIBPATH_FLAG)\$(".uc($reggroups{$_}).
-              "_ROOTLOCN)${FS}lib${FS}\$(UPLID) "
-          } @builtgroups)," \\\n               ",
+            "\$(LIBPATH_FLAG)".$_.
+              "${FS}lib${FS}\$(UPLID) "
+          } @grp_lib_locations)," \\\n               ",
             join(" \\\n               ", map {
                 getLinkName("\$(LIB_FLAG)\$(LINK_LIB_PREFIX)",$_,"\$(LIBUFID)",
                          "\$(LINK_LIB_EXT)","has_regions")
