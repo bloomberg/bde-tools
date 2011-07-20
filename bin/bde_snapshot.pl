@@ -39,7 +39,7 @@ use Symbols qw(
 use Task::Manager;
 use Task::Action;
 
-my @metafiles = qw[mem dep opts pub cap defs];
+my @metafiles = qw[mem dep opts pub cap defs dums];
 
 #==============================================================================
 
