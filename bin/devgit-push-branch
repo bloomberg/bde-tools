@@ -13,7 +13,7 @@ fi
 
 if [ "$1" != "" ]
 then
-    PREFIX=$1
+    PREFIX=$(echo $1 | perl -pe's!/$!!')
     TRACKING=""
 fi
 
