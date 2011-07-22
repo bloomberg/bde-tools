@@ -1465,7 +1465,7 @@ library name.  All consumers of this routine are isolated from such changes.
     sub isUntaggedApplication ($) {
 	my $lib = shift;
 	return 0 unless (LEGACY_SUPPORT eq ENABLED && length($lib) != 0);
-	return 0 if (substr($lib,0,2) eq "m_");
+	return 0 if ($lib=~/^[ms]_/);
 	if (!exists $application{$lib}) {
 	    $application{$lib} = getApplicationLeafPath($lib);
 	    if (!_mr_stat($application{$lib})
