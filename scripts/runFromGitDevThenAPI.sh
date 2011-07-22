@@ -6,7 +6,9 @@ SCRIPT_NAME=runFromGitDevThenAPI
 BUILD_TYPE=dev
 
 VIEW_NAME=bde_devintegrator
-GIT_REPO=/home/bdebuild/bs/git-bde-${BUILD_TYPE}
+
+BDE_GIT_REPO=/home/bdebuild/bs/git-bde-${BUILD_TYPE}
+BAS_GIT_REPO=/home/bdebuild/bs/bas-lib-${BUILD_TYPE}
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
 LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 
@@ -37,14 +39,19 @@ export PATH
 
 /usr/atria/bin/cleartool startview $VIEW_NAME
 
-pushd $GIT_REPO 2> /dev/null
+pushd $BDE_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
 /opt/swt/bin/git checkout remotes/origin/dev-integration
 popd
 
+pushd $BAS_GIT_REPO 2> /dev/null
+/opt/swt/bin/git fetch
+/opt/swt/bin/git checkout remotes/origin/proposed-updates
+popd
+
 SCRIPT_PATH=$TOOLSPATH/scripts
 
-$SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR $GIT_REPO /view/$VIEW_NAME/bbcm/{infrastructure,api} \
+$SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR $BDE_GIT_REPO $BAS_GIT_REPO /view/$VIEW_NAME/bbcm/{infrastructure,api} \
                  -- \
                  $DEV_UORS $API_UORS $FDE_UORS
 
