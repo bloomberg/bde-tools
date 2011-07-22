@@ -25,7 +25,7 @@ fi
 
 REMOTE_BRANCH=master
 
-if [ branch != "master" ]
+if [ $BRANCH != "master" ]
 then
     REMOTE_BRANCH="$PREFIX/$BRANCH"
     echo branch is $BRANCH - remote branch is $REMOTE_BRANCH
