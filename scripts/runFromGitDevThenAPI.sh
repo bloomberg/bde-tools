@@ -51,6 +51,10 @@ $SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR $GIT_REPO /view/$VIEW_NAME/
 cd $BUILD_DIR
 echo synchronizing $OUTPUTPATH and $BUILD_DIR
 
+# clean out BUILD_DIR to remove old source files.  We still get incr build
+# since the build subdirs are all symlinks to elsewhere.
+rm -rf $BUILD_DIR/*
+
 rsync -av $SNAPSHOT_DIR/ $BUILD_DIR/ 2>&1 | perl -pe's/^/UNIX-CP: /'
 
 rsync -av --rsync-path=/usr/bin/rsync \
@@ -58,6 +62,11 @@ rsync -av --rsync-path=/usr/bin/rsync \
 
 rsync -av --rsync-path=/usr/bin/rsync \
     $SNAPSHOT_DIR/ $W64_BUILD_DIR/ 2>&1 | perl -pe's/^/W64-CP: /'
+
+# remove unix-SunOS-sparc-*-gcc-* build artifacts to get all g++ warnings
+find $BUILD_DIR -name 'unix-SunOS-sparc-*-gcc-*' | grep -v -e include -e build | while read dir do
+    rm -f $dir/*.o
+done
 
 # run dev build
 $TOOLSPATH/bin/bde_bldmgr -v                \
