@@ -71,7 +71,8 @@ rsync -av --rsync-path=/usr/bin/rsync \
     $SNAPSHOT_DIR/ $W64_BUILD_DIR/ 2>&1 | perl -pe's/^/W64-CP: /'
 
 # remove unix-SunOS-sparc-*-gcc-* build artifacts to get all g++ warnings
-find $BUILD_DIR -name 'unix-SunOS-sparc-*-gcc-*' | grep -v -e include -e build | while read dir do
+find $BUILD_DIR -name 'unix-SunOS-sparc-*-gcc-*' | grep -v -e include -e build | while read dir
+do \
     rm -f $dir/*.o
 done
 
