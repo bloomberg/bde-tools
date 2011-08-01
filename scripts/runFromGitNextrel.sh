@@ -8,7 +8,7 @@ BUILD_TYPE=nextrel
 VIEW_NAME=bde_releaseintegrator2
 
 BDE_GIT_REPO=/home/bdebuild/bs/git-bde-${BUILD_TYPE}
-BAS_GIT_REPO=/home/bdebuild/bs/bas-lib-${BUILD_TYPE}
+BAS_GIT_REPO=/home/bdebuild/bs/bas-libs-${BUILD_TYPE}
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
 LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 
