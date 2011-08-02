@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-TOOLSPATH=/home/mgiroux/bs/bde-tools
+TOOLSPATH=/bbshr/bde/bde-tools
 
 SCRIPT_NAME=runFromGitNextrel
 BUILD_TYPE=nextrel
