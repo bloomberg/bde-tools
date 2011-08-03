@@ -79,7 +79,7 @@ fi
 export BDE_PATH="$PATHS:$BDE_PATH"
 
 # the -e option makes bde_snapshot.pl snapshot the "etc" directory as well
-$SNAPSHOT -e -w $ROOTPATH -t . -c -j 12 $UORLIST
+$SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 
 # bde_snapshot.pl doesn't get the subdirs correct for bsl+apache
 rsync -av $ROOTPATH/groups/bsl/bsl+apache/ ./groups/bsl/bsl+apache/
