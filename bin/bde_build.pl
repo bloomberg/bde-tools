@@ -2478,10 +2478,10 @@ _MAKE_TARGETS_END
         if (-e $makename or -l $makename) {
             if (-l $makename) {
                 unlink $makename;
-                eval { makeLink($makefile,$makename) };
+                eval { makeLink($makefile,$makename,1) };
             }
         } else {
-            eval { makeLink($makefile,$makename) };
+            eval { makeLink($makefile,$makename,1) };
         }
         retry_chdir $curdir;
     }
