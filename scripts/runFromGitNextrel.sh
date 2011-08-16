@@ -9,6 +9,10 @@ VIEW_NAME=bde_releaseintegrator2
 
 BDE_GIT_REPO=/home/bdebuild/bs/git-bde-${BUILD_TYPE}
 BAS_GIT_REPO=/home/bdebuild/bs/bas-libs-${BUILD_TYPE}
+
+# Actual api repo is $API_GIT_REPO/groups
+API_GIT_REPO=/home/bdebuild/bs/api-libs-${BUILD_TYPE}
+
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
 LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 
@@ -49,18 +53,23 @@ pushd $BAS_GIT_REPO 2> /dev/null
 /opt/swt/bin/git checkout remotes/origin/proposed-updates
 popd
 
+pushd $API_GIT_REPO/groups 2> /dev/null
+/opt/swt/bin/git fetch
+/opt/swt/bin/git checkout remotes/origin/master
+popd
+
 SCRIPT_PATH=$TOOLSPATH/scripts
 
-$SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR $BDE_GIT_REPO $BAS_GIT_REPO /view/$VIEW_NAME/bbcm/{infrastructure,api} \
+$SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR $BDE_GIT_REPO $BAS_GIT_REPO $API_GIT_REPO /view/$VIEW_NAME/bbcm/api \
                  -- \
                  $DEV_UORS $API_UORS $FDE_UORS
 
 # bde_snapshot.pl can fail if a group has bad metadata or header errors.
 # This is a particularly a problem with API libs.
-for grp in ${API_UORS/ blpapi/}; do \
-    rsync -av --exclude='unix-*' --exclude='windows-*' \
-        /view/$VIEW_NAME/bbcm/api/groups/$grp/ $SNAPSHOT_DIR/groups/$grp/
-done
+#for grp in ${API_UORS/ blpapi/}; do \
+#    rsync -av --exclude='unix-*' --exclude='windows-*' \
+#        $API_GIT_REPO/groups/$grp/ $SNAPSHOT_DIR/groups/$grp/
+#done
 
 cd $BUILD_DIR
 echo synchronizing $OUTPUTPATH and $BUILD_DIR
