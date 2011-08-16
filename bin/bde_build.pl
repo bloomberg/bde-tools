@@ -2544,7 +2544,12 @@ sub makeLink($$;$) {
         return 1;
     } else {
         my $rc=symlink($from, $to); #<<<TODO: change to copy on Windows?
-        fatal "Could not link $from to $to: $!" unless $rc;
+        if ($existing_ok) {
+            debug "Could not link $from to $to: $!" unless $rc;
+        }
+        else {
+            fatal "Could not link $from to $to: $!" unless $rc;
+        }
         return $rc;
     }
 }
