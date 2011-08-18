@@ -11,6 +11,7 @@ use File::Copy;
 use Getopt::Long;
 use POSIX qw(uname);
 use IO::Handle;
+use Sys::Hostname;
 
 #use BDE::Build::Uplid;
 use Symbols qw(EXIT_SUCCESS EXIT_FAILURE);
@@ -218,7 +219,8 @@ my @targets=split /\W+/,$opts{target};
         }
         my $logarch = (uname)[0];
         $logarch =~ s/\s+/_/g;
-        my $logfile = "$logdir/slave.$dtag.$group.$uplid.log";
+        my $hostname = hostname();
+        my $logfile = "$logdir/slave.$dtag.$group.$uplid.$hostname.$$.log";
 
         $SLAVELOG=new IO::Handle;
         retry_open($SLAVELOG,">$logfile") or die "cannot open build output file: $!";
