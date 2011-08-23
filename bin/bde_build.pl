@@ -1194,7 +1194,9 @@ sub makePackageDependencyMacros ($$$;$$) {
         print $fh "\n";
 
         # the list of 'prebuilt' libraries as simple -l rules
-        my @prebuilt_libs=grep { $_->isPrebuilt() } @groups;
+        # NOTE: Do *NOT* include intbasic, since it's in the NS-suite and
+        # not named intbasic
+        my @prebuilt_libs=grep { $_->isPrebuilt() && !/^intbasic$/ } @groups;
 
         print $fh getUnitMacro($_)."_LIB=".
           getLinkName("\$(LIB_FLAG)\$(LINK_LIB_PREFIX)",$_,"\$(LIBUFID)",
