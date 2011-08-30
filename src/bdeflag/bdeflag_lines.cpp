@@ -138,7 +138,8 @@ void Lines::checkPurpose()
     }
 
     const bsl::string purpose = "//@PURPOSE:";
-    const bsl::string provide = "Provide ";
+    const bsl::string provide = "Provide";
+    const bsl::string lcProvide = "provide";
 
     int lineCount = Lines::lineCount();
     for (int li = 1; li < lineCount; ++li) {
@@ -147,7 +148,8 @@ void Lines::checkPurpose()
             continue;
         }
 
-        if (!Ut::frontMatches(curLine.substr(11), provide)) {
+        const bsl::string& firstPurposeWord = Ut::wordAfter(curLine, 11);
+        if (provide != firstPurposeWord && lcProvide != firstPurposeWord) {
             s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PROVIDE;
         }
 
