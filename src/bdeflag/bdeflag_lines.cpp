@@ -147,11 +147,9 @@ void Lines::checkPurpose()
             continue;
         }
 
-#if 0
-        if (!Ut::frontMatches(curLine.substr(11), provide) {
+        if (!Ut::frontMatches(curLine.substr(11), provide)) {
             s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PROVIDE;
         }
-#endif
 
         if ('.' != curLine[curLine.length() - 1]) {
             s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PERIOD;
@@ -895,12 +893,10 @@ void Lines::printWarnings(bsl::ostream *stream)
             *stream << "Warning: in " << s_fileName <<
                                              " no '@PURPOSE:' comment" << endl;
         }
-#if 0
         if (s_purposeFlags & BDEFLAG_PURPOSE_LACKS_PROVIDE) {
             *stream << "Warning: in " << s_fileName <<
                        " '@PURPOSE:' comment doesn't start with \"Provide\"\n";
         }
-#endif
         if (s_purposeFlags & BDEFLAG_PURPOSE_LACKS_PERIOD) {
             *stream << "Warning: in " << s_fileName <<
                                  " '@PURPOSE:' comment doesn't end with '.'\n";
