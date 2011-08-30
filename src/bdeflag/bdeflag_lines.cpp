@@ -43,6 +43,7 @@ Ut::LineNumSet      Lines::s_inlinesNotAlone;
 Ut::LineNumSet      Lines::s_badlyAlignedReturns;
 Ut::LineNumSet      Lines::s_tbds;
 Lines::State        Lines::s_state = BDEFLAG_EMPTY;
+int                 Lines::s_purposeFlags;
 bool                Lines::s_hasTabs;
 bool                Lines::s_hasTrailingBlanks;
 bool                Lines::s_includesAssertH;
@@ -128,6 +129,38 @@ void Lines::checkIncludes()
     s_state = BDEFLAG_INCLUDES_CHECKED;
 
     return;
+}
+
+void Lines::checkPurpose()
+{
+    if (BDEFLAG_DOT_H != s_fileType) {
+        return;
+    }
+
+    const bsl::string purpose = "//@PURPOSE:";
+    const bsl::string provide = "Provide ";
+
+    int lineCount = Lines::lineCount();
+    for (int li = 1; li < lineCount; ++li) {
+        const bsl::string& curLine = s_lines[li];
+        if (!Ut::frontMatches(curLine, purpose, 0)) {
+            continue;
+        }
+
+#if 0
+        if (!Ut::frontMatches(curLine.substr(11), provide) {
+            s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PROVIDE;
+        }
+#endif
+
+        if ('.' != curLine[curLine.length() - 1]) {
+            s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PERIOD;
+        }
+
+        return;
+    }
+
+    s_purposeFlags |= BDEFLAG_NO_PURPOSE;
 }
 
 void Lines::firstDetect()
@@ -310,8 +343,8 @@ void Lines::killQuotesComments()
     BSLS_ASSERT_OPT(BDEFLAG_QUOTES_COMMENTS_KILLED >= s_state);
 
     static const struct {
-        const char  *str;
-        CommentType  commentType;
+        const char  *d_str;
+        CommentType  d_commentType;
     } legalComments[] = {
         { " RETURN",                  BDEFLAG_RETURN },
         { "RETURN",                   BDEFLAG_RETURN },
@@ -374,7 +407,7 @@ void Lines::killQuotesComments()
     typedef bsl::map<bsl::string, CommentType>::const_iterator CommentMapCIt;
     CommentMap commentMap;
     for (int i = 0; i < NUM_LEGAL_COMMENTS; ++i) {
-        commentMap[legalComments[i].str] = legalComments[i].commentType;
+        commentMap[legalComments[i].d_str] = legalComments[i].d_commentType;
     }
     const CommentMapCIt commentMapBegin = commentMap.begin();
 
@@ -658,6 +691,7 @@ Lines::Lines(const char *fileName)
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
+    s_purposeFlags = 0;
     s_hasTabs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
@@ -721,6 +755,7 @@ Lines::Lines(const char *fileName)
     firstDetect();
     checkIncludes();
     checkForAssert();
+    checkPurpose();
     killQuotesComments();
     trimTrailingWhite();
     wipeOutMacros();
@@ -744,6 +779,7 @@ Lines::Lines(const bsl::string& string)
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
+    s_purposeFlags = 0;
     s_hasTabs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
@@ -773,6 +809,7 @@ Lines::Lines(const bsl::string& string)
     firstDetect();
     checkIncludes();
     checkForAssert();
+    checkPurpose();
     killQuotesComments();
     wipeOutMacros();
     trimTrailingWhite();
@@ -852,6 +889,22 @@ void Lines::printWarnings(bsl::ostream *stream)
     if (!s_tbds.empty()) {
         *stream << "Warning: in " << s_fileName << " 'TBD' comments found on"
                                                  " line(s) " << s_tbds << endl;
+    }
+    if (s_purposeFlags) {
+        if (s_purposeFlags & BDEFLAG_NO_PURPOSE) {
+            *stream << "Warning: in " << s_fileName <<
+                                             " no '@PURPOSE:' comment" << endl;
+        }
+#if 0
+        if (s_purposeFlags & BDEFLAG_PURPOSE_LACKS_PROVIDE) {
+            *stream << "Warning: in " << s_fileName <<
+                       " '@PURPOSE:' comment doesn't start with \"Provide\"\n";
+        }
+#endif
+        if (s_purposeFlags & BDEFLAG_PURPOSE_LACKS_PERIOD) {
+            *stream << "Warning: in " << s_fileName <<
+                                 " '@PURPOSE:' comment doesn't end with '.'\n";
+        }
     }
 }
 

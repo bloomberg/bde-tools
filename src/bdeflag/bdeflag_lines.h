@@ -114,6 +114,11 @@ class Lines {
         BDEFLAG_DOT_H,
         BDEFLAG_DOT_T_DOT_CPP };
 
+    enum PurposeFlags {
+        BDEFLAG_NO_PURPOSE            = 0x1,
+        BDEFLAG_PURPOSE_LACKS_PROVIDE = 0x2,
+        BDEFLAG_PURPOSE_LACKS_PERIOD  = 0x4 };
+
   private:
     // PRIVATE TYPES
     typedef bsl::vector<bsl::string>   LineVec;
@@ -150,6 +155,7 @@ class Lines {
     static Ut::LineNumSet      s_badlyAlignedReturns;
     static Ut::LineNumSet      s_tbds;
     static State               s_state;
+    static int                 s_purposeFlags;
     static bool                s_hasTabs;
     static bool                s_hasTrailingBlanks;
     static bool                s_includesAssertH;
@@ -167,6 +173,9 @@ class Lines {
 
     void checkIncludes();
         // Set the values of the 's_include*' static flags.
+
+    void checkPurpose();
+        // If the file is a .h file, check the 'Purpose' line.
 
     void firstDetect();
         // Detect any long lines and tabs in the file, don't print out any
