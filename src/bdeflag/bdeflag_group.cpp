@@ -2246,6 +2246,13 @@ void Group::checkStartingBraces() const
       case BDEFLAG_TOP_LEVEL:
       case BDEFLAG_NAMESPACE: {
         indent = 0;
+
+        if (d_open.col() == indent && d_close.lineNum() == d_open.lineNum() &&
+                                           d_close.col() == d_open.col() + 1) {
+            // It a '{}' function.  Allow it.
+
+            return;
+        }
       }  break;
       case BDEFLAG_CLASS: {
         if (Lines::BDEFLAG_DOT_H != Lines::fileType() &&
