@@ -19,7 +19,7 @@ if(@ARGV==3) {
 
 my $date=strftime("%Y%m%d",localtime);
 
-open(GREP,"grep '\.h:.* warning:' $logpath/*$date*-SunOS-*-gcc-*|")
+open(GREP,"grep '\.h:.* warning:' $logpath/*$date*-SunOS-*-gcc-4.3.2*|")
         or die "Unable to open pipe from grep, error $!";
 
 my (%list, %s);
