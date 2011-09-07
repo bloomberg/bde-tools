@@ -45,7 +45,6 @@ my @otherBuilds = qw(
         dev-nextrel-api
         dev
         dev-api
-        dev-bus
         dev-fde
         );
 
