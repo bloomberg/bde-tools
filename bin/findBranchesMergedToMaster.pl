@@ -13,6 +13,9 @@ my %ignoredBranches = (
 # hash of seen abbreviated refids
 my %seen;
 
+# hash of abbreviations to full refids
+my %abbreviations;
+
 
 open(my $git_log_pipe,'git log master --decorate=full --color=never |')
     or die "Error starting git log pipe: $!";
@@ -22,7 +25,10 @@ while(<$git_log_pipe>) {
 
     s/^commit ([a-f0-9]+) \(// or next;
 
-    my $refidLen=10;
+    my $commitId = $1;
+
+    my $startRefidLen=10;
+    my $refidLen=$startRefidLen;
 
     my $refid = undef;
 
@@ -32,16 +38,18 @@ while(<$git_log_pipe>) {
     my $isAmbiguous=-1;
 
     while(!defined $refid || $seen{$refid}++) {
-        $refid = substr($1,0,$refidLen++);
+        $refid = substr($commitId,0,$refidLen++);
 
         $isAmbiguous++;
 
-        die "$1 is not unique!" if $refidLen>length($1);
+        die "$commitId is not unique!" if $refidLen>length($commitId);
     }
+
+    $abbreviations{$refid}=$commitId;
 
     if($isAmbiguous) {
         print "Note that $refid and ",
-              substr($1,0,10)," are ambiguous\n";
+              $abbreviations{substr($commitId,0,$startRefidLen)}," are ambiguous\n";
     }
 
     s/\)$//;
