@@ -20,7 +20,8 @@ TARBALL=/home/bdebuild/bs/tars-${BUILD_TYPE}/snapshot-${BUILD_TYPE}.`date +"%Y%m
 
 DEV_UORS="bsl zde bde bbe bce bae bte bsi                                   \
        a_bdema a_bteso a_xercesc bsc e_ipc a_ossl a_fsipc bas a_xmf         \
-       a_baslt a_bassvc bap a_comdb2 a_basfs a_bascat z_bae a_fsbaem z_bas"
+       a_baslt a_bassvc bap a_comdb2 a_basfs a_bascat z_bae a_fsbaem z_bas  \
+       z_a_bdema"
 API_UORS="api apt apu aps apn blpapi"
 FDE_UORS="fde"
 
@@ -92,6 +93,9 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
    | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE} \
    && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}
 
+# generate gcc warnings
+$TOOLSPATH/scripts/generateGccWarningsLogs.pl ${BUILD_TYPE} ${LOG_DIR}
+
 # THEN run api and fde builds
 $TOOLSPATH/bin/bde_bldmgr -v                \
         -k $TOOLSPATH/etc/bde_bldmgr.config \
@@ -110,6 +114,4 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-fde &
 
 wait
-
-$TOOLSPATH/scripts/generateGccWarningsLogs.pl ${BUILD_TYPE} ${LOG_DIR}
 
