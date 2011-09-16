@@ -4,11 +4,21 @@ use warnings;
 use strict;
 
 # list of refs we always want to ignore
-my %ignoredBranches = (
-    HEAD                    => undef,
-    'heads/master'          => undef,
-    'remotes/origin/master' => undef,
-);
+my %ignoredBranches;
+
+
+my $branch = "master";
+
+if(@ARGV) {
+    $branch = shift;
+}
+else {
+    $ignoredBranches{HEAD} = undef;
+    $ignoredBranches{'heads/master'} = undef;
+    $ignoredBranches{'remotes/origin/master'} = undef;
+}
+
+print "Listing branches merged into $branch\n\n";
 
 # hash of seen abbreviated refids
 my %seen;
@@ -17,7 +27,7 @@ my %seen;
 my %abbreviations;
 
 
-open(my $git_log_pipe,'git log master --decorate=full --color=never |')
+open(my $git_log_pipe,"git log $branch --decorate=full --color=never |")
     or die "Error starting git log pipe: $!";
 
 while(<$git_log_pipe>) {
