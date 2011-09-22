@@ -58,6 +58,7 @@ use vars qw(
              $resultsBase
              $mailLogPath
              %opts
+             $deadline
            );
 
 #------------------------------------------------------------------------------
@@ -1112,6 +1113,16 @@ sub gatherResults
 
 my $startTime=time;
 
+if(undef $deadline) {
+    $deadline = "11:00";
+}
+
+sub deadlineReached {
+    my $now = strftime("%H:%M",localtime);
+
+    return ($now ge $deadline);
+}
+
 while(scalar keys %kids) {
     my $kid;
     while (($kid=waitpid(-1, WNOHANG)) > 0) {
@@ -1136,6 +1147,7 @@ while(scalar keys %kids) {
             gatherResults($pid);
             next;
         }
+
         if (-e "/proc/$pid") {
             my $owner_id=(stat "/proc/$pid")[4];
             if($owner_id != $<) {
@@ -1144,7 +1156,17 @@ while(scalar keys %kids) {
                 next;
             }
         }
+
+        if(deadlineReached()) {
+            warn "Deadline $deadline reached - killing $pid and gathering";
+            kill 2,$pid; # SIGINT
+            sleep(1);
+            gatherResults($pid);
+            kill 9,$pid; # SIGKILL
+        }
+
         message("Checking for results for PLATFORM $platformByPid{$pid} PID $pid");
+
         if (waitpid($pid, WNOHANG) == $pid) {
             gatherResults($pid);
             next;
