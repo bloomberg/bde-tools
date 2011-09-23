@@ -107,6 +107,7 @@ unless (GetOptions(\%opts,qw[
     recipients|r=s@
     serial|s
     targets|t=s@
+    deadline|T=s
     verbose|v+
 ])) {
     usage(), exit(EXIT_BAD_OPT);
@@ -203,6 +204,13 @@ if ($opts{config}) {
 }
 require $opts{config} or fatal "Failed to load configuration '$opts{config}':".
   "\n\t$!";
+
+if (exists $opts{deadline}) {
+    $deadline = $opts{deadline};
+}
+
+message "Deadline is $deadline - will kill processes once that time is reached";
+
 unless (defined %configured_builds) {
     error("No valid build configurations found");
     usage();
@@ -1113,7 +1121,7 @@ sub gatherResults
 
 my $startTime=time;
 
-if(undef $deadline) {
+if(!defined $deadline) {
     $deadline = "11:00";
 }
 

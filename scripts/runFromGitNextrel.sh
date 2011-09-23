@@ -105,10 +105,11 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
 # generate gcc warnings
 $TOOLSPATH/scripts/generateGccWarningsLogs.pl ${BUILD_TYPE} ${LOG_DIR}
 
-# THEN run api and fde builds
+# THEN run api and fde builds - set deadline for these to 23:30
 $TOOLSPATH/bin/bde_bldmgr -v                \
         -k $TOOLSPATH/etc/bde_bldmgr.config \
         -f -k -m -i${BUILD_TYPE}-api        \
+        -T 23:30                            \
         $API_UORS                           \
         < /dev/null 2>&1                    \
    | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-api   \
@@ -117,6 +118,7 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
 $TOOLSPATH/bin/bde_bldmgr -v                \
         -k $TOOLSPATH/etc/bde_bldmgr.config \
         -f -k -m -i${BUILD_TYPE}-fde        \
+        -T 23:30                            \
         $FDE_UORS                           \
         < /dev/null 2>&1                    \
   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-fde       \
