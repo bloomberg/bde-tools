@@ -977,13 +977,16 @@ foreach my $platform (@platforms) {
                        or (exists $newBuild->{do_not_run_tests}
                         and $newBuild->{do_not_run_tests}=~ /\b$group\b/)
                         ) {
+
                     if(exists $test_build{test_host}
-                            && exists $test_build{test_host}{$group}
-                            && !exists $test_build{no_clearcase}) {
+                            && exists $test_build{test_host}{$group}) {
                         $test_host = $test_build{test_host}{$group};
-                        my $startview_cmd="/usr/atria/bin/cleartool startview $view";
-                        my ($cmd_status, $cmd_out) = invoke($test_build{test_host}{$group},
-                                $startview_cmd,$newBuild);
+
+                        if (!exists $test_build{no_clearcase}) {
+                            my $startview_cmd="/usr/atria/bin/cleartool startview $view";
+                            my ($cmd_status, $cmd_out) = invoke($test_build{test_host}{$group},
+                                    $startview_cmd,$newBuild);
+                        }
                     }
 
                     $command = assemble_command(\%test_build, $group);
