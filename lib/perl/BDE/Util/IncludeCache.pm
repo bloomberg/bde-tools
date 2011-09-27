@@ -22,8 +22,8 @@ sub _readFile ($) {
 
     my $fh=new IO::File;
     unless (open($fh, "< $file")) {
-	fatal "cannot open '$file': $!";
-	return undef;
+        fatal "cannot open '$file': $!";
+        return undef;
     }
 
     local $/=undef;
@@ -79,59 +79,59 @@ sub getFileIncludes ($;$$) {
     debug2 "Going to read includes of $file" if ($debug >= 2);
 
     while ($content =~ m|$incRE|mg) {
-	my ($lbr,$include,$rbr,$maybemarker)=($1,$2,$3,$4);
-	$maybemarker ||= "";
+        my ($lbr,$include,$rbr,$maybemarker)=($1,$2,$3,$4);
+        $maybemarker ||= "";
 
-	# check delimiters are sane
-	fatal("$file: inconsistent delimiters: $1 $3") unless
-	  ($lbr eq '"' and $rbr eq '"') or ($lbr eq '<' and $rbr eq '>');
+        # check delimiters are sane
+        fatal("$file: inconsistent delimiters in source $file for #include of $include: $1 $3") unless
+          ($lbr eq '"' and $rbr eq '"') or ($lbr eq '<' and $rbr eq '>');
 
-	if ($maybemarker=~/$NO_FOLLOW_MARKER/i) {
-	    debug2 "$file: ignored $include" if ($debug >= 2);
-	} else {
-	    debug2 "$file: got $include ($lbr$rbr|$include|$maybemarker)"
-	      if ($debug >= 2);
+        if ($maybemarker=~/$NO_FOLLOW_MARKER/i) {
+            debug2 "$file: ignored $include" if ($debug >= 2);
+        } else {
+            debug2 "$file: got $include ($lbr$rbr|$include|$maybemarker)"
+              if ($debug >= 2);
 
-	    my $incobj=new BDE::Package::Include({
+            my $incobj=new BDE::Package::Include({
                 fullname => $include, package => undef, name => $include
-	    });
-	    $incobj->setLocal( ($lbr eq q["]) ? 1 : 0 );
+            });
+            $incobj->setLocal( ($lbr eq q["]) ? 1 : 0 );
 
-	    ### determine nature of include - component or non-component
-	    if (isComponentHeader($include)) {
-		# looks like a component...
-		if ($maybemarker=~/$NOT_A_COMPONENT/i) {
-		    # explicitly marked as not a component
-		    $incobj->setNotAComponent(1);
-		} elsif ($package and isNonCompliant($package)
-			 and $incobj->isLocal()) {
-		    # a local include in a non-compliant pkg can't be comp.
-		    $incobj->setNotAComponent(1);
-		    $incobj->setPackage($package); #plus we know the package
-		} else {
-		    # it's a component
-		    $incobj->setNotAComponent(0);
-		    my $name = $incobj=~/^(.*?)\.h$/ && $1;
-		    $incobj->setPackage(getComponentPackage $name);
-		}
+            ### determine nature of include - component or non-component
+            if (isComponentHeader($include)) {
+                # looks like a component...
+                if ($maybemarker=~/$NOT_A_COMPONENT/i) {
+                    # explicitly marked as not a component
+                    $incobj->setNotAComponent(1);
+                } elsif ($package and isNonCompliant($package)
+                         and $incobj->isLocal()) {
+                    # a local include in a non-compliant pkg can't be comp.
+                    $incobj->setNotAComponent(1);
+                    $incobj->setPackage($package); #plus we know the package
+                } else {
+                    # it's a component
+                    $incobj->setNotAComponent(0);
+                    my $name = $incobj=~/^(.*?)\.h$/ && $1;
+                    $incobj->setPackage(getComponentPackage $name);
+                }
 
-		### check delimiters are appropriate
-		if ($package and isCompliant($package)) {
-		    if ($include =~ /^${package_regex}_/) {
-			# (skip; practice is now expected by John Lakos)
-			# warning "$what includes local file $include with <>";
-			#   if $lbr ne '"';
-		    } elsif ($lbr eq '"') {
-			warning
-			  "$file: includes non-local file $include with \"\"";
-		    }
-		}
-	    } else {
-		$incobj->setNotAComponent(1);
-	    }
+                ### check delimiters are appropriate
+                if ($package and isCompliant($package)) {
+                    if ($include =~ /^${package_regex}_/) {
+                        # (skip; practice is now expected by John Lakos)
+                        # warning "$what includes local file $include with <>";
+                        #   if $lbr ne '"';
+                    } elsif ($lbr eq '"') {
+                        warning
+                          "$file: includes non-local file $include with \"\"";
+                    }
+                }
+            } else {
+                $incobj->setNotAComponent(1);
+            }
 
-	    push @includes,$incobj;
- 	}
+            push @includes,$incobj;
+        }
     }
 
     return wantarray ? @includes : \@includes;
@@ -168,29 +168,29 @@ in the cache, an exception is thrown.
       # mean it's also in the cache... this routine won't return it
       # unless it actually exists somewhere.
       $file=$file->getFullname()
-	if ref($file) and $file->isa("BDE::Package::Include");
+        if ref($file) and $file->isa("BDE::Package::Include");
 
       unless (exists $incs{$file}) {
-	  fatal("Cannot locate include '$file' without a finder")
-	    unless defined $finder and $finder->isa("BDE::File::Finder");
-	  if (my $fi=$finder->find($file)) {
+          fatal("Cannot locate include '$file' without a finder")
+            unless defined $finder and $finder->isa("BDE::File::Finder");
+          if (my $fi=$finder->find($file)) {
 
-	      debug2 "Found file $file:",$fi->getFullname(),
-		     "(".$fi->getPackage().")" if ($debug >= 2);
-	      my $realfile=$fi->getRealname();
-	      my $content=_readFile($realfile);
+              debug2 "Found file $file:",$fi->getFullname(),
+                     "(".$fi->getPackage().")" if ($debug >= 2);
+              my $realfile=$fi->getRealname();
+              my $content=_readFile($realfile);
               $incs{$file}=$fi;
-	      $fi->{includes}=[
-	          getFileIncludes($content,$file,$fi->getPackage())
-	      ];
-	      debug2 "Cached $fi ($realfile)" if ($debug >= 2);
-	  }
+              $fi->{includes}=[
+                  getFileIncludes($content,$file,$fi->getPackage())
+              ];
+              debug2 "Cached $fi ($realfile)" if ($debug >= 2);
+          }
       }
 
       if ($debug >= 2) {
-	  # this typically means an include of something in the system
-	  # so we don't warn about it unless debug is on
-	  warning "No such file '$file'" unless exists $incs{$file};
+          # this typically means an include of something in the system
+          # so we don't warn about it unless debug is on
+          warning "No such file '$file'" unless exists $incs{$file};
       }
 
       return $incs{$file}; # a BDE::Package::Include object, or undef
