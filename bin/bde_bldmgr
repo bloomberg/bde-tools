@@ -713,7 +713,10 @@ sub assemble_command ($$) {
     $command .= " -T " . $build->{tag} if defined $build->{tag};
 
     # targets
-    $command .= " -t $build->{targets}";
+    my $targets=$build->{targets};
+    $targets=~s/\s+/,/g;
+
+    $command .= " -t $targets";
 
     # group (what to build - can also be package)
     $command .= " $group";
@@ -947,9 +950,10 @@ foreach my $platform (@platforms) {
             }
 
             # execute rsh - if rsh itself fails, try next host.
+            alert("Invoking '$command' on $host");
             my ($cmd_status, $cmd_out) = invoke($host,$command,$newBuild);
             if ($cmd_status) {
-                error(($newBuild->{local}?"local":"remote")." build failed to run");
+                error(($newBuild->{local}?"local":"remote")." build failed to run '$command'");
                 for my $l (@$cmd_out) { error($l); }
                 error("trying next machine");
                 $results{unreachable_hosts} .= " $host (build run failed)";
