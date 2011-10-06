@@ -18,43 +18,114 @@ use BDE::Util::Nomenclature qw(
 
 use constant {
     LIST_TYPE_Unordered    => 1,
-    LIST_TYPE_Numbered     => 2
+    LIST_TYPE_Numbered     => 2,
+    LIST_TYPE_Hanging      => 3
 };
 
 my %listTypeToAscii = (
     LIST_TYPE_Unordered, "Unordered",
-    LIST_TYPE_Numbered,  "Numbered"
+    LIST_TYPE_Numbered,  "Numbered",
+    LIST_TYPE_Hanging,   "Hanging"
+);
+
+# Map each list type to the lines that must be emitted to start the list, end
+# the list, start each item, each item, start a nested list, and end
+# a nested list.  Multi-line values have embedded newline characters.
+my %listTypeToEmittedLines = (
+    LIST_TYPE_Unordered, [
+          " * <UL>",
+          " * </UL>",
+          " * <LI>",
+          " * </LI>",
+          " *",
+          " *"
+        ],
+    LIST_TYPE_Numbered, [
+          " * <OL>",
+          " * </OL>",
+          " * <LI>",
+          " * </LI>",
+          " *",
+          " *"
+        ],
+    LIST_TYPE_Hanging, [ 
+          ' * <DIV class="hanging">',
+          " * \\par\n * </DIV>",
+          " * \\par",
+          " *",
+          " * \\par\n * <DIV class=\"unhanging\">",
+          " * \\par\n * </DIV>"
+        ]
 );
 
 #------------------------------------------------------------------------------
 # Predefined regex patterns
 #------------------------------------------------------------------------------
-my $listMarker   = qr "^ *//:";
-my $ulToken      = qr "[o\*] ";
-my $nlToken      = qr "[1-9][0-9]* ";
-my $ulListItem   = qr "$listMarker ((?:  )*)($ulToken)";
-my $listItem     = qr "$listMarker ((?:  )*)($ulToken|$nlToken)";
-my $listItemText = qr "$listMarker( *)\S+";  # NOTE: matches tokens
-#my $listItemCont = qr "$listMarker(  )+( )(\S+)";
-my $listItemCont = qr "$listMarker ((?:  )+)(\S+)";
-my $listItemTerm = qr "$listMarker *$";
+my $listMarker     = qr "^ *//:";
+my $ulToken        = qr " [o\*] ";
+my $nlToken        = qr "[1-9][0-9]*[.)]? ";
+# Glossary bullet item starts with text surrounded by double quotes
+my $glossaryToken  = qr { "([^"]+)"(\s|:|$)}; 
+my $listItemIndent = qr "$listMarker((?:  )*)"o;
+my $ulListItem     = qr "$listMarker((?:  )*)($ulToken)"o;
+my $nlListItem     = qr "$listMarker((?:  )*)($nlToken)"o;
+my $glossaryItem   = qr "$listMarker((?:  )*)($glossaryToken)"o;
+my $listItem       = qr "$listMarker((?:  )*)($ulToken|$nlToken| \S)"o;
+my $listItemPrefix = qr "$listMarker((?:  )*)($ulToken|$nlToken)?"o;
+my $listItemText   = qr "$listMarker( *)\S+"o;  # NOTE: matches tokens
+my $listItemTerm   = qr {$listMarker *$}o;
 
 #------------------------------------------------------------------------------
 # Global Data
 #------------------------------------------------------------------------------
 
-my @listLinesIn  = ();
-my @listLinesOut = ();
-
 #------------------------------------------------------------------------------
 # Helper Functions
 #------------------------------------------------------------------------------
 
-sub isListItemCont($)
+{ # Tags closure
+
+    my %tagDefs;
+    
+    # pushTagDefs(@lines, $tag1, $tag2, ...)
+    #
+    # Pushes anchors for zero or more tags onto the specified list of lines.
+    # Each tag is pushed on its own line in the format
+    # '<A NAME="tag">'
+    sub pushTagDefs($@)
+    {
+        my ($lines, @tags) = @_;
+
+        for my $tag (@tags) {
+            next if exists $tagDefs{$tag}; # Avoid duplicate tags
+            push @$lines, ' * <A NAME="'.$tag.'"></A>';
+            $tagDefs{$tag} = 1;
+        }
+    }
+
+    sub tagExists($)
+    {
+        my $tag = shift;
+        return exists $tagDefs{$tag};
+    }
+
+} # end tags closure
+
+sub isListItemContinuation($$$)
 {
-    my $line = shift;
-    return $line =~ $listItemText
-        && $line !~ $listItem;
+    my ($line, $givenListLevel, $givenListType) = @_;
+
+    if (($line =~ $ulListItem) || ($line =~ $nlListItem)) {
+        # This is the beginning of a new numbered or bullet list item; it is
+        # not a continuation.
+        return 0;
+    }
+
+    # Continuation line begins with a list marker and is indented
+    # at least two spaces deeper than the list item start.
+    my $listItemCont = $listMarker . qr "(  ){$givenListLevel,} +\S";
+    return 1 if ($line =~ $listItemCont);
+    return 0;
 }
 
 sub isListMarkup($)
@@ -66,92 +137,182 @@ sub isListMarkup($)
 sub listItemInfo($) {
     my $line = shift;
 
-    $line =~ m|$listItem|;
+    my $listType  = (($line =~ $ulListItem)   ? LIST_TYPE_Unordered :
+                     ($line =~ $nlListItem)   ? LIST_TYPE_Numbered  :
+                     ($line =~ $glossaryItem) ? LIST_TYPE_Hanging   :
+                     ($line =~ $listItem)     ? LIST_TYPE_Hanging   : undef);
     my $listLevel = 1 + (length($1) / 2);
-    my $listType  = ($line =~ $ulListItem)
-                  ? LIST_TYPE_Unordered
-                  : LIST_TYPE_Numbered;
-    return ($listLevel, $listType);
+    my $listToken = $2;
+    return ($listLevel, $listType, $listToken);
 }
 
-sub levelOfCont($)
-{
-    my $line = shift;
-    $line =~ m|$listItemCont|;
-    return (length($1) / 2);
+sub encodeUriFragment($) {
+    # Convert the input string into a string suitable for use as URI fragment
+    # (the portion of a URL/URI after the '#').  Ideally, illegal characters
+    # would be "percent-encoded" as a '%' character followed by two hex
+    # digits.  See RFC 3986.  Unfortunately, brownsers disagree as to how
+    # to decode in-document links with percent-encoded characters in them
+    # (Firefox decodes them, whereas IE doesn't).  Thus, instead of
+    # percent-encoding illegal characters, this function replaces spaces with
+    # underscores and other illegal characters with a tilde (~) followed by
+    # two hex digits.  In addition, upper-case letters are converted to
+    # lower-case.  It is possible for two distinct inputs to yield
+    # the same output (e.g., "abc def" and "abc_Def" would both yield
+    # "abc_def"), but distinct labels are rarely so similar as to
+    # cause such a collision in practice.
+
+    my $term = shift;
+    my $result = lc $term;
+
+    $result =~ s/^\s*//;  # Trim leading whitespace
+    $result =~ s/\s*$//;  # Trim trailing whitespace
+
+    # Remove formatting characters
+    $result =~ s{((\s|>|^)[\{(*!_]*)\'([^']+)\'}{$1$3}g;
+    $result =~ s{((\s|>|^)[\{(!_']*)\*(\S[^*]+)(?<!\s)\*}{$1$3}g;
+    $result =~ s{((\s|>|^)[\{(*_']*)\!(\S[^!]+)(?<!\s)\!}{$1$3}g;
+    $result =~ s{((\s|>|^)[\{(*!']*)\_(\S[^_]+)(?<!\s)\_}{$1$3}g;
+
+    # Pattern of characters that are not legal in a URI fragment.  Percent
+    # symbols are legal, but only as part of a percent-escaped sequence, so
+    # they are considered part of the illegal character set for our purposes.
+    # Ampersand (&) and apostrophy (') are also legal, but Doxygen insists on
+    # modifying them under certain circumstances, so they are considered
+    # illegal here.
+    my $illegal = qr "[^-A-Za-z0-9._~!\$()*+,;=]";
+
+    return $result unless ($result =~ $illegal);
+
+    # Replace whitespace with underscores
+    $result =~ s/\s/_/g;
+
+    # Tilde-escape any other characters in the illegal list
+    while ($result =~ m/($illegal)/o) {
+        my $c = $1;                          # Character to be escaped
+        my $hex = sprintf("%02X", ord($c));  # c in hex
+        $c = "\\$c";  # escape $c
+        $result =~ s/$c/~$hex/g;
+    }
+
+    return $result;
 }
 
+# Return a list of lines to be emitted at the start of a list.
+# Usage: my @start = listStart($listType);
 sub listStart($) {
     my $listType = shift;
-    return $listType == LIST_TYPE_Unordered ? "<ul>" : "<ol>";
+    return split /\n/, $listTypeToEmittedLines{$listType}->[0];
 }
 
+# Return a list of lines to be emited at the end of a list.
+# Usage: my @end = listEnd($listType);
 sub listEnd($) {
     my $listType = shift;
-    return $listType == LIST_TYPE_Unordered ? "</ul>" : "</ol>";
+    return split /\n/, $listTypeToEmittedLines{$listType}->[1];
 }
 
-sub processList($$);  #forward declaration (of recursive function).
-sub processList($$)
+# Return a list of lines to be emited before each list item.
+# Usage: my @start = listItemStart($listType);
+sub listItemStart($) {
+    my $listType = shift;
+    return split /\n/, $listTypeToEmittedLines{$listType}->[2];
+}
+
+# Return a list of lines to be emited after each list item.
+# Usage: my @end = listItemEnd($listType);
+sub listItemEnd($) {
+    my $listType = shift;
+    return split /\n/, $listTypeToEmittedLines{$listType}->[3];
+}
+
+# Return a list of lines to be emited before begining a nested list.
+# Usage: my @start = listStartNested($listType);
+sub listStartNested($) {
+    my $listType = shift;
+    return split /\n/, $listTypeToEmittedLines{$listType}->[4];
+}
+
+# Return a list of lines to be emited after ending a nested list.
+# Usage: my @end = listEndNested($listType);
+sub listEndNested($) {
+    my $listType = shift;
+    return split /\n/, $listTypeToEmittedLines{$listType}->[5];
+}
+
+sub processList(\@\@);  #forward declaration (of recursive function).
+sub processList(\@\@)
 {
     my $listLines = shift;
     my $ar        = shift;
 
     my $line = shift @$ar;
     $line =~ $listItem or die "not a list item: $line";
-    my ($givenListLevel, $givenListType) = listItemInfo($line);
+    my ($givenListLevel,$givenListType,$givenListToken) = listItemInfo($line);
 
-    push @$listLines, " * " . listStart($givenListType);
-    push @$listLines, " * " . "<li>";
-    $line =~ s|$listItem||;
+    push @$listLines, listStart($givenListType);
+    push @$listLines, listItemStart($givenListType);
+    if ($givenListToken =~ $glossaryToken) {
+        my $glossaryRef = encodeUriFragment($1);
+        pushTagDefs($listLines, $glossaryRef, getSectionTags($glossaryRef));
+        $line =~ s{$glossaryToken}{ *$1*$2};  # Italicize term
+    }
+    $line =~ s|$listItemPrefix||;
     push @$listLines, " * " . escape($line);
+    my $withinItem = 1;
 
     while ($line = shift @$ar) {
-
-        if ($line =~ $listItem) {
-            my ($listLevel, $listType) = listItemInfo($line);
+        if ($withinItem &&
+            isListItemContinuation($line, $givenListLevel, $givenListType)) {
+            $line =~ s|$listItemIndent||;
+            push @$listLines, " * " . escape($line);
+            next;
+        } elsif ($line =~ $listItem) {
+            my ($listLevel, $listType, $listToken) = listItemInfo($line);
             #print "SRB: $givenListLevel: $listLevel: $line\n";
 
-            if      ($listLevel > $givenListLevel) {
+            if ($listLevel > $givenListLevel) {
+                push @$listLines, listStartNested($givenListType);
                 unshift @$ar, $line;
-                $line = processList($listLines, $ar);
+                $line = processList(@$listLines, @$ar);
                 unshift @$ar, $line;
+                push @$listLines, listEndNested($givenListType);
+                $withinItem = 0;
                 next;
             } elsif ($listLevel < $givenListLevel) {
-                push @$listLines, " * " . "</li>";
-                push @$listLines, " * " . listEnd($givenListType);
+                push @$listLines, listEnd($givenListType);
                 return $line;
             } else {
-                push @$listLines, " * " . "</li>";
-                push @$listLines, " * " . "<li>";
-                $line =~ s|$listItem||;
+                push @$listLines, listItemEnd($givenListType);
+                if ($listType != $givenListType) {
+                    # End one type of list and start another
+                    push @$listLines, listEnd($givenListType);
+                    push @$listLines, listStart($listType);
+                    $givenListType = $listType;
+                }
+                push @$listLines, listItemStart($listType);
+                if ($listToken =~ $glossaryToken) {
+                    my $glossaryRef = encodeUriFragment($1);
+                    pushTagDefs($listLines, $glossaryRef,
+                                getSectionTags($glossaryRef));
+                    $line =~ s{$glossaryToken}{ *$1*$2};  # Italicize term
+                }
+                $line =~ s|$listItemPrefix||;
                 push @$listLines, " * " . escape($line);
+                $withinItem = 1;
                 next;
             }
-        } elsif (isListItemCont($line)) {
-            my $listLevel = levelOfCont($line);
-            print "srb: $givenListLevel: $listLevel: $line\n";
-            if ($listLevel > $givenListLevel) {
-                push @$listLines, " * " . "</LI>";
-                push @$listLines, " * " . listEnd($givenListType);
-                return $line;
-            }
-            $line =~ s|$listItemCont|$2|;
-            push @$listLines, " * " . escape($line);
-            next;
-        } elsif ($line =~ $listMarker) {
-            $line =~ s|$listItemTerm||;
-            push @$listLines, " * " . escape($line);
+        } elsif ($line =~ $listItemTerm) {
+            $withinItem = 0;
             next;
         } else {
-            push @$listLines, " * " . "</li>";
-            push @$listLines, " * " . listEnd($givenListType);
+            push @$listLines, listItemEnd($givenListType);
+            push @$listLines, listEnd($givenListType);
             return $line;
         }
     }
 
-    push @$listLines, " * " . "</li>";
-    push @$listLines, " * " . listEnd($givenListType);
+    push @$listLines, listItemEnd($givenListType);
+    push @$listLines, listEnd($givenListType);
     return $line;
 }
 
@@ -357,109 +518,120 @@ my @level_name = (
 
 #------------------------------------------------------------------------------
 { # header closure
-    use constant MAXHEADERLEVELS => 6;
-    my @headers;
+    my @TOC_entries;
     my @levels;
-    my $nheaders = 0;
-    my $prevlevel = 0;
+    # Section names encoded for use in URIs
+    my @seclinks;
 
-    # increment level count and return tag for this level
+    # return tag for specified level
     sub getTag($) {
         my $hlev = shift;
-        $hlev --;  # caller is 1-indexed
-        $levels[$hlev] ++;
-        my $tag = join('.',@levels[0..$hlev]);
-        $hlev ++;
-        while ($hlev < MAXHEADERLEVELS) {
-            $levels[$hlev] = 0;
-            $hlev++;
-        }
-        return $tag;
+        return join('.',@levels[0..$hlev-1]);
     }
-    # main working routine
+    # Return a list of tags that are all aliases for the current section,
+    # appending an optional suffix to each.  The first tag is the encoded name
+    # of the current section.  The second tag is a concatonation of the name
+    # of the parent section and the current section.  The tag before that
+    # prepends the parent's parent, etc..  The longer tags are used to
+    # disambiguate in the case where the same subsection shows up in multiple
+    # sections.
+    sub getSectionTags(;$) {
+        my $suffix = shift;
+        $suffix = $suffix ? ('.' . $suffix) : "";
+        my @ret;
+        my $lastidx = @seclinks - 1;  # zero-based indexing
+        for (my $i = $lastidx; $i >= 0; --$i) {
+            push @ret, join('.', @seclinks[$i..$lastidx]).$suffix;
+        }
+        return @ret;
+    }
+    # main working routine.
+    # Note: $txt must not be escaped
     sub pushheader($$) {
         my ($level, $txt) = @_;
-        my $dashes="------";   # need MAXHEADERLEVELS dashes
-
-        ++ $nheaders;
-        my $tag = getTag($level);
-        pushline(" * \\par");
-        pushline(" * <A NAME=\"$tag\"> \\par $txt </A>");
-        pushline(" * \\par");
-        #my $tag = "$nheaders.$level";
-        #pushline(" * \\htmlonly");
-        #if ($level <= 3)    {
-        #    my $hlvl=$level+2;  # Levels 1 and 2 are in use already
-        #    pushline("\t<A name=\"$tag\"><H$hlvl>$txt</H$hlvl></A>");
-        #} else {
-        #    pushline("\t<A name=\"$tag\"><P><B>$txt</B></P></A>");
-        #}
-        #pushline(" * \\endhtmlonly");
-        #
-        # TOC entries
         $txt =~ s/:$//o;    # remove trailing colon from TOC entry
-        #
-        # Adjust nesting for level
-        while ($prevlevel < $level) {
-            push @headers, " * <UL>";
-            $prevlevel ++;
+        my $txt_prefix = $txt;
+        $txt_prefix =~ s/:\s.*$//;  # Remove anything after the first colon
+
+        # Adjust TOC nesting for level
+        while (@levels < $level) {
+            push @levels, 0;
+            push @seclinks, "";
+            push @TOC_entries, " * <UL>";
         }
-        while ($prevlevel > $level) {
-            push @headers, " * </UL>";
-            $prevlevel --;
+        while (@levels > $level) {
+            pop @levels;
+            pop @seclinks;
+            push @TOC_entries, " * </UL>";
         }
-        push @headers, " * <LI><A HREF=\"#$tag\"> $txt </A></LI>";
+        ++$levels[-1];  # Increment deepest level
+        $seclinks[-1] = encodeUriFragment($txt_prefix);
+
+        # Add tag link and section links
+        pushline(" * \\par");
+        my @sectags = getSectionTags();
+        pushTagDefs(getlines(), @sectags);
+        my $tag = getTag($level);
+        pushline(" * <A NAME=\"$tag\"> \\par ".escape($txt).": </A>");
+        pushline(" * \\par");
+
+        # Add TOC entry
+        push @TOC_entries," * <LI><A HREF=\"#$tag\">".escape($txt)."</A></LI>";
     }
     # Insert the Table of Contents in position $pos
     sub insertTOC ($$) {
         my $lines = shift;
         my $pos = shift;
 
-        while ($prevlevel > 0) {
-            push @headers, " * </UL>";
-            $prevlevel --;
+        while (@levels) {
+            push @TOC_entries, " * </UL>";
+            pop @levels;
         }
-        my $headers = getheaders();
 
         splice ( @$lines, $pos, 0, ( " * \\par " ) );
-        splice ( @$lines, $pos, 0, @$headers );
+        splice ( @$lines, $pos, 0, @TOC_entries );
         splice ( @$lines, $pos, 0, ( " * \\par Outline" ) );
     }
 
     # retrieve processed output
     sub getheaders () {
-        return \@headers;
+        return \@TOC_entries;
     }
 
     # reset headers
     sub resetheaders () {
-        @headers=();
-        @levels = ( 0, 0, 0, 0, 0, 0 ); # should be MAXHEADERLEVELS
-        $prevlevel = 0;
+        @TOC_entries=();
+        @levels = ();
     }
 }
 #------------------------------------------------------------------------------
 # escape Doxygen-significant characters - use for comments only, not code.
-# also, translate 'code' and *italic* markers in the text
-# Note: - Funky multi-line s/// translates '*' to '\f' to avoid interpretation
-#         as italics. tr/// undoes this after italics are done.
-#       - Italics include (*this* *text*) but not (*)
+# also, translate 'code', *italic*, and !bold! markers in the text. Italics
+# include (*this* *text*) but not (*).  Similarly for bold.
 
 sub escape ($) {
     my $string = shift;
+
+    # escape characters that are meaningful to Doxygen
     $string=~s{([\@<>&\$#\\])}{\\$1}go if $string;
 
+    # Note: - Funky multi-line substitution translates '*' to '\f' to avoid
+    #         interpretation as italics. tr/// undoes this after italics are
+    #         done. Similarly for '!' and '_'.
     my $t;
-    $string =~ s{(\s|^)' ([^']+) '}
-                 {   $t = "$1<code>$2</code>";
+    $string =~ s{((?:\s|>|^)[\{(*!_]*)' ([^']+) '}
+                 {   $t = "<code>$2</code>";
                      $t =~ tr|\*|\f|;
                      $t =~ tr|\!|\e|;
                      $t =~ tr|\_|\r|;
-                     $t
+                     "$1$t"
                  }gexo;
-    $string =~ s{((\s|^)\(?)\*([^)*][^*]*)\*}{$1<I>$3</I>}g;
-    $string =~ s{((\s|^)\(?)\!([^)!][^!]*)\!}{$1<B>$3</B>}g;
-    $string =~ s{((\s|^)\(?)\_([^)_][^_]*)\_}{$1<B><I>$3</I></B>}g;
+
+     
+    $string =~ s{((\s|>|^)[\{(!_']*)\*([^)* ][^*]+)(?<!\s)\*}{$1<em>$3</em>}g;
+    $string =~ s{((\s|>|^)[\{(*_']*)\!([^)! ][^!]+)(?<!\s)\!}{$1<strong>$3</strong>}g;
+    $string =~ s{((\s|>|^)[\{(*!']*)\_([^)_ ][^_]+)(?<!\s)\_}{$1<em>$3</em>}g;
+
     $string =~ tr[\f][\*];
     $string =~ tr[\e][\!];
     $string =~ tr[\r][\_];
@@ -468,8 +640,147 @@ sub escape ($) {
 #        $string =~ s!/\*!|*!g;
 #        $string =~ s!/*/!*|!g;
 #    }
+    return $string;
+}
+
+# Reverse the effects of escape($string).
+sub unescape($)
+{
+    my $string = shift;
+
+    $string =~ s{</?em>}{*}g;
+    $string =~ s{</?strong>}{!}g;
+    $string =~ s{</?code>}{'}g;
+
+    $string =~ s{\\([\@<>&\$#\\])}{$1}go;
 
     return $string;
+}
+
+
+
+
+my $generalLink    = qr /{([^{} ][^{}]*)}/io;
+my $glossaryLink   = qr /(\s)"([^"]+)"(\s+\(see\s+$generalLink\))/io;
+
+sub splitLink($)
+{
+    my $link = shift;
+    my @parts = split(/\|/, $link);
+
+    # Prepend an empty document name if fewer than 2 parts
+    unshift @parts, "" if (@parts < 2);
+
+    $parts[1] = "" if $parts[1] eq '*';
+
+    return @parts;
+}
+
+# Mangle a source filename into the form generated by Doxygen
+sub doxygenizeFilename($)
+{
+    my $filename = shift;
+
+    $filename =~ s/_/__/g;
+    $filename =~ s/\./_8/g;
+    $filename =~ s/:/_1/g;
+
+    return "group__" . $filename;
+}
+
+sub documentToUriPath($)
+{
+    my $document = shift;
+
+    return "" unless $document;
+
+    if ($document =~ m{^\w{3}$})
+    {
+        # Package group
+    }
+    elsif ($document =~ m{^\w_\w+$|^\w{3}\w+$})
+    {
+        # Package
+    }
+    elsif ($document =~ m{^\w_\w+_\w+|^\w{3}\w+_\w+})
+    {
+        # Component
+        $document .= ".h";
+    }
+
+    return doxygenizeFilename($document) . ".html";
+}
+
+# Replace each link of the form:
+#
+#   {doc|section.subsection}
+#
+# with an HTML hyperlink to the specified subsection within the specified
+# section within the specified document.  The document can be the name of a
+# component, package, or package group.  If the document is not specified
+# (i.e., there is no '|' in the link, then the current document is assumed.  A
+# link of form 
+#
+#   {doc|*}
+#
+# links to the top of the specified document.  A link of the form:
+#
+#   "glossary phrase" (see {link})
+#
+# (quotes required) will create two hyperlinks: {link} is replaced by a
+# hyperlink to the subesection specified by link, as usual, and "glossary
+# phrase" is replaced by a hyperlink to the definition of phrase within the
+# subection.
+sub insertLinks()
+{
+    my $lines = getlines();
+    for my $string (@$lines) {
+        while ($string =~ m/$generalLink/g) {
+            # Save pos so that next search will not start from the
+            # begining:
+            my $rawlink = $1;
+            # $rawlinkstart and $rawlinklen include open and close curlies
+            my $rawlinkstart = $-[1] - 1;
+            my $rawlinklen   = $+[1] - $rawlinkstart + 1;
+
+            next if ($rawlink =~ /\s$/);  # Skip if trailing whitespace
+            my $link = unescape($rawlink);
+
+            # Split document part from section within document
+            my ($document, $section) = splitLink($link);
+            my $sectionTag = encodeUriFragment($section);
+
+            # Don't replace local link to non-existant tag
+            next unless ($document || tagExists($sectionTag));
+
+            my $linkPath = documentToUriPath($document);
+
+            if ($string =~ $glossaryLink) {
+                my $rawname = $2;
+                # $rawnamestart and $rawnamelen include open and close quotes
+                my $rawnamestart = $-[2] - 1;
+                my $rawnamelen   = $+[2] - $rawnamestart + 1;
+
+                # Unescape special characters in glossary name
+                my $name = unescape($rawname);
+
+                my $nameTag = encodeUriFragment($name);
+                $nameTag = $sectionTag . ($section ? "." : "") . $nameTag;
+                if ($document || tagExists($nameTag)) {
+                    my $htmlref = "<A CLASS=\"glossary\" ".
+                        "HREF=\"$linkPath#$nameTag\">".escape($name)."</A>";
+                    my $lenchange = length($htmlref) - $rawnamelen;
+                    substr($string, $rawnamestart, $rawnamelen) = $htmlref;
+                    $rawlinkstart += $lenchange;  # compenstate for change
+                }
+            }
+
+            my $linkUrl = $linkPath;
+            $linkUrl .= '#' . $sectionTag if ($section);
+            my $htmlref = "<A CLASS=\"el\" HREF=\"$linkUrl\">$rawlink</A>";
+            substr($string, $rawlinkstart, $rawlinklen) = $htmlref;
+        } # end while more links in line
+    } # end for each string in lines
 }
 
 #==============================================================================
@@ -522,6 +833,8 @@ sub bde2doxygen ($$) {
     my $lno = 0;            # line number
     my $pending_header;     # there *might* be a /// ------ line coming.
     my $ispending = 0;      # is there a header pending?
+
+    my @listLinesIn  = ();
 
     for my $line (@$linesref) {
         $line =~ s/^/$prepend/ if defined($prepend);
@@ -738,8 +1051,8 @@ sub bde2doxygen ($$) {
                 } else {
                     popstate();
 
-                    @listLinesOut = ();
-                    processList(\@listLinesOut, \@listLinesIn);
+                    my @listLinesOut = ();
+                    processList(@listLinesOut, @listLinesIn);
 
                     for my $listLineOut (@listLinesOut) {
                         pushline($listLineOut);
@@ -774,7 +1087,7 @@ sub bde2doxygen ($$) {
                 if ($line =~ m|^///\s*[\w"']|) {
                     $line =~ s|^///\s*||;
                     $ispending = 1;
-                    $pending_header = escape($line);
+                    $pending_header = $line;
                     # pushline(" * \\par ".escape($line));
                 } elsif ($line =~ m|^//\.\.|) {
                     pushstate(INTRO,PREFORM);
@@ -822,6 +1135,9 @@ sub bde2doxygen ($$) {
                 pushline(" */");
                 popstate();
             }
+            if (minorstate()==PROTOTYPE && $line =~ m[^\s*{]) {
+                popstate();
+            }
         }
         # Use namespace BloombergLP as a guard for bde groups
         # But remove the namespace for clarity
@@ -840,27 +1156,34 @@ sub bde2doxygen ($$) {
             ++$namespaceStack;
         }
 
-        if ( $line =~ m!^\s*(template|class|struct)\s*!o ) {
-            openGroups(0);
+        if ( $line =~ m!^\s*(template|class|struct|enum)\s*!o ) {
+            openGroups(0) unless ($line =~ m|;| );
         }
 
-        ### start of class
-        if ($line =~ m!^\s*(class|struct)\s*(.*?)\s*{!) {
+        ### start of class or enum
+        if ($line =~ m!^\s*(class|struct|enum)\s*(\S[^{;]*)(?:{.*})?(;?)!) {
             # non-comment line: terminate existing comment
             if (minorstate()==COMMENT) {
                 pushline(" */");
                 popstate();
                 pushline("");
             }
+
+            # No special processing for forward or one-line declarations of
+            # classes or enums.
+            if ($3 eq ";") {
+                pushline($line);
+                next;
+            }
+
             openGroups(0);
             # not currently used because Doxygen doesn't allow a space in
             # specified classnames (like for instance in a specialised
             # template class). Retained until this is a solvable problem.
             $classname = $2;
-            # currently only the outer class causes the state depth to
-            # increase internally. This may change once internal class/structs
-            # can always detect their ends.
-            pushstate(CLASS,NOSTATE) if statedepth()==0;
+
+            # enter class state
+            pushstate(CLASS,NOSTATE);
 
             # enter class head state
             pushstate(CLASS,CLASSHEAD);
@@ -871,9 +1194,9 @@ sub bde2doxygen ($$) {
             # it doesn't work for template specialisations including spaces in
             # the classname (as in: 'template<> class foobar<void *>'
             push @class_decl, $line;
-            # in fact this cases the comment to end up between the template
-            # and the class in cases where they appear on seperate lines.
-            # However Doxygen appears not to care. However lines following
+            # in fact this causes the comment to end up between the template
+            # and the class in cases where they appear on seperate lines,
+            # but Doxygen appears not to care. However lines following
             # the class/struct are handled - see 'multi-line class head' below.
             next;
         }
@@ -887,7 +1210,7 @@ sub bde2doxygen ($$) {
                 next;
             }
 
-            if ($line=~m|^\s*\w| and minorstate()==CLASSHEAD) {
+            if (minorstate()==CLASSHEAD and $class_decl[-1] !~ m|{|) {
                 # multi-line class head
                 $class_decl[-1].="\n$line";
             } elsif ( $line =~ m|\s+//\s*=+\s*$|o ) {
@@ -927,8 +1250,7 @@ sub bde2doxygen ($$) {
                     popstate();
                 }
                 pushline("");
-            #} elsif ($line =~ m|^\s*};|) {  #ends early for enums.
-            } elsif ($line =~ m|^};|) {      #stricter
+            } elsif ($line =~ m|^\s*};|) {
                 #print "MATCH: $lno\n";
 
                 # end of multi-line class body
@@ -950,7 +1272,7 @@ sub bde2doxygen ($$) {
                     pushline(pop @class_decl);
                 }
                 pushline($line);
-                popstate() if statedepth()==1; #end of outer class
+                popstate(); #end of class
 #            } elsif ($line =~ m|//| and
 #                     ($line =~ m[MANIP|ACCES|OPERATOR])) {
 #                # convert titles we don't want to ignore
@@ -1000,7 +1322,8 @@ sub bde2doxygen ($$) {
                             pushstate(majorstate,COMMENT);
                             #pushline("/*!");
                             #pushline("KILROY WAS HERE: $lno:|$line|");
-                            pushline("/*!<");  #SRB EXPER
+                            #pushline("/*!<");  #SRB EXPER
+                            pushline("/*");     #PGH prevent weird artifacts
                         }
                         $line =~ s|//||o;
                         if (minorstate()==PREFORM) {
@@ -1069,6 +1392,7 @@ sub bde2doxygen ($$) {
     }
     pushline("");
     closeGroups();
+    insertLinks();
     # If there's a Purpose, we can place a TOC.
     insertTOC(getlines(),$TOClocation) if defined($TOClocation);
 
