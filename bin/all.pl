@@ -177,6 +177,7 @@ Usage: $prog -h | [-s|-[p|j] <jobs>] [-t <s>] [-z <b>] [-d] [-v] [-q]
                               of jobs at one time (default: $DEFAULT_JOBS)
   --logfile   | -l <logfile>  write test results to specified log file
   --quiet     | -q            disable messages to screen
+  --failures  | -f            only output on failure (can't use with -q or -v)
   --reuse     | -r            reuse previous results from log if newer than cmd
   --serial    | -s            test in serial. Equivalent to -j1
   --sizeout   | -z <bytes>    abort a test if output exceeds this size (default: 1 meg)
@@ -211,6 +212,7 @@ unless (GetOptions(\%opts,qw[
     parallel|jobs|j:i
     maxindex|m=i
     verbose|v+
+    failures|f
 ])) {
     usage();
     exit EXIT_FAILURE;
@@ -218,6 +220,8 @@ unless (GetOptions(\%opts,qw[
 
 usage() and exit EXIT_SUCCESS if $opts{help};
 usage() and exit EXIT_FAILURE if !@ARGV;
+usage() and exit EXIT_FAILURE if $opts{failures}
+                              && ($opts{verbose}||$opts{quiet});
 
 if (exists($opts{serial}) and exists($opts{parallel})) {
     usage("--serial and --jobs are incompatible");
@@ -663,7 +667,7 @@ MAIN: {
     if ($rc) {
         #the (N) is matched in reuse
         alert(basename($testName)." ABNORMAL TEST FAILURE ($rc)");
-    } else {
+    } elsif (!$opts{failures}) {
         alert(basename($testName)." SUCCESSFUL");
     }
 

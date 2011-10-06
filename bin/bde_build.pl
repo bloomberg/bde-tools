@@ -993,6 +993,12 @@ sub nopPackageTarget ($$$$$) { return 0; }
         }
 
         $make_cmd .= " -f $makefile $what";
+
+        if ($opts{silent} and $what eq "test") {
+            #$make_cmd .= " ALLTEST_VERBOSE=-q";
+            $make_cmd .= " ALLTEST_VERBOSE=-f";
+        }
+
         debug("$pkg $what: $make_cmd");
 
         my $rc=_gather_output($make_cmd,$mklog);
@@ -3274,9 +3280,6 @@ if ($opts{noretry}) {
     $ENV{RETRY_ALLTEST}="";     # ...
 }
 
-#usage("Too many arguments: @ARGV") if @ARGV > 1;
-#my $arg = @ARGV ? $ARGV[0] : '.'; # '.' = look in current directory
-
 #---
 # Set up root - for legacy reasons may be true root or groups root
 
@@ -3727,7 +3730,12 @@ foreach my $arg(@ARGV) {
             $mgr->addAction(new Task::Action({
                         name     => "$thispkg.$target",
                         action   => $action,
-                        args     => [ $thispkg, $target, $uplid, $ufid, $opts{makejobs}],
+                        args     => [ $thispkg,
+                                      $target,
+                                      $uplid,
+                                      $ufid,
+                                      $opts{makejobs}
+                                    ],
                         requires => \@deps,
                         failok   => $failok,
                     }));
