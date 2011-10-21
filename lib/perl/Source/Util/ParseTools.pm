@@ -78,6 +78,8 @@ Replace RCS construct(s) with newlines.  This is meant to be Bloomberg-specific.
 sub rmRCS($) {
     my($input) = @_;
 
+    printf "Called rmRCS on input of length %d\n",length($$input);
+
     fatal("not a ref") if !ref($input);
 
     my $lint = qr/^\s*\#\s*ifndef\s+lint.*?\n/om;
@@ -85,7 +87,11 @@ sub rmRCS($) {
     my $endif = qr/^.*?\s*\#\s*endif.*?\n/om;
 
     $$input =~ s/$lint$rcs$endif/\n\n\n/g;
-    $$input =~ s/$rcs/\n/;
+
+    # The $rcs regex is very expensive.  Avoid it if possible.
+    if($$input =~ /\bchar\s+[Rr][Cc][Ss]/) {
+        $$input =~ s/$rcs/\n/;
+    }
 }
 
 #------------------------------------------------------------------------------
