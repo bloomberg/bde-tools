@@ -48,7 +48,7 @@ sub getSlimSource () {
     my $self=shift;
 
     unless ($self->{slimSource}) {
-	$self->{slimSource} = slimSrcLines($self->getFullSource());
+        $self->{slimSource} = slimSrcLines($self->getFullSource(), 0, 1); # slim out strings, but keep RCS
     }
 
     $self->{source} = $self->{slimSource};
