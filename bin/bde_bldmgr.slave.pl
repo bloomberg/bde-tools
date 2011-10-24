@@ -156,7 +156,7 @@ my $where    = $opts{where}    || $ENV{BDE_ROOT};
 my $tag      = $opts{tag}      || "";
 
 if ($opts{envbat}) {
-    warn "Got --envbat $opts{envbat}";
+    write_logandverbose "Got --envbat $opts{envbat}";
 
     open ENVBAT, '"'.$opts{envbat}.'" && set |';
     while(<ENVBAT>) {
@@ -164,12 +164,12 @@ if ($opts{envbat}) {
     }
     close(ENVBAT);
 
-    warn "Populated environment to:\n";
-    warn "\t$_=$ENV{$_}\n" foreach sort keys %ENV;
+    write_logandverbose "Populated environment to:\n";
+    write_logandverbose "\t$_=$ENV{$_}\n" foreach sort keys %ENV;
 }
 
 if ($opts{path}) {
-    warn "Got --path @{$opts{path}}";
+    write_logandverbose "Got --path @{$opts{path}}";
 
     my $newpath=(join ":",@{$opts{path}});
 
@@ -180,7 +180,7 @@ if ($opts{path}) {
         $ENV{BDE_PATH} = $newpath;
     }
 
-    warn "Populated BDE_PATH to: $ENV{BDE_PATH}\n";
+    write_logandverbose "Populated BDE_PATH to: $ENV{BDE_PATH}\n";
 }
 
 if ($opts{uptodate} && $opts{rebuild}) {
