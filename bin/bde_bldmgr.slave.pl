@@ -157,7 +157,7 @@ my $tag      = $opts{tag}      || "";
 
 if ($opts{envbat}) {
     write_logandverbose "Got --envbat $opts{envbat}";
-    open ENVBAT,"$FindBin::Bin\\run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
+    open ENVBAT,"$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
     while(<ENVBAT>) {
         /^(.*?)=(.*)$/ and $ENV{$1}=$2;
     }
