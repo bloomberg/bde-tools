@@ -3070,7 +3070,7 @@ sub makeGroupMakefile($$$$$) {
         push @mkf, "\t\$(RM) \$\@\n";
         push @mkf, "\t\$(CD) $gop_locn_real && ".
           "\$(AR_INSTALL) \\\n\t".
-            (join " \\\n\t",@{$all_objects_relative{$lib}})."\\\n";
+            (join " \\\n\t",@{$all_objects_relative{$lib}})."\n";
     }
 
     push @mkf,"# ---------------- END ".uc($gop)." MAKEFILE ---------------\n";
