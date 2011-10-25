@@ -155,42 +155,6 @@ my $where    = $opts{where}    || $ENV{BDE_ROOT};
 
 my $tag      = $opts{tag}      || "";
 
-if ($opts{envbat}) {
-    write_logandverbose "Got --envbat $opts{envbat}";
-    open ENVBAT,"$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
-    while(<ENVBAT>) {
-        /^(.*?)=(.*)$/ and $ENV{$1}=$2;
-    }
-    close(ENVBAT);
-
-    write_logandverbose "Populated environment to:\n";
-    write_logandverbose "\t$_=$ENV{$_}\n" foreach sort keys %ENV;
-}
-
-if ($opts{path}) {
-    write_logandverbose "Got --path @{$opts{path}}";
-
-    my $newpath=(join ":",@{$opts{path}});
-
-    if (exists $ENV{BDE_PATH}) {
-        $ENV{BDE_PATH} = "$newpath:$ENV{BDE_PATH}";
-    }
-    else {
-        $ENV{BDE_PATH} = $newpath;
-    }
-
-    write_logandverbose "Populated BDE_PATH to: $ENV{BDE_PATH}\n";
-}
-
-if ($opts{uptodate} && $opts{rebuild}) {
-    fatal "--uptodate and --rebuild are mutually exclusive"
-}
-
-# Ensure we pick up tools from the view we are building
-unless ($iamwindows) {
-  $ENV{PATH} = join(':',"$where/tools/bin",$ENV{PATH});
-}
-
 my $uplid;
 if ($opts{uplid}) {
     fatal "--uplid and --compiler are mutually exclusive"
@@ -203,44 +167,6 @@ if ($opts{uplid}) {
 } else {
     $uplid = BDE::Build::Uplid->new({ where    => $opts{where} });
 }
-
-if ($group) {
-    if (@ARGV) {
-        usage("Trailing arguments incompatible with --group");
-        exit EXIT_FAILURE;
-    }
-} else {
-  SWITCH: foreach (scalar@ARGV) {
-        $_==0 and do {
-            usage("No --group or trailing group argument supplied");
-            exit EXIT_FAILURE;
-        };
-        $_==1 and do {
-            $group = $opts{group} = $ARGV[0];
-            last;
-        };
-      DEFAULT:
-        usage("@ARGV: only one trailing group argument allowed");
-        exit EXIT_FAILURE;
-    }
-}
-
-unless ($where) {
-   $where = $bindir;
-   $where =~s|tools/bin/?$||s;
-}
-
-usage("No group or package supplied"),exit EXIT_FAILURE
-  unless $opts{group};
-usage("No target build type supplied"), exit EXIT_FAILURE
-  unless $opts{target};
-
-unless ($opts{logdir}) {
-    $opts{logdir}=$bindir;
-    $opts{logdir} =~ s{[/\\][^/\\]+[/\\]?$}{/logs};
-}
-
-my @targets=split /\W+/,$opts{target};
 
 #------------------------------------------------------------------------------
 # logging
@@ -283,6 +209,80 @@ sub write_logandverbose (@) {
     write_slavelog @_,"\n";
     print @_,"\n" if $verbose;
 }
+
+if ($opts{envbat}) {
+    write_logandverbose "Got --envbat $opts{envbat}";
+    open ENVBAT,"$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
+    while(<ENVBAT>) {
+        /^(.*?)=(.*)$/ and $ENV{$1}=$2;
+    }
+    close(ENVBAT);
+
+    write_logandverbose "Populated environment to:\n";
+    write_logandverbose "\t$_=$ENV{$_}\n" foreach sort keys %ENV;
+}
+
+if ($opts{path}) {
+    write_logandverbose "Got --path @{$opts{path}}";
+
+    my $newpath=(join ":",@{$opts{path}});
+
+    if (exists $ENV{BDE_PATH}) {
+        $ENV{BDE_PATH} = "$newpath:$ENV{BDE_PATH}";
+    }
+    else {
+        $ENV{BDE_PATH} = $newpath;
+    }
+
+    write_logandverbose "Populated BDE_PATH to: $ENV{BDE_PATH}\n";
+}
+
+if ($opts{uptodate} && $opts{rebuild}) {
+    fatal "--uptodate and --rebuild are mutually exclusive"
+}
+
+# Ensure we pick up tools from the view we are building
+unless ($iamwindows) {
+  $ENV{PATH} = join(':',"$where/tools/bin",$ENV{PATH});
+}
+
+if ($group) {
+    if (@ARGV) {
+        usage("Trailing arguments incompatible with --group");
+        exit EXIT_FAILURE;
+    }
+} else {
+  SWITCH: foreach (scalar@ARGV) {
+        $_==0 and do {
+            usage("No --group or trailing group argument supplied");
+            exit EXIT_FAILURE;
+        };
+        $_==1 and do {
+            $group = $opts{group} = $ARGV[0];
+            last;
+        };
+      DEFAULT:
+        usage("@ARGV: only one trailing group argument allowed");
+        exit EXIT_FAILURE;
+    }
+}
+
+unless ($where) {
+   $where = $bindir;
+   $where =~s|tools/bin/?$||s;
+}
+
+usage("No group or package supplied"),exit EXIT_FAILURE
+  unless $opts{group};
+usage("No target build type supplied"), exit EXIT_FAILURE
+  unless $opts{target};
+
+unless ($opts{logdir}) {
+    $opts{logdir}=$bindir;
+    $opts{logdir} =~ s{[/\\][^/\\]+[/\\]?$}{/logs};
+}
+
+my @targets=split /\W+/,$opts{target};
 
 #------------------------------------------------------------------------------
 
