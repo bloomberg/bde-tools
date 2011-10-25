@@ -2022,7 +2022,7 @@ build_package_library: \$(PACKAGE_LIB)
 #\$(PACKAGE_LIB): \$(OBJS) noop
 \$(PACKAGE_LIB): \$(OBJS)
 \t\$(RM) \$(PACKAGE_LIB)
-\t\@\$(AR_PACKAGE) \$(notdir \$(OBJS)) > /dev/null 2>&1 || (echo Failure running \$(AR_PACKAGE) \$(notdir \$(OBJS)) && false)
+\t\@\$(AR_PACKAGE) \$(notdir \$(OBJS))
 \t\$(RANLIB)
 
 build_package_objects: \$(OBJS)
@@ -2040,7 +2040,7 @@ install_group_library: \$(GRP_LIB_DIR)${FS}\$(GROUP_LIB)
 \$(GRP_LIB_DIR)${FS}\$(GROUP_LIB): \$(OBJS) noop
 \t\@-\$(MKDIR) \$(GRP_LIB_DIR)
 \t\@\$(RM) \$(GRP_LIB_DIR)${FS}\$(GROUP_LIB)
-\t\@\$(AR_INSTALL) \$(notdir \$(OBJS)) > /dev/null 2>&1 || (echo Failure running \$(AR_INSTALL) \$(notdir \$(OBJS)) && false)
+\t\@\$(AR_INSTALL) \$(notdir \$(OBJS))
 \t\$(RANLIB)
 
 #--- Uninstall (Package from) Group
@@ -3070,9 +3070,7 @@ sub makeGroupMakefile($$$$$) {
         push @mkf, "\t\$(RM) \$\@\n";
         push @mkf, "\t\$(CD) $gop_locn_real && ".
           "\$(AR_INSTALL) \\\n\t".
-            (join " \\\n\t",@{$all_objects_relative{$lib}})."\\\n".
-          "\t     > /dev/null 2>&1 ".
-          "|| (echo Failure running \$(AR_INSTALL) step for group archive && false)"."\n\n";
+            (join " \\\n\t",@{$all_objects_relative{$lib}})."\\\n";
     }
 
     push @mkf,"# ---------------- END ".uc($gop)." MAKEFILE ---------------\n";
