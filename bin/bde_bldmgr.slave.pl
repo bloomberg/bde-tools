@@ -168,6 +168,27 @@ if ($opts{uplid}) {
     $uplid = BDE::Build::Uplid->new({ where    => $opts{where} });
 }
 
+if ($group) {
+    if (@ARGV) {
+        usage("Trailing arguments incompatible with --group");
+        exit EXIT_FAILURE;
+    }
+} else {
+  SWITCH: foreach (scalar@ARGV) {
+        $_==0 and do {
+            usage("No --group or trailing group argument supplied");
+            exit EXIT_FAILURE;
+        };
+        $_==1 and do {
+            $group = $opts{group} = $ARGV[0];
+            last;
+        };
+      DEFAULT:
+        usage("@ARGV: only one trailing group argument allowed");
+        exit EXIT_FAILURE;
+    }
+}
+
 #------------------------------------------------------------------------------
 # logging
 
@@ -251,27 +272,6 @@ if ($opts{uptodate} && $opts{rebuild}) {
 # Ensure we pick up tools from the view we are building
 unless ($iamwindows) {
   $ENV{PATH} = join(':',"$where/tools/bin",$ENV{PATH});
-}
-
-if ($group) {
-    if (@ARGV) {
-        usage("Trailing arguments incompatible with --group");
-        exit EXIT_FAILURE;
-    }
-} else {
-  SWITCH: foreach (scalar@ARGV) {
-        $_==0 and do {
-            usage("No --group or trailing group argument supplied");
-            exit EXIT_FAILURE;
-        };
-        $_==1 and do {
-            $group = $opts{group} = $ARGV[0];
-            last;
-        };
-      DEFAULT:
-        usage("@ARGV: only one trailing group argument allowed");
-        exit EXIT_FAILURE;
-    }
 }
 
 unless ($where) {
