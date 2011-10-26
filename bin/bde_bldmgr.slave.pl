@@ -155,7 +155,69 @@ my $where    = $opts{where}    || $ENV{BDE_ROOT};
 
 my $tag      = $opts{tag}      || "";
 
+my $uplid;
+if ($opts{uplid}) {
+    fatal "--uplid and --compiler are mutually exclusive"
+      if $opts{compiler};
+    $uplid = BDE::Build::Uplid->unexpanded($opts{uplid});
+} elsif ($opts{compiler}) {
+    $uplid = BDE::Build::Uplid->new({ compiler => $opts{compiler},
+                                      where    => $opts{where}
+                                    });
+} else {
+    $uplid = BDE::Build::Uplid->new({ where    => $opts{where} });
+}
+
+#------------------------------------------------------------------------------
+# logging
+
+{
+    my $logOpened=0;
+    my $logfile;
+    my $SLAVELOG;
+
+    sub open_slavelog ($) {
+        return $logfile if $logOpened;
+
+        my $logdir=shift;
+
+        my @lt = localtime();
+        my $dtag = sprintf "%04d%02d%02d-%02d%02d%02d",
+            ($lt[5]+1900),($lt[4]+1),$lt[3],$lt[2],$lt[1],$lt[0];
+
+        unless (retry_dir $logdir) {
+            mkpath($logdir, 0, 0777) or die "cannot make '$logdir': $!\n";
+        }
+        my $logarch = (uname)[0];
+        $logarch =~ s/\s+/_/g;
+        my $hostname = hostname();
+        $logfile = "$logdir/slave.$dtag.$group.$uplid.$hostname.$$.log";
+
+        $SLAVELOG=new IO::Handle;
+        retry_open($SLAVELOG,">$logfile") or die "cannot open build output file: $!";
+        $SLAVELOG->autoflush(1);
+
+        $logOpened = 1;
+
+        return $logfile;
+    }
+
+    sub write_slavelog (@) {
+        print $SLAVELOG @_;
+    }
+
+    sub close_slavelog () {
+        close $SLAVELOG;
+    }
+}
+
+sub write_logandverbose (@) {
+    write_slavelog @_,"\n";
+    print @_,"\n" if $verbose;
+}
+
 if ($opts{envbat}) {
+    open_slavelog($opts{logdir});
     write_logandverbose "Got --envbat $opts{envbat}";
     open ENVBAT,"$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
     while(<ENVBAT>) {
@@ -163,8 +225,8 @@ if ($opts{envbat}) {
     }
     close(ENVBAT);
 
-    write_logandverbose "Populated environment to:\n";
-    write_logandverbose "\t$_=$ENV{$_}\n" foreach sort keys %ENV;
+    write_logandverbose "Populated environment to:";
+    write_logandverbose "\t$_=$ENV{$_}" foreach sort keys %ENV;
 }
 
 if ($opts{path}) {
