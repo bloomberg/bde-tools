@@ -168,13 +168,38 @@ if ($opts{uplid}) {
     $uplid = BDE::Build::Uplid->new({ where    => $opts{where} });
 }
 
+if ($group) {
+    if (@ARGV) {
+        usage("Trailing arguments incompatible with --group");
+        exit EXIT_FAILURE;
+    }
+} else {
+  SWITCH: foreach (scalar@ARGV) {
+        $_==0 and do {
+            usage("No --group or trailing group argument supplied");
+            exit EXIT_FAILURE;
+        };
+        $_==1 and do {
+            $group = $opts{group} = $ARGV[0];
+            last;
+        };
+      DEFAULT:
+        usage("@ARGV: only one trailing group argument allowed");
+        exit EXIT_FAILURE;
+    }
+}
+
 #------------------------------------------------------------------------------
 # logging
 
 {
+    my $logOpened=0;
+    my $logfile;
     my $SLAVELOG;
 
     sub open_slavelog ($) {
+        return $logfile if $logOpened;
+
         my $logdir=shift;
 
         my @lt = localtime();
@@ -187,11 +212,13 @@ if ($opts{uplid}) {
         my $logarch = (uname)[0];
         $logarch =~ s/\s+/_/g;
         my $hostname = hostname();
-        my $logfile = "$logdir/slave.$dtag.$group.$uplid.$hostname.$$.log";
+        $logfile = "$logdir/slave.$dtag.$group.$uplid.$hostname.$$.log";
 
         $SLAVELOG=new IO::Handle;
         retry_open($SLAVELOG,">$logfile") or die "cannot open build output file: $!";
         $SLAVELOG->autoflush(1);
+
+        $logOpened = 1;
 
         return $logfile;
     }
@@ -211,6 +238,7 @@ sub write_logandverbose (@) {
 }
 
 if ($opts{envbat}) {
+    open_slavelog($opts{logdir});
     write_logandverbose "Got --envbat $opts{envbat}";
     open ENVBAT,"$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
     while(<ENVBAT>) {
@@ -218,8 +246,8 @@ if ($opts{envbat}) {
     }
     close(ENVBAT);
 
-    write_logandverbose "Populated environment to:\n";
-    write_logandverbose "\t$_=$ENV{$_}\n" foreach sort keys %ENV;
+    write_logandverbose "Populated environment to:";
+    write_logandverbose "\t$_=$ENV{$_}" foreach sort keys %ENV;
 }
 
 if ($opts{path}) {
@@ -244,27 +272,6 @@ if ($opts{uptodate} && $opts{rebuild}) {
 # Ensure we pick up tools from the view we are building
 unless ($iamwindows) {
   $ENV{PATH} = join(':',"$where/tools/bin",$ENV{PATH});
-}
-
-if ($group) {
-    if (@ARGV) {
-        usage("Trailing arguments incompatible with --group");
-        exit EXIT_FAILURE;
-    }
-} else {
-  SWITCH: foreach (scalar@ARGV) {
-        $_==0 and do {
-            usage("No --group or trailing group argument supplied");
-            exit EXIT_FAILURE;
-        };
-        $_==1 and do {
-            $group = $opts{group} = $ARGV[0];
-            last;
-        };
-      DEFAULT:
-        usage("@ARGV: only one trailing group argument allowed");
-        exit EXIT_FAILURE;
-    }
 }
 
 unless ($where) {
