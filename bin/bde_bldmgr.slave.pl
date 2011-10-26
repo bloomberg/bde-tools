@@ -253,19 +253,6 @@ unless ($iamwindows) {
   $ENV{PATH} = join(':',"$where/tools/bin",$ENV{PATH});
 }
 
-my $uplid;
-if ($opts{uplid}) {
-    fatal "--uplid and --compiler are mutually exclusive"
-      if $opts{compiler};
-    $uplid = BDE::Build::Uplid->unexpanded($opts{uplid});
-} elsif ($opts{compiler}) {
-    $uplid = BDE::Build::Uplid->new({ compiler => $opts{compiler},
-                                      where    => $opts{where}
-                                    });
-} else {
-    $uplid = BDE::Build::Uplid->new({ where    => $opts{where} });
-}
-
 if ($group) {
     if (@ARGV) {
         usage("Trailing arguments incompatible with --group");
@@ -303,48 +290,6 @@ unless ($opts{logdir}) {
 }
 
 my @targets=split /\W+/,$opts{target};
-
-#------------------------------------------------------------------------------
-# logging
-
-{
-    my $SLAVELOG;
-
-    sub open_slavelog ($) {
-        my $logdir=shift;
-
-        my @lt = localtime();
-        my $dtag = sprintf "%04d%02d%02d-%02d%02d%02d",
-            ($lt[5]+1900),($lt[4]+1),$lt[3],$lt[2],$lt[1],$lt[0];
-
-        unless (retry_dir $logdir) {
-            mkpath($logdir, 0, 0777) or die "cannot make '$logdir': $!\n";
-        }
-        my $logarch = (uname)[0];
-        $logarch =~ s/\s+/_/g;
-        my $hostname = hostname();
-        my $logfile = "$logdir/slave.$dtag.$group.$uplid.$hostname.$$.log";
-
-        $SLAVELOG=new IO::Handle;
-        retry_open($SLAVELOG,">$logfile") or die "cannot open build output file: $!";
-        $SLAVELOG->autoflush(1);
-
-        return $logfile;
-    }
-
-    sub write_slavelog (@) {
-        print $SLAVELOG @_;
-    }
-
-    sub close_slavelog () {
-        close $SLAVELOG;
-    }
-}
-
-sub write_logandverbose (@) {
-    write_slavelog @_,"\n";
-    print @_,"\n" if $verbose;
-}
 
 #------------------------------------------------------------------------------
 
