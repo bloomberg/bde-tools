@@ -1924,6 +1924,16 @@ sub makeMakefile ($@) {
         $alltargets="test install";
     }
 
+    my $mainsrc=$options->getValue("APPLICATION_MAIN");
+    my $mainsrc_clean_rule_name = "";
+    my $have_mainsrc_clean_rule = 0;
+
+    if ($mainsrc) {
+        message "Have mainsrc clean rule";
+        $mainsrc_clean_rule_name = "clean.using_relative_paths.application_main_objects";
+        $have_mainsrc_clean_rule = 1;
+    }
+
     # destination installation paths for include files
     my @pkg_inc_files  = map { "\$(PKG_INC_DIR)${FS}$_" } @inc_files;
     my @grp_inc_files  = map { "\$(GRP_INC_DIR)${FS}$_" } @inc_files;
@@ -2062,7 +2072,7 @@ uninstall_group_library:
 clean: cleancache
 \t\$(CD) \$(${PKG}_BLOC) && \$(MAKE) -f $dir${FS}$makefile clean.using_relative_paths
 
-clean.using_relative_paths:
+clean.using_relative_paths: $mainsrc_clean_rule_name
 \t\$(RM) ${clpkg}*.\$(UFID)\$(OBJ_EXT)
 \t\$(RM) ${clpkg}*.\$(UFID).log
 \t\$(RM) make.*.\$(UFID).log
@@ -2237,11 +2247,11 @@ _MAKE_TARGETS_END
             print $FMK "realclean.$comp: clean.$comp\n\n";
         } #foreach my $comp (@build_list)
 
-        my $mainsrc=$options->getValue("APPLICATION_MAIN");
-
         if (isApplication($pkg) and not $mainsrc) {
             $mainsrc="${pkg}.m.cpp=${pkg}.tsk";
         }
+
+        my @srcsNeedingCleanObjs;
 
         if ($mainsrc) {
             my (@exes,$exe);
@@ -2276,11 +2286,24 @@ _MAKE_TARGETS_END
                                         @extraobjs);
                 push @exes,$exe;
 
+                push @srcsNeedingCleanObjs,$src;
+
             }
 
             print $FMK "build_application: ",join(' ',map {
                 "\$(${PKG}_BLOC)${FS}$_"
             } @exes)."\n\n";
+
+            if ($have_mainsrc_clean_rule) {
+                print $FMK "# -- Extra cleanup rule for APPLICATION_MAIN objects\n";
+                print $FMK "$mainsrc_clean_rule_name:\n";
+                foreach my $src (@srcsNeedingCleanObjs) {
+                    # strip extension from sourcename
+                    $src=~s/\.\w+$//;
+                    print $FMK "\t\$(RM) $src.\$(UFID)\$(OBJ_EXT)\n";
+                }
+                print $FMK "\n";
+            }
         }
 
         #----------
