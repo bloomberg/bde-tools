@@ -2415,7 +2415,7 @@ _MAKE_TARGETS_END
             }
             if ($extension eq "c") {
                 if ($uplid->platform() ne "win") {
-                    print $FMK "\t\$(CC) \$(CFLAGS) -o \"\$@\"".
+                    print $FMK "\t\$(CLINK) \$(EXE_OPT)".
                                " \$(${PKG}_BLOC)${FS}$base.\$(UFID)\$(OBJ_EXT)";
                 } else {
                     print $FMK "\t\$(CLINK) \$(CFLAGS) \$(EXE_OPT)".
