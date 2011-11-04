@@ -1,0 +1,532 @@
+$VAR1 = {
+          'default' => {
+                         'build_desc' => '**set platform name**',
+                         'id:dev' => {
+                                       'build_type' => 'dev'
+                                     },
+                         'id:dev-api' => {
+                                           'targets' => undef
+                                         },
+                         'id:dev-nextrel-api' => {
+                                                   'build' => 'N',
+                                                   'build_type' => 'nextrel-api'
+                                                 },
+                         'id:nextrel' => {
+                                           'build_type' => 'nextrel'
+                                         },
+                         'kshrc_check' => 'if [ -e /home/bdebuild/.kshrc ]; then . /home/bdebuild/.kshrc; fi;',
+                         'log_destdir' => '/',
+                         'no_clearcase' => 'Y',
+                         'rmtbin' => '/bb/bigstor17/appinfra/mgiroux/bde-tools/etc/../bin',
+                         'rmtroot' => '[srcdir]',
+                         'rsh_cmd' => 'ssh -2 -n -o PreferredAuthentications=publickey -o BatchMode=yes ',
+                         'serial' => 'N',
+                         'serial_tests_groups' => 'e_ipc a_basfs a_bassvclt a_baslt a_fsipc a_bassvc a_bascat',
+                         'slave_script' => '[rmtbin]/bde_bldmgr.slave.pl --nice 10',
+                         'srcdir' => '',
+                         'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                       },
+          'hp' => {
+                    'build' => 'Y',
+                    'build_desc' => 'HP/HPUX/aCC',
+                    'hosts' => 'nyhbldo1',
+                    'id:dev' => {
+                                  'jobs' => 8,
+                                  'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                                },
+                    'id:dev-api' => {
+                                      'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                                    },
+                    'id:nextrel' => {
+                                      'hosts' => 'nyhbldo1',
+                                      'jobs' => 8,
+                                      'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                                    },
+                    'id:nextrel-api' => {
+                                          'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                                        },
+                    'targets' => 'dbg_exc_mt dbg_exc_mt_64',
+                    'test_host' => {
+                                     'a_bascat' => 'hp1',
+                                     'a_basfs' => 'hp2',
+                                     'a_baslt' => 'hp1',
+                                     'a_bassvc' => 'hp3',
+                                     'a_bassvclt' => 'hp2',
+                                     'a_bdema' => 'hp1',
+                                     'a_comdb2' => 'hp1',
+                                     'a_fsipc' => 'hp3',
+                                     'a_xmf' => 'hp2',
+                                     'bap' => 'hp3',
+                                     'e_ipc' => 'hp2',
+                                     'z_a_bdema' => 'hp3'
+                                   },
+                    'uplid' => 'unix-HP_UX-ia64-B.11.31-acc-6.2'
+                  },
+          'i10' => {
+                     'build' => 'Y',
+                     'build_desc' => 'AIX/PowerPC/xlC10',
+                     'compiler' => 'xlc-10.1',
+                     'hosts' => 'nyibldo2 ibm2 ibm3 ibm4 nyibldo1',
+                     'id:dev' => {
+                                   'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                                 },
+                     'id:nextrel' => {
+                                       'hosts' => 'nyibldo1 nyibldo2 ibm3 ibm2 ibm4 ibm1'
+                                     },
+                     'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
+                     'targets' => 'dbg_exc_mt dbg_exc_mt_64',
+                     'test_host' => {
+                                      'a_bascat' => 'ibm2',
+                                      'a_basfs' => 'ibm2',
+                                      'a_baslt' => 'ibm4',
+                                      'a_bassvc' => 'ibm2',
+                                      'a_bassvclt' => 'ibm4',
+                                      'a_bdema' => 'ibm4',
+                                      'a_comdb2' => 'ibm2',
+                                      'a_fsipc' => 'ibm4',
+                                      'a_xmf' => 'ibm2',
+                                      'bap' => 'ibm4',
+                                      'e_ipc' => 'ibm4',
+                                      'z_a_bdema' => 'ibm2'
+                                    }
+                   },
+          'i10_opt' => {
+                         'build' => 'Y',
+                         'build_desc' => 'AIX/PowerPC/xlC10 opt builds',
+                         'compiler' => 'xlc-10.1',
+                         'hosts' => 'nyibldo1 nyibldo2 ibm2 ibm3 ibm4',
+                         'id:dev' => {
+                                       'targets' => 'opt_exc_mt opt_exc_mt_64'
+                                     },
+                         'id:dev-api' => {
+                                           'build' => 'N'
+                                         },
+                         'id:dev-nextrel-api' => {
+                                                   'build' => 'N'
+                                                 },
+                         'id:nextrel' => {
+                                           'hosts' => 'nyibldo2 ibm3 ibm2 ibm4 ibm1 nyibldo1'
+                                         },
+                         'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
+                         'targets' => 'opt_exc_mt opt_exc_mt_64',
+                         'test_host' => {
+                                          'a_bascat' => 'ibm2',
+                                          'a_basfs' => 'ibm2',
+                                          'a_baslt' => 'ibm4',
+                                          'a_bassvc' => 'ibm2',
+                                          'a_bassvclt' => 'ibm4',
+                                          'a_bdema' => 'ibm4',
+                                          'a_comdb2' => 'ibm2',
+                                          'a_fsipc' => 'ibm4',
+                                          'a_xmf' => 'ibm2',
+                                          'bap' => 'ibm4',
+                                          'e_ipc' => 'ibm4',
+                                          'z_a_bdema' => 'ibm2'
+                                        }
+                       },
+          'i10_safe' => {
+                          'build' => 'Y',
+                          'build_desc' => 'AIX/PowerPC/xlC10 safe builds',
+                          'compiler' => 'xlc-10.1',
+                          'hosts' => 'nyibldo1 nyibldo2 ibm2 ibm3 ibm4',
+                          'id:dev' => {
+                                        'targets' => 'dbg_exc_mt_safe'
+                                      },
+                          'id:nextrel' => {
+                                            'hosts' => 'nyibldo2 ibm3 ibm2 ibm4 ibm1 nyibldo1'
+                                          },
+                          'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
+                          'targets' => 'dbg_exc_mt_safe',
+                          'test_host' => {
+                                           'a_bascat' => 'ibm2',
+                                           'a_basfs' => 'ibm2',
+                                           'a_baslt' => 'ibm4',
+                                           'a_bassvc' => 'ibm2',
+                                           'a_bassvclt' => 'ibm4',
+                                           'a_bdema' => 'ibm4',
+                                           'a_comdb2' => 'ibm2',
+                                           'a_fsipc' => 'ibm4',
+                                           'a_xmf' => 'ibm2',
+                                           'bap' => 'ibm4',
+                                           'e_ipc' => 'ibm4',
+                                           'z_a_bdema' => 'ibm2'
+                                         }
+                        },
+          'lnx-RHEL4-3.4.3' => {
+                                 'build' => 'Y',
+                                 'build_desc' => 'Linux 32/intel/RHEL4/gcc 3.4.3',
+                                 'do_not_build' => 'a_fsbaem a_bassvclt a_bdema a_bascat z_bas z_a_bdema',
+                                 'hosts' => 'nylnxbldo3',
+                                 'id:dev' => {
+                                               'hosts' => 'nylnxbldo1',
+                                               'targets' => 'dbg_exc_mt dbg_exc_mt_64 opt_exc_mt_64',
+                                               'test_host' => {
+                                                                'a_bascat' => 'linxdev1',
+                                                                'a_basfs' => 'linxdev2',
+                                                                'a_baslt' => 'linxdev2',
+                                                                'a_bassvc' => 'linxdev2',
+                                                                'a_bassvclt' => 'linxdev1',
+                                                                'a_comdb2' => 'linxdev1',
+                                                                'a_fsipc' => 'linxdev1',
+                                                                'a_xmf' => 'linxdev2',
+                                                                'bap' => 'linxdev1',
+                                                                'e_ipc' => 'linxdev2'
+                                                              }
+                                             },
+                                 'id:dev-api' => {
+                                                   'build' => 'N'
+                                                 },
+                                 'id:dev-nextrel-api' => {
+                                                           'build' => 'Y',
+                                                           'builds' => 'dbg_exc_mt opt_exc_mt_64',
+                                                           'hosts' => 'nylnxbldo2',
+                                                           'jobs' => 8
+                                                         },
+                                 'jobs' => '6',
+                                 'slave_script' => '[rmtbin]/bde_bldmgr.slave.pl',
+                                 'targets' => 'dbg_exc_mt dbg_exc_mt_64 opt_exc_mt_64',
+                                 'test_host' => {
+                                                  'a_bascat' => 'linxdev3',
+                                                  'a_basfs' => 'linxdev4',
+                                                  'a_baslt' => 'linxdev4',
+                                                  'a_bassvc' => 'linxdev4',
+                                                  'a_bassvclt' => 'linxdev3',
+                                                  'a_comdb2' => 'linxdev3',
+                                                  'a_fsipc' => 'linxdev3',
+                                                  'a_xmf' => 'linxdev4',
+                                                  'bap' => 'linxdev3',
+                                                  'e_ipc' => 'linxdev4'
+                                                }
+                               },
+          'lnx-RHEL5-4.3.5' => {
+                                 'build' => 'Y',
+                                 'build_desc' => 'Linux 32/intel/RHEL5/gcc 4.3.5',
+                                 'do_not_build' => 'a_fsbaem a_bassvclt a_bdema a_bascat z_bas z_a_bdema',
+                                 'hosts' => 'nylxdev1',
+                                 'id:dev' => {
+                                               'targets' => 'dbg_exc_mt dbg_exc_mt_64 opt_exc_mt_64'
+                                             },
+                                 'id:dev-nextrel-api' => {
+                                                           'build' => 'Y',
+                                                           'builds' => 'dbg_exc_mt opt_exc_mt_64',
+                                                           'hosts' => 'nylxdev2',
+                                                           'jobs' => 8
+                                                         },
+                                 'jobs' => '10',
+                                 'slave_script' => '[rmtbin]/bde_bldmgr.slave.pl',
+                                 'targets' => 'dbg_exc_mt dbg_exc_mt_64 opt_exc_mt_64',
+                                 'test_host' => {
+                                                  'a_bascat' => 'nylxdev1',
+                                                  'a_basfs' => 'nylxdev2',
+                                                  'a_baslt' => 'nylxdev2',
+                                                  'a_bassvc' => 'nylxdev2',
+                                                  'a_bassvclt' => 'nylxdev1',
+                                                  'a_comdb2' => 'nylxdev1',
+                                                  'a_fsipc' => 'nylxdev1',
+                                                  'a_xmf' => 'nylxdev2',
+                                                  'bap' => 'nylxdev1',
+                                                  'e_ipc' => 'nylxdev2'
+                                                }
+                               },
+          's12' => {
+                     'build' => 'Y',
+                     'build_desc' => 'Solaris 10/sparc/Studio 12U1',
+                     'hosts' => 'nysbldo1 nysbldo2 nysbldo3 nysbldo4',
+                     'id:dev' => {
+                                   'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                                 },
+                     'id:dev-api' => {
+                                       'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                                     },
+                     'id:dev-nextrel-api' => {
+                                               'build' => 'Y'
+                                             },
+                     'id:nextrel' => {
+                                       'hosts' => 'nysbldo3 nysbldo4 nysbldo1 nysbldo2'
+                                     },
+                     'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
+                     'targets' => 'dbg_exc_mt dbg_exc_mt_64 opt_mt_safe',
+                     'test_host' => {
+                                      'a_bascat' => 'sundev32',
+                                      'a_basfs' => 'sundev1',
+                                      'a_baslt' => 'sundev2',
+                                      'a_bassvc' => 'sundev32',
+                                      'a_bassvclt' => 'sundev32',
+                                      'a_bdema' => 'sundev32',
+                                      'a_comdb2' => 'sundev1',
+                                      'a_fsipc' => 'sundev1',
+                                      'a_xmf' => 'sundev2',
+                                      'bap' => 'sundev32',
+                                      'e_ipc' => 'sundev1',
+                                      'z_a_bdema' => 'sundev1'
+                                    },
+                     'uplid' => 'unix-SunOS-sparc-5.10-cc-5.10'
+                   },
+          's12_opt' => {
+                         'build' => 'Y',
+                         'build_desc' => 'Solaris 10/sparc/Studio 12v4 opt build',
+                         'hosts' => 'nysbldo2 nysbldo3 nysbldo4 nysbldo1',
+                         'id:dev' => {
+                                       'targets' => 'opt_exc_mt opt_exc_mt_64'
+                                     },
+                         'id:dev-api' => {
+                                           'build' => 'N'
+                                         },
+                         'id:dev-nextrel-api' => {
+                                                   'build' => 'N'
+                                                 },
+                         'id:nextrel' => {
+                                           'hosts' => 'nysbldo2 nysbldo3 nysbldo4 nysbldo1'
+                                         },
+                         'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
+                         'targets' => 'opt_exc_mt opt_exc_mt_64',
+                         'test_host' => {
+                                          'a_bascat' => 'sundev32',
+                                          'a_basfs' => 'sundev1',
+                                          'a_baslt' => 'sundev2',
+                                          'a_bassvc' => 'sundev32',
+                                          'a_bassvclt' => 'sundev32',
+                                          'a_bdema' => 'sundev32',
+                                          'a_comdb2' => 'sundev1',
+                                          'a_fsipc' => 'sundev1',
+                                          'a_xmf' => 'sundev2',
+                                          'bap' => 'sundev32',
+                                          'e_ipc' => 'sundev1',
+                                          'z_a_bdema' => 'sundev1'
+                                        },
+                         'uplid' => 'unix-SunOS-sparc-5.10-cc-5.10'
+                       },
+          's12_safe' => {
+                          'build' => 'Y',
+                          'build_desc' => 'Solaris 10/sparc/Studio 12v4 safe build',
+                          'hosts' => 'nysbldo4 nysbldo1 nysbldo2 nysbldo3',
+                          'id:dev' => {
+                                        'targets' => 'dbg_exc_mt_safe'
+                                      },
+                          'id:dev-api' => {
+                                            'build' => 'N'
+                                          },
+                          'id:dev-nextrel-api' => {
+                                                    'build' => 'N'
+                                                  },
+                          'id:nextrel' => {
+                                            'hosts' => 'nysbldo1 nysbldo2 nysbldo3 nysbldo4'
+                                          },
+                          'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
+                          'targets' => 'dbg_exc_mt_safe',
+                          'test_host' => {
+                                           'a_bascat' => 'sundev32',
+                                           'a_basfs' => 'sundev1',
+                                           'a_baslt' => 'sundev2',
+                                           'a_bassvc' => 'sundev32',
+                                           'a_bassvclt' => 'sundev32',
+                                           'a_bdema' => 'sundev32',
+                                           'a_comdb2' => 'sundev1',
+                                           'a_fsipc' => 'sundev1',
+                                           'a_xmf' => 'sundev2',
+                                           'bap' => 'sundev32',
+                                           'e_ipc' => 'sundev1',
+                                           'z_a_bdema' => 'sundev1'
+                                         },
+                          'uplid' => 'unix-SunOS-sparc-5.10-cc-5.10'
+                        },
+          'sgcc' => {
+                      'build' => 'Y',
+                      'build_desc' => 'Solaris 10/sparc/gcc',
+                      'compiler' => 'gcc',
+                      'hosts' => 'nysbldo4 nysbldo1 nysbldo2 nysbldo3',
+                      'id:dev' => {
+                                    'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                                  },
+                      'id:dev-api' => {
+                                        'build' => 'N'
+                                      },
+                      'id:nextrel-api' => {
+                                            'build' => 'N'
+                                          },
+                      'jobs' => 12,
+                      'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
+                      'test_host' => {
+                                       'a_bascat' => 'sundev32',
+                                       'a_basfs' => 'sundev1',
+                                       'a_baslt' => 'sundev2',
+                                       'a_bassvc' => 'sundev32',
+                                       'a_bassvclt' => 'sundev32',
+                                       'a_bdema' => 'sundev32',
+                                       'a_comdb2' => 'sundev1',
+                                       'a_fsipc' => 'sundev1',
+                                       'a_xmf' => 'sundev2',
+                                       'bap' => 'sundev32',
+                                       'e_ipc' => 'sundev1',
+                                       'z_a_bdema' => 'sundev1'
+                                     },
+                      'uplid' => 'unix-SunOS-sparc-5.10-gcc-4.3.2'
+                    },
+          'sgcc-4.6.1' => {
+                            'build' => 'Y',
+                            'build_desc' => 'Solaris 10/sparc/gcc',
+                            'compiler' => 'gcc-4.6.1',
+                            'hosts' => 'nysbldo4 nysbldo1 nysbldo2 nysbldo3',
+                            'id:dev-api' => {
+                                              'build' => 'N'
+                                            },
+                            'id:nextrel-api' => {
+                                                  'build' => 'N'
+                                                },
+                            'jobs' => 12,
+                            'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
+                            'targets' => 'dbg_exc_mt dbg_exc_mt_64 dbg_exc_mt_safe_cpp11',
+                            'test_host' => {
+                                             'a_bascat' => 'sundev32',
+                                             'a_basfs' => 'sundev1',
+                                             'a_baslt' => 'sundev2',
+                                             'a_bassvc' => 'sundev32',
+                                             'a_bassvclt' => 'sundev32',
+                                             'a_bdema' => 'sundev32',
+                                             'a_comdb2' => 'sundev1',
+                                             'a_fsipc' => 'sundev1',
+                                             'a_xmf' => 'sundev2',
+                                             'bap' => 'sundev32',
+                                             'e_ipc' => 'sundev1',
+                                             'z_a_bdema' => 'sundev1'
+                                           },
+                            'uplid' => 'unix-SunOS-sparc-5.10-gcc-4.6.1'
+                          },
+          'w32' => {
+                     'bde_path_overrides' => '',
+                     'build' => 'N',
+                     'build_desc' => 'Windows/intel32/VS.NET-2005',
+                     'buildview' => 'e:\\\\nightly_builds\\\\[build_type]',
+                     'compiler' => 'cl-14.00',
+                     'cygwin_logdir' => '/e/nightly_logs/[build_type]',
+                     'cygwinview' => '/e/nightly_builds/[build_type]',
+                     'defaultid' => 'dev',
+                     'do_not_build' => 'a_fsbaem e_ipc a_baslt a_xmf bap a_comdb2 a_fsipc a_basfs a_bassvclt a_bdema a_bascat bus z_bus a_bteso apu fde xml z_bas z_bae zde a_bassvc z_a_bdema',
+                     'env_path' => '\'c:/Program Files/Microsoft Visual Studio 8/Common7/Tools/vsvars32.bat\'',
+                     'hosts' => 'bdenydev01',
+                     'id:dev' => {
+                                   'build_type' => 'dev',
+                                   'targets' => 'opt_exc_mt dbg_exc_mt'
+                                 },
+                     'id:dev-api' => {
+                                       'build' => 'N',
+                                       'build_type' => 'dev'
+                                     },
+                     'id:nextrel-api' => {
+                                           'build' => 'N',
+                                           'build_type' => 'nextrel'
+                                         },
+                     'kshrc_check' => '',
+                     'log_destdir' => 'e:\\\\nightly_logs\\\\[build_type]',
+                     'no_clearcase' => 'Y',
+                     'postbuild_cmd' => 'rsync --rsh=/usr/bin/ssh -rltgDzOm --include=\'*/\' --include=\'windows-Windows_*[compiler]/*.log\' --include=\'tools/logs/*.log\' --exclude=\'**\' [cygwinview]/ bdebuild@nysbldo2:// ;rsync --rsh=/usr/bin/ssh -rltgDzOm --include=\'*/\' --include=\'*.log\' --exclude=\'**\' [cygwin_logdir]/ bdebuild@nysbldo2:// ',
+                     'rmtbin' => 'e:\\\\git\\\\bde-tools\\\\bin',
+                     'rmtroot' => '[srcdir]',
+                     'serial' => 'Y',
+                     'slave_script' => 'perl [rmtbin]\\\\bde_bldmgr.slave.pl  -E [env_path] ',
+                     'srcdir' => '[buildview]',
+                     'targets' => 'opt_exc_mt dbg_exc_mt'
+                   },
+          'w32_2008' => {
+                          'bde_path_overrides' => '',
+                          'build' => 'Y',
+                          'build_desc' => 'Windows/intel32/VS.NET-2008',
+                          'buildview' => 'e:\\\\nightly_builds\\\\[build_type]',
+                          'compiler' => 'cl-15.00',
+                          'cygwin_logdir' => '/e/nightly_logs/[build_type]',
+                          'cygwinview' => '/e/nightly_builds/[build_type]',
+                          'defaultid' => 'dev',
+                          'do_not_build' => 'a_fsbaem e_ipc a_baslt a_xmf bap a_comdb2 a_fsipc a_basfs a_bassvclt a_bdema a_bascat bus z_bus a_bteso apu fde xml z_bas z_bae zde a_bassvc z_a_bdema',
+                          'env_path' => '\'D:/Program Files/Microsoft Visual Studio 9.0/Common7/Tools/vsvars32.bat\'',
+                          'hosts' => 'bdenydev01',
+                          'id:dev' => {
+                                        'build_type' => 'dev',
+                                        'targets' => 'opt_exc_mt dbg_exc_mt_safe'
+                                      },
+                          'id:dev-api' => {
+                                            'build_type' => 'dev',
+                                            'targets' => 'opt_exc_mt dbg_exc_mt_safe'
+                                          },
+                          'id:nextrel-api' => {
+                                                'build_type' => 'nextrel'
+                                              },
+                          'kshrc_check' => '',
+                          'log_destdir' => 'e:\\\\nightly_logs\\\\[build_type]',
+                          'no_clearcase' => 'Y',
+                          'postbuild_cmd' => 'rsync --rsh=/usr/bin/ssh -rltgDzOm --include=\'*/\' --include=\'windows-Windows_*[compiler]/*.log\' --include=\'tools/logs/*.log\' --exclude=\'**\' [cygwinview]/ bdebuild@nysbldo2:// ;rsync --rsh=/usr/bin/ssh -rltgDzOm --include=\'*/\' --include=\'*.log\' --exclude=\'**\' [cygwin_logdir]/ bdebuild@nysbldo2:// ',
+                          'rmtbin' => 'e:\\\\git\\\\bde-tools\\\\bin',
+                          'rmtroot' => '[srcdir]',
+                          'serial' => 'Y',
+                          'slave_script' => 'perl [rmtbin]\\\\bde_bldmgr.slave.pl  -E [env_path] ',
+                          'srcdir' => '[buildview]',
+                          'targets' => 'opt_exc_mt dbg_exc_mt'
+                        },
+          'w32_2010' => {
+                          'bde_path_overrides' => '',
+                          'build' => 'N',
+                          'build_desc' => 'Windows/intel32/VS.NET-2010',
+                          'buildview' => 'e:\\\\nightly_builds\\\\[build_type]',
+                          'compiler' => 'cl-16.00',
+                          'cygwin_logdir' => '/e/nightly_logs/[build_type]',
+                          'cygwinview' => '/e/nightly_builds/[build_type]',
+                          'defaultid' => 'dev',
+                          'do_not_build' => 'a_fsbaem e_ipc a_baslt a_xmf bap a_comdb2 a_fsipc a_basfs a_bassvclt a_bdema a_bascat bus z_bus a_bteso apu fde xml z_bas z_bae zde a_bassvc z_a_bdema',
+                          'env_path' => '\'D:/Program Files/Microsoft Visual Studio 10.0/Common7/Tools/vsvars32.bat\'',
+                          'hosts' => 'bdenydev01',
+                          'id:dev' => {
+                                        'build_type' => 'dev',
+                                        'targets' => 'opt_exc_mt dbg_exc_mt dbg_exc_mt_rtd opt_exc_mt_rtd'
+                                      },
+                          'id:dev-api' => {
+                                            'build_type' => 'dev',
+                                            'targets' => 'opt_exc_mt dbg_exc_mt dbg_exc_mt_rtd opt_exc_mt_rtd'
+                                          },
+                          'id:nextrel-api' => {
+                                                'build_type' => 'nextrel'
+                                              },
+                          'kshrc_check' => '',
+                          'log_destdir' => 'e:\\\\nightly_logs\\\\[build_type]',
+                          'no_clearcase' => 'Y',
+                          'postbuild_cmd' => 'rsync --rsh=/usr/bin/ssh -rltgDzOm --include=\'*/\' --include=\'windows-Windows_*[compiler]/*.log\' --include=\'tools/logs/*.log\' --exclude=\'**\' [cygwinview]/ bdebuild@nysbldo2:// ;rsync --rsh=/usr/bin/ssh -rltgDzOm --include=\'*/\' --include=\'*.log\' --exclude=\'**\' [cygwin_logdir]/ bdebuild@nysbldo2:// ',
+                          'rmtbin' => 'e:\\\\git\\\\bde-tools\\\\bin',
+                          'rmtroot' => '[srcdir]',
+                          'serial' => 'Y',
+                          'slave_script' => 'perl [rmtbin]\\\\bde_bldmgr.slave.pl  -E [env_path] ',
+                          'srcdir' => '[buildview]',
+                          'targets' => 'opt_exc_mt dbg_exc_mt dbg_exc_mt_rtd opt_exc_mt_rtd'
+                        },
+          'w64a' => {
+                      'bde_path_overrides' => '',
+                      'build' => 'Y',
+                      'build_desc' => 'APINYDEV01 Windows/intel64/VS.NET-2008',
+                      'buildview' => 'd:\\\\nightly_builds\\\\[build_type]',
+                      'compiler' => 'cl-15.00',
+                      'cygwin_logdir' => '/d/nightly_logs/[build_type]',
+                      'cygwinview' => '/d/nightly_builds/[build_type]',
+                      'defaultid' => 'dev',
+                      'do_not_build' => 'a_fsbaem e_ipc a_baslt a_xmf bap a_comdb2 a_fsipc a_basfs a_bassvclt a_bdema a_bascat bus z_bus a_bteso apu fde xml z_bas z_bae zde a_bassvc z_a_bdema',
+                      'env_path' => '\'c:/Program Files (x86)/Microsoft Visual Studio 9.0/VC/bin/amd64/vcvarsamd64.bat\'',
+                      'hosts' => 'apinydev01',
+                      'id:dev' => {
+                                    'build_type' => 'dev',
+                                    'targets' => 'dbg_exc_mt_64_rtd opt_exc_mt_64_rtd'
+                                  },
+                      'id:dev-api' => {
+                                        'build_type' => 'dev',
+                                        'targets' => 'dbg_exc_mt_64_rtd opt_exc_mt_64_rtd'
+                                      },
+                      'id:nextrel-api' => {
+                                            'build_type' => 'nextrel'
+                                          },
+                      'kshrc_check' => '',
+                      'log_destdir' => 'd:\\\\nightly_logs\\\\[build_type]',
+                      'no_clearcase' => 'Y',
+                      'postbuild_cmd' => 'rsync --rsh=/usr/bin/ssh -rltgDzOm --include=\'*/\' --include=\'windows-Windows_*[compiler]/*.log\' --include=\'tools/logs/*.log\' --exclude=\'**\' [cygwinview]/ bdebuild@nysbldo2:// ;rsync --rsh=/usr/bin/ssh -rltgDzOm --include=\'*/\' --include=\'*.log\' --exclude=\'**\' [cygwin_logdir]/ bdebuild@nysbldo2:// ',
+                      'rmtbin' => 'd:\\\\git\\\\bde-tools\\\\bin',
+                      'rmtroot' => '[srcdir]',
+                      'serial' => 'Y',
+                      'slave_script' => 'perl [rmtbin]\\\\bde_bldmgr.slave.pl  -E [env_path] ',
+                      'srcdir' => '[buildview]',
+                      'targets' => 'dbg_exc_mt_64_rtd opt_exc_mt_64_rtd'
+                    }
+        };
