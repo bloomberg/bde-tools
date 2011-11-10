@@ -51,6 +51,7 @@ bool                Lines::s_includesCassert;
 bool                Lines::s_includesDoubleQuotes;
 bool                Lines::s_assertFound;
 bool                Lines::s_includesComponentDotH;
+bool                Lines::s_couldntOpenFile;
 
 // LOCAL FUNCTIONS
 
@@ -744,6 +745,7 @@ Lines::Lines(const char *fileName)
     s_includesDoubleQuotes = false;
     s_assertFound = false;
     s_includesComponentDotH = false;
+    s_couldntOpenFile = false;
 
     if (s_fileName.length() >= 6 &&
                       s_fileName.substr(s_fileName.length() - 6) == ".t.cpp") {
@@ -759,8 +761,8 @@ Lines::Lines(const char *fileName)
 
     bsl::ifstream fin(fileName);
     if (!fin) {
-        bsl::cerr << "Can't open file: " << fileName << endl;
-        abort();
+        s_couldntOpenFile = true;
+	return;
     }
 
     {
@@ -833,6 +835,7 @@ Lines::Lines(const bsl::string& string)
     s_includesDoubleQuotes = false;
     s_assertFound = false;
     s_includesComponentDotH = false;
+    s_couldntOpenFile = false;
 
     s_lines.push_back("");
 
@@ -916,10 +919,14 @@ void Lines::printWarnings(bsl::ostream *stream)
         *stream << "Warning: " << s_fileName <<
                                     ": 'ASSERT' found in comment in .h file\n";
     }
-    if (BDEFLAG_DOT_H != s_fileType && !s_includesComponentDotH) {
+    if (BDEFLAG_DOT_H != s_fileType && !s_includesComponentDotH &&
+                                                          !s_couldntOpenFile) {
         *stream << "Warning: " << s_fileName <<
                         ": should include, as the first include, '#include " <<
                                                   componentInclude() << "'.\n";
+    }
+    if (s_couldntOpenFile) {
+        *stream << "Warning: " << s_fileName << ": could not be opened\n";
     }
     if (!s_longLines.empty()) {
         *stream << "Warning: long line(s) in " << s_fileName <<

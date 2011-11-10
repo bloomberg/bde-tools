@@ -53,6 +53,10 @@ BSLS_IDENT("$Id: $")
 #include <bsl_utility.h>
 #endif
 
+#ifndef INCLUDED_BSL_LIST
+#include <bsl_list.h>
+#endif
+
 #ifndef INCLUDED_BSL_VECTOR
 #include <bsl_vector.h>
 #endif
@@ -163,6 +167,7 @@ class Lines {
     static bool                s_includesDoubleQuotes;
     static bool                s_assertFound;
     static bool                s_includesComponentDotH;
+    static bool                s_couldntOpenFile;
 
     // Only manipulators can change the value of static members
 
@@ -338,7 +343,6 @@ class Lines {
     // ACCESSORS
     void printWarnings(bsl::ostream *stream);
         // Print warnings according to the static data in this class.
-
 };
 
 // CLASS METHODS
