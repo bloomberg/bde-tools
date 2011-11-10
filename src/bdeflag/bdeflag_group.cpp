@@ -17,6 +17,8 @@
 #include <bsl_iostream.h>
 #include <bsl_string.h>
 
+#include <bsl_cstdlib.h>
+
 #include <ctype.h>
 
 #define P(x)          Ut::p(#x, (x))
@@ -103,6 +105,8 @@ static bsl::set<bsl::string> binaryOperators;
 static bsl::set<bsl::string> unaryOperators;
 
 static bsl::set<bsl::string> annoyingMacros;
+
+static bool tolerateSnugComments;
 
 struct StartProgram {
     // An object of this type is declared 'static' so that the c'tor will be
@@ -203,6 +207,8 @@ StartProgram::StartProgram()
     for (int i = 0; i < NUM_ANNOYING_MACROS; ++i) {
         annoyingMacros.insert(arrayAnnoyingMacros[i]);
     }
+
+    tolerateSnugComments = !!bsl::getenv("BDEFLAG_TOLERATE_SNUG_COMMENTS");
 }
 
 static
@@ -503,6 +509,9 @@ void Group::checkAllBooleanRoutineNames()
 
 void Group::checkAllCodeComments()
 {
+    strangelyIndentedComments.clear();
+    commentNeedsBlankLines.clear();
+
     topLevel().recurseMemTraverse(&Group::checkCodeComments);
 
     if (!strangelyIndentedComments.empty()) {
@@ -511,7 +520,7 @@ void Group::checkAllCodeComments()
                                              strangelyIndentedComments << endl;
         strangelyIndentedComments.clear();
     }
-    if (!commentNeedsBlankLines.empty()) {
+    if (!tolerateSnugComments && !commentNeedsBlankLines.empty()) {
         cerr << "Warning: " << Lines::fileName() <<
                 ": comments should be separated from code by a blank line"
                               " at line(s) " << commentNeedsBlankLines << endl;
