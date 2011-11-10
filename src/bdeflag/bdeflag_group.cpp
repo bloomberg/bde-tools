@@ -1863,7 +1863,8 @@ void Group::checkFunctionDoc() const
     bool isUnNamed = false;
 
     Place docPlace = d_close;
-    char nextChar = *(d_close + 1);
+    Place after = d_close + 1;
+    char nextChar = *after;
 
     if (Ut::npos() != d_prevWord.find(':')) {
         // Defining something separately declared in a class somewhere.  It
@@ -1891,6 +1892,24 @@ void Group::checkFunctionDoc() const
             for (++it; d_parent->d_subGroups.end() != it &&
                    (group = *it, BDEFLAG_CTOR_CLAUSE == group->d_type); ++it) {
                 docPlace = group->d_close;
+            }
+        }
+
+        if (isalpha(nextChar)) {
+            after.wordAfter(&after);
+            docPlace = after;
+
+            ++after;
+            nextChar = *after;
+        }
+
+        {
+            Place pl;
+            if ('=' == nextChar && "0" == (after + 1).wordAfter(&pl)) {
+                docPlace = pl;
+
+                after = pl + 1;
+                nextChar = *after;
             }
         }
 
