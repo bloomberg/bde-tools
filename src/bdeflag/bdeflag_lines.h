@@ -162,6 +162,7 @@ class Lines {
     static bool                s_includesCassert;
     static bool                s_includesDoubleQuotes;
     static bool                s_assertFound;
+    static bool                s_includesComponentDotH;
 
     // Only manipulators can change the value of static members
 

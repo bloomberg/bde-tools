@@ -50,6 +50,36 @@ bool                Lines::s_includesAssertH;
 bool                Lines::s_includesCassert;
 bool                Lines::s_includesDoubleQuotes;
 bool                Lines::s_assertFound;
+bool                Lines::s_includesComponentDotH;
+
+// LOCAL FUNCTIONS
+
+static
+bsl::string componentInclude() {
+    bsl::string s = Lines::fileName();
+    size_t slashPos = s.find_last_of('/');
+    if (Ut::npos() != slashPos) {
+        s = s.substr(slashPos + 1);
+    }
+    size_t clip;
+    switch (Lines::fileType()) {
+      case Lines::BDEFLAG_DOT_CPP: {
+	clip = 4;
+      }  break;
+      case Lines::BDEFLAG_DOT_T_DOT_CPP: {
+	clip = 6;
+      }  break;
+      default: {
+	BSLS_ASSERT_OPT(0);    // should never happen
+	return "";
+      }  break;
+    }
+    BSLS_ASSERT_OPT(s.length() >= clip);
+
+    s = s.substr(0, s.length() - clip);
+
+    return "<" + s + ".h>";
+}
 
 // PRIVATE MANIPULATORS
 void Lines::checkForAssert()
@@ -101,6 +131,8 @@ void Lines::checkIncludes()
     s_includesCassert = false;
     s_includesDoubleQuotes = false;
 
+    bool firstInclude = true;
+
     for (int li = 1; li < lineCount(); ++li) {
         const bsl::string& curLine = line(li);
 
@@ -111,7 +143,20 @@ void Lines::checkIncludes()
                                                       "include",
                                                       pos)) {
                 pos = curLine.find_first_not_of(' ', pos + 7);
+
                 if (Ut::npos() != pos) {
+                    if (firstInclude) {
+                        firstInclude = false;
+
+                        if (BDEFLAG_DOT_H != s_fileType) {
+                            if (Ut::frontMatches(curLine,
+                                                 componentInclude(),
+                                                 pos)) {
+                                s_includesComponentDotH = true;
+                            }
+                        }
+                    }
+
                     if ('"' == curLine[pos]) {
                         s_includesDoubleQuotes = true;
                     }
@@ -698,6 +743,7 @@ Lines::Lines(const char *fileName)
     s_includesCassert = false;
     s_includesDoubleQuotes = false;
     s_assertFound = false;
+    s_includesComponentDotH = false;
 
     if (s_fileName.length() >= 6 &&
                       s_fileName.substr(s_fileName.length() - 6) == ".t.cpp") {
@@ -786,6 +832,7 @@ Lines::Lines(const bsl::string& string)
     s_includesCassert = false;
     s_includesDoubleQuotes = false;
     s_assertFound = false;
+    s_includesComponentDotH = false;
 
     s_lines.push_back("");
 
@@ -868,6 +915,11 @@ void Lines::printWarnings(bsl::ostream *stream)
     if (s_assertFound) {
         *stream << "Warning: " << s_fileName <<
                                     ": 'ASSERT' found in comment in .h file\n";
+    }
+    if (BDEFLAG_DOT_H != s_fileType && !s_includesComponentDotH) {
+        *stream << "Warning: " << s_fileName <<
+                        ": should include, as the first include, '#include " <<
+                                                  componentInclude() << "'.\n";
     }
     if (!s_longLines.empty()) {
         *stream << "Warning: long line(s) in " << s_fileName <<
