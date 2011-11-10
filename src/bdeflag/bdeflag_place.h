@@ -189,7 +189,8 @@ class Place {
         // Return the C++ identifier at or after the current position, setting
         // the optionally specified 'end' to the last char of the word.  If a
         // non-identifier char is encountered before an identifier is
-        // encountered, 'end' is pointed to that char and "" is returned.
+        // encountered, 'end' is pointed to that char and "" is returned.  Note
+	// that it is OK for 'end' to equal 'this'.
 
     bsl::string wordBefore(Place *start = 0) const;
         // Return the word preceding or ending with '**this' consisting of
