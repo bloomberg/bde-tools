@@ -21,19 +21,14 @@ int main(int argc, char *argv[])
 {
     for (int f = 1; f < argc; ++f) {
         if (argc > 2) {
-            bsl::cout << argv[f] << ':' << bsl::endl;
+            bsl::cerr << argv[f] << ':' << bsl::endl;
         }
 
         Lines lines(argv[f]);
         Place::setEnds();
         lines.printWarnings(&bsl::cerr);
 
-        if (Lines::hasTabs()) {
-            bsl::cerr << "Error: ignoring " << argv[f] << " because of tabs\n";
-        }
-        else {
-            Group::doEverything();
-        }
+        Group::doEverything();
     }
 
     return 0;

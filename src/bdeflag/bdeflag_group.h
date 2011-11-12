@@ -184,6 +184,11 @@ class Group {
         // If this is a routine body, check that the starting '{' is on its own
         // line and properly indented.
 
+    void registerValidFriendTarget() const;
+        // Only called if we're in a .h file.  If this a group, put it on the
+        // list of valid friend target groups.  If this is a function decl
+        // not in a group, put it in the list of friend target routines.
+
     void getArgList(bsl::vector<bsl::string> *typeNames,
                     bsl::vector<bsl::string> *names,
                     bsl::vector<int>         *lineNums) const;
@@ -211,6 +216,11 @@ class Group {
     void checkAllCodeIndents();
         // Check indentation of all code in classes, code bodies and routine
         // bodies.
+
+    static
+    void checkAllFriends();
+        // Nop unless in a .h file.  Make sure that all friendships occurring
+        // in this file refer to groups or methods declared in this file.
 
     static
     void checkAllFunctionDoc();

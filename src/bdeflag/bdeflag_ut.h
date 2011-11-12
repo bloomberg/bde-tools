@@ -8,7 +8,7 @@
 #endif
 BSLS_IDENT("$Id: $")
 
-//@PURPOSE: Provide low-level utilities for bdeflag program
+//@PURPOSE: Provide low-level utilities for bdeflag program.
 //
 //@CLASSES:
 //    Ut: low-level utilities for bdeflag program
@@ -83,6 +83,10 @@ struct Ut {
         // 'startsQuoted' indicates the line is started in a quoted string.
         // Return true if the quotes are unterminated and the line ends in a
         // '\'.  Note that this method understands '\\' escapes.
+        //
+        // DEPRECATED: No longer used as blocking out quotes was not readily
+        // separable from processing comments, so functionality was blended in
+        // in 'bdeflag_lines.cpp'.
 
     static
     char charAtOrBefore(const bsl::string& s, int col, int *atCol = 0);

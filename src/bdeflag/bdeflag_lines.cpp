@@ -56,7 +56,9 @@ bool                Lines::s_couldntOpenFile;
 // LOCAL FUNCTIONS
 
 static
-bsl::string componentInclude() {
+bsl::string componentInclude()
+    // for a .cpp file, determine the appropriate component #include clause
+{
     bsl::string s = Lines::fileName();
     size_t slashPos = s.find_last_of('/');
     if (Ut::npos() != slashPos) {
@@ -65,14 +67,14 @@ bsl::string componentInclude() {
     size_t clip;
     switch (Lines::fileType()) {
       case Lines::BDEFLAG_DOT_CPP: {
-	clip = 4;
+        clip = 4;
       }  break;
       case Lines::BDEFLAG_DOT_T_DOT_CPP: {
-	clip = 6;
+        clip = 6;
       }  break;
       default: {
-	BSLS_ASSERT_OPT(0);    // should never happen
-	return "";
+        BSLS_ASSERT_OPT(0);    // should never happen
+        return "";                                                    // RETURN
       }  break;
     }
     BSLS_ASSERT_OPT(s.length() >= clip);
@@ -80,6 +82,14 @@ bsl::string componentInclude() {
     s = s.substr(0, s.length() - clip);
 
     return "<" + s + ".h>";
+}
+
+static inline
+int nextLiveChar(const bsl::string& s, int pos)
+    // skip to next possibly relevant char in 'killQuotesComments'
+{
+    size_t ret = s.find_first_of("/*\"'", pos);
+    return Ut::npos() == ret ? s.length() : ret;
 }
 
 // PRIVATE MANIPULATORS
@@ -180,7 +190,7 @@ void Lines::checkIncludes()
 void Lines::checkPurpose()
 {
     if (BDEFLAG_DOT_H != s_fileType) {
-        return;
+        return;                                                       // RETURN
     }
 
     const bsl::string purpose = "//@PURPOSE:";
@@ -194,6 +204,12 @@ void Lines::checkPurpose()
             continue;
         }
 
+        if (curLine.length() < 12) {
+            s_purposeFlags |= (BDEFLAG_PURPOSE_LACKS_PROVIDE |
+                               BDEFLAG_PURPOSE_LACKS_PERIOD);
+            return;                                                   // RETURN
+        }
+
         const bsl::string& firstPurposeWord = Ut::wordAfter(curLine, 11);
         if (provide != firstPurposeWord && lcProvide != firstPurposeWord) {
             s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PROVIDE;
@@ -203,7 +219,7 @@ void Lines::checkPurpose()
             s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PERIOD;
         }
 
-        return;
+        return;                                                       // RETURN
     }
 
     s_purposeFlags |= BDEFLAG_NO_PURPOSE;
@@ -459,22 +475,72 @@ void Lines::killQuotesComments()
 
     s_cStyleComments.clear();
 
-    char carryQuotes = 0;
+    char quote = 0;    // 0: not in quoted str, ':in quoted char, ": in q str
     const int lineCount = s_lineCount;
     bool inCStyleComment = false;
     for (int li = 0; li < s_lineCount; ++li) {
         bsl::string& curLine = s_lines[li];
         const int len = curLine.length();
 
-        carryQuotes = Ut::blockOutQuotes(&curLine, carryQuotes);
-
         bool slash    = false;
         bool asterisk = false;
-        for (int col = 0; col < len; ++col) {
+        for (int col = 0; col < len; col = (slash | asterisk | inCStyleComment)
+                                         ? col + 1
+                                         : nextLiveChar(curLine, col + 1)) {
             char& c = curLine[col];
 
             if (!inCStyleComment) {
                 BSLS_ASSERT_OPT(!asterisk);
+
+                // Handle quoted strings
+
+                if (quote | ('"' == c) | ('\'' == c)) {
+                    BSLS_ASSERT_OPT(!quote || 0 == col);
+                    slash = false;
+
+                    const char startChar  = quote ? quote : c;
+                    size_t       endPos   = quote ? -1 : col;
+                    const char *endStr = '"' == startChar ? "\\\"" : "\\'";
+                    while (Ut::npos() !=
+                        (endPos = curLine.find_first_of(endStr, endPos + 1))) {
+                        if ('\\' == curLine[endPos]) {
+                            if (curLine.length() > endPos + 1) {
+                                ++endPos;    // skip the quoted char
+                            }
+                            else {
+                                quote = startChar;    // string goes off line
+                            }
+                        }
+                        else {
+                            quote = 0;    // string ended
+                            break;
+                        }
+                    }
+                    if (Ut::npos() == endPos) {
+                        endPos = curLine.length();
+                    }
+                    else {
+                        BSLS_ASSERT_OPT(startChar == curLine[endPos]);
+
+                        ++endPos;
+                    }
+                    const bsl::string& endLine = curLine.substr(endPos);
+
+                    // Note the following manipulation of 'curLine' may
+                    // invalidate reference 'c'.
+
+                    curLine.resize(col);
+                    curLine.append(endPos - col, startChar);
+                    curLine += endLine;
+
+                    BSLS_ASSERT_OPT(curLine.length() == len);
+                    BSLS_ASSERT_OPT(endPos >= 1);
+                    BSLS_ASSERT_OPT(!quote || len == endPos);
+
+                    col = endPos - 1;
+
+                    continue;    // on to next char
+                }
 
                 if (slash) {
                     slash = false;
@@ -540,6 +606,7 @@ void Lines::killQuotesComments()
             else {
                 // in C-style Comment
 
+                BSLS_ASSERT_OPT(!quote);
                 BSLS_ASSERT_OPT(!slash);
 
                 if ('\\' != c || col != curLine.length() - 1) {
@@ -583,6 +650,30 @@ void Lines::trimTrailingWhite()
     int lineCount = Lines::lineCount();
     for (int li = 0; li < lineCount; ++li) {
         Ut::trim(&s_lines[li]);
+    }
+}
+
+void Lines::untabify()
+{
+    int lineCount = Lines::lineCount();
+    for (int li = 0; li < lineCount; ++li) {
+        bsl::string& curLine = s_lines[li];
+        int len = curLine.length();
+
+        for (int col = 0; col < len; ++col) {
+            if ('\t' == curLine[col]) {
+                curLine[col] = ' ';
+                const int charAfter = ((col + 8) / 8) * 8;
+                ++col;
+                const int toInsert = charAfter - col;
+                BSLS_ASSERT_OPT(toInsert >= 0);  BSLS_ASSERT_OPT(toInsert < 8);
+
+                curLine.insert(col, toInsert, ' ');
+                len += toInsert;
+                BSLS_ASSERT_OPT(curLine.length() == len);
+                col = charAfter - 1;
+            }
+        }
     }
 }
 
@@ -762,7 +853,7 @@ Lines::Lines(const char *fileName)
     bsl::ifstream fin(fileName);
     if (!fin) {
         s_couldntOpenFile = true;
-	return;
+        return;                                                       // RETURN
     }
 
     {
@@ -801,6 +892,7 @@ Lines::Lines(const char *fileName)
     s_state = BDEFLAG_LOADED;
 
     firstDetect();
+    untabify();
     checkIncludes();
     checkForAssert();
     checkPurpose();
@@ -920,7 +1012,7 @@ void Lines::printWarnings(bsl::ostream *stream)
                                     ": 'ASSERT' found in comment in .h file\n";
     }
     if (BDEFLAG_DOT_H != s_fileType && !s_includesComponentDotH &&
-                                                          !s_couldntOpenFile) {
+              !s_couldntOpenFile && Ut::npos() == s_fileName.find(".m.cpp")) {
         *stream << "Warning: " << s_fileName <<
                         ": should include, as the first include, '#include " <<
                                                   componentInclude() << "'.\n";

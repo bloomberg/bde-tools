@@ -8,7 +8,7 @@
 #endif
 BSLS_IDENT("$Id: $")
 
-//@PURPOSE: Provide vectorized representation of a source file
+//@PURPOSE: Provide vectorized representation of a source file.
 //
 //@CLASSES:
 //    Lines: vectorized representation of a source file
@@ -207,6 +207,9 @@ class Lines {
 
     void trimTrailingWhite();
         // Trim trailing whitespace from all the lines.
+
+    void untabify();
+        // Expand tabs into spaces.
 
     void wipeOutMacros();
         // Remove macros, also remove all code enclosed by '#else' - '#endif'
