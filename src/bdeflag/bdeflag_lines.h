@@ -235,6 +235,10 @@ class Lines {
         // standard comment, give the comment in string form.
 
     static
+    bool couldntOpenFile();
+        // True if file could not be opened.
+
+    static
     int commentIndent(int index);
         // Return the indentation of any comment on line indicated by 'index'.
 
@@ -359,6 +363,12 @@ inline
 int Lines::commentIndent(int index)
 {
     return s_commentIndents[index];
+}
+
+inline
+bool Lines::couldntOpenFile()
+{
+    return s_couldntOpenFile;
 }
 
 inline

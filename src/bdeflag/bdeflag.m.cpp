@@ -25,10 +25,11 @@ int main(int argc, char *argv[])
         }
 
         Lines lines(argv[f]);
-        Place::setEnds();
         lines.printWarnings(&bsl::cerr);
-
-        Group::doEverything();
+        if (!Lines::couldntOpenFile()) {
+            Place::setEnds();
+            Group::doEverything();
+        }
     }
 
     return 0;

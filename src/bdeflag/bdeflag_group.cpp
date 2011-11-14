@@ -80,6 +80,7 @@ enum {
     MATCH_BDEAT_DECL,
     MATCH_EXPLICIT,
     MATCH_BLOOMBERGLP,
+    MATCH_TEMPLATE,
     MATCH_NUM_CONSTANTS };
 
 static bsl::vector<bsl::string> match;
@@ -172,8 +173,9 @@ StartProgram::StartProgram()
     match[MATCH__EXCEPT]         = "__except";
     match[MATCH_PRINT]           = "print";
     match[MATCH_BDEAT_DECL]      = "BDEAT_DECL_";
-    match[MATCH_BLOOMBERGLP]     = "BloombergLP";
     match[MATCH_EXPLICIT]        = "explicit";
+    match[MATCH_BLOOMBERGLP]     = "BloombergLP";
+    match[MATCH_TEMPLATE]        = "template";
 
     static const char *arrayBoolOperators[] = {
         "!", "<", "<=", ">", ">=", "==", "!=", "&&", "||" };
@@ -356,14 +358,13 @@ int Group::recurseInitGroup(Place       *place,
 
         d_statementStart = cursor.findStatementStart();
         d_prevWord = (cursor - 1).wordBefore(&d_prevWordBegin);
-        if (d_prevWordBegin < d_statementStart &&
-                           (MATCH[MATCH_NIL] != d_prevWord ||
+        if (d_prevWordBegin < d_statementStart && (!d_prevWord.empty() ||
                                         0 ==strchr(";}{", *d_prevWordBegin))) {
             // probably '{' lined up under 'struct' or 'template'
 
             d_statementStart = d_prevWordBegin.findStatementStart();
         }
-        if (MATCH[MATCH_NIL] == d_prevWord && '>' == *d_prevWordBegin) {
+        if (d_prevWord.empty() && '>' == *d_prevWordBegin) {
             // There's a real problem here, they might just be saying
             // 'a > (c + d)' and it's not really a template.  So what precedes
             // a '(', to be even possibly considered a template, the '>' must
@@ -374,7 +375,7 @@ int Group::recurseInitGroup(Place       *place,
                              d_prevWordBegin.lineNum() == d_open.lineNum())) {
                 Place tnBegin;
                 bsl::string tn = (d_open - 1).templateNameBefore(&tnBegin);
-                if (MATCH[MATCH_NIL] != tn) {
+                if (!tn.empty()) {
                     d_prevWord = tn;
                     d_prevWordBegin = tnBegin;
                 }
@@ -624,13 +625,39 @@ void Group::checkAllFriends()
             int namePos = Lines::lineIndent(li) + 6;
             BSLS_ASSERT('d' == curLine[namePos - 1]);
 
+            bool isClass = false;
             bool isOp = false;
             bsl::string friendName;
             Place pl = Place(li, namePos).findFirstOf(";(");
             if (';' == *pl) {
                 // It's a class
 
-                friendName = Place(li, namePos).wordAfter();
+                isClass = true;
+
+                friendName = Place(li, namePos).wordAfter(&pl);
+
+                bool tplate = false;
+                if (MATCH[MATCH_TEMPLATE] == friendName) {
+                    tplate = true;
+
+                    (pl + 1).templateNameAfter(&pl);
+
+                    friendName = (pl + 1).wordAfter(&pl);
+                }
+
+                if (MATCH[MATCH_CLASS]  != friendName &&
+                    MATCH[MATCH_STRUCT] != friendName &&
+                    MATCH[MATCH_UNION]  != friendName) {
+                    // confused.  skip it.
+
+                    if (!tplate) {
+                        pl.error() << "Confusing 'friend' statement, not"
+                                " routine, class, struct, or union\n";
+                    }
+                }
+
+                friendName = (pl + 1).wordAfter();
+
                 BSLS_ASSERT(Ut::npos() == friendName.find('<'));
             }
             else {
@@ -675,6 +702,16 @@ void Group::checkAllFriends()
                 if (validFriendTargets.count(subName)) {
                     found = true;
                     break;
+                }
+                else if (isClass) {
+                    typedef bsl::set<bsl::string>::iterator It;
+                    It end = validFriendTargets.end();
+                    for (It it = validFriendTargets.begin(); end != it; ++it) {
+                        if (Ut::frontMatches(subName, *it, 0)) {
+                            found = true;
+                            break;
+                        }
+                    }
                 }
                 if (Ut::npos() == colon) {
                     break;
@@ -865,7 +902,7 @@ void Group::checkAllTemplateOnOwnLine()
                 continue;
             }
             Place tnEnd;
-            if (MATCH[MATCH_NIL] == cursor.templateNameAfter(&tnEnd)) {
+            if (cursor.templateNameAfter(&tnEnd).empty()) {
                 (cursor - 8).error() << "'template' occurred in  very"
                                                           " strange context\n";
                 continue;
@@ -983,7 +1020,7 @@ void Group::determineGroupType()
             return;                                                   // RETURN
         }
 
-        if (MATCH[MATCH_NIL] == d_prevWord) {
+        if (d_prevWord.empty()) {
             bool expression = false;
             if (Ut::charInString(pwbc, "~!%^&*-+=<>,?:(){}|[]/")) {
                 expression = true;
@@ -1212,7 +1249,7 @@ void Group::determineGroupType()
           }
           case Lines::BDEFLAG_S_EXTERN: {
             if (Lines::BDEFLAG_S_EXTERN == st &&
-                   MATCH[MATCH_NIL] == d_prevWord && '"' == *d_prevWordBegin) {
+                               d_prevWord.empty() && '"' == *d_prevWordBegin) {
                 int li = d_prevWordBegin.lineNum();
                 const bsl::string& curLine = Lines::line(li);
                 int col = d_prevWordBegin.col();
@@ -1244,7 +1281,7 @@ void Group::determineGroupType()
           }
         }
 
-        if (MATCH[MATCH_NIL] != d_prevWord) {
+        if (!d_prevWord.empty()) {
             if   (MATCH[MATCH_STRUCT] == d_prevWord
                || MATCH[MATCH_CLASS]  == d_prevWord
                || MATCH[MATCH_UNION]  == d_prevWord) {
@@ -1287,7 +1324,7 @@ void Group::determineGroupType()
                 BSLS_ASSERT_OPT('e' == *startName);
                 ++startName;
                 Place tnEnd;
-                if (MATCH[MATCH_NIL] == startName.templateNameAfter(&tnEnd)) {
+                if (startName.templateNameAfter(&tnEnd).empty()) {
                     d_statementStart.error() << "'template' in very strange"
                                                                 " context\n";
                 }
@@ -1516,7 +1553,7 @@ void Group::checkArgNames() const
 
     bool namesPresent = false;
     for (int i = 0; i < argCount; ++i) {
-        if (MATCH[MATCH_NIL] != argNames[i] && '=' != argNames[i][0]) {
+        if (!argNames[i].empty() && '=' != argNames[i][0]) {
             namesPresent = true;
             break;
         }
@@ -2548,7 +2585,7 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
         }
         Place typeNameEnd;
         bsl::string typeName = begin.nameAfter(&typeNameEnd);
-        if (MATCH[MATCH_NIL] == typeName) {
+        if (typeName.empty()) {
             begin.error() << "confusing arg list\n";
             typeNames->clear();
             names->clear();
