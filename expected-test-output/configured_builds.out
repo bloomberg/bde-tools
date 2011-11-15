@@ -70,6 +70,9 @@ $VAR1 = {
                      'id:dev' => {
                                    'targets' => 'dbg_exc_mt dbg_exc_mt_64'
                                  },
+                     'id:dev-api' => {
+                                       'targets' => 'dbg_exc_mt dbg_exc_mt_64'
+                                     },
                      'id:nextrel' => {
                                        'hosts' => 'nyibldo1 nyibldo2 ibm3 ibm2 ibm4 ibm1'
                                      },
@@ -132,6 +135,9 @@ $VAR1 = {
                           'id:dev' => {
                                         'targets' => 'dbg_exc_mt_safe'
                                       },
+                          'id:dev-api' => {
+                                            'targets' => 'dbg_exc_mt_safe'
+                                          },
                           'id:nextrel' => {
                                             'hosts' => 'nyibldo2 ibm3 ibm2 ibm4 ibm1 nyibldo1'
                                           },
@@ -245,7 +251,7 @@ $VAR1 = {
                                        'hosts' => 'nysbldo3 nysbldo4 nysbldo1 nysbldo2'
                                      },
                      'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
-                     'targets' => 'dbg_exc_mt dbg_exc_mt_64 opt_mt_safe',
+                     'targets' => 'dbg_exc_mt dbg_exc_mt_64',
                      'test_host' => {
                                       'a_bascat' => 'sundev32',
                                       'a_basfs' => 'sundev1',
@@ -375,7 +381,7 @@ $VAR1 = {
                                                 },
                             'jobs' => 12,
                             'no_64_groups' => 'a_bdema a_bascat z_a_bdema',
-                            'targets' => 'dbg_exc_mt dbg_exc_mt_64 dbg_exc_mt_safe_cpp11',
+                            'targets' => 'dbg_exc_mt dbg_exc_mt_64',
                             'test_host' => {
                                              'a_bascat' => 'sundev32',
                                              'a_basfs' => 'sundev1',
