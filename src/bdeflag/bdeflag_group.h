@@ -208,6 +208,12 @@ class Group {
         // boolean operators do in fact return bools.
 
     static
+    void checkAllCasesPresentInTestDriver();
+        // If the file is not a test driver, do nothing.  If it is, check that
+        // no cases in the middle of the sequence of positive test numbers are
+        // missing.
+
+    static
     void checkAllCodeComments();
         // Check all comments in classes, code blocks and routine bodies are
         // indented and spaced appropriately.

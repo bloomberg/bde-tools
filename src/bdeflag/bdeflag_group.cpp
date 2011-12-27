@@ -15,6 +15,7 @@
 
 #include <bsl_algorithm.h>
 #include <bsl_iostream.h>
+#include <bsl_sstream.h>
 #include <bsl_string.h>
 
 #include <bsl_cstdlib.h>
@@ -81,6 +82,8 @@ enum {
     MATCH_EXPLICIT,
     MATCH_BLOOMBERGLP,
     MATCH_TEMPLATE,
+    MATCH_MAIN,
+    MATCH_TEST,
     MATCH_NUM_CONSTANTS };
 
 static bsl::vector<bsl::string> match;
@@ -176,6 +179,8 @@ StartProgram::StartProgram()
     match[MATCH_EXPLICIT]        = "explicit";
     match[MATCH_BLOOMBERGLP]     = "BloombergLP";
     match[MATCH_TEMPLATE]        = "template";
+    match[MATCH_MAIN]            = "main";
+    match[MATCH_TEST]            = "test";
 
     static const char *arrayBoolOperators[] = {
         "!", "<", "<=", ">", ">=", "==", "!=", "&&", "||" };
@@ -507,6 +512,155 @@ void Group::checkAllBooleanRoutineNames()
         printStringSet(shouldBool);
 
         shouldBool.clear();
+    }
+}
+
+void Group::checkAllCasesPresentInTestDriver()
+{
+    if (Lines::BDEFLAG_DOT_T_DOT_CPP != Lines::fileType()) {
+        return;                                                       // RETURN
+    }
+
+    GroupSetIt endIt = topLevel().d_subGroups.end();
+    GroupSetIt it    = topLevel().d_subGroups.begin();
+    GroupSetIt prev  = it;
+
+    const Group *mainGroup = 0;
+
+    for (; endIt != it; prev = it, ++it) {
+        if (BDEFLAG_ROUTINE_BODY != (*it)->d_type
+           || BDEFLAG_ROUTINE_DECL != (*prev)->d_type
+           || MATCH[MATCH_MAIN] != (*prev)->d_prevWord) {
+            continue;
+        }
+
+        // we've found main
+
+        if (mainGroup) {
+            (*it)->d_open.warning() << "multiple 'main's found in test"
+                                                                    "driver\n";
+        }
+        mainGroup = *it;
+    }
+
+    if (!mainGroup) {
+        topLevel().d_close.warning() << "no 'main' routine found in test"
+                                                                    "driver\n";
+        return;                                                       // RETURN
+    }
+
+    endIt = mainGroup->d_subGroups.end();
+    it    = mainGroup->d_subGroups.begin();
+    prev  = it;
+
+    GroupSet switchCandidates;
+
+    for (; endIt != it; prev = it, ++it) {
+        if (BDEFLAG_CODE_BODY != (*it)->d_type
+           || BDEFLAG_SWITCH_PARENS != (*prev)->d_type) {
+            continue;
+        }
+
+        switchCandidates.insert(*it);
+    }
+
+    const Group *switchGroup = 0;
+
+    switch (switchCandidates.size()) {
+      case 0: {
+        return;                                                       // RETURN
+      }  break;
+      case 1: {
+        switchGroup = *switchCandidates.begin();
+      }  break;
+      default: {
+        endIt = switchCandidates.end();
+        it    = switchCandidates.begin();
+        for (; endIt != it; ++it) {
+            Place p = (*it)->d_open;
+            --p;
+            if (MATCH[MATCH_TEST] == p.wordBefore()) {
+                if (switchGroup) {
+                    p.warning() << "multiple 'switch (test)' in 'main()',"
+                             " can't tell which is primary.  Assuming last.\n";
+                }
+                switchGroup = *it;
+            }
+        }
+      }
+    }
+
+    if (!switchGroup) {
+        return;                                                       // RETURN
+    }
+
+    Ut::LineNumSet caseNumbers;
+    bool defaultFound = false;
+
+    int li = switchGroup->d_open.lineNum() + 1;
+
+    endIt = switchGroup->d_subGroups.end();
+    it    = switchGroup->d_subGroups.begin();
+    while (true) {
+        int end = endIt == it ? switchGroup->d_close.lineNum()
+                              : (*it)->d_open.lineNum();
+
+        for ( ; li <= end; ++li) {
+            const Lines::StatementType st = Lines::statement(li);
+            if (Lines::BDEFLAG_S_CASE == st) {
+                const bsl::string& ln = Lines::line(li);
+                bsl::istringstream iss(ln.substr(Lines::lineIndent(li) + 4));
+                int caseNumber;
+                iss >> caseNumber;
+                if (!iss.fail()) {
+                    caseNumbers.insert(caseNumber);
+                }
+            }
+            else if (Lines::BDEFLAG_S_DEFAULT == st) {
+                defaultFound = true;
+            }
+        }
+
+        if (endIt == it) {
+            break;
+        }
+        li = (*it)->d_close.lineNum() + 1;
+        ++it;
+    }
+
+    if (!defaultFound) {
+        switchGroup->d_open.warning() << "no default case found in main"
+                                                  " 'switch' in test driver\n";
+    }
+
+    Ut::LineNumSet missingNumbers;
+
+    const Ut::LineNumSetIt endCNIt = caseNumbers.end();
+    Ut::LineNumSetIt          cNIt = caseNumbers.begin();
+    int cN = -1;
+
+    for (; cNIt != endCNIt; ++cNIt) {
+        if (*cNIt >= 1) {
+            if (1 == *cNIt) {
+                cN = 1;
+            }
+            else {
+                if (cN < *cNIt) {
+                    if (cN < 0) {
+                        cN = 1;
+                    }
+                    for (; cN < *cNIt; ++cN) {
+                        missingNumbers.insert(cN);
+                    }
+                }
+            }
+            ++cN;
+        }
+    }
+
+    if (0 != missingNumbers.size()) {
+        switchGroup->d_open.warning() << "main switch in test driver skipped"<<
+                                         " case(s) " << missingNumbers << endl;
     }
 }
 
@@ -959,6 +1113,7 @@ void Group::doEverything()
     checkAllArgNames();
     checkAllIfWhileFor();
     checkAllStatics();
+    checkAllCasesPresentInTestDriver();
 
     //  checkAllRoutineCallArgLists();
 
