@@ -65,6 +65,10 @@ class Place {
     Place(int line, int col);
         // Construct a place at the specified '(line number, column)' position.
 
+    Place& operator=(const Place& other);
+        // Assign the value of 'other' to this place and return a copy of that
+        // value.
+
     // CLASS METHODS
     static
     const Place& rEnd();
@@ -189,7 +193,8 @@ class Place {
         // Return the C++ identifier at or after the current position, setting
         // the optionally specified 'end' to the last char of the word.  If a
         // non-identifier char is encountered before an identifier is
-        // encountered, 'end' is pointed to that char and "" is returned.
+        // encountered, 'end' is pointed to that char and "" is returned.  Note
+        // that it is OK for 'end' to equal 'this'.
 
     bsl::string wordBefore(Place *start = 0) const;
         // Return the word preceding or ending with '**this' consisting of
@@ -299,6 +304,15 @@ Place::Place() : d_lineNum(0), d_col(0)
 inline
 Place::Place(int line, int col) : d_lineNum(line), d_col(col)
 {
+}
+
+inline
+Place& Place::operator=(const Place& other)
+{
+    d_lineNum = other.d_lineNum;
+    d_col     = other.d_col;
+
+    return *this;
 }
 
 // CLASS METHODS

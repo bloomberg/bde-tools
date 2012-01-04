@@ -13,21 +13,21 @@
 #include <bslmf_assert.h>
 #include <bsls_assert.h>
 
-#include <bsl_list.h>
-#include <bsl_string.h>
-
 #include <bsl_algorithm.h>
 #include <bsl_iostream.h>
+#include <bsl_sstream.h>
 #include <bsl_string.h>
+
+#include <bsl_cstdlib.h>
 
 #include <ctype.h>
 
 #define P(x)          Ut::p(#x, (x))
 
+namespace BloombergLP {
+
 using bsl::cerr;
 using bsl::endl;
-
-namespace BloombergLP {
 
 namespace bdeFlag {
 
@@ -81,6 +81,9 @@ enum {
     MATCH_BDEAT_DECL,
     MATCH_EXPLICIT,
     MATCH_BLOOMBERGLP,
+    MATCH_TEMPLATE,
+    MATCH_MAIN,
+    MATCH_TEST,
     MATCH_NUM_CONSTANTS };
 
 static bsl::vector<bsl::string> match;
@@ -106,6 +109,10 @@ static bsl::set<bsl::string> binaryOperators;
 static bsl::set<bsl::string> unaryOperators;
 
 static bsl::set<bsl::string> annoyingMacros;
+
+static bsl::set<bsl::string> validFriendTargets;
+
+static bool tolerateSnugComments;
 
 struct StartProgram {
     // An object of this type is declared 'static' so that the c'tor will be
@@ -169,8 +176,11 @@ StartProgram::StartProgram()
     match[MATCH__EXCEPT]         = "__except";
     match[MATCH_PRINT]           = "print";
     match[MATCH_BDEAT_DECL]      = "BDEAT_DECL_";
-    match[MATCH_BLOOMBERGLP]     = "BloombergLP";
     match[MATCH_EXPLICIT]        = "explicit";
+    match[MATCH_BLOOMBERGLP]     = "BloombergLP";
+    match[MATCH_TEMPLATE]        = "template";
+    match[MATCH_MAIN]            = "main";
+    match[MATCH_TEST]            = "test";
 
     static const char *arrayBoolOperators[] = {
         "!", "<", "<=", ">", ">=", "==", "!=", "&&", "||" };
@@ -206,6 +216,8 @@ StartProgram::StartProgram()
     for (int i = 0; i < NUM_ANNOYING_MACROS; ++i) {
         annoyingMacros.insert(arrayAnnoyingMacros[i]);
     }
+
+    tolerateSnugComments = !!bsl::getenv("BDEFLAG_TOLERATE_SNUG_COMMENTS");
 }
 
 static
@@ -351,14 +363,13 @@ int Group::recurseInitGroup(Place       *place,
 
         d_statementStart = cursor.findStatementStart();
         d_prevWord = (cursor - 1).wordBefore(&d_prevWordBegin);
-        if (d_prevWordBegin < d_statementStart &&
-                           (MATCH[MATCH_NIL] != d_prevWord ||
+        if (d_prevWordBegin < d_statementStart && (!d_prevWord.empty() ||
                                         0 ==strchr(";}{", *d_prevWordBegin))) {
             // probably '{' lined up under 'struct' or 'template'
 
             d_statementStart = d_prevWordBegin.findStatementStart();
         }
-        if (MATCH[MATCH_NIL] == d_prevWord && '>' == *d_prevWordBegin) {
+        if (d_prevWord.empty() && '>' == *d_prevWordBegin) {
             // There's a real problem here, they might just be saying
             // 'a > (c + d)' and it's not really a template.  So what precedes
             // a '(', to be even possibly considered a template, the '>' must
@@ -369,7 +380,7 @@ int Group::recurseInitGroup(Place       *place,
                              d_prevWordBegin.lineNum() == d_open.lineNum())) {
                 Place tnBegin;
                 bsl::string tn = (d_open - 1).templateNameBefore(&tnBegin);
-                if (MATCH[MATCH_NIL] != tn) {
+                if (!tn.empty()) {
                     d_prevWord = tn;
                     d_prevWordBegin = tnBegin;
                 }
@@ -504,8 +515,160 @@ void Group::checkAllBooleanRoutineNames()
     }
 }
 
+void Group::checkAllCasesPresentInTestDriver()
+{
+    if (Lines::BDEFLAG_DOT_T_DOT_CPP != Lines::fileType()) {
+        return;                                                       // RETURN
+    }
+
+    GroupSetIt endIt = topLevel().d_subGroups.end();
+    GroupSetIt it    = topLevel().d_subGroups.begin();
+    GroupSetIt prev  = it;
+
+    const Group *mainGroup = 0;
+
+    for (; endIt != it; prev = it, ++it) {
+        if (BDEFLAG_ROUTINE_BODY != (*it)->d_type
+           || BDEFLAG_ROUTINE_DECL != (*prev)->d_type
+           || MATCH[MATCH_MAIN] != (*prev)->d_prevWord) {
+            continue;
+        }
+
+        // we've found main
+
+        if (mainGroup) {
+            (*it)->d_open.warning() << "multiple 'main's found in test"
+                                                                    "driver\n";
+        }
+        mainGroup = *it;
+    }
+
+    if (!mainGroup) {
+        topLevel().d_close.warning() << "no 'main' routine found in test"
+                                                                    "driver\n";
+        return;                                                       // RETURN
+    }
+
+    endIt = mainGroup->d_subGroups.end();
+    it    = mainGroup->d_subGroups.begin();
+    prev  = it;
+
+    GroupSet switchCandidates;
+
+    for (; endIt != it; prev = it, ++it) {
+        if (BDEFLAG_CODE_BODY != (*it)->d_type
+           || BDEFLAG_SWITCH_PARENS != (*prev)->d_type) {
+            continue;
+        }
+
+        switchCandidates.insert(*it);
+    }
+
+    const Group *switchGroup = 0;
+
+    switch (switchCandidates.size()) {
+      case 0: {
+        return;                                                       // RETURN
+      }  break;
+      case 1: {
+        switchGroup = *switchCandidates.begin();
+      }  break;
+      default: {
+        endIt = switchCandidates.end();
+        it    = switchCandidates.begin();
+        for (; endIt != it; ++it) {
+            Place p = (*it)->d_open;
+            --p;
+            if (MATCH[MATCH_TEST] == p.wordBefore()) {
+                if (switchGroup) {
+                    p.warning() << "multiple 'switch (test)' in 'main()',"
+                             " can't tell which is primary.  Assuming last.\n";
+                }
+                switchGroup = *it;
+            }
+        }
+      }
+    }
+
+    if (!switchGroup) {
+        return;                                                       // RETURN
+    }
+
+    Ut::LineNumSet caseNumbers;
+    bool defaultFound = false;
+
+    int li = switchGroup->d_open.lineNum() + 1;
+
+    endIt = switchGroup->d_subGroups.end();
+    it    = switchGroup->d_subGroups.begin();
+    while (true) {
+        int end = endIt == it ? switchGroup->d_close.lineNum()
+                              : (*it)->d_open.lineNum();
+
+        for ( ; li <= end; ++li) {
+            const Lines::StatementType st = Lines::statement(li);
+            if (Lines::BDEFLAG_S_CASE == st) {
+                const bsl::string& ln = Lines::line(li);
+                bsl::istringstream iss(ln.substr(Lines::lineIndent(li) + 4));
+                int caseNumber;
+                iss >> caseNumber;
+                if (!iss.fail()) {
+                    caseNumbers.insert(caseNumber);
+                }
+            }
+            else if (Lines::BDEFLAG_S_DEFAULT == st) {
+                defaultFound = true;
+            }
+        }
+
+        if (endIt == it) {
+            break;
+        }
+        li = (*it)->d_close.lineNum() + 1;
+        ++it;
+    }
+
+    if (!defaultFound) {
+        switchGroup->d_open.warning() << "no default case found in main"
+                                                  " 'switch' in test driver\n";
+    }
+
+    Ut::LineNumSet missingNumbers;
+
+    const Ut::LineNumSetIt endCNIt = caseNumbers.end();
+    Ut::LineNumSetIt          cNIt = caseNumbers.begin();
+    int cN = -1;
+
+    for (; cNIt != endCNIt; ++cNIt) {
+        if (*cNIt >= 1) {
+            if (1 == *cNIt) {
+                cN = 1;
+            }
+            else {
+                if (cN < *cNIt) {
+                    if (cN < 0) {
+                        cN = 1;
+                    }
+                    for (; cN < *cNIt; ++cN) {
+                        missingNumbers.insert(cN);
+                    }
+                }
+            }
+            ++cN;
+        }
+    }
+
+    if (0 != missingNumbers.size()) {
+        switchGroup->d_open.warning() << "main switch in test driver skipped"<<
+                                         " case(s) " << missingNumbers << endl;
+    }
+}
+
 void Group::checkAllCodeComments()
 {
+    strangelyIndentedComments.clear();
+    commentNeedsBlankLines.clear();
+
     topLevel().recurseMemTraverse(&Group::checkCodeComments);
 
     if (!strangelyIndentedComments.empty()) {
@@ -514,7 +677,7 @@ void Group::checkAllCodeComments()
                                              strangelyIndentedComments << endl;
         strangelyIndentedComments.clear();
     }
-    if (!commentNeedsBlankLines.empty()) {
+    if (!tolerateSnugComments && !commentNeedsBlankLines.empty()) {
         cerr << "Warning: " << Lines::fileName() <<
                 ": comments should be separated from code by a blank line"
                               " at line(s) " << commentNeedsBlankLines << endl;
@@ -531,6 +694,193 @@ void Group::checkAllCodeIndents()
                                ": strangely indented Statements at line(s) " <<
                                            strangelyIndentedStatements << endl;
         strangelyIndentedStatements.clear();
+    }
+}
+
+void Group::checkAllFriends()
+{
+    if (Lines::BDEFLAG_DOT_H != Lines::fileType()) {
+        return;                                                       // RETURN
+    }
+
+    validFriendTargets.clear();
+
+    // Collect all declarations of subroutines and class/struct/union
+    // definitions
+
+    topLevel().recurseMemTraverse(&Group::registerValidFriendTarget);
+
+    bool dump = false;
+    static bool firstTime = true;
+    if (firstTime) {
+        firstTime = false;
+
+        dump = !!bsl::getenv("BDEFLAG_DUMP_FRIENDSHIP_TARGETS");
+
+        if (dump) {
+            bsl::cout << "Recursion-found friendship targets:";
+            for (bsl::set<bsl::string>::iterator it =
+                                                    validFriendTargets.begin();
+                                        validFriendTargets.end() != it; ++it) {
+                bsl::cout << ' ' << *it;
+            }
+            bsl::cout << bsl::endl;
+        }
+    }
+
+    // Also traverse all class/struct/union statements looking for forward
+    // declarations within classes, and only those.
+
+    for (int li = 1; li < Lines::lineCount(); ++li) {
+        if (Lines::BDEFLAG_S_CLASS_STRUCT_UNION == Lines::statement(li)) {
+            Place pl(li, Lines::lineIndent(li));
+            if ('{' == *(pl.findFirstOf(";{"))) {
+                // Not a forward declaration.  Redundant.
+
+                continue;
+            }
+
+            Group *parent = findGroupForPlace(pl);
+            if (BDEFLAG_CLASS != parent->d_type) {
+                // Not a forward declaration within a class.  Not a valid
+                // friendship target.
+
+                continue;
+            }
+
+            pl.wordAfter(&pl);            // skip 'class', 'struct', or 'union'
+            ++pl;
+
+            bsl::string className = pl.wordAfter();    // ignores '<' and after
+            BSLS_ASSERT(Ut::npos() == className.find('<'));
+
+            if (Ut::npos() != className.find(':')) {
+                pl.error() << "Forward declaring class '" << className <<
+                                      "' with ':' in name -- not valid C++!\n";
+                continue;
+            }
+
+            validFriendTargets.insert(className);
+        }
+    }
+
+    if (dump) {
+        bsl::cout << "Recursion+scan-found friendship targets:";
+        for (bsl::set<bsl::string>::iterator it = validFriendTargets.begin();
+                                        validFriendTargets.end() != it; ++it) {
+            bsl::cout << ' ' << *it;
+        }
+        bsl::cout << bsl::endl;
+    }
+
+    for (int li = 1; li < Lines::lineCount(); ++li) {
+        if (Lines::BDEFLAG_S_FRIEND == Lines::statement(li)) {
+            const bsl::string& curLine = Lines::line(li);
+            int namePos = Lines::lineIndent(li) + 6;
+            BSLS_ASSERT('d' == curLine[namePos - 1]);
+
+            bool isClass = false;
+            bool isOp = false;
+            bsl::string friendName;
+            Place pl = Place(li, namePos).findFirstOf(";(");
+            if (';' == *pl) {
+                // It's a class
+
+                isClass = true;
+
+                friendName = Place(li, namePos).wordAfter(&pl);
+
+                bool tplate = false;
+                if (MATCH[MATCH_TEMPLATE] == friendName) {
+                    tplate = true;
+
+                    (pl + 1).templateNameAfter(&pl);
+
+                    friendName = (pl + 1).wordAfter(&pl);
+                }
+
+                if (MATCH[MATCH_CLASS]  != friendName &&
+                    MATCH[MATCH_STRUCT] != friendName &&
+                    MATCH[MATCH_UNION]  != friendName) {
+                    // confused.  skip it.
+
+                    if (!tplate) {
+                        pl.error() << "Confusing 'friend' statement, not"
+                                " routine, class, struct, or union\n";
+                    }
+                }
+
+                friendName = (pl + 1).wordAfter();
+
+                BSLS_ASSERT(Ut::npos() == friendName.find('<'));
+            }
+            else {
+                BSLS_ASSERT_OPT('(' == *pl);
+
+                // it's a routine
+
+                Group *group = findGroupForPlace(pl);
+
+                friendName = group->d_prevWord;
+                isOp = Ut::frontMatches(friendName, MATCH[MATCH_OPERATOR]);
+                if (!isOp) {
+                    size_t pos = friendName.find('<');
+                    if (Ut::npos() != pos) {
+                        friendName.resize(pos);
+                    }
+                }
+            }
+            BSLS_ASSERT(isOp || Ut::npos() == friendName.find_first_of("<>"));
+
+            if (friendName.empty()) {
+                continue;
+            }
+
+            if (dump) {
+                bsl::cout << "Friend search at " << pl << " on '" <<
+                                                           friendName << "'\n";
+            }
+
+            // The friended thing may be a compound name of several things
+            // things mashed together with "::"s.  If ANY of them are valid
+            // friend targets, then it's an acceptable friendship.
+
+            bsl::string compoundFriendName = friendName;
+
+            bool found = false;
+            while (true) {
+                size_t colon = compoundFriendName.find(':');
+                bsl::string subName = Ut::npos() == colon
+                                    ? compoundFriendName
+                                    : compoundFriendName.substr(0, colon);
+                if (validFriendTargets.count(subName)) {
+                    found = true;
+                    break;
+                }
+                else if (isClass) {
+                    typedef bsl::set<bsl::string>::iterator It;
+                    It end = validFriendTargets.end();
+                    for (It it = validFriendTargets.begin(); end != it; ++it) {
+                        if (Ut::frontMatches(subName, *it, 0)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (Ut::npos() == colon) {
+                    break;
+                }
+
+                size_t notColon = compoundFriendName.find_first_not_of(
+                                                                   ':', colon);
+                compoundFriendName = compoundFriendName.substr(notColon);
+            }
+
+            if (!found) {
+                Place(li, Lines::lineIndent(li)).warning() << "friendship"
+                           " of '" << friendName << "' outside of component\n";
+            }
+        }
     }
 }
 
@@ -706,7 +1056,7 @@ void Group::checkAllTemplateOnOwnLine()
                 continue;
             }
             Place tnEnd;
-            if (MATCH[MATCH_NIL] == cursor.templateNameAfter(&tnEnd)) {
+            if (cursor.templateNameAfter(&tnEnd).empty()) {
                 (cursor - 8).error() << "'template' occurred in  very"
                                                           " strange context\n";
                 continue;
@@ -759,9 +1109,11 @@ void Group::doEverything()
     checkAllStartingBraces();
     checkAllTemplateOnOwnLine();
     checkAllCodeComments();
+    checkAllFriends();
     checkAllArgNames();
     checkAllIfWhileFor();
     checkAllStatics();
+    checkAllCasesPresentInTestDriver();
 
     //  checkAllRoutineCallArgLists();
 
@@ -823,7 +1175,7 @@ void Group::determineGroupType()
             return;                                                   // RETURN
         }
 
-        if (MATCH[MATCH_NIL] == d_prevWord) {
+        if (d_prevWord.empty()) {
             bool expression = false;
             if (Ut::charInString(pwbc, "~!%^&*-+=<>,?:(){}|[]/")) {
                 expression = true;
@@ -1052,7 +1404,7 @@ void Group::determineGroupType()
           }
           case Lines::BDEFLAG_S_EXTERN: {
             if (Lines::BDEFLAG_S_EXTERN == st &&
-                   MATCH[MATCH_NIL] == d_prevWord && '"' == *d_prevWordBegin) {
+                               d_prevWord.empty() && '"' == *d_prevWordBegin) {
                 int li = d_prevWordBegin.lineNum();
                 const bsl::string& curLine = Lines::line(li);
                 int col = d_prevWordBegin.col();
@@ -1084,7 +1436,7 @@ void Group::determineGroupType()
           }
         }
 
-        if (MATCH[MATCH_NIL] != d_prevWord) {
+        if (!d_prevWord.empty()) {
             if   (MATCH[MATCH_STRUCT] == d_prevWord
                || MATCH[MATCH_CLASS]  == d_prevWord
                || MATCH[MATCH_UNION]  == d_prevWord) {
@@ -1127,7 +1479,7 @@ void Group::determineGroupType()
                 BSLS_ASSERT_OPT('e' == *startName);
                 ++startName;
                 Place tnEnd;
-                if (MATCH[MATCH_NIL] == startName.templateNameAfter(&tnEnd)) {
+                if (startName.templateNameAfter(&tnEnd).empty()) {
                     d_statementStart.error() << "'template' in very strange"
                                                                 " context\n";
                 }
@@ -1342,7 +1694,7 @@ void Group::checkArgNames() const
     // avoid calling 'getArgList' outside of class except on binary operators
 
     bool anyOp = Ut::frontMatches(d_prevWord, MATCH[MATCH_OPERATOR], 0);
-    bool binOp = anyOp && binaryOperators.count(d_prevWord.substr(8));
+    bool binOp = anyOp && binaryOperators. count(d_prevWord.substr(8));
     if (BDEFLAG_CLASS != d_parent->d_type && !binOp) {
         return;                                                       // RETURN
     }
@@ -1356,7 +1708,7 @@ void Group::checkArgNames() const
 
     bool namesPresent = false;
     for (int i = 0; i < argCount; ++i) {
-        if (MATCH[MATCH_NIL] != argNames[i] && '=' != argNames[i][0]) {
+        if (!argNames[i].empty() && '=' != argNames[i][0]) {
             namesPresent = true;
             break;
         }
@@ -1471,8 +1823,8 @@ void Group::checkArgNames() const
       case BDEFLAG_CLASS: {
         if (binOp) {
             if (argCount != (isFriend ? 2 : 1)) {
-                if (0 != argCount ||
-                                 !unaryOperators.count(d_prevWord.substr(8))) {
+                if (!unaryOperators.count(d_prevWord.substr(8)) ||
+                                              argCount != (isFriend ? 1 : 0)) {
                     d_open.error() << "confused, binary operator '" <<
                                   d_prevWord << "'with wrong number of args\n";
                 }
@@ -1481,7 +1833,8 @@ void Group::checkArgNames() const
                 BSLS_ASSERT_OPT(1 == argCount);
                 if (MATCH[MATCH_RHS] != argNames[0]) {
                     d_open.warning() << "argument name of binary operator " <<
-                                            d_prevWord << " should be 'rhs'\n";
+                                  d_prevWord << " should be 'rhs' and not '" <<
+                                                          argNames[0] << "'\n";
                 }
             }
         }
@@ -1866,7 +2219,8 @@ void Group::checkFunctionDoc() const
     bool isUnNamed = false;
 
     Place docPlace = d_close;
-    char nextChar = *(d_close + 1);
+    Place after = d_close + 1;
+    char nextChar = *after;
 
     if (Ut::npos() != d_prevWord.find(':')) {
         // Defining something separately declared in a class somewhere.  It
@@ -1894,6 +2248,24 @@ void Group::checkFunctionDoc() const
             for (++it; d_parent->d_subGroups.end() != it &&
                    (group = *it, BDEFLAG_CTOR_CLAUSE == group->d_type); ++it) {
                 docPlace = group->d_close;
+            }
+        }
+
+        if (isalpha(nextChar)) {
+            after.wordAfter(&after);
+            docPlace = after;
+
+            ++after;
+            nextChar = *after;
+        }
+
+        {
+            Place pl;
+            if ('=' == nextChar && "0" == (after + 1).wordAfter(&pl)) {
+                docPlace = pl;
+
+                after = pl + 1;
+                nextChar = *after;
             }
         }
 
@@ -2249,6 +2621,13 @@ void Group::checkStartingBraces() const
       case BDEFLAG_TOP_LEVEL:
       case BDEFLAG_NAMESPACE: {
         indent = 0;
+
+        if (d_open.col() == indent && d_close.lineNum() == d_open.lineNum() &&
+                                           d_close.col() == d_open.col() + 1) {
+            // It a '{}' function.  Allow it.
+
+            return;                                                   // RETURN
+        }
       }  break;
       case BDEFLAG_CLASS: {
         if (Lines::BDEFLAG_DOT_H != Lines::fileType() &&
@@ -2282,6 +2661,59 @@ void Group::checkStartingBraces() const
     }
 }
 
+void Group::registerValidFriendTarget() const
+{
+    BSLS_ASSERT(Lines::BDEFLAG_DOT_H == Lines::fileType());
+
+    bsl::string name;
+
+    switch (d_type) {
+      case BDEFLAG_ROUTINE_UNKNOWN_CALL_OR_DECL:
+      case BDEFLAG_ROUTINE_DECL: {
+        switch (d_parent->d_type) {
+          case BDEFLAG_UNKNOWN_BRACES:
+          case BDEFLAG_TOP_LEVEL:
+          case BDEFLAG_NAMESPACE: {
+            name = d_prevWord;
+          }  break;
+          default: {
+            return;                                                   // RETURN
+          }
+        }
+      }  break;
+      case BDEFLAG_CLASS: {
+        name = d_className;
+      }  break;
+      default: {
+        return;                                                       // RETURN
+      }
+    }
+
+    if (name.empty()) {
+        // anonymous union of dysfunctional routine decl
+
+        return;                                                       // RETURN
+    }
+
+    if (!Ut::frontMatches(name, MATCH[MATCH_OPERATOR])) {
+        // clip off template part
+
+        size_t angle = name.find_first_of('<');
+        if (Ut::npos() != angle) {
+            name.resize(angle);
+        }
+
+        // if ':'s, take part after last one
+
+        size_t colon = name.find_last_of(':');
+        if (Ut::npos() != colon) {
+            name = name.substr(colon + 1);
+        }
+    }
+
+    validFriendTargets.insert(name);
+}
+
 void Group::getArgList(bsl::vector<bsl::string> *typeNames,
                        bsl::vector<bsl::string> *names,
                        bsl::vector<int>         *lineNums) const
@@ -2308,7 +2740,7 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
         }
         Place typeNameEnd;
         bsl::string typeName = begin.nameAfter(&typeNameEnd);
-        if (MATCH[MATCH_NIL] == typeName) {
+        if (typeName.empty()) {
             begin.error() << "confusing arg list\n";
             typeNames->clear();
             names->clear();

@@ -8,7 +8,7 @@
 #endif
 BSLS_IDENT("$Id: $")
 
-//@PURPOSE: Provide vectorized representation of a source file
+//@PURPOSE: Provide vectorized representation of a source file.
 //
 //@CLASSES:
 //    Lines: vectorized representation of a source file
@@ -51,6 +51,10 @@ BSLS_IDENT("$Id: $")
 
 #ifndef INCLUDED_BSL_UTILITY
 #include <bsl_utility.h>
+#endif
+
+#ifndef INCLUDED_BSL_LIST
+#include <bsl_list.h>
 #endif
 
 #ifndef INCLUDED_BSL_VECTOR
@@ -114,6 +118,11 @@ class Lines {
         BDEFLAG_DOT_H,
         BDEFLAG_DOT_T_DOT_CPP };
 
+    enum PurposeFlags {
+        BDEFLAG_NO_PURPOSE            = 0x1,
+        BDEFLAG_PURPOSE_LACKS_PROVIDE = 0x2,
+        BDEFLAG_PURPOSE_LACKS_PERIOD  = 0x4 };
+
   private:
     // PRIVATE TYPES
     typedef bsl::vector<bsl::string>   LineVec;
@@ -150,12 +159,15 @@ class Lines {
     static Ut::LineNumSet      s_badlyAlignedReturns;
     static Ut::LineNumSet      s_tbds;
     static State               s_state;
+    static int                 s_purposeFlags;
     static bool                s_hasTabs;
     static bool                s_hasTrailingBlanks;
     static bool                s_includesAssertH;
     static bool                s_includesCassert;
     static bool                s_includesDoubleQuotes;
     static bool                s_assertFound;
+    static bool                s_includesComponentDotH;
+    static bool                s_couldntOpenFile;
 
     // Only manipulators can change the value of static members
 
@@ -167,6 +179,9 @@ class Lines {
 
     void checkIncludes();
         // Set the values of the 's_include*' static flags.
+
+    void checkPurpose();
+        // If the file is a .h file, check the 'Purpose' line.
 
     void firstDetect();
         // Detect any long lines and tabs in the file, don't print out any
@@ -193,6 +208,9 @@ class Lines {
     void trimTrailingWhite();
         // Trim trailing whitespace from all the lines.
 
+    void untabify();
+        // Expand tabs into spaces.
+
     void wipeOutMacros();
         // Remove macros, also remove all code enclosed by '#else' - '#endif'
         // blocks.
@@ -215,6 +233,10 @@ class Lines {
     bsl::string commentAsString(CommentType comment);
         // Given the specified 'comment', which is an enum representing a
         // standard comment, give the comment in string form.
+
+    static
+    bool couldntOpenFile();
+        // True if file could not be opened.
 
     static
     int commentIndent(int index);
@@ -328,7 +350,6 @@ class Lines {
     // ACCESSORS
     void printWarnings(bsl::ostream *stream);
         // Print warnings according to the static data in this class.
-
 };
 
 // CLASS METHODS
@@ -342,6 +363,12 @@ inline
 int Lines::commentIndent(int index)
 {
     return s_commentIndents[index];
+}
+
+inline
+bool Lines::couldntOpenFile()
+{
+    return s_couldntOpenFile;
 }
 
 inline

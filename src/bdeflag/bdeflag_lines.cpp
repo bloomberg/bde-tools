@@ -43,12 +43,54 @@ Ut::LineNumSet      Lines::s_inlinesNotAlone;
 Ut::LineNumSet      Lines::s_badlyAlignedReturns;
 Ut::LineNumSet      Lines::s_tbds;
 Lines::State        Lines::s_state = BDEFLAG_EMPTY;
+int                 Lines::s_purposeFlags;
 bool                Lines::s_hasTabs;
 bool                Lines::s_hasTrailingBlanks;
 bool                Lines::s_includesAssertH;
 bool                Lines::s_includesCassert;
 bool                Lines::s_includesDoubleQuotes;
 bool                Lines::s_assertFound;
+bool                Lines::s_includesComponentDotH;
+bool                Lines::s_couldntOpenFile;
+
+// LOCAL FUNCTIONS
+
+static
+bsl::string componentInclude()
+    // for a .cpp file, determine the appropriate component #include clause
+{
+    bsl::string s = Lines::fileName();
+    size_t slashPos = s.find_last_of('/');
+    if (Ut::npos() != slashPos) {
+        s = s.substr(slashPos + 1);
+    }
+    size_t clip;
+    switch (Lines::fileType()) {
+      case Lines::BDEFLAG_DOT_CPP: {
+        clip = 4;
+      }  break;
+      case Lines::BDEFLAG_DOT_T_DOT_CPP: {
+        clip = 6;
+      }  break;
+      default: {
+        BSLS_ASSERT_OPT(0);    // should never happen
+        return "";                                                    // RETURN
+      }  break;
+    }
+    BSLS_ASSERT_OPT(s.length() >= clip);
+
+    s = s.substr(0, s.length() - clip);
+
+    return "<" + s + ".h>";
+}
+
+static inline
+int nextLiveChar(const bsl::string& s, int pos)
+    // skip to next possibly relevant char in 'killQuotesComments'
+{
+    size_t ret = s.find_first_of("/*\"'", pos);
+    return Ut::npos() == ret ? s.length() : ret;
+}
 
 // PRIVATE MANIPULATORS
 void Lines::checkForAssert()
@@ -100,6 +142,8 @@ void Lines::checkIncludes()
     s_includesCassert = false;
     s_includesDoubleQuotes = false;
 
+    bool firstInclude = true;
+
     for (int li = 1; li < lineCount(); ++li) {
         const bsl::string& curLine = line(li);
 
@@ -110,7 +154,20 @@ void Lines::checkIncludes()
                                                       "include",
                                                       pos)) {
                 pos = curLine.find_first_not_of(' ', pos + 7);
+
                 if (Ut::npos() != pos) {
+                    if (firstInclude) {
+                        firstInclude = false;
+
+                        if (BDEFLAG_DOT_H != s_fileType) {
+                            if (Ut::frontMatches(curLine,
+                                                 componentInclude(),
+                                                 pos)) {
+                                s_includesComponentDotH = true;
+                            }
+                        }
+                    }
+
                     if ('"' == curLine[pos]) {
                         s_includesDoubleQuotes = true;
                     }
@@ -128,6 +185,44 @@ void Lines::checkIncludes()
     s_state = BDEFLAG_INCLUDES_CHECKED;
 
     return;
+}
+
+void Lines::checkPurpose()
+{
+    if (BDEFLAG_DOT_H != s_fileType) {
+        return;                                                       // RETURN
+    }
+
+    const bsl::string purpose = "//@PURPOSE:";
+    const bsl::string provide = "Provide";
+    const bsl::string lcProvide = "provide";
+
+    int lineCount = Lines::lineCount();
+    for (int li = 1; li < lineCount; ++li) {
+        const bsl::string& curLine = s_lines[li];
+        if (!Ut::frontMatches(curLine, purpose, 0)) {
+            continue;
+        }
+
+        if (curLine.length() < 12) {
+            s_purposeFlags |= (BDEFLAG_PURPOSE_LACKS_PROVIDE |
+                               BDEFLAG_PURPOSE_LACKS_PERIOD);
+            return;                                                   // RETURN
+        }
+
+        const bsl::string& firstPurposeWord = Ut::wordAfter(curLine, 11);
+        if (provide != firstPurposeWord && lcProvide != firstPurposeWord) {
+            s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PROVIDE;
+        }
+
+        if ('.' != curLine[curLine.length() - 1]) {
+            s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PERIOD;
+        }
+
+        return;                                                       // RETURN
+    }
+
+    s_purposeFlags |= BDEFLAG_NO_PURPOSE;
 }
 
 void Lines::firstDetect()
@@ -310,8 +405,8 @@ void Lines::killQuotesComments()
     BSLS_ASSERT_OPT(BDEFLAG_QUOTES_COMMENTS_KILLED >= s_state);
 
     static const struct {
-        const char  *str;
-        CommentType  commentType;
+        const char  *d_str;
+        CommentType  d_commentType;
     } legalComments[] = {
         { " RETURN",                  BDEFLAG_RETURN },
         { "RETURN",                   BDEFLAG_RETURN },
@@ -374,28 +469,78 @@ void Lines::killQuotesComments()
     typedef bsl::map<bsl::string, CommentType>::const_iterator CommentMapCIt;
     CommentMap commentMap;
     for (int i = 0; i < NUM_LEGAL_COMMENTS; ++i) {
-        commentMap[legalComments[i].str] = legalComments[i].commentType;
+        commentMap[legalComments[i].d_str] = legalComments[i].d_commentType;
     }
     const CommentMapCIt commentMapBegin = commentMap.begin();
 
     s_cStyleComments.clear();
 
-    char carryQuotes = 0;
+    char quote = 0;    // 0: not in quoted str, ':in quoted char, ": in q str
     const int lineCount = s_lineCount;
     bool inCStyleComment = false;
     for (int li = 0; li < s_lineCount; ++li) {
         bsl::string& curLine = s_lines[li];
         const int len = curLine.length();
 
-        carryQuotes = Ut::blockOutQuotes(&curLine, carryQuotes);
-
         bool slash    = false;
         bool asterisk = false;
-        for (int col = 0; col < len; ++col) {
+        for (int col = 0; col < len; col = (slash | asterisk | inCStyleComment)
+                                         ? col + 1
+                                         : nextLiveChar(curLine, col + 1)) {
             char& c = curLine[col];
 
             if (!inCStyleComment) {
                 BSLS_ASSERT_OPT(!asterisk);
+
+                // Handle quoted strings
+
+                if (quote | ('"' == c) | ('\'' == c)) {
+                    BSLS_ASSERT_OPT(!quote || 0 == col);
+                    slash = false;
+
+                    const char startChar  = quote ? quote : c;
+                    size_t       endPos   = quote ? -1 : col;
+                    const char *endStr = '"' == startChar ? "\\\"" : "\\'";
+                    while (Ut::npos() !=
+                        (endPos = curLine.find_first_of(endStr, endPos + 1))) {
+                        if ('\\' == curLine[endPos]) {
+                            if (curLine.length() > endPos + 1) {
+                                ++endPos;    // skip the quoted char
+                            }
+                            else {
+                                quote = startChar;    // string goes off line
+                            }
+                        }
+                        else {
+                            quote = 0;    // string ended
+                            break;
+                        }
+                    }
+                    if (Ut::npos() == endPos) {
+                        endPos = curLine.length();
+                    }
+                    else {
+                        BSLS_ASSERT_OPT(startChar == curLine[endPos]);
+
+                        ++endPos;
+                    }
+                    const bsl::string& endLine = curLine.substr(endPos);
+
+                    // Note the following manipulation of 'curLine' may
+                    // invalidate reference 'c'.
+
+                    curLine.resize(col);
+                    curLine.append(endPos - col, startChar);
+                    curLine += endLine;
+
+                    BSLS_ASSERT_OPT(curLine.length() == len);
+                    BSLS_ASSERT_OPT(endPos >= 1);
+                    BSLS_ASSERT_OPT(!quote || len == endPos);
+
+                    col = endPos - 1;
+
+                    continue;    // on to next char
+                }
 
                 if (slash) {
                     slash = false;
@@ -461,6 +606,7 @@ void Lines::killQuotesComments()
             else {
                 // in C-style Comment
 
+                BSLS_ASSERT_OPT(!quote);
                 BSLS_ASSERT_OPT(!slash);
 
                 if ('\\' != c || col != curLine.length() - 1) {
@@ -504,6 +650,30 @@ void Lines::trimTrailingWhite()
     int lineCount = Lines::lineCount();
     for (int li = 0; li < lineCount; ++li) {
         Ut::trim(&s_lines[li]);
+    }
+}
+
+void Lines::untabify()
+{
+    int lineCount = Lines::lineCount();
+    for (int li = 0; li < lineCount; ++li) {
+        bsl::string& curLine = s_lines[li];
+        int len = curLine.length();
+
+        for (int col = 0; col < len; ++col) {
+            if ('\t' == curLine[col]) {
+                curLine[col] = ' ';
+                const int charAfter = ((col + 8) / 8) * 8;
+                ++col;
+                const int toInsert = charAfter - col;
+                BSLS_ASSERT_OPT(toInsert >= 0);  BSLS_ASSERT_OPT(toInsert < 8);
+
+                curLine.insert(col, toInsert, ' ');
+                len += toInsert;
+                BSLS_ASSERT_OPT(curLine.length() == len);
+                col = charAfter - 1;
+            }
+        }
     }
 }
 
@@ -658,12 +828,15 @@ Lines::Lines(const char *fileName)
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
+    s_purposeFlags = 0;
     s_hasTabs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
     s_includesDoubleQuotes = false;
     s_assertFound = false;
+    s_includesComponentDotH = false;
+    s_couldntOpenFile = false;
 
     if (s_fileName.length() >= 6 &&
                       s_fileName.substr(s_fileName.length() - 6) == ".t.cpp") {
@@ -679,8 +852,8 @@ Lines::Lines(const char *fileName)
 
     bsl::ifstream fin(fileName);
     if (!fin) {
-        bsl::cerr << "Can't open file: " << fileName << endl;
-        abort();
+        s_couldntOpenFile = true;
+        return;                                                       // RETURN
     }
 
     {
@@ -719,8 +892,10 @@ Lines::Lines(const char *fileName)
     s_state = BDEFLAG_LOADED;
 
     firstDetect();
+    untabify();
     checkIncludes();
     checkForAssert();
+    checkPurpose();
     killQuotesComments();
     trimTrailingWhite();
     wipeOutMacros();
@@ -744,12 +919,15 @@ Lines::Lines(const bsl::string& string)
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
+    s_purposeFlags = 0;
     s_hasTabs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
     s_includesDoubleQuotes = false;
     s_assertFound = false;
+    s_includesComponentDotH = false;
+    s_couldntOpenFile = false;
 
     s_lines.push_back("");
 
@@ -773,6 +951,7 @@ Lines::Lines(const bsl::string& string)
     firstDetect();
     checkIncludes();
     checkForAssert();
+    checkPurpose();
     killQuotesComments();
     wipeOutMacros();
     trimTrailingWhite();
@@ -832,6 +1011,15 @@ void Lines::printWarnings(bsl::ostream *stream)
         *stream << "Warning: " << s_fileName <<
                                     ": 'ASSERT' found in comment in .h file\n";
     }
+    if (BDEFLAG_DOT_H != s_fileType && !s_includesComponentDotH &&
+              !s_couldntOpenFile && Ut::npos() == s_fileName.find(".m.cpp")) {
+        *stream << "Warning: " << s_fileName <<
+                        ": should include, as the first include, '#include " <<
+                                                  componentInclude() << "'.\n";
+    }
+    if (s_couldntOpenFile) {
+        *stream << "Warning: " << s_fileName << ": could not be opened\n";
+    }
     if (!s_longLines.empty()) {
         *stream << "Warning: long line(s) in " << s_fileName <<
                                         " at line(s): " << s_longLines << endl;
@@ -852,6 +1040,20 @@ void Lines::printWarnings(bsl::ostream *stream)
     if (!s_tbds.empty()) {
         *stream << "Warning: in " << s_fileName << " 'TBD' comments found on"
                                                  " line(s) " << s_tbds << endl;
+    }
+    if (s_purposeFlags) {
+        if (s_purposeFlags & BDEFLAG_NO_PURPOSE) {
+            *stream << "Warning: in " << s_fileName <<
+                                             " no '@PURPOSE:' comment" << endl;
+        }
+        if (s_purposeFlags & BDEFLAG_PURPOSE_LACKS_PROVIDE) {
+            *stream << "Warning: in " << s_fileName <<
+                       " '@PURPOSE:' comment doesn't start with \"Provide\"\n";
+        }
+        if (s_purposeFlags & BDEFLAG_PURPOSE_LACKS_PERIOD) {
+            *stream << "Warning: in " << s_fileName <<
+                                 " '@PURPOSE:' comment doesn't end with '.'\n";
+        }
     }
 }
 

@@ -184,6 +184,11 @@ class Group {
         // If this is a routine body, check that the starting '{' is on its own
         // line and properly indented.
 
+    void registerValidFriendTarget() const;
+        // Only called if we're in a .h file.  If this a group, put it on the
+        // list of valid friend target groups.  If this is a function decl
+        // not in a group, put it in the list of friend target routines.
+
     void getArgList(bsl::vector<bsl::string> *typeNames,
                     bsl::vector<bsl::string> *names,
                     bsl::vector<int>         *lineNums) const;
@@ -203,6 +208,12 @@ class Group {
         // boolean operators do in fact return bools.
 
     static
+    void checkAllCasesPresentInTestDriver();
+        // If the file is not a test driver, do nothing.  If it is, check that
+        // no cases in the middle of the sequence of positive test numbers are
+        // missing.
+
+    static
     void checkAllCodeComments();
         // Check all comments in classes, code blocks and routine bodies are
         // indented and spaced appropriately.
@@ -211,6 +222,11 @@ class Group {
     void checkAllCodeIndents();
         // Check indentation of all code in classes, code bodies and routine
         // bodies.
+
+    static
+    void checkAllFriends();
+        // Nop unless in a .h file.  Make sure that all friendships occurring
+        // in this file refer to groups or methods declared in this file.
 
     static
     void checkAllFunctionDoc();
