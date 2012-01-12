@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
-VERSION=$(shell dpkg-parsechangelog | grep ^Version: | cut -c 10-)
+VERSION=$(shell dpkg-parsechangelog | grep '^Version:' | cut -c 10-)
 
 clean:
 	rm -rf debian/tmp
