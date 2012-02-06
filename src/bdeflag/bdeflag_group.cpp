@@ -84,6 +84,7 @@ enum {
     MATCH_TEMPLATE,
     MATCH_MAIN,
     MATCH_TEST,
+    MATCH_BSLMF_METAINT,
     MATCH_NUM_CONSTANTS };
 
 static bsl::vector<bsl::string> match;
@@ -181,6 +182,7 @@ StartProgram::StartProgram()
     match[MATCH_TEMPLATE]        = "template";
     match[MATCH_MAIN]            = "main";
     match[MATCH_TEST]            = "test";
+    match[MATCH_BSLMF_METAINT]   = "bslmf_MetaInt";
 
     static const char *arrayBoolOperators[] = {
         "!", "<", "<=", ">", ">=", "==", "!=", "&&", "||" };
@@ -1694,7 +1696,7 @@ void Group::checkArgNames() const
     // avoid calling 'getArgList' outside of class except on binary operators
 
     bool anyOp = Ut::frontMatches(d_prevWord, MATCH[MATCH_OPERATOR], 0);
-    bool binOp = anyOp && binaryOperators. count(d_prevWord.substr(8));
+    bool binOp = anyOp && binaryOperators.count(d_prevWord.substr(8));
     if (BDEFLAG_CLASS != d_parent->d_type && !binOp) {
         return;                                                       // RETURN
     }
@@ -1773,16 +1775,45 @@ void Group::checkArgNames() const
                                                             d_prevWord << endl;
                 }
                 else if ('&' == tn[tn.length() - 1] &&
-                                   Ut::npos() == tn.find(MATCH[MATCH_CONST]) &&
-                                 !(bdeu_String::strstrCaseless(tn.c_str(),
-                                                               tn.length(),
-                                                               "stream", 6) ||
-                                   bdeu_String::strstrCaseless(an.c_str(),
-                                                               an.length(),
-                                                               "stream", 6))) {
-                    d_open.warning() << " first argument of routine " <<
+                                   Ut::npos() == tn.find(MATCH[MATCH_CONST])) {
+                    bool ok = false;
+                    static struct {
+                        int         d_length;
+                        const char *d_name;
+                    } okNames[] = { 0, "stream",
+                                    0, "manipulator",
+                                    0, "accessor",
+                                    0, "visitor" };
+                    enum { NUM_OKNAMES = sizeof okNames / sizeof *okNames };
+                    if (0 == okNames[0].d_length) {
+                        for (int i = 0; i < NUM_OKNAMES; ++i) {
+                            okNames[i].d_length =
+                                                bsl::strlen(okNames[i].d_name);
+                        }
+                    }
+                    for (int i = 0; i < NUM_OKNAMES; ++i) {
+                        if (Ut::npos() != an.find(okNames[i].d_name)) {
+                            ok = true;
+                            break;
+                        }
+                    }
+                    if (!ok) {
+                        for (int i = 0; i < NUM_OKNAMES; ++i) {
+                            if (bdeu_String::strstrCaseless(
+                                                        tn.c_str(),
+                                                        tn.length(),
+                                                        okNames[i].d_name,
+                                                        okNames[i].d_length)) {
+                                ok = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!ok) {
+                        d_open.warning() << " first argument of routine " <<
                              d_prevWord << " is being passed as a reference" <<
                                                    " to a modifiable object\n";
+                    }
                 }
             }
 
@@ -2015,19 +2046,23 @@ void Group::checkBooleanRoutineNames() const
        && (Ut::frontMatches(d_prevWord, MATCH[MATCH_IS],  0)
            || Ut::frontMatches(d_prevWord, MATCH[MATCH_ARE], 0)
            || (Ut::frontMatches(d_prevWord, MATCH[MATCH_HAS],  0) &&
-                               d_prevWord.length() > 3 && 'h' != d_prevWord[3])
+                             d_prevWord.length() > 3 && isupper(d_prevWord[3]))
            || (Ut::frontMatches(d_prevWord, MATCH[MATCH_OPERATOR], 0) &&
                                                ':' != *(d_prevWordBegin - 1) &&
                                  boolOperators.count(d_prevWord.substr(8))))) {
         Place pb = d_prevWordBegin - 1;    // Place Before
-        Place typeWordBegin;
-        bsl::string typeWord = pb.wordBefore(&typeWordBegin);
-        if ('&' == *typeWordBegin) {
-            pb = typeWordBegin - 1;
-            typeWord = pb.wordBefore();
+        if ('>' == *pb) {
+            if (!Ut::frontMatches(pb.templateNameBefore(),
+                                  MATCH[MATCH_BSLMF_METAINT],
+                                  0)) {
+                shouldBool.insert(d_prevWord);
+            }
+            return;
         }
-
-        if (MATCH[MATCH_BOOL] != typeWord) {
+        if ('&' == *pb) {
+            --pb;
+        }
+        if (MATCH[MATCH_BOOL] != pb.wordBefore()) {
             shouldBool.insert(d_prevWord);
         }
     }
@@ -2386,6 +2421,12 @@ void Group::checkNamespace() const
 {
     if (BDEFLAG_NAMESPACE != d_type || MATCH[MATCH_QUOTE_C] == d_prevWord) {
         return;                                                       // RETURN
+    }
+
+    if (d_open.lineNum() == d_close.lineNum()) {
+        // Single line namespace.  No closing comment necessary.
+
+        return;
     }
 
     bool commentFound = false;
