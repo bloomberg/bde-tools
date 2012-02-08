@@ -555,7 +555,7 @@ void Group::checkAllCasesPresentInTestDriver()
     it    = mainGroup->d_subGroups.begin();
     prev  = it;
 
-    GroupSet switchCandidates;
+    GroupSet_Base switchCandidates;
 
     for (; endIt != it; prev = it, ++it) {
         if (BDEFLAG_CODE_BODY != (*it)->d_type
@@ -894,7 +894,9 @@ void Group::checkAllFunctionDoc()
 
     topLevel().recurseMemTraverse(&Group::checkFunctionDoc);
 
-    routinesNeedDoc.erase(MATCH[MATCH_OPERATOR]);
+    if (routinesNeedDoc.count(MATCH[MATCH_OPERATOR])) {
+        routinesNeedDoc.erase(MATCH[MATCH_OPERATOR]);
+    }
 
     if (!routinesNeedDoc.empty()) {
         typedef bsl::set<bsl::string>::iterator It;
