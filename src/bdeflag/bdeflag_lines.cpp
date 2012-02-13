@@ -717,6 +717,7 @@ void Lines::wipeOutMacros()
                                 if (0 == depth) {
                                     for (int j = li; j <= li2; ++j) {
                                         s_lines[j] = "";
+                                        s_lineIndents[j] = 0;
                                         s_comments[j] = BDEFLAG_NONE;
                                         s_commentIndents[j] = 0;
                                     }
@@ -898,8 +899,8 @@ Lines::Lines(const char *fileName)
     checkPurpose();
     killQuotesComments();
     trimTrailingWhite();
-    wipeOutMacros();
     setLineIndents();
+    wipeOutMacros();
     identifyStatements();
     identifyStatementEnds();
     identifyInlinesNotAlone();

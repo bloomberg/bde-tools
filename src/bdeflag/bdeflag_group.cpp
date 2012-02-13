@@ -85,6 +85,7 @@ enum {
     MATCH_MAIN,
     MATCH_TEST,
     MATCH_BSLMF_METAINT,
+    MATCH_TYPENAME,
     MATCH_NUM_CONSTANTS };
 
 static bsl::vector<bsl::string> match;
@@ -183,6 +184,7 @@ StartProgram::StartProgram()
     match[MATCH_MAIN]            = "main";
     match[MATCH_TEST]            = "test";
     match[MATCH_BSLMF_METAINT]   = "bslmf_MetaInt";
+    match[MATCH_TYPENAME]        = "typename";
 
     static const char *arrayBoolOperators[] = {
         "!", "<", "<=", ">", ">=", "==", "!=", "&&", "||" };
@@ -1056,6 +1058,20 @@ void Group::checkAllTemplateOnOwnLine()
             BSLS_ASSERT_OPT('e' == *cursor);
             ++cursor;
             if ('<' != *cursor) {
+                Place cA;
+                const bsl::string nWord = cursor.nameAfter(&cA, true);
+                ++cA;
+                Place cB;
+                cA.nameAfter(&cB, true);
+                ++cB;
+                if   ((MATCH[MATCH_STRUCT] == nWord
+                   ||  MATCH[MATCH_CLASS]  == nWord
+                   ||  MATCH[MATCH_UNION]  == nWord) && ';' == *cB
+                   ||  '(' == *cB) {
+                    // forward template instantiation -- ignore it
+                
+                    continue;
+                }
                 (cursor - 8).error() << "'template' not followed by '<'\n";
                 continue;
             }
@@ -1999,6 +2015,8 @@ void Group::checkArgNames() const
                         d_open.warning() << d_prevWord << " copy c'tor arg"
                                                       " name not 'original'\n";
                     }
+
+                    // note we don't mark copy c'tors 'explicit'
                 }
                 else if (potentialSingleArg && MATCH[MATCH_EXPLICIT] !=
                                           (d_prevWordBegin - 1).wordBefore()) {
@@ -2784,6 +2802,17 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
         Place typeNameEnd;
         bsl::string typeName = begin.nameAfter(&typeNameEnd);
         if (typeName.empty()) {
+            if ('.' == *typeNameEnd) {
+                const bsl::string& curLine =
+                                            Lines::line(typeNameEnd.lineNum());
+                if ("..." == curLine.substr(typeNameEnd.col(), 3) &&
+                                                  d_close == typeNameEnd + 3) {
+                    // don't analyze this arg -- we're done with the others
+
+                    break;
+                }
+            }
+
             begin.error() << "confusing arg list\n";
             typeNames->clear();
             names->clear();
@@ -2791,6 +2820,7 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
             return;                                                   // RETURN
         }
         while (MATCH[MATCH_CONST] == typeName ||
+                    MATCH[MATCH_TYPENAME] == typeName ||
                     MATCH[MATCH_VOLATILE] == typeName || '*' == *typeNameEnd) {
             typeName = (typeNameEnd + 1).nameAfter(&typeNameEnd);
         }
@@ -2830,6 +2860,7 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
         Place postTypeEnd;
         bsl::string postType = (typeNameEnd + 1).nameAfter(&postTypeEnd);
         while (MATCH[MATCH_CONST] == postType ||
+                    MATCH[MATCH_TYPENAME] == typeName ||
                     MATCH[MATCH_VOLATILE] == postType || '*' == *postTypeEnd) {
             postType = (postTypeEnd + 1).nameAfter(&postTypeEnd);
         }
