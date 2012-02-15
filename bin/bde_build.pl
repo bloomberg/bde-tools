@@ -2078,8 +2078,9 @@ clean.using_relative_paths: $mainsrc_clean_rule_name
 \t\$(RM) make.*.\$(UFID).log
 \t\$(RM) ${clpkg}*.\$(UFID).out
 \t\$(RM) ${clpkg}*.\$(UFID).pdb
+\t\$(RM) vc*.pdb
 \t\$(RM) ${clpkg}*.cod
-\t\$(RM) ${clpkg}*.t.\$(UFID)
+\t\$(RM) ${clpkg}*.t.\$(UFID)\$(EXE_EXT)
 \t\$(RM) \$(PACKAGE_LIB)
 $remove_subdirs
 # wipes out all build types, unfortunately <<<TODO: fix later
