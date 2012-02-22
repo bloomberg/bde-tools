@@ -2481,10 +2481,12 @@ void Group::checkNamespace() const
         }
     }
     else {
-        if (Lines::BDEFLAG_CLOSE_NAMESPACE !=
-                                           Lines::comment(d_close.lineNum())) {
+        Lines::CommentType closingCmt = Lines::comment(d_close.lineNum());
+        if   (Lines::BDEFLAG_CLOSE_NAMESPACE         != closingCmt
+           && Lines::BDEFLAG_CLOSE_PACKAGE_NAMESPACE != closingCmt) {
             d_close.warning() << "when closed, namespaces should have the"
-                         " comment '// close namespace <name of namespace>'\n";
+                         " comment '// close namespace <name of namespace>' or"
+                                             " '// close package namespace'\n";
         }
         else {
             commentFound = true;

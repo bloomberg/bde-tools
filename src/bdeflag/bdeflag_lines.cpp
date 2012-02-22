@@ -461,7 +461,8 @@ void Lines::killQuotesComments()
         { " close namespace",         BDEFLAG_CLOSE_NAMESPACE },
         { " close unnamed namespace", BDEFLAG_CLOSE_UNNAMED_NAMESPACE },
         { " close enterprise namespace",
-                                      BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE } };
+                                      BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE },
+        { " close package namespace", BDEFLAG_CLOSE_PACKAGE_NAMESPACE } };
 
     enum { NUM_LEGAL_COMMENTS = sizeof legalComments / sizeof *legalComments };
 
