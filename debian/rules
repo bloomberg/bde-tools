@@ -19,11 +19,13 @@ debian/binary-stamp: debian/build-stamp
 	dpkg-gencontrol
 	dpkg-deb -b debian/tmp ../bde-tools_$(VERSION)_all.deb
 
-build: build-indep
+build: build-arch build-indep
 
 build-indep: debian/build-stamp
 
-binary: binary-indep
+build-arch:
+
+binary: binary-arch binary-indep
 
 binary-indep: debian/binary-stamp
 

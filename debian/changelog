@@ -1,3 +1,9 @@
+bde-tools (20120223.1.gc58edb0) unstable; urgency=low
+
+  * Depend on the robo-etc for default.opts
+
+ -- Daniel Ruoso <druoso@bloomberg.net>  Wed, 23 Feb 2012 15:42:22 -0500
+
 bde-tools (20111214.1.g3b54559) unstable; urgency=low
 
   * Initial release
