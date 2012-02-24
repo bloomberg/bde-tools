@@ -1,3 +1,9 @@
+bde-tools (20120223.1.gc58edb0+1) unstable; urgency=low
+
+  * Update producemake to match cstools version
+
+ -- Daniel Ruoso <druoso@bloomberg.net>  Fri, 24 Feb 2012 17:30:26 -0500
+
 bde-tools (20120223.1.gc58edb0) unstable; urgency=low
 
   * Depend on the robo-etc for default.opts
