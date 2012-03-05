@@ -24,7 +24,7 @@ TARBALL=/home/bdebuild/bs/tars-${BUILD_TYPE}/snapshot-${BUILD_TYPE}.`date +"%Y%m
 
 DEV_UORS="bsl zde bde bbe bce bae bte bsi                                   \
        a_bdema a_bteso a_xercesc bsc e_ipc a_ossl a_fsipc bas a_xmf         \
-       a_baslt a_bassvc bap a_comdb2 a_basfs a_bascat z_bae a_fsbaem z_bas  \
+       a_baslt bap a_bassvc a_comdb2 a_basfs a_bascat z_bae a_fsbaem z_bas  \
        z_a_bdema"
 API_UORS="api apt apu aps apn blpapi"
 FDE_UORS="fde"
