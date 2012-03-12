@@ -224,6 +224,29 @@ StartProgram::StartProgram()
     tolerateSnugComments = !!bsl::getenv("BDEFLAG_TOLERATE_SNUG_COMMENTS");
 }
 
+bool isModifiableRef(const bsl::string& typeName)
+{
+    const int len = typeName.length();
+
+    if (len >= 1) {
+        if ('&' == typeName[len - 1]) {
+            if (len >= 2) {
+                if ('&' == typeName[len - 2]) {
+                        // Rvalue
+
+                        return false;
+                }
+            }
+
+            if (! Ut::frontMatches(typeName, MATCH[MATCH_CONST])) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 static
 void printStringSet(const bsl::set<bsl::string>& s)
     // Print a set of strings to cerr with commas separating them.
@@ -1792,8 +1815,7 @@ void Group::checkArgNames() const
                               "null typename for first argument of routine " <<
                                                             d_prevWord << endl;
                 }
-                else if ('&' == tn[tn.length() - 1] &&
-                                   Ut::npos() == tn.find(MATCH[MATCH_CONST])) {
+                else if (isModifiableRef(tn)) {
                     bool ok = false;
                     static struct {
                         int         d_length;
@@ -1842,8 +1864,7 @@ void Group::checkArgNames() const
                              Ut::nthString(i + 1) << " argument of routine " <<
                                                             d_prevWord << endl;
                 }
-                else if ('&' == tn[tn.length() - 1] &&
-                                   Ut::npos() == tn.find(MATCH[MATCH_CONST])) {
+                else if (isModifiableRef(tn)) {
                     d_open.warning() << Ut::nthString(i + 1) << " argument of"
                            " routine " << d_prevWord << " is being passed as a"
                                          " reference to a modifiable object\n";
