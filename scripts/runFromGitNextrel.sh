@@ -7,7 +7,9 @@ BUILD_TYPE=nextrel
 
 VIEW_NAME=bde_releaseintegrator2
 
-BDE_GIT_REPO=/home/bdebuild/bs/git-bde-${BUILD_TYPE}
+BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
+BDE_BB_GIT_REPO=/home/bdebuild/bs/bde-bb-${BUILD_TYPE}
+
 BAS_GIT_REPO=/home/bdebuild/bs/bas-libs-${BUILD_TYPE}
 
 # Actual api repo is $API_GIT_REPO/groups
@@ -44,7 +46,12 @@ export PATH
 
 /usr/atria/bin/cleartool startview $VIEW_NAME
 
-pushd $BDE_GIT_REPO 2> /dev/null
+pushd $BDE_CORE_GIT_REPO 2> /dev/null
+/opt/swt/bin/git fetch
+/opt/swt/bin/git checkout remotes/origin/master
+popd
+
+pushd $BDE_BB_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
 /opt/swt/bin/git checkout remotes/origin/master
 popd

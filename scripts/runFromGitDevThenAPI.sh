@@ -7,7 +7,8 @@ BUILD_TYPE=dev
 
 VIEW_NAME=bde_devintegrator
 
-BDE_GIT_REPO=/home/bdebuild/bs/git-bde-${BUILD_TYPE}
+BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
+BDE_BB_GIT_REPO=/home/bdebuild/bs/bde-bb-${BUILD_TYPE}
 BAS_GIT_REPO=/home/bdebuild/bs/bas-libs-${BUILD_TYPE}
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
 LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
@@ -40,7 +41,12 @@ export PATH
 
 /usr/atria/bin/cleartool startview $VIEW_NAME
 
-pushd $BDE_GIT_REPO 2> /dev/null
+pushd $BDE_CORE_GIT_REPO 2> /dev/null
+/opt/swt/bin/git fetch
+/opt/swt/bin/git checkout remotes/origin/dev-integration
+popd
+
+pushd $BDE_BB_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
 /opt/swt/bin/git checkout remotes/origin/dev-integration
 popd
