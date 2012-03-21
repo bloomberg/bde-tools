@@ -68,7 +68,7 @@ popd
 
 SCRIPT_PATH=$TOOLSPATH/scripts
 
-$SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR $BDE_GIT_REPO $BAS_GIT_REPO $API_GIT_REPO /view/$VIEW_NAME/bbcm/api \
+$SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR $BDE_CORE_GIT_REPO $BDE_BB_GIT_REPO $BAS_GIT_REPO /view/$VIEW_NAME/bbcm/api \
                  -- \
                  $DEV_UORS $API_UORS $FDE_UORS
 
