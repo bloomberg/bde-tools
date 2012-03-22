@@ -1,6 +1,7 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
+use warnings;
 
 use FindBin;
 use File::Path;
@@ -580,10 +581,6 @@ _USAGE_END
 
         Util::Retry::retry_chdir($_[0]);
     };
-}
-
-if ($^O!~/windows|MSWin32/) {
-    $ENV{PATH}="/opt/swt/bin:$ENV{PATH}";
 }
 
 # if needed, make directory, or, if opts{output} is in effect, make directory

@@ -1,5 +1,7 @@
-#!/opt/swt/bin/perl -w
+#!/usr/bin/env perl
+
 use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib/perl";
@@ -67,10 +69,6 @@ $bindir =~ s|/|\\|sg if $iamwindows;
 my $FS         = $iamwindows ? "\\" : "/";
 
 unless ($iamwindows) {
-    $ENV{PATH} = join(':',$bindir,qw[
-        /usr/local/bin /usr/bin /bin /usr/ccs/bin
-        /opt/SUNWspro/bin /bb/bin
-    ]);
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
 }
 
@@ -267,11 +265,6 @@ if ($opts{path}) {
 
 if ($opts{uptodate} && $opts{rebuild}) {
     fatal "--uptodate and --rebuild are mutually exclusive"
-}
-
-# Ensure we pick up tools from the view we are building
-unless ($iamwindows) {
-  $ENV{PATH} = join(':',"$where/tools/bin",$ENV{PATH});
 }
 
 unless ($where) {

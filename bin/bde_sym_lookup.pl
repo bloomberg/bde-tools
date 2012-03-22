@@ -1,5 +1,7 @@
-#! /bbs/opt/perl-5.8.8/bin/perl
+#!/usr/bin/env perl
+
 use strict;
+use warnings;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::Bin";

@@ -1,5 +1,7 @@
-#!/bb/csdata/scm/bin/perl -w
-# FIXME - make shebang standard once we're on 5.8.8
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
 
 my $format = 'line';
 

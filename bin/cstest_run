@@ -1,8 +1,9 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
 
+use strict;
+use warnings;
 use Getopt::Long;
 use Test::Harness;
-use strict;
 
 my @getopt = qw/verbose/;
 GetOptions(\my %opt, @getopt) or die usage();

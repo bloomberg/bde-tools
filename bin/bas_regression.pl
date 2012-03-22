@@ -1,6 +1,7 @@
-#!/bbs/opt/bin/perl-5.8.8 -w
-# !/opt/swt/bin/perl -w
+#!/usr/bin/env perl
+
 use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin";

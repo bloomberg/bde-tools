@@ -1,7 +1,7 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
 
-# NEVER remove the -w in the shebang line!!
-# Our error-detection scheme depends on this.
+use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin";
@@ -16,8 +16,6 @@ use Change::Symbols
   qw/$FILE_IS_RENAMED $FILE_IS_COPIED $FILE_IS_CHANGED $STAGE_PRODUCTION/;
 use Change::Identity         qw/identifyProductionName/;
 use BDE::Util::Nomenclature  qw/getCanonicalUOR getSubdirsRelativeToUOR/;
-
-use strict;
 
 # The shebang line has to include -w for this as we want to die whenever
 # any code in any outside module issues a warning. We therefore can't do

@@ -1,7 +1,8 @@
 #!/usr/bin/env perl
 
-use Getopt::Long;
 use strict;
+use warnings;
+use Getopt::Long;
 
 my @getopt = qw(showfile|n showcsid|c);
 my %opt;

@@ -1,11 +1,11 @@
-#!/bbs/opt/bin/perl 
+#!/usr/bin/env perl
 
 # a cheap perldoc-wrapper for accessing the documentation
 # for the SIBUILD modules and tools
 # Tassilo von Parseval (tvonparseval@bloomberg.net)
 
-use warnings;
 use strict;
+use warnings;
 
 # PERL5LIB settings for the various stages
 my %stage2perl5lib = (
