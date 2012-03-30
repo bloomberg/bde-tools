@@ -1,7 +1,6 @@
-#!/usr/bin/env perl
+#!/bbs/opt/bin/perl -w
 
 use strict;
-use warnings;
 
 use FindBin;
 use File::Path;

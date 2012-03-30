@@ -1,7 +1,5 @@
-#!/usr/bin/env perl
-
+#!/bbs/opt/bin/perl -w
 use strict;
-use warnings;
 
 use Cwd;
 use FindBin;

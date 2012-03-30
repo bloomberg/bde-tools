@@ -1,7 +1,5 @@
-#!/usr/bin/env perl
-
+#!/opt/swt/bin/perl
 use strict;
-use warnings;
 
 use Getopt::Long;
 use Fcntl qw(:flock);
