@@ -2155,6 +2155,8 @@ void Group::checkCodeComments() const
                 if (li > begin && Lines::BDEFLAG_S_BLANKLINE !=
                                                        Lines::statement(li - 1)
                                           && startIndent >= expectIndent + 4) {
+                    // deeply indented comment -- ok
+
                     ok = true;
                 }
                 else {
@@ -2178,11 +2180,15 @@ void Group::checkCodeComments() const
                             ++li;
                         }
                         else {
+                            // it's a blank line and not a comment, it's ok
+
                             break;
                         }
                     }
                     else {
-                        if (!ok && li < bigEnd) {
+                        if (!ok && li < bigEnd &&
+                                        '{' != Lines::line(li + 1)[
+                                                  Lines::lineIndent(li + 1)]) {
                             commentNeedsBlankLines.insert(li);
                         }
                         break;
