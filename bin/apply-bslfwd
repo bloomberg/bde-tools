@@ -1,0 +1,7 @@
+#!/bin/sh
+
+PATH=\
+/opt/swt/install/perl-5.12.2/bin:\
+/opt/swt/install/perl-5.12.2-1/bin:\
+$PATH \
+    `dirname "$0"`/apply-bslfwd.pl "$@"
