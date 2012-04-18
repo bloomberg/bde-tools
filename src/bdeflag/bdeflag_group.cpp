@@ -29,7 +29,7 @@ namespace BloombergLP {
 using bsl::cerr;
 using bsl::endl;
 
-namespace bdeFlag {
+namespace bdeflag {
 
 // store strings in a static vector for comparisons - a compare with a string
 // is faster that with a 'const char *'.
@@ -86,6 +86,7 @@ enum {
     MATCH_TEST,
     MATCH_BSLMF_METAINT,
     MATCH_TYPENAME,
+    MATCH_BSLALG_TYPETRAITS,
     MATCH_NUM_CONSTANTS };
 
 static bsl::vector<bsl::string> match;
@@ -113,6 +114,14 @@ static bsl::set<bsl::string> unaryOperators;
 static bsl::set<bsl::string> annoyingMacros;
 
 static bsl::set<bsl::string> validFriendTargets;
+
+static struct ClassNameVals {
+    // Only valid within 'checkAllClassNames
+
+    bsl::string d_componentPrefix;
+    bsl::string d_componentName;
+    bsl::string d_componentNameNoPrefix;    // empty if no '_' in componentName
+} classNameVals;
 
 static bool tolerateSnugComments;
 
@@ -185,6 +194,7 @@ StartProgram::StartProgram()
     match[MATCH_TEST]            = "test";
     match[MATCH_BSLMF_METAINT]   = "bslmf_MetaInt";
     match[MATCH_TYPENAME]        = "typename";
+    match[MATCH_BSLALG_TYPETRAITS] = "balalg_TypeTraits";
 
     static const char *arrayBoolOperators[] = {
         "!", "<", "<=", ">", ">=", "==", "!=", "&&", "||" };
@@ -224,7 +234,11 @@ StartProgram::StartProgram()
     tolerateSnugComments = !!bsl::getenv("BDEFLAG_TOLERATE_SNUG_COMMENTS");
 }
 
+static
 bool isModifiableRef(const bsl::string& typeName)
+    // Given a typename of an arg to a method, return true if the type
+    // describes a reference to a modifiable object.  Note that C++11 'rvalue'
+    // '&&' refs do not qualify as modifiable refs.
 {
     const int len = typeName.length();
 
@@ -232,14 +246,14 @@ bool isModifiableRef(const bsl::string& typeName)
         if ('&' == typeName[len - 1]) {
             if (len >= 2) {
                 if ('&' == typeName[len - 2]) {
-                        // Rvalue
+                    // Rvalue
 
-                        return false;
+                    return false;                                     // RETURN
                 }
             }
 
             if (! Ut::frontMatches(typeName, MATCH[MATCH_CONST])) {
-                return true;
+                return true;                                          // RETURN
             }
         }
     }
@@ -691,6 +705,42 @@ void Group::checkAllCasesPresentInTestDriver()
     }
 }
 
+void Group::checkAllClassNames()
+{
+    ClassNameVals& cnv = classNameVals;
+
+    cnv.d_componentName = Lines::fileName();
+
+    // take basename
+
+    bsl::size_t u = cnv.d_componentName.rfind('/');
+    if (Ut::npos() != u) {
+        cnv.d_componentName = cnv.d_componentName.substr(u + 1);
+    }
+
+    // chop off suffix
+
+    u = cnv.d_componentName.find('.');
+    if (Ut::npos() != u) {
+        cnv.d_componentName.resize(u);
+    }
+
+    // find prefix.  Note that 'a_' is not a prefix, 'a_bdema_' is.
+
+    u = cnv.d_componentName.find('_');
+    if (u <= 1) {
+        u = cnv.d_componentName.find('_', u + 1);
+    }
+    cnv.d_componentPrefix = Ut::npos() != u
+                          ? cnv.d_componentName.substr(0, u + 1)
+                          : MATCH[MATCH_NIL];
+    cnv.d_componentNameNoPrefix = Ut::npos() != u
+                                ? cnv.d_componentName.substr(u + 1)
+                                : MATCH[MATCH_NIL];
+
+    topLevel().recurseMemTraverse(&Group::checkClassName);
+}
+
 void Group::checkAllCodeComments()
 {
     strangelyIndentedComments.clear();
@@ -1092,7 +1142,7 @@ void Group::checkAllTemplateOnOwnLine()
                    ||  MATCH[MATCH_UNION]  == nWord) && ';' == *cB
                    ||  '(' == *cB) {
                     // forward template instantiation -- ignore it
-                
+
                     continue;
                 }
                 (cursor - 8).error() << "'template' not followed by '<'\n";
@@ -1144,6 +1194,7 @@ void Group::doEverything()
 {
     initGroups();
     checkAllBooleanRoutineNames();
+    checkAllClassNames();
     checkAllFunctionDoc();
     checkAllReturns();
     checkAllNotImplemented();
@@ -2098,7 +2149,7 @@ void Group::checkBooleanRoutineNames() const
                                   0)) {
                 shouldBool.insert(d_prevWord);
             }
-            return;
+            return;                                                   // RETURN
         }
         if ('&' == *pb) {
             --pb;
@@ -2108,6 +2159,87 @@ void Group::checkBooleanRoutineNames() const
         }
     }
 }
+
+void Group::checkClassName() const
+{
+    if (BDEFLAG_CLASS != d_type) {
+        return;                                                       // RETURN
+    }
+
+    if (d_className.empty() | (MATCH[MATCH_STRUCT] == d_className) |
+                              (MATCH[MATCH_CLASS ] == d_className) |
+                              (MATCH[MATCH_UNION ] == d_className)) {
+        return;                                                       // RETURN
+    }
+
+    bsl::string className = d_className;
+
+    bsl::size_t u = className.find('<');
+    if (Ut::npos() != u) {
+        className.resize(u);
+    }
+    u = className.rfind(':');
+    if (Ut::npos() != u) {
+        className = className.substr(u + 1);
+    }
+
+    const ClassNameVals& cnv = classNameVals;
+
+    // it's a type -- check first letter is uppercase.  Note that sometimes it
+    // is appropriate to declare template classes of type traits in other
+    // components.
+
+    unsigned leadingIdx = !strncmp(className.c_str(),
+                                   cnv.d_componentPrefix.c_str(),
+                                   cnv.d_componentPrefix.length())
+                        ? cnv.d_componentPrefix.length()
+                        : Lines::BDEFLAG_DOT_T_DOT_CPP == Lines::fileType() &&
+                                          !strncmp(className.c_str(), "my_", 3)
+                          ? 3
+                          : 0;
+    char leadingChar = className.length() > leadingIdx
+                     ? className[leadingIdx]
+                     : ' ';
+    if (! isupper(leadingChar) && ! Ut::frontMatches(
+                                                className,
+                                                MATCH[MATCH_BSLALG_TYPETRAITS],
+                                                0)) {
+        d_open.warning() << "class name " << className << " begins with '" <<
+                                leadingChar << "' -- not an upper case char\n";
+    }
+
+    // the following checks are only for classes in .h files that are not
+    // nested classes
+
+    if (Lines::BDEFLAG_DOT_H != Lines::fileType() ||
+                         (d_parent && BDEFLAG_NAMESPACE != d_parent->d_type &&
+                                      BDEFLAG_TOP_LEVEL != d_parent->d_type)) {
+        return;                                                       // RETURN
+    }
+
+    bdeu_String::toLower(&className);
+
+    // compare without package prefix
+
+    if (! cnv.d_componentNameNoPrefix.empty() &&
+                              !strncmp(className.c_str(),
+                                       cnv.d_componentNameNoPrefix.c_str(),
+                                       cnv.d_componentNameNoPrefix.length())) {
+        return;                                                       // RETURN
+    }
+
+    // compare with package prefix
+
+    if (!strncmp(className.c_str(),
+                 cnv.d_componentName.c_str(),
+                 cnv.d_componentName.length())) {
+        return;                                                       // RETURN
+    }
+
+    d_open.warning() << "class name " << d_prevWord << " doesn't start with"
+                                                       " the component name\n";
+}
+
 
 void Group::checkCodeComments() const
 {
@@ -2186,6 +2318,9 @@ void Group::checkCodeComments() const
                         }
                     }
                     else {
+                        // Note we tolerate snug comments if the line following
+                        // them begins with '{'.
+
                         if (!ok && li < bigEnd &&
                                         '{' != Lines::line(li + 1)[
                                                   Lines::lineIndent(li + 1)]) {
@@ -2470,18 +2605,20 @@ void Group::checkNamespace() const
         return;                                                       // RETURN
     }
 
-    if (d_open.lineNum() == d_close.lineNum()) {
-        // Single line namespace.  No closing comment necessary.
-
-        return;
-    }
+    // check name is acceptable
 
     bool commentFound = false;
-    if ("namespace" == d_prevWord) {
+    if (MATCH[MATCH_NAMESPACE] == d_prevWord) {
         // unnamed namespace
 
         if (Lines::BDEFLAG_DOT_H == Lines::fileType()) {
             d_open.warning() << "unnamed namespace in .h file\n";
+        }
+
+        if (d_open.lineNum() == d_close.lineNum()) {
+            // Single line namespace.  No closing comment necessary.
+
+            return;                                                   // RETURN
         }
 
         if (Lines::BDEFLAG_CLOSE_UNNAMED_NAMESPACE !=
@@ -2493,8 +2630,14 @@ void Group::checkNamespace() const
             commentFound = true;
         }
     }
-    else if ("BloombergLP" == d_prevWord) {
+    else if (MATCH[MATCH_BLOOMBERGLP] == d_prevWord) {
         // enterprise namespace
+
+        if (d_open.lineNum() == d_close.lineNum()) {
+            // Single line namespace.  No closing comment necessary.
+
+            return;                                                   // RETURN
+        }
 
         Lines::CommentType closingCmt = Lines::comment(d_close.lineNum());
         if (Lines::BDEFLAG_CLOSE_NAMESPACE != closingCmt
@@ -2508,6 +2651,22 @@ void Group::checkNamespace() const
         }
     }
     else {
+        if (Lines::BDEFLAG_DOT_T_DOT_CPP != Lines::fileType()) {
+            for (bsl::size_t u = 0; u < d_prevWord.length(); ++u) {
+                if (isupper(d_prevWord[u])) {
+                    d_open.warning() << "namespace name '" << d_prevWord <<
+                                             "' contains upper case char(s)\n";
+                    break;
+                }
+            }
+        }
+
+        if (d_open.lineNum() == d_close.lineNum()) {
+            // Single line namespace.  No closing comment necessary.
+
+            return;                                                   // RETURN
+        }
+
         Lines::CommentType closingCmt = Lines::comment(d_close.lineNum());
         if   (Lines::BDEFLAG_CLOSE_NAMESPACE         != closingCmt
            && Lines::BDEFLAG_CLOSE_PACKAGE_NAMESPACE != closingCmt) {
@@ -2979,7 +3138,7 @@ Group::GroupSet::~GroupSet()
     }
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 // ---------------------------------------------------------------------------

@@ -47,7 +47,7 @@ BSLS_IDENT("$Id: $")
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 class Group {
     // PRIVATE TYPES
@@ -150,6 +150,10 @@ class Group {
         // group.  Groups that don't represent routine definitions in classes
         // are ignored.
 
+    void checkClassName() const;
+        // Check class name in .h file starts with component name, or the
+        // component name without the prefix.
+
     void checkCodeComments() const;
         // Check all comments in code are appropriately indented.
 
@@ -212,6 +216,10 @@ class Group {
         // If the file is not a test driver, do nothing.  If it is, check that
         // no cases in the middle of the sequence of positive test numbers are
         // missing.
+
+    static
+    void checkAllClassNames();
+        // Check all class names in .h file start with component name.
 
     static
     void checkAllCodeComments();
@@ -376,7 +384,7 @@ bool Group::GroupPtrLess::operator()(const Group *lhs, const Group *rhs) const
     return lhs->open() < rhs->open();
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 #endif
