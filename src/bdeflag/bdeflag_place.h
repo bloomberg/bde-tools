@@ -46,7 +46,7 @@ BSLS_IDENT("$Id: $")
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 class Place {
     // CLASS DATA
@@ -332,8 +332,8 @@ const Place& Place::end()
 inline
 char Place::operator*() const
 {
-    if (d_lineNum >= Lines::lineCount() || d_lineNum < 0 ||
-                                       d_col >= Lines::lineLength(d_lineNum)) {
+    if ((unsigned) d_lineNum >= Lines::lineCount() ||
+                            (unsigned) d_col >= Lines::lineLength(d_lineNum)) {
         return 0;                                                     // RETURN
     }
 
@@ -359,7 +359,7 @@ int Place::lineNum() const
     return d_lineNum;
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 #endif
