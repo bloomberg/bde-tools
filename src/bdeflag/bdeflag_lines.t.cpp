@@ -12,7 +12,7 @@
 #include <bsl_string.h>
 
 using namespace BloombergLP;
-using namespace bdeFlag;
+using namespace bdeflag;
 
 using bsl::cout;
 using bsl::cerr;
@@ -168,7 +168,8 @@ int main(int argc, char *argv[])
             N, Lines::BDEFLAG_CREATOR, N, N, N,
             N, N, N, N, Lines::BDEFLAG_MANIPULATOR,
             N, N, N, N, N,
-            N, N, Lines::BDEFLAG_ACCESSOR, N, N };
+            N, N, Lines::BDEFLAG_ACCESSOR, N, N,
+            Lines::BDEFLAG_RETURN, N, N };
 
         enum {
             NUM_EMPTY_STRINGS = sizeof emptyStrings / sizeof *emptyStrings,
@@ -178,7 +179,8 @@ int main(int argc, char *argv[])
         Lines lines(dummyFileString);
 
         ASSERT(NUM_EMPTY_STRINGS == Lines::lineCount());
-        ASSERT(NUM_COMMENTS      == Lines::lineCount());
+        LOOP2_ASSERT(NUM_COMMENTS, Lines::lineCount(),
+                                           NUM_COMMENTS == Lines::lineCount());
 
         for (int li = 0; li < NUM_EMPTY_STRINGS; ++li) {
             LOOP3_ASSERT(li, emptyStrings[li], Lines::lineLength(li),
