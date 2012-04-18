@@ -11,7 +11,7 @@
 #include <bsl_cstdio.h>
 
 using namespace BloombergLP;
-using namespace bdeFlag;
+using namespace bdeflag;
 
 // ============================================================================
 //                                 MAIN PROGRAM

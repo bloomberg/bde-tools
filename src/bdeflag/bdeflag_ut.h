@@ -40,7 +40,7 @@ BSLS_IDENT("$Id: $")
 #endif
 
 namespace BloombergLP {
-namespace bdeFlag {
+namespace bdeflag {
 
 struct Ut {
     // Objects of this class are never created, this class is just a namespace
@@ -255,7 +255,7 @@ size_t Ut::npos()
     return bsl::string::npos;
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 #endif

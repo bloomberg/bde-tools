@@ -14,7 +14,7 @@
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 Ut::AlphaNumOrColon  Ut::s_alphaNumOrColon;
 
@@ -312,7 +312,7 @@ bsl::ostream& operator<<(bsl::ostream& stream, const Ut::LineNumSet& set)
     return stream;
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 
 }  // close namespace BloombergLP
 

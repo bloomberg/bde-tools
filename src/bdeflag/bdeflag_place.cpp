@@ -13,7 +13,7 @@
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 // FREE OPERATORS
 Place operator+(Place lhs, int rhs)
@@ -680,7 +680,7 @@ bsl::string Place::wordBefore(Place *start) const
     return "";
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 // ---------------------------------------------------------------------------
