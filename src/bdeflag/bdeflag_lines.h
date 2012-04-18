@@ -63,7 +63,7 @@ BSLS_IDENT("$Id: $")
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 class Lines {
   public:
@@ -162,6 +162,7 @@ class Lines {
     static State               s_state;
     static int                 s_purposeFlags;
     static bool                s_hasTabs;
+    static bool                s_hasCrs;
     static bool                s_hasTrailingBlanks;
     static bool                s_includesAssertH;
     static bool                s_includesCassert;
@@ -353,6 +354,10 @@ class Lines {
         // Print warnings according to the static data in this class.
 };
 
+// FREE OPErATORS
+bsl::ostream& operator<<(bsl::ostream& stream, Lines::CommentType commentType);
+    // Output the comment type as a string.
+
 // CLASS METHODS
 inline
 Lines::CommentType Lines::comment(int index)
@@ -472,7 +477,7 @@ const Ut::LineNumSet& Lines::tbds()
     return s_tbds;
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 #endif

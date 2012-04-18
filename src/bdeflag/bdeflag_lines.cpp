@@ -13,6 +13,7 @@
 #include <bsl_map.h>
 #include <bsl_string.h>
 
+#include <bsl_cstdlib.h>
 #include <bsl_fstream.h>
 #include <bsl_iostream.h>
 
@@ -23,7 +24,21 @@
 #define P(x)            Ut::p(#x, (x))
 
 namespace BloombergLP {
-namespace bdeFlag {
+namespace bdeflag {
+
+struct Lines_StartProgram {
+    static bool s_crsOK;
+
+    Lines_StartProgram();
+        // Initialize things at program start that don't have to be
+        // reinitialized for each file.
+} lines_startProgram;
+bool Lines_StartProgram::s_crsOK;
+
+Lines_StartProgram::Lines_StartProgram()
+{
+    s_crsOK = !!bsl::getenv("BDEFLAG_TOLERATE_CARRAIGE_RETURNS");
+}
 
 using bsl::cerr;
 using bsl::endl;
@@ -45,6 +60,7 @@ Ut::LineNumSet      Lines::s_tbds;
 Lines::State        Lines::s_state = BDEFLAG_EMPTY;
 int                 Lines::s_purposeFlags;
 bool                Lines::s_hasTabs;
+bool                Lines::s_hasCrs;
 bool                Lines::s_hasTrailingBlanks;
 bool                Lines::s_includesAssertH;
 bool                Lines::s_includesCassert;
@@ -232,6 +248,7 @@ void Lines::firstDetect()
     s_longLines.clear();
 
     s_hasTabs = false;
+    s_hasCrs  = false;
     for (int li = 0; li < s_lineCount; ++li) {
         bsl::string& curLine = s_lines[li];
 
@@ -239,8 +256,9 @@ void Lines::firstDetect()
             s_longLines.insert(li);
         }
 
-        if (Ut::npos() != curLine.find('\t')) {
-            s_hasTabs = true;
+        if (Ut::npos() != curLine.find_first_of("\r\t")) {
+            s_hasTabs |= Ut::npos() != curLine.find('\t');
+            s_hasCrs  |= Ut::npos() != curLine.find('\r');
         }
 
         if (curLine.length() > 0 && ' ' == curLine[curLine.length() - 1]) {
@@ -361,13 +379,13 @@ void Lines::identifyStatementEnds()
         }
 
         const char lastChar = curLine[cLength - 1];
-        if ('}' == lastChar || '{' == lastChar || ';' == lastChar) {
+        switch (lastChar) {
+          case ';':
+          case '{':
+          case '}': {
             s_statementEnds[li] = true;
-            continue;
-        }
-
-        if (':' == lastChar) {
-            bool found = false;
+          }  break;
+          case ':': {
             switch (Lines::statement(li)) {
               case Lines::BDEFLAG_S_SWITCH:
               case Lines::BDEFLAG_S_CASE:
@@ -375,25 +393,28 @@ void Lines::identifyStatementEnds()
               case Lines::BDEFLAG_S_PRIVATE:
               case Lines::BDEFLAG_S_PUBLIC:
               case Lines::BDEFLAG_S_PROTECTED: {
-                found = true;
-              } break;
-            }
-            if (found) {
                 s_statementEnds[li] = true;
-                continue;
+              }  break;
+              default: {
+                ; // do nothing
+              }
             }
-        }
+          }  break;
+          case ')': {
+            // see if it's in a c'tor init list
 
-        if (')' == lastChar) {
             const int indentLevel = Lines::lineIndent(li);
             const char startChar = curLine[indentLevel];
-            if ((':' == startChar || ',' == startChar) &&
+            if (((':' == startChar) | (',' == startChar)) &&
                                                    cLength > indentLevel + 4 &&
-                                             '_' == curLine[indentLevel + 3] &&
-                                             'd' == curLine[indentLevel + 2]) {
+                                         (('_' == curLine[indentLevel + 3]) &
+                                          ('d' == curLine[indentLevel + 2]))) {
                 s_statementEnds[li] = true;
-                continue;
             }
+          }  break;
+          default: {
+            ; // do nothing
+          }
         }
     }
 
@@ -832,6 +853,7 @@ Lines::Lines(const char *fileName)
     s_cStyleComments.clear();
     s_purposeFlags = 0;
     s_hasTabs = false;
+    s_hasCrs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
@@ -840,16 +862,17 @@ Lines::Lines(const char *fileName)
     s_includesComponentDotH = false;
     s_couldntOpenFile = false;
 
-    if (s_fileName.length() >= 6 &&
-                      s_fileName.substr(s_fileName.length() - 6) == ".t.cpp") {
-        s_fileType = BDEFLAG_DOT_T_DOT_CPP;
-    }
-    else if (s_fileName.length() >= 2 &&
-                          s_fileName.substr(s_fileName.length() - 2) == ".h") {
-        s_fileType = BDEFLAG_DOT_H;
-    }
-    else {
-        s_fileType = BDEFLAG_DOT_CPP;
+    s_fileType = BDEFLAG_DOT_CPP;
+    if (s_fileName.length() >= 2) {
+        if (s_fileName.substr(s_fileName.length() - 2) == ".h") {
+            s_fileType = BDEFLAG_DOT_H;
+        } else if (s_fileName.length() >= 6) {
+            const bsl::string& suffix =
+                                    s_fileName.substr(s_fileName.length() - 6);
+            if (suffix == ".t.cpp" || suffix == ".m.cpp") {
+                s_fileType = BDEFLAG_DOT_T_DOT_CPP;
+            }
+        }
     }
 
     bsl::ifstream fin(fileName);
@@ -923,6 +946,7 @@ Lines::Lines(const bsl::string& string)
     s_cStyleComments.clear();
     s_purposeFlags = 0;
     s_hasTabs = false;
+    s_hasCrs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
@@ -943,6 +967,8 @@ Lines::Lines(const bsl::string& string)
     }
 
     s_lineCount = s_lines.size();
+    s_lines.push_back("");    // Add 1 extra line so we don't segfault if
+                              // we access one line over.
     s_comments.insert(s_comments.end(), s_lines.size(), BDEFLAG_NONE);
     s_commentIndents.insert(s_commentIndents.end(), s_lines.size(), -1);
     s_lineIndents.insert(s_lineIndents.end(),       s_lines.size(),  0);
@@ -955,9 +981,9 @@ Lines::Lines(const bsl::string& string)
     checkForAssert();
     checkPurpose();
     killQuotesComments();
-    wipeOutMacros();
     trimTrailingWhite();
     setLineIndents();
+    wipeOutMacros();
     identifyStatements();
     identifyStatementEnds();
     identifyInlinesNotAlone();
@@ -980,6 +1006,7 @@ Lines::~Lines()
     s_tbds.clear();
     s_state = BDEFLAG_EMPTY;
     s_hasTabs = false;
+    s_hasCrs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
@@ -992,6 +1019,9 @@ void Lines::printWarnings(bsl::ostream *stream)
 {
     if (s_hasTabs) {
         *stream << "Warning: file " << s_fileName << " has tab(s).\n";
+    }
+    if (s_hasCrs && !Lines_StartProgram::s_crsOK) {
+        *stream << "Warning: file " << s_fileName << " has '\\r'(s).\n";
     }
     if (s_hasTrailingBlanks) {
         *stream << "Warning: file " << s_fileName <<
@@ -1083,7 +1113,76 @@ bsl::string Lines::asString()
     return ret;
 }
 
-}  // close namespace bdeFlag
+// FREE OPERATORS
+bsl::ostream& operator<<(bsl::ostream& stream, Lines::CommentType commentType)
+{
+    switch (commentType) {
+      case Lines::BDEFLAG_NONE: {
+        stream << "BDEFLAG_NONE";
+      }  break;
+      case Lines::BDEFLAG_RETURN: {
+        stream << "BDEFLAG_RETURN";
+      }  break;
+      case Lines::BDEFLAG_TYPE: {
+        stream << "BDEFLAG_TYPE";
+      }  break;
+      case Lines::BDEFLAG_CLASS_DATA: {
+        stream << "BDEFLAG_CLASS_DATA";
+      }  break;
+      case Lines::BDEFLAG_DATA: {
+        stream << "BDEFLAG_DATA";
+      }  break;
+      case Lines::BDEFLAG_FRIEND: {
+        stream << "BDEFLAG_FRIEND";
+      }  break;
+      case Lines::BDEFLAG_TRAITS: {
+        stream << "BDEFLAG_TRAITS";
+      }  break;
+      case Lines::BDEFLAG_INVARIANTS: {
+        stream << "BDEFLAG_INVARIANTS";
+      }  break;
+      case Lines::BDEFLAG_CLASS_METHOD: {
+        stream << "BDEFLAG_CLASS_METHOD";
+      }  break;
+      case Lines::BDEFLAG_NOT_IMPLEMENTED: {
+        stream << "BDEFLAG_NOT_IMPLEMENTED";
+      }  break;
+      case Lines::BDEFLAG_CREATOR: {
+        stream << "BDEFLAG_CREATOR";
+      }  break;
+      case Lines::BDEFLAG_MANIPULATOR: {
+        stream << "BDEFLAG_MANIPULATOR";
+      }  break;
+      case Lines::BDEFLAG_ACCESSOR: {
+        stream << "BDEFLAG_ACCESSOR";
+      }  break;
+      case Lines::BDEFLAG_FREE_OPERATOR: {
+        stream << "BDEFLAG_FREE_OPERATOR";
+      }  break;
+      case Lines::BDEFLAG_CLOSE_NAMESPACE: {
+        stream << "BDEFLAG_CLOSE_NAMESPACE";
+      }  break;
+      case Lines::BDEFLAG_CLOSE_UNNAMED_NAMESPACE: {
+        stream << "BDEFLAG_CLOSE_UNNAMED_NAMESPACE";
+      }  break;
+      case Lines::BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE: {
+        stream << "BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE";
+      }  break;
+      case Lines::BDEFLAG_CLOSE_PACKAGE_NAMESPACE: {
+        stream << "BDEFLAG_CLOSE_PACKAGE_NAMESPACE";
+      }  break;
+      case Lines::BDEFLAG_UNRECOGNIZED: {
+        stream << "BDEFLAG_UNRECOGNIZED";
+      }  break;
+      default: {
+        stream << "invalid comment type";
+      }
+    }
+
+    return stream;
+}
+
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 // ---------------------------------------------------------------------------
