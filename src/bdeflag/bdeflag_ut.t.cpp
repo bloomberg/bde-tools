@@ -10,7 +10,7 @@
 #include <bsl_string.h>
 
 using namespace BloombergLP;
-using namespace bdeFlag;
+using namespace bdeflag;
 
 using bsl::cerr;
 using bsl::cout;
