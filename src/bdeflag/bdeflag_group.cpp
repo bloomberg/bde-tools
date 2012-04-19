@@ -87,6 +87,7 @@ enum {
     MATCH_BSLMF_METAINT,
     MATCH_TYPENAME,
     MATCH_BSLALG_TYPETRAITS,
+    MATCH_ANGLES,
     MATCH_NUM_CONSTANTS };
 
 static bsl::vector<bsl::string> match;
@@ -195,6 +196,7 @@ StartProgram::StartProgram()
     match[MATCH_BSLMF_METAINT]   = "bslmf_MetaInt";
     match[MATCH_TYPENAME]        = "typename";
     match[MATCH_BSLALG_TYPETRAITS] = "balalg_TypeTraits";
+    match[MATCH_ANGLES]          = "<>";
 
     static const char *arrayBoolOperators[] = {
         "!", "<", "<=", ">", ">=", "==", "!=", "&&", "||" };
@@ -907,7 +909,9 @@ void Group::checkAllFriends()
                     }
                 }
             }
-            BSLS_ASSERT(isOp || Ut::npos() == friendName.find_first_of("<>"));
+            BSLS_ASSERT(isOp || Ut::npos() == friendName.find_first_of(
+                                                         MATCH[MATCH_ANGLES]));
+                                                        // match_angles == "<>"
 
             if (friendName.empty()) {
                 continue;
@@ -2172,13 +2176,14 @@ void Group::checkClassName() const
         return;                                                       // RETURN
     }
 
-    bsl::string className = d_className;
-
-    bsl::size_t u = className.find('<');
-    if (Ut::npos() != u) {
-        className.resize(u);
+    bsl::string className = Ut::removeTemplateAngleBrackets(d_className);
+    if (MATCH[MATCH_ANGLES] == className) {    // match_angles == "<>"
+        d_statementStart.error() << "strange class name '" << d_className <<
+                                                                     bsl::endl;
+        return;                                                       // RETURN
     }
-    u = className.rfind(':');
+
+    bsl::size_t u = className.rfind(':');
     if (Ut::npos() != u) {
         className = className.substr(u + 1);
     }
@@ -2204,8 +2209,9 @@ void Group::checkClassName() const
                                                 className,
                                                 MATCH[MATCH_BSLALG_TYPETRAITS],
                                                 0)) {
-        d_open.warning() << "class name " << className << " begins with '" <<
-                                leadingChar << "' -- not an upper case char\n";
+        d_statementStart.warning() << "class name " << d_className <<
+                                             " begins with '" << leadingChar <<
+                                               "' -- not an upper case char\n";
     }
 
     // the following checks are only for classes in .h files that are not
@@ -2219,7 +2225,7 @@ void Group::checkClassName() const
 
     bdeu_String::toLower(&className);
 
-    // compare without package prefix
+    // compare with component name without package prefix
 
     if (! cnv.d_componentNameNoPrefix.empty() &&
                               !strncmp(className.c_str(),
@@ -2228,7 +2234,7 @@ void Group::checkClassName() const
         return;                                                       // RETURN
     }
 
-    // compare with package prefix
+    // compare with component name with package prefix
 
     if (!strncmp(className.c_str(),
                  cnv.d_componentName.c_str(),
@@ -2236,8 +2242,8 @@ void Group::checkClassName() const
         return;                                                       // RETURN
     }
 
-    d_open.warning() << "class name " << d_prevWord << " doesn't start with"
-                                                       " the component name\n";
+    d_statementStart.warning() << "class name " << d_className <<
+                                    " doesn't start with the component name\n";
 }
 
 
