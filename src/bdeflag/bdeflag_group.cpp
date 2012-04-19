@@ -713,32 +713,37 @@ void Group::checkAllClassNames()
 
     cnv.d_componentName = Lines::fileName();
 
-    // take basename
-
-    bsl::size_t u = cnv.d_componentName.rfind('/');
-    if (Ut::npos() != u) {
-        cnv.d_componentName = cnv.d_componentName.substr(u + 1);
+    // take basename, chop off suffix
+    {
+        bsl::size_t u = cnv.d_componentName.rfind('/');
+        if (Ut::npos() != u) {
+            cnv.d_componentName = cnv.d_componentName.substr(u + 1);
+        }
+        u = cnv.d_componentName.find('.');
+        if (Ut::npos() != u) {
+            cnv.d_componentName.resize(u);
+        }
     }
 
-    // chop off suffix
+    // find prefix.  Note that 'a_' is not a prefix, 'a_bdema_' is.  Also be
+    // able to handle 'z_a_bdema_'.
 
-    u = cnv.d_componentName.find('.');
-    if (Ut::npos() != u) {
-        cnv.d_componentName.resize(u);
+    cnv.d_componentPrefix.clear();
+    cnv.d_componentNameNoPrefix.clear();
+    for (bsl::size_t uu = 0, nn; true; uu = nn) {
+        nn = cnv.d_componentName.find('_', uu);
+        if (Ut::npos() != nn) {
+            ++nn;
+            if (nn - uu > 2) {
+                cnv.d_componentNameNoPrefix = cnv.d_componentName.substr(nn);
+                cnv.d_componentPrefix       = cnv.d_componentName.substr(0,nn);
+                break;
+            }
+        }
+        else {
+            break;
+        }
     }
-
-    // find prefix.  Note that 'a_' is not a prefix, 'a_bdema_' is.
-
-    u = cnv.d_componentName.find('_');
-    if (u <= 1) {
-        u = cnv.d_componentName.find('_', u + 1);
-    }
-    cnv.d_componentPrefix = Ut::npos() != u
-                          ? cnv.d_componentName.substr(0, u + 1)
-                          : MATCH[MATCH_NIL];
-    cnv.d_componentNameNoPrefix = Ut::npos() != u
-                                ? cnv.d_componentName.substr(u + 1)
-                                : MATCH[MATCH_NIL];
 
     topLevel().recurseMemTraverse(&Group::checkClassName);
 }
