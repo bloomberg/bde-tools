@@ -186,8 +186,9 @@ class Lines {
         // If the file is a .h file, check the 'Purpose' line.
 
     void firstDetect();
-        // Detect any long lines and tabs in the file, don't print out any
-        // errors, just record them in static data.
+        // Detect any long lines, tabs, and '\r' in the file, don't print out
+        // any errors, just record them in static data.  Also correct any
+        // '\r's.
 
     void identifyInlinesNotAlone();
         // Identify any 'inline' statements that are not on their own line,

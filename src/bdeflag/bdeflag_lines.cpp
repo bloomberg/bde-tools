@@ -258,7 +258,21 @@ void Lines::firstDetect()
 
         if (Ut::npos() != curLine.find_first_of("\r\t")) {
             s_hasTabs |= Ut::npos() != curLine.find('\t');
-            s_hasCrs  |= Ut::npos() != curLine.find('\r');
+
+            bool hasCr = Ut::npos() != curLine.find('\r');
+            s_hasCrs |= hasCr;
+            if (hasCr) {
+                bsl::size_t crPos;
+                while (Ut::npos() != (crPos = curLine.find('\r'))) {
+                    if (curLine.length() - 1 == crPos) {
+                        curLine.resize(crPos);
+                        break;
+                    }
+                    else {
+                        curLine[crPos] = ' ';
+                    }
+                }
+            }
         }
 
         if (curLine.length() > 0 && ' ' == curLine[curLine.length() - 1]) {
@@ -1022,6 +1036,14 @@ void Lines::printWarnings(bsl::ostream *stream)
     }
     if (s_hasCrs && !Lines_StartProgram::s_crsOK) {
         *stream << "Warning: file " << s_fileName << " has '\\r'(s).\n";
+
+        static bool firstTime = true;
+        if (firstTime) {
+            firstTime = false;
+            *stream << "    Note: warnings about '\\r's can be suppressed by"
+                                                " setting environment variable"
+                                     " '$BDEFLAG_TOLERATE_CARRAIGE_RETURNS'\n";
+        }
     }
     if (s_hasTrailingBlanks) {
         *stream << "Warning: file " << s_fileName <<
