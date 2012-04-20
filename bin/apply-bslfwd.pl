@@ -4,7 +4,6 @@ use 5.010;
 use strict;
 use warnings;
 use Getopt::Std;
-use Carp;
 use File::Copy;
 
 
@@ -131,8 +130,10 @@ sub read_src {
     my $fdecl_lines = $args{fdecl_lines};
     my $fdecl_classes = $args{fdecl_classes};
 
-    my $last_include_line = 0;  # last included header after which more includes can be added
+    my $last_include_line;  # last included header after which more includes can be added
     my $last_include_line_locked = 0;
+    my $bloomberglp_line;   # the line where namespace BloombergLP begins
+    my $is_dualmode_file;   # this source file has #ifdef __cplusplus
     my $cur_line = 0;
     my $ifdefs = Ifdefs->new($is_header);
     my $expect_guards = $is_header;
@@ -145,8 +146,11 @@ sub read_src {
         $cur_line++;
 
         given ($_) {
-            when (/^\s*#\s*if/) {
+            when (/^\s*#\s*if(.*?__cplusplus)?/) {
                 $ifdefs->push($_);
+                if ($1) {
+                    $is_dualmode_file = 1;
+                }
             }
             when (/^\s*#\s*endif/) {
                 $ifdefs->pop();
@@ -170,23 +174,33 @@ sub read_src {
                             if ($lines[$cur_line + 1] ~~ /^\s*#\s*endif/) {
                                 $last_include_line = $cur_line + 2;
                             } else {
-                                carp "warning: $src: $cur_line: unrecognized redundant include guard pattern\n";
+                                warn "warning: $src: $cur_line: unrecognized redundant include guard pattern\n";
                             }
                         }
                     }
                 }
             }
-            when (/^\s*(class|struct)\s+(bsl\w+?)_(\w+)\s*;/) {
+            when (/^\s*(class|struct)\s+(bsl\w+?_\w+|bdema_Allocator)\s*;/) {
                 # found forward declaration
-                my $class = $2 . '_' . $3;
-                $fdecl_lines->{$cur_line} = $_;
-                $fdecl_classes->{$class} = 1;
+                my $class = $2;
+
+                # treat bdema_Allocator as bslma_Allocator
+                $class = 'bslma_Allocator' if $class ~~ 'bdema_Allocator';
+
+                # don't remove 'struct ...' forward declarations from what
+                # appears to be a C header file
+                if (!($is_dualmode_file && $1 ~~ 'struct')) {
+                    $fdecl_lines->{$cur_line} = $_;
+                    $fdecl_classes->{$class} = 1;
+                }
             }
-            when (/^\s*(class|struct)\s+(bdema_)(Allocator)\s*;/) {
-                # found bdema_Allocator forward declaration, treat as bslma_Allocator
-                my $class = 'bslma_' . $3;
-                $fdecl_lines->{$cur_line} = $_;
-                $fdecl_classes->{$class} = 1;
+            when (/^\s*namespace\s+BloombergLP/ && !defined $bloomberglp_line) {
+                # check if the previous line is empty
+                if ($lines[$cur_line - 2] =~ /^\s*$/) {
+                    $bloomberglp_line = $cur_line - 1;
+                } else {
+                    $bloomberglp_line = $cur_line;
+                }
             }
             when (/^\s*(\w)/ && lc($1) ~~ $1 && !/_IDENT|char\s.*RCS/) {
                 # not a # or // or some IDENT or RCS line
@@ -195,10 +209,18 @@ sub read_src {
         }
     }
 
-    carp "warning: $src: $cur_line: unbalanced #if/#endif\n"
+    warn "warning: $src: $cur_line: unbalanced #if/#endif\n"
         unless $ifdefs->size() == 0;
 
-    return $last_include_line;
+    if ($is_dualmode_file && defined $bloomberglp_line) {
+        return $bloomberglp_line - 1;
+    } elsif (defined $last_include_line) {
+        return $last_include_line;
+    } elsif (defined $bloomberglp_line) {
+        return $bloomberglp_line - 1;
+    } else {
+        return undef;
+    }
 }
 
 # write_tgt - produce a target file with forward declarations of bsl classes replaced
@@ -208,9 +230,10 @@ sub write_tgt {
     my $src = $args{src};
     my $tgt = $args{tgt};
     my $generate_guards = $args{generate_guards};
-    my $last_include_line = $args{last_include_line};
+    my $insert_headers_at = $args{insert_headers_at};
     my $fdecl_lines = $args{fdecl_lines};
     my $fdecl_classes = $args{fdecl_classes};
+    my $insert_empty_line;
 
     my $cur_line = 0;
     open my $in, '<', $src
@@ -221,18 +244,29 @@ sub write_tgt {
     while (<$in>) {
         $cur_line++;
 
-        if ($cur_line == $last_include_line) {
+        if (defined $insert_headers_at && $cur_line == $insert_headers_at) {
             print $out $_;
 
             # generate forward declaration includes
             for my $class (keys %$fdecl_classes) {
                 gen_fdecl($out, $class, $generate_guards);
             }
+
+            $insert_empty_line = 1;  # insert an empty line after forward declaration headers if needed
+
         } elsif (defined $fdecl_lines->{$cur_line}
                 || (/^\s*$/ && defined $fdecl_lines->{$cur_line - 1}))
         {
             # skip the forward declaration and the empty line after it
         } else {
+            if ($insert_empty_line) {
+                $insert_empty_line = undef;
+
+                if (!/^\s*$/) {
+                    print $out "\n";
+                }
+            }
+
             print $out $_;
         }
     }
@@ -249,20 +283,20 @@ sub applyfwd {
     my %fdecl_lines;            # lines on which forward declarations appear
     my %fdecl_classes;          # collected forward declaration classes
 
-    my $last_include_line = read_src(src           => $src,
+    my $insert_headers_at = read_src(src           => $src,
                                      is_header     => $is_header,
                                      fdecl_lines   => \%fdecl_lines,
                                      fdecl_classes => \%fdecl_classes);
 
     if (%fdecl_classes) {
-        carp "warning: $src: failed to find the last included header, the result file is likely incorrect"
-            if ($last_include_line == 0);
+        warn "warning: $src: failed to insert forward declaration headers, the result file is likely incorrect\n"
+            unless defined $insert_headers_at;
 
         my $tgt = $src . '.new';
         write_tgt(src               => $src,
                   tgt               => $tgt,
                   generate_guards   => $is_header,
-                  last_include_line => $last_include_line,
+                  insert_headers_at => $insert_headers_at,
                   fdecl_lines       => \%fdecl_lines,
                   fdecl_classes     => \%fdecl_classes);
 
@@ -276,10 +310,10 @@ sub checkfwd {
     my %fdecl_lines;            # lines on which forward declarations appear
     my %fdecl_classes;          # collected forward declaration classes
 
-    my $last_include_line = read_src(src           => $src,
-                                     is_header     => $is_header,
-                                     fdecl_lines   => \%fdecl_lines,
-                                     fdecl_classes => \%fdecl_classes);
+    read_src(src           => $src,
+             is_header     => $is_header,
+             fdecl_lines   => \%fdecl_lines,
+             fdecl_classes => \%fdecl_classes);
 
     if (%fdecl_lines) {
         my @line_numbers = sort { $a<=>$b } keys %fdecl_lines;
@@ -289,7 +323,6 @@ sub checkfwd {
         }
     }
 }
-
 
 sub main {
     my %opt;
