@@ -1929,7 +1929,8 @@ void Group::checkArgNames() const
                     }
                     if (!ok) {
                         d_open.warning() << " first argument of routine " <<
-                             d_prevWord << " is being passed as a reference" <<
+                                            d_prevWord << " of type '" << tn <<
+                                          "' is being passed as a reference" <<
                                                    " to a modifiable object\n";
                     }
                 }
@@ -1944,7 +1945,8 @@ void Group::checkArgNames() const
                 }
                 else if (isModifiableRef(tn)) {
                     d_open.warning() << Ut::nthString(i + 1) << " argument of"
-                           " routine " << d_prevWord << " is being passed as a"
+                           " routine " << d_prevWord << " of type '" << tn <<
+                                                       "' is being passed as a"
                                          " reference to a modifiable object\n";
                 }
             }
@@ -3233,12 +3235,20 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
                     MATCH[MATCH_VOLATILE] == postType || '*' == *postTypeEnd) {
             postType = (postTypeEnd + 1).nameAfter(&postTypeEnd);
         }
-        char pte = *postTypeEnd;
-        Place startName;
-        if ('&' == pte) {
-            startName = postTypeEnd + 1;
+        char pte;
+        while ('&' == (pte = *postTypeEnd)) {
+            ++postTypeEnd;
         }
-        else if (',' == pte || ')' == pte) {
+        Place startName;
+#if 0
+        if ('&' == pte) {
+            startName = postTypeEnd + 1;    // simple ref or rvalue
+            if ('&' == *startName) {
+                ++startName;                // rvalue
+            }
+        }
+#endif
+        if (',' == pte || ')' == pte) {
             startName = postTypeEnd;
         }
         else if ('=' == pte) {
