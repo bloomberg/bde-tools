@@ -91,6 +91,7 @@ class Group {
     // PUBLIC TYPES
   public:
     struct GroupPtrLess {
+        // ACCESSOR
         bool operator()(const Group *lhs, const Group *rhs) const;
     };
     typedef bsl::set<Group *, GroupPtrLess> GroupSet_Base;
@@ -164,6 +165,10 @@ class Group {
         // If this is a function decl, check it is docced if that is
         // approrpriate.
 
+    void checkFunctionSection() const;
+        // If this is a function decl, check it is docced if that is
+        // approrpriate.
+
     void checkIfWhileFor() const;
         // Check if/while/for controls a {} block.
 
@@ -188,10 +193,9 @@ class Group {
         // If this is a routine body, check that the starting '{' is on its own
         // line and properly indented.
 
-    void registerValidFriendTarget() const;
-        // Only called if we're in a .h file.  If this a group, put it on the
-        // list of valid friend target groups.  If this is a function decl
-        // not in a group, put it in the list of friend target routines.
+    void markClassBoundaries() const;
+        // Mark the beginning and ending of this class in the 'classBoundaries'
+        // vector in the imp.
 
     void getArgList(bsl::vector<bsl::string> *typeNames,
                     bsl::vector<bsl::string> *names,
@@ -199,6 +203,11 @@ class Group {
         // If this is a routine decl, get the arg list for it.  Care has to be
         // taken to avoid calling this on things that turn out not to be
         // routine decls.
+
+    void registerValidFriendTarget() const;
+        // Only called if we're in a .h file.  If this a group, put it on the
+        // list of valid friend target groups.  If this is a function decl
+        // not in a group, put it in the list of friend target routines.
 
   public:
     // CLASS METHODS
@@ -239,6 +248,10 @@ class Group {
     static
     void checkAllFunctionDoc();
         // Check all functions are appropriately docced.
+
+    static
+    void checkAllFunctionSections();
+        // Check that all functions are in appropriate sections.
 
     static
     void checkAllIfWhileFor();
@@ -336,6 +349,10 @@ class Group {
 
     const Place& open() const;
         // Return 'd_open'.
+
+    bool isMarkedImplicit() const;
+        // Return 'true' if this group represents an arg list of a function
+        // marked with the '// IMPLICIT' comment and 'false' otherwise.
 };
 
 // ===========================================================================

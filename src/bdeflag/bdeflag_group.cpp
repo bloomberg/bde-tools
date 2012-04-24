@@ -88,10 +88,13 @@ enum {
     MATCH_TYPENAME,
     MATCH_BSLALG_TYPETRAITS,
     MATCH_ANGLES,
+    MATCH_STATIC,
     MATCH_NUM_CONSTANTS };
 
 static bsl::vector<bsl::string> match;
 const bsl::vector<bsl::string>& MATCH = match;
+
+static bsl::vector<bool> classBoundaries;
 
 static Group *findGroupForPlaceGroup_p = 0;
 bsl::set<bsl::string> shouldBool;    // Routines That Should Have Bool Names
@@ -197,6 +200,7 @@ StartProgram::StartProgram()
     match[MATCH_TYPENAME]        = "typename";
     match[MATCH_BSLALG_TYPETRAITS] = "balalg_TypeTraits";
     match[MATCH_ANGLES]          = "<>";
+    match[MATCH_STATIC]          = "static";
 
     static const char *arrayBoolOperators[] = {
         "!", "<", "<=", ">", ">=", "==", "!=", "&&", "||" };
@@ -1018,6 +1022,19 @@ void Group::checkAllFunctionDoc()
     routinesDocced.clear();
 }
 
+void Group::checkAllFunctionSections()
+{
+    if (Lines::BDEFLAG_DOT_T_DOT_CPP == Lines::fileType()) {
+        return;                                                       // RETURN
+    }
+
+    classBoundaries.clear();
+    classBoundaries.resize(Lines::lineCount() + 1, false);
+    topLevel().recurseMemTraverse(&Group::markClassBoundaries);
+
+    topLevel().recurseMemTraverse(&Group::checkFunctionSection);
+}
+
 void Group::checkAllIfWhileFor()
 {
     if (Lines::BDEFLAG_DOT_T_DOT_CPP != Lines::fileType()) {
@@ -1205,6 +1222,7 @@ void Group::doEverything()
     checkAllBooleanRoutineNames();
     checkAllClassNames();
     checkAllFunctionDoc();
+    checkAllFunctionSections();
     checkAllReturns();
     checkAllNotImplemented();
     checkAllNamespaces();
@@ -2050,9 +2068,11 @@ void Group::checkArgNames() const
                     }
                 }
                 else if (MATCH[MATCH_EXPLICIT] !=
-                                          (d_prevWordBegin - 1).wordBefore()) {
+                                          (d_prevWordBegin - 1).wordBefore() &&
+                                                         !isMarkedImplicit()) {
                     d_open.warning() << d_prevWord << ": single argument"
-                                      " constructor not declared 'explicit'\n";
+                                         " constructor not declared 'explicit'"
+                                                  " or marked '// IMPLICIT'\n";
                 }
               }  break;
               case 2: {
@@ -2100,12 +2120,13 @@ void Group::checkArgNames() const
                     // note we don't mark copy c'tors 'explicit'
                 }
                 else if (potentialSingleArg && MATCH[MATCH_EXPLICIT] !=
-                                          (d_prevWordBegin - 1).wordBefore()) {
+                                          (d_prevWordBegin - 1).wordBefore() &&
+                                                         !isMarkedImplicit()) {
                     // potentially single arg non-copy c'tor
 
                     d_open.warning() << d_prevWord << ": double argument"
-                                        " constructor with default 2nd arg not"
-                                                      " declared 'explicit'\n";
+                               " constructor with default 2nd arg not declared"
+                                       " 'explicit' or marked '// IMPLICIT'\n";
                 }
               }  break;
               default: {
@@ -2113,10 +2134,11 @@ void Group::checkArgNames() const
 
                 if (Ut::npos() != argNames[1].find('=')) {
                     if (MATCH[MATCH_EXPLICIT] !=
-                                          (d_prevWordBegin - 1).wordBefore()) {
+                                          (d_prevWordBegin - 1).wordBefore() &&
+                                                         !isMarkedImplicit()) {
                         d_open.warning() << d_prevWord << ": many argument"
-                                        " constructor with default 2nd arg not"
-                                                      " declared 'explicit'\n";
+                               " constructor with default 2nd arg not declared"
+                                       " 'explicit' or marked '// IMPLICIT'\n";
                     }
                 }
               }  break;
@@ -2589,6 +2611,144 @@ void Group::checkFunctionDoc() const
     }
 }
 
+void Group::checkFunctionSection() const
+{
+    if (BDEFLAG_ROUTINE_DECL != d_type ||
+        !d_parent || BDEFLAG_CLASS != d_parent->d_type) {
+        // Note we're just not checking BDEFLAG_ROUTINE_UNKNOWN_CALL_OR_DECL
+
+        return;                                                       // RETURN
+    }
+    BSLS_ASSERT(!d_prevWord.empty());
+
+    bool isCtor, isConst, isStatic;
+    {
+        isCtor = d_parent->d_className == d_prevWord ||
+                         ('~' == d_prevWord[0] &&
+                                  ('~' + d_parent->d_className) == d_prevWord);
+
+        Place endDecl = d_close.findFirstOf("{;");
+        isConst = Ut::npos() != d_close.twoPointsString(endDecl).find(
+                                                           MATCH[MATCH_CONST]);
+        isStatic = false;
+        int cli = d_open.lineNum();
+        int li = Lines::lineBefore(&cli);
+        for (++li ; li <= cli; ++li) {
+            if   (Lines::BDEFLAG_S_FRIEND == Lines::statement(li)
+               || Lines::BDEFLAG_S_TYPEDEF == Lines::statement(li)) {
+                // friend or typedef -- doesn't belong in a function decl
+                // section
+
+                return;                                               // RETURN
+            }
+
+            if (Lines::BDEFLAG_S_STATIC == Lines::statement(li)) {
+                isStatic = true;
+                break;
+            }
+
+            const bsl::string& curLine = Lines::line(li);
+            bsl::size_t staticPos = curLine.find(MATCH[MATCH_STATIC]);
+            if (Ut::npos() != staticPos) {
+                if ((0 == staticPos || !isalnum(curLine[staticPos - 1]))
+                   && (curLine.length() == staticPos + 6 ||
+                                       !isalnum(curLine[staticPos + 6]))) {
+                    isStatic = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    for (int li = d_open.lineNum(); li > 0; --li) {
+        if (classBoundaries[li]) {
+            break;
+        }
+
+        switch (Lines::comment(li)) {
+          case Lines::BDEFLAG_NOT_IMPLEMENTED: {
+            // handled elsewhere
+
+            return;                                                   // RETURN
+          } break;
+          case Lines::BDEFLAG_CLASS_METHOD: {
+            if (isCtor) {
+                d_open.warning() << "c'tor " << d_prevWord << " declared in"
+                                               " '// CLASS METHODS' section\n";
+            }
+            if (!isStatic) {
+                d_open.warning() << "class method " << d_prevWord << " not"
+                                                        " declared 'static'\n";
+            }
+            // if it's declared 'static' and 'const' the compiler will complain
+
+            return;                                                   // RETURN
+          } break;
+          case Lines::BDEFLAG_CREATOR: {
+            if (!isCtor) {
+                d_open.warning() << "non c'tor " << d_prevWord << " declared"
+                                                 " in '// CREATORS' section\n";
+            }
+            // If a c'tor is declared 'static' or 'const', the compiler will
+            // complain.
+
+            return;                                                   // RETURN
+          } break;
+          case Lines::BDEFLAG_MANIPULATOR: {
+            if (isCtor) {
+                d_open.warning() << "c'tor " << d_prevWord <<
+                                    " declared in '// MANIPULATORS' section\n";
+            }
+            if (isStatic) {
+                d_open.warning() << "static method " << d_prevWord <<
+                                    " declared in '// MANIPULATORS' section\n";
+            }
+            if (isConst) {
+                d_open.warning() << "const method " << d_prevWord <<
+                                    " declared in '// MANIPULATORS' section\n";
+            }
+            return;                                                   // RETURN
+          } break;
+          case Lines::BDEFLAG_ACCESSOR: {
+            if (isCtor) {
+                d_open.warning() << "c'tor " << d_prevWord <<
+                                       " declared in '// ACCESSORS' section\n";
+            }
+            if (isStatic) {
+                d_open.warning() << "static method " << d_prevWord <<
+                                       " declared in '// ACCESSORS' section\n";
+            }
+            if (!isConst) {
+                d_open.warning() << "non-const method " << d_prevWord <<
+                                       " declared in '// ACCESSORS' section\n";
+            }
+            return;                                                   // RETURN
+          } break;
+          default: {
+            ; // do nothing
+          }
+        }
+    }
+
+    if (isAnnoying(d_prevWord)) {
+        // nested traits or the like, no section needed
+
+        return;                                                       // RETURN
+    }
+
+    {
+        Place pl(d_open);
+        if ('*' == *++pl && d_close == ++pl) {
+            // '(*)' -- function declaration -- probably a func ptr variable
+
+            return;                                                   // RETURN
+        }
+    }
+
+    d_open.warning() << "routine " << d_prevWord << " declared outside"
+                       " section (no '// CREATORS', '// MANIPULATORS', etc)\n";
+}
+
 void Group::checkIfWhileFor() const
 {
     if (BDEFLAG_IF_WHILE_FOR != d_type) {
@@ -2921,6 +3081,16 @@ void Group::checkStartingBraces() const
     }
 }
 
+void Group::markClassBoundaries() const
+{
+    if (BDEFLAG_CLASS != d_type) {
+        return;                                                       // RETURN
+    }
+
+    classBoundaries[d_open. lineNum()] = true;
+    classBoundaries[d_close.lineNum()] = true;
+}
+
 void Group::registerValidFriendTarget() const
 {
     BSLS_ASSERT(Lines::BDEFLAG_DOT_H == Lines::fileType());
@@ -3107,6 +3277,12 @@ void Group::print() const
     bsl::cout << *d_open << ": Open: " << d_open << ", close: " << d_close <<
                  ", sStart: " << d_statementStart << ", prev: '" <<
                  d_prevWord << "', type: " << typeToStr(d_type) << endl;
+}
+
+bool Group::isMarkedImplicit() const
+{
+    return Lines::BDEFLAG_IMPLICIT == Lines::comment(d_close.lineNum()) ||
+           Lines::BDEFLAG_IMPLICIT == Lines::comment(d_close.lineNum() + 1);
 }
 
 const char *Group::typeToStr(Group::GroupType groupType)

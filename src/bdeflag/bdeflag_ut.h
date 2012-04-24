@@ -61,6 +61,7 @@ struct Ut {
         bool  d_state[256];
         bool *d_stateRef;
 
+        // CREATORS
         AlphaNumOrColon();
             // Initialize the 'd_state' array, and point 'd_stateRef' to the
             // beginning or middle of the array, depending on whether the type

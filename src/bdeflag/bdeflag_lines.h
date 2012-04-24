@@ -87,6 +87,7 @@ class Lines {
         BDEFLAG_CLOSE_UNNAMED_NAMESPACE,
         BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE,
         BDEFLAG_CLOSE_PACKAGE_NAMESPACE,
+        BDEFLAG_IMPLICIT,
         BDEFLAG_UNRECOGNIZED };
 
     enum StatementType {
@@ -157,6 +158,7 @@ class Lines {
     static Ut::LineNumSet      s_longLines;
     static Ut::LineNumSet      s_cStyleComments;
     static Ut::LineNumSet      s_inlinesNotAlone;
+    static Ut::LineNumSet      s_badlyAlignedImplicits;
     static Ut::LineNumSet      s_badlyAlignedReturns;
     static Ut::LineNumSet      s_tbds;
     static State               s_state;
@@ -351,7 +353,7 @@ class Lines {
         // Destructor.  Clears all static data and frees all memory.
 
     // ACCESSORS
-    void printWarnings(bsl::ostream *stream);
+    void printWarnings(bsl::ostream *stream) const;
         // Print warnings according to the static data in this class.
 };
 

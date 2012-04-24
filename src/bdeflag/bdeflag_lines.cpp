@@ -27,8 +27,13 @@ namespace BloombergLP {
 namespace bdeflag {
 
 struct Lines_StartProgram {
+    // Object to be created at program start to initialize 's_crsOK' variable
+    // with 'getenv'.
+
+    // PUBLIC CLASS DATA
     static bool s_crsOK;
 
+    // CREATOR
     Lines_StartProgram();
         // Initialize things at program start that don't have to be
         // reinitialized for each file.
@@ -55,6 +60,7 @@ int                 Lines::s_lineCount;
 Ut::LineNumSet      Lines::s_longLines;
 Ut::LineNumSet      Lines::s_cStyleComments;
 Ut::LineNumSet      Lines::s_inlinesNotAlone;
+Ut::LineNumSet      Lines::s_badlyAlignedImplicits;
 Ut::LineNumSet      Lines::s_badlyAlignedReturns;
 Ut::LineNumSet      Lines::s_tbds;
 Lines::State        Lines::s_state = BDEFLAG_EMPTY;
@@ -446,6 +452,9 @@ void Lines::killQuotesComments()
         { " RETURN",                  BDEFLAG_RETURN },
         { "RETURN",                   BDEFLAG_RETURN },
 
+        { " IMPLICIT",                BDEFLAG_IMPLICIT },
+        { "IMPLICIT",                 BDEFLAG_IMPLICIT },
+
         { " PUBLIC TYPE",             BDEFLAG_TYPE },
         { " PRIVATE TYPE",            BDEFLAG_TYPE },
         { " PROTECTED TYPE",          BDEFLAG_TYPE },
@@ -585,7 +594,8 @@ void Lines::killQuotesComments()
                         // C++ comment
 
                         ++col;
-                        s_comments[li] = BDEFLAG_UNRECOGNIZED;
+                        CommentType& cmtRef = s_comments[li];
+                        cmtRef = BDEFLAG_UNRECOGNIZED;
                         s_commentIndents[li] = col - 2;
                         bsl::string comment = curLine.substr(col);
 
@@ -602,16 +612,28 @@ void Lines::killQuotesComments()
 
                         if (commentMapBegin != it &&
                              (--it, Ut::frontMatches(comment, it->first, 0))) {
-                            s_comments[li] = it->second;
+                            cmtRef = it->second;
                         }
-                        else if (comment.length() >= 6 &&
-                            !bsl::strcmp(comment.data() + comment.length() - 6,
+                        else if     (comment.length() >= 6) {
+                            if (!bsl::strcmp(
+                                         comment.data() + comment.length() - 6,
                                          "RETURN")) {
-                            s_comments[li] = BDEFLAG_RETURN;
+                                cmtRef = BDEFLAG_RETURN;
+                            }
+                            else if (comment.length() >= 8 &&
+                                    !bsl::strcmp(
+                                         comment.data() + comment.length() - 8,
+                                         "IMPLICIT")) {
+                                cmtRef = BDEFLAG_IMPLICIT;
+                            }
                         }
-                        if (BDEFLAG_RETURN == s_comments[li] &&
-                                                      79 != curLine.length()) {
-                            s_badlyAlignedReturns.insert(li);
+                        if (79 != curLine.length()) {
+                            if      (BDEFLAG_IMPLICIT == cmtRef) {
+                                s_badlyAlignedImplicits.insert(li);
+                            }
+                            else if (BDEFLAG_RETURN   == cmtRef) {
+                                s_badlyAlignedReturns.  insert(li);
+                            }
                         }
 
                         // Wipe out the comment.  Preserve '\' in case we're
@@ -862,6 +884,8 @@ Lines::Lines(const char *fileName)
     s_lineCount = 0;
 
     s_lines.clear();
+    s_badlyAlignedImplicits.clear();
+    s_badlyAlignedReturns.clear();
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
@@ -955,6 +979,8 @@ Lines::Lines(const bsl::string& string)
     s_lineCount = 0;
 
     s_lines.clear();
+    s_badlyAlignedImplicits.clear();
+    s_badlyAlignedReturns.clear();
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
@@ -1016,6 +1042,7 @@ Lines::~Lines()
     s_longLines.clear();
     s_cStyleComments.clear();
     s_inlinesNotAlone.clear();
+    s_badlyAlignedImplicits.clear();
     s_badlyAlignedReturns.clear();
     s_tbds.clear();
     s_state = BDEFLAG_EMPTY;
@@ -1029,7 +1056,7 @@ Lines::~Lines()
 
 // ACCESSORS
 
-void Lines::printWarnings(bsl::ostream *stream)
+void Lines::printWarnings(bsl::ostream *stream) const
 {
     if (s_hasTabs) {
         *stream << "Warning: file " << s_fileName << " has tab(s).\n";
@@ -1085,6 +1112,11 @@ void Lines::printWarnings(bsl::ostream *stream)
     if (!s_inlinesNotAlone.empty()) {
         *stream << "Warning: in " << s_fileName << " 'inline' not on its own"
                 " line ('inline static' is OK): " << s_inlinesNotAlone << endl;
+    }
+    if (!s_badlyAlignedImplicits.empty()) {
+        *stream << "Warning: in " << s_fileName << " '// IMPLICIT' comment not"
+                                 " right-justified to 79 chars at line(s): " <<
+                                               s_badlyAlignedImplicits << endl;
     }
     if (!s_badlyAlignedReturns.empty()) {
         *stream << "Warning: in " << s_fileName << " '// RETURN' comment not"
