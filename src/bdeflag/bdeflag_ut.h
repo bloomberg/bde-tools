@@ -158,7 +158,7 @@ struct Ut {
         // used by P macros in other components
 
     static
-    bsl::string Ut::removeTemplateAngleBrackets(const bsl::string& s);
+    bsl::string removeTemplateAngleBrackets(const bsl::string& s);
         // Given a templated name 's', remove all the '<*>' (possibly nested)
         // from it.  If the '<>'s in 's' are unbalanced (meaning it's not
         // a template expression) return "<>".
