@@ -6,6 +6,10 @@ use warnings;
 use Getopt::Std;
 use File::Copy;
 
+BEGIN {
+    ${^WARNING_BITS} ^= ${^WARNING_BITS} ^ "\x3c\x3f\x33\x00\x0f\xf0\x0f\xc0\xf0\xfc\x33\x00";
+}
+
 
 # Ifdefs - class to track #ifdef's
 package Ifdefs;
@@ -180,7 +184,7 @@ sub read_src {
                     }
                 }
             }
-            when (/^\s*(class|struct)\s+(bsl\w+?_\w+|bdema_Allocator)\s*;/) {
+            when (/^(?:[^\/]*(?:\{|;))?\s*(class|struct)\s+(bsl\w+?_\w+|bdema_Allocator)\s*;/) {
                 # found forward declaration
                 my $class = $2;
 
@@ -223,6 +227,14 @@ sub read_src {
     }
 }
 
+sub can_remove_fdecl {
+    my $fdecl = shift;
+    return defined $fdecl
+        && $fdecl ~~ /^(?:namespace\s+BloombergLP\s*\{)?\s*(class|struct)\s+(bsl\w+?_\w+|bdema_Allocator)\s*;/;
+           # this is a slightly modified regex (compare to regex in read_src)
+           # that removes only 'safe' forward declarations
+}
+
 # write_tgt - produce a target file with forward declarations of bsl classes replaced
 # with included bslfwd headers
 sub write_tgt {
@@ -254,8 +266,8 @@ sub write_tgt {
 
             $insert_empty_line = 1;  # insert an empty line after forward declaration headers if needed
 
-        } elsif (defined $fdecl_lines->{$cur_line}
-                || (/^\s*$/ && defined $fdecl_lines->{$cur_line - 1}))
+        } elsif (can_remove_fdecl($fdecl_lines->{$cur_line})
+                || (/^\s*$/ && can_remove_fdecl($fdecl_lines->{$cur_line - 1})))
         {
             # skip the forward declaration and the empty line after it
         } else {
