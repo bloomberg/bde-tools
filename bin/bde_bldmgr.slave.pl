@@ -62,11 +62,14 @@ This script is not intended to be invoked directly; use bde_bldmgr instead.
 umask 002;
 STDOUT->autoflush(1);
 
-my $iamwindows = ($^O =~ /win/i);
+my $iamwindows = ($^O eq 'MSWin32' || $^O eq 'cygwin');
+    # TODO: review the 'cygwin' case
+
 my $prog       = basename($0);
 my $bindir     = $iamwindows ? $FindBin::Bin : dirname($0);
 $bindir =~ s|/|\\|sg if $iamwindows;
 my $FS         = $iamwindows ? "\\" : "/";
+    # TODO: this is a hack - use File::Spec for portable file path manipulation
 
 unless ($iamwindows) {
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
