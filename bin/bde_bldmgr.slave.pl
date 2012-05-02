@@ -1,5 +1,7 @@
-#!/opt/swt/bin/perl -w
+#!/usr/bin/env perl
+
 use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib/perl";
@@ -60,17 +62,16 @@ This script is not intended to be invoked directly; use bde_bldmgr instead.
 umask 002;
 STDOUT->autoflush(1);
 
-my $iamwindows = ($^O =~ /win/i);
+my $iamwindows = ($^O eq 'MSWin32' || $^O eq 'cygwin');
+    # TODO: review the 'cygwin' case
+
 my $prog       = basename($0);
 my $bindir     = $iamwindows ? $FindBin::Bin : dirname($0);
 $bindir =~ s|/|\\|sg if $iamwindows;
 my $FS         = $iamwindows ? "\\" : "/";
+    # TODO: this is a hack - use File::Spec for portable file path manipulation
 
 unless ($iamwindows) {
-    $ENV{PATH} = join(':',$bindir,qw[
-        /usr/local/bin /usr/bin /bin /usr/ccs/bin
-        /opt/SUNWspro/bin /bb/bin
-    ]);
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
 }
 
@@ -267,11 +268,6 @@ if ($opts{path}) {
 
 if ($opts{uptodate} && $opts{rebuild}) {
     fatal "--uptodate and --rebuild are mutually exclusive"
-}
-
-# Ensure we pick up tools from the view we are building
-unless ($iamwindows) {
-  $ENV{PATH} = join(':',"$where/tools/bin",$ENV{PATH});
 }
 
 unless ($where) {

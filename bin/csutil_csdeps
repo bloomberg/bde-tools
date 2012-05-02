@@ -1,5 +1,7 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
 
+use strict;
+use warnings;
 use FindBin;
 use lib "$FindBin::Bin";
 use lib "$FindBin::Bin/../lib/perl";
@@ -14,7 +16,6 @@ use Change::Symbols qw($DEPENDENCY_TYPE_NONE
                        $DEPENDENCY_TYPE_DEPENDENT
                        $DEPENDENCY_TYPE_SIBLING);
 use Util::Message qw/warning/;
-use strict;
 
 my %deptypes = (
         'none'          => $DEPENDENCY_TYPE_NONE,

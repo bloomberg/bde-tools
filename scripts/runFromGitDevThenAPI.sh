@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 TOOLSPATH=/bbshr/bde/bde-tools
 

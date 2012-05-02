@@ -1,8 +1,9 @@
-#!/bb/csdata/scm/bin/perl -w
+#!/usr/bin/env perl
 
+use strict;
+use warnings;
 use Getopt::Long;
 use CDB_File;
-use strict;
 
 my @getopt = qw/keys values escape!/;
 my %opt = ( escape => 1 );

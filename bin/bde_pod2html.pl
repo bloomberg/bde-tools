@@ -1,7 +1,9 @@
-#!/bbs/opt/bin/perl -w
-use strict;
+#!/usr/bin/env perl
 
 require v5.8;
+
+use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin";
