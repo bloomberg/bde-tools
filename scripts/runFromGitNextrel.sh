@@ -21,6 +21,9 @@ LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 W32_BUILD_DIR=bdenydev01:/e/nightly_builds/${BUILD_TYPE}
 W64_BUILD_DIR=apinydev01:/d/nightly_builds/${BUILD_TYPE}
 
+MAC_BASE_DIR=bdenydev02:/Development/bdebuild/
+MAC_BUILD_DIR=${MAC_BASE_DIR}/${BUILD_TYPE}
+
 SNAPSHOT_DIR=/home/bdebuild/bs/snapshot-${BUILD_TYPE}
 TARBALL=/home/bdebuild/bs/tars-${BUILD_TYPE}/snapshot-${BUILD_TYPE}.`date +"%Y%m%d"`.tar.gz
 
@@ -93,6 +96,12 @@ rsync -av --rsync-path=/usr/bin/rsync \
 
 rsync -av --rsync-path=/usr/bin/rsync \
     $SNAPSHOT_DIR/ $W64_BUILD_DIR/ 2>&1 | perl -pe's/^/W64-CP: /'
+
+rsync -av --rsync-path=/usr/bin/rsync \
+    $SNAPSHOT_DIR/ $MAC_BUILD_DIR/ 2>&1 | perl -pe's/^/MAC-CP: /'
+
+rsync -av --rsync-path=/usr/bin/rsync \
+    /bbshr/bde/bde-tools/ $MAC_BASE_DIR/bde-tools/ 2>&1 | perl -pe's/^/MAC-TOOLS: /'
 
 # remove unix-SunOS-sparc-*-gcc-* build artifacts to get all g++ warnings
 find $BUILD_DIR -name 'unix-SunOS-sparc-*-gcc-*' | grep -v -e include -e build | while read dir
