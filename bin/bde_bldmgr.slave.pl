@@ -75,6 +75,14 @@ unless ($iamwindows) {
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
 }
 
+if ($^O =~ /solaris/) {
+    # Sun builds require adding a few paths to the prompt to find things like ar
+    $ENV{PATH} = join(':',$bindir,qw[
+        /usr/ccs/bin
+    ]);
+
+}
+
 if ($^O =~ /aix/) {
     # Email from Mark Hannum on 20100720 @ 15:16:33
     #> My guess is that the test script is unsetting the EXTSHM variable ..
