@@ -1362,7 +1362,7 @@ sub display_results ($$$;$) {
     for my $result (@$results_array) {
         for my $result_target (@{$result->{target_combos}}) {
             push @all_targets, $result_target if
-              ! grep(/^$result_target$/, @all_targets);
+              ! grep(/^\Q$result_target\E$/, @all_targets);
             $maxtargetlen = length($result_target) if
               $maxtargetlen < length($result_target);
         }
