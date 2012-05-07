@@ -1386,16 +1386,18 @@ sub display_results ($$$;$) {
         for my $result (@$results_array) {
             $statcount{total}++;
             if (1 || $result->{host}) {
-                if (grep(/^$target$/, @{$result->{ok_targets}})) {
+                my $target_pattern = qr/^\Q$target\E$/;
+
+                if (grep(/$target_pattern/, @{$result->{ok_targets}})) {
                     push(@target_results, OK);
                     $statcount{ok}++;
                     next;
-                } elsif (grep(/^$target$/, @{$result->{notsup_targets}})) {
+                } elsif (grep(/$target_pattern/, @{$result->{notsup_targets}})) {
                     push(@target_results, NOTSUP);
                     $statcount{total}--;
                     next;
                 } elsif (ref $result->{err_targets}) {
-                    if (grep(/^$target$/, @{$result->{err_targets}})) {
+                    if (grep(/$target_pattern/, @{$result->{err_targets}})) {
                     push(@target_results, ERR);
                     $statcount{err}++;
                     next;
