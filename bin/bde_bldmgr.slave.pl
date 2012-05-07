@@ -77,7 +77,7 @@ unless ($iamwindows) {
 
 if ($^O =~ /solaris/) {
     # Sun builds require adding a few paths to the prompt to find things like ar
-    $ENV{PATH} = join(':',$bindir,qw[
+    $ENV{PATH} .= ":".join(':',$bindir,qw[
         /usr/ccs/bin
     ]);
 
