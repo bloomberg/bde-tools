@@ -258,7 +258,11 @@ sub matchVersionSubelement ($$$$) {
        return $currentv <=> $testv;
    }
 
-   return $currentv cmp $testv;
+   # For non-numeric versions we want the exact match rather than
+   # lexicographical which would be provided by 'cmp' (equivalent of '<=>' for
+   # non-numeric versions).
+   # Note that results 1 or 0 - match, and -1 - no match.
+   return $currentv eq $testv ? 0 : -1;
 }
 
 #------------------------------------------------------------------------------
