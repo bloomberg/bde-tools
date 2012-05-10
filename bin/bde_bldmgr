@@ -1279,6 +1279,7 @@ print $rfh "#target,system,build,elapsed,failurePackage,logFile,htmlURL,unreacha
 while(my ($target, $target_ar) = each %all_results) {
     foreach my $system_hr(@$target_ar) {
         foreach my $build(@{$system_hr->{target_combos}}) {
+            my $build_re = qr(^\Q$build\E$);
             print $rfh "$target,$system_hr->{system},$build,$system_hr->{elapsed},";
 
             print $rfh ",,,";
@@ -1289,13 +1290,13 @@ while(my ($target, $target_ar) = each %all_results) {
 
             print $rfh ",";
 
-            if(grep /^$build$/,@{$system_hr->{notsup_targets}}) {
+            if(grep /$build_re/,@{$system_hr->{notsup_targets}}) {
                 print $rfh "C";
             }
-            elsif(grep /^$build$/,@{$system_hr->{ok_targets}}) {
+            elsif(grep /$build_re/,@{$system_hr->{ok_targets}}) {
                 print $rfh "Y";
             }
-            elsif(grep /^$build$/,@{$system_hr->{err_targets}}) {
+            elsif(grep /$build_re/,@{$system_hr->{err_targets}}) {
                 print $rfh "N";
             }
             else {
