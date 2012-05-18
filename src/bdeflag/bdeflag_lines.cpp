@@ -42,7 +42,7 @@ bool Lines_StartProgram::s_crsOK;
 
 Lines_StartProgram::Lines_StartProgram()
 {
-    s_crsOK = !!bsl::getenv("BDEFLAG_TOLERATE_CARRAIGE_RETURNS");
+    s_crsOK = !!bsl::getenv("BDEFLAG_TOLERATE_CARRIAGE_RETURNS");
 }
 
 using bsl::cerr;
@@ -1069,7 +1069,7 @@ void Lines::printWarnings(bsl::ostream *stream) const
             firstTime = false;
             *stream << "    Note: warnings about '\\r's can be suppressed by"
                                                 " setting environment variable"
-                                     " '$BDEFLAG_TOLERATE_CARRAIGE_RETURNS'\n";
+                                     " '$BDEFLAG_TOLERATE_CARRIAGE_RETURNS'\n";
         }
     }
     if (s_hasTrailingBlanks) {
