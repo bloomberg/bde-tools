@@ -396,6 +396,9 @@ MAIN: {
     # on distributed builds, always rebuild and skip non-compliant package tests
     push @basecmd,"-R","-E";
 
+    # enable retry to try to work around transient nfs failures
+    push @basecmd,"-x";
+
     # -j, -s
     if ($opts{serial}) {
         push @basecmd,"-s";
