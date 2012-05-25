@@ -24,12 +24,10 @@ MAC_BUILD_DIR=${MAC_BASE_DIR}/${BUILD_TYPE}
 SNAPSHOT_DIR=/home/bdebuild/bs/snapshot-${BUILD_TYPE}
 TARBALL=/home/bdebuild/bs/tars-${BUILD_TYPE}/snapshot-${BUILD_TYPE}.`date +"%Y%m%d"`.tar.gz
 
-DEV_UORS="bsl zde bde bbe bce bae bte bsi                                   \
+DEV_UORS="bsl bst zde bde bbe bce bae bte bsi                               \
        a_bdema a_bteso a_xercesc bsc e_ipc a_ossl a_fsipc bas a_xmf         \
        a_baslt bap a_bassvc a_comdb2 a_basfs a_bascat z_bae a_fsbaem z_bas  \
        z_a_bdema"
-
-#DEV_UORS=bsl
 
 export BUILD_DIR LOG_DIR TOOLSPATH
 
