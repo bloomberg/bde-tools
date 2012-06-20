@@ -381,7 +381,10 @@ sub read_symbols {
                 close $fh;
             } elsif ( $^O =~ /win/i ) {
             } else {
-                warn "Unable to open symbol definition file" . " '$file': $!\n";
+                # Useless warning - not going to bother with it any more unless
+                # BDE_BACKTRACE is set in env...
+                warn "Unable to open symbol definition file" . " '$file': $!\n"
+                            if exists $ENV{BDE_BACKTRACE};
             }
         } else {
 
