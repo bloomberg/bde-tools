@@ -17,7 +17,7 @@ ALL_UORS="$CORE_UORS $BB_UORS $BAS_UORS"
 # not mail cron job results
 exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
-TOOLSPATH=/bbshr/bde/bde-tools
+TOOLSPATH=$(dirname $0)/..
 SCRIPT_PATH=$TOOLSPATH/scripts
 
 export TOOLSPATH SCRIPT_PATH SCRIPT_NAME BUILD_TYPE BDE_CORE_BRANCH BDE_BB_BRANCH BAS_BRANCH
