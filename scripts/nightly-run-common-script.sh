@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# this script requires that several variables be set - see
+# runFromGitDevThenAPI.sh for an example.
+
 BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
 
 BDE_BB_GIT_REPO=/home/bdebuild/bs/bde-bb-${BUILD_TYPE}
