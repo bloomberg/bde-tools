@@ -1,13 +1,29 @@
 #!/bin/bash
 
-TOOLSPATH=/bbshr/bde/bde-tools
+# this script requires that several variables be set - see
+# runFromGitDevThenAPI.sh for an example.
 
-SCRIPT_NAME=runFromGitNextrel
-BUILD_TYPE=nextrel
+if [[ -z "$TOOLSPATH" || -z "$SCRIPT_PATH" || -z "$SCRIPT_NAME" || -z "$BUILD_TYPE" || -z "$BDE_CORE_BRANCH" || -z "$BDE_BB_BRANCH" || -z "$BAS_BRANCH" || -z "$CORE_UORS" || -z "$BB_UORS" || -z "$BAS_UORS" || -z "$ALL_UORS" ]]
+then \
+    echo "USAGE: $0"
+    echo "    All of the following variables must be exported before this script is invoked:"
+    echo "         TOOLSPATH"
+    echo "         SCRIPT_PATH"
+    echo "         SCRIPT_NAME"
+    echo "         BUILD_TYPE"
+    echo "         BDE_CORE_BRANCH"
+    echo "         BDE_BB_BRANCH"
+    echo "         BAS_BRANCH"
+    echo "         CORE_UORS"
+    echo "         BB_UORS"
+    echo "         BAS_UORS"
+    echo "         ALL_UORS"
 
-VIEW_NAME=bde_releaseintegrator2
+    exit 1
+fi
 
 BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
+
 BDE_BB_GIT_REPO=/home/bdebuild/bs/bde-bb-${BUILD_TYPE}
 
 BAS_GIT_REPO=/home/bdebuild/bs/bas-libs-${BUILD_TYPE}
@@ -24,44 +40,30 @@ MAC_BUILD_DIR=${MAC_BASE_DIR}/${BUILD_TYPE}
 SNAPSHOT_DIR=/home/bdebuild/bs/snapshot-${BUILD_TYPE}
 TARBALL=/home/bdebuild/bs/tars-${BUILD_TYPE}/snapshot-${BUILD_TYPE}.`date +"%Y%m%d"`.tar.gz
 
-DEV_UORS="bsl zde bde bbe bce bae bte bsi                                   \
-       a_bdema a_bteso a_xercesc bsc e_ipc a_ossl a_fsipc bas a_xmf         \
-       a_baslt bap a_bassvc a_comdb2 a_basfs a_bascat z_bae a_fsbaem z_bas  \
-       z_a_bdema"
-
-#DEV_UORS=bsl
-
 export BUILD_DIR LOG_DIR TOOLSPATH
-
-# redirect outputs so we can track failures - nysbldo2 does
-# not mail cron job results
-exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
 PATH="$TOOLSPATH/bin:$TOOLSPATH/scripts:/opt/swt/bin:/opt/SUNWspro/bin/:/usr/bin:/usr/sbin:/sbin:/usr/bin/X11:/usr/local/bin:/bb/bin:/bb/shared/bin:/bb/shared/abin:/bb/bin/robo:/bbsrc/tools/bbcm:/bbsrc/tools/bbcm/parent:/usr/atria/bin"
 export PATH
 
-/usr/atria/bin/cleartool startview $VIEW_NAME
-
 pushd $BDE_CORE_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
-/opt/swt/bin/git checkout remotes/origin/master
+/opt/swt/bin/git checkout $BDE_CORE_BRANCH
 popd
 
 pushd $BDE_BB_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
-/opt/swt/bin/git checkout remotes/origin/master
+/opt/swt/bin/git checkout $BDE_BB_BRANCH
 popd
 
 pushd $BAS_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
-/opt/swt/bin/git checkout remotes/origin/master
+/opt/swt/bin/git checkout $BAS_BRANCH
 popd
 
-SCRIPT_PATH=$TOOLSPATH/scripts
-
-$SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR $BDE_CORE_GIT_REPO $BDE_BB_GIT_REPO $BAS_GIT_REPO /view/$VIEW_NAME/bbcm/api \
-                 -- \
-                 $DEV_UORS
+$SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR \
+                              $BDE_CORE_GIT_REPO $BDE_BB_GIT_REPO $BAS_GIT_REPO \
+                         -- \
+                         $ALL_UORS
 
 cd $BUILD_DIR
 echo synchronizing $OUTPUTPATH and $BUILD_DIR
@@ -90,14 +92,32 @@ do \
     rm -f $dir/*.o
 done
 
-# run nextrel build
+# run ${BUILD_TYPE}-core build
 $TOOLSPATH/bin/bde_bldmgr -v                \
        -k $TOOLSPATH/etc/bde_bldmgr.config  \
-       -f -k -m -i${BUILD_TYPE}             \
-       $DEV_UORS                            \
+       -f -k -m -i${BUILD_TYPE}-core        \
+       $CORE_UORS                           \
        < /dev/null 2>&1                     \
-   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE} \
-   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}
+   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-core \
+   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-core
+
+# run ${BUILD_TYPE}-bb build
+$TOOLSPATH/bin/bde_bldmgr -v                \
+       -k $TOOLSPATH/etc/bde_bldmgr.config  \
+       -f -k -m -i${BUILD_TYPE}-bb          \
+       $BB_UORS                             \
+       < /dev/null 2>&1                     \
+   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-bb   \
+   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-bb
+
+# run ${BUILD_TYPE}-bas build
+$TOOLSPATH/bin/bde_bldmgr -v                \
+       -k $TOOLSPATH/etc/bde_bldmgr.config  \
+       -f -k -m -i${BUILD_TYPE}-bas         \
+       $BAS_UORS                            \
+       < /dev/null 2>&1                     \
+   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-bas   \
+   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-bas
 
 # generate gcc warnings
 $TOOLSPATH/scripts/generateGccWarningsLogs.pl ${BUILD_TYPE} ${LOG_DIR}

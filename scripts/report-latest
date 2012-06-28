@@ -6,17 +6,14 @@ use POSIX qw(strftime);
 
 my %acceptableArgs = (
     dev       => 1,
-    zev       => 1,
-    'dev-bus' => 1,
-    'dev-api' => 1,
-    'zev-api' => 1,
-    'nextrel-api' => 1,
-    'dev-nextrel-api' => 1,
-    'dev-fde' => 1,
-    api       => 1,
     nextrel   => 1,
-    bus       => 1,
 );
+
+foreach my $target (qw(core bb bas router)) {
+    foreach my $build (qw(dev nextrel)) {
+        $acceptableArgs{"$build-$target"}=1;
+    }
+}
 
 if(!((@ARGV==1 || @ARGV==2) && exists $acceptableArgs{$ARGV[0]})) {
     print STDERR "USAGE: $0 <" . (join "|",sort keys %acceptableArgs) . "> [date]\n";
