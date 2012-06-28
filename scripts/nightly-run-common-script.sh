@@ -3,6 +3,25 @@
 # this script requires that several variables be set - see
 # runFromGitDevThenAPI.sh for an example.
 
+if [[ -z "$TOOLSPATH" || -z "$SCRIPT_PATH" || -z "$SCRIPT_NAME" || -z "$BUILD_TYPE" || -z "$BDE_CORE_BRANCH" || -z "$BDE_BB_BRANCH" || -z "$BAS_BRANCH" || -z "$CORE_UORS" || -z "$BB_UORS" || -z "$BAS_UORS" || -z "$ALL_UORS" ]]
+then \
+    echo "USAGE: $0"
+    echo "    All of the following variables must be exported before this script is invoked:"
+    echo "         TOOLSPATH"
+    echo "         SCRIPT_PATH"
+    echo "         SCRIPT_NAME"
+    echo "         BUILD_TYPE"
+    echo "         BDE_CORE_BRANCH"
+    echo "         BDE_BB_BRANCH"
+    echo "         BAS_BRANCH"
+    echo "         CORE_UORS"
+    echo "         BB_UORS"
+    echo "         BAS_UORS"
+    echo "         ALL_UORS"
+
+    exit 1
+fi
+
 BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
 
 BDE_BB_GIT_REPO=/home/bdebuild/bs/bde-bb-${BUILD_TYPE}
