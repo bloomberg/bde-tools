@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_NAME=runFromGitDevThenAPI
+SCRIPT_NAME=nightly-run-dev
 BUILD_TYPE=dev
 
 BDE_CORE_BRANCH=remotes/origin/dev-integration

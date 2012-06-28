@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_NAME=runFromGitNextrel
+SCRIPT_NAME=nightly-run-nextrel
 BUILD_TYPE=nextrel
 
 BDE_CORE_BRANCH=remotes/origin/master
