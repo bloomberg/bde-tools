@@ -97,6 +97,7 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
        -k $TOOLSPATH/etc/bde_bldmgr.config  \
        -f -k -m -i${BUILD_TYPE}-core        \
        $CORE_UORS                           \
+       -vvv                                 \
        < /dev/null 2>&1                     \
    | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-core \
    && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-core
