@@ -324,6 +324,13 @@ sub colour_and_htmlize ($$) {
 
     my ($line, $anchor_r)=@_;
 
+    # Escape HTML characters in $line
+
+    $line=~s/&/&amp;/g; # do this one first so as not to undo others...
+    $line=~s/</&lt;/g;
+    $line=~s/>/&gt;/g;
+    $line=~s/"/&quot;/g;
+
     if(    $line!~/is not a valid default record buffer size/
         && $line!~/Error: could not find a route for request/
         && $line!~/Propagating error message from interface/
