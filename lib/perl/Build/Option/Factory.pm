@@ -579,7 +579,7 @@ sub checkCapability {
 	    #optimistic build mode requires no 'NEVER's
 	    print STDERR $cv->dump() if Util::Message::get_verbose();
 	    #$self->throw(($wuor eq $uor)?"capabilities of $wuor prohibit".
-	    error(($wuor eq $uor)?"capabilities of $wuor prohibit".
+        fatal(($wuor eq $uor)?"capabilities of $wuor prohibit".
                                       " $ufid build on $uplid":
                       "capabilities of dependency $wuor prohibit".
                       " $ufid build of $uor on $uplid");
