@@ -1030,10 +1030,12 @@ foreach my $platform (@platforms) {
             # Like postbuild_cmd, except that this command is run locally.
             if (exists $build->{postbuild_pull_cmd}) {
                 message("running postbuild pull command");
-                my ($cmd_status, $cmd_out) = invoke_by_command($build->{postbuild_pull_cmd});
+                my $cmd_out = system($build->{postbuild_pull_cmd});
+                my $cmd_status = $?;
+
                 if ($cmd_status) {
                     error("Postbuild pull command failed");
-                    for my $l (@$cmd_out) { error($l); }
+                    for my $l (split /\n/,$cmd_out) { error($l); }
                     $results{unreachable_hosts} .= " $host (postbuild pull failed)";
                     $results{host} = undef;
                     push @badCmdOutput, @$cmd_out;
