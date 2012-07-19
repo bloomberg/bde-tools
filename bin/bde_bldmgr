@@ -1038,7 +1038,7 @@ foreach my $platform (@platforms) {
                     for my $l (split /\n/,$cmd_out) { error($l); }
                     $results{unreachable_hosts} .= " $host (postbuild pull failed)";
                     $results{host} = undef;
-                    push @badCmdOutput, @$cmd_out;
+                    push @badCmdOutput, $cmd_out;
                     next;
                 }
             }
