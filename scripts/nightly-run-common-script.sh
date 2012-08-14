@@ -3,7 +3,7 @@
 # this script requires that several variables be set - see
 # runFromGitDevThenAPI.sh for an example.
 
-if [[ -z "$TOOLSPATH" || -z "$SCRIPT_PATH" || -z "$SCRIPT_NAME" || -z "$BUILD_TYPE" || -z "$BDE_CORE_BRANCH" || -z "$BDE_BB_BRANCH" || -z "$BAS_BRANCH" || -z "$CORE_UORS" || -z "$BB_UORS" || -z "$BAS_UORS" || -z "$ALL_UORS" ]]
+if [[ -z "$TOOLSPATH" || -z "$SCRIPT_PATH" || -z "$SCRIPT_NAME" || -z "$BUILD_TYPE" || -z "$BDE_CORE_BRANCH" || -z "$BDE_BB_BRANCH" ||  -z "$CORE_UORS" || -z "$BB_UORS" || -z "$ALL_UORS" ]]
 then \
     echo "USAGE: $0"
     echo "    All of the following variables must be exported before this script is invoked:"
@@ -13,10 +13,8 @@ then \
     echo "         BUILD_TYPE"
     echo "         BDE_CORE_BRANCH"
     echo "         BDE_BB_BRANCH"
-    echo "         BAS_BRANCH"
     echo "         CORE_UORS"
     echo "         BB_UORS"
-    echo "         BAS_UORS"
     echo "         ALL_UORS"
 
     exit 1
@@ -25,8 +23,6 @@ fi
 BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
 
 BDE_BB_GIT_REPO=/home/bdebuild/bs/bde-bb-${BUILD_TYPE}
-
-BAS_GIT_REPO=/home/bdebuild/bs/bas-libs-${BUILD_TYPE}
 
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
 LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
@@ -55,13 +51,8 @@ pushd $BDE_BB_GIT_REPO 2> /dev/null
 /opt/swt/bin/git checkout $BDE_BB_BRANCH
 popd
 
-pushd $BAS_GIT_REPO 2> /dev/null
-/opt/swt/bin/git fetch
-/opt/swt/bin/git checkout $BAS_BRANCH
-popd
-
 $SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR \
-                              $BDE_CORE_GIT_REPO $BDE_BB_GIT_REPO $BAS_GIT_REPO \
+                              $BDE_CORE_GIT_REPO $BDE_BB_GIT_REPO \
                          -- \
                          $ALL_UORS
 
@@ -110,15 +101,6 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
        < /dev/null 2>&1                     \
    | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-bb   \
    && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-bb
-
-# run ${BUILD_TYPE}-bas build
-$TOOLSPATH/bin/bde_bldmgr -v                \
-       -k $TOOLSPATH/etc/bde_bldmgr.config  \
-       -f -k -m -i${BUILD_TYPE}-bas         \
-       $BAS_UORS                            \
-       < /dev/null 2>&1                     \
-   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-bas   \
-   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-bas
 
 # generate gcc warnings
 $TOOLSPATH/scripts/generateGccWarningsLogs.pl ${BUILD_TYPE} ${LOG_DIR}
