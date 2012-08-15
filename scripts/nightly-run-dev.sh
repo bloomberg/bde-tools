@@ -7,7 +7,7 @@ BDE_CORE_BRANCH=remotes/origin/dev-integration
 BDE_BB_BRANCH=remotes/origin/dev-integration
 
 CORE_UORS="bsl bst bde bbe bce bae bte"
-BB_UORS="bsi zde a_bdema a_bteso a_xercesc e_ipc a_comdb2 z_a_bdema bap z_bae a_cdrcache"
+BB_UORS="bsi zde a_bdema a_bteso a_xercesc e_ipc z_a_bdema bap a_comdb2 z_bae a_cdrcache"
 
 ALL_UORS="$CORE_UORS $BB_UORS"
 
