@@ -81,8 +81,11 @@ export BDE_PATH="$PATHS:$BDE_PATH"
 # the -e option makes bde_snapshot.pl snapshot the "etc" directory as well
 $SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 
-# bde_snapshot.pl doesn't get the subdirs correct for bst+apache
+# bde_snapshot.pl doesn't get the subdirs correct for any of the "+" non-compliant packages
 rsync -av $ROOTPATH/groups/bst/bst+apache/ ./groups/bst/bst+apache/
+rsync -av $ROOTPATH/groups/bsl/bsl+bslhdrs/ ./groups/bsl/bsl+bslhdrs/
+rsync -av $ROOTPATH/groups/bsl/bsl+stdhdrs/ ./groups/bsl/bsl+stdhdrs/
+rsync -av $ROOTPATH/groups/bde/bde+pcre/ ./groups/bde/bde+pcre/
 
 if [ $? -ne 0 ]
 then \
