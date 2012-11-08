@@ -71,7 +71,7 @@ my %matchingBrackets = ( '[' => ']',
 my $commentAndStringRe =
     qr{(?:
         (//(?:[^\\\n]+|\\.|\\\n)*$)     | # C++-style comment
-        (/\*(?:[^*]++|\*[^*/])*\*/)     | # C-style comment
+        (/\*(?:[^*]+|\*[^*/])*\*/)     | # C-style comment
         ("(?:[^"\\\n]+|\\.|\\\n)*["\n]) | # string literal
         ('(?:[^'\\\n]+|\\.|\\\n)*['\n])   # character literal
        )}mx;
@@ -173,7 +173,7 @@ sub stripComments($;$)
 
     pos($input) = 0;
 
-    while ($input =~ m{\h*$commentAndStringRe\h*\n?}g)
+    while ($input =~ m{[ \t]*$commentAndStringRe[ \t]*\n?}g)
     {
         my $start = $-[0];
         my $end   = $+[0];
@@ -620,7 +620,7 @@ sub replaceAndFitOnLine($$$$)
     # Compute length of longest line of $replacement
     my $lastReplacementWidth = 0;
     my $maxReplacementWidth = 0;
-    for my $line (split qr/\n\h*/, $replacement) {
+    for my $line (split qr/\n[ \t]*/, $replacement) {
         $lastReplacementWidth = length($line);
         $maxReplacementWidth = $lastReplacementWidth
             if ($lastReplacementWidth > $maxReplacementWidth);
@@ -635,7 +635,7 @@ sub replaceAndFitOnLine($$$$)
         # Leave enough slack to fit entire $postPack on same line
         $slack = $postLen;
     }
-    elsif ($postPack =~ m/^\h*,/) {
+    elsif ($postPack =~ m/^[ \t]*,/) {
         # Leave enough slack to fit a comma
         $slack = 1;
     }
@@ -655,7 +655,7 @@ sub replaceAndFitOnLine($$$$)
 
     if ($replacement && $targetCol < $column) {
         my $overage = $column - $targetCol;
-        $prePack =~ /(\h*)$/;  # Match trailing whitespace
+        $prePack =~ /([ \t]*)$/;  # Match trailing whitespace
         my $spacesAtEndofPrepack = length($1);
         if ($overage <= $spacesAtEndofPrepack) {
             # Remove unneeded spaces so that we can start at $targetCol
@@ -671,7 +671,7 @@ sub replaceAndFitOnLine($$$$)
     }
 
     # Prepend indentation after every newline in $replacement
-    $replacement =~ s/\n\h*/\n$indentation/g;
+    $replacement =~ s/\n[ \t]*/\n$indentation/g;
 
     if ($targetCol + $lastReplacementWidth + $postLen > $maxColumn) {
         # $postPack will not fit on the same line as the last line of the
@@ -679,7 +679,7 @@ sub replaceAndFitOnLine($$$$)
 
         # Remove any leading commas from $postPack.  The comma
         # (if any) will be appended to the replacement.
-        $postPack =~ s/^(\h*(,?)\h*)//;
+        $postPack =~ s/^([ \t]*(,?)[ \t]*)//;
         my $removedLen = length($1);
         my $comma = $2;
         $packEnd += $removedLen;
@@ -731,7 +731,7 @@ sub replaceForwarding($$$;$)
     for my $typename (@typenames) {
 
         $pos = 0;
-        while (cppSearch(qr/\b($typename\s*&&)((?:\h*\.\.\.)?\h*[[:word:]]+)?/,
+        while (cppSearch(qr/\b($typename\s*&&)((?:[ \t]*\.\.\.)?[ \t]*[[:word:]]+)?/,
                          $pos)) {
             my $argname = $cppMatch[2] || "";
             replaceAndFitOnLine($shroudedInput,
@@ -996,7 +996,7 @@ sub repeatPacks($$@)
 
                 my $preDelim = "";  # optional comma or colon before pack
                 pos($workingBuffer) = $packStart;
-                $preDelim = $1 if ($workingBuffer =~ m/(\h*[,:]\s*)\G/g);
+                $preDelim = $1 if ($workingBuffer =~ m/([ \t]*[,:]\s*)\G/g);
 
                 my $postDelim = ""; # optional comma after pack
                 pos($workingBuffer) = $packEnd;
@@ -1185,7 +1185,7 @@ sub transformTemplates($$$)
     while ($pos < $inputEnd)
     {
         # Find start of a template.
-        last unless cppSearch(qr/\h*\btemplate\s*</, $pos);
+        last unless cppSearch(qr/[ \t]*\btemplate\s*</, $pos);
         my $templateBegin = $cppMatchStart[0];
 
         # Copy everything before the template to output.
@@ -1226,7 +1226,7 @@ sub transformTemplates($$$)
         }
 
         # Include trailing end-of-line in template definition
-        if (cppSearch(qr/\G\h*\n/, $templateEnd)) {
+        if (cppSearch(qr/\G[ \t]*\n/, $templateEnd)) {
             $templateEnd = $cppMatchEnd[0];
         }
 
@@ -1365,7 +1365,7 @@ sub main()
 
     # Search for '#include <bsls_m.h>'
     die "Missing #include <bsls_m.h> in input file\n"
-        unless (cppSearch(qr|^\h*#\h*include\h*[<"]bsls_m\.h[">]|m, 0));
+        unless (cppSearch(qr|^[ \t]*#[ \t]*include[ \t]*[<"]bsls_m\.h[">]|m, 0));
     my $bsls_m_pos = $cppMatchStart[0];
 
     # Search for '#if !BSLS_M_SIMULATED_CPP11_FEATURES' or
@@ -1373,7 +1373,7 @@ sub main()
     my $simCpp11Macro = "BSLS_M_SIMULATED_CPP11_FEATURES";
     my $simVariadicsMacro = "BSLS_M_SIMULATED_VARIADIC_TEMPLATES";
     my $perfFwdWorkaroundMacro = "BSLS_M_PERFECT_FORWARD_WORKAROUND";
-    while (cppSearch(qr/^\h*\#\h*(if(?:ndef\h|\h+!)\h*$simCpp11Macro)\b(.*)\n/m,
+    while (cppSearch(qr/^[ \t]*\#[ \t]*(if(?:ndef[ \t]|[ \t]+!)[ \t]*$simCpp11Macro)\b(.*)\n/m,
                      $pos))
     {
         die "Error: Use of $simCpp11Macro before #include <bsls_m.h>\n"
@@ -1413,7 +1413,7 @@ sub main()
         # nested #if's along the way.
         my $depth = 1;
         my $ppDirective;  # Preprocessor directive
-        while (cppSearch(qr{^\h*\#\h*(\w+).*\n}m, $pos)) {
+        while (cppSearch(qr{^[ \t]*\#[ \t]*(\w+).*\n}m, $pos)) {
             $pos = $cppMatchEnd[0];
             $ppDirective = $cppMatch[1];
             if (1 == $depth and $ppDirective =~ /^(else|elif|endif)$/ ) {
@@ -1436,7 +1436,7 @@ sub main()
         if ($ppDirective =~ m/^(?:else|elif)$/) {
             # Consume and discard input until matching '#endif'.  $depth == 1
             # here.
-            while (cppSearch(qr/^\h*\#\h*(\w+).*\n/m, $pos)) {
+            while (cppSearch(qr/^[ \t]*\#[ \t]*(\w+).*\n/m, $pos)) {
                 $pos = $cppMatchEnd[0];
                 $ppDirective = $cppMatch[1];
                 $depth++ if ($ppDirective =~ /^if/);
@@ -1727,7 +1727,7 @@ sub testReplaceAndFitOnLine
         my ($working, $repl) = @_;
 
         $working =~ s/^(~?)/$1                /mg;
-        $working =~ m/([:,]\s*)?(XXX*)(\s*,\h*)?/;
+        $working =~ m/([:,]\s*)?(XXX*)(\s*,[ \t]*)?/;
         my $packStart = $-[2];
         my $packEnd   = $+[2];
 
