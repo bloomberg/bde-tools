@@ -5,6 +5,8 @@ use warnings;
 
 use POSIX qw(strftime);
 
+my $GCC_VER = "4.7.2";
+
 if(@ARGV<2) {
     print STDERR "USAGE: $0 buildtype logpath [recipients]\n";
     exit 1;
@@ -20,7 +22,7 @@ if(@ARGV==3) {
 
 my $date=strftime("%Y%m%d",localtime);
 
-open(GREP,"grep '\.h:.* warning:' $logpath/*$date*-SunOS-*-gcc-4.3.2*|")
+open(GREP,"grep '\.h:.* warning:' $logpath/*$date*-SunOS-*-gcc-${GCC_VER}*|")
         or die "Unable to open pipe from grep, error $!";
 
 my (%list, %s);
@@ -54,7 +56,7 @@ close(GREP);
 my $warninglog="/home/bdebuild/logs/gcc-header-warnings-in-$buildtype.".strftime("%Y%m%d-%H%M%S",localtime);
 my $plural=($warningCount==1)?"":"s";
 
-my $subject=qq{*** $warningCount gcc warning$plural in $buildtype today ***************};
+my $subject=qq{*** $warningCount gcc ${GCC_VER} warning$plural in $buildtype today ***************};
 
 open(LOG,">$warninglog") or die "Unable to open $warninglog, error $!";
 
