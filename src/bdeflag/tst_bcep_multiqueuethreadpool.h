@@ -1,6 +1,6 @@
-// txtbcep_multiqueuethreadpool.h                                     -*-C++-*-
-#ifndef INCLUDED_TXTBCEP_MULTIQUEUETHREADPOOL
-#define INCLUDED_TXTBCEP_MULTIQUEUETHREADPOOL
+// bcep_multiqueuethreadpool.h                                        -*-C++-*-
+#ifndef INCLUDED_BCEP_MULTIQUEUETHREADPOOL
+#define INCLUDED_BCEP_MULTIQUEUETHREADPOOL
 
 #ifndef INCLUDED_BDES_IDENT
 #include <bdes_ident.h>
@@ -338,10 +338,10 @@ class bslma_Allocator;
 class bcemt_Barrier;
 
                    // ========================================
-                   // class txtbcep_MultiQueueThreadPool_Queue
+                   // class bcep_MultiQueueThreadPool_Queue
                    // ========================================
 
-class txtbcep_MultiQueueThreadPool_Queue {
+class bcep_MultiQueueThreadPool_Queue {
     // This private class provides a lightweight queue, plus a spin lock.
     // Thread-safety may be implemented by the client by acquiring
     // and manipulating the queue's lock vis-a-vis the 'mutex' function.
@@ -374,24 +374,24 @@ class txtbcep_MultiQueueThreadPool_Queue {
                                             // it was reset.
   private:
     // FRIENDS
-    friend class txtbcep_MultiQueueThreadPool;
-    friend class txtbcep_MultiQueueThreadPool_QueueContext;
+    friend class bcep_MultiQueueThreadPool;
+    friend class bcep_MultiQueueThreadPool_QueueContext;
 
     // NOT IMPLEMENTED
-    txtbcep_MultiQueueThreadPool_Queue(
-                                    const txtbcep_MultiQueueThreadPool_Queue&);
-    txtbcep_MultiQueueThreadPool_Queue& operator=(
-                                    const txtbcep_MultiQueueThreadPool_Queue&);
+    bcep_MultiQueueThreadPool_Queue(
+                                    const bcep_MultiQueueThreadPool_Queue&);
+    bcep_MultiQueueThreadPool_Queue& operator=(
+                                    const bcep_MultiQueueThreadPool_Queue&);
 
     // CREATORS
-    txtbcep_MultiQueueThreadPool_Queue(bslma_Allocator *basicAllocator = 0);
+    bcep_MultiQueueThreadPool_Queue(bslma_Allocator *basicAllocator = 0);
         // Create a 'bcep_MultiQueueThreadPool_Queue' with an initial capacity
         // of 0.  Optionally specify a 'basicAllocator' used to supply memory
         // If 'basicAllocator' is 0, the default memory allocator is used.
 
   public:
     // CREATORS
-    ~txtbcep_MultiQueueThreadPool_Queue();
+    ~bcep_MultiQueueThreadPool_Queue();
         // Destroy this queue.
 
     // MANIPULATORS
@@ -441,7 +441,7 @@ class txtbcep_MultiQueueThreadPool_Queue {
                // class bcep_MultiQueueThreadPool_QueueContext
                // ============================================
 
-class txtbcep_MultiQueueThreadPool_QueueContext {
+class bcep_MultiQueueThreadPool_QueueContext {
     // This private class encapsulates a lightweight job queue and a callback
     // which processes the queue.
 
@@ -453,31 +453,31 @@ class txtbcep_MultiQueueThreadPool_QueueContext {
         // ID must be bound to the functor at the time of its instantiation.
 
     // PUBLIC DATA MEMBERS
-    txtbcep_MultiQueueThreadPool_Queue  d_queue;
+    bcep_MultiQueueThreadPool_Queue  d_queue;
     mutable bces_SpinLock            d_lock;
     QueueProcessorCb                 d_processingCb;
     bool                             d_destroyFlag;
 
   private:
     // NOT IMPLEMENTED
-    txtbcep_MultiQueueThreadPool_QueueContext(
-                             const txtbcep_MultiQueueThreadPool_QueueContext&);
-    txtbcep_MultiQueueThreadPool_QueueContext& operator=(
-                             const txtbcep_MultiQueueThreadPool_QueueContext&);
+    bcep_MultiQueueThreadPool_QueueContext(
+                             const bcep_MultiQueueThreadPool_QueueContext&);
+    bcep_MultiQueueThreadPool_QueueContext& operator=(
+                             const bcep_MultiQueueThreadPool_QueueContext&);
 
   public:
 
-    BSLALG_DECLARE_NESTED_TRAITS(txtbcep_MultiQueueThreadPool_QueueContext,
+    BSLALG_DECLARE_NESTED_TRAITS(bcep_MultiQueueThreadPool_QueueContext,
                                  bslalg_TypeTraitUsesBslmaAllocator);
 
     // CREATORS
-    txtbcep_MultiQueueThreadPool_QueueContext(
+    bcep_MultiQueueThreadPool_QueueContext(
                                           bslma_Allocator *basicAllocator = 0);
         // Construct a queue context object.  Optionally specify a
         // 'basicAllocator' used to supply memory.  If 'basicAllocator' is 0,
         // the default memory allocator is used.
 
-    ~txtbcep_MultiQueueThreadPool_QueueContext();
+    ~bcep_MultiQueueThreadPool_QueueContext();
         // Destroy this queue context.
 
     void reset();
@@ -496,7 +496,7 @@ class txtbcep_MultiQueueThreadPool_QueueContext {
                       // class bcep_MultiQueueThreadPool
                       // ===============================
 
-class txtbcep_MultiQueueThreadPool {
+class bcep_MultiQueueThreadPool {
     // This class implements a dynamic, configurable pool of queues, each of
     // which is processed serially by a thread pool.
 
@@ -517,13 +517,13 @@ class txtbcep_MultiQueueThreadPool {
     bcep_ThreadPool *d_threadPool_p;       // threads for queue processing
     bool             d_threadPoolIsOwned;  // 'true' if thread pool is owned
 
-    bcec_ObjectPool<txtbcep_MultiQueueThreadPool_QueueContext,
+    bcec_ObjectPool<bcep_MultiQueueThreadPool_QueueContext,
                     bcec_ObjectPoolFunctors::DefaultCreator,
                     bcec_ObjectPoolFunctors::Reset<
-                                   txtbcep_MultiQueueThreadPool_QueueContext> >
+                                   bcep_MultiQueueThreadPool_QueueContext> >
                      d_queuePool;          // pool of queue contexts
 
-    bcec_ObjectCatalog<txtbcep_MultiQueueThreadPool_QueueContext*>
+    bcec_ObjectCatalog<bcep_MultiQueueThreadPool_QueueContext*>
                      d_queueRegistry;      // registry of queue contexts
 
     mutable bcemt_RWMutex
@@ -543,9 +543,9 @@ class txtbcep_MultiQueueThreadPool {
                                            // was reset
   private:
     // NOT IMPLEMENTED
-    txtbcep_MultiQueueThreadPool(const txtbcep_MultiQueueThreadPool&);
-    txtbcep_MultiQueueThreadPool& operator=(
-                                          const txtbcep_MultiQueueThreadPool&);
+    bcep_MultiQueueThreadPool(const bcep_MultiQueueThreadPool&);
+    bcep_MultiQueueThreadPool& operator=(
+                                          const bcep_MultiQueueThreadPool&);
 
     // PRIVATE MANIPULATORS
     void createQueueContextCb(void *memory);
@@ -558,7 +558,7 @@ class txtbcep_MultiQueueThreadPool {
         // registry, execute the specified 'cleanupFunctor', wait on the
         // specified 'barrier', and then delete the referenced queue.
 
-    void processQueueCb(txtbcep_MultiQueueThreadPool_QueueContext *context);
+    void processQueueCb(bcep_MultiQueueThreadPool_QueueContext *context);
         // If the queue contained in the specified 'context' is not empty,
         // dequeue the next job, and process it.
 
@@ -571,27 +571,27 @@ class txtbcep_MultiQueueThreadPool {
 
   public:
     // TRAITS
-    BSLALG_DECLARE_NESTED_TRAITS(txtbcep_MultiQueueThreadPool,
+    BSLALG_DECLARE_NESTED_TRAITS(bcep_MultiQueueThreadPool,
                                  bslalg_TypeTraitUsesBslmaAllocator);
 
     // CREATORS
-    txtbcep_MultiQueueThreadPool(const bcemt_Attribute& threadAttributes,
+    bcep_MultiQueueThreadPool(const bcemt_Attribute& threadAttributes,
                               int                    minThreads,
                               int                    maxThreads,
                               int                    maxIdleTime,
                               bslma_Allocator       *basicAllocator = 0);
-        // Construct a 'txtbcep_MultiQueueThreadPool' with the specified
+        // Construct a 'bcep_MultiQueueThreadPool' with the specified
         // 'threadAttributes', 'minThread' minimum number of threads,
         // 'maxThreads' maximum number of threads, 'maxIdleTime' maximum
         // idle time (in milliseconds).  Optionally specify a 'basicAllocator'
         // used to supply memory.  If 'basicAllocator' is 0, the default memory
-        // allocator is used.  Note that the 'txtbcep_MultiQueueThreadPool' is
+        // allocator is used.  Note that the 'bcep_MultiQueueThreadPool' is
         // created without any queues.  Although queues may be created, 'start'
         // must be called before enqueuing jobs.
 
-    txtbcep_MultiQueueThreadPool(bcep_ThreadPool *threadPool,
+    bcep_MultiQueueThreadPool(bcep_ThreadPool *threadPool,
                                  bslma_Allocator *basicAllocator = 0);
-        // Construct a 'txtbcep_MultiQueueThreadPool' with the specified
+        // Construct a 'bcep_MultiQueueThreadPool' with the specified
         // 'threadPool'.  Optionally specify a 'basicAllocator' used to supply
         // memory.  If 'basicAllocator' is 0, the default memory allocator is
         // used.  The behavior is undefined if 'threadPool' is 0.  Note that
@@ -599,7 +599,7 @@ class txtbcep_MultiQueueThreadPool {
         // Although queues may be created, 'start' must be called before
         // enqueuing jobs.
 
-    ~txtbcep_MultiQueueThreadPool();
+    ~bcep_MultiQueueThreadPool();
         // Destroy this multi-queue thread pool.  Disable queuing on all
         // queues, and wait until all queues are empty.  Then, delete all
         // queues, and shut down the thread pool if the thread pool is owned
@@ -722,14 +722,14 @@ class txtbcep_MultiQueueThreadPool {
 
 // MANIPULATORS
 inline
-int txtbcep_MultiQueueThreadPool::enqueueJob(int id, const Job& functor)
+int bcep_MultiQueueThreadPool::enqueueJob(int id, const Job& functor)
 {
     ++d_numEnqueued;
     return enqueueJobImpl(id, functor, BCEP_ENQUEUE_BACK);
 }
 
 inline
-void txtbcep_MultiQueueThreadPool::numProcessedReset(int *numDequeued,
+void bcep_MultiQueueThreadPool::numProcessedReset(int *numDequeued,
                                                      int *numEnqueued)
 {
     // Implementation note:
@@ -742,7 +742,7 @@ void txtbcep_MultiQueueThreadPool::numProcessedReset(int *numDequeued,
 
 // ACCESSORS
 inline
-void txtbcep_MultiQueueThreadPool::numProcessed(int *numDequeued,
+void bcep_MultiQueueThreadPool::numProcessed(int *numDequeued,
                                                 int *numEnqueued) const
 {
     *numDequeued = d_numDequeued;
@@ -750,13 +750,13 @@ void txtbcep_MultiQueueThreadPool::numProcessed(int *numDequeued,
 }
 
 inline
-int txtbcep_MultiQueueThreadPool::numQueues() const
+int bcep_MultiQueueThreadPool::numQueues() const
 {
     return d_queueRegistry.length();
 }
 
 inline
-const bcep_ThreadPool& txtbcep_MultiQueueThreadPool::threadPool() const
+const bcep_ThreadPool& bcep_MultiQueueThreadPool::threadPool() const
 {
     return *d_threadPool_p;
 }

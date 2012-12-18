@@ -1,4 +1,4 @@
-// txtbtemt_channelpool.h                                             -*-C++-*-
+// btemt_channelpool.h                                                -*-C++-*-
 #ifndef INCLUDED_BTEMT_CHANNELPOOL
 #define INCLUDED_BTEMT_CHANNELPOOL
 
@@ -15,7 +15,7 @@ BDES_IDENT("$Id: $")
 //   btemt_channelpoolconfiguration, btemt_channelqueuepool
 //
 //@CLASSES:
-//   txtbtemt_ChannelPool: channel manager
+//   btemt_ChannelPool: channel manager
 //
 //@DESCRIPTION:  This component provides a thread-enabled manager of the
 // IPv4-based byte-stream communication channels.  The channels are created
@@ -145,7 +145,7 @@ BDES_IDENT("$Id: $")
 // over the set of *all* *possible* event managers, and the load is taken as 0
 // if an event manager is not started.  The length of interval that metrics
 // are periodically collected over is configured by the
-// 'txtbtemt_ChannelPoolConfiguration' supplied at construction.
+// 'btemt_ChannelPoolConfiguration' supplied at construction.
 //
 // For calculating the percentage of CPU time used by the channel pool given
 // that channel pool manages 'n' event pollers at a moment (with the maximum
@@ -198,16 +198,16 @@ BDES_IDENT("$Id: $")
 //                          int                 sourceId,
 //                          int                 status,
 //                          void               *arg,
-//                          txtbtemt_ChannelPool **poolAddr)
+//                          btemt_ChannelPool **poolAddr)
 //      {
 //          assert(sourceId == d_sourceId);
-//          if (txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN == status) {
+//          if (btemt_ChannelPool::BTEMT_CHANNEL_DOWN == status) {
 //              // Client disconnected from the server.
 //              assert(poolAddr && *poolAddr);
 //              (*poolAddr)->shutdown(channelId,
-//                                    txtbtemt_ChannelPool::BTEMT_IMMEDIATE);
+//                                    btemt_ChannelPool::BTEMT_IMMEDIATE);
 //          } else
-//          if (txtbtemt_ChannelPool::BTEMT_CHANNEL_UP == status) {
+//          if (btemt_ChannelPool::BTEMT_CHANNEL_UP == status) {
 //              // Connected to the server.
 //              // ...
 //          }
@@ -222,7 +222,7 @@ BDES_IDENT("$Id: $")
 //..
 //  int main(int argc, char *argv[]) {
 //      my_LocalCallback localCallback;
-//      txtbtemt_ChannelPoolConfiguration config;
+//      btemt_ChannelPoolConfiguration config;
 //      config.setMaxThreads(4);
 //      config.setMetricsInterval(10.0);
 //      config.setMaxConnections(16);
@@ -245,7 +245,7 @@ BDES_IDENT("$Id: $")
 //
 //      localCallback.d_sourceId = 5;    // just for a simple verification
 //
-//      txtbtemt_ChannelPool pool(ccb, dcb, pcb, config);
+//      btemt_ChannelPool pool(ccb, dcb, pcb, config);
 //      poolAddr = &pool;
 //..
 // Now, start the channel pool, issue the connect request, and wait for
@@ -284,7 +284,7 @@ BDES_IDENT("$Id: $")
 //
 //      // DATA
 //      txtbtemtnnelPoolConfiguration d_config;        // pool's configuration
-//      txtbtemt_ChannelPool             *d_channelPool_p; // managed pool
+//      btemt_ChannelPool             *d_channelPool_p; // managed pool
 //      bslma_Allocator               *d_allocator_p;   // memory manager
 //      bcemt_Mutex                   *d_coutLock_p;    // synchronize 'cout'
 //
@@ -298,7 +298,7 @@ BDES_IDENT("$Id: $")
 //          // identifies the channel pool operation associated with this state
 //          // (in this case, the 'SERVER_ID' passed to 'listen()' or 0 for
 //          // pool states with no associated source), and 'severity' is one
-//          // of the 'txtbtemt_ChannelPool::Severity' values.
+//          // of the 'btemt_ChannelPool::Severity' values.
 //
 //      void channelStateCb(int channelId, int sourceId, int state, void *ctx);
 //          // Output a message to 'stdout' indicating the specified 'state',
@@ -352,7 +352,7 @@ BDES_IDENT("$Id: $")
 //          // Destroy this server.
 //
 //      // MANIPULATORS
-//      const txtbtemt_ChannelPool& pool() { return *d_channelPool_p; }
+//      const btemt_ChannelPool& pool() { return *d_channelPool_p; }
 //  };
 //..
 // In the constructor of 'my_EchoServer', the configuration is initialized,
@@ -372,23 +372,23 @@ BDES_IDENT("$Id: $")
 //      d_config.setMaxWriteCache(1<<10);   // 1MB
 //      d_config.setIncomingMessageSizes(1, 100, 1024);
 //
-//      txtbtemt_ChannelPool::ChannelStateChangeCallback channelStateFunctor(
+//      btemt_ChannelPool::ChannelStateChangeCallback channelStateFunctor(
 //              &my_EchoServer::channelStateCb
 //            , this)
 //            , basicAllocator);
 //
-//      txtbtemt_ChannelPool::PoolStateChangeCallback poolStateFunctor(
+//      btemt_ChannelPool::PoolStateChangeCallback poolStateFunctor(
 //              &my_EchoServer::poolStateCb
 //            , this)
 //            , basicAllocator));
 //
-//      txtbtemt_ChannelPool::DataReadCallback dataFunctor(
+//      btemt_ChannelPool::DataReadCallback dataFunctor(
 //              &my_EchoServer::dataCb
 //            , this)
 //            , basicAllocator));
 //
 //      d_channelPool_p = new (*d_allocator_p)
-//          txtbtemt_ChannelPool(channelStateFunctor,
+//          btemt_ChannelPool(channelStateFunctor,
 //                            dataFunctor,
 //                            poolStateFunctor,
 //                            d_config,
@@ -430,16 +430,16 @@ BDES_IDENT("$Id: $")
 //      assert(SERVER_ID == sourceId);
 //
 //      switch(state) {
-//        case txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN: {
+//        case btemt_ChannelPool::BTEMT_CHANNEL_DOWN: {
 //            bteso_IPv4Address peer;
 //            d_channelPool_p->getPeerAddress(&peer, channelId);
 //            d_coutLock_p->lock();
 //            cout << "Client from " << peer << " has disconnected." << endl;
 //            d_coutLock_p->unlock();
 //            d_channelPool_p->shutdown(channelId,
-//                                      txtbtemt_ChannelPool::BTEMT_IMMEDIATE);
+//                                      btemt_ChannelPool::BTEMT_IMMEDIATE);
 //        } break;
-//        case txtbtemt_ChannelPool::BTEMT_CHANNEL_UP: {
+//        case btemt_ChannelPool::BTEMT_CHANNEL_UP: {
 //            bteso_IPv4Address peer;
 //            d_channelPool_p->getPeerAddress(&peer, channelId);
 //            d_coutLock_p->lock();
@@ -464,7 +464,7 @@ BDES_IDENT("$Id: $")
 //      *numNeeded   = 1;
 //
 //      d_channelPool_p->shutdown(msg.channelId(),
-//                                txtbtemt_ChannelPool::BTEMT_IMMEDIATE);
+//                                btemt_ChannelPool::BTEMT_IMMEDIATE);
 //  }
 //..
 // The implementation of an echo server is now complete.  Let's create
@@ -474,7 +474,7 @@ BDES_IDENT("$Id: $")
 // for monitoring:
 //..
 //  static inline void  monitorPool(bcemt_Mutex              *coutLock,
-//                                  const txtbtemt_ChannelPool&  pool,
+//                                  const btemt_ChannelPool&  pool,
 //                                  int                       numTimes)
 //      // Every 10 seconds, output the percent busy of the specified channel
 //      // 'pool' to the standard output, using the specified 'coutLock' to
@@ -624,7 +624,7 @@ class btesc_TimedCbChannel;
 class btesc_TimedCbChannelAllocator;
 
 // Local classes
-class txtbtemt_Channel;
+class btemt_Channel;
 class btemt_Connector;
 class btemt_ServerState;
 
@@ -634,11 +634,11 @@ class btemt_ServerState;
 
 struct btemt_TimerState {
     // Provide a description of a scheduled timer event.  Note that a
-    // 'txtbtemt_ChannelPool' associates a 'btemt_TimerState' object with each
+    // 'btemt_ChannelPool' associates a 'btemt_TimerState' object with each
     // timer callback it registers with an underlying
     // 'btemt_TcpTimerEventManager'.
     //
-    // This class is an implementation detail of 'txtbtemt_ChannelPool', and is
+    // This class is an implementation detail of 'btemt_ChannelPool', and is
     // *not* intended to be used in client code.
 
     void                       *d_eventManagerId; // identifies the timer in
@@ -661,10 +661,10 @@ struct btemt_TimerState {
 };
 
                        //=========================
-                       // struct txtbtemt_ChannelPool
+                       // struct btemt_ChannelPool
                        //=========================
 
-class txtbtemt_ChannelPool {
+class btemt_ChannelPool {
     // This class provides a channel pool, i.e., a mechanism by which
     // connections can be established and managed.  This channel pool allows
     // the establishment of both server channels (see section "Server part" of
@@ -688,7 +688,7 @@ class txtbtemt_ChannelPool {
     // pool can be started again and the channels will resume their operations.
     // This channel pool keeps a set of metrics (see the "Metrics" section).
     // It can be configured at construction by passing a
-    // 'txtbtemt_ChannelPoolConfiguration' object.
+    // 'btemt_ChannelPoolConfiguration' object.
 
   public:
     // TYPES
@@ -889,7 +889,7 @@ class txtbtemt_ChannelPool {
         bteso_SocketHandle::Handle  d_handle;       // socket handle (file
                                                     // descriptor)
 
-        txtbtemt_ChannelType::Value    d_channelType;  // indicates how the
+        btemt_ChannelType::Value    d_channelType;  // indicates how the
                                                     // channel was created
 
         int                         d_channelId;    // channel using this
@@ -906,7 +906,7 @@ class txtbtemt_ChannelPool {
 
   private:
     // PRIVATE TYPES
-    typedef bcema_SharedPtr<txtbtemt_Channel>     ChannelHandle;
+    typedef bcema_SharedPtr<btemt_Channel>     ChannelHandle;
     typedef bcema_SharedPtr<btemt_ServerState> ServerHandle;
 
     // INSTANCE DATA
@@ -932,7 +932,7 @@ class txtbtemt_ChannelPool {
     bsl::map<int, btemt_TimerState>     d_timers;
 
                                         // *** Parameters ***
-    txtbtemt_ChannelPoolConfiguration      d_config;
+    btemt_ChannelPoolConfiguration      d_config;
     bces_AtomicUtil::Int                d_capacity;
     int                                 d_startFlag;
     bool                                d_collectTimeMetrics;
@@ -983,14 +983,14 @@ class txtbtemt_ChannelPool {
     bteso_InetStreamSocketFactory<bteso_IPv4Address>
                                         d_factory;
 
-    bcema_Pool                          d_pool;        // for txtbtemt_Channel
+    bcema_Pool                          d_pool;        // for btemt_Channel
                                                        // (owned)
 
     bslma_Allocator                    *d_allocator_p; // (held, not owned)
 
   private:
     // FRIENDS
-    friend class txtbtemt_Channel;
+    friend class btemt_Channel;
 
     // PRIVATE MANIPULATORS
     btemt_TcpTimerEventManager *allocateEventManager();
@@ -1138,16 +1138,16 @@ class txtbtemt_ChannelPool {
 
   private:
     // NOT IMPLEMENTED
-    txtbtemt_ChannelPool(const txtbtemt_ChannelPool& original);
-    txtbtemt_ChannelPool& operator=(const txtbtemt_ChannelPool& rhs);
+    btemt_ChannelPool(const btemt_ChannelPool& original);
+    btemt_ChannelPool& operator=(const btemt_ChannelPool& rhs);
 
   public:
     // CREATORS
-    txtbtemt_ChannelPool(
+    btemt_ChannelPool(
            ChannelStateCallback                   channelStateCb,
            DataCallback                           pooledBufferChainBasedReadCb,
            PoolStateCallback                      poolStateCb,
-           const txtbtemt_ChannelPoolConfiguration&  parameters,
+           const btemt_ChannelPoolConfiguration&  parameters,
            bslma_Allocator                       *basicAllocator = 0);
         // Create a channel pool with the specified 'channelStateCb',
         // 'pooledBufferChainBasedReadCb' and 'poolStateCb' callbacks to be
@@ -1165,11 +1165,11 @@ class txtbtemt_ChannelPool {
         //
         // @DEPRECATED - use the constructor that uses bdef_Function parameters
 
-    txtbtemt_ChannelPool(
+    btemt_ChannelPool(
            ChannelStateChangeCallback             channelStateCb,
            DataReadCallback                       pooledBufferChainBasedReadCb,
            PoolStateChangeCallback                poolStateCb,
-           const txtbtemt_ChannelPoolConfiguration&  parameters,
+           const btemt_ChannelPoolConfiguration&  parameters,
            bslma_Allocator                       *basicAllocator = 0);
         // Create a channel pool with the specified 'channelStateCb',
         // 'pooledBufferChainBasedReadCb' and 'poolStateCb' callbacks to be
@@ -1185,11 +1185,11 @@ class txtbtemt_ChannelPool {
         // 'ChannelStateChangeCallback', 'DataReadCallback', and
         // 'PoolStateChangeCallback'.
 
-    txtbtemt_ChannelPool(
+    btemt_ChannelPool(
             ChannelStateCallback                   channelStateCb,
             BlobBasedReadCallback                  blobBasedReadCb,
             PoolStateCallback                      poolStateCb,
-            const txtbtemt_ChannelPoolConfiguration&  parameters,
+            const btemt_ChannelPoolConfiguration&  parameters,
             bslma_Allocator                       *basicAllocator = 0);
         // Create a channel pool with the specified 'channelStateCb',
         // 'blobBasedReadCb' and 'poolStateCb' callbacks to be invoked,
@@ -1207,11 +1207,11 @@ class txtbtemt_ChannelPool {
         //
         // @DEPRECATED - use the constructor that uses bdef_Function parameters
 
-    txtbtemt_ChannelPool(
+    btemt_ChannelPool(
             ChannelStateChangeCallback             channelStateCb,
             BlobBasedReadCallback                  blobBasedReadCb,
             PoolStateChangeCallback                poolStateCb,
-            const txtbtemt_ChannelPoolConfiguration&  parameters,
+            const btemt_ChannelPoolConfiguration&  parameters,
             bslma_Allocator                       *basicAllocator = 0);
         // Create a channel pool with the specified 'channelStateCb',
         // 'blobBasedReadCb' and 'poolStateCb' callbacks to be invoked,
@@ -1227,7 +1227,7 @@ class txtbtemt_ChannelPool {
         // 'ChannelStateChangeCallback', 'BlobBasedReadCallback', and
         // 'PoolStateChangeCallback'.
 
-    ~txtbtemt_ChannelPool();
+    ~btemt_ChannelPool();
         // Destroy this channel pool.  The behavior is undefined if the
         // channel pool was not shut down properly.
 
@@ -1512,7 +1512,7 @@ class txtbtemt_ChannelPool {
         // channel state callback.  The behavior is undefined unless
         // '0 <= numBytes'.  Note that this method overrides the default value
         // configured (for all channels) by the
-        // 'txtbtemt_ChannelPoolConfiguration' supplied at construction.
+        // 'btemt_ChannelPoolConfiguration' supplied at construction.
 
                                   // *** Thread management ***
 
@@ -1866,12 +1866,12 @@ class txtbtemt_ChannelPool {
 };
 
                  // ==================================
-                 // class txtbtemt_ChannelPool_IovecArray
+                 // class btemt_ChannelPool_IovecArray
                  // ==================================
 
 template <typename IOVEC>
-class txtbtemt_ChannelPool_IovecArray {
-    // This is an implementation type of 'txtbtemt_ChannelPool' and should not
+class btemt_ChannelPool_IovecArray {
+    // This is an implementation type of 'btemt_ChannelPool' and should not
     // be used by clients of this component.  An 'IovecArray' is an in-core
     // value-semantic type describing a array of iovec objects of templatized
     // type 'IOVEC'.  The parameterized 'IOVEC' type must be either
@@ -1888,22 +1888,22 @@ class txtbtemt_ChannelPool_IovecArray {
     public:
 
     // CREATORS
-    txtbtemt_ChannelPool_IovecArray(const IOVEC *iovecs, int numIovecs);
+    btemt_ChannelPool_IovecArray(const IOVEC *iovecs, int numIovecs);
             // Create an 'IovecArray' object for the specified array of
             // 'iovecs' of length 'numIovecs'.
 
-    // ~txtbtemt_ChannelPool_IovecArray();
+    // ~btemt_ChannelPool_IovecArray();
         // Destroy this array of iovec objects.  Note that this operation
         // is supplied by the compiler.
 
-    txtbtemt_ChannelPool_IovecArray(
-			      const txtbtemt_ChannelPool_IovecArray& original);
+    btemt_ChannelPool_IovecArray(
+			      const btemt_ChannelPool_IovecArray& original);
         // Create an iovec array with the same value as the specified
         // original.
 
     // MANIPULATORS
-    txtbtemt_ChannelPool_IovecArray& operator=(
-                                   const txtbtemt_ChannelPool_IovecArray& rhs);
+    btemt_ChannelPool_IovecArray& operator=(
+                                   const btemt_ChannelPool_IovecArray& rhs);
         // Assign this iovec array the value of the specified 'rhs', and
         // return a reference to this modifiable iovec array.
 
@@ -1924,8 +1924,8 @@ class txtbtemt_ChannelPool_IovecArray {
 // FREE OPERATORS
 template <typename IOVEC>
 inline
-bool operator==(const txtbtemt_ChannelPool_IovecArray<IOVEC> &lhs,
-                const txtbtemt_ChannelPool_IovecArray<IOVEC> &rhs);
+bool operator==(const btemt_ChannelPool_IovecArray<IOVEC> &lhs,
+                const btemt_ChannelPool_IovecArray<IOVEC> &rhs);
     // Return 'true' if the specified 'lhs' and 'rhs' iovec arrays have the
     // same value, and 'false' otherwise.  Two iovec arrays have the same
     // value if their respective array addresses, array lengths, and total
@@ -1933,21 +1933,21 @@ bool operator==(const txtbtemt_ChannelPool_IovecArray<IOVEC> &lhs,
 
 template <typename IOVEC>
 inline
-bool operator!=(const txtbtemt_ChannelPool_IovecArray<IOVEC> &lhs,
-                const txtbtemt_ChannelPool_IovecArray<IOVEC> &rhs);
+bool operator!=(const btemt_ChannelPool_IovecArray<IOVEC> &lhs,
+                const btemt_ChannelPool_IovecArray<IOVEC> &rhs);
     // Return 'true' if the specified 'lhs' and 'rhs' iovec arrays do not have
     // the same value, and 'false' otherwise.  Two iovec arrays do not have
     // the same value if their respective array addresses, array lengths, or
     // total data lengths are not the name.
 
                  // =====================================
-                 // class txtbtemt_ChannelPool_MessageUtil
+                 // class btemt_ChannelPool_MessageUtil
                  // =====================================
 
-struct txtbtemt_ChannelPool_MessageUtil {
-    // This is an implementation type of 'txtbtemt_ChannelPool' and should not
+struct btemt_ChannelPool_MessageUtil {
+    // This is an implementation type of 'btemt_ChannelPool' and should not
     // be used by clients of this component.  The
-    // 'txtbtemt_ChannelPool_MessageUtil' struct provides a namespace for a
+    // 'btemt_ChannelPool_MessageUtil' struct provides a namespace for a
     // set of common functions that can be applied to the different message
     // container types supported by a 'ChannelPool'.
 
@@ -1963,7 +1963,7 @@ struct txtbtemt_ChannelPool_MessageUtil {
 #ifdef BSLS_PLATFORM__OS_UNIX
 #ifdef IOV_MAX
 #if IOV_MAX > 32
-// If too big, this would make 'txtbtemt_Channel' really big.
+// If too big, this would make 'btemt_Channel' really big.
         BTEMT_MAX_IOVEC_SIZE = 32
 #else
         BTEMT_MAX_IOVEC_SIZE = IOV_MAX
@@ -1979,7 +1979,7 @@ struct txtbtemt_ChannelPool_MessageUtil {
     // CLASS METHODS
     template <typename IOVEC>
     static bsls_PlatformUtil::Int64 length(
-                            const txtbtemt_ChannelPool_IovecArray<IOVEC>& msg);
+                            const btemt_ChannelPool_IovecArray<IOVEC>& msg);
     static bsls_PlatformUtil::Int64 length(const btemt_DataMsg& msg);
     static bsls_PlatformUtil::Int64 length(const bcema_Blob& msg);
         // Return the length of the specified 'msg'.
@@ -1987,7 +1987,7 @@ struct txtbtemt_ChannelPool_MessageUtil {
     template <typename IOVEC>
     static int write(bteso_StreamSocket<bteso_IPv4Address>      *socket,
                      btes_Iovec                                 *temp,
-                     const txtbtemt_ChannelPool_IovecArray<IOVEC>&  msg);
+                     const btemt_ChannelPool_IovecArray<IOVEC>&  msg);
     static int write(bteso_StreamSocket<bteso_IPv4Address> *socket,
                      btes_Iovec                            *temp,
                      const bcema_Blob&                      msg);
@@ -2008,7 +2008,7 @@ struct txtbtemt_ChannelPool_MessageUtil {
 
     template <typename IOVEC>
     static int loadBlob(bcema_Blob                                 *dest,
-                        const txtbtemt_ChannelPool_IovecArray<IOVEC>&  msg,
+                        const btemt_ChannelPool_IovecArray<IOVEC>&  msg,
                         int                                         msgOffset);
     static int loadBlob(bcema_Blob           *dest,
                         const btemt_DataMsg&  msg,
@@ -2025,7 +2025,7 @@ struct txtbtemt_ChannelPool_MessageUtil {
 
     template <typename IOVEC>
     static void appendToBlob(bcema_Blob                                 *dest,
-                           const txtbtemt_ChannelPool_IovecArray<IOVEC>&  msg);
+                           const btemt_ChannelPool_IovecArray<IOVEC>&  msg);
     static void appendToBlob(bcema_Blob           *dest,
                              const btemt_DataMsg&  msg);
     static void appendToBlob(bcema_Blob        *dest,
@@ -2040,12 +2040,12 @@ struct txtbtemt_ChannelPool_MessageUtil {
 // ============================================================================
 
                        //-------------------------
-                       // struct txtbtemt_ChannelPool
+                       // struct btemt_ChannelPool
                        //-------------------------
 
 // PRIVATE ACCESSORS
 inline
-int txtbtemt_ChannelPool::findChannelHandle(
+int btemt_ChannelPool::findChannelHandle(
                                     ChannelHandle *handle, int channelId) const
 {
     if (BSLS_PERFORMANCEHINT_PREDICT_LIKELY(
@@ -2059,26 +2059,26 @@ int txtbtemt_ChannelPool::findChannelHandle(
 
 // MANIPULATORS
 inline
-int txtbtemt_ChannelPool::write(int channelId, const bcema_Blob& message)
+int btemt_ChannelPool::write(int channelId, const bcema_Blob& message)
 {
     return write(channelId, message, 0x7FFFFFFF);
 }
 
 inline
-int txtbtemt_ChannelPool::write(int channelId, const btemt_BlobMsg& message)
+int btemt_ChannelPool::write(int channelId, const btemt_BlobMsg& message)
 {
     return write(channelId, message, 0x7FFFFFFF);
 }
 
 inline
-int txtbtemt_ChannelPool::write(int                   channelId,
+int btemt_ChannelPool::write(int                   channelId,
                              const btemt_DataMsg&  message)
 {
     return write(channelId, message,  0x7FFFFFFF);
 }
 
 inline
-int txtbtemt_ChannelPool::write(int                   channelId,
+int btemt_ChannelPool::write(int                   channelId,
                              const btemt_DataMsg&  message,
                              int                   enqueueWatermark,
                              btemt_BlobMsg        *)
@@ -2087,7 +2087,7 @@ int txtbtemt_ChannelPool::write(int                   channelId,
 }
 
 inline
-int txtbtemt_ChannelPool::write(int                   channelId,
+int btemt_ChannelPool::write(int                   channelId,
                              const btemt_DataMsg&  message,
                              btemt_BlobMsg        *)
 {
@@ -2095,64 +2095,64 @@ int txtbtemt_ChannelPool::write(int                   channelId,
 }
 
 inline
-bcema_PooledBufferChainFactory *txtbtemt_ChannelPool::incomingBufferFactory()
+bcema_PooledBufferChainFactory *btemt_ChannelPool::incomingBufferFactory()
 {
     return &d_messageFactory;
 }
 
 inline
 bcema_PooledBlobBufferFactory
-			     *txtbtemt_ChannelPool::incomingBlobBufferFactory()
+			     *btemt_ChannelPool::incomingBlobBufferFactory()
 {
     return &d_readBlobFactory;
 }
 
 inline
-bcema_PooledBufferChainFactory *txtbtemt_ChannelPool::outboundBufferFactory()
+bcema_PooledBufferChainFactory *btemt_ChannelPool::outboundBufferFactory()
 {
     return &d_vecMessageFactory;
 }
 
 inline
 bcema_PooledBlobBufferFactory
-			    *txtbtemt_ChannelPool::outboundBlobBufferFactory()
+			    *btemt_ChannelPool::outboundBlobBufferFactory()
 {
     return &d_writeBlobFactory;
 }
 
 // ACCESSORS
 inline
-int txtbtemt_ChannelPool::busyMetrics() const
+int btemt_ChannelPool::busyMetrics() const
 {
     return bces_AtomicUtil::getInt(d_capacity);
 }
 
 inline
-bool txtbtemt_ChannelPool::useBlobForDataReads() const
+bool btemt_ChannelPool::useBlobForDataReads() const
 {
     return d_useBlobForDataReads;
 }
 
 inline
-int txtbtemt_ChannelPool::numChannels() const
+int btemt_ChannelPool::numChannels() const
 {
     return d_channels.length();
 }
 
 inline
-int txtbtemt_ChannelPool::numThreads() const
+int btemt_ChannelPool::numThreads() const
 {
     return d_startFlag ? static_cast<int>(d_managers.size()) : 0;
 }
 
                  // ----------------------------------
-                 // class txtbtemt_ChannelPool_IovecArray
+                 // class btemt_ChannelPool_IovecArray
                  // ----------------------------------
 
 // CREATORS
 template <typename IOVEC>
 inline
-txtbtemt_ChannelPool_IovecArray<IOVEC>::txtbtemt_ChannelPool_IovecArray(
+btemt_ChannelPool_IovecArray<IOVEC>::btemt_ChannelPool_IovecArray(
                                                         const IOVEC *iovecs,
                                                         int          numIovecs)
 : d_iovecs(iovecs)
@@ -2163,8 +2163,8 @@ txtbtemt_ChannelPool_IovecArray<IOVEC>::txtbtemt_ChannelPool_IovecArray(
 
 template <typename IOVEC>
 inline
-txtbtemt_ChannelPool_IovecArray<IOVEC>::txtbtemt_ChannelPool_IovecArray(
-                              const txtbtemt_ChannelPool_IovecArray& original)
+btemt_ChannelPool_IovecArray<IOVEC>::btemt_ChannelPool_IovecArray(
+                              const btemt_ChannelPool_IovecArray& original)
 : d_iovecs(original.d_iovecs)
 , d_numIovecs(original.d_numIovecs)
 , d_totalLength(original.d_totalLength)
@@ -2174,9 +2174,9 @@ txtbtemt_ChannelPool_IovecArray<IOVEC>::txtbtemt_ChannelPool_IovecArray(
 // MANIPULATORS
 template <typename IOVEC>
 inline
-txtbtemt_ChannelPool_IovecArray<IOVEC>&
-txtbtemt_ChannelPool_IovecArray<IOVEC>::operator=(
-                                   const txtbtemt_ChannelPool_IovecArray& rhs)
+btemt_ChannelPool_IovecArray<IOVEC>&
+btemt_ChannelPool_IovecArray<IOVEC>::operator=(
+                                   const btemt_ChannelPool_IovecArray& rhs)
 {
     d_iovecs      = rhs.d_iovecs;
     d_numIovecs   = rhs.d_numIovecs;
@@ -2188,7 +2188,7 @@ txtbtemt_ChannelPool_IovecArray<IOVEC>::operator=(
 template <typename IOVEC>
 inline
 bsls_PlatformUtil::Int64
-txtbtemt_ChannelPool_IovecArray<IOVEC>::length() const
+btemt_ChannelPool_IovecArray<IOVEC>::length() const
 {
     return d_totalLength;
 }
@@ -2196,33 +2196,33 @@ txtbtemt_ChannelPool_IovecArray<IOVEC>::length() const
 template <typename IOVEC>
 inline
 const IOVEC *
-txtbtemt_ChannelPool_IovecArray<IOVEC>::iovecs() const
+btemt_ChannelPool_IovecArray<IOVEC>::iovecs() const
 {
     return d_iovecs;
 }
 
 template <typename IOVEC>
 inline
-int txtbtemt_ChannelPool_IovecArray<IOVEC>::numIovecs() const
+int btemt_ChannelPool_IovecArray<IOVEC>::numIovecs() const
 {
     return d_numIovecs;
 }
 
                  // -----------------------------------
-                 // class txtbtemt_ChannelPool_MessageUtil
+                 // class btemt_ChannelPool_MessageUtil
                  // -----------------------------------
 
 // CLASS METHODS
 inline
 bsls_PlatformUtil::Int64
-txtbtemt_ChannelPool_MessageUtil::length(const btemt_DataMsg& msg)
+btemt_ChannelPool_MessageUtil::length(const btemt_DataMsg& msg)
 {
     return msg.data()->length();
 }
 
 inline
 bsls_PlatformUtil::Int64
-txtbtemt_ChannelPool_MessageUtil::length(const bcema_Blob& msg)
+btemt_ChannelPool_MessageUtil::length(const bcema_Blob& msg)
 {
     return msg.length();
 }
@@ -2230,18 +2230,18 @@ txtbtemt_ChannelPool_MessageUtil::length(const bcema_Blob& msg)
 template <typename IOVEC>
 inline
 bsls_PlatformUtil::Int64
-txtbtemt_ChannelPool_MessageUtil::length(
-                             const txtbtemt_ChannelPool_IovecArray<IOVEC>& msg)
+btemt_ChannelPool_MessageUtil::length(
+                             const btemt_ChannelPool_IovecArray<IOVEC>& msg)
 {
     return msg.length();
 }
 
 template <typename IOVEC>
 inline
-int txtbtemt_ChannelPool_MessageUtil::write(
+int btemt_ChannelPool_MessageUtil::write(
                            bteso_StreamSocket<bteso_IPv4Address>      *socket,
                            btes_Iovec                                 *,
-                           const txtbtemt_ChannelPool_IovecArray<IOVEC>&  msg)
+                           const btemt_ChannelPool_IovecArray<IOVEC>&  msg)
 {
     int minNumVecs = msg.numIovecs();
     if (BSLS_PERFORMANCEHINT_PREDICT_UNLIKELY(
@@ -2253,7 +2253,7 @@ int txtbtemt_ChannelPool_MessageUtil::write(
 }
 
 inline
-int txtbtemt_ChannelPool_MessageUtil::write(
+int btemt_ChannelPool_MessageUtil::write(
                                  bteso_StreamSocket<bteso_IPv4Address> *socket,
                                  btes_Iovec                            *temp,
                                  const bcema_Blob&                      msg)
@@ -2264,7 +2264,7 @@ int txtbtemt_ChannelPool_MessageUtil::write(
 }
 
 inline
-int txtbtemt_ChannelPool_MessageUtil::write(
+int btemt_ChannelPool_MessageUtil::write(
                                bteso_StreamSocket<bteso_IPv4Address>  *socket,
                                btes_Iovec                             *temp,
                                const btemt_DataMsg&                    msg)
@@ -2276,9 +2276,9 @@ int txtbtemt_ChannelPool_MessageUtil::write(
 
 template <typename IOVEC>
 inline
-int txtbtemt_ChannelPool_MessageUtil::loadBlob(
+int btemt_ChannelPool_MessageUtil::loadBlob(
                          bcema_Blob                                 *dest,
-                         const txtbtemt_ChannelPool_IovecArray<IOVEC>&  msg,
+                         const btemt_ChannelPool_IovecArray<IOVEC>&  msg,
                          int                                         msgOffset)
 {
     btes_IovecUtil::appendToBlob(
@@ -2289,9 +2289,9 @@ int txtbtemt_ChannelPool_MessageUtil::loadBlob(
 
 template <typename IOVEC>
 inline
-void txtbtemt_ChannelPool_MessageUtil::appendToBlob(
+void btemt_ChannelPool_MessageUtil::appendToBlob(
                          bcema_Blob                                 *dest,
-                         const txtbtemt_ChannelPool_IovecArray<IOVEC>&  msg)
+                         const btemt_ChannelPool_IovecArray<IOVEC>&  msg)
 {
     btes_IovecUtil::appendToBlob(dest, msg.iovecs(), msg.numIovecs());
 }
@@ -2299,8 +2299,8 @@ void txtbtemt_ChannelPool_MessageUtil::appendToBlob(
 // FREE OPERATORS
 template <typename IOVEC>
 inline
-bool operator==(const txtbtemt_ChannelPool_IovecArray<IOVEC> &lhs,
-                const txtbtemt_ChannelPool_IovecArray<IOVEC> &rhs)
+bool operator==(const btemt_ChannelPool_IovecArray<IOVEC> &lhs,
+                const btemt_ChannelPool_IovecArray<IOVEC> &rhs)
 {
     return lhs.iovecs()    == rhs.iovecs()
         && lhs.numIovecs() == rhs.numIovecs()
@@ -2309,8 +2309,8 @@ bool operator==(const txtbtemt_ChannelPool_IovecArray<IOVEC> &lhs,
 
 template <typename IOVEC>
 inline
-bool operator!=(const txtbtemt_ChannelPool_IovecArray<IOVEC> &lhs,
-                const txtbtemt_ChannelPool_IovecArray<IOVEC> &rhs)
+bool operator!=(const btemt_ChannelPool_IovecArray<IOVEC> &lhs,
+                const btemt_ChannelPool_IovecArray<IOVEC> &rhs)
 {
     return !(lhs == rhs);
 }

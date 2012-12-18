@@ -39,7 +39,7 @@ class friendShipabc_Klass4 {
     // Only problem should be lower case 'f'
 };
 
-class txt_friendShipabc_Klass5 {
+class friendShipabc_Klass5 {
     // Only problem should be lower case 'f'
 };
 

@@ -1,5 +1,5 @@
-// txtbcep_fixedthreadpool.cpp                                        -*-C++-*-
-#include <txtbcep_fixedthreadpool.h>
+// tst_bcep_fixedthreadpool.cpp                                       -*-C++-*-
+#include <tst_bcep_fixedthreadpool.h>
 
 #include <bdes_ident.h>
 BDES_IDENT_RCSID(bcep_fixedthreadpool_cpp,"$Id$ $CSID$")
@@ -52,11 +52,11 @@ void initBlockSet(sigset_t *blockSet)
 namespace BloombergLP {
 
                          // --------------------------
-                         // class txtbcep_FixedThreadPool
+                         // class bcep_FixedThreadPool
                          // --------------------------
 
 // PRIVATE MANIPULATORS
-void txtbcep_FixedThreadPool::processJobs()
+void bcep_FixedThreadPool::processJobs()
 {
     while (BSLS_PERFORMANCEHINT_PREDICT_LIKELY(
                                         BCEP_RUN == d_control.relaxedLoad())) {
@@ -80,7 +80,7 @@ void txtbcep_FixedThreadPool::processJobs()
     }
 }
 
-void txtbcep_FixedThreadPool::drainQueue()
+void bcep_FixedThreadPool::drainQueue()
 {
     while (BCEP_DRAIN == d_control.relaxedLoad()) {
         Job functor;
@@ -94,7 +94,7 @@ void txtbcep_FixedThreadPool::drainQueue()
     }
 }
 
-void txtbcep_FixedThreadPool::waitWorkerThreads()
+void bcep_FixedThreadPool::waitWorkerThreads()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_gateMutex);
 
@@ -103,7 +103,7 @@ void txtbcep_FixedThreadPool::waitWorkerThreads()
     }
 }
 
-void txtbcep_FixedThreadPool::releaseWorkerThreads()
+void bcep_FixedThreadPool::releaseWorkerThreads()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_gateMutex);
     d_numThreadsReady = 0;
@@ -113,7 +113,7 @@ void txtbcep_FixedThreadPool::releaseWorkerThreads()
     // d_gateMutex.unlock() emits a release barrier.
 }
 
-void txtbcep_FixedThreadPool::interruptWorkerThreads()
+void bcep_FixedThreadPool::interruptWorkerThreads()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_gateMutex); // acquire barrier
 
@@ -126,7 +126,7 @@ void txtbcep_FixedThreadPool::interruptWorkerThreads()
     }
 }
 
-void txtbcep_FixedThreadPool::workerThread()
+void bcep_FixedThreadPool::workerThread()
 {
     int gateCount = d_gateCount;
 
@@ -164,7 +164,7 @@ void txtbcep_FixedThreadPool::workerThread()
     }
 }
 
-int txtbcep_FixedThreadPool::startNewThread()
+int bcep_FixedThreadPool::startNewThread()
 {
 #if defined(BSLS_PLATFORM__OS_UNIX)
     // Block all asynchronous signals.
@@ -174,7 +174,7 @@ int txtbcep_FixedThreadPool::startNewThread()
 #endif
 
     bdef_Function<void(*)()> workerThreadFunc = bdef_MemFnUtil::memFn(
-            &txtbcep_FixedThreadPool::workerThread, this);
+            &bcep_FixedThreadPool::workerThread, this);
 
     int rc = d_threadGroup.addThread(workerThreadFunc, d_threadAttributes);
 
@@ -189,7 +189,7 @@ int txtbcep_FixedThreadPool::startNewThread()
 
 // CREATORS
 
-txtbcep_FixedThreadPool::txtbcep_FixedThreadPool(
+bcep_FixedThreadPool::bcep_FixedThreadPool(
         const bcemt_Attribute& threadAttributes,
         int                    numThreads,
         int                    maxQueueSize,
@@ -211,7 +211,7 @@ txtbcep_FixedThreadPool::txtbcep_FixedThreadPool(
 #endif
 }
 
-txtbcep_FixedThreadPool::txtbcep_FixedThreadPool(int              numThreads,
+bcep_FixedThreadPool::bcep_FixedThreadPool(int              numThreads,
                                            int              maxQueueSize,
                                            bslma_Allocator *basicAllocator)
 : d_queue(maxQueueSize, basicAllocator)
@@ -230,14 +230,14 @@ txtbcep_FixedThreadPool::txtbcep_FixedThreadPool(int              numThreads,
 #endif
 }
 
-txtbcep_FixedThreadPool::~txtbcep_FixedThreadPool()
+bcep_FixedThreadPool::~bcep_FixedThreadPool()
 {
     shutdown();
 }
 
 // MANIPULATORS
 
-int txtbcep_FixedThreadPool::enqueueJob(const Job& functor)
+int bcep_FixedThreadPool::enqueueJob(const Job& functor)
 {
     BSLS_ASSERT(functor);
 
@@ -252,7 +252,7 @@ int txtbcep_FixedThreadPool::enqueueJob(const Job& functor)
     return ret;
 }
 
-int txtbcep_FixedThreadPool::tryEnqueueJob(const Job& functor)
+int bcep_FixedThreadPool::tryEnqueueJob(const Job& functor)
 {
     BSLS_ASSERT(functor);
 
@@ -266,7 +266,7 @@ int txtbcep_FixedThreadPool::tryEnqueueJob(const Job& functor)
     return ret;
 }
 
-void txtbcep_FixedThreadPool::drain()
+void bcep_FixedThreadPool::drain()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_metaMutex);
 
@@ -289,7 +289,7 @@ void txtbcep_FixedThreadPool::drain()
     }
 }
 
-void txtbcep_FixedThreadPool::shutdown()
+void bcep_FixedThreadPool::shutdown()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_metaMutex);
 
@@ -308,7 +308,7 @@ void txtbcep_FixedThreadPool::shutdown()
     }
 }
 
-int txtbcep_FixedThreadPool::start()
+int bcep_FixedThreadPool::start()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_metaMutex);
 
@@ -338,7 +338,7 @@ int txtbcep_FixedThreadPool::start()
     return 0;
 }
 
-void txtbcep_FixedThreadPool::stop()
+void bcep_FixedThreadPool::stop()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_metaMutex);
 

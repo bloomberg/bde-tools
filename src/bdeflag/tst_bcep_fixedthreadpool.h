@@ -10,20 +10,20 @@ BDES_IDENT("$Id: $")
 //@PURPOSE: Provide portable implementation for a fixed-size pool of threads.
 //
 //@CLASSES:
-//   txtbcep_FixedThreadPool: portable fixed-size thread pool
+//   bcep_FixedThreadPool: portable fixed-size thread pool
 //
 //@SEE_ALSO: bcep_threadpool
 //
 //@AUTHOR: Ilougino Rocha (irocha), Vlad Kliatchko (vkliatch)
 //
 //@DESCRIPTION: This component defines a portable and efficient implementation
-// of a thread pool, 'txtbcep_FixedThreadPool', that can be used to distribute
+// of a thread pool, 'bcep_FixedThreadPool', that can be used to distribute
 // various user-defined functions ("jobs") to a separate threads to execute
 // the jobs concurrently.  Each thread pool object manages a fixed number of
 // processing threads and can hold up to a fixed maximum number of pending
 // jobs.
 //
-// 'txtbcep_FixedThreadPool' implements a queuing mechanism that distributes
+// 'bcep_FixedThreadPool' implements a queuing mechanism that distributes
 // among the threads.  Jobs are queued for execution as they arrive, and each
 // queued job is processed by the next available thread.  If each of the
 // concurrent threads is busy processing a job, new jobs will remain enqueued
@@ -43,8 +43,8 @@ BDES_IDENT("$Id: $")
 // functions or the passing of multiple user-defined arguments.  See the 'bdef'
 // package-level documentation for more on functors and their usage.
 //
-// Unlike a 'txtbcep_ThreadPool', an application can not tune a
-// 'txtbcep_FixedThreadPool' once it is created with a specified number of
+// Unlike a 'bcep_ThreadPool', an application can not tune a
+// 'bcep_FixedThreadPool' once it is created with a specified number of
 // threads and queue capacity, hence the name "fixed" thread pool.  An
 // application can, however, specify the attributes of the threads in the
 // pool (e.g., thread priority or stack size), by providing a
@@ -53,7 +53,7 @@ BDES_IDENT("$Id: $")
 //
 // Thread pools are ideal for developing multi-threaded server applications.
 // A server need only package client requests to execute as jobs, and
-// 'txtbcep_FixedThreadPool' will handle the queue management, thread manage,
+// 'bcep_FixedThreadPool' will handle the queue management, thread manage,
 // and request dispatching.  Thread pools are also well suited for
 // parallelizing certain types of application logic.  Without any complex or
 // redundant thread management code, an application can easily create a thread
@@ -62,7 +62,7 @@ BDES_IDENT("$Id: $")
 //
 ///Thread Safety
 ///-------------
-// The 'txtbcep_FixedThreadPool' class is both *fully thread-safe* (i.e., all
+// The 'bcep_FixedThreadPool' class is both *fully thread-safe* (i.e., all
 // non-creator methods can correctly execute concurrently), and is
 // *thread-enabled* (i.e., the classes does not function correctly in a
 // non-multi-threading environment).  See 'bsldoc_glossary' for complete
@@ -86,14 +86,14 @@ BDES_IDENT("$Id: $")
 //
 ///Usage
 ///-----
-// This example demonstrates the use of a 'txtbcep_FixedThreadPool' to paralle
+// This example demonstrates the use of a 'bcep_FixedThreadPool' to paralle
 // a segment of program logic.  The example implements a multi-threaded file
 // search utility.  The utility searches multiple files for a string, similar
-// to the Unix command 'fgrep'; the use of a 'txtbcep_FixedThreadPool' allows
+// to the Unix command 'fgrep'; the use of a 'bcep_FixedThreadPool' allows
 // utility to search multiple files concurrently.
 //
 // The example program will take as input a string and a list of files to
-// search.  The program creates a 'txtbcep_FixedThreadPool', and then enqueu
+// search.  The program creates a 'bcep_FixedThreadPool', and then enqueu
 // single "job" for each file to be searched.  Each thread in the pool will
 // take a job from the queue, open the file, and search for the string.  If a
 // match is found, the job adds the filename to an array of matching filenames.
@@ -192,7 +192,7 @@ BDES_IDENT("$Id: $")
 // We initialize the thread pool using default thread attributes.  We then
 // start the pool so that the threads can begin while we prepare the jobs.
 //..
-//       txtbcep_FixedThreadPool pool(defaultAttributes,
+//       bcep_FixedThreadPool pool(defaultAttributes,
 //                                 SEARCH_THREADS,
 //                                 SEARCH_QUEUE_CAPACITY);
 //
@@ -331,16 +331,16 @@ namespace BloombergLP {
 class bslma_Allocator;
 
 extern "C" {
-    typedef void (*txtbcep_FixedThreadPoolJobFunc)(void *);
+    typedef void (*bcep_FixedThreadPoolJobFunc)(void *);
         // This type declares the prototype for functions that are suitable
-        // to be specified 'txtbcep_FixedThreadPool::enqueueJob'.
+        // to be specified 'bcep_FixedThreadPool::enqueueJob'.
 }
 
                          // ==========================
-                         // class txtbcep_FixedThreadPool
+                         // class bcep_FixedThreadPool
                          // ==========================
 
-class txtbcep_FixedThreadPool {
+class bcep_FixedThreadPool {
     // This class implements a thread pool used for concurrently executing
     // multiple user-defined functions ("jobs").
 
@@ -438,12 +438,12 @@ class txtbcep_FixedThreadPool {
         // Awaken any waiting worker threads by signaling the queue semaphore.
 
     // NOT IMPLEMENTED
-    txtbcep_FixedThreadPool(const txtbcep_FixedThreadPool&);
-    txtbcep_FixedThreadPool& operator=(const txtbcep_FixedThreadPool&);
+    bcep_FixedThreadPool(const bcep_FixedThreadPool&);
+    bcep_FixedThreadPool& operator=(const bcep_FixedThreadPool&);
 
   public:
     // CREATORS
-    txtbcep_FixedThreadPool(int                    numThreads,
+    bcep_FixedThreadPool(int                    numThreads,
                          int                    maxNumPendingJobs,
                          bslma_Allocator       *basicAllocator = 0);
         // Construct a thread pool with the specified 'numThread' number of
@@ -454,7 +454,7 @@ class txtbcep_FixedThreadPool {
         // undefined unless '1 <= numThreads' and
         // '1 <= maxPendingJobs <= 0x01FFFFFF'.
 
-    txtbcep_FixedThreadPool(const bcemt_Attribute& threadAttributes,
+    bcep_FixedThreadPool(const bcemt_Attribute& threadAttributes,
                          int                    numThreads,
                          int                    maxNumPendingJobs,
                          bslma_Allocator       *basicAllocator = 0);
@@ -466,7 +466,7 @@ class txtbcep_FixedThreadPool {
         // allocator is used.  The behavior is undefined unless
         // '1 <= numThreads' and '1 <= maxPendingJobs <= 0x01FFFFFF'.
 
-    ~txtbcep_FixedThreadPool();
+    ~bcep_FixedThreadPool();
         // Remove all pending jobs from the queue without executing them,
         // block until all currently running jobs complete, and then
         // destroy this thread pool.
@@ -489,7 +489,7 @@ class txtbcep_FixedThreadPool {
         // unless 'functor' is not "unset".  See 'bdef_function' for more
         // information on functors.
 
-    int enqueueJob(txtbcep_FixedThreadPoolJobFunc function, void *userData);
+    int enqueueJob(bcep_FixedThreadPoolJobFunc function, void *userData);
         // Enqueue the specified 'function' to be executed by the next
         // available thread.  The specified 'userData' pointer will be passed
         // to the function by the processing thread.  Return 0 if enqueued
@@ -502,7 +502,7 @@ class txtbcep_FixedThreadPool {
         // nonzero value if queuing is currently disabled or the queue is
         // full.  The behavior is undefined unless 'functor' is not "unset".
 
-    int tryEnqueueJob(txtbcep_FixedThreadPoolJobFunc function, void *userData);
+    int tryEnqueueJob(bcep_FixedThreadPoolJobFunc function, void *userData);
         // Attempt to enqueue the specified 'function' to be executed by the
         // next available thread.  The specified 'userData' pointer will be
         // passed to the function by the processing thread.  Return 0 if
@@ -564,31 +564,31 @@ class txtbcep_FixedThreadPool {
 // ===========================================================================
 
                          // --------------------------
-                         // class txtbcep_FixedThreadPool
+                         // class bcep_FixedThreadPool
                          // --------------------------
 
 // MANIPULATORS
 inline
-void txtbcep_FixedThreadPool::disable()
+void bcep_FixedThreadPool::disable()
 {
     d_queue.disable();
 }
 
 inline
-void txtbcep_FixedThreadPool::enable()
+void bcep_FixedThreadPool::enable()
 {
     d_queue.enable();
 }
 
 inline
-int txtbcep_FixedThreadPool::enqueueJob(txtbcep_FixedThreadPoolJobFunc  func,
+int bcep_FixedThreadPool::enqueueJob(bcep_FixedThreadPoolJobFunc  func,
                                      void                        *userData)
 {
     return enqueueJob(bdef_BindUtil::bindR<void>(function, userData));
 }
 
 inline
-int txtbcep_FixedThreadPool::tryEnqueueJob(txtbcep_FixedThreadPoolJobFunc  fun,
+int bcep_FixedThreadPool::tryEnqueueJob(bcep_FixedThreadPoolJobFunc  fun,
                                         void                        *userData)
 {
     return tryEnqueueJob(bdef_BindUtil::bindR<void>(function, userData));
@@ -596,19 +596,19 @@ int txtbcep_FixedThreadPool::tryEnqueueJob(txtbcep_FixedThreadPoolJobFunc  fun,
 
 // ACCESSORS
 inline
-bool txtbcep_FixedThreadPool::isEnabled() const
+bool bcep_FixedThreadPool::isEnabled() const
 {
     return d_queue.isEnabled();
 }
 
 inline
-bool txtbcep_FixedThreadPool::isStarted() const
+bool bcep_FixedThreadPool::isStarted() const
 {
     return d_numThreads == d_threadGroup.numThreads();
 }
 
 inline
-int txtbcep_FixedThreadPool::numActiveThreads() const
+int bcep_FixedThreadPool::numActiveThreads() const
 {
     int numStarted = d_threadGroup.numThreads();
     return d_numThreads == numStarted
@@ -617,25 +617,25 @@ int txtbcep_FixedThreadPool::numActiveThreads() const
 }
 
 inline
-int txtbcep_FixedThreadPool::numPendingJobs() const
+int bcep_FixedThreadPool::numPendingJobs() const
 {
     return d_queue.length();
 }
 
 inline
-int txtbcep_FixedThreadPool::numThreads() const
+int bcep_FixedThreadPool::numThreads() const
 {
     return d_numThreads;
 }
 
 inline
-int txtbcep_FixedThreadPool::numThreadsStarted() const
+int bcep_FixedThreadPool::numThreadsStarted() const
 {
     return d_threadGroup.numThreads();
 }
 
 inline
-int txtbcep_FixedThreadPool::queueCapacity() const
+int bcep_FixedThreadPool::queueCapacity() const
 {
     return d_queue.size();
 }

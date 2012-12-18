@@ -1,5 +1,5 @@
-// txtbael_log.cpp                                                    -*-C++-*-
-#include <txtbael_log.h>
+// tst_bael_log.cpp                                                   -*-C++-*-
+#include <tst_bael_log.h>
 
 #include <bdes_ident.h>
 BDES_IDENT_RCSID(bael_log_cpp,"$Id$ $CSID$")
@@ -29,11 +29,11 @@ BDES_IDENT_RCSID(bael_log_cpp,"$Id$ $CSID$")
 namespace BloombergLP {
 
                          // ---------------
-                         // struct txtbael_Log
+                         // struct bael_Log
                          // ---------------
 
 // CLASS METHODS
-int txtbael_Log::format(char        *buffer,
+int bael_Log::format(char        *buffer,
                      bsl::size_t  numBytes,
                      const char  *format,
                      ...)
@@ -54,21 +54,21 @@ int txtbael_Log::format(char        *buffer,
     return (signed)numBytes <= status ? -1 : status;
 }
 
-bael_Record *txtbael_Log::getRecord(const bael_Category *category,
+bael_Record *bael_Log::getRecord(const bael_Category *category,
                                  const char          *file,
                                  int                  line)
 {
     if (category) {
-        return txtbael_LoggerManager::singleton().getLogger().getRecord(file,
+        return bael_LoggerManager::singleton().getLogger().getRecord(file,
                                                                      line);
                                                                       // RETURN
     }
     else {
-        return txtbael_LoggerManager::getRecord(file, line);          // RETURN
+        return bael_LoggerManager::getRecord(file, line);             // RETURN
     }
 }
 
-void txtbael_Log::logMessage(const bael_Category *category,
+void bael_Log::logMessage(const bael_Category *category,
                           int                  severity,
                           const char          *fileName,
                           int                  lineNumber,
@@ -79,7 +79,7 @@ void txtbael_Log::logMessage(const bael_Category *category,
     BSLS_ASSERT(message);
 
     if (category) {
-        txtbael_LoggerManager::singleton().getLogger().logMessage(*category,
+        bael_LoggerManager::singleton().getLogger().logMessage(*category,
                                                                severity,
                                                                fileName,
                                                                lineNumber,
@@ -87,69 +87,69 @@ void txtbael_Log::logMessage(const bael_Category *category,
     }
 }
 
-void txtbael_Log::logMessage(const bael_Category *category,
+void bael_Log::logMessage(const bael_Category *category,
                           int                  severity,
                           bael_Record          *record)
 {
     BSLS_ASSERT(1 <= severity);  BSLS_ASSERT(severity <= 255);
 
     if (category) {
-        txtbael_LoggerManager::singleton().getLogger().logMessage(*category,
+        bael_LoggerManager::singleton().getLogger().logMessage(*category,
                                                                severity,
                                                                record);
     }
     else {
-        txtbael_LoggerManager::logMessage(severity, record);
+        bael_LoggerManager::logMessage(severity, record);
     }
 }
 
-char *txtbael_Log::obtainMessageBuffer(bcemt_Mutex **mutex, int *bufferSize)
+char *bael_Log::obtainMessageBuffer(bcemt_Mutex **mutex, int *bufferSize)
 {
-    if (txtbael_LoggerManager::isInitialized()) {
-        return txtbael_LoggerManager::
+    if (bael_LoggerManager::isInitialized()) {
+        return bael_LoggerManager::
                    singleton().getLogger().obtainMessageBuffer(mutex,
                                                                bufferSize);
                                                                       // RETURN
     }
     else {
-        return txtbael_LoggerManager::obtainMessageBuffer(mutex, bufferSize);
+        return bael_LoggerManager::obtainMessageBuffer(mutex, bufferSize);
                                                                       // RETURN
     }
 }
 
-void txtbael_Log::releaseMessageBuffer(bcemt_Mutex *mutex)
+void bael_Log::releaseMessageBuffer(bcemt_Mutex *mutex)
 {
     mutex->unlock();
 }
 
-const bael_Category *txtbael_Log::setCategory(const char *categoryName)
+const bael_Category *bael_Log::setCategory(const char *categoryName)
 {
     BSLS_ASSERT(categoryName);
 
-    return txtbael_LoggerManager::isInitialized()
-         ? txtbael_LoggerManager::singleton().setCategory(categoryName)
+    return bael_LoggerManager::isInitialized()
+         ? bael_LoggerManager::singleton().setCategory(categoryName)
          : 0;
 }
 
-void txtbael_Log::setCategory(bael_CategoryHolder *categoryHolder,
+void bael_Log::setCategory(bael_CategoryHolder *categoryHolder,
                            const char          *categoryName)
 {
     BSLS_ASSERT(categoryName);
 
-    if (txtbael_LoggerManager::isInitialized()) {
-        txtbael_LoggerManager::singleton().setCategory(categoryHolder,
+    if (bael_LoggerManager::isInitialized()) {
+        bael_LoggerManager::singleton().setCategory(categoryHolder,
                                                     categoryName);
     }
 }
 
-bool txtbael_Log::isCategoryEnabled(const bael_CategoryHolder *categoryHolder,
+bool bael_Log::isCategoryEnabled(const bael_CategoryHolder *categoryHolder,
                                  int                        severity)
 {
     BSLS_ASSERT(categoryHolder);
 
     if (bael_CategoryHolder::BAEL_UNINITIALIZED_CATEGORY ==
                                               categoryHolder->threshold() ||
-        !txtbael_LoggerManager::isInitialized()                              ||
+        !bael_LoggerManager::isInitialized()                              ||
         !categoryHolder->category()) {
 
         // If the category is uninitialized (i.e., the category holder is
@@ -160,55 +160,55 @@ bool txtbael_Log::isCategoryEnabled(const bael_CategoryHolder *categoryHolder,
         return bael_Severity::BAEL_WARN >= severity;                  // RETURN
     }
 
-    return txtbael_LoggerManager::singleton().isCategoryEnabled(
+    return bael_LoggerManager::singleton().isCategoryEnabled(
                                                    categoryHolder->category(),
                                                    severity);
 }
 
                      // ---------------------
-                     // class txtbael_Log_Stream
+                     // class bael_Log_Stream
                      // ---------------------
 
 // CREATORS
-txtbael_Log_Stream::txtbael_Log_Stream(const bael_Category *category,
+bael_Log_Stream::bael_Log_Stream(const bael_Category *category,
                                  const char          *fileName,
                                  int                  lineNumber,
                                  int                  severity)
 : d_category_p(category)
-, d_record_p(txtbael_Log::getRecord(category, fileName, lineNumber))
+, d_record_p(bael_Log::getRecord(category, fileName, lineNumber))
 , d_severity(severity)
 , d_stream(&d_record_p->fixedFields().messageStreamBuf())
 {
 }
 
-txtbael_Log_Stream::~txtbael_Log_Stream()
+bael_Log_Stream::~bael_Log_Stream()
 {
-    txtbael_Log::logMessage(d_category_p, d_severity, d_record_p);
+    bael_Log::logMessage(d_category_p, d_severity, d_record_p);
 }
 
                      // ------------------------
-                     // class txtbael_Log_Formatter
+                     // class bael_Log_Formatter
                      // ------------------------
 
 // CREATORS
-txtbael_Log_Formatter::txtbael_Log_Formatter(const bael_Category *category,
+bael_Log_Formatter::bael_Log_Formatter(const bael_Category *category,
                                        const char          *fileName,
                                        int                  lineNumber,
                                        int                  severity)
 : d_category_p(category)
-, d_record_p(txtbael_Log::getRecord(category, fileName, lineNumber))
+, d_record_p(bael_Log::getRecord(category, fileName, lineNumber))
 , d_severity(severity)
 , d_mutex_p(0)
 {
-    d_buffer_p = txtbael_Log::obtainMessageBuffer(&d_mutex_p, &d_bufferLen);
+    d_buffer_p = bael_Log::obtainMessageBuffer(&d_mutex_p, &d_bufferLen);
 }
 
-txtbael_Log_Formatter::~txtbael_Log_Formatter()
+bael_Log_Formatter::~bael_Log_Formatter()
 {
     d_buffer_p[d_bufferLen - 1] = '\0';
     bcemt_LockGuard<bcemt_Mutex> lockGuard(d_mutex_p, 1);
     d_record_p->fixedFields().setMessage(d_buffer_p);
-    txtbael_Log::logMessage(d_category_p, d_severity, d_record_p);
+    bael_Log::logMessage(d_category_p, d_severity, d_record_p);
 }
 
 }  // close namespace BloombergLP
@@ -218,13 +218,13 @@ txtbael_Log_Formatter::~txtbael_Log_Formatter()
 // The stream-style logging macro (without a callback) is reproduced here:
 //..
 //#define BAEL_LOG_STREAM(BAEL_SEVERITY) {                                   \@
-//    using BloombergLP::txtbael_Log;                                        \@
-//    using BloombergLP::txtbael_Log_Stream;                                 \@
+//    using BloombergLP::bael_Log;                                        \@
+//    using BloombergLP::bael_Log_Stream;                                 \@
 //    using BloombergLP::bael_Severity;                                      \@
 //    if (BAEL_LOG_THRESHOLD >= BAEL_SEVERITY) {                             \@
-//       if (txtbael_Log::isCategoryEnabled(&BAEL_LOG_CATEGORYHOLDER,        \@
+//       if (bael_Log::isCategoryEnabled(&BAEL_LOG_CATEGORYHOLDER,        \@
 //                                        BAEL_SEVERITY)) {                  \@
-//         txtbael_Log_Stream bael_lOcAl_StReAm(BAEL_LOG_CATEGORY, __FILE__, \@
+//         bael_Log_Stream bael_lOcAl_StReAm(BAEL_LOG_CATEGORY, __FILE__, \@
 //                                              __LINE__, BAEL_SEVERITY);    \@
 //            BAEL_STREAM
 //..
@@ -234,12 +234,12 @@ txtbael_Log_Formatter::~txtbael_Log_Formatter()
 // This latest version of the macro, as well as the 'printf'-style macros, are
 // based on category holders ('bael_CategoryHolder').  The introduction of
 // category holders, and the factoring of the innards of the original macros
-// into the new helper classes 'txtbael_Log_Stream' 'txtbael_Log_Formatter',
+// into the new helper classes 'bael_Log_Stream' 'bael_Log_Formatter',
 // yielded non-negligible performance improvements.  In addition, Rule-based
 // logging can be released at a later time without requiring additional changes
 // to 'bael_log.h' or breaking binary-compatibility.  All the logic in this
 // component required to support Rule-based logging will go into the new
-// 'txtbael_Log::isCategoryEnabled' method.
+// 'bael_Log::isCategoryEnabled' method.
 //
 // As used in this component, the 'threshold' attributes of category holders
 // are initialized to a value outside the range '[0 .. 255]'.  Category holders
@@ -249,7 +249,7 @@ txtbael_Log_Formatter::~txtbael_Log_Formatter()
 // category holders corresponding to "dynamic" categories
 // ('BAEL_LOG_SET_DYNAMIC_CATEGORY' macro) are initialized to
 // 'bael_CategoryHolder::DYNAMIC_CATEGORY'.  The threshold of a static category
-// holder is updated by 'txtbael_Log::setCategory' *if* the logger manager has
+// holder is updated by 'bael_Log::setCategory' *if* the logger manager has
 // been initialized and not yet destroyed.  The thresholds of dynamic category
 // holders never change from their initial value.
 //
@@ -265,7 +265,7 @@ txtbael_Log_Formatter::~txtbael_Log_Formatter()
 // (but relatively cheap, in the vast majority of cases) analysis of whether a
 // record must actually be logged (after possibly calling 'setCategory' on
 // 'BAEL_LOG_CATEGORYNAME').  Only if 'isCategoryEnabled' returns 'true' is a
-// 'txtbael_Log_Stream' object constructed (or a 'txtbael_Log_Formatter' object
+// 'bael_Log_Stream' object constructed (or a 'bael_Log_Formatter' object
 // the case of the 'printf'-style macros) and a record logged.
 //
 // Note that the above condition is *always* 'true' for dynamic categories.
@@ -281,36 +281,36 @@ txtbael_Log_Formatter::~txtbael_Log_Formatter()
 // was moved here so as not to encourage direct use of the utility functions.)
 //
 // The following example recasts the 'snprintf'-based macro usage shown above
-// in terms of the 'txtbael_Log' utility functions.  Note, however, that direct
+// in terms of the 'bael_Log' utility functions.  Note, however, that direct
 // use of the utility functions is *strongly* discouraged:
 //..
 //      static const BloombergLP::bael_Category *category =
-//                                txtbael_Log::setCategory("EQUITY.NASD.SUNW");
+//                                bael_Log::setCategory("EQUITY.NASD.SUNW");
 //      {
-//          using BloombergLP::txtbael_Log;
+//          using BloombergLP::bael_Log;
 //          using BloombergLP::bael_Severity;
-//          if (txtbael_Log::isEnabled(category, bael_Severity::BAEL_INFO)) {
+//          if (bael_Log::isEnabled(category, bael_Severity::BAEL_INFO)) {
 //              const char *formatSpec = "%d shares of %s sold at %f\n";
-//              snprintf(txtbael_Log::messageBuffer(),
-//                       txtbael_Log::messageBufferSize(),
+//              snprintf(bael_Log::messageBuffer(),
+//                       bael_Log::messageBufferSize(),
 //                       formatSpec, 400, "SUNW", 5.65);
-//              bael_Record *record = txtbael_Log::getRecord();
+//              bael_Record *record = bael_Log::getRecord();
 //              record->fixedFields().setLineNumber(__LINE__);
 //              record->fixedFields().setFileName(__FILE__);
-//              record->fixedFields().setMessage(txtbael_Log::messageBuffer());
-//              txtbael_Log::logMessage(category, bael_Severity::BAEL_INFO,
+//              record->fixedFields().setMessage(bael_Log::messageBuffer());
+//              bael_Log::logMessage(category, bael_Severity::BAEL_INFO,
 //                                   record);
 //          }
 //      }
 //..
 // Note that it is not necessary to set the filename in this usage scenario;
 // instead, '__FILE__' is used directly.  However, a category must still be
-// established (first time only), by calling 'txtbael_Log::setCategory'.  The
+// established (first time only), by calling 'bael_Log::setCategory'.  The
 // remaining code mimics the expansion of the 'BAEL_LOG3_INFO' macro.  First
 // the category is queried to determine if it has logging enabled for the
 // 'bael_Severity::BAEL_INFO' severity level.  If so, the message is formatted
-// into a static buffer managed by 'txtbael_LoggerManager' and then logged with
-// the call to 'txtbael_Log::logMessage'.  It is readily apparent from this
+// into a static buffer managed by 'bael_LoggerManager' and then logged with
+// the call to 'bael_Log::logMessage'.  It is readily apparent from this
 // example that using the macros defined in this component is much simpler,
 // cleaner, and less error prone as compared to direct use of the utilities.
 

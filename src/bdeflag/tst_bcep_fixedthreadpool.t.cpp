@@ -1,5 +1,6 @@
-// txtbcep_fixedthreadpool.t.cpp          -*-C++-*-
-#include <txtbcep_fixedthreadpool.h>
+// bcep_fixedthreadpool.t.cpp          -*-C++-*-
+#include <tst_bcep_fixedthreadpool.h>
+
 #include <bcema_testallocator.h>
 #include <bslma_defaultallocatorguard.h>
 
@@ -52,18 +53,18 @@ using namespace bsl;  // automatically added by script
 // In addition to positive test cases (run in the nightly builds), a negative
 // test case -1 can be run manually to measure performance of enqueuing jobs.
 //
-// [ 3] txtbcep_FixedThreadPool(const bcemt_Attributes&, int, int, int);
-// [ 3] ~txtbcep_FixedThreadPool();
+// [ 3] bcep_FixedThreadPool(const bcemt_Attributes&, int, int, int);
+// [ 3] ~bcep_FixedThreadPool();
 // [ 3] int enqueueJob(const bdef_Function<void (*)()>& );
 // [ 3] int numThreads() const;
-// [ 4] int enqueueJob(txtbcep_FixedThreadPoolJobFunc, void *);
+// [ 4] int enqueueJob(bcep_FixedThreadPoolJobFunc, void *);
 // [ 4] void start();
 // [ 4] void stop();
 // [ 4] void drain();
 // [ 4] void shutdown();
 // [ 4] int queueCapacity() const;
 // [ 4] int numThreadsStarted() const;
-// [ 5] int tryenqueueJob(txtbcep_FixedThreadPoolJobFunc, void *);
+// [ 5] int tryenqueueJob(bcep_FixedThreadPoolJobFunc, void *);
 //-----------------------------------------------------------------------------
 // [ 2] TESTING HELPER FUNCTIONS
 // [ 2] Breathing test
@@ -118,7 +119,7 @@ static void aSsErT(int c, const char *s, int i) {
 //                  GLOBAL TYPEDEFS/CONSTANTS FOR TESTING
 //-----------------------------------------------------------------------------
 
-typedef txtbcep_FixedThreadPool Obj;
+typedef bcep_FixedThreadPool Obj;
 
 //=============================================================================
 //                              DEFAULT ALLOCATOR
@@ -335,7 +336,7 @@ static void  myFastSearch( const string&         word,
 {
     bcemt_Mutex     mutex;
     bcemt_Attribute defaultAttributes;
-    txtbcep_FixedThreadPool pool(defaultAttributes,
+    bcep_FixedThreadPool pool(defaultAttributes,
                               SEARCH_THREADS,
                               SEARCH_QUEUE_CAPACITY);
 
@@ -397,7 +398,7 @@ static void  myFastFunctorSearch( const string& word,
 {
     bcemt_Mutex     mutex;
     bcemt_Attribute defaultAttributes;
-    txtbcep_FixedThreadPool pool(defaultAttributes,
+    bcep_FixedThreadPool pool(defaultAttributes,
                               SEARCH_THREADS,
                               SEARCH_QUEUE_CAPACITY);
 
@@ -436,7 +437,7 @@ class ConcurrencyTest {
     // Invoke a set of operations operations synchronously.
 
     // DATA
-    txtbcep_FixedThreadPool   d_pool;
+    bcep_FixedThreadPool   d_pool;
     bcemt_Barrier          d_barrier;
     bslma_Allocator       *d_allocator_p;
 
@@ -493,7 +494,7 @@ enum {
     THREADPOOL_QUEUE_SIZE = 20
 };
 
-txtbcep_FixedThreadPool *threadPools[NUM_THREADPOOLS];
+bcep_FixedThreadPool *threadPools[NUM_THREADPOOLS];
 bces_AtomicInt64 numFertileRabbits = 0;
 
 struct EnqueueRabbit {
@@ -711,7 +712,7 @@ int main(int argc, char *argv[])
         memset(threadPools, 0, sizeof(threadPools));
 
         for (int i = 0; i < NUM_THREADPOOLS; ++i) {
-            threadPools[i] = new txtbcep_FixedThreadPool(1,
+            threadPools[i] = new bcep_FixedThreadPool(1,
                                                    THREADPOOL_QUEUE_SIZE);
         }
 
@@ -765,7 +766,7 @@ int main(int argc, char *argv[])
             for (int i = 0; i < NUM_THREADPOOLS; ++i) {
                 if (0 != threadPools[i]->numPendingJobs()) {
                     delete threadPools[i];
-                    threadPools[i] = new txtbcep_FixedThreadPool(1,
+                    threadPools[i] = new bcep_FixedThreadPool(1,
                                                    THREADPOOL_QUEUE_SIZE);
                 }
             }
@@ -803,7 +804,7 @@ int main(int argc, char *argv[])
             for (int i = 0; i < NUM_THREADPOOLS; ++i) {
                 if (0 != threadPools[i]->numPendingJobs()) {
                     delete threadPools[i];
-                    threadPools[i] = new txtbcep_FixedThreadPool(1,
+                    threadPools[i] = new bcep_FixedThreadPool(1,
                                                    THREADPOOL_QUEUE_SIZE);
                 }
             }
@@ -1038,7 +1039,7 @@ int main(int argc, char *argv[])
               NUM_THREADS = 5
           };
 
-          txtbcep_FixedThreadPool tp(NUM_THREADS, NUM_THREADS);
+          bcep_FixedThreadPool tp(NUM_THREADS, NUM_THREADS);
 
           ASSERT(0 == tp.numActiveThreads());
 
@@ -1083,7 +1084,7 @@ int main(int argc, char *argv[])
         //   counter has reached a limit.
         //
         // Testing:
-        //   int enqueueJob(txtbcep_FixedThreadPoolJobFunc , void *);
+        //   int enqueueJob(bcep_FixedThreadPoolJobFunc , void *);
         // --------------------------------------------------------------------
 
         if (verbose) cout << "TESTING a job enqueuing other jobs\n"
@@ -1116,7 +1117,7 @@ int main(int argc, char *argv[])
         //   timeout.
         //
         // Testing:
-        //   int tryEnqueueJob(txtbcep_FixedThreadPoolJobFunc , void *);
+        //   int tryEnqueueJob(bcep_FixedThreadPoolJobFunc , void *);
         // --------------------------------------------------------------------
 
         static const struct {
@@ -1199,7 +1200,7 @@ int main(int argc, char *argv[])
         //   shutting down the pool, all the threads are stopped.
         //
         // Testing:
-        //   int enqueueJob(txtbcep_FixedThreadPoolJobFunc , void *);
+        //   int enqueueJob(bcep_FixedThreadPoolJobFunc , void *);
         //   void stop();
         //   void drain();
         //   void shutdown();
@@ -1429,8 +1430,8 @@ int main(int argc, char *argv[])
         // Testing:
         //   int numThreads() const;
         //   int queueCapacity() const;
-        //   txtbcep_FixedThreadPool(const bcemt_Attributes&,int , int);
-        //   ~txtbcep_FixedThreadPool();
+        //   bcep_FixedThreadPool(const bcemt_Attributes&,int , int);
+        //   ~bcep_FixedThreadPool();
         // --------------------------------------------------------------------
 
         if (verbose) cout << "Testing: direct accessors\n"
@@ -1507,7 +1508,7 @@ int main(int argc, char *argv[])
         // --------------------------------------------------------------------
         // TESTING HELPER FUNCTIONS
         //   Verify that the support functions used to test
-        //   'txtbcep_FixedThreadPool' behave as expected.  The 'testJobFuncti
+        //   'bcep_FixedThreadPool' behave as expected.  The 'testJobFuncti
         //   function is expected to increment the supplied counter, signal a
         //   condition variable indicating that it has started, and wait for a
         //   stop condition to be signaled before exiting.  'testJobFunction2'

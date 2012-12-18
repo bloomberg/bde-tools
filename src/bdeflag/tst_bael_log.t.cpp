@@ -1,5 +1,5 @@
-// txtbael_log.t.cpp                                                  -*-C++-*-
-#include <txtbael_log.h>
+// tst_bael_log.t.cpp                                                 -*-C++-*-
+#include <tst_bael_log.h>
 
 #include <bael_administration.h>
 #include <bael_defaultattributecontainer.h>
@@ -167,11 +167,11 @@ void aSsErT(int c, const char *s, int i)
 //                  GLOBAL TYPEDEFS/CONSTANTS FOR TESTING
 //-----------------------------------------------------------------------------
 
-typedef BloombergLP::txtbael_Log                Obj;
+typedef BloombergLP::bael_Log                Obj;
 typedef BloombergLP::bael_Severity           Sev;
 typedef BloombergLP::bael_Category           Cat;
 typedef BloombergLP::bael_CategoryHolder     Holder;
-typedef BloombergLP::txtbael_Log_Stream         LogStream;
+typedef BloombergLP::bael_Log_Stream         LogStream;
 typedef BloombergLP::bslma_TestAllocator     TestAllocator;
 typedef BloombergLP::bael_CategoryManager    CategoryManager;
 typedef BloombergLP::bael_ThresholdAggregate Thresholds;
@@ -922,8 +922,8 @@ int main(int argc, char *argv[])
 // logging threshold.
 //..
     bael_DefaultObserver observer(bsl::cout);
-    txtbael_LoggerManagerConfiguration lmc;
-    txtbael_LoggerManagerScopedGuard lmg(&observer, lmc);
+    bael_LoggerManagerConfiguration lmc;
+    bael_LoggerManagerScopedGuard lmg(&observer, lmc);
 
     BAEL_LOG_SET_CATEGORY("EXAMPLE.CATEGORY");
 
@@ -940,7 +940,7 @@ int main(int argc, char *argv[])
 //..
     bael_Rule rule("*", 0, bael_Severity::BAEL_TRACE, 0, 0);
     rule.addPredicate(bael_Predicate("uuid", 3938908));
-    txtbael_LoggerManager::singleton().addRule(rule);
+    bael_LoggerManager::singleton().addRule(rule);
 
     BAEL_LOG_ERROR << "Processing the second message." << BAEL_LOG_END;
     processData(3938908, 2, 9001, message);
@@ -982,8 +982,8 @@ int main(int argc, char *argv[])
 
         if (verbose) bsl::cout << "Initialize logger manager" << bsl::endl;
 
-        BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-        BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc);
+        BloombergLP::bael_LoggerManagerConfiguration lmc;
+        BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc);
 
         BloombergLP::bael_Administration::addCategory(
                                       "EQUITY.NASD",
@@ -1051,17 +1051,17 @@ int main(int argc, char *argv[])
         if (verbose) bsl::cout << "Utility usage" << bsl::endl;
         {
             static const BloombergLP::bael_Category *category =
-                     BloombergLP::txtbael_Log::setCategory("EQUITY.NASD.SUNW");
+                     BloombergLP::bael_Log::setCategory("EQUITY.NASD.SUNW");
             {
-                using BloombergLP::txtbael_Log;
+                using BloombergLP::bael_Log;
                 using BloombergLP::bael_Severity;
                 if (category->isEnabled(bael_Severity::BAEL_INFO)) {
                     const char *formatSpec =
                                          "[7] %d shares of %s sold at %f\n";
-                    txtbael_Log::format(messageBuffer(),
+                    bael_Log::format(messageBuffer(),
                                      messageBufferSize(),
                                      formatSpec, 400, "SUNW", 5.65);
-                    txtbael_Log::logMessage(category,
+                    bael_Log::logMessage(category,
                                          BloombergLP::bael_Severity::BAEL_INFO,
                                          __FILE__, __LINE__,
                                          messageBuffer());
@@ -1157,13 +1157,13 @@ int main(int argc, char *argv[])
         const int NUM_DATA = sizeof (DATA) / sizeof (*DATA);
 
         BloombergLP::bael_DefaultObserver observer(bsl::cout);
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setDefaultThresholdLevelsIfValid(OFF, OFF, OFF, OFF);
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration,
                                                          &ta);
-        txtbael_LoggerManager& manager = txtbael_LoggerManager::singleton();
+        bael_LoggerManager& manager = bael_LoggerManager::singleton();
 
         if (verbose) bsl::cout << "\tExhaustively test w/o logging rules.\n";
         {
@@ -1276,12 +1276,12 @@ int main(int argc, char *argv[])
         // the trigger level.
         int numPublished       = 0;
         int numBufferedRecords = 0;
-        txtbael_LoggerManagerConfiguration lmc;
+        bael_LoggerManagerConfiguration lmc;
         lmc.setTriggerMarkers(
-                          txtbael_LoggerManagerConfiguration::BAEL_NO_MARKERS);
+                          bael_LoggerManagerConfiguration::BAEL_NO_MARKERS);
 
-        txtbael_LoggerManager::initSingleton(TO, lmc, &ta);
-        txtbael_LoggerManager& manager = txtbael_LoggerManager::singleton();
+        bael_LoggerManager::initSingleton(TO, lmc, &ta);
+        bael_LoggerManager& manager = bael_LoggerManager::singleton();
         for (int i = 0; i < (int) thresholds.size(); ++i) {
             bael_Category *category =
                           manager.setCategory("TestCategory",
@@ -1377,7 +1377,7 @@ int main(int argc, char *argv[])
             }
             manager.removeAllRules();
         }
-        txtbael_LoggerManager::shutDownSingleton();
+        bael_LoggerManager::shutDownSingleton();
 
       } break;
       case 25: {
@@ -1456,9 +1456,9 @@ int main(int argc, char *argv[])
                       << bsl::endl;
         }
 
-        txtbael_LoggerManagerConfiguration lmc;
-        txtbael_LoggerManager::initSingleton(TO, lmc, &ta);
-        txtbael_LoggerManager& manager = txtbael_LoggerManager::singleton();
+        bael_LoggerManagerConfiguration lmc;
+        bael_LoggerManager::initSingleton(TO, lmc, &ta);
+        bael_LoggerManager& manager = bael_LoggerManager::singleton();
 
         // Create a test category for each test threshold-aggregate
         for (int i = 0; i < (int) thresholds.size(); ++i) {
@@ -1518,7 +1518,7 @@ int main(int argc, char *argv[])
             }
             manager.removeAllRules();
         }
-        txtbael_LoggerManager::shutDownSingleton();
+        bael_LoggerManager::shutDownSingleton();
 
       } break;
       case 24: {
@@ -1564,13 +1564,13 @@ int main(int argc, char *argv[])
                       << bsl::endl;
         {
             BloombergLP::bcema_TestAllocator ta(veryVeryVerbose);
-            BloombergLP::txtbael_LoggerManagerConfiguration lmc;
+            BloombergLP::bael_LoggerManagerConfiguration lmc;
             lmc.setDefaultThresholdLevelsIfValid(
                   BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                   BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                   BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                   BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
-            BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
+            BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
 
             categoryName  = "WithLoggerManager";
             msg           = "There is a logger manager";
@@ -1635,13 +1635,13 @@ int main(int argc, char *argv[])
                       << bsl::endl;
         {
             BloombergLP::bcema_TestAllocator ta(veryVeryVerbose);
-            BloombergLP::txtbael_LoggerManagerConfiguration lmc;
+            BloombergLP::bael_LoggerManagerConfiguration lmc;
             lmc.setDefaultThresholdLevelsIfValid(
                   BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                   BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                   BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                   BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
-            BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
+            BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
 
             categoryName  = "WithLoggerManager";
             msg           = "There is a logger manager";
@@ -1704,13 +1704,13 @@ int main(int argc, char *argv[])
                       << bsl::endl;
         {
             BloombergLP::bcema_TestAllocator ta(veryVeryVerbose);
-            BloombergLP::txtbael_LoggerManagerConfiguration lmc;
+            BloombergLP::bael_LoggerManagerConfiguration lmc;
             lmc.setDefaultThresholdLevelsIfValid(
                   BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                   BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                   BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                   BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
-            BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
+            BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
 
             categoryName  = "WithLoggerManager";
             msg           = "There is a logger manager";
@@ -1772,13 +1772,13 @@ int main(int argc, char *argv[])
                       << bsl::endl;
         {
             BloombergLP::bcema_TestAllocator ta(veryVeryVerbose);
-            BloombergLP::txtbael_LoggerManagerConfiguration lmc;
+            BloombergLP::bael_LoggerManagerConfiguration lmc;
             lmc.setDefaultThresholdLevelsIfValid(
                BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
-            BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
+            BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
 
             categoryName  = "WithLoggerManager";
             msg           = "There is a logger manager";
@@ -1898,14 +1898,14 @@ int main(int argc, char *argv[])
             static bool LM_INITIALIZED = false;
             if (USE_LM && !LM_INITIALIZED) {
                 LM_INITIALIZED = true;
-                BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-                BloombergLP::txtbael_LoggerManager::initSingleton(TO, lmc,&ta);
+                BloombergLP::bael_LoggerManagerConfiguration lmc;
+                BloombergLP::bael_LoggerManager::initSingleton(TO, lmc,&ta);
             }
-            bool result = txtbael_Log::isCategoryEnabled(&mH, SEVERITY);
+            bool result = bael_Log::isCategoryEnabled(&mH, SEVERITY);
             LOOP_ASSERT(LINE, RESULT == result);
         }
 
-        ASSERT(txtbael_LoggerManager::isInitialized());
+        ASSERT(bael_LoggerManager::isInitialized());
 
         // Test getRecord
         for (int i = 0; i < NUM_DATA; ++i) {
@@ -1914,7 +1914,7 @@ int main(int argc, char *argv[])
             const char   *FILENAME    = DATA[i].d_name_p;
 
             const Cat   *CATEGORY = USE_CAT ? (Cat *) 0 : (Cat *) 1;
-            bael_Record *RECORD   = txtbael_Log::getRecord(CATEGORY,
+            bael_Record *RECORD   = bael_Log::getRecord(CATEGORY,
                                                         FILENAME,
                                                         LINE);
             LOOP_ASSERT(LINE, LINE == RECORD->fixedFields().lineNumber());
@@ -1923,12 +1923,12 @@ int main(int argc, char *argv[])
                             RECORD->fixedFields().fileName()));
         }
 
-        BloombergLP::txtbael_LoggerManager::shutDownSingleton();
+        BloombergLP::bael_LoggerManager::shutDownSingleton();
 
       } break;
       case 19: {
         // --------------------------------------------------------------------
-        // TESTING txtbael_Log_Stream
+        // TESTING bael_Log_Stream
         //
         // Concerns:
         //   The basic concern is that the creators, manipulators and
@@ -1936,7 +1936,7 @@ int main(int argc, char *argv[])
         //
         // Plan:
         //   Specify a large set of data values that can be used to construct
-        //   a txtbael_Log_Stream object.  Initialize an object X by calling
+        //   a bael_Log_Stream object.  Initialize an object X by calling
         //   constructor using one of the specified data values.  Using the
         //   accessor functions verify that X was correctly initialized.  Then
         //   use the manipulator functions to put X into a different state.
@@ -1947,7 +1947,7 @@ int main(int argc, char *argv[])
         // --------------------------------------------------------------------
 
         if (verbose) bsl::cout << bsl::endl
-                               << "Test txtbael_Log_Stream" << bsl::endl
+                               << "Test bael_Log_Stream" << bsl::endl
                                << "====================" << bsl::endl;
 
         static const struct {
@@ -1990,8 +1990,8 @@ int main(int argc, char *argv[])
         bslma_DefaultAllocatorGuard guard(&da);
 
         CategoryManager CM(&ta);
-        BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-        BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc);
+        BloombergLP::bael_LoggerManagerConfiguration lmc;
+        BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc);
 
         for (int i = 0; i < NUM_DATA; ++i) {
             const int     LINE        = DATA[i].d_line;
@@ -2035,7 +2035,7 @@ int main(int argc, char *argv[])
         //
         // Concerns:
         //   This macro must be safe in absence of a logger manager.  This
-        //   macro must be correct when 'txtbael_LoggerManager::setCategory' is
+        //   macro must be correct when 'bael_LoggerManager::setCategory' is
         //   called to change the threshold levels of the dynamic category
         //   before logging macros are encountered.
         //
@@ -2043,7 +2043,7 @@ int main(int argc, char *argv[])
         //   Intentionally invoke the macro without first initializing the
         //   logger manager.  Verify that the number of records going to
         //   'bsl::cout' is expected.  Then invoke the macro in presence of a
-        //   logger manager and call 'txtbael_LoggerManager::setCategory' to
+        //   logger manager and call 'bael_LoggerManager::setCategory' to
         //   change the underlying category.  Verify that the number of
         //   published records is expected.
         //
@@ -2119,13 +2119,13 @@ int main(int argc, char *argv[])
             bsl::cout << "\tTesting macro correctness with a logger manager."
                       << bsl::endl;
         {
-            BloombergLP::txtbael_LoggerManagerConfiguration lmc;
+            BloombergLP::bael_LoggerManagerConfiguration lmc;
             lmc.setDefaultThresholdLevelsIfValid(
                   BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                   BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                   BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                   BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
-            BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc);
+            BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc);
 
             // Re "sieve" category: (1) if recorded, then also published;
             // (2) never triggered.
@@ -2151,7 +2151,7 @@ int main(int argc, char *argv[])
 
             numPublishedRecords = TO->numPublishedRecords();
 
-            txtbael_LoggerManager::singleton().setCategory(
+            bael_LoggerManager::singleton().setCategory(
                                          "sieve",
                                          0,
                                          BloombergLP::bael_Severity::BAEL_WARN,
@@ -2265,7 +2265,7 @@ int main(int argc, char *argv[])
                 bsl::streambuf *cerrBuf = bsl::cerr.rdbuf();
                 bsl::cerr.rdbuf(os.rdbuf());
 
-                ASSERT(false == txtbael_LoggerManager::isInitialized());
+                ASSERT(false == bael_LoggerManager::isInitialized());
                 BloombergLP::bdef_Function
                         <void (*)(BloombergLP::bdem_List *)> callback =
                                                                   &incCallback;
@@ -2368,8 +2368,8 @@ int main(int argc, char *argv[])
         if (verbose)
             bsl::cout << "Safely invoked stream-style macros" << bsl::endl;
 
-        BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(TO, lmc);
+        BloombergLP::bael_LoggerManagerConfiguration lmc;
+        BloombergLP::bael_LoggerManagerScopedGuard guard(TO, lmc);
 
         ASSERT("" == os.str());
         bsl::cerr.rdbuf(cerrBuf);
@@ -2409,8 +2409,8 @@ int main(int argc, char *argv[])
         const char  SEP     = ':';
         const int   ARGS[]  = { 1, 2, 3 };
 
-        BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-        BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
+        BloombergLP::bael_LoggerManagerConfiguration lmc;
+        BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
 
         // Re "sieve" category: (1) if recorded, then also published;
         // (2) never triggered.
@@ -2685,14 +2685,14 @@ int main(int argc, char *argv[])
                       << bsl::endl << "===========" << bsl::endl;
 
         my_PublishCountingObserver observer;
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setDefaultThresholdLevelsIfValid(
                  BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                  BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                  BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                  BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration);
 
         // int NUM_MESSAGES = bsl::atoi(argv[2]);
@@ -2740,18 +2740,18 @@ int main(int argc, char *argv[])
                       << bsl::endl;
 
         BloombergLP::bael_DefaultObserver observer(bsl::cout);
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setDefaultThresholdLevelsIfValid(
                   BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                   BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                   BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                   BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration,
                                                          &ta);
-        BloombergLP::txtbael_LoggerManager& manager =
-            BloombergLP::txtbael_LoggerManager::singleton();
+        BloombergLP::bael_LoggerManager& manager =
+            BloombergLP::bael_LoggerManager::singleton();
 
         {
             BAEL_LOG_SET_CATEGORY("TEST.CATEGORY");
@@ -2830,14 +2830,14 @@ int main(int argc, char *argv[])
         }
 
         BloombergLP::bael_DefaultObserver observer(bsl::cout);
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setDefaultThresholdLevelsIfValid(
                   BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                   BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                   BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                   BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration);
         BloombergLP::bsls_PlatformUtil::Int64 t =
                          BloombergLP::bsls_TimeUtil::getTimer();
@@ -2895,14 +2895,14 @@ int main(int argc, char *argv[])
         }
 
         BloombergLP::bael_DefaultObserver observer(bsl::cout);
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setDefaultThresholdLevelsIfValid(
                BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration);
         BloombergLP::bsls_PlatformUtil::Int64 t =
                           BloombergLP::bsls_TimeUtil::getTimer();
@@ -2959,14 +2959,14 @@ int main(int argc, char *argv[])
         }
 
         BloombergLP::bael_DefaultObserver observer(bsl::cout);
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setDefaultThresholdLevelsIfValid(
                 BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                 BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                 BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                 BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration);
         BloombergLP::bsls_PlatformUtil::Int64 t =
                       BloombergLP::bsls_TimeUtil::getTimer();
@@ -3024,14 +3024,14 @@ int main(int argc, char *argv[])
         }
 
         BloombergLP::bael_DefaultObserver observer(bsl::cout);
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setDefaultThresholdLevelsIfValid(
                   BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                   BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                   BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                   BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration);
         BloombergLP::bsls_PlatformUtil::Int64 t =
                      BloombergLP::bsls_TimeUtil::getTimer();
@@ -3080,9 +3080,9 @@ int main(int argc, char *argv[])
         ASSERT(EXP_N_TOTAL == EXP_N_RECORD + EXP_N_PUBLISH + EXP_N_TRIGGER);
 
         my_Observer observer;
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setLogOrder(
-            BloombergLP::txtbael_LoggerManagerConfiguration::BAEL_FIFO);
+            BloombergLP::bael_LoggerManagerConfiguration::BAEL_FIFO);
         configuration.setDefaultThresholdLevelsIfValid(
                BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
@@ -3090,10 +3090,10 @@ int main(int argc, char *argv[])
                BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
         configuration.setDefaultRecordBufferSizeIfValid(REC_BUF_LIMIT);
         configuration.setTriggerMarkers(
-             BloombergLP::txtbael_LoggerManagerConfiguration::BAEL_NO_MARKERS);
+             BloombergLP::bael_LoggerManagerConfiguration::BAEL_NO_MARKERS);
         BloombergLP::bcema_TestAllocator ta(veryVeryVerbose);
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration,
                                                          &ta);
         executeInParallel(NUM_THREADS, workerThread9);
@@ -3153,7 +3153,7 @@ int main(int argc, char *argv[])
 
         bsl::ostrstream os;
         BloombergLP::bael_DefaultObserver observer(os);
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
 
         // for simplicity we keep the passthrough level to be 'FATAL',
         // so that on trigger event, the message is published only once.
@@ -3163,7 +3163,7 @@ int main(int argc, char *argv[])
                   BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                   BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration,
                                                          &ta);
         BAEL_LOG_SET_CATEGORY("main category");
@@ -3213,9 +3213,9 @@ int main(int argc, char *argv[])
 
         bsl::ostrstream os;
         BloombergLP::bael_DefaultObserver observer(os);
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setLogOrder(
-                  BloombergLP::txtbael_LoggerManagerConfiguration::BAEL_FIFO);
+                  BloombergLP::bael_LoggerManagerConfiguration::BAEL_FIFO);
 
         // for simplicity we keep the passthrough level to be 'FATAL',
         // so that on trigger event, the message is published only once.
@@ -3225,7 +3225,7 @@ int main(int argc, char *argv[])
               BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
               BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration,
                                                          &ta);
         BAEL_LOG_SET_CATEGORY("main category");
@@ -3278,14 +3278,14 @@ int main(int argc, char *argv[])
 
         bsl::ostrstream os;
         BloombergLP::bael_DefaultObserver observer(os);
-        BloombergLP::txtbael_LoggerManagerConfiguration configuration;
+        BloombergLP::bael_LoggerManagerConfiguration configuration;
         configuration.setDefaultThresholdLevelsIfValid(
                   BloombergLP::bael_Severity::BAEL_TRACE,  // record level
                   BloombergLP::bael_Severity::BAEL_WARN,   // passthrough level
                   BloombergLP::bael_Severity::BAEL_ERROR,  // trigger level
                   BloombergLP::bael_Severity::BAEL_FATAL); // triggerAll level
 
-        BloombergLP::txtbael_LoggerManagerScopedGuard guard(&observer,
+        BloombergLP::bael_LoggerManagerScopedGuard guard(&observer,
                                                          configuration,
                                                          &ta);
         BAEL_LOG_SET_CATEGORY("main category");
@@ -3351,7 +3351,7 @@ int main(int argc, char *argv[])
                                        << bsl::endl;
 #endif
 
-                ASSERT(false == txtbael_LoggerManager::isInitialized());
+                ASSERT(false == bael_LoggerManager::isInitialized());
                 BAEL_LOG_SET_CATEGORY("LoggerManagerDestroyed");
                 if (verbose)
                     bsl::cout << "Safely invoked 'BAEL_LOG_SET_CATEGORY' macro"
@@ -3480,8 +3480,8 @@ int main(int argc, char *argv[])
         unlink(filename.c_str());
 #endif
 
-        BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-        BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc);
+        BloombergLP::bael_LoggerManagerConfiguration lmc;
+        BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc);
 #endif
       } break;
       case 4: {
@@ -3511,8 +3511,8 @@ int main(int argc, char *argv[])
         const char  SEP     = ':';
         const int   ARGS[]  = { 1, 2, 3 };
 
-        BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-        BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
+        BloombergLP::bael_LoggerManagerConfiguration lmc;
+        BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
 
         // Re "sieve" category: (1) if recorded, then also published;
         // (2) never triggered.
@@ -3803,8 +3803,8 @@ int main(int argc, char *argv[])
         };
         ASSERT(MAX_ARGS + 1 == sizeof MESSAGE / sizeof *MESSAGE);
 
-        BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-        BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
+        BloombergLP::bael_LoggerManagerConfiguration lmc;
+        BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
 
         const int TRACE = BloombergLP::bael_Severity::BAEL_TRACE;
         const int DEBUG = BloombergLP::bael_Severity::BAEL_DEBUG;
@@ -5750,8 +5750,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-        BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
+        BloombergLP::bael_LoggerManagerConfiguration lmc;
+        BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc, &ta);
 
         {
             const char *CATEGORY_NAME1 = "EQUITY.NASD";
@@ -5874,10 +5874,10 @@ int main(int argc, char *argv[])
 
         using namespace BloombergLP;
 
-        BloombergLP::txtbael_LoggerManagerConfiguration lmc;
-        BloombergLP::txtbael_LoggerManagerScopedGuard lmg(TO, lmc);
-        BloombergLP::txtbael_LoggerManager& lm =
-            BloombergLP::txtbael_LoggerManager::singleton();
+        BloombergLP::bael_LoggerManagerConfiguration lmc;
+        BloombergLP::bael_LoggerManagerScopedGuard lmg(TO, lmc);
+        BloombergLP::bael_LoggerManager& lm =
+            BloombergLP::bael_LoggerManager::singleton();
 
         if (veryVerbose) {
             bsl::cout << "\tTesting 'messageBuffer' and 'messageBufferSize'"
@@ -5888,13 +5888,13 @@ int main(int argc, char *argv[])
         {
             lm.setDefaultThresholdLevels(192, 96, 64, 32);
             const bael_Category *category;
-            category = txtbael_Log::setCategory("EQUITY.NASD");  // creates new
+            category = bael_Log::setCategory("EQUITY.NASD");  // creates new
                                                               // category
             ASSERT(0 == bsl::strcmp("EQUITY.NASD", category->categoryName()));
 
             bael_Administration::setMaxNumCategories(2);
             ASSERT(2 == bael_Administration::maxNumCategories());
-            category = txtbael_Log::setCategory("EQUITY.NYSE");
+            category = bael_Log::setCategory("EQUITY.NYSE");
                                                               // *Category*
             ASSERT(0 != bsl::strcmp("EQUITY.NYSE", category->categoryName()));
             ASSERT(0 != bsl::strcmp("EQUITY.NASD", category->categoryName()));
@@ -5907,13 +5907,13 @@ int main(int argc, char *argv[])
             lm.setDefaultThresholdLevels(192, 96, 64, 32);
             Holder mH;
             const bael_Category *category;
-            category = txtbael_Log::setCategory(&mH, "EQUITY.NASD");
+            category = bael_Log::setCategory(&mH, "EQUITY.NASD");
                                                         // creates new category
             ASSERT(0 == bsl::strcmp("EQUITY.NASD", category->categoryName()));
 
             bael_Administration::setMaxNumCategories(2);
             ASSERT(2 == bael_Administration::maxNumCategories());
-            category = txtbael_Log::setCategory("EQUITY.NYSE");
+            category = bael_Log::setCategory("EQUITY.NYSE");
                                                               // *Category*
             ASSERT(0 != bsl::strcmp("EQUITY.NYSE", category->categoryName()));
             ASSERT(0 != bsl::strcmp("EQUITY.NASD", category->categoryName()));
@@ -5921,14 +5921,14 @@ int main(int argc, char *argv[])
 #endif
          if (veryVerbose) bsl::cout << "\tTesting 'logMessage'" << bsl::endl;
          {
-             const Cat  *CAT  = txtbael_Log::setCategory("EQUITY.NASD");
+             const Cat  *CAT  = bael_Log::setCategory("EQUITY.NASD");
              const int   SEV  = BloombergLP::bael_Severity::BAEL_WARN;
              const char *FILE = __FILE__;
              const int   LINE = 1066;
              const char *MSG  = "logMessage test";
 
              const int NREC = TO->numPublishedRecords();
-             txtbael_Log::logMessage(CAT, SEV, FILE, LINE, MSG);
+             bael_Log::logMessage(CAT, SEV, FILE, LINE, MSG);
              ASSERT(NREC + 1 == TO->numPublishedRecords());
              ASSERT(isRecordOkay(*TO, CAT, SEV, FILE, LINE, MSG));
          }
@@ -5959,7 +5959,7 @@ int main(int argc, char *argv[])
         using namespace BAEL_LOG_TEST_CASE_MINUS_1;
 
         bael_DefaultObserver observer(bsl::cout);
-        txtbael_LoggerManager::initSingleton( &observer, 0 );
+        bael_LoggerManager::initSingleton( &observer, 0 );
 
         bcemt_Attribute attributes;
         bcemt_ThreadUtil::Handle handles[10];

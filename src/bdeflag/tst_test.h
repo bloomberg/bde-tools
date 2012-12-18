@@ -34,7 +34,7 @@ namespace {    // should be caught
         // not caught
 }  // close unnamed namespace
 
-class txt_TestWoofer {
+class TestWoofer {
     static int s_i;
 
     int d_i;
@@ -44,13 +44,13 @@ class txt_TestWoofer {
         // static method
 
     // CREATORS
-    txt_TestWoofer();
+    TestWoofer();
         // default
 
-    txt_TestWoofer(const txt_TestWoofer& original);
+    TestWoofer(const TestWoofer& original);
         // copy
 
-    ~txt_TestWoofer();
+    ~TestWoofer();
         // d'tor
 
     // MANIPULATORS
@@ -90,7 +90,7 @@ bsl::ostream& operator<<(bsl::ostream&                    stream,
 namespace {
 }
 
-class txt_TestArf {
+class TestArf {
     int d_i;
     int d_j;
 
@@ -117,7 +117,7 @@ void woof() {
 int arf() { return 3; }
     // not allowed
 
-struct txt_TestMeow {
+struct TestMeow {
     Boom::Town oil1()
                      = 0;
         // doc
@@ -150,7 +150,7 @@ int arf10()
     }
 }
 
-class txt_TestMeow {
+class TestMeow {
     // class doc
 
   public:

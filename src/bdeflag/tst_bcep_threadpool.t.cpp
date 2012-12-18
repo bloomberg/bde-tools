@@ -1,5 +1,5 @@
-// txtbcep_threadpool.t.cpp                                           -*-C++-*-
-#include <txtbcep_threadpool.h>
+// tst_bcep_threadpool.t.cpp                                          -*-C++-*-
+#include <tst_bcep_threadpool.h>
 
 #include <bcemt_configuration.h>
 
@@ -41,10 +41,10 @@ using namespace bsl;  // automatically added by script
 //-----------------------------------------------------------------------------
 //                              OVERVIEW
 //
-// [3 ] txtbcep_ThreadPool(const bcemt_Attributes&,int , int , int );
-// [3 ] ~txtbcep_ThreadPool();
+// [3 ] bcep_ThreadPool(const bcemt_Attributes&,int , int , int );
+// [3 ] ~bcep_ThreadPool();
 // [  ] int enqueueJob(bdef_Function<void (*)()>);
-// [4 ] int enqueueJob(txtbcep_ThreadPoolJobFunc , void *);
+// [4 ] int enqueueJob(bcep_ThreadPoolJobFunc , void *);
 // [4 ] void start();
 // [4 ] void stop();
 // [4 ] void drain();
@@ -113,7 +113,7 @@ static void aSsErT(int c, const char *s, int i) {
 //                  GLOBAL TYPEDEFS/CONSTANTS FOR TESTING
 //-----------------------------------------------------------------------------
 
-typedef txtbcep_ThreadPool Obj;
+typedef bcep_ThreadPool Obj;
 
 //=============================================================================
 //                         HELPER CLASSES AND FUNCTIONS  FOR TESTING
@@ -262,14 +262,14 @@ namespace BCEP_THREADPOOL_USAGE_EXAMPLE {
 
 ///Usage
 ///-----
-// This example demonstrates the use of a 'txtbcep_ThreadPool' to parallelize a
+// This example demonstrates the use of a 'bcep_ThreadPool' to parallelize a
 // segment of program logic.  The example implements a multi-threaded file
 // search utility.  The utility searches multiple files for a string, similar
-// to the Unix command 'fgrep'; the use of a 'txtbcep_ThreadPool' allows the
+// to the Unix command 'fgrep'; the use of a 'bcep_ThreadPool' allows the
 // utility to search multiple files concurrently.
 //
 // The example program will take as input a string and a list of files to
-// search.  The program creates a 'txtbcep_ThreadPool', and then enqueues a si
+// search.  The program creates a 'bcep_ThreadPool', and then enqueues a si
 // "job" for each file to be searched.  Each thread in the pool will take a job
 // from the queue, open the file, and search for the string.  If a match is
 // found, the job adds the filename to an array of matching filenames.  Because
@@ -383,7 +383,7 @@ namespace BCEP_THREADPOOL_USAGE_EXAMPLE {
 // We initialize the thread pool using default thread attributes.  We then
 // start the pool so that the threads can begin while we prepare the jobs.
 //..
-        txtbcep_ThreadPool pool(defaultAttributes,
+        bcep_ThreadPool pool(defaultAttributes,
                              MIN_SEARCH_THREADS,
                              MAX_SEARCH_THREADS,
                              MAX_SEARCH_THREAD_IDLE);
@@ -478,7 +478,7 @@ namespace BCEP_THREADPOOL_USAGE_EXAMPLE {
     {
         bcemt_Mutex     mutex;
         bcemt_Attribute defaultAttributes;
-        txtbcep_ThreadPool pool(defaultAttributes,
+        bcep_ThreadPool pool(defaultAttributes,
                              MIN_SEARCH_THREADS,
                              MAX_SEARCH_THREADS,
                              MAX_SEARCH_THREAD_IDLE);
@@ -1040,7 +1040,7 @@ int main(int argc, char *argv[])
         //   counter has reached a limit.
         //
         // Testing:
-        //   int enqueueJob(txtbcep_ThreadPoolJobFunc , void *);
+        //   int enqueueJob(bcep_ThreadPoolJobFunc , void *);
         // --------------------------------------------------------------------
 
         if (verbose) cout << "TESTING a job enqueuing other jobs" << endl
@@ -1430,7 +1430,7 @@ int main(int argc, char *argv[])
         //   additional threads were created and one item remained in queue.
         //
         // Testing:
-        //   int enqueueJob(txtbcep_ThreadPoolJobFunc , void *);
+        //   int enqueueJob(bcep_ThreadPoolJobFunc , void *);
         //   void stop();
         //   void drain();
         //   void shutdown();
@@ -1650,8 +1650,8 @@ int main(int argc, char *argv[])
         //   int minThreads() const;
         //   int maxThreads() const;
         //   int maxIdleTime() const;
-        //   txtbcep_ThreadPool(const bcemt_Attributes&,int , int , int );
-        //   ~txtbcep_ThreadPool();
+        //   bcep_ThreadPool(const bcemt_Attributes&,int , int , int );
+        //   ~bcep_ThreadPool();
         // --------------------------------------------------------------------
 
         if (verbose) cout << "Testing: direct accessors\n"
@@ -1750,7 +1750,7 @@ int main(int argc, char *argv[])
       case 1: {
         // --------------------------------------------------------------------
         // TESTING HELPER FUNCTIONS
-        //   Verify that the support functions used to test 'txtbcep_ThreadP
+        //   Verify that the support functions used to test 'bcep_ThreadP
         //   behave as expected.  The 'TestJobFunction1' function is expected
         //   to increment the supplied counter, signal a condition variable
         //   indicating that it has started, and wait for a stop condition to

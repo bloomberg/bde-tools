@@ -1,4 +1,4 @@
-// txtbcep_threadpool.h                                               -*-C++-*-
+// tst_bcep_threadpool.h                                              -*-C++-*-
 #ifndef INCLUDED_BCEP_THREADPOOL
 #define INCLUDED_BCEP_THREADPOOL
 
@@ -10,7 +10,7 @@ BDES_IDENT("$Id: $")
 //@PURPOSE: Provide portable implementation for a dynamic pool of threads.
 //
 //@CLASSES:
-//   txtbcep_ThreadPool: portable dynamic thread pool
+//   bcep_ThreadPool: portable dynamic thread pool
 //
 //@SEE_ALSO:
 //
@@ -56,7 +56,7 @@ BDES_IDENT("$Id: $")
 //
 // Thread pools are ideal for developing multi-threaded server applications.  A
 // server need only package client requests to execute as jobs, and
-// 'txtbcep_ThreadPool' will handle the queue management, thread management,
+// 'bcep_ThreadPool' will handle the queue management, thread management,
 // request dispatching.  Thread pools are also well suited for parallelizing
 // certain types of application logic.  Without any complex or redundant thread
 // management code, an application can easily create a thread pool, enqueue a
@@ -64,7 +64,7 @@ BDES_IDENT("$Id: $")
 //
 ///Thread Safety
 ///-------------
-// The 'txtbcep_ThreadPool' class is both *fully thread-safe* (i.e., all
+// The 'bcep_ThreadPool' class is both *fully thread-safe* (i.e., all
 // non-creator methods can correctly execute concurrently), and is
 // *thread-enabled* (i.e., the class does not function correctly in a
 // non-multi-threading environment).  See 'bsldoc_glossary' for complete
@@ -87,14 +87,14 @@ BDES_IDENT("$Id: $")
 //
 ///Usage
 ///-----
-// This example demonstrates the use of a 'txtbcep_ThreadPool' to parallelize a
+// This example demonstrates the use of a 'bcep_ThreadPool' to parallelize a
 // segment of program logic.  The example implements a multi-threaded file
 // search utility.  The utility searches multiple files for a string, similar
-// to the Unix command 'fgrep'; the use of a 'txtbcep_ThreadPool' allows the
+// to the Unix command 'fgrep'; the use of a 'bcep_ThreadPool' allows the
 // utility to search multiple files concurrently.
 //
 // The example program will take as input a string and a list of files to
-// search.  The program creates a 'txtbcep_ThreadPool', and then enqueues a si
+// search.  The program creates a 'bcep_ThreadPool', and then enqueues a si
 // "job" for each file to be searched.  Each thread in the pool will take a job
 // from the queue, open the file, and search for the string.  If a match is
 // found, the job adds the filename to an array of matching filenames.  Because
@@ -204,7 +204,7 @@ BDES_IDENT("$Id: $")
 // We initialize the thread pool using default thread attributes.  We then
 // start the pool so that the threads can begin while we prepare the jobs.
 //..
-//       txtbcep_ThreadPool pool(defaultAttributes,
+//       bcep_ThreadPool pool(defaultAttributes,
 //                            MIN_SEARCH_THREADS,
 //                            MAX_SEARCH_THREADS,
 //                            MAX_SEARCH_THREAD_IDLE);
@@ -297,7 +297,7 @@ BDES_IDENT("$Id: $")
 //  {
 //      bcemt_Mutex     mutex;
 //      bcemt_Attribute defaultAttributes;
-//      txtbcep_ThreadPool pool(defaultAttributes,
+//      bcep_ThreadPool pool(defaultAttributes,
 //                           MIN_SEARCH_THREADS,
 //                           MAX_SEARCH_THREADS,
 //                           MAX_SEARCH_THREAD_IDLE);
@@ -383,23 +383,23 @@ BDES_IDENT("$Id: $")
 
 namespace BloombergLP {
 
-class txtbcep_ThreadPool;
-struct txtbcep_ThreadPoolWaitNode;
+class bcep_ThreadPool;
+struct bcep_ThreadPoolWaitNode;
 
-extern "C" void* txtbcep_ThreadPoolEntry(void *);
+extern "C" void* bcep_ThreadPoolEntry(void *);
     // Entry point for processing threads.
 
                            // =====================
-                           // class txtbcep_ThreadPool
+                           // class bcep_ThreadPool
                            // =====================
 
 extern "C" {
-    typedef void (*txtbcep_ThreadPoolJobFunc)(void *);
+    typedef void (*bcep_ThreadPoolJobFunc)(void *);
         // This type declares the prototype for functions that are suitable
-        // to be specified 'txtbcep_ThreadPool::enqueueJob'.
+        // to be specified 'bcep_ThreadPool::enqueueJob'.
 }
 
-class txtbcep_ThreadPool {
+class bcep_ThreadPool {
     // This class implements a thread pool used for concurrently executing
     // multiple user-defined functions ("jobs").
 
@@ -454,7 +454,7 @@ class txtbcep_ThreadPool {
                                            // queue; queuing is disabled when
                                            // 0, enabled otherwise
 
-    txtbcep_ThreadPoolWaitNode* volatile  d_waitHead;
+    bcep_ThreadPoolWaitNode* volatile  d_waitHead;
                                            // pointer to the
                                            // 'WaitNode' control
                                            // structure of the first
@@ -476,7 +476,7 @@ class txtbcep_ThreadPool {
 #endif
 
     // FRIENDS
-    friend void* ::BloombergLP::txtbcep_ThreadPoolEntry(void *);
+    friend void* ::BloombergLP::bcep_ThreadPoolEntry(void *);
 
     // PRIVATE MANIPULATORS
     void doEnqueueJob(const Job& job);
@@ -500,16 +500,16 @@ class txtbcep_ThreadPool {
 
   private:
     // NOT IMPLEMENTED
-    txtbcep_ThreadPool(const txtbcep_ThreadPool&);
-    txtbcep_ThreadPool& operator=(const txtbcep_ThreadPool&);
+    bcep_ThreadPool(const bcep_ThreadPool&);
+    bcep_ThreadPool& operator=(const bcep_ThreadPool&);
 
   public:
     // TRAITS
-    BSLALG_DECLARE_NESTED_TRAITS(txtbcep_ThreadPool,
+    BSLALG_DECLARE_NESTED_TRAITS(bcep_ThreadPool,
                                  bslalg_TypeTraitUsesBslmaAllocator);
 
     // CREATORS
-    txtbcep_ThreadPool(const bcemt_Attribute&  threadAttributes,
+    bcep_ThreadPool(const bcemt_Attribute&  threadAttributes,
                     int                     minThreads,
                     int                     maxThreads,
                     int                     maxIdleTime,
@@ -519,7 +519,7 @@ class txtbcep_ThreadPool {
         // of threads, and 'maxIdleTime' maximum idle time (in milliseconds),
         // and optionally using the specified 'basicAllocator'.
 
-    ~txtbcep_ThreadPool();
+    ~bcep_ThreadPool();
         // Drain all pending jobs and destroy this thread pool.
 
     // MANIPULATORS
@@ -534,7 +534,7 @@ class txtbcep_ThreadPool {
         // 'functor' is not "unset".  See 'bdef_function' for more information
         // on functors.
 
-    int enqueueJob(txtbcep_ThreadPoolJobFunc function, void *userData);
+    int enqueueJob(bcep_ThreadPoolJobFunc function, void *userData);
         // Enqueue the specified 'function' to be executed by the next
         // available thread.  The specified 'userData' pointer will be passed
         // to the function by the processing thread.  Return 0 if enqueued
@@ -622,7 +622,7 @@ class txtbcep_ThreadPool {
 // MANIPULATORS
 
 inline
-int txtbcep_ThreadPool::enqueueJob(txtbcep_ThreadPoolJobFunc  function,
+int bcep_ThreadPool::enqueueJob(bcep_ThreadPoolJobFunc  function,
                                 void                   *userData)
 {
     return enqueueJob(bdef_BindUtil::bindR<void>(function, userData));
@@ -631,25 +631,25 @@ int txtbcep_ThreadPool::enqueueJob(txtbcep_ThreadPoolJobFunc  function,
 // ACCESSORS
 
 inline
-int txtbcep_ThreadPool::minThreads() const
+int bcep_ThreadPool::minThreads() const
 {
     return d_minThreads;
 }
 
 inline
-int txtbcep_ThreadPool::maxThreads() const
+int bcep_ThreadPool::maxThreads() const
 {
     return d_maxThreads;
 }
 
 inline
-int txtbcep_ThreadPool::threadFailures() const
+int bcep_ThreadPool::threadFailures() const
 {
     return d_createFailures;
 }
 
 inline
-int txtbcep_ThreadPool::maxIdleTime() const
+int bcep_ThreadPool::maxIdleTime() const
 {
     return d_maxIdleTime;
 }

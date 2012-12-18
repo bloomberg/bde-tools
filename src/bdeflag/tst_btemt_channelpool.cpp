@@ -1,6 +1,6 @@
-// txtbtemt_channelpool.cpp         -*-C++-*-
+// btemt_channelpool.cpp               -*-C++-*-
 
-#include <txtbtemt_channelpool.h>
+#include <tst_btemt_channelpool.h>
 
 #include <bsls_ident.h>
 BSLS_IDENT("$Id$ $CSID$")
@@ -62,13 +62,13 @@ using namespace bdef_PlaceHolders;
 
 enum {
 
-    MAX_IOVEC_SIZE =  txtbtemt_ChannelPool_MessageUtil::BTEMT_MAX_IOVEC_SIZE
+    MAX_IOVEC_SIZE =  btemt_ChannelPool_MessageUtil::BTEMT_MAX_IOVEC_SIZE
 };
 
 // IMPLEMENTATION NOTES: This implementation file is quite large and uses a
 // number of auxiliary classes.  We start with the auxiliary class
 // definitions, then with their implementation, then finally provide the class
-// implementation of 'txtbtemt_ChannelPool'.
+// implementation of 'btemt_ChannelPool'.
 
 // NOTE: There is a race in the channel destruction.  Previously, the race was
 // resolved by ensuring that the channel destructor was always invoked in the
@@ -86,21 +86,21 @@ enum {
 // into the event manager timer queue (via execute, with a shared handle to the
 // channel) are:
 //..
-//  txtbtemt_Channel::readTimeoutCb              // via registerTimer
-//  txtbtemt_Channel::registerWriteCb            // via execute
-//  txtbtemt_Channel::disableRead                // via execute
-//  txtbtemt_Channel::initiateReadSequence       // via execute
-//  txtbtemt_Channel::invokeChannelDown          // via execute
-//  txtbtemt_Channel::invokeChannelUp            // via execute
+//  btemt_Channel::readTimeoutCb              // via registerTimer
+//  btemt_Channel::registerWriteCb            // via execute
+//  btemt_Channel::disableRead                // via execute
+//  btemt_Channel::initiateReadSequence       // via execute
+//  btemt_Channel::invokeChannelDown          // via execute
+//  btemt_Channel::invokeChannelUp            // via execute
 //..
 // and the callbacks that can be registered to a socket event (with a shared
 // handle to the channel) are:
 //..
-//  txtbtemt_Channel::readCb                     // registered to READ using
+//  btemt_Channel::readCb                     // registered to READ using
 //                                            // either via a
 //                                            // 'bcema_PooledBufferChain'
 //                                            // or a 'bcema_Blob'
-//  txtbtemt_Channel::writeCb                    // registered to WRITE
+//  btemt_Channel::writeCb                    // registered to WRITE
 //..
 // Finally note that those functions *must* take the shared pointer by value
 // (not by 'const' reference) or else a 'deregisterTimer' could invalidate the
@@ -144,10 +144,10 @@ enum ChannelDownMask {
 };
 
                     // =========================
-                    // local class txtbtemt_Channel
+                    // local class btemt_Channel
                     // =========================
 
-class txtbtemt_Channel {
+class btemt_Channel {
     // This channel class provides roughly an implementation of the
     // 'btemt_asyncchannel' protocol for use in this channel pool.  It owns its
     // underlying socket and is responsible for destroying it upon destruction
@@ -186,20 +186,20 @@ class txtbtemt_Channel {
     // to a 'bcema_SharedPtr'.
 
     // PRIVATE TYPES
-    typedef txtbtemt_ChannelPool::ChannelStateChangeCallback
+    typedef btemt_ChannelPool::ChannelStateChangeCallback
                                                     ChannelStateChangeCallback;
         // Callback called in case of channel events.
 
-    typedef txtbtemt_ChannelPool::DataReadCallback
+    typedef btemt_ChannelPool::DataReadCallback
                                             PooledBufferChainBasedReadCallback;
         // Callback called upon reading data, if reading is enabled on this
         // channel.
 
-    typedef txtbtemt_ChannelPool::BlobBasedReadCallback  BlobBasedReadCallback;
+    typedef btemt_ChannelPool::BlobBasedReadCallback  BlobBasedReadCallback;
         // Blob based callback for reading data, if reading is enabled on this
         // channel.
 
-    typedef bcema_SharedPtr<txtbtemt_Channel> ChannelHandle;
+    typedef bcema_SharedPtr<btemt_Channel> ChannelHandle;
         // Handle shared by all the callbacks and functions which are at some
         // point enqueued in the time queue of an event manager, to ensure that
         // the channel lives at least as long as the callbacks that reference
@@ -310,7 +310,7 @@ class txtbtemt_Channel {
     volatile int                    d_channelUpFlag;         // are we running?
 
     // Channel managers section
-    txtbtemt_ChannelPool              *d_channelPool_p;         // (held)
+    btemt_ChannelPool              *d_channelPool_p;         // (held)
 
     btemt_TcpTimerEventManager     *d_eventManager_p;        // (held)
 
@@ -401,7 +401,7 @@ class txtbtemt_Channel {
         // channel.
 
     void invokeChannelDown(ChannelHandle                    self,
-                           txtbtemt_ChannelPool::ChannelEvents type);
+                           btemt_ChannelPool::ChannelEvents type);
         // Invoke user-installed channel state callback with the specified
         // 'type' (which can be either 'BTEMT_CHANNEL_DOWN',
         // 'BTEMT_CHANNEL_DOWN_RECEIVE',
@@ -488,22 +488,22 @@ class txtbtemt_Channel {
         // channel.
 
     // FRIENDS
-    friend class txtbtemt_ChannelPool;
+    friend class btemt_ChannelPool;
 
   private:
     // NOT IMPLEMENTED
-    txtbtemt_Channel(const txtbtemt_Channel&);
-    txtbtemt_Channel& operator=(const txtbtemt_Channel&);
+    btemt_Channel(const btemt_Channel&);
+    btemt_Channel& operator=(const btemt_Channel&);
 
   public:
     // CREATORS
-    txtbtemt_Channel(
+    btemt_Channel(
           StreamSocket                           *socket,
           StreamSocketFactory                    *socketFactory,
           int                                     channelId,
           int                                     sourceId,
-          const txtbtemt_ChannelPoolConfiguration&   configuration,
-          txtbtemt_ChannelType::Value                channelType,
+          const btemt_ChannelPoolConfiguration&   configuration,
+          btemt_ChannelType::Value                channelType,
           bool                                    mode,
           ChannelStateChangeCallback              channelCb,
           PooledBufferChainBasedReadCallback      pooledBufferChainBasedReadCb,
@@ -513,7 +513,7 @@ class txtbtemt_Channel {
           bcema_BlobBufferFactory                *writeBlobBufferPool,
           bcema_BlobBufferFactory                *readBlobBufferPool,
           btemt_TcpTimerEventManager             *eventManager,
-          txtbtemt_ChannelPool                      *channelPool,
+          btemt_ChannelPool                      *channelPool,
           bcema_PoolAllocator                    *sharedPtrAllocator,
           bslma_Allocator                        *basicAllocator = 0);
         // Create a channel belonging to the specified 'channelPool' and
@@ -533,7 +533,7 @@ class txtbtemt_Channel {
         // 'writeBlobBufferPool' for the blobs used to stored the incoming and
         // outgoing enqueued messages.
 
-    ~txtbtemt_Channel();
+    ~btemt_Channel();
         // Destroy this channel.
 
     // MANIPULATORS
@@ -559,9 +559,9 @@ class txtbtemt_Channel {
         // operation by holding the specified 'self' handle to this channel
         // pool.  Return 0 on success, or a negative value if the message
         // could not be enqueued.  The templatized type 'MessageType' must be
-        // support by the 'txtbtemt_ChannelPool_MessageUtil' class
+        // support by the 'btemt_ChannelPool_MessageUtil' class
         // (i.e. 'bcema_Blob', 'btemt_DataMsg', or
-        // 'txtbtemt_ChannelPool_MessageUtil::IovecArray').  Note that the
+        // 'btemt_ChannelPool_MessageUtil::IovecArray').  Note that the
         // message may not be enqueued if the number of bytes already enqueued
         // for this channel exceeds either the specified 'enqueueWaterMark' or
         // the high water mark specified to this channel at construction, or
@@ -582,7 +582,7 @@ class txtbtemt_Channel {
     bdet_TimeInterval creationTime() const;
         // Return the local time recorded at construction of this channel.
 
-    txtbtemt_ChannelType::Value channelType() const;
+    btemt_ChannelType::Value channelType() const;
         // Return an enumerated value identifying how this channel was created
         // from within the channel pool.
 
@@ -620,14 +620,14 @@ class txtbtemt_Channel {
 
 // PRIVATE MANIPULATORS
 inline
-void txtbtemt_Channel::deregisterSocketRead(ChannelHandle)
+void btemt_Channel::deregisterSocketRead(ChannelHandle)
 {
     d_eventManager_p->deregisterSocketEvent(this->socket()->handle(),
                                             bteso_EventType::BTESO_READ);
 }
 
 inline
-void txtbtemt_Channel::deregisterSocketWrite(ChannelHandle)
+void btemt_Channel::deregisterSocketWrite(ChannelHandle)
 {
     if (d_eventManager_p->isRegistered(this->socket()->handle(),
                                        bteso_EventType::BTESO_WRITE)) {
@@ -638,74 +638,74 @@ void txtbtemt_Channel::deregisterSocketWrite(ChannelHandle)
 
 // MANIPULATORS
 inline
-void txtbtemt_Channel::setUserData(void *userData)
+void btemt_Channel::setUserData(void *userData)
 {
     d_userData = userData;
 }
 
 // ACCESSORS
 inline
-int txtbtemt_Channel::channelId() const
+int btemt_Channel::channelId() const
 {
     return d_channelId;
 }
 
 inline
-bdet_TimeInterval txtbtemt_Channel::creationTime() const
+bdet_TimeInterval btemt_Channel::creationTime() const
 {
     return d_creationTime;
 }
 
 inline
-txtbtemt_ChannelType::Value txtbtemt_Channel::channelType() const
+btemt_ChannelType::Value btemt_Channel::channelType() const
 {
-    return static_cast<txtbtemt_ChannelType::Value>(d_channelType);
+    return static_cast<btemt_ChannelType::Value>(d_channelType);
 }
 
 inline
-btemt_TcpTimerEventManager *txtbtemt_Channel::eventManager() const
+btemt_TcpTimerEventManager *btemt_Channel::eventManager() const
 {
     return d_eventManager_p;
 }
 
 inline
-bool txtbtemt_Channel::isChannelDown(ChannelDownMask mask) const
+bool btemt_Channel::isChannelDown(ChannelDownMask mask) const
 {
     return mask == (d_channelDownFlag.relaxedLoad() & mask);
 }
 
 inline
-bsls_PlatformUtil::Int64 txtbtemt_Channel::numBytesRead() const
+bsls_PlatformUtil::Int64 btemt_Channel::numBytesRead() const
 {
     return d_numBytesRead;
 }
 
 inline
-bsls_PlatformUtil::Int64 txtbtemt_Channel::numBytesWritten() const
+bsls_PlatformUtil::Int64 btemt_Channel::numBytesWritten() const
 {
     return d_numBytesWritten;
 }
 
 inline
-bsls_PlatformUtil::Int64 txtbtemt_Channel::numBytesRequestedToBeWritten() const
+bsls_PlatformUtil::Int64 btemt_Channel::numBytesRequestedToBeWritten() const
 {
     return d_numBytesRequestedToBeWritten;
 }
 
 inline
-StreamSocket *txtbtemt_Channel::socket() const
+StreamSocket *btemt_Channel::socket() const
 {
     return d_socket_p;
 }
 
 inline
-int txtbtemt_Channel::sourceId() const
+int btemt_Channel::sourceId() const
 {
     return d_sourceId;
 }
 
 inline
-void *txtbtemt_Channel::userData() const
+void *btemt_Channel::userData() const
 {
     return d_userData;
 }
@@ -718,7 +718,7 @@ class btemt_Connector {
   public:
     // This small object is stored in channel pool 'd_connectors' and holds all
     // (but does not own any of) the information needed while an asynchronous
-    // call to 'txtbtemt_ChannelPool::connect' is in progress.
+    // call to 'btemt_ChannelPool::connect' is in progress.
 
     // TRAITS
     BSLALG_DECLARE_NESTED_TRAITS(btemt_Connector,
@@ -904,7 +904,7 @@ btemt_ServerState::~btemt_ServerState()
 //                      LOCAL FUNCTIONS IMPLEMENTATIONS
 // ============================================================================
 
-void txtbtemt_Channel::allocateNextReadBuffers(int numBytes,
+void btemt_Channel::allocateNextReadBuffers(int numBytes,
                                             int totalBufferSize,
                                             const PooledBufferChainBasedType&)
 {
@@ -934,7 +934,7 @@ void txtbtemt_Channel::allocateNextReadBuffers(int numBytes,
     }
 }
 
-void txtbtemt_Channel::allocateNextReadBuffers(int numBytes,
+void btemt_Channel::allocateNextReadBuffers(int numBytes,
                                             int totalBufferSize,
                                             const BlobBasedType&)
 {
@@ -974,7 +974,7 @@ void txtbtemt_Channel::allocateNextReadBuffers(int numBytes,
     }
 }
 
-void txtbtemt_Channel::initDataBufferForReads(
+void btemt_Channel::initDataBufferForReads(
                                              const PooledBufferChainBasedType&)
 {
     // Initializes incoming message: allocate just one buffer, and sets the
@@ -990,7 +990,7 @@ void txtbtemt_Channel::initDataBufferForReads(
     d_currentMsg.setUserDataField2(d_minIncomingMessageSize);
 }
 
-void txtbtemt_Channel::initDataBufferForReads(const BlobBasedType&)
+void btemt_Channel::initDataBufferForReads(const BlobBasedType&)
 {
     // Initializes incoming message: allocate just one buffer, and sets the
     // capacity (field 1).
@@ -1006,7 +1006,7 @@ void txtbtemt_Channel::initDataBufferForReads(const BlobBasedType&)
     d_minBytesBeforeNextCb = d_minIncomingMessageSize;
 }
 
-int txtbtemt_Channel::populateIVecs(const PooledBufferChainBasedType&)
+int btemt_Channel::populateIVecs(const PooledBufferChainBasedType&)
 {
     // Data is available on the channel, load it into 'd_currentMsg'.
     // Note that the first 'd_currentMsg.userDataField1()' bytes have
@@ -1045,7 +1045,7 @@ int txtbtemt_Channel::populateIVecs(const PooledBufferChainBasedType&)
     return remaining + bufferSize * (d_numUsedIVecs - 1);
 }
 
-int txtbtemt_Channel::populateIVecs(const BlobBasedType&)
+int btemt_Channel::populateIVecs(const BlobBasedType&)
 {
     BSLS_ASSERT(d_numUsedIVecs <=
             d_blobReadData.numBuffers() - d_blobReadData.numDataBuffers() + 1);
@@ -1079,7 +1079,7 @@ int txtbtemt_Channel::populateIVecs(const BlobBasedType&)
     return totalBufferSize;
 }
 
-void txtbtemt_Channel::processReadData(int numBytes,
+void btemt_Channel::processReadData(int numBytes,
                                     const PooledBufferChainBasedType&)
 {
     BSLS_ASSERT(0 <= numBytes);
@@ -1151,7 +1151,7 @@ void txtbtemt_Channel::processReadData(int numBytes,
     BSLS_ASSERT(0 < d_currentMsg.userDataField2());
 }
 
-void txtbtemt_Channel::processReadData(int numBytes,
+void btemt_Channel::processReadData(int numBytes,
                                     const BlobBasedType&)
 {
     BSLS_ASSERT(0 <= numBytes);
@@ -1188,12 +1188,12 @@ typedef bsl::map<int, btemt_Connector>     ConnectorMap;
 typedef bsl::map<int, btemt_TimerState>    TimerStateMap;
 
                     // -------------------------
-                    // local class txtbtemt_Channel
+                    // local class btemt_Channel
                     // -------------------------
 
 // PRIVATE MANIPULATORS
-void txtbtemt_Channel::invokeChannelDown(ChannelHandle                    self,
-                                      txtbtemt_ChannelPool::ChannelEvents type)
+void btemt_Channel::invokeChannelDown(ChannelHandle                    self,
+                                      btemt_ChannelPool::ChannelEvents type)
 {
     BSLS_ASSERT(bcemt_ThreadUtil::isEqual(bcemt_ThreadUtil::self(),
                                   d_eventManager_p->dispatcherThreadHandle()));
@@ -1203,7 +1203,7 @@ void txtbtemt_Channel::invokeChannelDown(ChannelHandle                    self,
     // channel will delay the destruction of this channel until at least the
     // callback completes.
 
-    if (txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN_READ == type) {
+    if (btemt_ChannelPool::BTEMT_CHANNEL_DOWN_READ == type) {
         if (d_eventManager_p->isRegistered(this->socket()->handle(),
                                            bteso_EventType::BTESO_READ)) {
             d_eventManager_p->deregisterSocketEvent(
@@ -1211,13 +1211,13 @@ void txtbtemt_Channel::invokeChannelDown(ChannelHandle                    self,
                                                   bteso_EventType::BTESO_READ);
         }
     }
-    else if (txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN == type) {
+    else if (btemt_ChannelPool::BTEMT_CHANNEL_DOWN == type) {
         d_eventManager_p->deregisterSocket(this->socket()->handle());
     }
 
     // Do not deregister the read time out if not closing the read part.
 
-    if (txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN_WRITE != type) {
+    if (btemt_ChannelPool::BTEMT_CHANNEL_DOWN_WRITE != type) {
         if (d_readTimeoutTimerId) {
             d_eventManager_p->deregisterTimer(d_readTimeoutTimerId);
             d_readTimeoutTimerId = 0;
@@ -1228,18 +1228,18 @@ void txtbtemt_Channel::invokeChannelDown(ChannelHandle                    self,
     d_channelUpFlag = 0;
 }
 
-void txtbtemt_Channel::invokeChannelUp(ChannelHandle)
+void btemt_Channel::invokeChannelUp(ChannelHandle)
 {
     BSLS_ASSERT(bcemt_ThreadUtil::isEqual(bcemt_ThreadUtil::self(),
                                   d_eventManager_p->dispatcherThreadHandle()));
 
     d_channelStateCb(d_channelId, d_sourceId,
-                     txtbtemt_ChannelPool::BTEMT_CHANNEL_UP,
+                     btemt_ChannelPool::BTEMT_CHANNEL_UP,
                      d_userData);
     d_channelUpFlag = 1;
 }
 
-void txtbtemt_Channel::notifyChannelDown(ChannelHandle            self,
+void btemt_Channel::notifyChannelDown(ChannelHandle            self,
                                       bteso_Flag::ShutdownType type,
                                       bool                     serializedFlag)
 {
@@ -1290,15 +1290,15 @@ void txtbtemt_Channel::notifyChannelDown(ChannelHandle            self,
                                != (newChannelDownFlag & CLOSED_RECEIVE_MASK)) {
         if (serializedFlag) {
             invokeChannelDown(self,
-                              txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN_READ);
+                              btemt_ChannelPool::BTEMT_CHANNEL_DOWN_READ);
         }
         else {
             bdef_Function<void (*)()> cb(bdef_BindUtil::bindA(
                         d_allocator_p
-                      , &txtbtemt_Channel::invokeChannelDown
+                      , &btemt_Channel::invokeChannelDown
                       , this
                       , self
-                      , txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN_READ));
+                      , btemt_ChannelPool::BTEMT_CHANNEL_DOWN_READ));
 
             d_eventManager_p->execute(cb);
         }
@@ -1309,15 +1309,15 @@ void txtbtemt_Channel::notifyChannelDown(ChannelHandle            self,
                                   != (newChannelDownFlag & CLOSED_SEND_MASK)) {
         if (serializedFlag) {
             invokeChannelDown(self,
-                              txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN_WRITE);
+                              btemt_ChannelPool::BTEMT_CHANNEL_DOWN_WRITE);
         }
         else {
             bdef_Function<void (*)()> cb(bdef_BindUtil::bindA(
                         d_allocator_p
-                      , &txtbtemt_Channel::invokeChannelDown
+                      , &btemt_Channel::invokeChannelDown
                       , this
                       , self
-                      , txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN_WRITE));
+                      , btemt_ChannelPool::BTEMT_CHANNEL_DOWN_WRITE));
 
             d_eventManager_p->execute(cb);
         }
@@ -1351,15 +1351,15 @@ void txtbtemt_Channel::notifyChannelDown(ChannelHandle            self,
         }
 
         if (serializedFlag) {
-            invokeChannelDown(self, txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN);
+            invokeChannelDown(self, btemt_ChannelPool::BTEMT_CHANNEL_DOWN);
         }
         else {
             bdef_Function<void (*)()> cb(bdef_BindUtil::bindA(
                         d_allocator_p
-                      , &txtbtemt_Channel::invokeChannelDown
+                      , &btemt_Channel::invokeChannelDown
                       , this
                       , self
-                      , txtbtemt_ChannelPool::BTEMT_CHANNEL_DOWN));
+                      , btemt_ChannelPool::BTEMT_CHANNEL_DOWN));
 
             d_eventManager_p->execute(cb);
         }
@@ -1367,7 +1367,7 @@ void txtbtemt_Channel::notifyChannelDown(ChannelHandle            self,
 }
 
 inline
-int txtbtemt_Channel::protectAndCheckCallback(const ChannelHandle& self,
+int btemt_Channel::protectAndCheckCallback(const ChannelHandle& self,
                                            ChannelDownMask      mask)
 {
     BSLS_ASSERT(this == self.ptr());
@@ -1387,7 +1387,7 @@ int txtbtemt_Channel::protectAndCheckCallback(const ChannelHandle& self,
 }
 
 template <typename TYPE>
-void txtbtemt_Channel::readCb(ChannelHandle self)
+void btemt_Channel::readCb(ChannelHandle self)
 {
     if (BSLS_PERFORMANCEHINT_PREDICT_UNLIKELY(
                     0 != protectAndCheckCallback(self, CLOSED_RECEIVE_MASK))) {
@@ -1523,7 +1523,7 @@ void txtbtemt_Channel::readCb(ChannelHandle self)
     }
 }
 
-void txtbtemt_Channel::readTimeoutCb(ChannelHandle self)
+void btemt_Channel::readTimeoutCb(ChannelHandle self)
 {
     if (0 != protectAndCheckCallback(self, CLOSED_RECEIVE_MASK)) {
         return;
@@ -1531,7 +1531,7 @@ void txtbtemt_Channel::readTimeoutCb(ChannelHandle self)
 
     d_channelStateCb(d_channelId,
                      d_sourceId,
-                     txtbtemt_ChannelPool::BTEMT_READ_TIMEOUT,
+                     btemt_ChannelPool::BTEMT_READ_TIMEOUT,
                      d_userData);
 
     d_readTimeoutTimerId = 0;
@@ -1544,7 +1544,7 @@ void txtbtemt_Channel::readTimeoutCb(ChannelHandle self)
     }
 }
 
-int txtbtemt_Channel::refillOutgoingMsg()
+int btemt_Channel::refillOutgoingMsg()
 {
     BSLS_ASSERT(0 == d_writeActiveData.data()->numBuffers());
     BSLS_ASSERT(0 == d_writeActiveData.userDataField1());
@@ -1581,7 +1581,7 @@ int txtbtemt_Channel::refillOutgoingMsg()
     return 1;
 }
 
-void txtbtemt_Channel::registerReadTimeoutCallback(
+void btemt_Channel::registerReadTimeoutCallback(
                                                 bdet_TimeInterval    timeout,
                                                 const ChannelHandle& self)
 {
@@ -1591,7 +1591,7 @@ void txtbtemt_Channel::registerReadTimeoutCallback(
 
     bdef_Function<void (*)()> readTimeoutFunctor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_Channel::readTimeoutCb
+              , &btemt_Channel::readTimeoutCb
               , this
               , self));
 
@@ -1600,7 +1600,7 @@ void txtbtemt_Channel::registerReadTimeoutCallback(
                                                 readTimeoutFunctor);
 }
 
-void txtbtemt_Channel::registerWriteCb(ChannelHandle self)
+void btemt_Channel::registerWriteCb(ChannelHandle self)
 {
     // This callback is executed whenever data is available in
     if (0 != protectAndCheckCallback(self, CLOSED_SEND_MASK)) {
@@ -1609,7 +1609,7 @@ void txtbtemt_Channel::registerWriteCb(ChannelHandle self)
 
     bdef_Function<void (*)()> writeFunctor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_Channel::writeCb
+              , &btemt_Channel::writeCb
               , this
               , self));
 
@@ -1621,7 +1621,7 @@ void txtbtemt_Channel::registerWriteCb(ChannelHandle self)
     if (0 != rCode) {
         if (isChannelDown(CLOSED_SEND_MASK)) {
             d_channelStateCb(d_channelId, d_sourceId,
-                             txtbtemt_ChannelPool::BTEMT_MESSAGE_DISCARDED,
+                             btemt_ChannelPool::BTEMT_MESSAGE_DISCARDED,
                              d_userData);
         }
         else {
@@ -1631,7 +1631,7 @@ void txtbtemt_Channel::registerWriteCb(ChannelHandle self)
     // We simply wait until the socket calls us back.
 }
 
-void txtbtemt_Channel::writeCb(ChannelHandle self)
+void btemt_Channel::writeCb(ChannelHandle self)
 {
     // This callback is executed whenever the write buffer of 'd_socket_p' has
     // some space available, always in the event manager's dispatcher thread.
@@ -1712,7 +1712,7 @@ void txtbtemt_Channel::writeCb(ChannelHandle self)
 
             if (isChannelDown(CLOSED_SEND_MASK)) {
                 d_channelStateCb(d_channelId, d_sourceId,
-                                 txtbtemt_ChannelPool::BTEMT_MESSAGE_DISCARDED,
+                                 btemt_ChannelPool::BTEMT_MESSAGE_DISCARDED,
                                  d_userData);
             }
             else {
@@ -1735,7 +1735,7 @@ void txtbtemt_Channel::writeCb(ChannelHandle self)
                 d_hiWatermarkHitFlag = false;
                 oGuard.release()->unlock();
                 d_channelStateCb(d_channelId, d_sourceId,
-                                txtbtemt_ChannelPool::BTEMT_WRITE_CACHE_LOWWAT,
+                                btemt_ChannelPool::BTEMT_WRITE_CACHE_LOWWAT,
                                 d_userData);
             }
         } // End of the lock guard.
@@ -1807,13 +1807,13 @@ void txtbtemt_Channel::writeCb(ChannelHandle self)
 }
 
 // CREATORS
-txtbtemt_Channel::txtbtemt_Channel(
+btemt_Channel::btemt_Channel(
         StreamSocket                           *socket,
         StreamSocketFactory                    *socketFactory,
         int                                     channelId,
         int                                     sourceId,
-        const txtbtemt_ChannelPoolConfiguration&   config,
-        txtbtemt_ChannelType::Value                channelType,
+        const btemt_ChannelPoolConfiguration&   config,
+        btemt_ChannelType::Value                channelType,
         bool                                    mode,
         ChannelStateChangeCallback              channelCb,
         PooledBufferChainBasedReadCallback      pooledBufferChainBasedReadCb,
@@ -1823,7 +1823,7 @@ txtbtemt_Channel::txtbtemt_Channel(
         bcema_BlobBufferFactory                *writeBlobBufferPool,
         bcema_BlobBufferFactory                *readBlobBufferPool,
         btemt_TcpTimerEventManager             *eventManager,
-        txtbtemt_ChannelPool                      *channelPool,
+        btemt_ChannelPool                      *channelPool,
         bcema_PoolAllocator                    *sharedPtrAllocator,
         bslma_Allocator                        *basicAllocator)
 : d_socket_p(socket)
@@ -1901,7 +1901,7 @@ txtbtemt_Channel::txtbtemt_Channel(
                                       d_allocator_p);
 }
 
-txtbtemt_Channel::~txtbtemt_Channel()
+btemt_Channel::~btemt_Channel()
 {
     // This destructor can only be called "by" the timer event manager, either
     // through proper scheduling (i.e. channel shutdown in which case the start
@@ -1920,7 +1920,7 @@ txtbtemt_Channel::~txtbtemt_Channel()
 }
 
 // MANIPULATORS
-void txtbtemt_Channel::disableRead(ChannelHandle self)
+void btemt_Channel::disableRead(ChannelHandle self)
 {
     BSLS_ASSERT(bcemt_ThreadUtil::isEqual(bcemt_ThreadUtil::self(),
                                   d_eventManager_p->dispatcherThreadHandle()));
@@ -1935,11 +1935,11 @@ void txtbtemt_Channel::disableRead(ChannelHandle self)
 
     d_channelStateCb(d_channelId,
                      d_sourceId,
-                     txtbtemt_ChannelPool::BTEMT_AUTO_READ_DISABLED,
+                     btemt_ChannelPool::BTEMT_AUTO_READ_DISABLED,
                      d_userData);
 }
 
-int txtbtemt_Channel::initiateReadSequence(ChannelHandle self)
+int btemt_Channel::initiateReadSequence(ChannelHandle self)
 {
     if (0 != protectAndCheckCallback(self) || d_enableReadFlag) {
         // There is no point doing this twice, if 'd_enableReadFlag' is
@@ -1955,14 +1955,14 @@ int txtbtemt_Channel::initiateReadSequence(ChannelHandle self)
     if (d_useBlobForDataReads) {
         readFunctor = bdef_BindUtil::bindA(
              d_allocator_p
-           , &txtbtemt_Channel::readCb<BlobBasedType>
+           , &btemt_Channel::readCb<BlobBasedType>
            , this
            , self);
     }
     else {
         readFunctor = bdef_BindUtil::bindA(
              d_allocator_p
-           , &txtbtemt_Channel::readCb<PooledBufferChainBasedType>
+           , &btemt_Channel::readCb<PooledBufferChainBasedType>
            , this
            , self);
     }
@@ -1975,7 +1975,7 @@ int txtbtemt_Channel::initiateReadSequence(ChannelHandle self)
     if (0 == rCode) {
         d_enableReadFlag = true;
         d_channelStateCb(d_channelId, d_sourceId,
-                         txtbtemt_ChannelPool::BTEMT_AUTO_READ_ENABLED,
+                         btemt_ChannelPool::BTEMT_AUTO_READ_ENABLED,
                          d_userData);
 
         if (0 < d_currentMsg.userDataField1()) {
@@ -2009,11 +2009,11 @@ int txtbtemt_Channel::initiateReadSequence(ChannelHandle self)
 }
 
 template <typename MessageType>
-int txtbtemt_Channel::writeMessage(const MessageType&   msg,
+int btemt_Channel::writeMessage(const MessageType&   msg,
                                 int                  enqueueWatermark,
                                 const ChannelHandle& self)
 {
-    typedef txtbtemt_ChannelPool_MessageUtil MessageUtil;
+    typedef btemt_ChannelPool_MessageUtil MessageUtil;
 
     enum {
         CACHE_HIWAT     = -1,
@@ -2073,7 +2073,7 @@ int txtbtemt_Channel::writeMessage(const MessageType&   msg,
                                 , d_channelStateCb
                                 , d_channelId
                                 , d_sourceId
-                                , txtbtemt_ChannelPool::BTEMT_WRITE_CACHE_HIWAT
+                                , btemt_ChannelPool::BTEMT_WRITE_CACHE_HIWAT
                                 , d_userData));
 
             d_eventManager_p->execute(functor);
@@ -2177,7 +2177,7 @@ int txtbtemt_Channel::writeMessage(const MessageType&   msg,
         bdef_Function<void (*)()> initWriteFunctor(
                 bdef_BindUtil::bindA(
                     d_allocator_p
-                  , &txtbtemt_Channel::registerWriteCb
+                  , &btemt_Channel::registerWriteCb
                   , this
                   , self));
 
@@ -2208,7 +2208,7 @@ int txtbtemt_Channel::writeMessage(const MessageType&   msg,
     return SUCCESS;
 }
 
-int txtbtemt_Channel::setWriteCacheHiWatermark(int numBytes)
+int btemt_Channel::setWriteCacheHiWatermark(int numBytes)
 {
     // 'd_writeCacheLowWat' is const.
     if (d_writeCacheLowWat > numBytes) {
@@ -2230,7 +2230,7 @@ int txtbtemt_Channel::setWriteCacheHiWatermark(int numBytes)
                   , &d_channelStateCb
                   , d_channelId
                   , d_sourceId
-                  , txtbtemt_ChannelPool::BTEMT_WRITE_CACHE_HIWAT
+                  , btemt_ChannelPool::BTEMT_WRITE_CACHE_HIWAT
                   , d_userData));
 
         d_eventManager_p->execute(functor);
@@ -2252,12 +2252,12 @@ int txtbtemt_Channel::setWriteCacheHiWatermark(int numBytes)
 // ============================================================================
 
                              // -----------------
-                             // txtbtemt_ChannelPool
+                             // btemt_ChannelPool
                              // -----------------
 
 // PRIVATE MANIPULATORS
 btemt_TcpTimerEventManager *
-txtbtemt_ChannelPool::allocateEventManager()
+btemt_ChannelPool::allocateEventManager()
 {
     int numManagers = d_managers.size();
     BSLS_ASSERT(numManagers == d_config.maxThreads());
@@ -2304,7 +2304,7 @@ txtbtemt_ChannelPool::allocateEventManager()
     return d_managers[result];
 }
 
-void txtbtemt_ChannelPool::init()
+void btemt_ChannelPool::init()
 {
     // Note that, if there is a single thread, there is no need to choose the
     // event manager with the least usage (as there is only 1 option) - in
@@ -2314,7 +2314,7 @@ void txtbtemt_ChannelPool::init()
 
     bces_AtomicUtil::initInt(&d_capacity, 0);
     d_metricsFunctor = bdef_BindUtil::bindA( d_allocator_p
-                                           , &txtbtemt_ChannelPool::metricsCb
+                                           , &btemt_ChannelPool::metricsCb
                                            , this);
 
     int maxThread = d_config.maxThreads();
@@ -2350,7 +2350,7 @@ void txtbtemt_ChannelPool::init()
 
                                   // *** Server part ***
 
-void txtbtemt_ChannelPool::acceptCb(int                             serverId,
+void btemt_ChannelPool::acceptCb(int                             serverId,
                                  bcema_SharedPtr<btemt_ServerState> server)
 {
     // Always executed in the event manager's dispatcher thread.
@@ -2387,7 +2387,7 @@ void txtbtemt_ChannelPool::acceptCb(int                             serverId,
 
             bdef_Function<void (*)()> acceptRetryFunctor(bdef_BindUtil::bindA(
                         d_allocator_p
-                      , &txtbtemt_ChannelPool::acceptRetryCb
+                      , &btemt_ChannelPool::acceptRetryCb
                       , this
                       , serverId
                       , server));
@@ -2448,11 +2448,11 @@ void txtbtemt_ChannelPool::acceptCb(int                             serverId,
     ++numChannels;
     BSLS_ASSERT(newId);
 
-    txtbtemt_Channel *channelPtr = new (d_pool) txtbtemt_Channel(
+    btemt_Channel *channelPtr = new (d_pool) btemt_Channel(
                                   connection, &d_factory,
                                   newId, serverId,
                                   d_config,
-                                  txtbtemt_ChannelType::BTEMT_ACCEPTED_CHANNEL,
+                                  btemt_ChannelType::BTEMT_ACCEPTED_CHANNEL,
                                   server->d_keepHalfOpenMode,
                                   d_channelStateCb,
                                   d_pooledBufferChainBasedReadCb,
@@ -2481,7 +2481,7 @@ void txtbtemt_ChannelPool::acceptCb(int                             serverId,
 
         bdef_Function<void (*)()> acceptTimeoutFunctor(bdef_BindUtil::bindA(
                     d_allocator_p
-                  , &txtbtemt_ChannelPool::acceptTimeoutCb
+                  , &btemt_ChannelPool::acceptTimeoutCb
                   , this
                   , serverId
                   , server));
@@ -2495,7 +2495,7 @@ void txtbtemt_ChannelPool::acceptCb(int                             serverId,
 
     bdef_Function<void (*)()> invokeChannelUpCommand(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_Channel::invokeChannelUp
+              , &btemt_Channel::invokeChannelUp
               , channelPtr
               , channelHandle));
 
@@ -2504,7 +2504,7 @@ void txtbtemt_ChannelPool::acceptCb(int                             serverId,
         initiateReadCommand
             = bdef_BindUtil::bindA(
                     d_allocator_p
-                  , &txtbtemt_Channel::initiateReadSequence
+                  , &btemt_Channel::initiateReadSequence
                   , channelPtr
                   , channelHandle);
     }
@@ -2519,7 +2519,7 @@ void txtbtemt_ChannelPool::acceptCb(int                             serverId,
     }
 }
 
-void txtbtemt_ChannelPool::acceptRetryCb(
+void btemt_ChannelPool::acceptRetryCb(
                                    int                                serverId,
                                    bcema_SharedPtr<btemt_ServerState> server)
 {
@@ -2534,7 +2534,7 @@ void txtbtemt_ChannelPool::acceptRetryCb(
 
     bdef_Function<void (*)()> acceptFunctor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_ChannelPool::acceptCb
+              , &btemt_ChannelPool::acceptCb
               , this
               , serverId
               , server));
@@ -2551,7 +2551,7 @@ void txtbtemt_ChannelPool::acceptRetryCb(
     }
 }
 
-void txtbtemt_ChannelPool::acceptTimeoutCb(
+void btemt_ChannelPool::acceptTimeoutCb(
                                    int                                serverId,
                                    bcema_SharedPtr<btemt_ServerState> server)
 {
@@ -2567,7 +2567,7 @@ void txtbtemt_ChannelPool::acceptTimeoutCb(
 
     bdef_Function<void (*)()> acceptTimeoutFunctor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_ChannelPool::acceptTimeoutCb
+              , &btemt_ChannelPool::acceptTimeoutCb
               , this
               , serverId
               , server));
@@ -2581,7 +2581,7 @@ void txtbtemt_ChannelPool::acceptTimeoutCb(
     d_poolStateCb(btemt_PoolMsg::BTEMT_ACCEPT_TIMEOUT, serverId, BTEMT_ALERT);
 }
 
-int txtbtemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
+int btemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
                               int                        backlog,
                               int                        serverId,
                               int                        reuseAddress,
@@ -2727,7 +2727,7 @@ int txtbtemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
 
     bdef_Function<void (*)()> acceptFunctor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_ChannelPool::acceptCb
+              , &btemt_ChannelPool::acceptCb
               , this
               , serverId
               , server));
@@ -2746,7 +2746,7 @@ int txtbtemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
     if (isTimedFlag) {
         bdef_Function<void (*)()> acceptTimeoutFunctor(bdef_BindUtil::bindA(
                     d_allocator_p
-                  , &txtbtemt_ChannelPool::acceptTimeoutCb
+                  , &btemt_ChannelPool::acceptTimeoutCb
                   , this
                   , serverId
                   , server));
@@ -2762,7 +2762,7 @@ int txtbtemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
 
                                   // *** Client part ***
 
-void txtbtemt_ChannelPool::connectCb(ConnectorMap::iterator idx)
+void btemt_ChannelPool::connectCb(ConnectorMap::iterator idx)
 {
     // Always executed in the event manager's dispatcher thread.
 
@@ -2798,7 +2798,7 @@ void txtbtemt_ChannelPool::connectCb(ConnectorMap::iterator idx)
              false);
 }
 
-void txtbtemt_ChannelPool::connectEventCb(ConnectorMap::iterator idx)
+void btemt_ChannelPool::connectEventCb(ConnectorMap::iterator idx)
 {
     // Called by socket even CONNECT on the underlying 'cs.d_socket_p'.
     // Always executed in the event manager's dispatcher thread.
@@ -2861,7 +2861,7 @@ void txtbtemt_ChannelPool::connectEventCb(ConnectorMap::iterator idx)
     }
 }
 
-void txtbtemt_ChannelPool::connectInitiateCb(ConnectorMap::iterator idx)
+void btemt_ChannelPool::connectInitiateCb(ConnectorMap::iterator idx)
 {
     // Always executed in the event manager's dispatcher thread.
 
@@ -2984,7 +2984,7 @@ void txtbtemt_ChannelPool::connectInitiateCb(ConnectorMap::iterator idx)
         else if (bteso_SocketHandle::BTESO_ERROR_WOULDBLOCK == retCode) {
             bdef_Function<void (*)()> connectEventFunctor(bdef_BindUtil::bindA(
                         d_allocator_p
-                      , &txtbtemt_ChannelPool::connectEventCb
+                      , &btemt_ChannelPool::connectEventCb
                       , this
                       , idx));
 
@@ -3023,7 +3023,7 @@ void txtbtemt_ChannelPool::connectInitiateCb(ConnectorMap::iterator idx)
 
     bdef_Function<void (*)()> connectTimeoutFunctor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_ChannelPool::connectTimeoutCb
+              , &btemt_ChannelPool::connectTimeoutCb
               , this
               , idx));
 
@@ -3035,7 +3035,7 @@ void txtbtemt_ChannelPool::connectInitiateCb(ConnectorMap::iterator idx)
     socketGuard.release();
 }
 
-void txtbtemt_ChannelPool::connectTimeoutCb(ConnectorMap::iterator idx)
+void btemt_ChannelPool::connectTimeoutCb(ConnectorMap::iterator idx)
 {
     // Always executed in the event manager's dispatcher thread.
     int clientId = idx->first;
@@ -3089,7 +3089,7 @@ void txtbtemt_ChannelPool::connectTimeoutCb(ConnectorMap::iterator idx)
 
                                   // *** Channel management part ***
 
-void txtbtemt_ChannelPool::importCb(StreamSocket               *socket,
+void btemt_ChannelPool::importCb(StreamSocket               *socket,
                                  StreamSocketFactory        *factory,
                                  btemt_TcpTimerEventManager *manager,
                                  btemt_TcpTimerEventManager *srcManager,
@@ -3115,10 +3115,10 @@ void txtbtemt_ChannelPool::importCb(StreamSocket               *socket,
     // workaround a bug when using placement new as a constructor argument in
     // aCC (aC++/ANSI C B3910B A.06.00 [Aug 25 2004]).
 
-    txtbtemt_ChannelType::Value type = imported
-                               ? txtbtemt_ChannelType::BTEMT_IMPORTED_CHANNEL
-                               : txtbtemt_ChannelType::BTEMT_CONNECTED_CHANNEL;
-    txtbtemt_Channel *channelPtr = new (d_pool) txtbtemt_Channel(
+    btemt_ChannelType::Value type = imported
+                               ? btemt_ChannelType::BTEMT_IMPORTED_CHANNEL
+                               : btemt_ChannelType::BTEMT_CONNECTED_CHANNEL;
+    btemt_Channel *channelPtr = new (d_pool) btemt_Channel(
                                                 socket, factory, newId,
                                                 sourceId, d_config, type,
                                                 mode,
@@ -3141,7 +3141,7 @@ void txtbtemt_ChannelPool::importCb(StreamSocket               *socket,
 
     bdef_Function<void (*)()> invokeChannelUpCommand(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_Channel::invokeChannelUp
+              , &btemt_Channel::invokeChannelUp
               , channelPtr
               , channelHandle));
 
@@ -3150,7 +3150,7 @@ void txtbtemt_ChannelPool::importCb(StreamSocket               *socket,
         initiateReadCommand
             = bdef_BindUtil::bindA(
                         d_allocator_p
-                      , &txtbtemt_Channel::initiateReadSequence
+                      , &btemt_Channel::initiateReadSequence
                       , channelPtr
                       , channelHandle);
     }
@@ -3171,7 +3171,7 @@ void txtbtemt_ChannelPool::importCb(StreamSocket               *socket,
 
                                   // *** Clock management ***
 
-void txtbtemt_ChannelPool::timerCb(int clockId) {
+void btemt_ChannelPool::timerCb(int clockId) {
     bcemt_LockGuard<bcemt_Mutex> tGuard(&d_timersLock);
 
     TimerStateMap::iterator tsit = d_timers.find(clockId);
@@ -3193,7 +3193,7 @@ void txtbtemt_ChannelPool::timerCb(int clockId) {
 
         bdef_Function<void (*)()> functor(bdef_BindUtil::bindA(
                     d_allocator_p
-                  , &txtbtemt_ChannelPool::timerCb
+                  , &btemt_ChannelPool::timerCb
                   , this
                   , clockId));
 
@@ -3213,7 +3213,7 @@ void txtbtemt_ChannelPool::timerCb(int clockId) {
 
                                   // *** Metrics ***
 
-void txtbtemt_ChannelPool::metricsCb()
+void btemt_ChannelPool::metricsCb()
 {
     int s = 0;
     BSLS_ASSERT((int)d_managers.size() <= d_config.maxThreads());
@@ -3238,11 +3238,11 @@ void txtbtemt_ChannelPool::metricsCb()
 }
 
 // CREATORS
-txtbtemt_ChannelPool::txtbtemt_ChannelPool(
+btemt_ChannelPool::btemt_ChannelPool(
            ChannelStateCallback                   channelStateCb,
            DataCallback                           pooledBufferChainBasedReadCb,
            PoolStateCallback                      poolStateCb,
-           const txtbtemt_ChannelPoolConfiguration&  parameters,
+           const btemt_ChannelPoolConfiguration&  parameters,
            bslma_Allocator                       *basicAllocator)
 : d_channels(basicAllocator)
 , d_managers(basicAllocator)
@@ -3268,17 +3268,17 @@ txtbtemt_ChannelPool::txtbtemt_ChannelPool(
 , d_totalBytesRequestedWrittenAdjustment(0)
 , d_metricAdjustmentMutex()
 , d_factory(basicAllocator)
-, d_pool(sizeof(txtbtemt_Channel), basicAllocator)
+, d_pool(sizeof(btemt_Channel), basicAllocator)
 , d_allocator_p(bslma_Default::allocator(basicAllocator))
 {
     init();
 }
 
-txtbtemt_ChannelPool::txtbtemt_ChannelPool(
+btemt_ChannelPool::btemt_ChannelPool(
            ChannelStateChangeCallback             channelStateCb,
            DataReadCallback                       pooledBufferChainBasedReadCb,
            PoolStateChangeCallback                poolStateCb,
-           const txtbtemt_ChannelPoolConfiguration&  parameters,
+           const btemt_ChannelPoolConfiguration&  parameters,
            bslma_Allocator                       *basicAllocator)
 : d_channels(basicAllocator)
 , d_managers(basicAllocator)
@@ -3304,17 +3304,17 @@ txtbtemt_ChannelPool::txtbtemt_ChannelPool(
 , d_totalBytesRequestedWrittenAdjustment(0)
 , d_metricAdjustmentMutex()
 , d_factory(basicAllocator)
-, d_pool(sizeof(txtbtemt_Channel), basicAllocator)
+, d_pool(sizeof(btemt_Channel), basicAllocator)
 , d_allocator_p(bslma_Default::allocator(basicAllocator))
 {
     init();
 }
 
-txtbtemt_ChannelPool::txtbtemt_ChannelPool(
+btemt_ChannelPool::btemt_ChannelPool(
                         ChannelStateCallback                   channelStateCb,
                         BlobBasedReadCallback                  blobBasedReadCb,
                         PoolStateCallback                      poolStateCb,
-                        const txtbtemt_ChannelPoolConfiguration&  parameters,
+                        const btemt_ChannelPoolConfiguration&  parameters,
                         bslma_Allocator                       *basicAllocator)
 : d_channels(basicAllocator)
 , d_managers(basicAllocator)
@@ -3340,17 +3340,17 @@ txtbtemt_ChannelPool::txtbtemt_ChannelPool(
 , d_totalBytesRequestedWrittenAdjustment(0)
 , d_metricAdjustmentMutex()
 , d_factory(basicAllocator)
-, d_pool(sizeof(txtbtemt_Channel), basicAllocator)
+, d_pool(sizeof(btemt_Channel), basicAllocator)
 , d_allocator_p(bslma_Default::allocator(basicAllocator))
 {
     init();
 }
 
-txtbtemt_ChannelPool::txtbtemt_ChannelPool(
+btemt_ChannelPool::btemt_ChannelPool(
                         ChannelStateChangeCallback             channelStateCb,
                         BlobBasedReadCallback                  blobBasedReadCb,
                         PoolStateChangeCallback                poolStateCb,
-                        const txtbtemt_ChannelPoolConfiguration&  parameters,
+                        const btemt_ChannelPoolConfiguration&  parameters,
                         bslma_Allocator                       *basicAllocator)
 : d_channels(basicAllocator)
 , d_managers(basicAllocator)
@@ -3376,13 +3376,13 @@ txtbtemt_ChannelPool::txtbtemt_ChannelPool(
 , d_totalBytesRequestedWrittenAdjustment(0)
 , d_metricAdjustmentMutex()
 , d_factory(basicAllocator)
-, d_pool(sizeof(txtbtemt_Channel), basicAllocator)
+, d_pool(sizeof(btemt_Channel), basicAllocator)
 , d_allocator_p(bslma_Default::allocator(basicAllocator))
 {
     init();
 }
 
-txtbtemt_ChannelPool::~txtbtemt_ChannelPool()
+btemt_ChannelPool::~btemt_ChannelPool()
 {
     stop();
     d_managers[0]->deregisterTimer(d_metricsTimerId);
@@ -3416,7 +3416,7 @@ txtbtemt_ChannelPool::~txtbtemt_ChannelPool()
 
                        // *** Server related section ***
 
-int txtbtemt_ChannelPool::close(int serverId)
+int btemt_ChannelPool::close(int serverId)
 {
     enum {
         SUCCESS        =  0,
@@ -3462,7 +3462,7 @@ int txtbtemt_ChannelPool::close(int serverId)
     return SUCCESS;
 }
 
-int txtbtemt_ChannelPool::listen(int                        port,
+int btemt_ChannelPool::listen(int                        port,
                               int                        backlog,
                               int                        serverId,
                               int                        reuseAddress,
@@ -3484,7 +3484,7 @@ int txtbtemt_ChannelPool::listen(int                        port,
                         socketOptions);
 }
 
-int txtbtemt_ChannelPool::listen(int                        port,
+int btemt_ChannelPool::listen(int                        port,
                               int                        backlog,
                               int                        serverId,
                               const bdet_TimeInterval&   timeout,
@@ -3507,7 +3507,7 @@ int txtbtemt_ChannelPool::listen(int                        port,
                         socketOptions);
 }
 
-int txtbtemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
+int btemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
                               int                        backlog,
                               int                        serverId,
                               int                        reuseAddress,
@@ -3527,7 +3527,7 @@ int txtbtemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
                         socketOptions);
 }
 
-int txtbtemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
+int btemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
                               int                        backlog,
                               int                        serverId,
                               const bdet_TimeInterval&   timeout,
@@ -3551,7 +3551,7 @@ int txtbtemt_ChannelPool::listen(const bteso_IPv4Address&   endpoint,
 
                          // *** Client-related section
 
-int txtbtemt_ChannelPool::connect(const char                *serverName,
+int btemt_ChannelPool::connect(const char                *serverName,
                                int                        portNumber,
                                int                        numAttempts,
                                const bdet_TimeInterval&   interval,
@@ -3634,7 +3634,7 @@ int txtbtemt_ChannelPool::connect(const char                *serverName,
 
     bdef_Function<void (*)()> connectFunctor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_ChannelPool::connectInitiateCb
+              , &btemt_ChannelPool::connectInitiateCb
               , this
               , idx));
 
@@ -3643,7 +3643,7 @@ int txtbtemt_ChannelPool::connect(const char                *serverName,
     return SUCCESS;
 }
 
-int txtbtemt_ChannelPool::connect(const bteso_IPv4Address&   server,
+int btemt_ChannelPool::connect(const bteso_IPv4Address&   server,
                                int                        numAttempts,
                                const bdet_TimeInterval&   interval,
                                int                        clientId,
@@ -3708,7 +3708,7 @@ int txtbtemt_ChannelPool::connect(const bteso_IPv4Address&   server,
 
     bdef_Function<void (*)()> connectFunctor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_ChannelPool::connectInitiateCb
+              , &btemt_ChannelPool::connectInitiateCb
               , this
               , idx));
 
@@ -3719,7 +3719,7 @@ int txtbtemt_ChannelPool::connect(const bteso_IPv4Address&   server,
 
                          // *** Channel management ***
 
-int txtbtemt_ChannelPool::disableRead(int channelId)
+int btemt_ChannelPool::disableRead(int channelId)
 {
     enum { NOT_FOUND = -1 };
 
@@ -3727,11 +3727,11 @@ int txtbtemt_ChannelPool::disableRead(int channelId)
     if (0 != findChannelHandle(&channelHandle, channelId)) {
         return NOT_FOUND;
     }
-    txtbtemt_Channel *channel = channelHandle.ptr();
+    btemt_Channel *channel = channelHandle.ptr();
 
     bdef_Function<void (*)()> disableReadCommand(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_Channel::disableRead
+              , &btemt_Channel::disableRead
               , channel
               , channelHandle));
 
@@ -3739,7 +3739,7 @@ int txtbtemt_ChannelPool::disableRead(int channelId)
     return 0;
 }
 
-int txtbtemt_ChannelPool::enableRead(int channelId)
+int btemt_ChannelPool::enableRead(int channelId)
 {
     enum { NOT_FOUND = -1 };
 
@@ -3749,11 +3749,11 @@ int txtbtemt_ChannelPool::enableRead(int channelId)
     }
     BSLS_ASSERT(channelHandle);
 
-    txtbtemt_Channel *channel = channelHandle.ptr();
+    btemt_Channel *channel = channelHandle.ptr();
 
     bdef_Function<void (*)()> initiateReadCommand(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_Channel::initiateReadSequence
+              , &btemt_Channel::initiateReadSequence
               , channel
               , channelHandle));
 
@@ -3761,7 +3761,7 @@ int txtbtemt_ChannelPool::enableRead(int channelId)
     return 0;
 }
 
-int txtbtemt_ChannelPool::import(
+int btemt_ChannelPool::import(
         bteso_StreamSocket<bteso_IPv4Address>        *streamSocket,
         bteso_StreamSocketFactory<bteso_IPv4Address> *factory,
         int                                           sourceId,
@@ -3782,7 +3782,7 @@ int txtbtemt_ChannelPool::import(
 
     bdef_Function<void (*)()> importFunctor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_ChannelPool::importCb
+              , &btemt_ChannelPool::importCb
               , this
               , streamSocket
               , factory
@@ -3797,13 +3797,13 @@ int txtbtemt_ChannelPool::import(
     return SUCCESS;
 }
 
-int txtbtemt_ChannelPool::shutdown(int                      channelId,
+int btemt_ChannelPool::shutdown(int                      channelId,
                                 ShutdownMode             how)
 {
     return shutdown(channelId, bteso_Flag::BTESO_SHUTDOWN_BOTH, how);
 }
 
-int txtbtemt_ChannelPool::shutdown(int                      channelId,
+int btemt_ChannelPool::shutdown(int                      channelId,
                                 bteso_Flag::ShutdownType type,
                                 ShutdownMode             how)
 {
@@ -3829,7 +3829,7 @@ int txtbtemt_ChannelPool::shutdown(int                      channelId,
         channelDownMask = CLOSED_SEND_MASK;
     }
 
-    txtbtemt_Channel *channel = channelHandle.ptr();
+    btemt_Channel *channel = channelHandle.ptr();
     if (channel->isChannelDown(channelDownMask)) {
         return ALREADY_DEAD;
     }
@@ -3839,7 +3839,7 @@ int txtbtemt_ChannelPool::shutdown(int                      channelId,
     return SUCCESS;
 }
 
-int txtbtemt_ChannelPool::setWriteCacheHiWatermark(int channelId,
+int btemt_ChannelPool::setWriteCacheHiWatermark(int channelId,
                                                    int numBytes)
 {
     BSLS_ASSERT(numBytes >= 0);
@@ -3854,7 +3854,7 @@ int txtbtemt_ChannelPool::setWriteCacheHiWatermark(int channelId,
 
                          // *** Thread management ***
 
-int txtbtemt_ChannelPool::start()
+int btemt_ChannelPool::start()
 {
     int numManagers = d_managers.size();
     for (int i = 0; i < numManagers; ++i) {
@@ -3873,7 +3873,7 @@ int txtbtemt_ChannelPool::start()
     return 0;
 }
 
-int txtbtemt_ChannelPool::stop()
+int btemt_ChannelPool::stop()
 {
     int numManagers = d_managers.size();
     for (int i = 0; i < numManagers; ++i) {
@@ -3893,7 +3893,7 @@ int txtbtemt_ChannelPool::stop()
 
                          // *** Outgoing messages ***
 
-void txtbtemt_ChannelPool::setChannelContext(int channelId, void *context)
+void btemt_ChannelPool::setChannelContext(int channelId, void *context)
 {
     ChannelHandle channelHandle;
     if (0 == findChannelHandle(&channelHandle, channelId)) {
@@ -3901,7 +3901,7 @@ void txtbtemt_ChannelPool::setChannelContext(int channelId, void *context)
     }
 }
 
-int txtbtemt_ChannelPool::write(int               channelId,
+int btemt_ChannelPool::write(int               channelId,
                              const bcema_Blob& blob,
                              int               enqueueWatermark)
 {
@@ -3924,7 +3924,7 @@ int txtbtemt_ChannelPool::write(int               channelId,
     return NOT_FOUND;
 }
 
-int txtbtemt_ChannelPool::write(int                  channelId,
+int btemt_ChannelPool::write(int                  channelId,
                              const btemt_BlobMsg& msg,
                              int                  enqueueWatermark)
 {
@@ -3947,7 +3947,7 @@ int txtbtemt_ChannelPool::write(int                  channelId,
     return NOT_FOUND;
 }
 
-int txtbtemt_ChannelPool::write(int                   channelId,
+int btemt_ChannelPool::write(int                   channelId,
                              const btemt_DataMsg&  msg,
                              int                   enqueueWatermark)
 {
@@ -3970,7 +3970,7 @@ int txtbtemt_ChannelPool::write(int                   channelId,
     return NOT_FOUND;
 }
 
-int txtbtemt_ChannelPool::write(int               channelId,
+int btemt_ChannelPool::write(int               channelId,
                              const btes_Iovec  vecs[],
                              int               numVecs)
 {
@@ -3986,7 +3986,7 @@ int txtbtemt_ChannelPool::write(int               channelId,
     if (BSLS_PERFORMANCEHINT_PREDICT_LIKELY(
                             !channelHandle->isChannelDown(CLOSED_SEND_MASK))) {
         return channelHandle->writeMessage(
-                    txtbtemt_ChannelPool_IovecArray<btes_Iovec>(vecs, numVecs),
+                    btemt_ChannelPool_IovecArray<btes_Iovec>(vecs, numVecs),
                     0x7FFFFFFF,
                     channelHandle);
     }
@@ -3994,7 +3994,7 @@ int txtbtemt_ChannelPool::write(int               channelId,
     return NOT_FOUND;
 }
 
-int txtbtemt_ChannelPool::write(int             channelId,
+int btemt_ChannelPool::write(int             channelId,
                              const btes_Ovec vecs[],
                              int             numVecs)
 {
@@ -4010,7 +4010,7 @@ int txtbtemt_ChannelPool::write(int             channelId,
     if (BSLS_PERFORMANCEHINT_PREDICT_LIKELY(
                             !channelHandle->isChannelDown(CLOSED_SEND_MASK))) {
         return channelHandle->writeMessage(
-                    txtbtemt_ChannelPool_IovecArray<btes_Ovec>(vecs, numVecs),
+                    btemt_ChannelPool_IovecArray<btes_Ovec>(vecs, numVecs),
                     0x7FFFFFFF,
                     channelHandle);
     }
@@ -4020,7 +4020,7 @@ int txtbtemt_ChannelPool::write(int             channelId,
 
                           // *** Clock management ***
 
-int txtbtemt_ChannelPool::registerClock(
+int btemt_ChannelPool::registerClock(
                                      const bdef_Function<void (*)()>& command,
                                      const bdet_TimeInterval& startTime,
                                      const bdet_TimeInterval& period,
@@ -4042,7 +4042,7 @@ int txtbtemt_ChannelPool::registerClock(
 
     bdef_Function<void (*)()> functor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_ChannelPool::timerCb
+              , &btemt_ChannelPool::timerCb
               , this
               , clockId));
 
@@ -4060,7 +4060,7 @@ int txtbtemt_ChannelPool::registerClock(
     return SUCCESS;
 }
 
-int txtbtemt_ChannelPool::registerClock(
+int btemt_ChannelPool::registerClock(
                                      const bdef_Function<void (*)()>& command,
                                      const bdet_TimeInterval& startTime,
                                      const bdet_TimeInterval& period,
@@ -4087,7 +4087,7 @@ int txtbtemt_ChannelPool::registerClock(
 
     bdef_Function<void (*)()> functor(bdef_BindUtil::bindA(
                 d_allocator_p
-              , &txtbtemt_ChannelPool::timerCb
+              , &btemt_ChannelPool::timerCb
               , this
               , clockId));
 
@@ -4105,7 +4105,7 @@ int txtbtemt_ChannelPool::registerClock(
     return SUCCESS;
 }
 
-void txtbtemt_ChannelPool::deregisterClock(int clockId)
+void btemt_ChannelPool::deregisterClock(int clockId)
 {
     btemt_TcpTimerEventManager *manager = 0;
     void *timerId = 0;
@@ -4139,7 +4139,7 @@ void txtbtemt_ChannelPool::deregisterClock(int clockId)
 
                            // *** Socket options ***
 
-int txtbtemt_ChannelPool::getLingerOption(
+int btemt_ChannelPool::getLingerOption(
                                        bteso_SocketOptUtil::LingerData *result,
                                        int channelId) const
 {
@@ -4153,7 +4153,7 @@ int txtbtemt_ChannelPool::getLingerOption(
 }
 
 int
-txtbtemt_ChannelPool::getServerSocketOption(int *result,
+btemt_ChannelPool::getServerSocketOption(int *result,
                                          int  option,
                                          int  level,
                                          int  serverId) const
@@ -4170,7 +4170,7 @@ txtbtemt_ChannelPool::getServerSocketOption(int *result,
     return idx->second->d_socket_p->socketOption(result, level, option);
 }
 
-int txtbtemt_ChannelPool::getSocketOption(int *result,
+int btemt_ChannelPool::getSocketOption(int *result,
                                        int  option,
                                        int  level,
                                        int  channelId) const
@@ -4187,7 +4187,7 @@ int txtbtemt_ChannelPool::getSocketOption(int *result,
     return channelHandle->socket()->socketOption(result, level, option);
 }
 
-int txtbtemt_ChannelPool::setLingerOption(
+int btemt_ChannelPool::setLingerOption(
         const bteso_SocketOptUtil::LingerData& value,
         int                                    channelId)
 {
@@ -4201,7 +4201,7 @@ int txtbtemt_ChannelPool::setLingerOption(
     return channelHandle->socket()->setLingerOption(value);
 }
 
-int txtbtemt_ChannelPool::setServerSocketOption(int option,
+int btemt_ChannelPool::setServerSocketOption(int option,
                                              int level,
                                              int value,
                                              int serverId)
@@ -4218,7 +4218,7 @@ int txtbtemt_ChannelPool::setServerSocketOption(int option,
     return idx->second->d_socket_p->setOption(level, option, value);
 }
 
-int txtbtemt_ChannelPool::setSocketOption(int option,
+int btemt_ChannelPool::setSocketOption(int option,
                                        int level,
                                        int value,
                                        int channelId)
@@ -4235,7 +4235,7 @@ int txtbtemt_ChannelPool::setSocketOption(int option,
 
                               // *** Metrics ***
 
-double txtbtemt_ChannelPool::reportWeightedAverageReset()
+double btemt_ChannelPool::reportWeightedAverageReset()
 {
     bdet_TimeInterval resetTime = d_lastResetTime;
     bsls_PlatformUtil::Int64 sum = 0;
@@ -4262,7 +4262,7 @@ double txtbtemt_ChannelPool::reportWeightedAverageReset()
            : -1;
 }
 
-void txtbtemt_ChannelPool::totalBytesReadReset(
+void btemt_ChannelPool::totalBytesReadReset(
                                               bsls_PlatformUtil::Int64 *result)
 {
     // Note that this lock must be held to ensure that updating the adjustment
@@ -4280,7 +4280,7 @@ void txtbtemt_ChannelPool::totalBytesReadReset(
     d_totalBytesReadAdjustment = -total;
 }
 
-void txtbtemt_ChannelPool::totalBytesWrittenReset(
+void btemt_ChannelPool::totalBytesWrittenReset(
                                               bsls_PlatformUtil::Int64 *result)
 {
     // Note that this lock must be held to ensure that updating the adjustment
@@ -4298,7 +4298,7 @@ void txtbtemt_ChannelPool::totalBytesWrittenReset(
     d_totalBytesWrittenAdjustment = -total;
 }
 
-void txtbtemt_ChannelPool::totalBytesRequestedToBeWrittenReset(
+void btemt_ChannelPool::totalBytesRequestedToBeWrittenReset(
                                               bsls_PlatformUtil::Int64 *result)
 {
     // Note that this lock must be held to ensure that updating the adjustment
@@ -4318,7 +4318,7 @@ void txtbtemt_ChannelPool::totalBytesRequestedToBeWrittenReset(
 
 // ACCESSORS
 
-void *txtbtemt_ChannelPool::channelContext(int channelId) const
+void *btemt_ChannelPool::channelContext(int channelId) const
 {
     ChannelHandle channelHandle;
     if (0 == findChannelHandle(&channelHandle, channelId)) {
@@ -4328,7 +4328,7 @@ void *txtbtemt_ChannelPool::channelContext(int channelId) const
 }
 
 bcema_SharedPtr<const bteso_StreamSocket<bteso_IPv4Address> >
-txtbtemt_ChannelPool::streamSocket(int channelId) const
+btemt_ChannelPool::streamSocket(int channelId) const
 {
     ChannelHandle channelHandle;
     if (0 == findChannelHandle(&channelHandle, channelId)) {
@@ -4340,7 +4340,7 @@ txtbtemt_ChannelPool::streamSocket(int channelId) const
     return bcema_SharedPtr<const bteso_StreamSocket<bteso_IPv4Address> >();
 }
 
-int txtbtemt_ChannelPool::getChannelStatistics(
+int btemt_ChannelPool::getChannelStatistics(
                              bsls_PlatformUtil::Int64 *numRead,
                              bsls_PlatformUtil::Int64 *numRequestedToBeWritten,
                              bsls_PlatformUtil::Int64 *numWritten,
@@ -4348,7 +4348,7 @@ int txtbtemt_ChannelPool::getChannelStatistics(
 {
     ChannelHandle channelHandle;
     if (0 == findChannelHandle(&channelHandle, channelId)) {
-        txtbtemt_Channel *channel = channelHandle.ptr();
+        btemt_Channel *channel = channelHandle.ptr();
         *numRead = channel->numBytesRead();
         *numRequestedToBeWritten = channel->numBytesRequestedToBeWritten();
         *numWritten = channel->numBytesWritten();
@@ -4357,7 +4357,7 @@ int txtbtemt_ChannelPool::getChannelStatistics(
     return 1;
 }
 
-void txtbtemt_ChannelPool::getHandleStatistics(
+void btemt_ChannelPool::getHandleStatistics(
                                     bsl::vector<HandleInfo> *handleInfo) const
 {
     // There are five kinds of channels, but only three matter for the
@@ -4387,7 +4387,7 @@ void txtbtemt_ChannelPool::getHandleStatistics(
             // 'listen()' under the lock.
 
             info.d_handle       = ss.d_socket_p->handle();
-            info.d_channelType  =txtbtemt_ChannelType::BTEMT_LISTENING_CHANNEL;
+            info.d_channelType  =btemt_ChannelType::BTEMT_LISTENING_CHANNEL;
             info.d_channelId    = -1;
             info.d_creationTime = ss.d_creationTime;
             info.d_threadHandle = ss.d_manager_p->dispatcherThreadHandle();
@@ -4413,7 +4413,7 @@ void txtbtemt_ChannelPool::getHandleStatistics(
 
                 info.d_handle       = cs.d_socket_p->handle();
                 info.d_channelType  =
-                                txtbtemt_ChannelType::BTEMT_CONNECTING_CHANNEL;
+                                btemt_ChannelType::BTEMT_CONNECTING_CHANNEL;
                 info.d_channelId    = -1;
                 info.d_creationTime = cs.d_creationTime;
                 info.d_threadHandle = cs.d_manager_p->dispatcherThreadHandle();
@@ -4424,10 +4424,10 @@ void txtbtemt_ChannelPool::getHandleStatistics(
 
     {   // Item 3.
         handleInfo->reserve(idx + d_channels.length());
-        for (bcec_ObjectCatalogIter<bcema_SharedPtr<txtbtemt_Channel> >
+        for (bcec_ObjectCatalogIter<bcema_SharedPtr<btemt_Channel> >
                                               iter(d_channels); iter; ++iter) {
             if (iter().second) {
-                const txtbtemt_Channel& channel = *(iter().second);
+                const btemt_Channel& channel = *(iter().second);
                 handleInfo->resize(++idx);
                 HandleInfo& info = handleInfo->back();
 
@@ -4444,7 +4444,7 @@ void txtbtemt_ChannelPool::getHandleStatistics(
 }
 
 int
-txtbtemt_ChannelPool::getServerAddress(bteso_IPv4Address *result,
+btemt_ChannelPool::getServerAddress(bteso_IPv4Address *result,
                                     int                serverId) const
 {
     bcemt_LockGuard<bcemt_Mutex> aGuard(&d_acceptorsLock);
@@ -4459,7 +4459,7 @@ txtbtemt_ChannelPool::getServerAddress(bteso_IPv4Address *result,
 }
 
 int
-txtbtemt_ChannelPool::getLocalAddress(bteso_IPv4Address *result,
+btemt_ChannelPool::getLocalAddress(bteso_IPv4Address *result,
                                    int                channelId) const
 {
     BSLS_ASSERT(result);
@@ -4473,7 +4473,7 @@ txtbtemt_ChannelPool::getLocalAddress(bteso_IPv4Address *result,
 }
 
 int
-txtbtemt_ChannelPool::getPeerAddress(bteso_IPv4Address *result,
+btemt_ChannelPool::getPeerAddress(bteso_IPv4Address *result,
                                   int                channelId) const
 {
     BSLS_ASSERT(result);
@@ -4486,7 +4486,7 @@ txtbtemt_ChannelPool::getPeerAddress(bteso_IPv4Address *result,
     return channelHandle->socket()->peerAddress(result);
 }
 
-int txtbtemt_ChannelPool::numBytesRead(bsls_PlatformUtil::Int64 *result,
+int btemt_ChannelPool::numBytesRead(bsls_PlatformUtil::Int64 *result,
                                     int                       channelId) const
 {
     ChannelHandle channelHandle;
@@ -4497,7 +4497,7 @@ int txtbtemt_ChannelPool::numBytesRead(bsls_PlatformUtil::Int64 *result,
     return 1;
 }
 
-int txtbtemt_ChannelPool::numBytesRequestedToBeWritten(
+int btemt_ChannelPool::numBytesRequestedToBeWritten(
                                      bsls_PlatformUtil::Int64 *result,
                                      int                       channelId) const
 {
@@ -4509,7 +4509,7 @@ int txtbtemt_ChannelPool::numBytesRequestedToBeWritten(
     return 1;
 }
 
-int txtbtemt_ChannelPool::numBytesWritten(
+int btemt_ChannelPool::numBytesWritten(
                                      bsls_PlatformUtil::Int64 *result,
                                      int                       channelId) const
 {
@@ -4521,7 +4521,7 @@ int txtbtemt_ChannelPool::numBytesWritten(
     return 1;
 }
 
-void txtbtemt_ChannelPool::totalBytesWritten(
+void btemt_ChannelPool::totalBytesWritten(
                                         bsls_PlatformUtil::Int64 *result) const
 {
     // Note that this lock must be held to ensure that updating the adjustment
@@ -4537,7 +4537,7 @@ void txtbtemt_ChannelPool::totalBytesWritten(
     *result = total + d_totalBytesWrittenAdjustment;
 }
 
-void txtbtemt_ChannelPool::totalBytesRead(
+void btemt_ChannelPool::totalBytesRead(
                                         bsls_PlatformUtil::Int64 *result) const
 {
     // Note that this lock must be held to ensure that updating the adjustment
@@ -4553,7 +4553,7 @@ void txtbtemt_ChannelPool::totalBytesRead(
     *result = total + d_totalBytesReadAdjustment;
 }
 
-void txtbtemt_ChannelPool::totalBytesRequestedToBeWritten(
+void btemt_ChannelPool::totalBytesRequestedToBeWritten(
                                        bsls_PlatformUtil::Int64 *result) const
 {
     // Note that this lock must be held to ensure that updating the adjustment
@@ -4569,14 +4569,14 @@ void txtbtemt_ChannelPool::totalBytesRequestedToBeWritten(
     *result = total + d_totalBytesRequestedWrittenAdjustment;
 }
 
-int txtbtemt_ChannelPool::numEvents(int index) const
+int btemt_ChannelPool::numEvents(int index) const
 {
     BSLS_ASSERT(0 <= index);
     BSLS_ASSERT((int)d_managers.size() > index);
     return d_managers[index]->numEvents();
 }
 
-const bteso_IPv4Address *txtbtemt_ChannelPool::serverAddress(
+const bteso_IPv4Address *btemt_ChannelPool::serverAddress(
                                                             int serverId) const
 {
     bcemt_LockGuard<bcemt_Mutex> aGuard(&d_acceptorsLock);
@@ -4590,11 +4590,11 @@ const bteso_IPv4Address *txtbtemt_ChannelPool::serverAddress(
 }
 
                      // -----------------------------------
-                     // class txtbtemt_ChannelPool_MessageUtil
+                     // class btemt_ChannelPool_MessageUtil
                      // -----------------------------------
 
 // CLASS METHODS
-int txtbtemt_ChannelPool_MessageUtil::loadIovec(btes_Iovec        *dest,
+int btemt_ChannelPool_MessageUtil::loadIovec(btes_Iovec        *dest,
                                              const bcema_Blob&  msg)
 {
     int numVecs = 0;
@@ -4615,7 +4615,7 @@ int txtbtemt_ChannelPool_MessageUtil::loadIovec(btes_Iovec        *dest,
     return numVecs;
 }
 
-int txtbtemt_ChannelPool_MessageUtil::loadIovec(btes_Iovec           *dest,
+int btemt_ChannelPool_MessageUtil::loadIovec(btes_Iovec           *dest,
                                              const btemt_DataMsg&  msg)
 {
     int numVecs = 0;
@@ -4639,7 +4639,7 @@ int txtbtemt_ChannelPool_MessageUtil::loadIovec(btes_Iovec           *dest,
     return numVecs;
 }
 
-int txtbtemt_ChannelPool_MessageUtil::loadBlob(bcema_Blob           *dest,
+int btemt_ChannelPool_MessageUtil::loadBlob(bcema_Blob           *dest,
                                             const btemt_DataMsg&  msg,
                                             int                   msgOffset)
 {
@@ -4672,7 +4672,7 @@ int txtbtemt_ChannelPool_MessageUtil::loadBlob(bcema_Blob           *dest,
     return msgOffset - prefixSize;
 }
 
-int txtbtemt_ChannelPool_MessageUtil::loadBlob(bcema_Blob        *dest,
+int btemt_ChannelPool_MessageUtil::loadBlob(bcema_Blob        *dest,
                                             const bcema_Blob&  msg,
                                             int                msgOffset)
 {
@@ -4708,7 +4708,7 @@ int txtbtemt_ChannelPool_MessageUtil::loadBlob(bcema_Blob        *dest,
     return msgOffset - prefixSize;
 }
 
-void txtbtemt_ChannelPool_MessageUtil::appendToBlob(bcema_Blob        *dest,
+void btemt_ChannelPool_MessageUtil::appendToBlob(bcema_Blob        *dest,
                                                  const bcema_Blob&  msg)
 {
     const int currentLength  = dest->length();
@@ -4725,7 +4725,7 @@ void txtbtemt_ChannelPool_MessageUtil::appendToBlob(bcema_Blob        *dest,
     dest->trimLastDataBuffer();
 }
 
-void txtbtemt_ChannelPool_MessageUtil::appendToBlob(bcema_Blob           *dest,
+void btemt_ChannelPool_MessageUtil::appendToBlob(bcema_Blob           *dest,
                                                  const btemt_DataMsg&  msg)
 {
     bcema_PooledBufferChain *chain = msg.data();

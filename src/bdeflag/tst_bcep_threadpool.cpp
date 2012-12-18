@@ -1,5 +1,5 @@
-// txtbcep_threadpool.cpp            -*-C++-*-
-#include <txtbcep_threadpool.h>
+// tst_bcep_threadpool.cpp            -*-C++-*-
+#include <tst_bcep_threadpool.h>
 
 #include <bdes_ident.h>
 BDES_IDENT_RCSID(bcep_threadpool_cpp,"$Id$ $CSID$")
@@ -28,13 +28,13 @@ BDES_IDENT_RCSID(bcep_threadpool_cpp,"$Id$ $CSID$")
 namespace BloombergLP {
 
                          // =======================
-                         // txtbcep_ThreadPoolWaitNode
+                         // bcep_ThreadPoolWaitNode
                          // =======================
 
-struct txtbcep_ThreadPoolWaitNode {
+struct bcep_ThreadPoolWaitNode {
     // This structure is used to implement the linked list of threads that are
     // waiting for a request to process.  Each thread has its own instance of
-    // this structure (a local variable in the txtbcep_ThreadPool::workerThre
+    // this structure (a local variable in the bcep_ThreadPool::workerThre
     // When a thread finishes executing a job, if there are no pending jobs, it
     // will add itself to the head of the wait list.  This logic behaves the
     // same as a condition variable with the exception that it implements a
@@ -49,10 +49,10 @@ struct txtbcep_ThreadPoolWaitNode {
     bcemt_Condition                   d_jobCond; // signaled when 'd_hasJob'
                                                  // is set
 
-    txtbcep_ThreadPoolWaitNode* volatile d_next;    // pointer to the next
+    bcep_ThreadPoolWaitNode* volatile d_next;    // pointer to the next
                                                  // waiting thread
 
-    txtbcep_ThreadPoolWaitNode* volatile d_prev;    // pointer to the previous
+    bcep_ThreadPoolWaitNode* volatile d_prev;    // pointer to the previous
                                                  // waiting thread
 
     volatile int                      d_hasJob;  // 1 if a job has been
@@ -60,21 +60,21 @@ struct txtbcep_ThreadPoolWaitNode {
 };
 
                          // ====================
-                         // txtbcep_ThreadPoolEntry
+                         // bcep_ThreadPoolEntry
                          // ====================
 
-extern "C" void* txtbcep_ThreadPoolEntry(void *aThis)
+extern "C" void* bcep_ThreadPoolEntry(void *aThis)
 {
-    ((txtbcep_ThreadPool*)aThis)->workerThread();
+    ((bcep_ThreadPool*)aThis)->workerThread();
     return 0;
 }
 
                          // =======================
-                         // txtbcep_ThreadPoolWaitNode
+                         // bcep_ThreadPoolWaitNode
                          // =======================
 
 // PRIVATE MANIPULATORS
-void txtbcep_ThreadPool::doEnqueueJob(const Job& job)
+void bcep_ThreadPool::doEnqueueJob(const Job& job)
 {
     d_queue.push_back(job);
     if (d_waitHead) {
@@ -93,7 +93,7 @@ void txtbcep_ThreadPool::doEnqueueJob(const Job& job)
 }
 
 #if defined(BSLS_PLATFORM__OS_UNIX)
-void txtbcep_ThreadPool::initBlockSet()
+void bcep_ThreadPool::initBlockSet()
 {
     sigfillset(&d_blockSet);
 
@@ -118,7 +118,7 @@ void txtbcep_ThreadPool::initBlockSet()
 }
 #endif
 
-int txtbcep_ThreadPool::startNewThread()
+int bcep_ThreadPool::startNewThread()
 {
     bcemt_ThreadUtil::Handle handle;
 
@@ -130,7 +130,7 @@ int txtbcep_ThreadPool::startNewThread()
 #endif
 
     int rc = bcemt_ThreadUtil::create(&handle,d_threadAttributes,
-                                      txtbcep_ThreadPoolEntry, this);
+                                      bcep_ThreadPoolEntry, this);
 
 #if defined(BSLS_PLATFORM__OS_UNIX)
     // Restore the mask
@@ -146,9 +146,9 @@ int txtbcep_ThreadPool::startNewThread()
     return rc;
 }
 
-void txtbcep_ThreadPool::workerThread()
+void bcep_ThreadPool::workerThread()
 {
-    txtbcep_ThreadPoolWaitNode waitNode;
+    bcep_ThreadPoolWaitNode waitNode;
     Job functor;
     while (1) {
         // The functor has to be cleared when we are *not* holding the lock
@@ -274,7 +274,7 @@ void txtbcep_ThreadPool::workerThread()
 }
 
 // CREATORS
-txtbcep_ThreadPool::txtbcep_ThreadPool(const bcemt_Attribute& threadAttributes,
+bcep_ThreadPool::bcep_ThreadPool(const bcemt_Attribute& threadAttributes,
                                  int                    minThreads,
                                  int                    maxThreads,
                                  int                    maxIdleTime,
@@ -302,13 +302,13 @@ txtbcep_ThreadPool::txtbcep_ThreadPool(const bcemt_Attribute& threadAttributes,
 #endif
 }
 
-txtbcep_ThreadPool::~txtbcep_ThreadPool()
+bcep_ThreadPool::~bcep_ThreadPool()
 {
     shutdown();
 }
 
 // MANIPULATORS
-void txtbcep_ThreadPool::drain()
+void bcep_ThreadPool::drain()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_mutex);
     d_enabled = 0;
@@ -318,7 +318,7 @@ void txtbcep_ThreadPool::drain()
     }
 }
 
-int txtbcep_ThreadPool::enqueueJob(const Job& functor)
+int bcep_ThreadPool::enqueueJob(const Job& functor)
 {
     if (!functor) {
         // Abort here if the 'functor' is "unset".  This prevents a crash
@@ -343,7 +343,7 @@ int txtbcep_ThreadPool::enqueueJob(const Job& functor)
     return 0;
 }
 
-void txtbcep_ThreadPool::shutdown()
+void bcep_ThreadPool::shutdown()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_mutex);
     d_enabled = 0;
@@ -360,7 +360,7 @@ void txtbcep_ThreadPool::shutdown()
     d_queue.clear();
 }
 
-double txtbcep_ThreadPool::resetPercentBusy()
+double bcep_ThreadPool::resetPercentBusy()
 {
     bsls_PlatformUtil::Int64 now           = bsls_TimeUtil::getTimer();
     bsls_PlatformUtil::Int64 callbackTime  = d_callbackTime.swap(0);
@@ -384,7 +384,7 @@ double txtbcep_ThreadPool::resetPercentBusy()
     return percentBusy;
 }
 
-int txtbcep_ThreadPool::start()
+int bcep_ThreadPool::start()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_mutex);
     d_enabled = 1;
@@ -399,7 +399,7 @@ int txtbcep_ThreadPool::start()
     return 0;
 }
 
-void txtbcep_ThreadPool::stop()
+void bcep_ThreadPool::stop()
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_mutex);
     d_enabled = 0;
@@ -413,25 +413,25 @@ void txtbcep_ThreadPool::stop()
 }
 
 // ACCESSORS
-int txtbcep_ThreadPool::numActiveThreads() const
+int bcep_ThreadPool::numActiveThreads() const
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_mutex);
     return d_numActiveThreads;
 }
 
-int txtbcep_ThreadPool::numWaitingThreads() const
+int bcep_ThreadPool::numWaitingThreads() const
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_mutex);
     return d_threadCount - d_numActiveThreads;
 }
 
-int txtbcep_ThreadPool::numPendingJobs() const
+int bcep_ThreadPool::numPendingJobs() const
 {
     bcemt_LockGuard<bcemt_Mutex> lock(&d_mutex);
     return d_queue.size();
 }
 
-double txtbcep_ThreadPool::percentBusy() const {
+double bcep_ThreadPool::percentBusy() const {
     bsls_PlatformUtil::Int64 last     =  d_lastResetTime;
     bsls_PlatformUtil::Int64 interval = bsls_TimeUtil::getTimer() - last;
 
