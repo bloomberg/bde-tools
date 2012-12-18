@@ -89,6 +89,7 @@ static const bsl::string MATCH_STATIC          = "static";
 static const bsl::string MATCH_STREAM          = "stream";
 static const bsl::string MATCH_LEVEL           = "level";
 static const bsl::string MATCH_SPACES_PER_LEVEL= "spacesPerLevel";
+static const bsl::string MATCH_TST             = "tst_";
 
 static bsl::vector<bool> classBoundaries;
 
@@ -112,6 +113,8 @@ static bsl::set<bsl::string> binaryOperators;
 static bsl::set<bsl::string> unaryOperators;
 
 static bsl::set<bsl::string> annoyingMacros;
+static bsl::set<bsl::string> stlClasses;
+static bsl::set<bsl::string> bslmfClasses;
 
 static bsl::set<bsl::string> validFriendTargets;
 
@@ -174,6 +177,42 @@ StartProgram::StartProgram()
                                                  sizeof *arrayAnnoyingMacros };
     for (int i = 0; i < NUM_ANNOYING_MACROS; ++i) {
         annoyingMacros.insert(arrayAnnoyingMacros[i]);
+    }
+
+    static const char *arrayStlClasses[] = {
+        "allocator", "allocator_traits", "bitset", "deque", "equal_to", "hash",
+        "char_traits", "basic_stringbuf", "basic_istringstream",
+        "basic_ostringstream", "basic_stringstream", "basic_stringbuf",
+        "stringbuf", "istringstream", "ostringstream", "stringstream",
+        "wstringbuf", "wistringstream", "wostringstream", "wstringstream",
+        "iterator_traits", "reverse_iterator", "list", "map", "multimap",
+        "multiset", "pair", "stack", "string", "basic_stringbuf", "stringbuf",
+        "wstringbuf", "unordered_map", "unordered_multimap",
+        "unordered_multiset", "unordered_set", "vector" };
+    enum { NUM_ARRAY_STL_CLASSES =
+                            sizeof arrayStlClasses / sizeof *arrayStlClasses };
+    for (int i = 0; i < NUM_ARRAY_STL_CLASSES; ++i) {
+        stlClasses.insert(arrayStlClasses[i]);
+    }
+
+    static const char *arrayBslmfClasses[] = {
+        "add_const", "add_cv", "add_lvalue_reference", "add_pointer",
+        "add_rvalue_reference", "add_volatile", "conditional", "enable_if",
+        "integral_constant", "false_type", "true_type", "is_arithmetic",
+        "is_array", "is_class", "is_const", "is_convertible", "is_enum",
+        "is_floating_point", "is_function", "is_fundamental", "is_integral",
+        "is_lvalue_reference", "is_member_function_pointer",
+        "is_member_object_pointer", "is_member_pointer", "is_pointer",
+        "is_polymorphic", "is_reference", "is_rvalue_reference",
+        "is_same", "is_trivially_copyable",
+        "is_trivially_default_constructible", "is_void", "is_volatile",
+        "remove_const", "remove_cv", "remove_pointer", "remove_reference",
+        "remove_vaolatile" };
+    enum { NUM_ARRAY_BSLMF_CLASSES = sizeof arrayBslmfClasses
+                                                 / sizeof *arrayBslmfClasses };
+
+    for (int i = 0; i < NUM_ARRAY_STL_CLASSES; ++i) {
+        bslmfClasses.insert(arrayBslmfClasses[i]);
     }
 
     tolerateSnugComments = !!bsl::getenv("BDEFLAG_TOLERATE_SNUG_COMMENTS");
@@ -705,6 +744,9 @@ void Group::checkAllClassNames()
         u = cnv.d_componentName.find('.');
         if (Ut::npos() != u) {
             cnv.d_componentName.resize(u);
+        }
+        if (Ut::frontMatches(cnv.d_componentName, MATCH_TST, 0)) {
+            cnv.d_componentName = cnv.d_componentName.substr(4);
         }
     }
 
@@ -2255,7 +2297,11 @@ void Group::checkClassName() const
                                && ! Ut::frontMatches(
                                                 className,
                                                 MATCH_TYPETRAITS,
-                                                0)) {
+                                                0) &&
+                (Lines::componentPrefix() != Lines::BDEFLAG_CP_BSLSTL ||
+                                             !stlClasses.  count(className)) &&
+                (Lines::componentPrefix() != Lines::BDEFLAG_CP_BSLMF  ||
+                                             !bslmfClasses.count(className))) {
         d_statementStart.warning() << "class name " << d_className <<
                                              " begins with '" << leadingChar <<
                                                "' -- not an upper case char\n";

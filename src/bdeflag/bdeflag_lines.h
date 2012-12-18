@@ -126,6 +126,11 @@ class Lines {
         BDEFLAG_PURPOSE_LACKS_PROVIDE = 0x2,
         BDEFLAG_PURPOSE_LACKS_PERIOD  = 0x4 };
 
+    enum ComponentPrefix {
+        BDEFLAG_CP_BSLMF,
+        BDEFLAG_CP_BSLSTL,
+        BDEFLAG_CP_UNRECOGNIZED };
+
   private:
     // PRIVATE TYPES
     typedef bsl::vector<bsl::string>   LineVec;
@@ -164,6 +169,7 @@ class Lines {
     static Ut::LineNumSet      s_tbds;
     static State               s_state;
     static int                 s_purposeFlags;
+    static ComponentPrefix     s_componentPrefix;
     static bool                s_hasTabs;
     static bool                s_hasCrs;
     static bool                s_hasTrailingBlanks;
@@ -239,6 +245,11 @@ class Lines {
     bsl::string commentAsString(CommentType comment);
         // Given the specified 'comment', which is an enum representing a
         // standard comment, give the comment in string form.
+
+    static
+    ComponentPrefix componentPrefix();
+        // Return a component prefix, based on the beginning of the file name,
+        // to indicate whether the component is a bslmf or bslstl component.
 
     static
     bool couldntOpenFile();
@@ -373,6 +384,12 @@ inline
 int Lines::commentIndent(int index)
 {
     return s_commentIndents[index];
+}
+
+inline
+Lines::ComponentPrefix Lines::componentPrefix()
+{
+    return s_componentPrefix;
 }
 
 inline

@@ -49,32 +49,33 @@ Lines_StartProgram::Lines_StartProgram()
 using bsl::cerr;
 using bsl::endl;
 
-bsl::string         Lines::s_fileName;
-Lines::FileType     Lines::s_fileType;
-Lines::LineVec      Lines::s_lines;
-Lines::CommentVec   Lines::s_comments;
-Lines::IndentVec    Lines::s_commentIndents;
-Lines::IndentVec    Lines::s_lineIndents;
-Lines::StatementVec Lines::s_statements;
-bsl::vector<bool>   Lines::s_statementEnds;
-int                 Lines::s_lineCount;
-Ut::LineNumSet      Lines::s_longLines;
-Ut::LineNumSet      Lines::s_cStyleComments;
-Ut::LineNumSet      Lines::s_inlinesNotAlone;
-Ut::LineNumSet      Lines::s_badlyAlignedImplicits;
-Ut::LineNumSet      Lines::s_badlyAlignedReturns;
-Ut::LineNumSet      Lines::s_tbds;
-Lines::State        Lines::s_state = BDEFLAG_EMPTY;
-int                 Lines::s_purposeFlags;
-bool                Lines::s_hasTabs;
-bool                Lines::s_hasCrs;
-bool                Lines::s_hasTrailingBlanks;
-bool                Lines::s_includesAssertH;
-bool                Lines::s_includesCassert;
-bool                Lines::s_includesDoubleQuotes;
-bool                Lines::s_assertFound;
-bool                Lines::s_includesComponentDotH;
-bool                Lines::s_couldntOpenFile;
+bsl::string               Lines::s_fileName;
+Lines::FileType           Lines::s_fileType;
+Lines::LineVec            Lines::s_lines;
+Lines::CommentVec         Lines::s_comments;
+Lines::IndentVec          Lines::s_commentIndents;
+Lines::IndentVec          Lines::s_lineIndents;
+Lines::StatementVec       Lines::s_statements;
+bsl::vector<bool>         Lines::s_statementEnds;
+int                       Lines::s_lineCount;
+Ut::LineNumSet            Lines::s_longLines;
+Ut::LineNumSet            Lines::s_cStyleComments;
+Ut::LineNumSet            Lines::s_inlinesNotAlone;
+Ut::LineNumSet            Lines::s_badlyAlignedImplicits;
+Ut::LineNumSet            Lines::s_badlyAlignedReturns;
+Ut::LineNumSet            Lines::s_tbds;
+Lines::State              Lines::s_state = BDEFLAG_EMPTY;
+int                       Lines::s_purposeFlags;
+Lines::ComponentPrefix    Lines::s_componentPrefix;
+bool                      Lines::s_hasTabs;
+bool                      Lines::s_hasCrs;
+bool                      Lines::s_hasTrailingBlanks;
+bool                      Lines::s_includesAssertH;
+bool                      Lines::s_includesCassert;
+bool                      Lines::s_includesDoubleQuotes;
+bool                      Lines::s_assertFound;
+bool                      Lines::s_includesComponentDotH;
+bool                      Lines::s_couldntOpenFile;
 
 // LOCAL FUNCTIONS
 
@@ -904,6 +905,7 @@ Lines::Lines(const char *fileName)
     s_assertFound = false;
     s_includesComponentDotH = false;
     s_couldntOpenFile = false;
+    s_componentPrefix = BDEFLAG_CP_UNRECOGNIZED;
 
     s_fileType = BDEFLAG_DOT_CPP;
     if (s_fileName.length() >= 2) {
@@ -914,6 +916,22 @@ Lines::Lines(const char *fileName)
                                     s_fileName.substr(s_fileName.length() - 6);
             if (suffix == ".t.cpp" || suffix == ".m.cpp") {
                 s_fileType = BDEFLAG_DOT_T_DOT_CPP;
+            }
+        }
+    }
+
+    {
+        int matchIdx = Ut::frontMatches(fileName, "bsl",     0)
+                     ? 3
+                     : Ut::frontMatches(fileName, "tst_bsl", 0)
+                     ? 7
+                     : 0;
+        if (matchIdx) {
+            if      (Ut::frontMatches(fileName, "stl_", matchIdx)) {
+                s_componentPrefix = BDEFLAG_CP_BSLSTL;
+            }
+            else if (Ut::frontMatches(fileName, "mf_",  matchIdx)) {
+                s_componentPrefix = BDEFLAG_CP_BSLMF;
             }
         }
     }
@@ -999,6 +1017,7 @@ Lines::Lines(const bsl::string& string)
     s_assertFound = false;
     s_includesComponentDotH = false;
     s_couldntOpenFile = false;
+    s_componentPrefix = BDEFLAG_CP_UNRECOGNIZED;
 
     s_lines.push_back("");
 
