@@ -1,13 +1,5 @@
 Warning: file tst_test.h has tab(s).
 Warning: in tst_test.h no '@PURPOSE:' comment
-Warning: tst_test.h: (37, 0): class name txt_TestWoofer begins with 't' -- not an upper case char
-Warning: tst_test.h: (37, 0): class name txt_TestWoofer doesn't start with the component name
-Warning: tst_test.h: (93, 0): class name txt_TestArf begins with 't' -- not an upper case char
-Warning: tst_test.h: (93, 0): class name txt_TestArf doesn't start with the component name
-Warning: tst_test.h: (120, 0): class name txt_TestMeow begins with 't' -- not an upper case char
-Warning: tst_test.h: (120, 0): class name txt_TestMeow doesn't start with the component name
-Warning: tst_test.h: (153, 0): class name txt_TestMeow begins with 't' -- not an upper case char
-Warning: tst_test.h: (153, 0): class name txt_TestMeow doesn't start with the component name
 Warning: tst_test.h: (191, 0): class name Woofer doesn't start with the component name
 Warning: tst_test.h: the following routine(s) need(s) documentation: 'notDocumented2', 'oil3', 'oil4'
 Warning: tst_test.h: (97, 9): routine i declared outside section (no '// CREATORS', '// MANIPULATORS', etc)

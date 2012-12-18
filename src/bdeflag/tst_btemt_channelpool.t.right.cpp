@@ -1,4 +1,3 @@
-Warning: tst_btemt_channelpool.t.cpp: should include, as the first include, '#include <tst_btemt_channelpool.h>'.
 Warning: in tst_btemt_channelpool.t.cpp '// RETURN' comment not right-justified to 79 chars at line(s): 1945, 2008, 2036
 Warning: in tst_btemt_channelpool.t.cpp 'TBD' comments found on line(s) 7756, 8308, 8320, 8366, 8369, 11241
 Warning: tst_btemt_channelpool.t.cpp: (2757, 0): class name case23CallbackInfo begins with 'c' -- not an upper case char
