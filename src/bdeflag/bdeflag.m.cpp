@@ -1,5 +1,6 @@
 // bdeflag.m.cpp                                                      -*-C++-*-
 
+#include <bdeflag_componenttable.h>
 #include <bdeflag_group.h>
 #include <bdeflag_lines.h>
 #include <bdeflag_place.h>
@@ -19,6 +20,7 @@ using namespace bdeflag;
 
 int main(int argc, char *argv[])
 {
+#if 0
     for (int f = 1; f < argc; ++f) {
         if (argc > 2) {
             bsl::cerr << argv[f] << ':' << bsl::endl;
@@ -29,6 +31,44 @@ int main(int argc, char *argv[])
         if (!Lines::couldntOpenFile()) {
             Place::setEnds();
             Group::doEverything();
+        }
+    }
+#endif
+
+    ComponentTable table;
+
+    for (int f = 1; f < argc; ++f) {
+        bsl::string fn(argv[f]);
+
+        if (!table.addFileOrComponentName(fn)) {
+            bsl::cerr << "Error: file or component '" << fn <<
+                                                          "' doesn't exist.\n";
+        }
+    }
+
+    int numFiles = 0;
+    const bsl::size_t NUM_COMPONENTS = table.length();
+    for (bsl::size_t i = 0; i < NUM_COMPONENTS; ++i) {
+        numFiles += table.component(i).numFiles();
+    }
+
+    for (bsl::size_t i = 0; i < NUM_COMPONENTS; ++i) {
+        const ComponentTable::Component& component = table.component(i);
+
+        const ComponentTable::FileNameSetIterator end = component.end();
+        for (ComponentTable::FileNameSetIterator it = component.begin();
+                                                             end != it; ++it) {
+            const bsl::string& fn = *it;
+            if (numFiles > 1) {
+                bsl::cerr << fn << ':' << bsl::endl;
+            }
+
+            Lines lines(fn.c_str());
+            lines.printWarnings(&bsl::cerr);
+            if (!Lines::couldntOpenFile()) {
+                Place::setEnds();
+                Group::doEverything();
+            }
         }
     }
 

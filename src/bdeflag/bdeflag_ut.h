@@ -193,14 +193,14 @@ struct Ut {
         // is undefined if 'end' is not in the range '0 <= end < s.length()'.
 };
 
-//=============================================================================
-//                       INLINE FUNCTION DEFINITIONS
-//=============================================================================
-
 // FREE OPERATORS
 bsl::ostream& operator<<(bsl::ostream& stream, const Ut::LineNumSet& set);
     // Output, in sequence, the line numbers in the given set, with ','s in
     // between them, and return the stream passed.
+
+//=============================================================================
+//                       INLINE FUNCTION DEFINITIONS
+//=============================================================================
 
 // CLASS METHODS
 inline

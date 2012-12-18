@@ -84,7 +84,7 @@ class Place {
         // Construct a place at the specified '(line number, column)' position.
 
     // MANIPULATORS
-    Place& operator=(const Place& other);
+    Place& operator=(const Place& rhs);
         // Assign the value of 'other' to this place and return a copy of that
         // value.
 
@@ -321,10 +321,10 @@ const Place& Place::end()
 
 // MANIPULATORS
 inline
-Place& Place::operator=(const Place& other)
+Place& Place::operator=(const Place& rhs)
 {
-    d_lineNum = other.d_lineNum;
-    d_col     = other.d_col;
+    d_lineNum = rhs.d_lineNum;
+    d_col     = rhs.d_col;
 
     return *this;
 }

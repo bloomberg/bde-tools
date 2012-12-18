@@ -31,68 +31,64 @@ using bsl::endl;
 
 namespace bdeflag {
 
-// store strings in a static vector for comparisons - a compare with a string
-// is faster that with a 'const char *'.
-enum {
-    MATCH_STRUCT,
-    MATCH_CLASS,
-    MATCH_UNION,
-    MATCH_IS,
-    MATCH_ARE,
-    MATCH_HAS,
-    MATCH_ENUM,
-    MATCH_CONST,
-    MATCH_VOLATILE,
-    MATCH_ASM,
-    MATCH_IF,
-    MATCH_WHILE,
-    MATCH_FOR,
-    MATCH_SWITCH,
-    MATCH_CATCH,
-    MATCH_BSLS_CATCH,
-    MATCH_BOOL,
-    MATCH_NIL,
-    MATCH_NESTED_TRAITS,
-    MATCH_INLINE_STATIC,
-    MATCH_NAMESPACE,
-    MATCH_OPERATOR,
-    MATCH_OPERATOR_SHIFT,
-    MATCH_OPERATOR_SHIFT_RIGHT,
-    MATCH_OPERATOR_BRACES,
-    MATCH_LHS,
-    MATCH_RHS,
-    MATCH_SWAP,
-    MATCH_OTHER,
-    MATCH_ORIGINAL,
-    MATCH_QUOTE_C,
-    MATCH_THREE_QUOTES,
-    MATCH_EXTERN,
-    MATCH_ASM__,
-    MATCH_VOLATILE__,
-    MATCH_RCSID,
-    MATCH_BSLMA_ALLOCATOR,
-    MATCH_BSLMA_ALLOCATOR_B,
-    MATCH_THROW,
-    MATCH_BSLS_EXCEPTION_SPEC,
-    MATCH_BSLS_NOTHROW_SPEC,
-    MATCH__TRY,
-    MATCH__EXCEPT,
-    MATCH_PRINT,
-    MATCH_BDEAT_DECL,
-    MATCH_EXPLICIT,
-    MATCH_BLOOMBERGLP,
-    MATCH_TEMPLATE,
-    MATCH_MAIN,
-    MATCH_TEST,
-    MATCH_BSLMF_METAINT,
-    MATCH_TYPENAME,
-    MATCH_BSLALG_TYPETRAITS,
-    MATCH_ANGLES,
-    MATCH_STATIC,
-    MATCH_NUM_CONSTANTS };
-
-static bsl::vector<bsl::string> match;
-const bsl::vector<bsl::string>& MATCH = match;
+static const bsl::string MATCH_STRUCT          = "struct";
+static const bsl::string MATCH_CLASS           = "class";
+static const bsl::string MATCH_UNION           = "union";
+static const bsl::string MATCH_IS              = "is";
+static const bsl::string MATCH_ARE             = "are";
+static const bsl::string MATCH_HAS             = "has";
+static const bsl::string MATCH_ENUM            = "enum";
+static const bsl::string MATCH_CONST           = "const";
+static const bsl::string MATCH_VOLATILE        = "volatile";
+static const bsl::string MATCH_ASM             = "asm";
+static const bsl::string MATCH_IF              = "if";
+static const bsl::string MATCH_WHILE           = "while";
+static const bsl::string MATCH_FOR             = "for";
+static const bsl::string MATCH_SWITCH          = "switch";
+static const bsl::string MATCH_CATCH           = "catch";
+static const bsl::string MATCH_BSLS_CATCH      = "BSLS_CATCH";
+static const bsl::string MATCH_BOOL            = "bool";
+static const bsl::string MATCH_NIL             = "";
+static const bsl::string MATCH_BSLALG_NESTED_TRAITS =
+                                                "BSLALG_DECLARE_NESTED_TRAITS";
+static const bsl::string MATCH_BSLMF_NESTED_TRAITS =
+                                              "BSLMF_NESTED_TRAIT_DECLARATION";
+static const bsl::string MATCH_INLINE_STATIC   = "inline static";
+static const bsl::string MATCH_NAMESPACE       = "namespace";
+static const bsl::string MATCH_OPERATOR        = "operator";
+static const bsl::string MATCH_OPERATOR_LEFT_SHIFT  = "operator<<";
+static const bsl::string MATCH_OPERATOR_RIGHT_SHIFT = "operator>>";
+static const bsl::string MATCH_LHS             = "lhs";
+static const bsl::string MATCH_RHS             = "rhs";
+static const bsl::string MATCH_SWAP            = "swap";
+static const bsl::string MATCH_OTHER           = "other";
+static const bsl::string MATCH_ORIGINAL        = "original";
+static const bsl::string MATCH_QUOTE_C         = "\"C\"";
+static const bsl::string MATCH_THREE_QUOTES    = "\"\"\"";
+static const bsl::string MATCH_EXTERN          = "extern";
+static const bsl::string MATCH_ASM__           = "__asm__";
+static const bsl::string MATCH_VOLATILE__      = "__volatile__";
+static const bsl::string MATCH_RCSID           = "RCSID";
+static const bsl::string MATCH_THROW           = "throw";
+static const bsl::string MATCH_BSLS_EXCEPTION_SPEC = "BSLS_EXCEPTION_SPEC";
+static const bsl::string MATCH_BSLS_NOTHROW_SPEC = "BSLS_NOTHROW_SPEC";
+static const bsl::string MATCH__EXCEPT         = "__except";
+static const bsl::string MATCH_PRINT           = "print";
+static const bsl::string MATCH_BDEAT_DECL      = "BDEAT_DECL_";
+static const bsl::string MATCH_EXPLICIT        = "explicit";
+static const bsl::string MATCH_BLOOMBERGLP     = "BloombergLP";
+static const bsl::string MATCH_TEMPLATE        = "template";
+static const bsl::string MATCH_MAIN            = "main";
+static const bsl::string MATCH_TEST            = "test";
+static const bsl::string MATCH_BSLMF_METAINT   = "bslmf_MetaInt";
+static const bsl::string MATCH_TYPENAME        = "typename";
+static const bsl::string MATCH_BSLALG_TYPETRAITS = "bslalg_TypeTraits";
+static const bsl::string MATCH_TYPETRAITS      = "TypeTraits";
+static const bsl::string MATCH_ANGLES          = "<>";
+static const bsl::string MATCH_STATIC          = "static";
+static const bsl::string MATCH_STREAM          = "stream";
+static const bsl::string MATCH_LEVEL           = "level";
+static const bsl::string MATCH_SPACES_PER_LEVEL= "spacesPerLevel";
 
 static bsl::vector<bool> classBoundaries;
 
@@ -145,63 +141,6 @@ static StartProgram startProgram;
 // CREATORS
 StartProgram::StartProgram()
 {
-    match.resize(MATCH_NUM_CONSTANTS);
-    match[MATCH_STRUCT]          = "struct";
-    match[MATCH_CLASS]           = "class";
-    match[MATCH_UNION]           = "union";
-    match[MATCH_IS]              = "is";
-    match[MATCH_ARE]             = "are";
-    match[MATCH_HAS]             = "has";
-    match[MATCH_ENUM]            = "enum";
-    match[MATCH_CONST]           = "const";
-    match[MATCH_VOLATILE]        = "volatile";
-    match[MATCH_ASM]             = "asm";
-    match[MATCH_IF]              = "if";
-    match[MATCH_WHILE]           = "while";
-    match[MATCH_FOR]             = "for";
-    match[MATCH_SWITCH]          = "switch";
-    match[MATCH_CATCH]           = "catch";
-    match[MATCH_BSLS_CATCH]      = "BSLS_CATCH";
-    match[MATCH_BOOL]            = "bool";
-    match[MATCH_NIL]             = "";
-    match[MATCH_NESTED_TRAITS]   = "BSLALG_DECLARE_NESTED_TRAITS";
-    match[MATCH_INLINE_STATIC]   = "inline static";
-    match[MATCH_NAMESPACE]       = "namespace";
-    match[MATCH_OPERATOR]        = "operator";
-    match[MATCH_OPERATOR_SHIFT]  = "operator<<";
-    match[MATCH_OPERATOR_SHIFT_RIGHT]
-                                 = "operator>>";
-    match[MATCH_OPERATOR_BRACES] = "operator()";
-    match[MATCH_LHS]             = "lhs";
-    match[MATCH_RHS]             = "rhs";
-    match[MATCH_SWAP]            = "swap";
-    match[MATCH_OTHER]           = "other";
-    match[MATCH_ORIGINAL]        = "original";
-    match[MATCH_QUOTE_C]         = "\"C\"";
-    match[MATCH_THREE_QUOTES]    = "\"\"\"";
-    match[MATCH_EXTERN]          = "extern";
-    match[MATCH_ASM__]           = "__asm__";
-    match[MATCH_VOLATILE__]      = "__volatile__";
-    match[MATCH_RCSID]           = "RCSID";
-    match[MATCH_BSLMA_ALLOCATOR] = "bslma_Allocator *";
-    match[MATCH_BSLMA_ALLOCATOR_B] = "bslma_Allocator*";
-    match[MATCH_THROW]           = "throw";
-    match[MATCH_BSLS_EXCEPTION_SPEC] = "BSLS_EXCEPTION_SPEC";
-    match[MATCH_BSLS_NOTHROW_SPEC] = "BSLS_NOTHROW_SPEC";
-    match[MATCH__EXCEPT]         = "__except";
-    match[MATCH_PRINT]           = "print";
-    match[MATCH_BDEAT_DECL]      = "BDEAT_DECL_";
-    match[MATCH_EXPLICIT]        = "explicit";
-    match[MATCH_BLOOMBERGLP]     = "BloombergLP";
-    match[MATCH_TEMPLATE]        = "template";
-    match[MATCH_MAIN]            = "main";
-    match[MATCH_TEST]            = "test";
-    match[MATCH_BSLMF_METAINT]   = "bslmf_MetaInt";
-    match[MATCH_TYPENAME]        = "typename";
-    match[MATCH_BSLALG_TYPETRAITS] = "balalg_TypeTraits";
-    match[MATCH_ANGLES]          = "<>";
-    match[MATCH_STATIC]          = "static";
-
     static const char *arrayBoolOperators[] = {
         "!", "<", "<=", ">", ">=", "==", "!=", "&&", "||" };
     enum { NUM_ARRAY_BOOL_OPERATORS = sizeof arrayBoolOperators /
@@ -212,7 +151,7 @@ StartProgram::StartProgram()
 
     static const char *arrayBinaryOperators[] = {
         "*", "/", "%", "+", "-", "<", "<=", ">", ">=", "==", "!=",
-        "&", "^", "|", "&&", "||" };
+        "&", "^", "|", "&&", "||", "=" };
     enum { NUM_ARRAY_BINARY_OPERATORS = sizeof arrayBinaryOperators /
                                                 sizeof *arrayBinaryOperators };
     for (int i = 0; i < NUM_ARRAY_BINARY_OPERATORS; ++i) {
@@ -230,7 +169,7 @@ StartProgram::StartProgram()
 
     static const char *arrayAnnoyingMacros[] = {
         "BSLS_IDENT", "BDES_IDENT", "BSLS_IDENT_RCSID", "BDES_IDENT_RCSID",
-        "BSLMF_ASSERT", "sizeof" };
+        "BSLMF_ASSERT", "sizeof", "__attribute__" };
     enum { NUM_ANNOYING_MACROS = sizeof arrayAnnoyingMacros /
                                                  sizeof *arrayAnnoyingMacros };
     for (int i = 0; i < NUM_ANNOYING_MACROS; ++i) {
@@ -238,6 +177,45 @@ StartProgram::StartProgram()
     }
 
     tolerateSnugComments = !!bsl::getenv("BDEFLAG_TOLERATE_SNUG_COMMENTS");
+}
+
+static
+bool isAllocatorPtrType(const bsl::string& typeName)
+    // Return 'true' if 'typeName' is a pointer to a type whose name ends with
+    // 'Allocator'.
+{
+    static const bsl::string alloc = "Allocator";
+
+    size_t idx = typeName.rfind(alloc);
+    if (Ut::npos() == idx) {
+        return false;                                                 // RETURN
+    }
+    const bsl::string& tn = typeName.substr(idx);
+
+    size_t tl = tn.length();
+    switch (tl - alloc.length()) {
+      case 1: {
+        return '*' == tn[tl - 1];                                     // RETURN
+      } break;
+      case 2: {
+        return ' ' == tn[tl - 2] &&
+               '*' == tn[tl - 1];                                     // RETURN
+      } break;
+      default: {
+        return false;                                                 // RETURN
+      }
+    }
+}
+
+static
+void removeUpThroughLastColon(bsl::string *s)
+    // Remove any namespaces, containing classes, from a name -- everything up
+    // through, and including, the last ':'.
+{
+    size_t u = s->rfind(':');
+    if (Ut::npos() != u) {
+        s->erase(0, u + 1);
+    }
 }
 
 static
@@ -258,7 +236,7 @@ bool isModifiableRef(const bsl::string& typeName)
                 }
             }
 
-            if (! Ut::frontMatches(typeName, MATCH[MATCH_CONST])) {
+            if (! Ut::frontMatches(typeName, MATCH_CONST)) {
                 return true;                                          // RETURN
             }
         }
@@ -291,8 +269,9 @@ static bool isAnnoying(const bsl::string& routineName)
     // safely ignored?
 {
     return annoyingMacros.count(routineName) ||
-                Ut::frontMatches(routineName, MATCH[MATCH_NESTED_TRAITS], 0) ||
-                     Ut::frontMatches(routineName, MATCH[MATCH_BDEAT_DECL], 0);
+                Ut::frontMatches(routineName, MATCH_BSLALG_NESTED_TRAITS, 0) ||
+                Ut::frontMatches(routineName, MATCH_BSLMF_NESTED_TRAITS,  0) ||
+                            Ut::frontMatches(routineName, MATCH_BDEAT_DECL, 0);
 }
 
 static inline
@@ -309,19 +288,19 @@ static size_t matchesAnyStruct(const bsl::string& curLine)
 {
     size_t pos;
     int matchStrLen;
-    pos = curLine.find(MATCH[MATCH_STRUCT]);
+    pos = curLine.find(MATCH_STRUCT);
     if (Ut::npos() != pos) {
-        matchStrLen = MATCH[MATCH_STRUCT].length();
+        matchStrLen = MATCH_STRUCT.length();
     }
     else {
-        pos = curLine.find(MATCH[MATCH_CLASS]);
+        pos = curLine.find(MATCH_CLASS);
         if (Ut::npos() != pos) {
-            matchStrLen = MATCH[MATCH_CLASS].length();
+            matchStrLen = MATCH_CLASS.length();
         }
         else {
-            pos = curLine.find(MATCH[MATCH_UNION]);
+            pos = curLine.find(MATCH_UNION);
             if (Ut::npos() != pos) {
-                matchStrLen = MATCH[MATCH_UNION].length();
+                matchStrLen = MATCH_UNION.length();
             }
             else {
                 return Ut::npos();                                    // RETURN
@@ -577,7 +556,7 @@ void Group::checkAllCasesPresentInTestDriver()
     for (; endIt != it; prev = it, ++it) {
         if (BDEFLAG_ROUTINE_BODY != (*it)->d_type
            || BDEFLAG_ROUTINE_DECL != (*prev)->d_type
-           || MATCH[MATCH_MAIN] != (*prev)->d_prevWord) {
+           || MATCH_MAIN != (*prev)->d_prevWord) {
             continue;
         }
 
@@ -626,7 +605,7 @@ void Group::checkAllCasesPresentInTestDriver()
         for (; endIt != it; ++it) {
             Place p = (*it)->d_open;
             --p;
-            if (MATCH[MATCH_TEST] == p.wordBefore()) {
+            if (MATCH_TEST == p.wordBefore()) {
                 if (switchGroup) {
                     p.warning() << "multiple 'switch (test)' in 'main()',"
                              " can't tell which is primary.  Assuming last.\n";
@@ -879,7 +858,7 @@ void Group::checkAllFriends()
                 friendName = Place(li, namePos).wordAfter(&pl);
 
                 bool tplate = false;
-                if (MATCH[MATCH_TEMPLATE] == friendName) {
+                if (MATCH_TEMPLATE == friendName) {
                     tplate = true;
 
                     (pl + 1).templateNameAfter(&pl);
@@ -887,9 +866,9 @@ void Group::checkAllFriends()
                     friendName = (pl + 1).wordAfter(&pl);
                 }
 
-                if (MATCH[MATCH_CLASS]  != friendName &&
-                    MATCH[MATCH_STRUCT] != friendName &&
-                    MATCH[MATCH_UNION]  != friendName) {
+                if (MATCH_CLASS  != friendName &&
+                    MATCH_STRUCT != friendName &&
+                    MATCH_UNION  != friendName) {
                     // confused.  skip it.
 
                     if (!tplate) {
@@ -910,7 +889,7 @@ void Group::checkAllFriends()
                 Group *group = findGroupForPlace(pl);
 
                 friendName = group->d_prevWord;
-                isOp = Ut::frontMatches(friendName, MATCH[MATCH_OPERATOR]);
+                isOp = Ut::frontMatches(friendName, MATCH_OPERATOR);
                 if (!isOp) {
                     size_t pos = friendName.find('<');
                     if (Ut::npos() != pos) {
@@ -919,7 +898,7 @@ void Group::checkAllFriends()
                 }
             }
             BSLS_ASSERT(isOp || Ut::npos() == friendName.find_first_of(
-                                                         MATCH[MATCH_ANGLES]));
+                                                                MATCH_ANGLES));
                                                         // match_angles == "<>"
 
             if (friendName.empty()) {
@@ -982,8 +961,8 @@ void Group::checkAllFunctionDoc()
 
     topLevel().recurseMemTraverse(&Group::checkFunctionDoc);
 
-    if (routinesNeedDoc.count(MATCH[MATCH_OPERATOR])) {
-        routinesNeedDoc.erase(MATCH[MATCH_OPERATOR]);
+    if (routinesNeedDoc.count(MATCH_OPERATOR)) {
+        routinesNeedDoc.erase(MATCH_OPERATOR);
     }
 
     if (!routinesNeedDoc.empty()) {
@@ -1163,9 +1142,9 @@ void Group::checkAllTemplateOnOwnLine()
                 Place cB;
                 cA.nameAfter(&cB, true);
                 ++cB;
-                if   ((MATCH[MATCH_STRUCT] == nWord
-                   ||  MATCH[MATCH_CLASS]  == nWord
-                   ||  MATCH[MATCH_UNION]  == nWord) && ';' == *cB
+                if   ((MATCH_STRUCT == nWord
+                   ||  MATCH_CLASS  == nWord
+                   ||  MATCH_UNION  == nWord) && ';' == *cB
                    ||  '(' == *cB) {
                     // forward template instantiation -- ignore it
 
@@ -1302,7 +1281,7 @@ void Group::determineGroupType()
                 expression = true;
                 if (d_open.lineNum() == d_prevWordBegin.lineNum()) {
                     const bsl::string curLine = Lines::line(d_open.lineNum());
-                    size_t pos = curLine.rfind(MATCH[MATCH_OPERATOR],
+                    size_t pos = curLine.rfind(MATCH_OPERATOR,
                                                d_prevWordBegin.col());
                     int iPos = pos;
                     if (Ut::npos() != pos) {
@@ -1311,7 +1290,7 @@ void Group::determineGroupType()
                                              d_prevWordBegin.col() + 1 - iPos);
                         const bsl::string op = Ut::spacesOut(sub);
                         Place begin(d_open.lineNum(), iPos);
-                        if (op.length() <= 11 && MATCH[MATCH_OPERATOR] ==
+                        if (op.length() <= 11 && MATCH_OPERATOR ==
                                                         Ut::wordAfter(op, 0)) {
                             // it's something like 'operator+(' or
                             // 'operator()(', note 'operator() (' or
@@ -1353,9 +1332,9 @@ void Group::determineGroupType()
 
         BSLS_ASSERT_OPT(d_prevWord.length() > 0);
 
-        if   (MATCH[MATCH_IF]    == d_prevWord
-           || MATCH[MATCH_WHILE] == d_prevWord
-           || MATCH[MATCH_FOR]   == d_prevWord) {
+        if   (MATCH_IF    == d_prevWord
+           || MATCH_WHILE == d_prevWord
+           || MATCH_FOR   == d_prevWord) {
             d_type = BDEFLAG_IF_WHILE_FOR;
             if (BDEFLAG_ROUTINE_BODY != d_parent->d_type &&
                                        BDEFLAG_CODE_BODY != d_parent->d_type) {
@@ -1366,7 +1345,7 @@ void Group::determineGroupType()
             return;                                                   // RETURN
         }
 
-        if (MATCH[MATCH_SWITCH] == d_prevWord) {
+        if (MATCH_SWITCH == d_prevWord) {
             d_type = BDEFLAG_SWITCH_PARENS;
             if (BDEFLAG_ROUTINE_BODY != d_parent->d_type &&
                                        BDEFLAG_CODE_BODY != d_parent->d_type) {
@@ -1377,9 +1356,9 @@ void Group::determineGroupType()
             return;                                                   // RETURN
         }
 
-        if   (MATCH[MATCH_CATCH] == d_prevWord
-           || MATCH[MATCH_BSLS_CATCH] == d_prevWord
-           || MATCH[MATCH__EXCEPT] == d_prevWord) {
+        if   (MATCH_CATCH == d_prevWord
+           || MATCH_BSLS_CATCH == d_prevWord
+           || MATCH__EXCEPT == d_prevWord) {
             d_type = BDEFLAG_CATCH_PARENS;
             if (BDEFLAG_ROUTINE_BODY != d_parent->d_type &&
                                        BDEFLAG_CODE_BODY != d_parent->d_type &&
@@ -1392,18 +1371,18 @@ void Group::determineGroupType()
             return;                                                   // RETURN
         }
 
-        if ((MATCH[MATCH_ASM__] == d_prevWord ||
-              (MATCH[MATCH_VOLATILE__] == d_prevWord &&
-                  MATCH[MATCH_ASM__] == (d_prevWordBegin - 1).wordBefore())) ||
-            (MATCH[MATCH_ASM] == d_prevWord ||
-                (MATCH[MATCH_VOLATILE] == d_prevWord &&
-                    MATCH[MATCH_ASM] == (d_prevWordBegin - 1).wordBefore()))) {
+        if ((MATCH_ASM__ == d_prevWord ||
+              (MATCH_VOLATILE__ == d_prevWord &&
+                  MATCH_ASM__ == (d_prevWordBegin - 1).wordBefore())) ||
+            (MATCH_ASM == d_prevWord ||
+                (MATCH_VOLATILE == d_prevWord &&
+                    MATCH_ASM == (d_prevWordBegin - 1).wordBefore()))) {
             d_type = BDEFLAG_ASM;
             return;                                                   // RETURN
         }
 
-        if (MATCH[MATCH_THROW] == d_prevWord ||
-                              MATCH[MATCH_BSLS_EXCEPTION_SPEC] == d_prevWord) {
+        if (MATCH_THROW == d_prevWord ||
+                                     MATCH_BSLS_EXCEPTION_SPEC == d_prevWord) {
             d_type = BDEFLAG_THROW_PARENS;
             return;                                                   // RETURN
         }
@@ -1512,6 +1491,7 @@ void Group::determineGroupType()
             char c = ':' == Ut::lastCharOf(name) ? ':' : *(endName + 1);
             if (Ut::charInString(c, ":{")) {
                 d_className = name;
+                removeUpThroughLastColon(&d_className);
                 d_type = BDEFLAG_CLASS;
                 return;                                               // RETURN
             }
@@ -1532,8 +1512,8 @@ void Group::determineGroupType()
                 while (col > 0 && '"' == curLine[col - 1]) {
                     --col;
                 }
-                if (MATCH[MATCH_EXTERN] == (Place(li, col) - 1).wordBefore()) {
-                    d_prevWord = MATCH[MATCH_QUOTE_C];
+                if (MATCH_EXTERN == (Place(li, col) - 1).wordBefore()) {
+                    d_prevWord = MATCH_QUOTE_C;
                     d_prevWordBegin = d_prevWordBegin - 2;
                     d_type = BDEFLAG_NAMESPACE;
                     return;                                           // RETURN
@@ -1558,16 +1538,16 @@ void Group::determineGroupType()
         }
 
         if (!d_prevWord.empty()) {
-            if   (MATCH[MATCH_STRUCT] == d_prevWord
-               || MATCH[MATCH_CLASS]  == d_prevWord
-               || MATCH[MATCH_UNION]  == d_prevWord) {
+            if   (MATCH_STRUCT == d_prevWord
+               || MATCH_CLASS  == d_prevWord
+               || MATCH_UNION  == d_prevWord) {
                 // there is no class name
 
                 d_type = BDEFLAG_CLASS;
                 return;                                               // RETURN
             }
 
-            if (MATCH[MATCH_BSLS_NOTHROW_SPEC] == d_prevWord) {
+            if (MATCH_BSLS_NOTHROW_SPEC == d_prevWord) {
                 d_type = BDEFLAG_ROUTINE_BODY;
                 return;                                               // RETURN
             }
@@ -1576,17 +1556,17 @@ void Group::determineGroupType()
             bsl::string secondPrevWord =
                         (d_prevWordBegin - 1).wordBefore(&secondPrevWordBegin);
 
-            if   (MATCH[MATCH_STRUCT] == secondPrevWord
-               || MATCH[MATCH_CLASS]  == secondPrevWord
-               || MATCH[MATCH_UNION]  == secondPrevWord) {
+            if   (MATCH_STRUCT == secondPrevWord
+               || MATCH_CLASS  == secondPrevWord
+               || MATCH_UNION  == secondPrevWord) {
                 // prevWord or secondPrevWord are 'struct', 'class', or 'union'
 
                 d_className = d_prevWord;
+                removeUpThroughLastColon(&d_className);
                 d_type = BDEFLAG_CLASS;
                 return;                                               // RETURN
             }
-            if (')' == *secondPrevWordBegin &&
-                                            MATCH[MATCH_CONST] == d_prevWord) {
+            if (')' == *secondPrevWordBegin && MATCH_CONST == d_prevWord) {
                 Group *prevGroup =findGroupForPlace(secondPrevWordBegin);
                 if (prevGroup->d_flags.d_parenBased) {
                     prevGroup->d_type = BDEFLAG_ROUTINE_DECL;
@@ -1621,6 +1601,7 @@ void Group::determineGroupType()
                                        : *(nameEnd + 1);
                                 if (Ut::charInString(c, ":{")) {
                                     d_className = name;
+                                    removeUpThroughLastColon(&d_className);
                                     d_type = BDEFLAG_CLASS;
                                     return;                           // RETURN
                                 }
@@ -1640,6 +1621,7 @@ void Group::determineGroupType()
                                    : *(nameEnd + 1);
                             if (Ut::charInString(c, ":{")) {
                                 d_className = name;
+                                removeUpThroughLastColon(&d_className);
                                 d_type = BDEFLAG_CLASS;
                                 return;                               // RETURN
                             }
@@ -1658,6 +1640,7 @@ void Group::determineGroupType()
                                    : *(nameEnd + 1);
                             if (Ut::charInString(c, ":{")) {
                                 d_className = name;
+                                removeUpThroughLastColon(&d_className);
                                 d_type = BDEFLAG_CLASS;
                                 return;                               // RETURN
                             }
@@ -1672,8 +1655,8 @@ void Group::determineGroupType()
                 d_type = BDEFLAG_CODE_BODY;
                 return;                                               // RETURN
             }
-            if (MATCH[MATCH_ENUM] == d_prevWord ||
-                MATCH[MATCH_ENUM] == secondPrevWord) {
+            if (MATCH_ENUM == d_prevWord ||
+                MATCH_ENUM == secondPrevWord) {
                 d_type = BDEFLAG_ENUM;
                 return;                                               // RETURN
             }
@@ -1814,17 +1797,21 @@ void Group::checkArgNames() const
 
     // avoid calling 'getArgList' outside of class except on binary operators
 
-    bool anyOp = Ut::frontMatches(d_prevWord, MATCH[MATCH_OPERATOR], 0);
+    bool anyOp = Ut::frontMatches(d_prevWord, MATCH_OPERATOR, 0);
     bool binOp = anyOp && binaryOperators.count(d_prevWord.substr(8));
-    if (BDEFLAG_CLASS != d_parent->d_type && !binOp) {
+    bool shiftOp = anyOp && !binOp &&
+                                   (MATCH_OPERATOR_LEFT_SHIFT  == d_prevWord ||
+                                    MATCH_OPERATOR_RIGHT_SHIFT == d_prevWord);
+    if (BDEFLAG_CLASS != d_parent->d_type && !binOp && !shiftOp) {
         return;                                                       // RETURN
     }
 
     bsl::vector<bsl::string> typeNames;
     bsl::vector<bsl::string> argNames;
     bsl::vector<int>         lineNums;
+    bool potentialSingleArg;
 
-    getArgList(&typeNames, &argNames, &lineNums);
+    getArgList(&typeNames, &argNames, &lineNums, &potentialSingleArg);
     const int argCount = argNames.size();
 
     bool namesPresent = false;
@@ -1884,7 +1871,7 @@ void Group::checkArgNames() const
     }
 
     if (!notImplemented) {
-        if (MATCH[MATCH_SWAP] != d_prevWord) {
+        if (MATCH_SWAP != d_prevWord) {
             if (argCount >= 1) {
                 const bsl::string& tn = typeNames[0];
                 const bsl::string& an = argNames[0];
@@ -1944,10 +1931,12 @@ void Group::checkArgNames() const
                                                             d_prevWord << endl;
                 }
                 else if (isModifiableRef(tn)) {
-                    d_open.warning() << Ut::nthString(i + 1) << " argument of"
-                           " routine " << d_prevWord << " of type '" << tn <<
-                                                       "' is being passed as a"
+                    if (1 != i || MATCH_OPERATOR_RIGHT_SHIFT != d_prevWord) {
+                        d_open.warning() << Ut::nthString(i + 1) <<
+                                       " argument of routine " << d_prevWord <<
+                                 " of type '" << tn << "' is being passed as a"
                                          " reference to a modifiable object\n";
+                    }
                 }
             }
         }
@@ -1956,9 +1945,9 @@ void Group::checkArgNames() const
     switch (d_parent->d_type) {
       case BDEFLAG_TOP_LEVEL:
       case BDEFLAG_NAMESPACE: {
-        if (2 == argCount && (binOp || MATCH[MATCH_SWAP] == d_prevWord)) {
-            if   (MATCH[MATCH_LHS] != argNames[0]
-               || MATCH[MATCH_RHS] != argNames[1]) {
+        if (2 == argCount && (binOp || MATCH_SWAP == d_prevWord)) {
+            if   (MATCH_LHS != argNames[0]
+               || MATCH_RHS != argNames[1]) {
                 if (0 != argCount ||
                                  !unaryOperators.count(d_prevWord.substr(8))) {
                     d_statementStart.warning() << "argument names of binary" <<
@@ -1979,14 +1968,16 @@ void Group::checkArgNames() const
                                   d_prevWord << "'with wrong number of args\n";
                 }
             }
+#if 0
             else if (!isFriend && !notImplemented) {
                 BSLS_ASSERT_OPT(1 == argCount);
-                if (MATCH[MATCH_RHS] != argNames[0]) {
+                if (MATCH_RHS != argNames[0]) {
                     d_open.warning() << "argument name of binary operator " <<
                                   d_prevWord << " should be 'rhs' and not '" <<
                                                           argNames[0] << "'\n";
                 }
             }
+#endif
         }
 
         if (namesPresent) {
@@ -2004,7 +1995,7 @@ void Group::checkArgNames() const
             }
 
             if (binOp) {
-                if (MATCH[MATCH_RHS] != argNames[0]) {
+                if (MATCH_RHS != argNames[0]) {
                     d_open.warning() << "binary operator '" << d_prevWord <<
                         "' should have arg name 'rhs', not '" << argNames[0] <<
                                                                          "'\n";
@@ -2014,24 +2005,56 @@ void Group::checkArgNames() const
 
             if (!anyOp) {
                 for (int i = 0; i < argCount; ++i) {
-                    if  (MATCH[MATCH_LHS] == argNames[i]
-                       ||MATCH[MATCH_RHS] == argNames[i]) {
+                    if  (MATCH_LHS == argNames[i]
+                       ||MATCH_RHS == argNames[i]) {
                         d_open.warning() << d_prevWord << ": arg name '" <<
                          argNames[i] << "' is reserved for binary operators\n";
                     }
                 }
             }
 
-            if (MATCH[MATCH_SWAP] == d_prevWord) {
-                if (1 == argCount && MATCH[MATCH_OTHER] != argNames[0]) {
+            if (MATCH_SWAP == d_prevWord) {
+                if (1 == argCount && MATCH_OTHER != argNames[0]) {
                     d_open.warning() << "'swap' member function arg name"
                            " should be 'other', not '" << argNames[0] << "'\n";
                 }
                 return;                                               // RETURN
             }
+
+            if (MATCH_PRINT == d_prevWord) {
+                if (3 != argNames.size()) {
+                    d_open.warning() << "'print' should have 3 args\n";
+                }
+                else {
+                    if (MATCH_STREAM != argNames[0]) {
+                        d_open.warning() << "first arg of 'print' should be"
+                                                          " named 'stream'.\n";
+                    }
+                    if (MATCH_LEVEL != argNames[1]) {
+                        d_open.warning() << "second arg of 'print' should be"
+                                                           " named 'level'.\n";
+                    }
+                    if (MATCH_SPACES_PER_LEVEL != argNames[2]) {
+                        d_open.warning() << "third arg of 'print' should be"
+                                                  " named 'spacesPerLevel'.\n";
+                    }
+                    if (!potentialSingleArg) {
+                        d_open.warning() << "2nd and 3rd args of 'print'"
+                                                      " should be optional.\n";
+                    }
+                }
+            }
         }
 
-        if (d_prevWord == d_parent->d_className) {
+        bsl::string lastPartOfClassName = d_parent->d_className;
+        {
+            size_t u = lastPartOfClassName.rfind(':');
+            if (Ut::npos() != u) {
+                lastPartOfClassName = lastPartOfClassName.substr(u + 1);
+            }
+        }
+
+        if (d_prevWord == lastPartOfClassName) {
             switch (argCount) {
               case 0: {
                 ; // do nothing
@@ -2063,13 +2086,12 @@ void Group::checkArgNames() const
                     }
                 }
                 if (copyCtor) {
-                    if (!notImplemented &&
-                                        MATCH[MATCH_ORIGINAL] != argNames[0]) {
+                    if (!notImplemented && MATCH_ORIGINAL != argNames[0]) {
                         d_open.warning() << d_prevWord << " copy c'tor arg"
                                                       " name not 'original'\n";
                     }
                 }
-                else if (MATCH[MATCH_EXPLICIT] !=
+                else if (MATCH_EXPLICIT !=
                                           (d_prevWordBegin - 1).wordBefore() &&
                                                          !isMarkedImplicit()) {
                     d_open.warning() << d_prevWord << ": single argument"
@@ -2079,16 +2101,11 @@ void Group::checkArgNames() const
               }  break;
               case 2: {
                 bool copyCtor = false;
-                const bool potentialSingleArg =
-                                         (Ut::npos() != argNames[1].find('='));
-
-                if ((typeNames[1] == MATCH[MATCH_BSLMA_ALLOCATOR] ||
-                             typeNames[1] == MATCH[MATCH_BSLMA_ALLOCATOR_B]) &&
-                                                          potentialSingleArg) {
+                if (isAllocatorPtrType(typeNames[1]) && potentialSingleArg) {
                     const bsl::string& s = "const " + d_prevWord;
 
-                    if (typeNames[0] == (s + "&") ||
-                                                  typeNames[0] == (s + " &")) {
+                    if     (typeNames[0] == (s + "&") ||
+                            typeNames[0] == (s + " &")) {
                         copyCtor = true;
                     }
                     else {
@@ -2110,18 +2127,16 @@ void Group::checkArgNames() const
                         }
                     }
                 }
-                copyCtor &= (typeNames[1] == MATCH[MATCH_BSLMA_ALLOCATOR] ||
-                             typeNames[1] == MATCH[MATCH_BSLMA_ALLOCATOR_B]);
+                copyCtor &= isAllocatorPtrType(typeNames[1]);
                 if (copyCtor) {
-                    if (!notImplemented &&
-                                        MATCH[MATCH_ORIGINAL] != argNames[0]) {
+                    if (!notImplemented && MATCH_ORIGINAL != argNames[0]) {
                         d_open.warning() << d_prevWord << " copy c'tor arg"
                                                       " name not 'original'\n";
                     }
 
                     // note we don't mark copy c'tors 'explicit'
                 }
-                else if (potentialSingleArg && MATCH[MATCH_EXPLICIT] !=
+                else if (potentialSingleArg && MATCH_EXPLICIT !=
                                           (d_prevWordBegin - 1).wordBefore() &&
                                                          !isMarkedImplicit()) {
                     // potentially single arg non-copy c'tor
@@ -2134,9 +2149,8 @@ void Group::checkArgNames() const
               default: {
                 BSLS_ASSERT_OPT(argCount >= 3);
 
-                if (Ut::npos() != argNames[1].find('=')) {
-                    if (MATCH[MATCH_EXPLICIT] !=
-                                          (d_prevWordBegin - 1).wordBefore() &&
+                if (potentialSingleArg) {
+                    if (MATCH_EXPLICIT != (d_prevWordBegin - 1).wordBefore() &&
                                                          !isMarkedImplicit()) {
                         d_open.warning() << d_prevWord << ": many argument"
                                " constructor with default 2nd arg not declared"
@@ -2168,17 +2182,17 @@ void Group::checkBooleanRoutineNames() const
     }
 
     if (Ut::npos() == d_prevWord.find(':')
-       && (Ut::frontMatches(d_prevWord, MATCH[MATCH_IS],  0)
-           || Ut::frontMatches(d_prevWord, MATCH[MATCH_ARE], 0)
-           || (Ut::frontMatches(d_prevWord, MATCH[MATCH_HAS],  0) &&
+       && (Ut::frontMatches(d_prevWord, MATCH_IS,  0)
+           || Ut::frontMatches(d_prevWord, MATCH_ARE, 0)
+           || (Ut::frontMatches(d_prevWord, MATCH_HAS,  0) &&
                              d_prevWord.length() > 3 && isupper(d_prevWord[3]))
-           || (Ut::frontMatches(d_prevWord, MATCH[MATCH_OPERATOR], 0) &&
+           || (Ut::frontMatches(d_prevWord, MATCH_OPERATOR, 0) &&
                                                ':' != *(d_prevWordBegin - 1) &&
                                  boolOperators.count(d_prevWord.substr(8))))) {
         Place pb = d_prevWordBegin - 1;    // Place Before
         if ('>' == *pb) {
             if (!Ut::frontMatches(pb.templateNameBefore(),
-                                  MATCH[MATCH_BSLMF_METAINT],
+                                  MATCH_BSLMF_METAINT,
                                   0)) {
                 shouldBool.insert(d_prevWord);
             }
@@ -2187,7 +2201,7 @@ void Group::checkBooleanRoutineNames() const
         if ('&' == *pb) {
             --pb;
         }
-        if (MATCH[MATCH_BOOL] != pb.wordBefore()) {
+        if (MATCH_BOOL != pb.wordBefore()) {
             shouldBool.insert(d_prevWord);
         }
     }
@@ -2199,14 +2213,14 @@ void Group::checkClassName() const
         return;                                                       // RETURN
     }
 
-    if (d_className.empty() | (MATCH[MATCH_STRUCT] == d_className) |
-                              (MATCH[MATCH_CLASS ] == d_className) |
-                              (MATCH[MATCH_UNION ] == d_className)) {
+    if (d_className.empty() | (MATCH_STRUCT == d_className) |
+                              (MATCH_CLASS  == d_className) |
+                              (MATCH_UNION  == d_className)) {
         return;                                                       // RETURN
     }
 
     bsl::string className = Ut::removeTemplateAngleBrackets(d_className);
-    if (MATCH[MATCH_ANGLES] == className) {    // match_angles == "<>"
+    if (MATCH_ANGLES == className) {    // match_angles == "<>"
         d_statementStart.error() << "strange class name '" << d_className <<
                                                                      bsl::endl;
         return;                                                       // RETURN
@@ -2236,7 +2250,11 @@ void Group::checkClassName() const
                      : ' ';
     if (! isupper(leadingChar) && ! Ut::frontMatches(
                                                 className,
-                                                MATCH[MATCH_BSLALG_TYPETRAITS],
+                                                MATCH_BSLALG_TYPETRAITS,
+                                                0)
+                               && ! Ut::frontMatches(
+                                                className,
+                                                MATCH_TYPETRAITS,
                                                 0)) {
         d_statementStart.warning() << "class name " << d_className <<
                                              " begins with '" << leadingChar <<
@@ -2318,17 +2336,21 @@ void Group::checkCodeComments() const
             const int startIndent = Lines::commentIndent(li);
             if (Lines::BDEFLAG_S_BLANKLINE == Lines::statement(li)
                && Lines::BDEFLAG_UNRECOGNIZED == Lines::comment(li)) {
-                bool ok = false;
-                if (li > begin && Lines::BDEFLAG_S_BLANKLINE !=
-                                                       Lines::statement(li - 1)
-                                          && startIndent >= expectIndent + 4) {
-                    // deeply indented comment -- ok
+                bool snugOk = false;
+                if (startIndent != expectIndent) {
+                    if (li > begin &&
+                        (Lines::BDEFLAG_S_BLANKLINE !=
+                                                    Lines::statement(li - 1) ||
+                         Lines::BDEFLAG_BANG == Lines::comment(li - 1)) &&
+                                  (startIndent == expectIndent + 4 ||
+                                   startIndent >= expectIndent + 10)) {
+                        // deeply indented comment -- ok
 
-                    ok = true;
-                }
-                else {
-                    if (startIndent != expectIndent &&
-                                             startIndent < expectIndent + 10) {
+                        snugOk = true;
+                    }
+                    else if (startIndent < expectIndent + 10 &&
+                                                          !(0 == startIndent &&
+                                  Lines::BDEFLAG_DOT_H != Lines::fileType())) {
                         strangelyIndentedComments.insert(commentStart);
                     }
                 }
@@ -2356,7 +2378,7 @@ void Group::checkCodeComments() const
                         // Note we tolerate snug comments if the line following
                         // them begins with '{'.
 
-                        if (!ok && li < bigEnd &&
+                        if (!snugOk && li < bigEnd &&
                                         '{' != Lines::line(li + 1)[
                                                   Lines::lineIndent(li + 1)]) {
                             commentNeedsBlankLines.insert(li);
@@ -2494,7 +2516,8 @@ void Group::checkFunctionDoc() const
             // probably followed by c'tor clauses.  Move docplace to the the
             // close of the last ctor clause
 
-            GroupSetIt it = d_parent->d_subGroups.find(this);
+            GroupSetIt it =
+                         d_parent->d_subGroups.find(const_cast<Group *>(this));
             BSLS_ASSERT_OPT(this == *it);
             const Group *group;
             for (++it; d_parent->d_subGroups.end() != it &&
@@ -2545,7 +2568,7 @@ void Group::checkFunctionDoc() const
         }
 
         if (BDEFLAG_NAMESPACE == d_parent->d_type) {
-            isUnNamed = MATCH[MATCH_NAMESPACE] == d_parent->d_prevWord;
+            isUnNamed = MATCH_NAMESPACE == d_parent->d_prevWord;
             doc = true;
         }
         else {
@@ -2557,7 +2580,7 @@ void Group::checkFunctionDoc() const
 
                 if (Lines::BDEFLAG_S_STATIC == Lines::statement(li)
                    || (Lines::BDEFLAG_S_INLINE == Lines::statement(li) &&
-                                      MATCH[MATCH_INLINE_STATIC] == curLine)) {
+                                             MATCH_INLINE_STATIC == curLine)) {
                     doc = true;
                     break;
                 }
@@ -2631,7 +2654,7 @@ void Group::checkFunctionSection() const
 
         Place endDecl = d_close.findFirstOf("{;");
         isConst = Ut::npos() != d_close.twoPointsString(endDecl).find(
-                                                           MATCH[MATCH_CONST]);
+                                                                  MATCH_CONST);
         isStatic = false;
         int cli = d_open.lineNum();
         int li = Lines::lineBefore(&cli);
@@ -2650,7 +2673,7 @@ void Group::checkFunctionSection() const
             }
 
             const bsl::string& curLine = Lines::line(li);
-            bsl::size_t staticPos = curLine.find(MATCH[MATCH_STATIC]);
+            bsl::size_t staticPos = curLine.find(MATCH_STATIC);
             if (Ut::npos() != staticPos) {
                 if ((0 == staticPos || !isalnum(curLine[staticPos - 1]))
                    && (curLine.length() == staticPos + 6 ||
@@ -2763,7 +2786,7 @@ void Group::checkIfWhileFor() const
         return;                                                       // RETURN
     }
 
-    if (';' == nextChar && MATCH[MATCH_WHILE] == d_prevWord &&
+    if (';' == nextChar && MATCH_WHILE == d_prevWord &&
                                                '}' == *(d_prevWordBegin - 1)) {
         return;                                                       // RETURN
     }
@@ -2774,14 +2797,14 @@ void Group::checkIfWhileFor() const
 
 void Group::checkNamespace() const
 {
-    if (BDEFLAG_NAMESPACE != d_type || MATCH[MATCH_QUOTE_C] == d_prevWord) {
+    if (BDEFLAG_NAMESPACE != d_type || MATCH_QUOTE_C == d_prevWord) {
         return;                                                       // RETURN
     }
 
     // check name is acceptable
 
     bool commentFound = false;
-    if (MATCH[MATCH_NAMESPACE] == d_prevWord) {
+    if (MATCH_NAMESPACE == d_prevWord) {
         // unnamed namespace
 
         if (Lines::BDEFLAG_DOT_H == Lines::fileType()) {
@@ -2803,7 +2826,7 @@ void Group::checkNamespace() const
             commentFound = true;
         }
     }
-    else if (MATCH[MATCH_BLOOMBERGLP] == d_prevWord) {
+    else if (MATCH_BLOOMBERGLP == d_prevWord) {
         // enterprise namespace
 
         if (d_open.lineNum() == d_close.lineNum()) {
@@ -3127,7 +3150,7 @@ void Group::registerValidFriendTarget() const
         return;                                                       // RETURN
     }
 
-    if (!Ut::frontMatches(name, MATCH[MATCH_OPERATOR])) {
+    if (!Ut::frontMatches(name, MATCH_OPERATOR)) {
         // clip off template part
 
         size_t angle = name.find_first_of('<');
@@ -3148,19 +3171,23 @@ void Group::registerValidFriendTarget() const
 
 void Group::getArgList(bsl::vector<bsl::string> *typeNames,
                        bsl::vector<bsl::string> *names,
-                       bsl::vector<int>         *lineNums) const
+                       bsl::vector<int>         *lineNums,
+                       bool                     *potentialSingleArg) const
 {
     if (BDEFLAG_ROUTINE_DECL != d_type) {
         return;                                                       // RETURN
     }
     BSLS_ASSERT_OPT(d_flags.d_parenBased);
 
+    *potentialSingleArg = false;
+
     Place begin = d_open + 1;
     if (d_close == begin) {
         return;                                                       // RETURN
     }
     Place end = begin.findFirstOf(",()");
-    while (true) {
+    int numArgs = 0;
+    for (; true; ++numArgs) {
         char c = *end;
         if ('(' == c || (')' == c && end != d_close)) {
             // Function pointer type in arglist.  Give up.
@@ -3190,9 +3217,9 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
             lineNums->clear();
             return;                                                   // RETURN
         }
-        while (MATCH[MATCH_CONST] == typeName ||
-                    MATCH[MATCH_TYPENAME] == typeName ||
-                    MATCH[MATCH_VOLATILE] == typeName || '*' == *typeNameEnd) {
+        while (MATCH_CONST == typeName ||
+                           MATCH_TYPENAME == typeName ||
+                           MATCH_VOLATILE == typeName || '*' == *typeNameEnd) {
             typeName = (typeNameEnd + 1).nameAfter(&typeNameEnd);
         }
         if ('&' == *typeNameEnd) {
@@ -3230,9 +3257,9 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
 
         Place postTypeEnd;
         bsl::string postType = (typeNameEnd + 1).nameAfter(&postTypeEnd);
-        while (MATCH[MATCH_CONST] == postType ||
-                    MATCH[MATCH_TYPENAME] == typeName ||
-                    MATCH[MATCH_VOLATILE] == postType || '*' == *postTypeEnd) {
+        while (MATCH_CONST == postType ||
+                           MATCH_TYPENAME == typeName ||
+                           MATCH_VOLATILE == postType || '*' == *postTypeEnd) {
             postType = (postTypeEnd + 1).nameAfter(&postTypeEnd);
         }
         char pte;
@@ -3248,10 +3275,7 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
             }
         }
 #endif
-        if (',' == pte || ')' == pte) {
-            startName = postTypeEnd;
-        }
-        else if ('=' == pte) {
+        if (',' == pte || ')' == pte || '=' == pte) {
             startName = postTypeEnd;
         }
         else {
@@ -3267,8 +3291,16 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
             postTypeEnd.wordBefore(&startName);
         }
 
+        bsl::string argName = startName.twoPointsString(end - 1);
+        bsl::size_t equalsIdx = argName.find('=');
+        if (Ut::npos() != equalsIdx) {
+            *potentialSingleArg |= (1 == numArgs);
+            argName.resize(equalsIdx);
+            Ut::trim(&argName);
+        }
+
         typeNames->push_back(begin.twoPointsString(startName - 1));
-        names->push_back(startName.twoPointsString(end - 1));
+        names->push_back(argName);
         lineNums->push_back(begin.lineNum());
 
         if (end >= d_close) {
@@ -3278,6 +3310,9 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
         begin = end + 1;
         end = begin.findFirstOf(",()");
     }
+
+    *potentialSingleArg |= (0 == numArgs);    // numArgs will be 0 if there
+                                              // is just a single arg.
 
     BSLS_ASSERT_OPT(end == d_close);
 }

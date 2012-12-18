@@ -14,6 +14,7 @@
 #include <bsl_string.h>
 
 #include <bsl_cstdlib.h>
+#include <bsl_cstring.h>
 #include <bsl_fstream.h>
 #include <bsl_iostream.h>
 
@@ -89,7 +90,8 @@ bsl::string componentInclude()
     size_t clip;
     switch (Lines::fileType()) {
       case Lines::BDEFLAG_DOT_CPP: {
-        clip = 4;
+        bsl::size_t idx = s.rfind('.');
+        clip = Ut::npos() == idx ? 0  : s.length() - idx;
       }  break;
       case Lines::BDEFLAG_DOT_T_DOT_CPP: {
         clip = 6;
@@ -226,6 +228,7 @@ void Lines::checkPurpose()
             continue;
         }
 
+#if 0
         if (curLine.length() < 12) {
             s_purposeFlags |= (BDEFLAG_PURPOSE_LACKS_PROVIDE |
                                BDEFLAG_PURPOSE_LACKS_PERIOD);
@@ -240,6 +243,7 @@ void Lines::checkPurpose()
         if ('.' != curLine[curLine.length() - 1]) {
             s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PERIOD;
         }
+#endif
 
         return;                                                       // RETURN
     }
@@ -506,7 +510,8 @@ void Lines::killQuotesComments()
         { " close unnamed namespace", BDEFLAG_CLOSE_UNNAMED_NAMESPACE },
         { " close enterprise namespace",
                                       BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE },
-        { " close package namespace", BDEFLAG_CLOSE_PACKAGE_NAMESPACE } };
+        { " close package namespace", BDEFLAG_CLOSE_PACKAGE_NAMESPACE },
+        { "! ",                       BDEFLAG_BANG } };
 
     enum { NUM_LEGAL_COMMENTS = sizeof legalComments / sizeof *legalComments };
 

@@ -199,10 +199,13 @@ class Group {
 
     void getArgList(bsl::vector<bsl::string> *typeNames,
                     bsl::vector<bsl::string> *names,
-                    bsl::vector<int>         *lineNums) const;
+                    bsl::vector<int>         *lineNums,
+                    bool                     *potentialSingleArg) const;
         // If this is a routine decl, get the arg list for it.  Care has to be
         // taken to avoid calling this on things that turn out not to be
-        // routine decls.
+        // routine decls.  This strips '= ...' out of arg names, but returns
+        // 'potentialSingleArg' if there is one arg, or if there are >= 2
+        // args but the second one had a default value.
 
     void registerValidFriendTarget() const;
         // Only called if we're in a .h file.  If this a group, put it on the
