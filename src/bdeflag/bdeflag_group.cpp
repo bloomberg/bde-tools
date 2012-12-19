@@ -114,7 +114,8 @@ static bsl::set<bsl::string> unaryOperators;
 
 static bsl::set<bsl::string> annoyingMacros;
 static bsl::set<bsl::string> stlClasses;
-static bsl::set<bsl::string> bslmfClasses;
+static bsl::set<bsl::string> bslmfNonTraits;
+static bsl::set<bsl::string> otherExemptClasses;
 
 static bsl::set<bsl::string> validFriendTargets;
 
@@ -180,22 +181,24 @@ StartProgram::StartProgram()
     }
 
     static const char *arrayStlClasses[] = {
-        "allocator", "allocator_traits", "bitset", "deque", "equal_to", "hash",
-        "char_traits", "basic_stringbuf", "basic_istringstream",
+        "allocator", "allocator_traits", "bitset", "reference", "deque",
+        "equal_to", "hash", "char_traits", "basic_stringbuf",
+        "basic_istringstream",
         "basic_ostringstream", "basic_stringstream", "basic_stringbuf",
         "stringbuf", "istringstream", "ostringstream", "stringstream",
         "wstringbuf", "wistringstream", "wostringstream", "wstringstream",
         "iterator_traits", "reverse_iterator", "list", "map", "multimap",
-        "multiset", "pair", "stack", "string", "basic_stringbuf", "stringbuf",
-        "wstringbuf", "unordered_map", "unordered_multimap",
-        "unordered_multiset", "unordered_set", "vector" };
+         "set","multiset", "pair", "priority_queue", "queue", "stack",
+        "string", "basic_stringbuf", "basic_string",
+        "stringbuf", "wstringbuf", "unordered_map", "unordered_multimap",
+        "unordered_multiset", "unordered_set", "vector", "value_compare" };
     enum { NUM_ARRAY_STL_CLASSES =
                             sizeof arrayStlClasses / sizeof *arrayStlClasses };
     for (int i = 0; i < NUM_ARRAY_STL_CLASSES; ++i) {
         stlClasses.insert(arrayStlClasses[i]);
     }
 
-    static const char *arrayBslmfClasses[] = {
+    static const char *arrayBslmfNonTraits[] = {
         "add_const", "add_cv", "add_lvalue_reference", "add_pointer",
         "add_rvalue_reference", "add_volatile", "conditional", "enable_if",
         "integral_constant", "false_type", "true_type", "is_arithmetic",
@@ -203,16 +206,24 @@ StartProgram::StartProgram()
         "is_floating_point", "is_function", "is_fundamental", "is_integral",
         "is_lvalue_reference", "is_member_function_pointer",
         "is_member_object_pointer", "is_member_pointer", "is_pointer",
-        "is_polymorphic", "is_reference", "is_rvalue_reference",
-        "is_same", "is_trivially_copyable",
-        "is_trivially_default_constructible", "is_void", "is_volatile",
+        "is_reference", "is_rvalue_reference",
+        "is_same", "is_void", "is_volatile",
         "remove_const", "remove_cv", "remove_pointer", "remove_reference",
-        "remove_vaolatile" };
-    enum { NUM_ARRAY_BSLMF_CLASSES = sizeof arrayBslmfClasses
-                                                 / sizeof *arrayBslmfClasses };
+        "remove_volatile" };
+    enum { NUM_ARRAY_BSLMF_NON_TRAITS = sizeof arrayBslmfNonTraits /
+                                                 sizeof *arrayBslmfNonTraits };
+    for (int i = 0; i < NUM_ARRAY_BSLMF_NON_TRAITS; ++i) {
+        bslmfNonTraits.insert(arrayBslmfNonTraits[i]);
+    }
 
-    for (int i = 0; i < NUM_ARRAY_STL_CLASSES; ++i) {
-        bslmfClasses.insert(arrayBslmfClasses[i]);
+    static const char *arrayOtherExemptClasses[] = {
+        "is_polymorphic", "is_trivially_copyable",
+        "is_trivially_default_constructible",
+        "bslalg_TypeTraits", "TypeTraits" };
+    enum { NUM_ARRAY_OTHER_EXEMPT_CLASSES = sizeof arrayOtherExemptClasses
+                                           / sizeof *arrayOtherExemptClasses };
+    for (int i = 0; i < NUM_ARRAY_OTHER_EXEMPT_CLASSES; ++i) {
+        otherExemptClasses.insert(arrayOtherExemptClasses[i]);
     }
 
     tolerateSnugComments = !!bsl::getenv("BDEFLAG_TOLERATE_SNUG_COMMENTS");
@@ -255,6 +266,18 @@ void removeUpThroughLastColon(bsl::string *s)
     if (Ut::npos() != u) {
         s->erase(0, u + 1);
     }
+}
+
+static
+bool isExemptClassName(const bsl::string className)
+    // Certain special class names, especially in bslstl and bslmf, are exempt
+    // from normal rules for class names (i.e. starting with upper case).
+{
+    return (Lines::componentPrefix() == Lines::BDEFLAG_CP_BSLSTL &&
+            stlClasses.       count(className))
+        || (Lines::componentPrefix() == Lines::BDEFLAG_CP_BSLMF &&
+            bslmfNonTraits.   count(className))
+        || otherExemptClasses.count(className);
 }
 
 static
@@ -1533,6 +1556,7 @@ void Group::determineGroupType()
             char c = ':' == Ut::lastCharOf(name) ? ':' : *(endName + 1);
             if (Ut::charInString(c, ":{")) {
                 d_className = name;
+                Ut::stripAngleBrackets(&d_className);
                 removeUpThroughLastColon(&d_className);
                 d_type = BDEFLAG_CLASS;
                 return;                                               // RETURN
@@ -1604,6 +1628,7 @@ void Group::determineGroupType()
                 // prevWord or secondPrevWord are 'struct', 'class', or 'union'
 
                 d_className = d_prevWord;
+                Ut::stripAngleBrackets(&d_className);
                 removeUpThroughLastColon(&d_className);
                 d_type = BDEFLAG_CLASS;
                 return;                                               // RETURN
@@ -1643,6 +1668,7 @@ void Group::determineGroupType()
                                        : *(nameEnd + 1);
                                 if (Ut::charInString(c, ":{")) {
                                     d_className = name;
+                                    Ut::stripAngleBrackets(&d_className);
                                     removeUpThroughLastColon(&d_className);
                                     d_type = BDEFLAG_CLASS;
                                     return;                           // RETURN
@@ -1663,6 +1689,7 @@ void Group::determineGroupType()
                                    : *(nameEnd + 1);
                             if (Ut::charInString(c, ":{")) {
                                 d_className = name;
+                                Ut::stripAngleBrackets(&d_className);
                                 removeUpThroughLastColon(&d_className);
                                 d_type = BDEFLAG_CLASS;
                                 return;                               // RETURN
@@ -1682,6 +1709,7 @@ void Group::determineGroupType()
                                    : *(nameEnd + 1);
                             if (Ut::charInString(c, ":{")) {
                                 d_className = name;
+                                Ut::stripAngleBrackets(&d_className);
                                 removeUpThroughLastColon(&d_className);
                                 d_type = BDEFLAG_CLASS;
                                 return;                               // RETURN
@@ -2290,18 +2318,7 @@ void Group::checkClassName() const
     char leadingChar = className.length() > leadingIdx
                      ? className[leadingIdx]
                      : ' ';
-    if (! isupper(leadingChar) && ! Ut::frontMatches(
-                                                className,
-                                                MATCH_BSLALG_TYPETRAITS,
-                                                0)
-                               && ! Ut::frontMatches(
-                                                className,
-                                                MATCH_TYPETRAITS,
-                                                0) &&
-                (Lines::componentPrefix() != Lines::BDEFLAG_CP_BSLSTL ||
-                                             !stlClasses.  count(className)) &&
-                (Lines::componentPrefix() != Lines::BDEFLAG_CP_BSLMF  ||
-                                             !bslmfClasses.count(className))) {
+    if (! isupper(leadingChar) && ! isExemptClassName(className)) {
         d_statementStart.warning() << "class name " << d_className <<
                                              " begins with '" << leadingChar <<
                                                "' -- not an upper case char\n";
@@ -2312,7 +2329,9 @@ void Group::checkClassName() const
 
     if (Lines::BDEFLAG_DOT_H != Lines::fileType() ||
                          (d_parent && BDEFLAG_NAMESPACE != d_parent->d_type &&
-                                      BDEFLAG_TOP_LEVEL != d_parent->d_type)) {
+                                      BDEFLAG_TOP_LEVEL != d_parent->d_type) ||
+                         (d_parent && BDEFLAG_NAMESPACE == d_parent->d_type &&
+                                  MATCH_BLOOMBERGLP != d_parent->d_prevWord)) {
         return;                                                       // RETURN
     }
 
@@ -2332,6 +2351,10 @@ void Group::checkClassName() const
     if (!strncmp(className.c_str(),
                  cnv.d_componentName.c_str(),
                  cnv.d_componentName.length())) {
+        return;                                                       // RETURN
+    }
+
+    if (isExemptClassName(className)) {
         return;                                                       // RETURN
     }
 
