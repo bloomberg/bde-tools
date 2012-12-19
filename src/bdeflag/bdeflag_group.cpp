@@ -117,6 +117,8 @@ static bsl::set<bsl::string> stlClasses;
 static bsl::set<bsl::string> bslmfNonTraits;
 static bsl::set<bsl::string> otherExemptClasses;
 
+static bsl::set<bsl::string> guardNames;
+
 static bsl::set<bsl::string> validFriendTargets;
 
 static struct ClassNameVals {
@@ -224,6 +226,31 @@ StartProgram::StartProgram()
                                            / sizeof *arrayOtherExemptClasses };
     for (int i = 0; i < NUM_ARRAY_OTHER_EXEMPT_CLASSES; ++i) {
         otherExemptClasses.insert(arrayOtherExemptClasses[i]);
+    }
+
+    static const char *arrayGuardNames[] = {
+        "bslma_AutoDeallocator",        "bslma::AutoDeallocator",
+        "bslma_AutoDestructor",         "bslma::AutoDestructor",
+        "bslma_AutoRawDeleter",         "bslma::AutoRawDeleter",
+        "bslma_DeallocatorGuard",       "bslma::DeallocatorGuard",
+        "bslma_DeallocatorProctor",     "bslma::DeallocatorProctor",
+        "bslma_DefaultAllocatorGuard",  "bslma::DefaultAllocatorGuard",
+        "bslma_DestructorGuard",        "bslma::DestructorGuard",
+        "bslma_DestructorProctor",      "bslma::DestructorProctor",
+        "bslma_RawDeleterGuard",        "bslma::RawDeleterGuard",
+        "bslma_RawDeleterProctor",      "bslma::RawDeleterProctor",
+        "bcemt_LockGuard",              "bcemt::LockGuard",
+        "bcemt_QLockGuard",             "bcemt::QLockGuard",
+        "bcemt_ReadLockGuard",          "bcemt::ReadLockGuard",
+        "bcemt_ReadLockGuardUnlock",    "bcemt::ReadLockGuardUnlock",
+        "bcemt_ReadLockGuardTryLock",   "bcemt::ReadLockGuardTryLock",
+        "bcemt_WriteLockGuard",         "bcemt::WriteLockGuard",
+        "bcemt_WriteLockGuardUnlock",   "bcemt::WriteLockGuardUnlock",
+        "bcemt_WriteLockGuardTryLock",  "bcemt::WriteLockGuardTryLock" };
+    enum { NUM_ARRAY_GUARD_NAMES = sizeof arrayGuardNames /
+                                                     sizeof *arrayGuardNames };
+    for (int i = 0; i < NUM_ARRAY_GUARD_NAMES; ++i) {
+        guardNames.insert(arrayGuardNames[i]);
     }
 
     tolerateSnugComments = !!bsl::getenv("BDEFLAG_TOLERATE_SNUG_COMMENTS");
@@ -1154,6 +1181,11 @@ void Group::checkAllStartingBraces()
     }
 }
 
+void Group::checkAllUnnamedGuards()
+{
+    topLevel().recurseMemTraverse(&Group::checkUnnamedGuards);
+}
+
 void Group::checkAllStatics()
 {
     if (Lines::BDEFLAG_DOT_H != Lines::fileType()) {
@@ -1279,6 +1311,7 @@ void Group::doEverything()
     checkAllIfWhileFor();
     checkAllStatics();
     checkAllCasesPresentInTestDriver();
+    checkAllUnnamedGuards();
 
     //  checkAllRoutineCallArgLists();
 
@@ -2289,7 +2322,8 @@ void Group::checkClassName() const
         return;                                                       // RETURN
     }
 
-    bsl::string className = Ut::removeTemplateAngleBrackets(d_className);
+    bsl::string className(d_className);
+    Ut::stripAngleBrackets(&className);
     if (MATCH_ANGLES == className) {    // match_angles == "<>"
         d_statementStart.error() << "strange class name '" << d_className <<
                                                                      bsl::endl;
@@ -3005,7 +3039,6 @@ void Group::checkReturns() const
     }
 
     int li = d_open.lineNum() + 1;
-
     const GroupSetIt endIt = d_subGroups.end();
     GroupSetIt it          = d_subGroups.begin();
     while (true) {
@@ -3172,6 +3205,54 @@ void Group::checkStartingBraces() const
                         Lines::lineIndent(d_open.lineNum()) != indent ||
                         Lines::line(d_open.lineNum()).length() != indent + 1) {
         badlyAlignedFuncStartBrace.insert(d_open.lineNum());
+    }
+}
+
+void Group::checkUnnamedGuards() const
+{
+    if (BDEFLAG_ROUTINE_BODY != d_type && BDEFLAG_CODE_BODY != d_type) {
+        return;                                                       // RETURN
+    }
+
+    int li = d_open.lineNum() + 1;
+    const GroupSetIt endIt = d_subGroups.end();
+    GroupSetIt it          = d_subGroups.begin();
+    while (true) {
+        int end = endIt == it ? d_close.lineNum() : (*it)->d_open.lineNum();
+
+        for ( ; li <= end; ++li) {
+            if (Lines::BDEFLAG_S_NONE == Lines::statement(li)) {
+                int indent = Lines::lineIndent(li);
+                const bsl::string& curLine = Lines::line(li);
+                if (!isalpha(curLine[indent])) {
+                    continue;
+                }
+
+                int endCol;
+                const bsl::string& tn =Ut::wordAfter(curLine, indent, &endCol);
+                if (guardNames.count(tn)) {
+                    Place typeStart(li, indent), typeEnd(li, endCol);
+                    if ('<' == *(typeEnd + 1)) {
+                        (void) typeStart.templateNameAfter(&typeEnd,
+                                                           true);
+                    }
+
+                    char c = *(typeEnd + 1);
+                    if (!isalpha(c) && '*' != c && '&' != c) {
+                        typeStart.warning() << "Unnamed temporary of type '" <<
+                                  tn << "' created -- will not guard anything,"
+                                               " needs a name -- i.e. 'guard',"
+                                                 " 'proctor', or 'deleter'.\n";
+                    }
+                }
+            }
+        }
+
+        if (endIt == it) {
+            return;                                                   // RETURN
+        }
+        li = (*it)->d_close.lineNum() + 1;
+        ++it;
     }
 }
 

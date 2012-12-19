@@ -187,40 +187,6 @@ bool Ut::p(const char *name, const bsl::string& value)
     return false;
 }
 
-bsl::string Ut::removeTemplateAngleBrackets(const bsl::string& s)
-{
-    bsl::string ret = s;
-    const bsl::string angles = "<>";
-
-    while (true) {
-        bsl::size_t u = ret.find_first_of(angles);
-        if (npos() == u) {
-            return ret;                                               // RETURN
-        }
-        if ('>' == ret[u]) {
-            // not a template -- give up
-
-            return angles;                                            // RETURN
-        }
-        while (true) {
-            bsl::size_t v = ret.find_first_of(angles, u + 1);
-            if (npos() == v) {
-                // not a template -- give up
-
-                return angles;                                        // RETURN
-            }
-            if ('>' == ret[v]) {
-                ret = ret.substr(0, u) + ret.substr(v + 1);
-                break;
-            }
-            else {
-                BSLS_ASSERT('<' == ret[v]);
-                u = v;
-            }
-        }
-    }
-}
-
 bsl::string Ut::spacesOut(bsl::string s)
 {
     bsl::string ret = s;

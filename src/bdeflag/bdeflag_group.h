@@ -193,6 +193,11 @@ class Group {
         // If this is a routine body, check that the starting '{' is on its own
         // line and properly indented.
 
+    void checkUnnamedGuards() const;
+        // If this is a routine or code body, check for any declarations of
+        // recognized bde guard types that are unnamed -- that just create
+        // fleeting temporaries and don't guard anything.
+
     void markClassBoundaries() const;
         // Mark the beginning and ending of this class in the 'classBoundaries'
         // vector in the imp.
@@ -294,6 +299,11 @@ class Group {
     static
     void checkAllTemplateOnOwnLine();
         // Check all 'template' clauses are on their own lines.
+
+    static
+    void checkAllUnnamedGuards();
+        // Check for recognized bde guard types that are don't actually
+        // declare an instance of the type.
 
     static
     void clearGroups();
