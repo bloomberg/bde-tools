@@ -23,9 +23,7 @@ Warning: tst_test.cpp: strangely indented comments at line(s) 86, 89
 Warning: tst_test.cpp: (59, 14): BoolMatrix: double argument constructor with default 2nd arg not declared 'explicit' or marked '// IMPLICIT'
 Warning: tst_test.cpp: (131, 13): swap: arg name 'rhs' is reserved for binary operators
 Warning: tst_test.cpp: (131, 13): 'swap' member function arg name should be 'other', not 'rhs'
-Warning: tst_test.cpp: (135, 14): 'print' should have 3 args
 Warning: tst_test.cpp: (138, 16): second argument of routine print of type 'int&' is being passed as a reference to a modifiable object
-Warning: tst_test.cpp: (138, 16): 'print' should have 3 args
 Warning: tst_test.cpp: (144, 13): second argument of routine woof of type 'stream&' is being passed as a reference to a modifiable object
 Warning: tst_test.cpp: (178, 14): BoolMatrix copy c'tor arg name not 'original'
 Warning: tst_test.cpp: (181, 14): BoolMatrix copy c'tor arg name not 'original'

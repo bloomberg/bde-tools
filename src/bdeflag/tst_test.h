@@ -213,4 +213,18 @@ class Woofer {
                         int           level = 0,
                         int           spacesPerLevel = 4) const;
         // Doc.
+
+    // PUBLIC TYPEDEFS
+    typedef Arf Woof;
+};
+
+class TestWoofer2 {
+    // CLASS INVARIANT
+    BSLMF_ASSERT(1 > 0);
+};
+
+class TestA<void> {
+    // CREATORS
+    TestA();
+        // default
 };

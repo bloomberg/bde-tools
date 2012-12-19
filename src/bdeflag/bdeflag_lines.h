@@ -89,6 +89,7 @@ class Lines {
         BDEFLAG_CLOSE_PACKAGE_NAMESPACE,
         BDEFLAG_IMPLICIT,
         BDEFLAG_BANG,
+        BDEFLAG_IGNORED,
         BDEFLAG_UNRECOGNIZED };
 
     enum StatementType {

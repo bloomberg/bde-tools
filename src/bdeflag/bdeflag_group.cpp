@@ -2125,10 +2125,7 @@ void Group::checkArgNames() const
             }
 
             if (MATCH_PRINT == d_prevWord) {
-                if (3 != argNames.size()) {
-                    d_open.warning() << "'print' should have 3 args\n";
-                }
-                else {
+                if (3 == argNames.size()) {
                     if (MATCH_STREAM != argNames[0]) {
                         d_open.warning() << "first arg of 'print' should be"
                                                           " named 'stream'.\n";
@@ -2150,6 +2147,7 @@ void Group::checkArgNames() const
         }
 
         bsl::string lastPartOfClassName = d_parent->d_className;
+        Ut::stripAngleBrackets(&lastPartOfClassName);
         {
             size_t u = lastPartOfClassName.rfind(':');
             if (Ut::npos() != u) {
