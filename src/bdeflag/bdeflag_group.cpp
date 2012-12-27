@@ -1377,38 +1377,37 @@ void Group::determineGroupType()
             bool expression = false;
             if (Ut::charInString(pwbc, "~!%^&*-+=<>,?:(){}|[]/")) {
                 expression = true;
-                if (d_open.lineNum() == d_prevWordBegin.lineNum()) {
-                    const bsl::string curLine = Lines::line(d_open.lineNum());
-                    size_t pos = curLine.rfind(MATCH_OPERATOR,
-                                               d_prevWordBegin.col());
-                    int iPos = pos;
-                    if (Ut::npos() != pos) {
-                        const bsl::string& sub =
-                              curLine.substr(iPos,
-                                             d_prevWordBegin.col() + 1 - iPos);
-                        const bsl::string op = Ut::spacesOut(sub);
-                        Place begin(d_open.lineNum(), iPos);
-                        if (op.length() <= 11 && MATCH_OPERATOR ==
-                                                        Ut::wordAfter(op, 0)) {
-                            // it's something like 'operator+(' or
-                            // 'operator()(', note 'operator() (' or
-                            // 'operator<<=(' are possible.
+                const bsl::string curLine = Lines::line(
+                                                    d_prevWordBegin.lineNum());
+                size_t pos = curLine.rfind(MATCH_OPERATOR,
+                                                        d_prevWordBegin.col());
+                int iPos = pos;
+                if (Ut::npos() != pos) {
+                    const bsl::string& sub =
+                          curLine.substr(iPos,
+                                         d_prevWordBegin.col() + 1 - iPos);
+                    const bsl::string op = Ut::spacesOut(sub);
+                    Place begin(d_prevWordBegin.lineNum(), iPos);
+                    if (op.length() <= 11 && MATCH_OPERATOR ==
+                                                    Ut::wordAfter(op, 0)) {
+                        // it's something like 'operator+(' or
+                        // 'operator()(', note 'operator() (' or
+                        // 'operator<<=(' are possible.
 
-                            d_prevWord = op;
-                            d_prevWordBegin = begin;
-                            pwbc = d_prevWord[0];
-                            expression = false;
-                        }
-                        else if (('*' == pwbc || '&' == pwbc) &&
-                                       Ut::npos() == sub.find_first_of("()")) {
-                            // it's something like 'operator float&('
+                        d_prevWord = op;
+                        d_prevWordBegin = begin;
+                        pwbc = d_prevWord[0];
+                        expression = false;
+                    }
+                    else if (('*' == pwbc || '&' == pwbc) &&
+                                   Ut::npos() == sub.find_first_of("()")) {
+                        // it's something like 'operator float&('
 
-                            d_prevWord = sub;
-                            d_prevWordBegin = begin;
-                            pwbc = d_prevWord[0];
-                            expression = false;
-                            Ut::trim(&d_prevWord);    // trim trailing spaces
-                        }
+                        d_prevWord = sub;
+                        d_prevWordBegin = begin;
+                        pwbc = d_prevWord[0];
+                        expression = false;
+                        Ut::trim(&d_prevWord);    // trim trailing spaces
                     }
                 }
             }
@@ -3165,14 +3164,14 @@ void Group::checkStartingBraces() const
     switch (d_parent->d_type) {
       case BDEFLAG_TOP_LEVEL:
       case BDEFLAG_NAMESPACE: {
-        indent = 0;
-
-        if (d_open.col() == indent && d_close.lineNum() == d_open.lineNum() &&
+        if (d_close.lineNum() == d_open.lineNum() &&
                                            d_close.col() == d_open.col() + 1) {
             // It a '{}' function.  Allow it.
 
             return;                                                   // RETURN
         }
+
+        indent = d_close.col();
       }  break;
       case BDEFLAG_CLASS: {
         if (Lines::BDEFLAG_DOT_H != Lines::fileType() &&
@@ -3182,6 +3181,9 @@ void Group::checkStartingBraces() const
 
             return;                                                   // RETURN
         }
+
+        // It's an inline function in a class in a .cpp or .t.cpp.  It should
+        // be indented 4 deep inside the class.
 
         indent = d_parent->d_close.col() + 4;
       }  break;
