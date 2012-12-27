@@ -763,6 +763,10 @@ void Lines::wipeOutMacros()
         int end;
         int col = Lines::lineIndent(li);
         if ('#' == curLine[col]) {
+            if ((int) curLine.length() <= col + 1) {
+                curLine.resize(col);
+                continue;
+            }
             const bsl::string& wa = Ut::wordAfter(curLine, col + 1, &end);
             if (S_ELSE == wa || S_ELIF == wa ||
                       (S_IF == wa && "0" == Ut::wordAfter(curLine, end + 1))) {
