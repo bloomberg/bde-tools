@@ -59,6 +59,12 @@ $SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR \
 cd $BUILD_DIR
 echo synchronizing $OUTPUTPATH and $BUILD_DIR
 
+# remove unix-SunOS-sparc-*-gcc-* build artifacts to get all g++ warnings
+find $BUILD_DIR -name 'unix-SunOS-sparc-*-gcc-*' | grep -v -e include -e build | while read dir
+do \
+    rm -f $dir/*.o
+done
+
 # clean out BUILD_DIR to remove old source files.  We still get incr build
 # since the build subdirs are all symlinks to elsewhere.
 rm -rf $BUILD_DIR/*
@@ -76,12 +82,6 @@ rsync -av --rsync-path=/usr/bin/rsync \
 
 rsync -av --rsync-path=/usr/bin/rsync \
     /bbshr/bde/bde-tools/ $MAC_BASE_DIR/bde-tools/ 2>&1 | perl -pe's/^/MAC-TOOLS: /'
-
-# remove unix-SunOS-sparc-*-gcc-* build artifacts to get all g++ warnings
-find $BUILD_DIR -name 'unix-SunOS-sparc-*-gcc-*' | grep -v -e include -e build | while read dir
-do \
-    rm -f $dir/*.o
-done
 
 # run ${BUILD_TYPE}-core build
 $TOOLSPATH/bin/bde_bldmgr -v                \
