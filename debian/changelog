@@ -1,3 +1,15 @@
+bde-tools (20120625.1) unstable; urgency=low
+
+  * remove refernce to robo-etc
+
+ -- Mahendra Hirani <mhirani1@bloomberg.net>  Mon, 25 Jun 2012 17:30:26 -0500
+
+bde-tools (20120625) unstable; urgency=low
+
+  * rebase to most up-to-date bde-tools
+
+ -- Mahendra Hirani <mhirani1@bloomberg.net>  Mon, 25 Jun 2012 17:30:26 -0500
+
 bde-tools (20120223.1.gc58edb0+1) unstable; urgency=low
 
   * Update producemake to match cstools version
