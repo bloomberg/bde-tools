@@ -1,3 +1,9 @@
+bde-tools (20120625.2) unstable; urgency=low
+
+  * Update to most recent bde-tools
+
+ -- Daniel Ruoso <druoso@bloomberg.net>  Thu, 31 Jan 2013 18:08:56 -0500
+
 bde-tools (20120625.1) unstable; urgency=low
 
   * remove refernce to robo-etc
