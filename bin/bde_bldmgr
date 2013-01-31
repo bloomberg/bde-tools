@@ -324,6 +324,13 @@ sub colour_and_htmlize ($$) {
 
     my ($line, $anchor_r)=@_;
 
+    # Escape HTML characters in $line
+
+    $line=~s/&/&amp;/g; # do this one first so as not to undo others...
+    $line=~s/</&lt;/g;
+    $line=~s/>/&gt;/g;
+    $line=~s/"/&quot;/g;
+
     if(    $line!~/is not a valid default record buffer size/
         && $line!~/Error: could not find a route for request/
         && $line!~/Propagating error message from interface/
@@ -1016,6 +1023,22 @@ foreach my $platform (@platforms) {
                     $results{unreachable_hosts} .= " $host (postbuild failed)";
                     $results{host} = undef;
                     push @badCmdOutput, @$cmd_out;
+                    next;
+                }
+            }
+
+            # Like postbuild_cmd, except that this command is run locally.
+            if (exists $build->{postbuild_pull_cmd}) {
+                message("running postbuild pull command");
+                my $cmd_out = system($build->{postbuild_pull_cmd});
+                my $cmd_status = $?;
+
+                if ($cmd_status) {
+                    error("Postbuild pull command failed");
+                    for my $l (split /\n/,$cmd_out) { error($l); }
+                    $results{unreachable_hosts} .= " $host (postbuild pull failed)";
+                    $results{host} = undef;
+                    push @badCmdOutput, $cmd_out;
                     next;
                 }
             }

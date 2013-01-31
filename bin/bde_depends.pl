@@ -126,13 +126,13 @@ sub getoptions {
     unless (GetOptions(\%opts, qw[
         debug|d+
         help|h
-	direct|D
-	groupdeps|G
+        direct|D
+        groupdeps|G
         macros|m
         pretty|p
-	production|P
+        production|P
         noretry|X
-	verbose|v
+        verbose|v
         where|root|w|r=s
     ])) {
         usage();
@@ -150,7 +150,7 @@ sub getoptions {
 
     # disable retry
     if ($opts{noretry}) {
-	$Util::Retry::ATTEMPTS = 0;
+        $Util::Retry::ATTEMPTS = 0;
     }
 
     # debug mode
@@ -170,34 +170,35 @@ MAIN: {
     #---
 
     #if (@ARGV==2) {
-#	my ($filename,$packagename)=@ARGV;
-#	unless (isPackage($packagename)) {
-#	    fatal "Not a package: $packagename";
-#	}
+#       my ($filename,$packagename)=@ARGV;
+#       unless (isPackage($packagename)) {
+#           fatal "Not a package: $packagename";
+#       }
 #
-#	# this is a very primitive first implementation.
-#	my @dependencies=getAllFileDependencies($filename,$packagename);
-#	print "File dependencies: ",
-#	  scalar(@dependencies),"\n", map {
-#	      "    (".($_->getPackage or "-").") $_\n"
-#	  } @dependencies;
+#       # this is a very primitive first implementation.
+#       my @dependencies=getAllFileDependencies($filename,$packagename);
+#       print "File dependencies: ",
+#         scalar(@dependencies),"\n", map {
+#             "    (".($_->getPackage or "-").") $_\n"
+#         } @dependencies;
 #
-#	exit EXIT_SUCCESS;
+#       exit EXIT_SUCCESS;
 #    }
 
     #---
 
-    my $componentname=$ARGV[0];
-    foreach my $componentname (@ARGV) {
-        unless (isComponent($componentname)) {
-            fatal "Not a component: $componentname";
+    my $uorname=$ARGV[0];
+    UOR: foreach my $uorname (@ARGV) {
+        unless (isComponent($uorname)) {
+            fatal "Not a component: $uorname";
         }
-        my $component=getCachedComponent($componentname);
+        my $component=getCachedComponent($uorname);
 
         my @dependencies;
         if ($opts->{pretty}) {
 
             @dependencies=$component->getDependants();
+            print "Component: $uorname\n";
             print "Direct dependencies: ",
               scalar(@dependencies),"\n", map { "    $_\n" } @dependencies;
             @dependencies=getAllExternalComponentDependencies($component,0);

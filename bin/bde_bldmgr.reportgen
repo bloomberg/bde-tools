@@ -41,13 +41,14 @@ use vars qw(
            );
 
 my @otherBuilds = qw(
-        nextrel
-        nextrel-api
-        dev-nextrel-api
-        dev
-        dev-api
-        dev-fde
         );
+
+
+foreach my $target (qw(core bb bas router)) {
+    foreach my $build (qw(dev nextrel)) {
+        push @otherBuilds, "$build-$target";
+    }
+}
 
 my $configFile = $FindBin::Bin;
 $configFile =~s|bin/?$|etc|;

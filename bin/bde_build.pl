@@ -1050,8 +1050,8 @@ sub makeMakefilePreamble ($$$$$$$) {
         print $fh "include $makename.".$test_ufid->toString(1).".vars\n";
     }
 
-    # In case default.opts is checked out
-    print $fh "SWITCHCHAR?=-\n\n";
+    # In case default.opts is out of date
+    print $fh "SWITCHCHAR?=-\n";
 
     print $fh "\n";
     print $fh ".SUFFIXES:\n\n";
@@ -3357,38 +3357,7 @@ if($allow_output) {
             error "Output directory for -o doesn't exist ($opts{output})";
         }
 
-        debug "About to eval";
-        my $cleartool="/usr/atria/bin/cleartool";
-
-        if(!-x $cleartool) {
-            $cleartool="cleartool";
-            system($cleartool)==0 or $cleartool=undef;
-        }
-
-        my $pwv=undef;
-
-        if($cleartool) {
-            $pwv=eval qq{do {
-                chdir("$root");
-                my \$result=`/usr/atria/bin/cleartool pwv -wdview`;
-                chomp \$result;
-                \$result=~s/Working directory view: //;
-                \$result=~s/\\*\\* NONE.*//;
-
-                \$result;
-            };};
-            fatal "Clearcase pwv failed, $@" if $@;
-        }
-
-        if($pwv) {
-            debug "Initial pwv is $pwv";
-            $opts{output}.=${FS} unless $opts{output}=~/${FS}$/;
-            $opts{output}.=$pwv;
-            debug "Output directory adjusted for clearcase: $opts{output}";
-        }
-        else {
-            debug "Output directory not adjusted for clearcase: $opts{output}";
-        }
+        debug "Output directory: $opts{output}";
 
         if(!-d $opts{output}) {
             mkdir($opts{output},0777);

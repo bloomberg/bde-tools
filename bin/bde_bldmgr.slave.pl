@@ -393,8 +393,8 @@ MAIN: {
     push @basecmd,"-u",$uplid if $uplid;
     push @basecmd,"-w",$where if $where;
 
-    # on distributed builds, always rebuild and skip non-compliant package tests
-    push @basecmd,"-R","-E";
+    # on distributed builds, always rebuild
+    push @basecmd,"-R";
 
     # enable retry to try to work around transient nfs failures
     push @basecmd,"-x";
