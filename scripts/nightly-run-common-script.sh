@@ -93,14 +93,17 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
    | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-core \
    && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-core
 
-# run ${BUILD_TYPE}-bb build
-$TOOLSPATH/bin/bde_bldmgr -v                \
-       -k $TOOLSPATH/etc/bde_bldmgr.config  \
-       -f -k -m -i${BUILD_TYPE}-bb          \
-       $BB_UORS                             \
-       < /dev/null 2>&1                     \
-   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-bb   \
-   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-bb
+if [[ ! -z "$BB_UORS" ]]
+then
+    # run ${BUILD_TYPE}-bb build
+    $TOOLSPATH/bin/bde_bldmgr -v                \
+           -k $TOOLSPATH/etc/bde_bldmgr.config  \
+           -f -k -m -i${BUILD_TYPE}-bb          \
+           $BB_UORS                             \
+           < /dev/null 2>&1                     \
+       | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-bb   \
+       && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-bb
+fi
 
 # generate gcc warnings
 $TOOLSPATH/scripts/generateGccWarningsLogs.pl ${BUILD_TYPE} ${LOG_DIR}
