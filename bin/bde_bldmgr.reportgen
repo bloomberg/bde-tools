@@ -41,7 +41,8 @@ use vars qw(
            );
 
 my @otherBuilds = qw(
-        );
+    bslintdev
+);
 
 
 foreach my $target (qw(core bb bas router)) {

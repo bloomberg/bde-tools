@@ -5,8 +5,7 @@ use warnings;
 use POSIX qw(strftime);
 
 my %acceptableArgs = (
-    dev       => 1,
-    nextrel   => 1,
+    bslintdev => 1,
 );
 
 foreach my $target (qw(core bb bas router)) {
