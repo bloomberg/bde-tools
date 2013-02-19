@@ -41,7 +41,7 @@ use vars qw(
            );
 
 my @otherBuilds = qw(
-    bslintdev
+    'bslintdev-core'
 );
 
 
