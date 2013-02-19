@@ -1244,15 +1244,7 @@ MAIL_GROUP: foreach my $group (@groups) {
         # construct subject
         if ($opts{id}) {
             my $manually=($interactive)?" (manually invoked)":"";
-            $sub = "${manually}: $sub";
-            my $v;
-            if ($opts{id} =~ /dev/) {
-                $v = "dev-integration";
-            }
-            elsif ($opts{id} =~ /nextrel/) {
-                $v = "master";
-            }
-            $sub = "${v}${sub}";
+            $sub = "$opts{id}${manually}: $sub";
         }
         print $mfh "\n=> $sub <=\n";
 
