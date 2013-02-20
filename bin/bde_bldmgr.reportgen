@@ -40,7 +40,7 @@ use vars qw(
              $resultsBase
            );
 
-my @otherBuilds = qw(
+my @otherBuilds = (
     'bslintdev-core'
 );
 
