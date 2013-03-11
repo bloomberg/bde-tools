@@ -37,7 +37,9 @@ MAC_BUILD_DIR=${MAC_BASE_DIR}/${BUILD_TYPE}
 SNAPSHOT_DIR=/home/bdebuild/bs/snapshot-${BUILD_TYPE}
 TARBALL=/home/bdebuild/bs/tars-${BUILD_TYPE}/snapshot-${BUILD_TYPE}.`date +"%Y%m%d"`.tar.gz
 
-export BUILD_DIR LOG_DIR TOOLSPATH
+TMPDIR=/bb/data/tmp
+
+export BUILD_DIR LOG_DIR TOOLSPATH TMPDIR
 
 PATH="$TOOLSPATH/bin:$TOOLSPATH/scripts:/opt/swt/bin:/opt/SUNWspro/bin/:/usr/bin:/usr/sbin:/sbin:/usr/bin/X11:/usr/local/bin:/bb/bin:/bb/shared/bin:/bb/shared/abin:/bb/bin/robo:/bbsrc/tools/bbcm:/bbsrc/tools/bbcm/parent:/usr/atria/bin"
 export PATH
