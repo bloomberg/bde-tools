@@ -86,6 +86,7 @@ rsync -av $ROOTPATH/groups/bst/bst+apache/ ./groups/bst/bst+apache/
 rsync -av $ROOTPATH/groups/bsl/bsl+bslhdrs/ ./groups/bsl/bsl+bslhdrs/
 rsync -av $ROOTPATH/groups/bsl/bsl+stdhdrs/ ./groups/bsl/bsl+stdhdrs/
 rsync -av $ROOTPATH/groups/bde/bde+pcre/ ./groups/bde/bde+pcre/
+rsync -av $ROOTPATH/groups/bde/bde+decimal/ ./groups/bde/bde+decimal/
 
 if [ $? -ne 0 ]
 then \
