@@ -82,9 +82,9 @@ export BDE_PATH="$PATHS:$BDE_PATH"
 $SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 
 # bde_snapshot.pl doesn't get the subdirs correct for any of the "+" non-compliant packages
-rsync -av $ROOTPATH/groups/bst/*+*/ ./groups/bst/
-rsync -av $ROOTPATH/groups/bsl/*+*/ ./groups/bsl/
-rsync -av $ROOTPATH/groups/bde/*+*/ ./groups/bde/
+rsync -av $ROOTPATH/groups/bst/*+* ./groups/bst/
+rsync -av $ROOTPATH/groups/bsl/*+* ./groups/bsl/
+rsync -av $ROOTPATH/groups/bde/*+* ./groups/bde/
 
 if [ $? -ne 0 ]
 then \
