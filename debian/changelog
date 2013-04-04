@@ -1,3 +1,9 @@
+bde-tools (20130404.1) unstable; urgency=low
+
+  * Merge debian branch
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 04 Apr 2013 14:39:41 -0400
+
 bde-tools (20120625.2) unstable; urgency=low
 
   * Update to most recent bde-tools
