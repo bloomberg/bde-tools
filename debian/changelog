@@ -1,0 +1,35 @@
+bde-tools (20120625.2) unstable; urgency=low
+
+  * Update to most recent bde-tools
+
+ -- Daniel Ruoso <druoso@bloomberg.net>  Thu, 31 Jan 2013 18:08:56 -0500
+
+bde-tools (20120625.1) unstable; urgency=low
+
+  * remove refernce to robo-etc
+
+ -- Mahendra Hirani <mhirani1@bloomberg.net>  Mon, 25 Jun 2012 17:30:26 -0500
+
+bde-tools (20120625) unstable; urgency=low
+
+  * rebase to most up-to-date bde-tools
+
+ -- Mahendra Hirani <mhirani1@bloomberg.net>  Mon, 25 Jun 2012 17:30:26 -0500
+
+bde-tools (20120223.1.gc58edb0+1) unstable; urgency=low
+
+  * Update producemake to match cstools version
+
+ -- Daniel Ruoso <druoso@bloomberg.net>  Fri, 24 Feb 2012 17:30:26 -0500
+
+bde-tools (20120223.1.gc58edb0) unstable; urgency=low
+
+  * Depend on the robo-etc for default.opts
+
+ -- Daniel Ruoso <druoso@bloomberg.net>  Wed, 23 Feb 2012 15:42:22 -0500
+
+bde-tools (20111214.1.g3b54559) unstable; urgency=low
+
+  * Initial release
+
+ -- Daniel Ruoso <druoso@bloomberg.net>  Wed, 14 Dec 2011 15:42:22 -0500

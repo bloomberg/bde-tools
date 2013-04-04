@@ -1,0 +1,10 @@
+Source: bde-tools
+Section: unknown
+Priority: extra
+Maintainer: Daniel Ruoso <druoso@bloomberg.net>
+Standards-Version: 3.8.4
+
+Package: bde-tools
+Architecture: all
+Description: BDE Tools
+ This is used to build BDE and some other libraries
