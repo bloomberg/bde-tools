@@ -85,6 +85,10 @@ $SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 rsync -av $ROOTPATH/groups/bst/*+* ./groups/bst/
 rsync -av $ROOTPATH/groups/bsl/*+* ./groups/bsl/
 rsync -av $ROOTPATH/groups/bde/*+* ./groups/bde/
+for path in $(perl -e'print "$_\n" foreach split /:/,$ENV{PATHS}')
+do \
+    rsync -av $path/groups/dev/*+* ./groups/dev/
+done
 
 if [ $? -ne 0 ]
 then \
