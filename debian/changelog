@@ -1,41 +1,433 @@
-bde-tools (20130404.1) unstable; urgency=low
+bde-tools (20130408.1) unstable; urgency=low
 
-  * Merge debian branch
+  * Bump changelog
+  * d39d98b snapshot dev+decnumber correctly
+  * 2c9953d add dev UOR to nightly builds
+  * f02aeb1 bump changelog
+  * 742d43f [APPROVAL] origin/dev/druoso/debian-packaging to master
+  * 4250de9 move jobs off of nysbldo1
+  * a9d6062 fix + package snapshotting
+  * d8e5a15 simplify rules for "+" package snapshots
+  * ba34752 support bde+decimal in snapshots
+  * a18efa8 reduce jobs setting on linux
+  * 4d59d7f set TMPDIR to /bb/data/tmp to avoid DRQS 39552498-style issues
+  * 1dca4c5 add gcc 4.7.2 cpp11 builds
+  * 269f27b fix crosslink name for bslintdev-core
+  * a7e1c15 fix spelling of bslintdev-core for crosslinks
+  * 1ff9fae simplify email subjects
+  * a85e769 add bslintdev support for reports
+  * 7a863b6 [APPROVAL] add-bsl-internal-build to master
+  * a41ed7c make BB_UORS optional
+  * f77741b [APPROVAL] add-bsl-internal-build to master
+  * 5a0d3c0 add support for building bsl out of the bsl-internal repo
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 04 Apr 2013 14:39:41 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 8 Apr 2013 10:12:06 -0400
 
-bde-tools (20120625.2) unstable; urgency=low
+bde-tools (20120625.2) git; urgency=low
 
-  * Update to most recent bde-tools
+  * 0fcfa35 bump changelog
+  * b11e394 Merge remote-tracking branch 'origin/master' into dev/druoso/debian-packaging
+  * c3c08a7 remove references to robo-etc
+  * fe82254 alternate gcc-4.7.2 builds on different days to speed up results
+  * f11ef38 remove i10 weekend build collision
+  * e6df2ff move sun-gcc-4.7.2 cleanup earlier in common script so it works
+  * 8c740e6 fix linux-clang nightly build
+  * d2dd8fa add linux-clang-4.1.2 nightly build
+  * a7153c3 move a build away from nylxdev1
+  * 33a4e9a add opt-safe gcc-4.7.2 warnings check build
+  * cbcaa09 [APPROVAL] add-gcc-4.7.2-warnings-checks to master
+  * 73d27ed add sun gcc 4.7.2 warnings build and base warnings email on that
+  * 3c58f22 [APPROVAL] fix-perl-location-on-w64a to master
+  * f4f4132 fix perl location for w64a build
+  * 57f20aa [APPROVAL] sim_cpp11_features-import to master
+  * 6dae95e replace perl5.10 features with perl5.8 workarounds
+  * 8616649 Original version of sim_cpp11_features.pl from phalpern with perl5.10+ features
+  * 43cce11 [APPROVAL] snapshot-non-compliant-dirs-drqs-36597306 to master
+  * 156b6df snapshot bsl+* and bde+pcre using rsync like bst+apache to get subdirs
+  * 0a7828e [APPROVAL] remove-dash-E-from-nightlies to master
+  * 73286b6 Remove -E option so + packages get tested
+  * 40e518a Remove tabs
+  * 7838d00 [APPROVAL] build_safe2_every_day to master
+  * 7b08111 build safe2 every day
+  * defac85 add safe2_safe build on Thursdays as well
+  * 38903b5 [APPROVAL] cut-down-midweek-vs2010-ufids to master
+  * 2013851 reduce ufids vs2010 build runs during week
+  * 8f1764a [APPROVAL] weekend-safe-2-build to master
+  * 2062608 add safe_safe2 build on weekends to s12_safe build
+  * b1c2ab2 [APPROVAL] mid-week-msvc-2010-build to master
+  * 2427a92 add Wednesday vs2010 build
+  * a64ace7 fix perl path on w32
+  * f48b56c [APPROVAL] remotes/origin/review/remove_ancient_doc_tools-drqs-27854932 to master
+  * 6eda5c8 drqs-27854932: Moved from 'bin' to 'bin/attic':                bde_deploydoc                bde_deploydoc.ftp                bde_doc2doxy                bde_doc2doxy                quik_doxy                quik_doxyinplace                quik_doxyrun                quik_h2doxy
+  * b6ffc41 build a_comdb2 after bap in nightly builds
+  * 04cc390 remove bas from nightly builds
+  * a03237e Remove cleartool usage
+  * 1d4ba6f [APPROVAL] set-mac-do_not_build-for-bbipc-dependants-drqs-34329774 to master
+  * cfde5a5 copy do_not_build list from w32 to mac
+  * a6d6b9a [APPROVAL] rename-ss12-builds to master
+  * 5941788 fix names of s12 sub-builds, and remove redundant build targets
+  * e5ad923 alternate w32_opt and w32_dbg builds on different days
+  * 60291a9 remove opt build from w32_2008_dbg
+  * 9951dcc tweak w32_2008_{dbg,opt} descriptions
+  * b18cdb9 [APPROVAL] fix-broken-config-for-w64a to master
+  * 6489ade fix bde_bldmgr.config cloning for w64a
+  * 060cd1f [APPROVAL] split-windows-builds-into-opt-and-dbg to master
+  * b90355c split windows-2008 build into opt and dbg builds for separate timing info
+  * 860d04a [APPROVAL] remove-hp to master
+  * e1fffa8 remove HP as all machines are being decommissioned
+  * 05f0f37 [APPROVAL] fix_pull_error_handling to master
+  * f9b2ee9 add --rsync-path option to mac pull command
+  * e0ed58f fix error in pull error handling (deferencing scalar as array ref)
+  * 317774c [APPROVAL] make_pull_cmd_more_verbose to master
+  * fb10661 make rsync from mac more verbose
+  * 27777a6 [APPROVAL] replace_pull_cmd_with_system to master
+  * d66776e use system to call postbuild command chain
+  * cd6262c [APPROVAL] escape_html_metachars_in_error_logs to master
+  * 20952ee escape <>"& in html error logs
+  * c5bee49 [APPROVAL] cap_failures_fatal to master
+  * dc50701 make capability failures fatal instead of "error", which seems to be ignored
+  * 2ee6bb9 [APPROVAL] specify-compiler-for-linux-gcc-4.3.5 to master
+  * 732da62 specify "compiler" for lnx-RHEL5-4.3.5 to make sure gcc-4.3.5 is used
+  * 5c0d473 [APPROVAL] remove-a_cdrcache-on-windows to master
+  * 4528511 add a_cdrcache to the do_not_build list for windows
+  * c803f41 [APPROVAL] try_fixing_pull_command to master
+  * ff9b528 add cd to try to fix pull command
+  * 379a4fe [APPROVAL] use-system-for-pull to master
+  * 3606e98 add safe gcc-4.6.1 builds, and bump verbosity for core build to help debug Mac build issues
+  * 66b9704 [APPROVAL] restore-minimal-hp-builds to master
+  * fddc1e5 add "push" support for fetching files from mac
+  * 83d1408 update targets, and reinstate hp build to regain aCC checks for now
+  * c612e22 [APPROVAL] remove-hp-builds to master
+  * 76fa933 remove HP build (per Wayne & Shawn)
+  * 99667e4 [APPROVAL] fix-TOOLSPATH-for-nextrel to master
+  * 28c9651 fix TOOLSPATH
+  * 8ec1f8a [APPROVAL] simplify-nightly-builds to master
+  * 34a8fee add error checking to nightly-run-common.sh to make sure all env vars are set
+  * e36e1ef rename runFrom* to better names
+  * 018ef12 update for new targets
+  * b3f7546 update nextrel script to break out common section as well
+  * 133fc8b move bookkeeping lines a bit farther into script
+  * 176844d add a bit of commentary
+  * 309a0d9 fix perms
+  * 7d9d94d split out common logic into nightly-run-common-script.sh
+  * 93c7b26 split into core/bb/bas builds and prepare for refactoring
+  * 2d3ac4a add new build targets and remove old ones
+  * 0d74451 Update producemake to match cstools version
+  * 7912838 depend on robo-etc for default.opts
+  * 34496b0 quote the grep argument for solaris
+  * aa5452e Initial implementation of the debian packaging
+  * 6f1c175 [APPROVAL] remove-change-sym-warning to master
+  * 697ee69 Only warn when change.sym is missing if BDE_BACKTRACE is defined in environment
+  * 5928156 postpone nightly build kill time until 23:00 for 20120601
+  * 38671cd [APPROVAL] add-bst-to-dev-build-drqs-24965241 to master
+  * 80eda9b support bst+apache in buildSnapshot.sh
+  * deb826b [APPROVAL] add-bst-to-dev-build-drqs-24965241 to master
+  * e293139 add bst to dev build (drqs 24965241)
+  * 2708a5a [APPROVAL] pick-up-bas-from-master to master
+  * 6e418f5 use master for bas, even in dev build
+  * fe35bdb [APPROVAL] enable-retry-on-nightly-builds to master
+  * a5557c8 re-enable retry for nightly builds, hopefully fixing transient failures
+  * 7e99832 [APPROVAL] remove-api-builds-drqs-32387917 to master
+  * fc3a10b delete all api builds
+  * ad49859 [APPROVAL] bump-linux-builds-to-rhel5 to master
+  * a05b5e2 move all linux builds to rhel5
+  * 5ee817a escape metacharacters from build name in regex
+  * 9c2735a [APPROVAL] remotes/origin/review/bde-build-string-compilerversion-drqs32000581 to master
+  * 1d6662f changed non-numeric version matching from being lexicographical (similar to '<=>' for numeric) to exact which makes more sense for strings
+  * 0e119e3 [APPROVAL] force_opt_mt_builds to master
+  * 2c6ba0a enable forceOptMtBuilds option per Alisdair
+  * 6920f71 [APPROVAL] add-mac-postbuild-command to master
+  * 47c0a36 add postbuild_cmd for mac to rsync logs back
+  * fea269a escape $target string in regex to avoid errors
+  * 378bedd fix solaris path in bde_bldmgr.slave.pl
+  * 9c4a73b [APPROVAL] fix-sun-build-paths-in-slave to master
+  * b609ce7 add /usr/ccs/bin to PATH on Sun in bde_bldmgr.slave.pl
+  * 103739b [APPROVAL] escape-bracketing-in-result_target to master
+  * 9595ecc escape $result_target in regex
+  * 101db56 [APPROVAL] mac-nightly-build-drqs-29673330 to master
+  * 9f3fd6f add dbg_exc_mt build for mac
+  * db21e5b [APPROVAL] mac-nightly-build-drqs-29673330 to master
+  * 7fd84bf changes for mac support
+  * 99db1e9 [APPROVAL] mac-nightly-build-drqs-29673330 to master
+  * 4e4f652 add mac build
+  * b1badf8 [APPROVAL] remotes/origin/review/scripts-update to master
+  * 3d56856 removed darwin from the list of 'windows' platforms in bde_bldmgr
+  * 109fb86 mass build scripts update:
+  * 6a1491b [APPROVAL] remotes/origin/review/apply-bslfwd to master
+  * 6c5b76d extended apply-bslfwd to remove forward declarations written in a less usual form
+  * b33ef9a [APPROVAL] remotes/origin/review/apply-bslfwd to master
+  * b42bf44 fixed apply-bslfwd script to replace forward declaration headers in tricky source files
+  * 5f92111 [APPROVAL] fix-dev-hp-opt_mt-build to master
+  * 4fd8a4d alternate HP/Sun opt_mt/opt_mt_safe for dev/nextrel
+  * 6574790 [APPROVAL] fix-dev-hp-opt_mt-build to master
+  * 40f56e8 fix HP and sun extra builds to run in both dev/nextrel
+  * e12b783 Fix HP opt_mt build to run correctly in dev
+  * 9bc3e4e [APPROVAL] remotes/origin/review/apply-bslfwd to master
+  * acbf979 added a script to bde-tools that replaces forward declarations of bsl classes with the appropriate #include <bslfwd_bsl_class.h> header
+  * 0a7bb38 [APPROVAL] rework-opt_mt_safe-builds to master
+  * 4e5431d use opt_mt for weekly hp builds
+  * ce7b19f [APPROVAL] rework-opt_mt_safe-builds to master
+  * 4f4fffe add opt_mt_safe build on hp dev/next, and add o_m_s dev build on s12
+  * dad159f [APPROVAL] move-nextrel-linux-builds-to-rhel5 to master
+  * 54233d0 move nextrel lnx 3.4.3 (sic) build to rhel5
+  * 9bac46a Revert "[APPROVAL] remotes/origin/review/mac-build to master"
+  * 4b8a940 [APPROVAL] remotes/origin/review/mac-build to master
+  * bd98520 removed absolute path to perl from build scripts
+  * a3de84d [APPROVAL] get-api-from-repo-for-dev to master
+  * 0aa97e4 get api from git for dev build
+  * 9d3888b [APPROVAL] fix-nightly-snapshots to master
+  * 965ddd8 fix snapshot command to pick up new -core and -bb repos
+  * 267564e use bde-core and bde-bb for bde checkouts
+  * faa2cd6 [APPROVAL] remotes/origin/review/fix-build-order-for-bap to master
+  * fef51fe bump bap ahead of a_bassvc to reflect new dependencies
+  * de84b1a [APPROVAL] remotes/origin/review/drqs30468357-remove-producemake to master
+  * ec011b5 DRQS 30468357: producemake removed - it lives in cstools
+  * cd97db6 turn down jobs level for linux builds
+  * ef18b47 [APPROVAL] remotes/origin/review/drqs30192873-clean-test-drivers-on-windows to master
+  * f655989 delete test drivers in clean_using_relative_paths
+  * 83cf3a2 [APPROVAL] remotes/origin/review/bdeflag to master
+  * 10efea9 Add testing for skipped cases in test drivers
+  * c2f5ca2 [APPROVAL] switch-off-non-cpp11-builds to master
+  * 88625a7 bump up jobs level when only building cpp11
+  * b86978a [APPROVAL] switch-off-non-cpp11-builds to master
+  * 1caa27e build cpp11 only on cpp11 days for sgcc-4.6.1
+  * 3b54559 Merge branch 'master' of devgit:bde/bde-tools
+  * c36b493 specify uplid for lnx-3.4.3 builds so uplid is passed to slave
+  * 333e11e stop using hp3 for tests
+  * 5f7bc6b [APPROVAL] move-off-of-linxdevs to master
+  * f9a126d reduce jobs level for api linux builds
+  * 52b630b [APPROVAL] move-off-of-linxdevs to master
+  * 0d253c6 Switch away from linxdev boxes before they are decommissioned.
+  * e8b6205 [APPROVAL] moveExtraBuildsToSundayFromMonday to master
+  * 88dab6e move extra builds from Monday to Sunday
+  * d40acee [APPROVAL] fix-dev-api-build-targets to master
+  * b68df11 build correct targets for dev-api on i10 and s12
+  * 3d03cb5 Bugfix, proper handling of friend classes
+  * 959c0c4 - checking that .cpp's include component .h first - checking for friendships outside of component - no longer coredump on non-existent files - warn about tabs, but untabify and do normal checking - better checking of function doc - vastly improved handling of quotes strings in C-style comments - assorted bug fixes and cleanups
+  * f16f717 Snug comments complaint overridable.
+  * 1859229 Better handling of function doc checking
+  * 047934a Better doc of Place::wordAfter
+  * a6056de Handle non-existent files without core dumping.
+  * 7aa2f0e Got checking for first include in .cpp's being component include
+  * 7789e8a [APPROVAL] debug-thursday-safe-builds to master
+  * bf3c7aa do safe and cpp11 builds on Mondays too
+  * 1d0a201 [APPROVAL] debug-thursday-safe-builds to master
+  * 99ea09c --test-config flag for bde_bldmgr.config, and fix Thursdays
+  * 4142a8a [APPROVAL] remotes/origin/review/non-compliant-c-link to master
+  * 8b913f8 fix the generated link command for C files in non-compliant packages
+  * 58a3d86 drqs 28259213: add extra rules to remove objects created by APPLICATION_MAIN
+  * 1453121 [APPROVAL] decrease-api-build-load to master
+  * 657f8fb reduce api linux build loads, and make opt_mt and _cpp11 builds "safe"
+  * 6061be7 [APPROVAL] trade-opt_mt_64-for-dbg_exc_mt_cpp11 to master
+  * 6affd4b switch opt_mt_64 build for dbg_exc_mt_cpp11 on Thursdays
+  * 787f333 [APPROVAL] rotate_i10_opt_builds_off_of_ibm4 to master
+  * e4b20c6 move i10_opt and safe builds to nyibldo1 rather than ibm4
+  * 9a150d8 [APPROVAL] remove-windows-breaking-ar-redirects to master
+  * 1b4bf5a move $group computation earlier to use it in logname
+  * 334c740 cleanup post-merge
+  * 52826c4 fix logging
+  * f760f9c [APPROVAL] origin/review/remove-windows-breaking-ar-redirects to master
+  * f4bbd98 remove extra "
+  * fa501c6 [APPROVAL] origin/review/remove-windows-breaking-ar-redirects to master
+  * 927d3d4 remove redirects which break windows lib commands
+  * beadb96 [APPROVAL] log-slave-settings-more-verbosely to master
+  * 4da5bfe fix errors
+  * 5aed0fc [APPROVAL] log-slave-settings-more-verbosely to master
+  * 34db70e fix run_batch_file_and_dump_env.bat invocation
+  * 50cc1d8 add run_batch_file_and_dump_env.bat helper script, and call it from bde_bldmgr.slave.pl
+  * b92d333 [APPROVAL] log-slave-settings-more-verbosely to master
+  * ed02ce7 log --envbat and --path more verbosely
+  * 9961f99 [APPROVAL] speed-up-bdebuild-of-large-files to master
+  * e8bd685 turn on "keepRCS" for slimSrcLines
+  * 4c0d9b7 [APPROVAL] speed-up-bdebuild-of-large-files to master
+  * c490ee7 remove debug print
+  * f1a72ca [APPROVAL] speed-up-bdebuild-of-large-files to master
+  * 1c1edac speed up parsing of huge files by skipping RCS regex unless necessary
+  * de87348 [APPROVAL] move-linxdev-builds-to-nylnxbldo1 to master
+  * ff5be9c move compilation phases of linux rhel4 builds to nylnxbldo boxes
+  * ce637e1 [APPROVAL] move-linux-builds-to-nylnxbldo1 to master
+  * e4bba60 drop lnx job count to 10
+  * 39e1cac [APPROVAL] move-api-builds-from-ibm4 to master
+  * 9682f22 drqs27825983: move i10 builds from ibm4 (api builds causing issues)
 
- -- Daniel Ruoso <druoso@bloomberg.net>  Thu, 31 Jan 2013 18:08:56 -0500
+ -- Daniel Ruoso <druoso@bloomberg.net>  Thu, 31 Jan 2013 18:09:07 -0500
 
-bde-tools (20120625.1) unstable; urgency=low
+bde-tools (TOOLS_TO_PABLO_20111006) git; urgency=low
 
-  * remove refernce to robo-etc
+  * eaa9c56 [APPROVAL] phalpern-Doxygen to master
+  * 06b68ac [APPROVAL] bde_build-better-silence to master
+  * 75377c9 make -S option suppress test output (requires git-bde commit cdac04e)
+  * 5d29ce8 [APPROVAL] bde_build-multiple-targets to master
+  * 4d2b058 allow multiple UORs to be specified on commandline, and enhance -S
+  * b2bc1ca [APPROVAL] remove-ibm6 to master
+  * 0e28cf3 switch from ibm6 to ibm4 at Raymond's request
+  * cd15638 Merge into hanging indent, glossary, and cross-reference link generation branch from 9/2/2011 mainline.
+  * 548f13f [APPROVAL] bde_bldmgr-log-failed-commands to master
+  * 13e6a16 log command before/after execution, and try harder to put commas in target list
+  * c7346d6 [APPROVAL] inconsitent_delimiters_clarity to master
+  * 007ee5a make "inconsistent delimiters" message clearer
+  * bffe2f4 [APPROVAL] use_test_host_even_if_not_in_clearcase_mode to master
+  * ec7017f use test_host even if not in clearcase mode (fix bug spotted by Raymond)
+  * 62a9437 [APPROVAL] kill-builds-at-deadline-fix to master
+  * d6d1eeb correct deadline handling
+  * c55f8c5 [APPROVAL] kill-builds-at-deadline to master
+  * 8234740 really make sure processes die at deadline (send extra sigkill)
+  * 1169143 add deadline support, killing builds at 11am on weekdays, and 11pm on weekends
+  * fac9925 add branch choice support to findBranchesMergedToMaster.pl
+  * 5ee50b8 [APPROVAL] remotes/origin/review/drqs27355242-add-z_a_bdema-to-builds to master
+  * db0f373 DRQS 27355242: add z_a_bdema to nightly builds
+  * 54a8a6c [APPROVAL] use-test-hosts-for-linux-and-hp to master
+  * 3fc3327 specify test_host for linux and hp builds, per Raymond
+  * 9cb9e84 cleanup and track abbreviated ids
+  * c2327be new utility script to list branches which are already merged to master
+  * 61d9563 add opt_mt build on Thursdays
+  * 2112c3e [APPROVAL] drqs27084948-add-cpp11-ufid-support to master
+  * 4175804 add cpp11 ufid support
+  * 2b7cc98 [APPROVAL] drqs27195911-switch-bas-to-nextrel-and-kill-dev-bus to master
+  * d877743 switch bas to build nextrel from master branch.  Remove dev-bus links
 
- -- Mahendra Hirani <mhirani1@bloomberg.net>  Mon, 25 Jun 2012 17:30:26 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 6 Oct 2011 15:43:27 -0400
 
-bde-tools (20120625) unstable; urgency=low
+bde-tools (TOOLS_TO_PABLO_20110902) git; urgency=low
 
-  * rebase to most up-to-date bde-tools
+  * a71b081 fix path for build logs
+  * c2917cc [APPROVAL] DRQS27020131-enable-nextrel-gcc-4.6.1-build to master
+  * f440d1f DRQS 27020131: enable sgcc-4.6.1 build in nextrel
+  * ae30f43 Allow functions declared as '{}'
+  * 65f5bd7 [APPROVAL] jobs-to-3-for-linxdev2 to master
+  * 5eca096 drqs 26943178: reduce linxdev2 to -j3
+  * 95942f8 tolerate lower can "provide" in @PURPOSE comments
+  * 725d7a7 enable checking for "Provide" in @PURPOSE lines
+  * 0555080 check @PURPOSE line
+  * 87d34a8 [APPROVAL] add_sgcc-4.6.1_build_in_dev to master
+  * 435e19b fix typo
+  * 39b58b2 [APPROVAL] add_sgcc-4.6.1_build_in_dev to master
+  * d05fb7a add gcc 4.6.1 build on Sun in dev
+  * 377e9cd [APPROVAL] add-more-bas-groups-to-serial_test_groups to master
+  * 91a90aa update serial_test_groups list per bszablak
+  * 63a6c51 [APPROVAL] DRQS-26943178-no-API-tests-linxdev2 to master
+  * 8dc5b3a DRQS 26943178: stop building dev-api on linxdev2 - too hard for hardware.
+  * 3c3bd24 [APPROVAL] skip-dash-l-intbasic to master
+  * f0cc134 skip generating LIB_INTBASIC rules for intbasic, since it is in ns-suite
+  * 833dd77 [APPROVAL] remotes/origin/review/move-api-builds-to-nylxdev1 to master
+  * a127bca DRQS 26943234: move builds from apinydev02 to nylxdev1
+  * 0200be8 [APPROVAL] differentiate-slave-logs-by-more-than-timestamp to master
+  * 4309e9a differentiate slave logs via pid and hostname
+  * 11c480d [APPROVAL] build-api-nextrel-from-tmp-repo to master
+  * c9d293c pick up API groups files from test git repo rather than clearcase
+  * ebbf3a4 [APPROVAL] symlink-to-makefile-allowed-to-fail to master
+  * 41a93a9 allow failure in other branch of makeLink
+  * d84832f [APPROVAL] symlink-to-makefile-allowed-to-fail to master
+  * 9bfd6c9 allow symlink to Makefile to fail
+  * 30ddb10 update description for sun build
+  * 3457be5 [APPROVAL] debug-bas-snapshots to master
+  * 6cdc965 make bde_snapshot.pl run in -dvvv very verbose debug mode
+  * 4d669e4 [APPROVAL] snapshot-api-harder to master
+  * f5b3978 augment buildSnapshot.sh with some rsyncs to make sure api files are gathered
+  * 53f9fcf [APPROVAL] set-TOOLSPATH-to-bbshr to master
+  * 4bf3acc set TOOLSPATH=/bbshr/bde/bde-tools
+  * 40194df fix path to BAS_GIT_REPO (s/lib/libs/)
+  * e247283 build using cc-5.10 on sun from now on
+  * 2253cae [APPROVAL] remotes/origin/review/sgcc-12-jobs to master
+  * 2070a8a make sgcc build more parallel, since it is clean every night now
+  * dc5a305 [APPROVAL] remotes/origin/review/fix-nightly-script-typos to master
+  * 084d797 fix while loop syntax
+  * 909c115 [APPROVAL] remotes/origin/review/fetch-bas-from-git to master
+  * cff8c4f get bas from devgit:bas/lib
+  * 8c623be [APPROVAL] remotes/origin/review/build-clean-gcc-and-delete-files to master
+  * 656fc97 delete Sun gcc build artifacts to get all warnings, and delete build tree to remove old files
+  * f526e98 [APPROVAL] remotes/origin/review/delete-bas_codegen to master
+  * ac44038 delete bas_codegen.pl and etc/bas_codegen
+  * 910b2e3 [APPROVAL] remotes/origin/review/fix-master-support-in-push-branch to master
+  * e341384 fix typo spotted by bszablak
+  * 97a9c52 [APPROVAL] remotes/origin/review/allow-s_-applications-as-non-legacy to master
+  * c13fb38 DRQS 26368293: allow s_ for applications
+  * e9fd554 [APPROVAL] remotes/origin/review/add-dums-to-snapshot to master
+  * 6cf76bc add "dums" to supported metadata extensions
+  * 8337bee [APPROVAL] remotes/origin/review/push-branch-remove-trailing-slash to master
+  * 1f29058 remove debugging print
+  * 5b0ffb2 remove trailing / from argument in devgit-push-branch
+  * 3248523 [APPROVAL] remotes/origin/review/disable-w32 to master
+  * 4a810e2 stop building w32
+  * ec3dbe2 [APPROVAL] remotes/origin/review/nightly-dev-checkout-origin to master
+  * b098a52 switch from git pull to git fetch followed by detached head checkout of remotes/origin branch
+  * 97a9911 [APPROVAL] remotes/origin/review/path-determined-dash-L-rules to master
+  * 6c84504 limit -L rules to those needed for BDE_ROOT then BDE_PATH (in that order)
+  * 307a340 [APPROVAL] remotes/origin/review/fix-isPackage-ordering to master
+  * 3ac0261 check for $_[0] definedness before using it in isPackage
+  * 8d17298 [APPROVAL] origin/review/stlport4-build to master
+  * 2387259 added a new ufid for Sun, stlport, to build BDE with stlport4 library supplied with Sun compiler
+  * 1f2c06b [APPROVAL] remotes/origin/review/fix-hp-env to master
+  * 1004dfb DRQS 25995466: set UNIX_STD=2003 on HP
+  * 43060c7 [APPROVAL] remotes/origin/review/buildSnapshot_with_docs to master
+  * d27ed78 add -d option to snapshot docs
+  * e1e9eb9 [APPROVAL] remotes/origin/review/bldmgr-via-snapshot to master
+  * e2639d7 remove robo build from html pages
+  * 2f8e68d fix docs (noting env variables), and fix cygwin_logdir for w64a
+  * 8936d87 DRQS 25908458: build a_comdb2 on Linux
+  * 4e9cc7f fixup windows log paths
+  * 9a5f9d2 fix snapshotting of .s files, and fix reporting
+  * c24c341 handle no_clearcase better, and make sure build_type is defined
+  * d3d9a2d Manually snapshot subdirectories of bsl+apache
+  * c3f1a23 s/dev/nextrel/
+  * e990299 clone runFromGitDevThenAPI.sh to runFromGitNextrel.sh
+  * 57e9743 fix sort order and improve diagnostics
+  * 1201e91 fix rmtbin location for w64a
+  * 42dd43b remove --delete from rsync command
+  * 612ba4e fix bugs detected in first full run
+  * 404355e bugfixes
+  * a527229 parametrize LOGDIR location (among other environment parametrizations
+  * f21abf7 import tools from ~bdebuild/bin
+  * 628ffe9 ready to test
+  * 72ec017 Fixed errors in group.cpp.  Don't know how it ever worked.
+  * 3195675 move logic for updating repos, calling buildSnapshot, then deploying snapshots into this script (from buildSnapshot and bldmgr)
+  * 1200ee2 move logic for updating repos out of buildSnapshot.sh
+  * c8020cf set up for call to buildSnapshot in runFromGit*
+  * 28f6cdb add support for snapshotting etc directory
+  * decbac5 initial snapshot generation script
+  * cff7176 remove duped script name
+  * e043886 rename runDevThenAPI.sh
+  * 47c9213 delete obsolete runRobo.sh
+  * 78312d8 add scripts imported from ~bdebuild/bin
+  * 0aacb00 add scripts/README
+  * 97a4339 restore .gitignore file, but remove entries that do not make sense for bde-tools
+  * 9f49930 [APPROVAL] remotes/origin/review/bdeflag to master
+  * 860e14d Clean up newly detected bdeflag errors
+  * 042a9ed No function doc requirment in .t.cpp, checking opening '{ { of functions
+  * 9c2a0c5 fixed handling of comments ending with '\'
+  * e494477 Merge branch 'master' of devgit:bde/bde-tools
+  * d424e2c add --path option to override BDE_PATH
+  * cff950d fix rsync --rsh option for cygwin to hardcode path to ssh
+  * 50582eb Scanning for 'tbd' in comments (case-insensitive)
+  * 0279395 Merge branch 'master' of devgit:bde/bde-tools into bdeflag
+  * 459a52a Better checking of namespaces, elimination of bdeflag errors from bdeflag
+  * d443dc0 [APPROVAL] remotes/origin/review/new-linux-hosts-for-bus to master
+  * 4aa41a9 import bde_bldmgr-bus.config@@/main/bb/dev/21, "Changes lnxdev hosts to n[yj]lxdev", amurtazi, 05/21
+  * f218996 [APPROVAL] remotes/origin/pending/master/ubuntu-support to master
+  * 3c9c8bd add checks for perl, make, and rsync
+  * 9d4bcf1 [APPROVAL] remotes/origin/pending/master/ubuntu-support to master
+  * fd52713 Linux host configuration script for Ubuntu bde_build.pl usage
+  * f9c0b30 import manual changes from ~/tools
+  * 35d5169 add git_diff_wrapper
+  * 0853a1e [APPROVAL] remotes/origin/pending/master/branch-push-script to master
+  * d681f15 set tracking flags for pushes to dev/$USER
+  * e8b5c19 [APPROVAL] remotes/origin/pending/master/branch-push-script to master
+  * 6198d22 Strip prefix if already present - using [[ this time
+  * d1fbd23 Strip prefix if already present
+  * d261c6f [APPROVAL] remotes/origin/pending/master/dev/mgiroux/devgit-smart-co to master
+  * 8e1fff4 try to git co $1 || git co dev/$USER/$1
+  * 2e997dd [APPROVAL] remotes/origin/pending/master/branch-push-script to master
+  * ee63b0e use env to find bash
+  * c482404 [APPROVAL] remotes/origin/pending/master/branch-push-script to master
+  * bc1bbdd add support for prefix arguments
+  * f2b87dd new script to push to correct branch on origin
+  * cb43f1c remove broken doxygen symlink (used to point to bde_integrator view, since removed)
+  * b054ac5 [APPROVAL] remotes/origin/pending/master/gitignore to master
+  * 53d2558 Adding .gitignore file
+  * fba8d85 [APPROVAL] remotes/origin/pending/master/last-clearcase-dev-import to master
+  * 45e4587 localize $_ before reading in files
+  * d306aa1 import doc tool fixes from clearcase
+  * e684ee4 remove bin/aotools, update README
+  * a078516 initial import of dev/LATEST from clearcase
 
- -- Mahendra Hirani <mhirani1@bloomberg.net>  Mon, 25 Jun 2012 17:30:26 -0500
-
-bde-tools (20120223.1.gc58edb0+1) unstable; urgency=low
-
-  * Update producemake to match cstools version
-
- -- Daniel Ruoso <druoso@bloomberg.net>  Fri, 24 Feb 2012 17:30:26 -0500
-
-bde-tools (20120223.1.gc58edb0) unstable; urgency=low
-
-  * Depend on the robo-etc for default.opts
-
- -- Daniel Ruoso <druoso@bloomberg.net>  Wed, 23 Feb 2012 15:42:22 -0500
-
-bde-tools (20111214.1.g3b54559) unstable; urgency=low
-
-  * Initial release
-
- -- Daniel Ruoso <druoso@bloomberg.net>  Wed, 14 Dec 2011 15:42:22 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 2 Sep 2011 13:37:10 -0400
