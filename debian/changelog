@@ -1,3 +1,9 @@
+bde-tools (20130409.1) unstable; urgency=low
+  * Bump changelog
+  * d436124 add support for bde-dev repo
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 09 Apr 2013 14:28:00 -0400
+
 bde-tools (20130408.1) unstable; urgency=low
 
   * Bump changelog
