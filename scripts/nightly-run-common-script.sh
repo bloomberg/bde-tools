@@ -25,7 +25,7 @@ BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
 
 BDE_BB_GIT_REPO=/home/bdebuild/bs/bde-bb-${BUILD_TYPE}
 
-BDE_DEV_GIT_REPO=/home/bdebuild/bs/bde-dev-${BUILD_TYPE}
+BDE_BDX_GIT_REPO=/home/bdebuild/bs/bde-bdx-${BUILD_TYPE}
 
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
 LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
@@ -56,13 +56,13 @@ pushd $BDE_BB_GIT_REPO 2> /dev/null
 /opt/swt/bin/git checkout $BDE_BB_BRANCH
 popd
 
-pushd $BDE_DEV_GIT_REPO 2> /dev/null
+pushd $BDE_BDX_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
 /opt/swt/bin/git checkout $BDE_BB_BRANCH
 popd
 
 $SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR \
-                              $BDE_CORE_GIT_REPO $BDE_BB_GIT_REPO $BDE_DEV_GIT_REPO \
+                              $BDE_CORE_GIT_REPO $BDE_BB_GIT_REPO $BDE_BDX_GIT_REPO \
                          -- \
                          $ALL_UORS
 

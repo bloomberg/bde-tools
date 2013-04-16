@@ -87,7 +87,7 @@ rsync -av $ROOTPATH/groups/bsl/*+* ./groups/bsl/
 rsync -av $ROOTPATH/groups/bde/*+* ./groups/bde/
 for path in $(perl -e'print "$_\n" foreach split /:/,$ENV{PATHS}')
 do \
-    rsync -av $path/groups/dev/*+* ./groups/dev/
+    rsync -av $path/groups/bdx/*+* ./groups/bdx/
 done
 
 if [ $? -ne 0 ]
