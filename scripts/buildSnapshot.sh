@@ -7,6 +7,8 @@ then \
     exit 1
 fi
 
+echo "Running $0 $*"
+
 if [ "$1" == "-d" ]
 then \
     GET_DOCS=1
@@ -24,6 +26,7 @@ shift
 ROOTPATH=$1
 shift
 
+PATHS=""
 PATHSEP=""
 
 while [ "$1" != "--" ]
@@ -32,6 +35,8 @@ do \
     PATHSEP=":"
     shift
 done
+
+export PATHS
 
 if [ "$1" != "--" ]
 then \
@@ -85,9 +90,14 @@ $SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 rsync -av $ROOTPATH/groups/bst/*+* ./groups/bst/
 rsync -av $ROOTPATH/groups/bsl/*+* ./groups/bsl/
 rsync -av $ROOTPATH/groups/bde/*+* ./groups/bde/
-for path in $(perl -e'print "$_\n" foreach split /:/,$ENV{PATHS}')
+echo "Doing NON-COMPLIANT-SNAPSHOT for all entries in PATHS:$PATHS"
+for path in $(perl -e'foreach my $path (split /:/,$ENV{PATHS}) { print "$path\n"  }')
 do \
-    rsync -av $path/groups/bdx/*+* ./groups/bdx/
+    if [[ -e $path/groups/bdx ]]
+    then \
+        echo "NON-COMPLIANT-SNAPSHOT: rsync -av $path/groups/bdx/*+* ./groups/bdx/"
+        rsync -av $path/groups/bdx/*+* ./groups/bdx/
+    fi
 done
 
 if [ $? -ne 0 ]
