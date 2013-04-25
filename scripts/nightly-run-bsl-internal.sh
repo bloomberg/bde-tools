@@ -6,6 +6,8 @@ BUILD_TYPE=bslintdev
 BDE_CORE_BRANCH=remotes/origin/dev-integration
 BDE_BB_BRANCH=remotes/origin/dev-integration
 
+BSL_TYPE=internal
+
 CORE_UORS="bsl"
 BB_UORS=""
 
@@ -20,5 +22,6 @@ SCRIPT_PATH=$TOOLSPATH/scripts
 
 export TOOLSPATH SCRIPT_PATH SCRIPT_NAME BUILD_TYPE BDE_CORE_BRANCH BDE_BB_BRANCH
 export CORE_UORS BB_UORS ALL_UORS
+export BSL_TYPE
 
 $SCRIPT_PATH/nightly-run-common-script.sh

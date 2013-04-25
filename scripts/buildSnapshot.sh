@@ -87,17 +87,30 @@ export BDE_PATH="$PATHS:$BDE_PATH"
 $SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 
 # bde_snapshot.pl doesn't get the subdirs correct for any of the "+" non-compliant packages
-rsync -av $ROOTPATH/groups/bst/*+* ./groups/bst/
-rsync -av $ROOTPATH/groups/bsl/*+* ./groups/bsl/
-rsync -av $ROOTPATH/groups/bde/*+* ./groups/bde/
-echo "Doing NON-COMPLIANT-SNAPSHOT for all entries in PATHS:$PATHS"
-for path in $(perl -e'foreach my $path (split /:/,$ENV{PATHS}) { print "$path\n"  }')
+echo "Doing NON-COMPLIANT-SNAPSHOT for all entries in $ROOTPATH and PATHS:$PATHS"
+for path in $ROOTPATH
 do \
-    if [[ -e $path/groups/bdx ]]
-    then \
-        echo "NON-COMPLIANT-SNAPSHOT: rsync -av $path/groups/bdx/*+* ./groups/bdx/"
-        rsync -av $path/groups/bdx/*+* ./groups/bdx/
-    fi
+    for group in bsl
+    do \
+        if [[ -e $path/groups/$group ]]
+        then \
+            echo "NON-COMPLIANT-SNAPSHOT: rsync -av $path/groups/$group/*+* ./groups/$group/"
+            rsync -av $path/groups/$group/*+* ./groups/$group/
+        fi
+    done
+done
+
+# Can't look for bsl anywhere but root repo until it's deleted from bde-core!
+for path in $ROOTPATH $(perl -e'foreach my $path (split /:/,$ENV{PATHS}) { print "$path\n"  }')
+do \
+    for group in bst bde bdx
+    do \
+        if [[ -e $path/groups/$group ]]
+        then \
+            echo "NON-COMPLIANT-SNAPSHOT: rsync -av $path/groups/$group/*+* ./groups/$group/"
+            rsync -av $path/groups/$group/*+* ./groups/$group/
+        fi
+    done
 done
 
 if [ $? -ne 0 ]

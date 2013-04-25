@@ -6,6 +6,8 @@ BUILD_TYPE=dev
 BDE_CORE_BRANCH=remotes/origin/dev-integration
 BDE_BB_BRANCH=remotes/origin/dev-integration
 
+BSL_TYPE=oss
+
 CORE_UORS="bsl bst bde bbe bce bae bte"
 BB_UORS="bdx bsi zde a_bdema a_bteso a_xercesc e_ipc z_a_bdema bap a_comdb2 z_bae a_cdrcache"
 
@@ -20,5 +22,6 @@ SCRIPT_PATH=$TOOLSPATH/scripts
 
 export TOOLSPATH SCRIPT_PATH SCRIPT_NAME BUILD_TYPE BDE_CORE_BRANCH BDE_BB_BRANCH
 export CORE_UORS BB_UORS ALL_UORS
+export BSL_TYPE
 
 $SCRIPT_PATH/nightly-run-common-script.sh

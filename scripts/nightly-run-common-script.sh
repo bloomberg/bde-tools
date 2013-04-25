@@ -3,7 +3,7 @@
 # this script requires that several variables be set - see
 # runFromGitDevThenAPI.sh for an example.
 
-if [[ -z "$TOOLSPATH" || -z "$SCRIPT_PATH" || -z "$SCRIPT_NAME" || -z "$BUILD_TYPE" || -z "$BDE_CORE_BRANCH" || -z "$BDE_BB_BRANCH" ||  -z "$CORE_UORS" || -z "$ALL_UORS" ]]
+if [[ -z "$TOOLSPATH" || -z "$SCRIPT_PATH" || -z "$SCRIPT_NAME" || -z "$BUILD_TYPE" || -z "$BDE_CORE_BRANCH" || -z "$BDE_BB_BRANCH" ||  -z "$CORE_UORS" || -z "$ALL_UORS" || -z "$BSL_TYPE" ]]
 then \
     echo "USAGE: $0"
     echo "    All of the following variables must be exported before this script is invoked:"
@@ -15,11 +15,14 @@ then \
     echo "         BDE_BB_BRANCH"
     echo "         CORE_UORS"
     echo "         ALL_UORS"
+    echo "         BSL_TYPE"
     echo "    This variable is OPTIONAL:"
     echo "         BB_UORS"
 
     exit 1
 fi
+
+BDE_BSL_GIT_REPO=/home/bdebuild/bs/bsl-${BSL_TYPE}-${BUILD_TYPE}
 
 BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
 
@@ -46,23 +49,46 @@ export BUILD_DIR LOG_DIR TOOLSPATH TMPDIR
 PATH="$TOOLSPATH/bin:$TOOLSPATH/scripts:/opt/swt/bin:/opt/SUNWspro/bin/:/usr/bin:/usr/sbin:/sbin:/usr/bin/X11:/usr/local/bin:/bb/bin:/bb/shared/bin:/bb/shared/abin:/bb/bin/robo:/bbsrc/tools/bbcm:/bbsrc/tools/bbcm/parent:/usr/atria/bin"
 export PATH
 
+REPO_LIST=
+ROOT_REPO=
+
+if [ -e $BDE_BSL_GIT_REPO ]
+then \
+    pushd $BDE_BSL_GIT_REPO 2> /dev/null
+    /opt/swt/bin/git fetch
+    /opt/swt/bin/git checkout $BDE_CORE_BRANCH
+    popd
+
+    REPO_LIST="$REPO_LIST $BDE_BSL_GIT_REPO"
+    ROOT_REPO=$BDE_BSL_GIT_REPO
+else
+    echo ERROR: Invalid BDE_BSL_GIT_REPO $BDE_BSL_GIT_REPO of type $BSL_TYPE specified
+    exit 1
+fi
+
 pushd $BDE_CORE_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
 /opt/swt/bin/git checkout $BDE_CORE_BRANCH
 popd
+
+REPO_LIST="$REPO_LIST $BDE_CORE_GIT_REPO"
 
 pushd $BDE_BB_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
 /opt/swt/bin/git checkout $BDE_BB_BRANCH
 popd
 
+REPO_LIST="$REPO_LIST $BDE_BB_GIT_REPO"
+
 pushd $BDE_BDX_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
 /opt/swt/bin/git checkout $BDE_BB_BRANCH
 popd
 
+REPO_LIST="$REPO_LIST $BDE_BDX_GIT_REPO"
+
 $SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR \
-                              $BDE_CORE_GIT_REPO $BDE_BB_GIT_REPO $BDE_BDX_GIT_REPO \
+                              $ROOT_REPO $BDE_CORE_GIT_REPO $REPO_LIST \
                          -- \
                          $ALL_UORS
 
