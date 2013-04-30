@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo SCRIPT-TRACE - running $0
+
 if [ -z "$4" ]
 then \
     echo "USAGE: $0 [-d] tarName outputPath rootpath [path [path...]] -- uor [uor...]"

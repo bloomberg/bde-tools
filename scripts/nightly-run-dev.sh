@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo SCRIPT-TRACE - running $0
+
 SCRIPT_NAME=nightly-run-dev
 BUILD_TYPE=dev
 

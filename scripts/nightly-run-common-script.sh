@@ -22,6 +22,8 @@ then \
     exit 1
 fi
 
+echo SCRIPT-TRACE - running $0
+
 BDE_BSL_GIT_REPO=/home/bdebuild/bs/bsl-${BSL_TYPE}-${BUILD_TYPE}
 
 BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
@@ -56,6 +58,7 @@ if [ -e $BDE_BSL_GIT_REPO ]
 then \
     pushd $BDE_BSL_GIT_REPO 2> /dev/null
     /opt/swt/bin/git fetch
+    /opt/swt/bin/git reset --hard
     /opt/swt/bin/git checkout $BDE_CORE_BRANCH
     popd
 
@@ -68,13 +71,19 @@ fi
 
 pushd $BDE_CORE_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
+/opt/swt/bin/git reset --hard
 /opt/swt/bin/git checkout $BDE_CORE_BRANCH
+
+# TBD: Remove me!
+rm -rf $BDE_CORE_GIT_REPO/groups/bsl
+
 popd
 
 REPO_LIST="$REPO_LIST $BDE_CORE_GIT_REPO"
 
 pushd $BDE_BB_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
+/opt/swt/bin/git reset --hard
 /opt/swt/bin/git checkout $BDE_BB_BRANCH
 popd
 
@@ -82,6 +91,7 @@ REPO_LIST="$REPO_LIST $BDE_BB_GIT_REPO"
 
 pushd $BDE_BDX_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
+/opt/swt/bin/git reset --hard
 /opt/swt/bin/git checkout $BDE_BB_BRANCH
 popd
 
