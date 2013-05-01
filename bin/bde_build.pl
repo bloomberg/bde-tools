@@ -1324,7 +1324,7 @@ sub getComponentDependencyVar ($$$) {
         my $PKG=uc $comp->getPackage();
         $depline.=join($depSep, map {
             "\$(${PKG}_BLOC)${FS}$_.h"
-        } (getAllInternalComponentDependencies($comp,1), getTestOnlyDependencies($comp)));
+        } getAllInternalComponentDependencies($comp,1));
 
         my $package=$comp->getComponentPackage();
         my $group=$comp->getComponentGroup(); #undef if isolated package
