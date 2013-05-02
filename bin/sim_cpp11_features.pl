@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#!/usr/bin/env perl
 
 # Translate variadic C++ function templates into multiple function templates
 # with variable numbers of arguments.  For example, translate:
@@ -18,10 +18,19 @@
 #   num-reps argument specifies the maximum number of variadic arguments to be
 #   supported (default 15).  Output is written to standard out.
 
-use strict;
+use 5.010;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib/perl";
+use lib "$FindBin::Bin/../lib/perl/site-perl";
+
+use common::sense;
 use Getopt::Long;
+use File::Spec;
 
 my $debug = 0;
+my $clean = 0;
 my $defaultMaxArgs = 10;
 my $maxArgs = $defaultMaxArgs;
 my $maxColumn = 79;  # Maximum allowed output line length
@@ -45,7 +54,7 @@ sub genName($)
 # as an integer index of a character in the string.  The '$inputEnd' position
 # is set to 'length($input)', which is the first position past the end of the
 # string.  The $shroudedInput string is the same as $input except with
-# comments, string literals, and comment shrouded so that their contents 
+# comments, string literals, and comment shrouded so that their contents
 # will not interfere with regular expression matches.
 my $input;
 my $inputEnd;
@@ -55,6 +64,21 @@ my %matchingBrackets = ( '[' => ']',
                          '{' => '}',
                          '(' => ')',
                          '<' => '>' );
+
+my $generatedCodeBegin = <<EOT;
+// {{{ BEGIN GENERATED CODE
+// The following section is automatically generated.  **DO NOT EDIT**
+EOT
+
+chomp $generatedCodeBegin;
+
+my $generatedCodeEnd = <<EOT;
+// }}} END GENERATED CODE
+EOT
+
+chomp $generatedCodeEnd;
+
+my $commandLine;  # command line used to invoke the generator
 
 # Regular expression to find a comment or string string.  After being used in
 # a successful regular expression match, exactly one of the following will be
@@ -76,6 +100,21 @@ my $commentAndStringRe =
         ('(?:[^'\\\n]+|\\.|\\\n)*['\n])   # character literal
        )}mx;
 
+# Make a command line string suitable for putting into the generated file which
+# should be sufficient to reliably regenerate the file with the same
+# parameters.
+sub makeCommandLine {
+    my @args = @_;
+
+    # simplify args
+    for (my $i = 0; $i < scalar @args; $i++) {
+        my ($vol, $dirs, $file) = File::Spec->splitpath($args[$i]);
+        $args[$i] = $file;
+    }
+
+    return join ' ', @args;
+}
+
 # Return a string of whitespace to be used in place of the specified
 # '$comment' string.  If $comment contains whitespace before or after the
 # actual coment, it is considered as part of the comment for the purpose of
@@ -84,7 +123,7 @@ my $commentAndStringRe =
 #
 #  "single-ws"  Result contains a single whitespace character.
 #  "keep-nl"    Result contains the same number of newlines as '$comment' does
-#  "keep-len"   Result is the same length as '$comment' and has newlines in 
+#  "keep-len"   Result is the same length as '$comment' and has newlines in
 #               the same positions.
 sub commentToWhitespace($;$)
 {
@@ -112,7 +151,7 @@ sub commentToWhitespace($;$)
     else {
         die "Illegal option $option";
     }
-    
+
     return $comment;
 }
 
@@ -214,7 +253,7 @@ sub setInput($)
     my @inputEndStack = ();
     my @shroudedInputStack = ();
     my @posStack = ();
-    
+
     # Like 'setInput' but preserves the previous input string,
     # commentAndString arrays, and position.
     sub pushInput($)
@@ -306,6 +345,13 @@ sub cppSearch($;$$)
     return wantarray() ? @cppMatch : "";
 }
 
+# Obtain the argument name from the match found by cppSearch.
+sub argName {
+    my $argname = $cppMatch[2] || "";
+    $argname =~ s/\s+/ /g;  # squash all spaces to a single space
+    return $argname;
+}
+
 # Replace the substring in '$input' begining at the speicified '$start'
 # position, removing the specified '$length' characters and replacing them
 # with the specified '$subst' string.  Adjust all of the 'cppSearch' state
@@ -344,7 +390,7 @@ sub cppSubstitute($$$)
 # called in a scalar context, return only the line number.  Line and column
 # numbers are 1-based.  If the character at '$position' is a newline
 # character, it represents the end of a line, not the start of a new line.
-# Example: 
+# Example:
 #..
 #  If '$input' is "abc\ndef\n", then:
 #
@@ -368,7 +414,7 @@ sub lineAndColumn($)
 
     # Count how many newlines are in the fragment
     my $lineNum = length($fragment) + 1;
-    
+
     # Count number of characters between the last newline and the current
     # position.
     my $colNum = 1;
@@ -553,7 +599,7 @@ my $packTypesStr = join("|", @packTypes);
 #  (
 #    [ "class",    "T"   ],
 #    [ "class...", "XYZ" ],
-#    [ "int...",   "QRS" ] 
+#    [ "int...",   "QRS" ]
 #  )
 #..
 # The parameter pack type (e.g., "class" or "int") must be a term in the
@@ -597,8 +643,7 @@ sub noopTemplateTransform($$$;$)
 # Replaces [$packStart, $packEnd) with $replacement, re-indenting as necessary
 # so that longest line in $replacement fits within $maxCols.  Modifies
 # $workingBuffer.
-sub replaceAndFitOnLine($$$$)
-{
+sub replaceAndFitOnLine {
     my ($workingBuffer, $packStart, $packLen, $replacement) = @_;
     my $packEnd = $packStart + $packLen;
 
@@ -651,6 +696,8 @@ sub replaceAndFitOnLine($$$$)
     my $targetCol = $column;
     $targetCol = $maxColumn - $maxReplacementWidth
         if ($column + $maxReplacementWidth > $maxColumn);
+    $targetCol = 0 if $targetCol < 0;
+
     my $indentation = substr($spaces, 0, $targetCol);
 
     if ($replacement && $targetCol < $column) {
@@ -690,10 +737,11 @@ sub replaceAndFitOnLine($$$$)
             $indentation .= substr($spaces, 0, $maxColumn - $postLen);
         }
 
-        $replacement .= $comma . "\n";
+        $replacement =~ s/\s*$//;      # remove trailing spaces and then
+        $replacement .= $comma . "\n"; # append new line
         $replacement .= $indentation;
     }
-    
+
     $packLen = $packEnd - $packStart;
     if ($shroudedInput && $workingBuffer eq $shroudedInput) {
         cppSubstitute($packStart, $packLen, $replacement);
@@ -706,11 +754,11 @@ sub replaceAndFitOnLine($$$$)
     }
 }
 
-# Replace uses of perfect forwarding within the specified '$input' with
-# special macros and return the result: A template argument of type 'T&&' is
-# replaced with 'BSLS_M_FORWARD_REF(T)'.  An expression of the form
-# 'bsl::forward<T>(expr)' is replaced with 'BSLS_M_FORWARD(T, expr)', where
-# 'T' is a template type parameter.
+# Replace uses of perfect forwarding within the specified '$input' with special
+# macros and return the result: A template argument of type 'T&&' is replaced
+# with 'BSLS_COMPILERFEATURES_FORWARD_REF(T)'.  An expression of the form
+# 'bsl::forward<T>(expr)' is replaced with 'BSLS_COMPILERFEATURES_FORWARD(T, #expr)',
+# where 'T' is a template type parameter.
 sub replaceForwarding($$$;$)
 {
     my ($templateBegin, $templateHeadEnd, $templateEnd, $isVariadic) = @_;
@@ -729,15 +777,14 @@ sub replaceForwarding($$$;$)
     }
 
     for my $typename (@typenames) {
-
         $pos = 0;
         while (cppSearch(qr/\b($typename\s*&&)((?:[ \t]*\.\.\.)?[ \t]*[[:word:]]+)?/,
                          $pos)) {
-            my $argname = $cppMatch[2] || "";
+            my $argname = argName();
             replaceAndFitOnLine($shroudedInput,
                                 $cppMatchStart[1],
                                 $cppMatchEnd[2] - $cppMatchStart[1],
-                                "BSLS_M_FORWARD_REF($typename)".$argname);
+                                "BSLS_COMPILERFEATURES_FORWARD_REF($typename)".$argname);
             $pos = $cppMatchEnd[2];
         }
 
@@ -748,11 +795,11 @@ sub replaceForwarding($$$;$)
             replaceAndFitOnLine($shroudedInput,
                                 $cppMatchStart[0],
                                 $cppMatchEnd[0] - $cppMatchStart[0],
-                                "BSLS_M_FORWARD($typename, ");
+                                "BSLS_COMPILERFEATURES_FORWARD($typename, ");
             $pos = $cppMatchEnd[0];
         }
     }
-        
+
     $buffer = popInput();
     return $buffer;
 }
@@ -862,7 +909,7 @@ sub markPackExpansions()
     {
         print STDERR "found pack = ".$cppMatchAll."\n" if ($debug);
         my $PACKR = "__PACK_V".$packNum."R__";
-        
+
         my $FB = "\\".$cppMatch[1];  # Found begining delimiter
         my $pattern = $cppMatch[2];
         $PACKR =~ s/__PACK_V/__PACK_T/ if (exists($typeNames{$pattern}));
@@ -1180,7 +1227,7 @@ sub transformTemplates($$$)
 
     pushInput($_[0]);
     my $output = "";
-    
+
     my $pos = 0;
     while ($pos < $inputEnd)
     {
@@ -1304,25 +1351,27 @@ sub getArgsFromPPLine($;$$)
 #                            MAIN PROGRAM                                     #
 ###############################################################################
 
-sub usage(;$)
-{
-    my $message = $_[0] || "";
-    $message .= "\n" if ($message);
-    $message .= "Usage: sim_cpp11_features.pl [ --output=<filename> ]\n".
-                "                             [ --debug ]\n".
-                "                             [ --var-args=<max-args> ]\n".
-                "                             { <input-file> | - | TEST }\n";
-    die $message;
+sub usage {
+    print <<EOT;
+Usage: sim_cpp11_features.pl [ --output=<filename> ]
+                             [ --debug ]
+                             [ --clean ]
+                             [ --var-args=<max-args> ]
+                             { <input-file> | - | TEST }
+EOT
+    exit 1;
 }
 
-sub main()
-{
+sub main {
     my $inputFilename;
     my $outputFilename;
     my $maxArgsOpt = 0;
 
+    $commandLine = makeCommandLine($0, @ARGV);
+
     GetOptions("output=s"      => \$outputFilename,
                "debug"         => \$debug,
+               "clean"         => \$clean,
                "var-args=i"    => \$maxArgsOpt) or usage("Invalid option");
 
     my $timestamp = localtime();
@@ -1363,22 +1412,13 @@ sub main()
     my $pos = 0;
     my $output = "";
 
-    # Search for '#include <bsls_m.h>'
-    die "Missing #include <bsls_m.h> in input file\n"
-        unless (cppSearch(qr|^[ \t]*#[ \t]*include[ \t]*[<"]bsls_m\.h[">]|m, 0));
-    my $bsls_m_pos = $cppMatchStart[0];
-
-    # Search for '#if !BSLS_M_SIMULATED_CPP11_FEATURES' or
-    #            '#ifndef BSLS_M_SIMULATED_CPP11_FEATURES'
-    my $simCpp11Macro = "BSLS_M_SIMULATED_CPP11_FEATURES";
-    my $simVariadicsMacro = "BSLS_M_SIMULATED_VARIADIC_TEMPLATES";
-    my $perfFwdWorkaroundMacro = "BSLS_M_PERFECT_FORWARD_WORKAROUND";
+    # Search for '#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES' or
+    #            '#ifndef BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES'
+    my $simCpp11Macro = "BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES";
+    my $simVariadicsMacro = "BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES";
     while (cppSearch(qr/^[ \t]*\#[ \t]*(if(?:ndef[ \t]|[ \t]+!)[ \t]*$simCpp11Macro)\b(.*)\n/m,
                      $pos))
     {
-        die "Error: Use of $simCpp11Macro before #include <bsls_m.h>\n"
-            unless ($cppMatchStart[0] > $bsls_m_pos);
-
         my $startVerbetim = $pos;
         my $endVerbetim = $cppMatchStart[0];
 
@@ -1403,7 +1443,7 @@ sub main()
                           $endVerbetim - $startVerbetim);
 
         # Output cannonical form of #if
-        $output .= "#if !$simCpp11Macro$argsComment\n";
+        $output .= "#if !$simCpp11Macro\n";
 
         my $startCpp11Segment = $cppMatchEnd[0];  # start C++11 code segment
         my $endCpp11Segment;
@@ -1446,43 +1486,45 @@ sub main()
         }
         pos($input) = $pos;
 
-        # Temporarily change $maxArgs
-        $maxArgs = $localMaxArgs if ($localMaxArgs);
+        if ($clean) {
+            # Clean the generated code: just don't produce anything.
+            $output .= "#endif\n";
+        } else {
+            # Temporarily change $maxArgs
+            $maxArgs = $localMaxArgs if ($localMaxArgs);
 
-        # Apply the forwarding workaround to the extracted segment.
-        my $forwardingWorkaround = transformForwarding($cpp11Segment);
+            # Apply the forwarding workaround to the extracted segment.
+            my $forwardingWorkaround = transformForwarding($cpp11Segment);
+            chomp $forwardingWorkaround;
 
-        # Apply the variadic template simulation on top of the forwardng
-        # workaround.
-        my $variadicSimulation = transformVariadics($forwardingWorkaround);
+            # Apply the variadic template simulation on top of the forwardng
+            # workaround.
+            my $variadicSimulation = transformVariadics($forwardingWorkaround);
+            chomp $variadicSimulation;
 
-        # restore $maxArgs
-        $maxArgs = $defaultMaxArgs;
+            # restore $maxArgs
+            $maxArgs = $defaultMaxArgs;
 
-        # If the variadic template simulation is identical to the forwarding
-        # workaround alone, then there were not variadics in the segment.
-        # Output the variadics simulation only if these strings are
-        # different.
-        if ($variadicSimulation ne $forwardingWorkaround) {
-            $output .=
-                "#elif $simVariadicsMacro\n".
-                "// The following section is an *AUTOMATICALLY-GENERATED*\n".
-                "// simulation of variadic template arguments.\n".
-                "// $timestampComment\n".
-                "// Please do *not* edit this section by hand.".
-                "\n\n";
-            $output .= $variadicSimulation;
+            # If the variadic template simulation is identical to the forwarding
+            # workaround alone, then there were not variadics in the segment.
+            # Output the variadics simulation only if these strings are
+            # different.
+            if ($variadicSimulation ne $forwardingWorkaround) {
+                $output .= <<EOT;
+#elif $simVariadicsMacro
+$generatedCodeBegin
+// Generator command line: $commandLine
+$variadicSimulation
+EOT
+            }
+
+            $output .= <<EOT;
+#else
+$forwardingWorkaround
+$generatedCodeEnd
+#endif
+EOT
         }
-
-        $output .=
-            "#else\n".
-            "// The following section is an *AUTOMATICALLY-GENERATED*\n".
-            "// workaround for the absence of perfect forwarding.\n".
-            "// $timestampComment\n".
-            "// Please do *not* edit this section by hand.".
-            "\n\n";
-        $output .= $forwardingWorkaround;
-        $output .= "#endif // $simCpp11Macro else\n";
     }
 
     $output .= substr($input, $pos, $inputEnd - $pos);
@@ -1692,7 +1734,7 @@ sub testStripComments()
 
 sub testShroudCommentsAndStrings()
 {
-    local $dummyChar = '.';  # More convenient to type than "\267" 
+    local $dummyChar = '.';  # More convenient to type than "\267"
 
     my $input =
         "text // C++ comment\n".
@@ -1721,8 +1763,7 @@ sub testShroudCommentsAndStrings()
 
 # testShroudCommentsAndStrings();
 
-sub testReplaceAndFitOnLine
-{
+sub testReplaceAndFitOnLine {
     my $doTest = sub {
         my ($working, $repl) = @_;
 
@@ -1797,7 +1838,7 @@ __DATA__
 // Sample input
 void f(); // Not a template
 
-#if !BSLS_M_SIMULATED_CPP11_FEATURES // $var-args=3
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=3
 #  ifdef NESTED
 template <int ...B, class... A>
 void foo(C<B...> *c, A&&... a)
@@ -1821,7 +1862,7 @@ int bar(int a, T&& v)
     xyz(a, bsl::forward<T>(v));
 }
 
-#elif BSLS_M_SIMULATED_VARIADIC_TEMPLATES
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // The following section is an *AUTOMATICALLY-GENERATED*
 // simulation of variadic template arguments.
 // Generated by sim_cpp11_features.pl on Wed Oct 31 23:49:58 2012
@@ -1838,31 +1879,31 @@ void foo(C<> *c)
 }
 
 template <int B_1, class A_1>
-void foo(C<B_1> *c, BSLS_M_FORWARD_REF(A_1) a_1)
+void foo(C<B_1> *c, BSLS_COMPILERFEATURES_FORWARD_REF(A_1) a_1)
 {
-    D<A_1> d(BSLS_M_FORWARD(A_1, a_1));
+    D<A_1> d(BSLS_COMPILERFEATURES_FORWARD(A_1, a_1));
     bar(1u, c, &d);
 
     # Identical expansion twice in one line:
-    f(BSLS_M_FORWARD(A_1, a_1)); g(BSLS_M_FORWARD(A_1, a_1));
+    f(BSLS_COMPILERFEATURES_FORWARD(A_1, a_1)); g(BSLS_COMPILERFEATURES_FORWARD(A_1, a_1));
 }
 
 template <int B_1,
           int B_2, class A_1,
                    class A_2>
 void foo(C<B_1,
-           B_2> *c, BSLS_M_FORWARD_REF(A_1) a_1,
-                    BSLS_M_FORWARD_REF(A_2) a_2)
+           B_2> *c, BSLS_COMPILERFEATURES_FORWARD_REF(A_1) a_1,
+                    BSLS_COMPILERFEATURES_FORWARD_REF(A_2) a_2)
 {
     D<A_1,
-      A_2> d(BSLS_M_FORWARD(A_1, a_1),
-             BSLS_M_FORWARD(A_2, a_2));
+      A_2> d(BSLS_COMPILERFEATURES_FORWARD(A_1, a_1),
+             BSLS_COMPILERFEATURES_FORWARD(A_2, a_2));
     bar(2u, c, &d);
 
     # Identical expansion twice in one line:
-    f(BSLS_M_FORWARD(A_1, a_1),
-      BSLS_M_FORWARD(A_2, a_2)); g(BSLS_M_FORWARD(A_1, a_1),
-                                   BSLS_M_FORWARD(A_2, a_2));
+    f(BSLS_COMPILERFEATURES_FORWARD(A_1, a_1),
+      BSLS_COMPILERFEATURES_FORWARD(A_2, a_2)); g(BSLS_COMPILERFEATURES_FORWARD(A_1, a_1),
+                                   BSLS_COMPILERFEATURES_FORWARD(A_2, a_2));
 }
 
 template <int B_1,
@@ -1872,31 +1913,31 @@ template <int B_1,
                    class A_3>
 void foo(C<B_1,
            B_2,
-           B_3> *c, BSLS_M_FORWARD_REF(A_1) a_1,
-                    BSLS_M_FORWARD_REF(A_2) a_2,
-                    BSLS_M_FORWARD_REF(A_3) a_3)
+           B_3> *c, BSLS_COMPILERFEATURES_FORWARD_REF(A_1) a_1,
+                    BSLS_COMPILERFEATURES_FORWARD_REF(A_2) a_2,
+                    BSLS_COMPILERFEATURES_FORWARD_REF(A_3) a_3)
 {
     D<A_1,
       A_2,
-      A_3> d(BSLS_M_FORWARD(A_1, a_1),
-             BSLS_M_FORWARD(A_2, a_2),
-             BSLS_M_FORWARD(A_3, a_3));
+      A_3> d(BSLS_COMPILERFEATURES_FORWARD(A_1, a_1),
+             BSLS_COMPILERFEATURES_FORWARD(A_2, a_2),
+             BSLS_COMPILERFEATURES_FORWARD(A_3, a_3));
     bar(3u, c, &d);
 
     # Identical expansion twice in one line:
-    f(BSLS_M_FORWARD(A_1, a_1),
-      BSLS_M_FORWARD(A_2, a_2),
-      BSLS_M_FORWARD(A_3, a_3)); g(BSLS_M_FORWARD(A_1, a_1),
-                                   BSLS_M_FORWARD(A_2, a_2),
-                                   BSLS_M_FORWARD(A_3, a_3));
+    f(BSLS_COMPILERFEATURES_FORWARD(A_1, a_1),
+      BSLS_COMPILERFEATURES_FORWARD(A_2, a_2),
+      BSLS_COMPILERFEATURES_FORWARD(A_3, a_3)); g(BSLS_COMPILERFEATURES_FORWARD(A_1, a_1),
+                                   BSLS_COMPILERFEATURES_FORWARD(A_2, a_2),
+                                   BSLS_COMPILERFEATURES_FORWARD(A_3, a_3));
 }
 
 #  endif
 
 template <class T>
-int bar(int a, BSLS_M_FORWARD_REF(T) v)
+int bar(int a, BSLS_COMPILERFEATURES_FORWARD_REF(T) v)
 {
-    xyz(a, BSLS_M_FORWARD(T, v));
+    xyz(a, BSLS_COMPILERFEATURES_FORWARD(T, v));
 }
 
 #else
@@ -1907,25 +1948,25 @@ int bar(int a, BSLS_M_FORWARD_REF(T) v)
 
 #  ifdef NESTED
 template <int ...B, class... A>
-void foo(C<B...> *c, BSLS_M_FORWARD_REF(A)... a)
+void foo(C<B...> *c, BSLS_COMPILERFEATURES_FORWARD_REF(A)... a)
 {
-    D<A...> d(BSLS_M_FORWARD(A, a)...);
+    D<A...> d(BSLS_COMPILERFEATURES_FORWARD(A, a)...);
     bar(sizeof... (A), c, &d);
 
     # Identical expansion twice in one line:
-    f(BSLS_M_FORWARD(A, a)...); g(BSLS_M_FORWARD(A, a)...);
+    f(BSLS_COMPILERFEATURES_FORWARD(A, a)...); g(BSLS_COMPILERFEATURES_FORWARD(A, a)...);
 }
 #  endif
 
 template <class T>
-int bar(int a, BSLS_M_FORWARD_REF(T) v)
+int bar(int a, BSLS_COMPILERFEATURES_FORWARD_REF(T) v)
 {
-    xyz(a, BSLS_M_FORWARD(T, v));
+    xyz(a, BSLS_COMPILERFEATURES_FORWARD(T, v));
 }
 
-#endif // BSLS_M_SIMULATED_CPP11_FEATURES else
+#endif // BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES else
 
-#if !BSLS_M_SIMULATED_CPP11_FEATURES
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 // The following is a variadic template function
 template <typename... A>  // Comments are removed
     void g(const vector<A>&... a)
@@ -1974,7 +2015,7 @@ template <class ...T>
 template <typename T>
     void z(const vector<T>& v);  // No variadics
 
-#elif BSLS_M_SIMULATED_VARIADIC_TEMPLATES
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // The following section is an *AUTOMATICALLY-GENERATED*
 // simulation of variadic template arguments.
 // Generated by sim_cpp11_features.pl on Wed Oct 31 23:49:58 2012
@@ -2026,10 +2067,10 @@ template <typename A_1,
 
 
 template <int X,
-          class T_0 = BSLS_M_TNIL,
-          class T_1 = BSLS_M_TNIL,
-          class T_2 = BSLS_M_TNIL,
-          class = BSLS_M_TNIL>
+          class T_0 = BSLS_COMPILERFEATURES_TNIL,
+          class T_1 = BSLS_COMPILERFEATURES_TNIL,
+          class T_2 = BSLS_COMPILERFEATURES_TNIL,
+          class = BSLS_COMPILERFEATURES_TNIL>
 class C;
 
 template <int X>
@@ -2038,7 +2079,7 @@ class C<X>
 public:
     typename mf<X>::type member();
 
-    template <class U> void member2(BSLS_M_FORWARD_REF(U) v);
+    template <class U> void member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v);
 };
 
 template <int X, class T_1>
@@ -2047,7 +2088,7 @@ class C<X, T_1>
 public:
     typename mf<X>::type member(const T_1& z_1);
 
-    template <class U> void member2(BSLS_M_FORWARD_REF(U) v);
+    template <class U> void member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v);
 };
 
 template <int X, class T_1,
@@ -2059,7 +2100,7 @@ public:
     typename mf<X>::type member(const T_1& z_1,
                                 const T_2& z_2);
 
-    template <class U> void member2(BSLS_M_FORWARD_REF(U) v);
+    template <class U> void member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v);
 };
 
 template <int X, class T_1,
@@ -2074,18 +2115,18 @@ public:
                                 const T_2& z_2,
                                 const T_3& z_3);
 
-    template <class U> void member2(BSLS_M_FORWARD_REF(U) v);
+    template <class U> void member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v);
 };
 
 
 template <int X>
-typename mf<X>::type C<X, BSLS_M_TFILL(3)>::member()
+typename mf<X>::type C<X, BSLS_COMPILERFEATURES_TFILL(3)>::member()
 {
 }
 
 template <int X, class T_1>
 typename mf<X>::type C<X, T_1,
-                          BSLS_M_TFILL(2)>::member(const T_1& z_1)
+                          BSLS_COMPILERFEATURES_TFILL(2)>::member(const T_1& z_1)
 {
 }
 
@@ -2093,7 +2134,7 @@ template <int X, class T_1,
                  class T_2>
 typename mf<X>::type C<X, T_1,
                           T_2,
-                          BSLS_M_TFILL(1)>::member(const T_1& z_1,
+                          BSLS_COMPILERFEATURES_TFILL(1)>::member(const T_1& z_1,
                                                    const T_2& z_2)
 {
 }
@@ -2104,7 +2145,7 @@ template <int X, class T_1,
 typename mf<X>::type C<X, T_1,
                           T_2,
                           T_3,
-                          BSLS_M_TFILL(0)>::member(const T_1& z_1,
+                          BSLS_COMPILERFEATURES_TFILL(0)>::member(const T_1& z_1,
                                                    const T_2& z_2,
                                                    const T_3& z_3)
 {
@@ -2113,17 +2154,17 @@ typename mf<X>::type C<X, T_1,
 
 template <int X>
     template <class U>
-void C<X, BSLS_M_TFILL(3)>::member2(BSLS_M_FORWARD_REF(U) v)
+void C<X, BSLS_COMPILERFEATURES_TFILL(3)>::member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v)
 {
-    q(BSLS_M_FORWARD(U,  v ));
+    q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
 }
 
 template <int X, class T_1>
     template <class U>
 void C<X, T_1,
-          BSLS_M_TFILL(2)>::member2(BSLS_M_FORWARD_REF(U) v)
+          BSLS_COMPILERFEATURES_TFILL(2)>::member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v)
 {
-    q(BSLS_M_FORWARD(U,  v ));
+    q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
 }
 
 template <int X, class T_1,
@@ -2131,9 +2172,9 @@ template <int X, class T_1,
     template <class U>
 void C<X, T_1,
           T_2,
-          BSLS_M_TFILL(1)>::member2(BSLS_M_FORWARD_REF(U) v)
+          BSLS_COMPILERFEATURES_TFILL(1)>::member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v)
 {
-    q(BSLS_M_FORWARD(U,  v ));
+    q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
 }
 
 template <int X, class T_1,
@@ -2143,17 +2184,17 @@ template <int X, class T_1,
 void C<X, T_1,
           T_2,
           T_3,
-          BSLS_M_TFILL(0)>::member2(BSLS_M_FORWARD_REF(U) v)
+          BSLS_COMPILERFEATURES_TFILL(0)>::member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v)
 {
-    q(BSLS_M_FORWARD(U,  v ));
+    q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
 }
 
 
 template <int X,
-          unsigned V_0 = BSLS_M_VNIL,
-          unsigned V_1 = BSLS_M_VNIL,
-          unsigned V_2 = BSLS_M_VNIL,
-          unsigned = BSLS_M_VNIL>
+          unsigned V_0 = BSLS_COMPILERFEATURES_VNIL,
+          unsigned V_1 = BSLS_COMPILERFEATURES_VNIL,
+          unsigned V_2 = BSLS_COMPILERFEATURES_VNIL,
+          unsigned = BSLS_COMPILERFEATURES_VNIL>
 struct D;
 
 template <int X>
@@ -2188,13 +2229,13 @@ struct D<X, V_1,
 
 
 template <int X>
-typename mf<X>::type D<BSLS_M_VFILL(3)>::member()
+typename mf<X>::type D<BSLS_COMPILERFEATURES_VFILL(3)>::member()
 {
 }
 
 template <int X, unsigned V_1>
 typename mf<X>::type D<V_1,
-                       BSLS_M_VFILL(2)>::member()
+                       BSLS_COMPILERFEATURES_VFILL(2)>::member()
 {
 }
 
@@ -2202,7 +2243,7 @@ template <int X, unsigned V_1,
                  unsigned V_2>
 typename mf<X>::type D<V_1,
                        V_2,
-                       BSLS_M_VFILL(1)>::member()
+                       BSLS_COMPILERFEATURES_VFILL(1)>::member()
 {
 }
 
@@ -2212,7 +2253,7 @@ template <int X, unsigned V_1,
 typename mf<X>::type D<V_1,
                        V_2,
                        V_3,
-                       BSLS_M_VFILL(0)>::member()
+                       BSLS_COMPILERFEATURES_VFILL(0)>::member()
 {
 }
 
@@ -2272,9 +2313,9 @@ typename mf<X>::type C<X, T...>::member(const T&... z)
 
 template <int X, class ...T>
     template <class U>
-void C<X, T...>::member2(BSLS_M_FORWARD_REF(U) v)
+void C<X, T...>::member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v)
 {
-    q(BSLS_M_FORWARD(U,  v ));
+    q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
 }
 
 template <int X, unsigned ...V>
@@ -2294,16 +2335,16 @@ template <class ...T>
 template <typename T>
     void z(const vector<T>& v);
 
-#endif // BSLS_M_SIMULATED_CPP11_FEATURES else
+#endif // BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES else
 
 template <class T>
 class NonVaridadicClassWithVariadicMember
 {
-#if !BSLS_M_SIMULATED_CPP11_FEATURES // $local-var-args=4
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $local-var-args=4
     template <class... U>
         NonVaridadicClassWithVariadicMember(const U&... u);
 
-#elif BSLS_M_SIMULATED_VARIADIC_TEMPLATES
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // The following section is an *AUTOMATICALLY-GENERATED*
 // simulation of variadic template arguments.
 // Generated by sim_cpp11_features.pl on Wed Oct 31 23:49:58 2012
@@ -2345,10 +2386,10 @@ class NonVaridadicClassWithVariadicMember
     template <class... U>
         NonVaridadicClassWithVariadicMember(const U&... u);
 
-#endif // BSLS_M_SIMULATED_CPP11_FEATURES else
+#endif // BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES else
 };
 
-#if !BSLS_M_SIMULATED_CPP11_FEATURES
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 template <class T>
     template <class... U>
 NonVaridadicClassWithVariadicMember<T>::
@@ -2357,7 +2398,7 @@ NonVaridadicClassWithVariadicMember<T>::
 template <class... TYPE>
 void Cls<TYPE...>::functionWithLongExpansion79Columns(TYPE&&... a, double b);
 
-#elif BSLS_M_SIMULATED_VARIADIC_TEMPLATES
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // The following section is an *AUTOMATICALLY-GENERATED*
 // simulation of variadic template arguments.
 // Generated by sim_cpp11_features.pl on Wed Oct 31 23:49:58 2012
@@ -2389,22 +2430,22 @@ NonVaridadicClassWithVariadicMember<T>::
                                         const U_3& u_3);
 
 
-void Cls<BSLS_M_TFILL(3)>::functionWithLongExpansion79Columns(
+void Cls<BSLS_COMPILERFEATURES_TFILL(3)>::functionWithLongExpansion79Columns(
                                                  double b);
 
 template <class TYPE_1>
 void Cls<TYPE_1,
-         BSLS_M_TFILL(2)>::functionWithLongExpansion79Columns(
-                                                BSLS_M_FORWARD_REF(TYPE_1) a_1,
+         BSLS_COMPILERFEATURES_TFILL(2)>::functionWithLongExpansion79Columns(
+                                                BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_1) a_1,
                                                  double b);
 
 template <class TYPE_1,
           class TYPE_2>
 void Cls<TYPE_1,
          TYPE_2,
-         BSLS_M_TFILL(1)>::functionWithLongExpansion79Columns(
-                                                BSLS_M_FORWARD_REF(TYPE_1) a_1,
-                                                BSLS_M_FORWARD_REF(TYPE_2) a_2,
+         BSLS_COMPILERFEATURES_TFILL(1)>::functionWithLongExpansion79Columns(
+                                                BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_1) a_1,
+                                                BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_2) a_2,
                                                  double b);
 
 template <class TYPE_1,
@@ -2413,10 +2454,10 @@ template <class TYPE_1,
 void Cls<TYPE_1,
          TYPE_2,
          TYPE_3,
-         BSLS_M_TFILL(0)>::functionWithLongExpansion79Columns(
-                                                BSLS_M_FORWARD_REF(TYPE_1) a_1,
-                                                BSLS_M_FORWARD_REF(TYPE_2) a_2,
-                                                BSLS_M_FORWARD_REF(TYPE_3) a_3,
+         BSLS_COMPILERFEATURES_TFILL(0)>::functionWithLongExpansion79Columns(
+                                                BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_1) a_1,
+                                                BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_2) a_2,
+                                                BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_3) a_3,
                                                  double b);
 
 
@@ -2433,14 +2474,14 @@ NonVaridadicClassWithVariadicMember<T>::
 
 template <class... TYPE>
 void Cls<TYPE...>::functionWithLongExpansion79Columns(
-                                                 BSLS_M_FORWARD_REF(TYPE)... a,
+                                                 BSLS_COMPILERFEATURES_FORWARD_REF(TYPE)... a,
                                                  double b);
 
-#endif // BSLS_M_SIMULATED_CPP11_FEATURES else
+#endif // BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES else
 
 void h();
 
-#if !BSLS_M_SIMULATED_CPP11_FEATURES
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 template <class ALLOCATOR_TYPE>
 template <class ELEMENT_TYPE, class CTOR_ARG, class... CTOR_ARGS>
 inline void
@@ -2455,7 +2496,7 @@ allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
         std::forward<CTOR_ARGS>(ctorArgs)...,
         mechanism(allocator, IsBslma()));
 }
-#elif BSLS_M_SIMULATED_VARIADIC_TEMPLATES
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // The following section is an *AUTOMATICALLY-GENERATED*
 // simulation of variadic template arguments.
 // Generated by sim_cpp11_features.pl on Wed Oct 31 23:49:58 2012
@@ -2466,11 +2507,11 @@ template <class ELEMENT_TYPE, class CTOR_ARG>
 inline void
 allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
                                             ELEMENT_TYPE    *elementAddr,
-                                    BSLS_M_FORWARD_REF(CTOR_ARG)       ctorArg)
+                                    BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARG)       ctorArg)
 {
     BloombergLP::bslalg_ScalarPrimitives::construct(
         elementAddr,
-        BSLS_M_FORWARD(CTOR_ARG, ctorArg),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARG, ctorArg),
         mechanism(allocator, IsBslma()));
 }
 
@@ -2479,13 +2520,13 @@ template <class ELEMENT_TYPE, class CTOR_ARG, class CTOR_ARGS_1>
 inline void
 allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
                                             ELEMENT_TYPE    *elementAddr,
-                                    BSLS_M_FORWARD_REF(CTOR_ARG)       ctorArg,
-                                   BSLS_M_FORWARD_REF(CTOR_ARGS_1) ctorArgs_1)
+                                    BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARG)       ctorArg,
+                                   BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARGS_1) ctorArgs_1)
 {
     BloombergLP::bslalg_ScalarPrimitives::construct(
         elementAddr,
-        BSLS_M_FORWARD(CTOR_ARG, ctorArg),
-        BSLS_M_FORWARD(CTOR_ARGS_1, ctorArgs_1),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARG, ctorArg),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS_1, ctorArgs_1),
         mechanism(allocator, IsBslma()));
 }
 
@@ -2495,15 +2536,15 @@ template <class ELEMENT_TYPE, class CTOR_ARG, class CTOR_ARGS_1,
 inline void
 allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
                                             ELEMENT_TYPE    *elementAddr,
-                                    BSLS_M_FORWARD_REF(CTOR_ARG)       ctorArg,
-                                   BSLS_M_FORWARD_REF(CTOR_ARGS_1) ctorArgs_1,
-                                   BSLS_M_FORWARD_REF(CTOR_ARGS_2) ctorArgs_2)
+                                    BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARG)       ctorArg,
+                                   BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARGS_1) ctorArgs_1,
+                                   BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARGS_2) ctorArgs_2)
 {
     BloombergLP::bslalg_ScalarPrimitives::construct(
         elementAddr,
-        BSLS_M_FORWARD(CTOR_ARG, ctorArg),
-        BSLS_M_FORWARD(CTOR_ARGS_1, ctorArgs_1),
-        BSLS_M_FORWARD(CTOR_ARGS_2, ctorArgs_2),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARG, ctorArg),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS_1, ctorArgs_1),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS_2, ctorArgs_2),
         mechanism(allocator, IsBslma()));
 }
 
@@ -2514,17 +2555,17 @@ template <class ELEMENT_TYPE, class CTOR_ARG, class CTOR_ARGS_1,
 inline void
 allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
                                             ELEMENT_TYPE    *elementAddr,
-                                    BSLS_M_FORWARD_REF(CTOR_ARG)       ctorArg,
-                                   BSLS_M_FORWARD_REF(CTOR_ARGS_1) ctorArgs_1,
-                                   BSLS_M_FORWARD_REF(CTOR_ARGS_2) ctorArgs_2,
-                                   BSLS_M_FORWARD_REF(CTOR_ARGS_3) ctorArgs_3)
+                                    BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARG)       ctorArg,
+                                   BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARGS_1) ctorArgs_1,
+                                   BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARGS_2) ctorArgs_2,
+                                   BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARGS_3) ctorArgs_3)
 {
     BloombergLP::bslalg_ScalarPrimitives::construct(
         elementAddr,
-        BSLS_M_FORWARD(CTOR_ARG, ctorArg),
-        BSLS_M_FORWARD(CTOR_ARGS_1, ctorArgs_1),
-        BSLS_M_FORWARD(CTOR_ARGS_2, ctorArgs_2),
-        BSLS_M_FORWARD(CTOR_ARGS_3, ctorArgs_3),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARG, ctorArg),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS_1, ctorArgs_1),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS_2, ctorArgs_2),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS_3, ctorArgs_3),
         mechanism(allocator, IsBslma()));
 }
 
@@ -2539,18 +2580,18 @@ template <class ELEMENT_TYPE, class CTOR_ARG, class... CTOR_ARGS>
 inline void
 allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
                                             ELEMENT_TYPE    *elementAddr,
-                                    BSLS_M_FORWARD_REF(CTOR_ARG)       ctorArg,
-                                   BSLS_M_FORWARD_REF(CTOR_ARGS)...   ctorArgs)
+                                    BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARG)       ctorArg,
+                                   BSLS_COMPILERFEATURES_FORWARD_REF(CTOR_ARGS)...   ctorArgs)
 {
     BloombergLP::bslalg_ScalarPrimitives::construct(
         elementAddr,
-        BSLS_M_FORWARD(CTOR_ARG, ctorArg),
-        BSLS_M_FORWARD(CTOR_ARGS, ctorArgs)...,
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARG, ctorArg),
+        BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS, ctorArgs)...,
         mechanism(allocator, IsBslma()));
 }
-#endif // BSLS_M_SIMULATED_CPP11_FEATURES else
+#endif // BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES else
 
-#if !BSLS_M_SIMULATED_CPP11_FEATURES
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 // Function with perfect forwarding but no variadics
 template <typename A>
 void forwardingFunction(A&& x);
@@ -2561,10 +2602,10 @@ void forwardingFunction(A&& x);
 // Please do *not* edit this section by hand.
 
 template <typename A>
-void forwardingFunction(BSLS_M_FORWARD_REF(A) x);
-#endif // BSLS_M_SIMULATED_CPP11_FEATURES else
+void forwardingFunction(BSLS_COMPILERFEATURES_FORWARD_REF(A) x);
+#endif // BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES else
 
-#if !BSLS_M_SIMULATED_CPP11_FEATURES
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 // Non-template function
 void nonTemplateFunction(int x);
 
@@ -2581,4 +2622,4 @@ void nonTemplateFunction(int x);
 
 template <typename X>
 void normalTemplate(const X& v);
-#endif // BSLS_M_SIMULATED_CPP11_FEATURES else
+#endif // BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES else
