@@ -1181,6 +1181,11 @@ void Group::checkAllStartingBraces()
     }
 }
 
+void Group::checkAllUnintentionalAssigns()
+{
+    topLevel().recurseMemTraverse(&Group::checkUnintentionalAssigns);
+}
+
 void Group::checkAllUnnamedGuards()
 {
     topLevel().recurseMemTraverse(&Group::checkUnnamedGuards);
@@ -1311,6 +1316,7 @@ void Group::doEverything()
     checkAllIfWhileFor();
     checkAllStatics();
     checkAllCasesPresentInTestDriver();
+    checkAllUnintentionalAssigns();
     checkAllUnnamedGuards();
 
     //  checkAllRoutineCallArgLists();
@@ -2453,6 +2459,9 @@ void Group::checkCodeComments() const
                                   Lines::BDEFLAG_DOT_H != Lines::fileType())) {
                         strangelyIndentedComments.insert(commentStart);
                     }
+                    else if (0 == startIndent) {
+                        snugOk = true;
+                    }
                 }
                 while (li <= end) {
                     if (Lines::BDEFLAG_S_BLANKLINE ==
@@ -2746,6 +2755,12 @@ void Group::checkFunctionSection() const
     }
     BSLS_ASSERT(!d_prevWord.empty());
 
+    if (isAnnoying(d_prevWord)) {
+        // nested traits or the like, no section needed
+
+        return;                                                       // RETURN
+    }
+
     bool isCtor, isConst, isStatic;
     {
         isCtor = d_parent->d_className == d_prevWord ||
@@ -2853,12 +2868,6 @@ void Group::checkFunctionSection() const
             ; // do nothing
           }
         }
-    }
-
-    if (isAnnoying(d_prevWord)) {
-        // nested traits or the like, no section needed
-
-        return;                                                       // RETURN
     }
 
     {
@@ -3182,6 +3191,13 @@ void Group::checkStartingBraces() const
             return;                                                   // RETURN
         }
 
+        if (d_close.lineNum() == d_open.lineNum() &&
+                                           d_close.col() == d_open.col() + 1) {
+            // It a '{}' function.  Allow it.
+
+            return;                                                   // RETURN
+        }
+
         // It's an inline function in a class in a .cpp or .t.cpp.  It should
         // be indented 4 deep inside the class.
 
@@ -3205,6 +3221,61 @@ void Group::checkStartingBraces() const
                         Lines::lineIndent(d_open.lineNum()) != indent ||
                         Lines::line(d_open.lineNum()).length() != indent + 1) {
         badlyAlignedFuncStartBrace.insert(d_open.lineNum());
+    }
+}
+
+void Group::checkUnintentionalAssigns() const
+{
+    if (BDEFLAG_IF_WHILE_FOR != d_type) {
+        return;                                                       // RETURN
+    }
+
+    bsl::string str = (d_open + 1).twoPointsString(d_close - 1);
+
+    for (;;) {
+        bsl::size_t close = str.find(')');
+        if (Ut::npos() == close) {
+            break;
+        }
+
+        bsl::size_t open = str.rfind('(', close);
+        if (Ut::npos() == open) {
+            d_open.warning() << "Confused -- unpaired ')' in if/while/for" <<
+                                                                          "\n";
+            return;                                                   // RETURN
+        }
+
+        str = str.substr(0, open) + str.substr(close + 1);
+    }
+
+    if (d_prevWord == MATCH_FOR) {
+        bsl::size_t left = str.find(';');
+        if (Ut::npos() == left) {
+            d_open.warning() << "Confused -- 'for' with no ';'s\n";
+            return;                                                   // RETURN
+        }
+
+        bsl::size_t right = str.find(';', left + 1);
+        if (Ut::npos() == left) {
+            d_open.warning() << "Confused -- 'for' with only 1 ';'s\n";
+            return;                                                   // RETURN
+        }
+
+        str = str.substr(left + 1, right - left - 1);
+    }
+
+    for (bsl::size_t equal = str.find('='); Ut::npos() != equal;
+                                            equal = str.find('=', equal + 1)) {
+        const char left = equal > 0 ? str[equal - 1] : '?';
+        if (0 != strchr("<>=!", left)) {
+            continue;
+        }
+
+        const char right = equal < str.length() - 1 ? str[equal + 1] : '?';
+        if (right != '=') {
+            d_open.warning() << "Assignment in if/while/for -- surround with"
+                                                 " '()' to suppress warning\n";
+        }
     }
 }
 

@@ -168,6 +168,7 @@ class Lines {
     static Ut::LineNumSet      s_badlyAlignedImplicits;
     static Ut::LineNumSet      s_badlyAlignedReturns;
     static Ut::LineNumSet      s_tbds;
+    static Ut::LineNumSet      s_contComments;
     static State               s_state;
     static int                 s_purposeFlags;
     static ComponentPrefix     s_componentPrefix;

@@ -299,7 +299,7 @@ bsl::string Place::templateNameAfter(Place *endName, bool known) const
         if (start.lineNum() <= 0) {
             start = rEnd() + 1;
         }
-        else if (c = *start, ' ' == c || 0 == c) {
+        else if ((c = *start), ' ' == c || 0 == c) {
             ++start;
         }
         if (Lines::lineCount() <= start.lineNum()) {

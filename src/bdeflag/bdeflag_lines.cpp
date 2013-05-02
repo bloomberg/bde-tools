@@ -64,6 +64,7 @@ Ut::LineNumSet            Lines::s_inlinesNotAlone;
 Ut::LineNumSet            Lines::s_badlyAlignedImplicits;
 Ut::LineNumSet            Lines::s_badlyAlignedReturns;
 Ut::LineNumSet            Lines::s_tbds;
+Ut::LineNumSet            Lines::s_contComments;
 Lines::State              Lines::s_state = BDEFLAG_EMPTY;
 int                       Lines::s_purposeFlags;
 Lines::ComponentPrefix    Lines::s_componentPrefix;
@@ -653,6 +654,7 @@ void Lines::killQuotesComments()
                         curLine.resize(col-2);
                         if (lastSlash) {
                             curLine += " \\";
+                            s_contComments.insert(li);
                         }
                         break;
                     }
@@ -690,6 +692,7 @@ void Lines::killQuotesComments()
                 }
                 else {
                     asterisk = false;
+                    s_contComments.insert(li);
                 }
             }
         }
@@ -901,6 +904,8 @@ Lines::Lines(const char *fileName)
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
+    s_tbds.clear();
+    s_contComments.clear();
     s_purposeFlags = 0;
     s_hasTabs = false;
     s_hasCrs = false;
@@ -1013,6 +1018,8 @@ Lines::Lines(const bsl::string& string)
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
+    s_tbds.clear();
+    s_contComments.clear();
     s_purposeFlags = 0;
     s_hasTabs = false;
     s_hasCrs = false;
@@ -1075,6 +1082,7 @@ Lines::~Lines()
     s_badlyAlignedImplicits.clear();
     s_badlyAlignedReturns.clear();
     s_tbds.clear();
+    s_contComments.clear();
     s_state = BDEFLAG_EMPTY;
     s_hasTabs = false;
     s_hasCrs = false;
@@ -1156,6 +1164,10 @@ void Lines::printWarnings(bsl::ostream *stream) const
     if (!s_tbds.empty()) {
         *stream << "Warning: in " << s_fileName << " 'TBD' comments found on"
                                                  " line(s) " << s_tbds << endl;
+    }
+    if (!s_contComments.empty()) {
+        *stream << "Warning: in " << s_fileName <<
+          " '\\' at end of comment line on line(s) " << s_contComments << endl;
     }
     if (s_purposeFlags) {
         if (s_purposeFlags & BDEFLAG_NO_PURPOSE) {

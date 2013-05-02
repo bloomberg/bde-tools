@@ -193,6 +193,10 @@ class Group {
         // If this is a routine body, check that the starting '{' is on its own
         // line and properly indented.
 
+    void checkUnintentionalAssigns() const;
+        // Check for assigns not guarded by '()' within if/while or midlle part
+        // of 'for'.
+
     void checkUnnamedGuards() const;
         // If this is a routine or code body, check for any declarations of
         // recognized bde guard types that are unnamed -- that just create
@@ -299,6 +303,10 @@ class Group {
     static
     void checkAllTemplateOnOwnLine();
         // Check all 'template' clauses are on their own lines.
+
+    static
+    void checkAllUnintentionalAssigns();
+        // Check all conditions for assignments not guarded by '()'.
 
     static
     void checkAllUnnamedGuards();

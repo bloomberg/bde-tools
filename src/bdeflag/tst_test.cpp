@@ -285,3 +285,56 @@ class Arf::Woof {
     Woof(const Woof& original, bslma::Allocator *basicAllocator = 0);
         // copy c'tor
 };
+
+int arf()
+{
+    struct Woof {
+        Woof() {}
+
+        // ACCESSORS
+        bark(const char *name)
+        {
+            i += 5;
+        }
+    };
+}
+
+/* continuation in comment: \
+*/
+
+void arfarf()
+{
+    int i;
+//  int j;    // comment begins in col 0 -- allowed to be snug
+    i = 5;
+    // i += 10;   // comment not in col 0, not allowed to be snug
+    i /= 2;
+
+    // comment immediately before '{' line -- allowed to be snug
+    {
+    }
+
+    for (int i = 0;  i += 1;  ++i) {
+        woof();
+    }
+
+    while (a = b, a * a) {
+        woof();
+    }
+
+    if (c = s[5]) {
+        woof();
+    }
+
+    for (int i = 0;  (i += 1);  ++i) {
+        woof();
+    }
+
+    while ((a = b), a * a) {
+        woof();
+    }
+
+    if ((c = s[5])) {
+        woof();
+    }
+}
