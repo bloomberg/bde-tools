@@ -328,9 +328,11 @@ class Group {
         // that place.
 
     static
-    void initGroups();
+    int initGroups();
         // Parse file into a recursive group tree structure, then traverse the
-        // tree, initializing group types.
+        // tree, initializing group types.  Return 0 on success and a non-zero
+        // value if the attempt was so unsuccessful that further analysis of
+        // the source file should not proceed.
 
     static
     void printAll();

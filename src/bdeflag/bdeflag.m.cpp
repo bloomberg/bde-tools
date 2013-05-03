@@ -35,6 +35,31 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    bsl::string argv1;
+    if (argc > 1) {
+        argv1 = argv[1];
+    }
+
+    if (2 == argc && (argv1 == "-h" || argv1 == "--help")) {
+        bsl::cerr <<
+            "-h                         : this message\n"
+            "--brace_report <sourceFile>: dump out report of {}() nesting\n"
+            "<src1> <src2> ...          : generate bdeflag warnings for\n"
+            "                             unlimited # of source files\n";
+        return 0;                                                     // RETURN
+    }
+    else if (3 == argc && argv1 == "--brace_report") {
+        Lines lines(argv[2]);
+        if (Lines::couldntOpenFile()) {
+            bsl::cerr << "Error: couldn't open file '" << argv[2] << "\n";
+            return 1;                                                 // RETURN
+        }
+        else {
+            Lines::braceReport();
+            return 0;                                                 // RETURN
+        }
+    }
+
     ComponentTable table;
 
     for (int f = 1; f < argc; ++f) {

@@ -46,6 +46,7 @@ Lines_StartProgram::Lines_StartProgram()
     s_crsOK = !!bsl::getenv("BDEFLAG_TOLERATE_CARRIAGE_RETURNS");
 }
 
+using bsl::cout;
 using bsl::cerr;
 using bsl::endl;
 
@@ -844,6 +845,39 @@ void Lines::wipeOutMacros()
 }
 
 // CLASS METHODS
+void Lines::braceReport()
+{
+    cout << "<line#> <curly-brace-depth> <paren-depth> <source-line>\n\n";
+
+    int curly = 0, paren = 0;
+
+    for (int li = 1; li <= s_lineCount; ++li) {
+        const char *pc = li < s_lineCount ? s_lines[li].c_str() : "";
+
+        cout.width(3);
+        cout << li;
+        cout.width(0);
+        cout << ' ' << curly << ' ' << paren << ' ' << pc << endl;
+
+        for (; *pc; ++pc) {
+            switch (*pc) {
+              case ('{'): {
+                ++curly;
+              } break;
+              case ('}'): {
+                --curly;
+              } break;
+              case ('('): {
+                ++paren;
+              } break;
+              case (')'): {
+                --paren;
+              } break;
+            }
+        }
+    }
+}
+
 bsl::string Lines::commentAsString(CommentType comment)
 {
     switch (comment) {

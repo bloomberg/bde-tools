@@ -239,6 +239,15 @@ class Lines {
         // testing.
 
     static
+    void braceReport();
+        // Dump out the source of the file, with counts of '{}' and '()'
+        // nesting to aid in tracking down files containing unbalanced
+        // '{}' or '()' pairs.  (The Linux g++ compiler was observed tolerating
+        // / correcting such imbalances, but bdeflag really can't cope with it,
+        // and imbalances are hard for a human to track down in a large source
+        // file without help.
+
+    static
     CommentType comment(int index);
         // Return the enum representing any standard comment found at line
         // line indicated by 'index'

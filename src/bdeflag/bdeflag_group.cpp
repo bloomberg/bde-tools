@@ -467,27 +467,12 @@ int Group::recurseInitGroup(Place       *place,
     Place& cursor = *place;
 
     if (d_parent) {
-        for (;;) {
-            cursor = cursor.findFirstOf("(){}");
-            if (Place::end() == cursor) {
-                d_flags.d_noGroupsFound = true;
-                return  -1;                                           // RETURN
-            }
-            const char c = *cursor;
-            if (strchr("({", c)) {
-                break;
-            }
-            cerr << "Error: " << Lines::fileName() << ": Unexpected '" << c <<
-                                                     "' at " << cursor << endl;
-            ++cursor;
-        }
+        close      = d_flags.d_parenBased ? ')' : '}';
+        closeWrong = d_flags.d_parenBased ? '}' : ')';
 
         d_open = cursor;
 
         BSLS_ASSERT_OPT(('(' == *cursor) == d_flags.d_parenBased);
-
-        close      = d_flags.d_parenBased ? ')' : '}';
-        closeWrong = d_flags.d_parenBased ? '}' : ')';
 
         d_statementStart = cursor.findStatementStart();
         d_prevWord = (cursor - 1).wordBefore(&d_prevWordBegin);
@@ -531,18 +516,20 @@ int Group::recurseInitGroup(Place       *place,
     while (Place::end() != (cursor = (++cursor).findFirstOf("(){}"))) {
         const char c = *cursor;
         if (close == c) {
-            d_close = cursor;
-            return 0;                                                 // RETURN
-        }
-        else if (closeWrong == c) {
-            cursor.error() << "unmatched '" << c << "'\n";
-            if (d_flags.d_parenBased) {
-                // keep bubbling up until we reach a '{' block or the top
-
-                d_flags.d_closedWrong = true;
+            if (d_parent) {
+                d_close = cursor;
+                return 0;                                             // RETURN
+            }
+            else {
+                cursor.error() << "Unmatched '" << c << "' at top level.\n";
                 return -1;                                            // RETURN
             }
-            // We're a '{' group and we hit an excess ')'.  Continue.
+        }
+        else if (closeWrong == c) {
+            cursor.error() << "Unexpected '" << c <<
+                                     (d_parent ? "'.\n" : "' at top level.\n");
+            d_flags.d_closedWrong = true;
+            return -1;                                                // RETURN
         }
         else {
             BSLS_ASSERT_OPT(Ut::charInString(*cursor, "({"));
@@ -562,32 +549,10 @@ int Group::recurseInitGroup(Place       *place,
                 // continue finding more groups to add
             }
             else {
-                if (subGroup->d_flags.d_closedWrong) {
-                    BSLS_ASSERT_OPT(subGroup->d_flags.d_parenBased);
-                    BSLS_ASSERT_OPT('}' == *cursor);
+                // Whateverr the problem is, it's already reported.
 
-                    if (d_flags.d_parenBased) {
-                        // keep bubbling up until we reach a '{' block or the
-                        // top
-
-                        d_flags.d_closedWrong = true;
-                        return -1;                                    // RETURN
-                    }
-                    else {
-                        BSLS_ASSERT_OPT(close == *cursor);
-
-                        // the buck stops here -- continue
-
-                        d_close = cursor;
-                        return 0;                                     // RETURN
-                    }
-                }
-
-                // eof without closing block
-
-                BSLS_ASSERT_OPT(subGroup->d_flags.d_earlyEof);
-                BSLS_ASSERT_OPT(Place::end() == cursor);
-                break;
+                d_flags.d_closedWrong = subGroup->d_flags.d_closedWrong;
+                return -1;                                            // RETURN
             }
         }
 
@@ -596,10 +561,14 @@ int Group::recurseInitGroup(Place       *place,
 
     if (d_parent) {
         d_open.error() << "reached EOF: Unmatched " << *d_open << endl;
+        return -1;                                                    // RETURN
     }
+    else {
+        // We reached the end and we're at the top level, hunky dory.
 
-    d_flags.d_earlyEof = true;
-    return -1;
+        d_flags.d_earlyEof = true;
+        return 0;                                                     // RETURN
+    }
 }
 
 void Group::recurseMemTraverse(const Group::GroupMemFunc func)
@@ -1312,29 +1281,31 @@ void Group::clearGroups()
 
 void Group::doEverything()
 {
-    initGroups();
-    checkAllBooleanRoutineNames();
-    checkAllClassNames();
-    checkAllFunctionDoc();
-    checkAllFunctionSections();
-    checkAllReturns();
-    checkAllNotImplemented();
-    checkAllNamespaces();
-    checkAllStartingAsserts();
-    checkAllStartingBraces();
-    checkAllTemplateOnOwnLine();
-    checkAllCodeComments();
-    checkAllFriends();
-    checkAllArgNames();
-    checkAllIfWhileFor();
-    checkAllStatics();
-    checkAllCasesPresentInTestDriver();
-    checkAllUnintentionalAssigns();
-    checkAllUnnamedGuards();
+    if (0 == initGroups()) {
+        checkAllBooleanRoutineNames();
+        checkAllClassNames();
+        checkAllFunctionDoc();
+        checkAllFunctionSections();
+        checkAllReturns();
+        checkAllNotImplemented();
+        checkAllNamespaces();
+        checkAllStartingAsserts();
+        checkAllStartingBraces();
+        checkAllTemplateOnOwnLine();
+        checkAllCodeComments();
+        checkAllFriends();
+        checkAllArgNames();
+        checkAllIfWhileFor();
+        checkAllStatics();
+        checkAllCasesPresentInTestDriver();
+        checkAllUnintentionalAssigns();
+        checkAllUnnamedGuards();
 
-    //  checkAllRoutineCallArgLists();
+        //  checkAllRoutineCallArgLists();
 
-    checkAllCodeIndents();
+        checkAllCodeIndents();
+    }
+
     clearGroups();
 }
 
@@ -1355,16 +1326,20 @@ Group *Group::findGroupForPlace(const Place& place)
     return topLevel().recurseFindGroupForPlace(findGroupForPlaceGroup_p);
 }
 
-void Group::initGroups()
+int Group::initGroups()
 {
     bslma_Allocator *da = bslma_Default::defaultAllocator();
     s_topLevel = new (*da) Group(BDEFLAG_TOP_LEVEL, false);
 
     findGroupForPlaceGroup_p = new (*da) Group(BDEFLAG_UNKNOWN_PARENS, true);
 
-    s_topLevel->initTopLevelGroup();
+    if (s_topLevel->initTopLevelGroup()) {
+        return -1;                                                    // RETURN
+    }
 
     s_topLevel->recurseMemTraverse(&Group::determineGroupType);
+
+    return 0;
 }
 
 void Group::printAll()
@@ -1883,22 +1858,15 @@ int Group::initTopLevelGroup()
     d_type = BDEFLAG_TOP_LEVEL;
 
     int status = recurseInitGroup(&cursor, 0);
-    if (0 != status && d_flags.d_earlyEof) {
+    if (0 == status && d_flags.d_earlyEof) {
         BSLS_ASSERT_OPT(Place::end() == cursor);
 
         d_close = Place::end();
         return 0;                                                     // RETURN
     }
 
-    if (0 == status) {
-        cursor.error() << "unmatched '}' at top level.\n";
-    }
-    else if (d_flags.d_closedWrong) {
-        cursor.error() << "unmatched ')' at top level.\n";
-    }
-    else {
-        cursor.error() << "unknown error at top level\n";
-    }
+    bsl::cerr << "Run 'bdeflag --brace_report " << Lines::fileName() <<
+              "' to see a report in cout on nesting of '{}' and '()' braces\n";
 
     return -1;
 }
