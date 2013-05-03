@@ -116,6 +116,7 @@ static bsl::set<bsl::string> annoyingMacros;
 static bsl::set<bsl::string> stlClasses;
 static bsl::set<bsl::string> bslmfNonTraits;
 static bsl::set<bsl::string> otherExemptClasses;
+static bsl::set<bsl::string> popularTypeNames;
 
 static bsl::set<bsl::string> guardNames;
 
@@ -226,6 +227,18 @@ StartProgram::StartProgram()
                                            / sizeof *arrayOtherExemptClasses };
     for (int i = 0; i < NUM_ARRAY_OTHER_EXEMPT_CLASSES; ++i) {
         otherExemptClasses.insert(arrayOtherExemptClasses[i]);
+    }
+
+    static const char *arrayPopularTypeNames[] = {
+        "bool", "char", "short", "int", "long", "unsigned", "signed", "float",
+        "double",  "wchar_t", "char16_t", "char32_t", "void", "nullptr_t",
+        "string", "bsl::string", "std::string",
+        "true_type", "bsl::true_type", "std::true_type",
+        "false_type", "bsl::false_type", "std::false_type" };
+    enum { NUM_ARRAY_POPULAR_TYPE_NAMES = sizeof arrayPopularTypeNames /
+                                               sizeof *arrayPopularTypeNames };
+    for (int i = 0; i < NUM_ARRAY_POPULAR_TYPE_NAMES; ++i) {
+        popularTypeNames.insert(arrayPopularTypeNames[i]);
     }
 
     static const char *arrayGuardNames[] = {
@@ -3409,62 +3422,31 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
     Place end = begin.findFirstOf(",()");
     int numArgs = 0;
     for (; true; ++numArgs) {
-        char c = *end;
-        if ('(' == c || (')' == c && end != d_close)) {
-            // Function pointer type in arglist.  Give up.
+        Place startName;
+        bsl::string argName;
+        bsl::string typeName;
 
-            typeNames->clear();
-            names->clear();
-            lineNums->clear();
-            return;                                                   // RETURN
-        }
-        Place typeNameEnd;
-        bsl::string typeName = begin.nameAfter(&typeNameEnd);
-        if (typeName.empty()) {
-            if ('.' == *typeNameEnd) {
-                const bsl::string& curLine =
-                                            Lines::line(typeNameEnd.lineNum());
-                if ("..." == curLine.substr(typeNameEnd.col(), 3) &&
-                                                  d_close == typeNameEnd + 3) {
-                    // don't analyze this arg -- we're done with the others
+        bool growArg;
 
-                    break;
-                }
-            }
+        // Be ready to extend the next arg to include any template types (which
+        // may contain commas).
 
-            begin.error() << "confusing arg list\n";
-            typeNames->clear();
-            names->clear();
-            lineNums->clear();
-            return;                                                   // RETURN
-        }
-        while (MATCH_CONST == typeName ||
-                           MATCH_TYPENAME == typeName ||
-                           MATCH_VOLATILE == typeName || '*' == *typeNameEnd) {
-            typeName = (typeNameEnd + 1).nameAfter(&typeNameEnd);
-        }
-        if ('&' == *typeNameEnd) {
-            begin.error() << "confusing arg declaration '" <<
-                                       begin.twoPointsString(end - 1) << "'\n";
-            typeNames->clear();
-            names->clear();
-            lineNums->clear();
-            return;                                                   // RETURN
-        }
-        if (typeNameEnd > end) {
-            // there was probably a ',' within a templated type
-
-            if (typeNameEnd > d_close) {
-                begin.error() << "strange argument definition '" <<
-                                       begin.twoPointsString(end - 1) << "'\n";
+        do {
+            if (end > d_close) {
+                begin.error() << "Totally confused routine definition arg"
+                                     " list, probably strange template decl\n";
                 typeNames->clear();
                 names->clear();
                 lineNums->clear();
                 return;                                               // RETURN
             }
 
-            end = (typeNameEnd + 1).findFirstOf(",)(");
-            if ('(' == *end || (')' == *end && end != d_close)) {
+            char c = *end;
+            if ('(' == c || (')' == c && end != d_close)) {
+                if (')' == c) {
+                    end.error() << "Unexpected ')' in arg list\n";
+                }
+
                 // Function pointer type in arglist.  Give up.
 
                 typeNames->clear();
@@ -3472,55 +3454,82 @@ void Group::getArgList(bsl::vector<bsl::string> *typeNames,
                 lineNums->clear();
                 return;                                               // RETURN
             }
-        }
+            BSLS_ASSERT(',' == c || ')' == c);
 
-        // We got something other than "const", "volatile", or '*'.
+            Place afterArgName = end;
+            Place equals = begin.findFirstOf("=", true, end);
+            if (end != equals) {
+                if (end != (equals + 1).findFirstOf("=", true, end)) {
+                    begin.error() << "Multiple '='s fouund in routine arg"
+                                                     " definition, confused\n";
+                    typeNames->clear();
+                    names->clear();
+                    lineNums->clear();
+                    return;                                           // RETURN
+                }
 
-        Place postTypeEnd;
-        bsl::string postType = (typeNameEnd + 1).nameAfter(&postTypeEnd);
-        while (MATCH_CONST == postType ||
-                           MATCH_TYPENAME == typeName ||
-                           MATCH_VOLATILE == postType || '*' == *postTypeEnd) {
-            postType = (postTypeEnd + 1).nameAfter(&postTypeEnd);
-        }
-        char pte;
-        while ('&' == (pte = *postTypeEnd)) {
-            ++postTypeEnd;
-        }
-        Place startName;
-#if 0
-        if ('&' == pte) {
-            startName = postTypeEnd + 1;    // simple ref or rvalue
-            if ('&' == *startName) {
-                ++startName;                // rvalue
-            }
-        }
-#endif
-        if (',' == pte || ')' == pte || '=' == pte) {
-            startName = postTypeEnd;
-        }
-        else {
-            if (!Ut::alphaNumOrColon(pte)) {
-                begin.error() << "strange argument def '" <<
-                                       begin.twoPointsString(end - 1) << "'\n";
-                typeNames->clear();
-                names->clear();
-                lineNums->clear();
-                return;                                               // RETURN
+                if (1 == numArgs) {
+                    // (This is 2nd arg), might be c'tor needing 'explicit'.
+
+                    *potentialSingleArg |= true;
+                }
+
+                afterArgName = equals;
             }
 
-            postTypeEnd.wordBefore(&startName);
-        }
+            argName = (afterArgName - 1).wordBefore(&startName);
+            if (!Ut::alphaNumOrColon(*startName) || begin >= startName ||
+                                             popularTypeNames.count(argName)) {
+                // No arg name, just type.
 
-        bsl::string argName = startName.twoPointsString(end - 1);
-        bsl::size_t equalsIdx = argName.find('=');
-        if (Ut::npos() != equalsIdx) {
-            *potentialSingleArg |= (1 == numArgs);
-            argName.resize(equalsIdx);
-            Ut::trim(&argName);
-        }
+                argName.clear();
+                typeName = begin.twoPointsString(afterArgName - 1);
+            }
+            else {
+                typeName = begin.twoPointsString(startName - 1);
+            }
 
-        typeNames->push_back(begin.twoPointsString(startName - 1));
+            bsl::string noAngleTypeName = typeName;
+
+            // Remove any complete '<>' pairs from 'noAngleTypeName' to
+            // verify we have a complete type name.
+
+            growArg = false;
+            while (Ut::npos() != noAngleTypeName.find('<')) {
+                bsl::size_t closeAngle = noAngleTypeName.find('>');
+                if (Ut::npos() == closeAngle) {
+                    // Arg string contains '<' but no '>', we must have run
+                    // into a ',' within a template type that is not
+                    // delimiting a separation between two args.  Extend our
+                    // coverage to the next boundary, and go back and redefine
+                    // 'argName' and 'typeName'.
+
+                    if (',' != c || end != equals || end >= d_close) {
+                        begin.error() <<
+                                       "Confusing template type in arg list\n";
+                        typeNames->clear();
+                        names->clear();
+                        lineNums->clear();
+                        return;                                       // RETURN
+                    }
+
+                    end = (end + 1).findFirstOf(",()");
+                    growArg = true;
+                    break;
+                }
+
+                // We found the '>', remove a narrowest '<>' pair from
+                // 'noAngleTypeName' and go back and see if we now have a
+                // typename with no '<>'s in it.
+
+                bsl::size_t openAngle = noAngleTypeName.rfind('<', closeAngle);
+                BSLS_ASSERT(Ut::npos() != openAngle);
+                noAngleTypeName = noAngleTypeName.substr(0, openAngle) +
+                                        noAngleTypeName.substr(closeAngle + 1);
+            } // while contains '<>'s
+        } while (growArg);
+
+        typeNames->push_back(typeName);
         names->push_back(argName);
         lineNums->push_back(begin.lineNum());
 

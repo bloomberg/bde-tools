@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 SRCS="bdeflag.m.cpp bdeflag_group.cpp bdeflag_place.cpp bdeflag_lines.cpp bdeflag_componenttable.cpp bdeflag_ut.cpp"
 
 tabs="$(greptab $SRCS)"
@@ -9,4 +11,4 @@ if [ ! -z "$tabs" ] ; then
 fi
 
 pcomp -I. $SRCS
-rm -f *plink_timestamp*
+rm -f *plink_timestamp* 00plink_*
