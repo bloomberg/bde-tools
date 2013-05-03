@@ -17,7 +17,8 @@ SRCS="tst_test.h tst_test.cpp tst_test2.cpp tst_pcre.h tst_pcre.cpp
       tst_unbalanced3.cpp
       tst_unbalanced4.cpp
       tst_unbalanced5.cpp
-      tst_unbalanced6.cpp"
+      tst_unbalanced6.cpp
+      tst_decimal.h"
 
 runit() {
     ~bchapman/bin/myBdeflag "$@"
