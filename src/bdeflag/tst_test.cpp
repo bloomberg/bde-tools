@@ -338,3 +338,6 @@ void arfarf()
         woof();
     }
 }
+
+// continuation in comment \
+// this comment is OK

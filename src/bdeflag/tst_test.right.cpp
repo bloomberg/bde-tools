@@ -1,7 +1,7 @@
 Warning: tst_test.cpp: should include, as the first include, '#include <tst_test.h>'.
 Warning: C-style comment(s) in tst_test.cpp at line(s): 302
 Warning: in tst_test.cpp 'TBD' comments found on line(s) 238
-Warning: in tst_test.cpp '\' at end of comment line on line(s) 302
+Warning: in tst_test.cpp '\' at end of comment line on line(s) 302, 342
 Warning: tst_test.cpp: the following routine(s) need(s) documentation: 'bark', 'bdesu_stacktrace_walkbackCb'
 Warning: tst_test.cpp: (116, 17): non-const method testBreak declared in '// ACCESSORS' section
 Warning: tst_test.cpp: (131, 13): non-const method swap declared in '// ACCESSORS' section
@@ -43,4 +43,4 @@ Warning: tst_test.cpp: (101, 19): if/while/for doesn't control a {} block
 Warning: tst_test.cpp: (317, 8): Assignment in if/while/for -- surround with '()' to suppress warning
 Warning: tst_test.cpp: (321, 10): Assignment in if/while/for -- surround with '()' to suppress warning
 Warning: tst_test.cpp: (325, 7): Assignment in if/while/for -- surround with '()' to suppress warning
-Warning: tst_test.cpp: strangely indented Statements at line(s) 103, 104, 302
+Warning: tst_test.cpp: strangely indented Statements at line(s) 103, 104, 302, 342
