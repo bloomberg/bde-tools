@@ -6,6 +6,7 @@
 #include <bdeflag_place.h>
 #include <bdeflag_ut.h>
 
+#include <bsl_cstring.h>
 #include <bsl_iostream.h>
 #include <bsl_string.h>
 
@@ -13,6 +14,15 @@
 
 using namespace BloombergLP;
 using namespace bdeflag;
+
+static void usage()
+{
+    bsl::cerr <<
+            "-h                         : this message\n"
+            "--brace-report <sourceFile>: dump out report of {}() nesting\n"
+            "<src1> <src2> ...          : generate bdeflag warnings for\n"
+            "                             unlimited # of source files\n";
+}
 
 // ============================================================================
 //                                 MAIN PROGRAM
@@ -41,22 +51,30 @@ int main(int argc, char *argv[])
     }
 
     if (2 == argc && (argv1 == "-h" || argv1 == "--help")) {
-        bsl::cerr <<
-            "-h                         : this message\n"
-            "--brace_report <sourceFile>: dump out report of {}() nesting\n"
-            "<src1> <src2> ...          : generate bdeflag warnings for\n"
-            "                             unlimited # of source files\n";
+        usage();
         return 0;                                                     // RETURN
     }
-    else if (3 == argc && argv1 == "--brace_report") {
+    else if (3 == argc &&
+                    (argv1 == "--brace_report" || argv1 == "--brace-report")) {
         Lines lines(argv[2]);
         if (Lines::couldntOpenFile()) {
-            bsl::cerr << "Error: couldn't open file '" << argv[2] << "\n";
+            bsl::cerr << "Error: couldn't open file '" << argv[2] << "'.\n";
             return 1;                                                 // RETURN
         }
         else {
             Lines::braceReport();
             return 0;                                                 // RETURN
+        }
+    }
+    else {
+        for (int i = 1; i < argc; ++i) {
+            if (!bsl::strcmp(argv[i], "--brace-report") ||
+                !bsl::strcmp(argv[i], "--brace_report")) {
+                bsl::cerr << "Usage: bdeflag --brace-report <fileName>\n"
+                             "    where only one file is allowed.\n";
+                usage();
+                return 1;                                             // RETURN
+            }
         }
     }
 
