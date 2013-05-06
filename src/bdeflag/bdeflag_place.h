@@ -46,7 +46,7 @@ BSLS_IDENT("$Id: $")
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 class Place {
     // CLASS DATA
@@ -58,17 +58,6 @@ class Place {
     int                 d_col;
 
   public:
-    // CREATORS
-    Place();
-        // Construct a place at 'rEnd()'.
-
-    Place(int line, int col);
-        // Construct a place at the specified '(line number, column)' position.
-
-    Place& operator=(const Place& other);
-        // Assign the value of 'other' to this place and return a copy of that
-        // value.
-
     // CLASS METHODS
     static
     const Place& rEnd();
@@ -87,7 +76,18 @@ class Place {
         // Set the static data 's_end' and 's_rEnd' according to the
         // information in Lines.
 
+    // CREATORS
+    Place();
+        // Construct a place at 'rEnd()'.
+
+    Place(int line, int col);
+        // Construct a place at the specified '(line number, column)' position.
+
     // MANIPULATORS
+    Place& operator=(const Place& rhs);
+        // Assign the value of 'other' to this place and return a copy of that
+        // value.
+
     Place& operator++();
         // Skip to the next position of a valid char in the file.  The behavior
         // is undefined unless the starting position is a (0, 0), end(), or a
@@ -306,15 +306,6 @@ Place::Place(int line, int col) : d_lineNum(line), d_col(col)
 {
 }
 
-inline
-Place& Place::operator=(const Place& other)
-{
-    d_lineNum = other.d_lineNum;
-    d_col     = other.d_col;
-
-    return *this;
-}
-
 // CLASS METHODS
 inline
 const Place& Place::rEnd()
@@ -328,12 +319,22 @@ const Place& Place::end()
     return s_end;
 }
 
+// MANIPULATORS
+inline
+Place& Place::operator=(const Place& rhs)
+{
+    d_lineNum = rhs.d_lineNum;
+    d_col     = rhs.d_col;
+
+    return *this;
+}
+
 // ACCESSORS
 inline
 char Place::operator*() const
 {
-    if (d_lineNum >= Lines::lineCount() || d_lineNum < 0 ||
-                                       d_col >= Lines::lineLength(d_lineNum)) {
+    if ((unsigned) d_lineNum >= Lines::lineCount() ||
+                            (unsigned) d_col >= Lines::lineLength(d_lineNum)) {
         return 0;                                                     // RETURN
     }
 
@@ -359,7 +360,7 @@ int Place::lineNum() const
     return d_lineNum;
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 #endif

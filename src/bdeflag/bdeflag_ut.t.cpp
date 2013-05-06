@@ -10,7 +10,7 @@
 #include <bsl_string.h>
 
 using namespace BloombergLP;
-using namespace bdeFlag;
+using namespace bdeflag;
 
 using bsl::cerr;
 using bsl::cout;
@@ -97,6 +97,35 @@ int main(int argc, char *argv[])
     cout << "TEST " << __FILE__ << " CASE " << test << endl;;
 
     switch (test) { case 0:  // Zero is always the leading case.
+      case 7: {
+        // --------------------------------------------------------------------
+        // TESTING STRIPANGLEBRACKETS
+        // --------------------------------------------------------------------
+
+        static const struct {
+            const int   d_line;
+            const char *d_in;
+            const char *d_exp;
+        } DATA[] = {
+          { L_, "woof",                  "woof" },
+          { L_, "woof<",                 "woof" },
+          { L_, "woof<Arf",              "woofArf" },
+          { L_, "><",                    "" },
+          { L_, ">woof",                 "woof" },
+          { L_, "woof<Arf<bsl::Meow> >", "woof" } };
+
+        enum { DATA_LEN = sizeof DATA / sizeof *DATA };
+
+        for (int i = 0; i < DATA_LEN; ++i) {
+            const int LINE            = DATA[i].d_line;
+            const bsl::string IN      = DATA[i].d_in;
+            const bsl::string EXP     = DATA[i].d_exp;
+
+            bsl::string s = IN;
+            Ut::stripAngleBrackets(&s);
+            ASSERT(EXP == s);
+        }
+      } break;
       case 6: {
         // --------------------------------------------------------------------
         // TESTING WORDBEFORE

@@ -40,7 +40,7 @@ BSLS_IDENT("$Id: $")
 #endif
 
 namespace BloombergLP {
-namespace bdeFlag {
+namespace bdeflag {
 
 struct Ut {
     // Objects of this class are never created, this class is just a namespace
@@ -61,6 +61,7 @@ struct Ut {
         bool  d_state[256];
         bool *d_stateRef;
 
+        // CREATORS
         AlphaNumOrColon();
             // Initialize the 'd_state' array, and point 'd_stateRef' to the
             // beginning or middle of the array, depending on whether the type
@@ -161,6 +162,13 @@ struct Ut {
         // Return the specified 's' with all spaces removed.
 
     static
+    void stripAngleBrackets(bsl::string *s);
+        // Remove all template '<...>' sequences (possibly nested) from
+        // 's'.  Note this makes no assumptions about balance, it just removes
+        // everything at or after the first '[<>]', until at or before the last
+        // '[<>]'.
+
+    static
     void trim(bsl::string *string);
         // Trim trailing whitespace from string.
 
@@ -186,14 +194,14 @@ struct Ut {
         // is undefined if 'end' is not in the range '0 <= end < s.length()'.
 };
 
-//=============================================================================
-//                       INLINE FUNCTION DEFINITIONS
-//=============================================================================
-
 // FREE OPERATORS
 bsl::ostream& operator<<(bsl::ostream& stream, const Ut::LineNumSet& set);
     // Output, in sequence, the line numbers in the given set, with ','s in
     // between them, and return the stream passed.
+
+//=============================================================================
+//                       INLINE FUNCTION DEFINITIONS
+//=============================================================================
 
 // CLASS METHODS
 inline
@@ -255,7 +263,7 @@ size_t Ut::npos()
     return bsl::string::npos;
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 #endif

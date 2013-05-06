@@ -16,7 +16,7 @@
 #include <bsl_cstdio.h>
 
 using namespace BloombergLP;
-using namespace bdeFlag;
+using namespace bdeflag;
 
 using bsl::cout;
 using bsl::cerr;
@@ -261,6 +261,9 @@ int main(int argc, char *argv[])
         else if ("bool" == cmd) {
             cout << "Check boolean names\n";
         }
+        else if ("classNames" == cmd) {
+            cout << "Check class names\n";
+        }
         else if ("doc" == cmd) {
             cout << "Check function doc\n";
         }
@@ -327,6 +330,9 @@ int main(int argc, char *argv[])
 
             if ("bool" == cmd) {
                 Group::checkAllBooleanRoutineNames();
+            }
+            else if ("classNames" == cmd) {
+                Group::checkAllClassNames();
             }
             else if ("doc" == cmd) {
                 Group::checkAllFunctionDoc();

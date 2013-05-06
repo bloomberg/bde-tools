@@ -13,7 +13,7 @@
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 // FREE OPERATORS
 Place operator+(Place lhs, int rhs)
@@ -299,7 +299,7 @@ bsl::string Place::templateNameAfter(Place *endName, bool known) const
         if (start.lineNum() <= 0) {
             start = rEnd() + 1;
         }
-        else if (c = *start, ' ' == c || 0 == c) {
+        else if ((c = *start), ' ' == c || 0 == c) {
             ++start;
         }
         if (Lines::lineCount() <= start.lineNum()) {
@@ -680,7 +680,7 @@ bsl::string Place::wordBefore(Place *start) const
     return "";
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 // ---------------------------------------------------------------------------

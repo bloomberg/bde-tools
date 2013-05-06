@@ -14,7 +14,7 @@
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 Ut::AlphaNumOrColon  Ut::s_alphaNumOrColon;
 
@@ -205,6 +205,19 @@ bsl::string Ut::spacesOut(bsl::string s)
     return ret;
 }
 
+void Ut::stripAngleBrackets(bsl::string *s)
+{
+    bsl::size_t firstAngle = s->find_first_of("<>");
+    if (Ut::npos() == firstAngle) {
+        return;                                                       // RETURN
+    }
+    bsl::size_t lastAngle  = s->find_last_of( "<>");
+    BSLS_ASSERT(Ut::npos() != lastAngle);
+    BSLS_ASSERT(lastAngle < s->length());
+    BSLS_ASSERT(lastAngle >= firstAngle);
+    s->erase(s->data() + firstAngle, s->data() + lastAngle + 1);
+}
+
 void Ut::trim(bsl::string *string)
 {
     size_t col = string->find_last_not_of(" \r");
@@ -312,7 +325,7 @@ bsl::ostream& operator<<(bsl::ostream& stream, const Ut::LineNumSet& set)
     return stream;
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 
 }  // close namespace BloombergLP
 

@@ -13,6 +13,8 @@
 #include <bsl_map.h>
 #include <bsl_string.h>
 
+#include <bsl_cstdlib.h>
+#include <bsl_cstring.h>
 #include <bsl_fstream.h>
 #include <bsl_iostream.h>
 
@@ -23,35 +25,59 @@
 #define P(x)            Ut::p(#x, (x))
 
 namespace BloombergLP {
-namespace bdeFlag {
+namespace bdeflag {
 
+struct Lines_StartProgram {
+    // Object to be created at program start to initialize 's_crsOK' variable
+    // with 'getenv'.
+
+    // PUBLIC CLASS DATA
+    static bool s_crsOK;
+
+    // CREATOR
+    Lines_StartProgram();
+        // Initialize things at program start that don't have to be
+        // reinitialized for each file.
+} lines_startProgram;
+bool Lines_StartProgram::s_crsOK;
+
+Lines_StartProgram::Lines_StartProgram()
+{
+    s_crsOK = !!bsl::getenv("BDEFLAG_TOLERATE_CARRIAGE_RETURNS");
+}
+
+using bsl::cout;
 using bsl::cerr;
 using bsl::endl;
 
-bsl::string         Lines::s_fileName;
-Lines::FileType     Lines::s_fileType;
-Lines::LineVec      Lines::s_lines;
-Lines::CommentVec   Lines::s_comments;
-Lines::IndentVec    Lines::s_commentIndents;
-Lines::IndentVec    Lines::s_lineIndents;
-Lines::StatementVec Lines::s_statements;
-bsl::vector<bool>   Lines::s_statementEnds;
-int                 Lines::s_lineCount;
-Ut::LineNumSet      Lines::s_longLines;
-Ut::LineNumSet      Lines::s_cStyleComments;
-Ut::LineNumSet      Lines::s_inlinesNotAlone;
-Ut::LineNumSet      Lines::s_badlyAlignedReturns;
-Ut::LineNumSet      Lines::s_tbds;
-Lines::State        Lines::s_state = BDEFLAG_EMPTY;
-int                 Lines::s_purposeFlags;
-bool                Lines::s_hasTabs;
-bool                Lines::s_hasTrailingBlanks;
-bool                Lines::s_includesAssertH;
-bool                Lines::s_includesCassert;
-bool                Lines::s_includesDoubleQuotes;
-bool                Lines::s_assertFound;
-bool                Lines::s_includesComponentDotH;
-bool                Lines::s_couldntOpenFile;
+bsl::string               Lines::s_fileName;
+Lines::FileType           Lines::s_fileType;
+Lines::LineVec            Lines::s_lines;
+Lines::CommentVec         Lines::s_comments;
+Lines::IndentVec          Lines::s_commentIndents;
+Lines::IndentVec          Lines::s_lineIndents;
+Lines::StatementVec       Lines::s_statements;
+bsl::vector<bool>         Lines::s_statementEnds;
+int                       Lines::s_lineCount;
+Ut::LineNumSet            Lines::s_longLines;
+Ut::LineNumSet            Lines::s_cStyleComments;
+Ut::LineNumSet            Lines::s_inlinesNotAlone;
+Ut::LineNumSet            Lines::s_badlyAlignedImplicits;
+Ut::LineNumSet            Lines::s_badlyAlignedReturns;
+Ut::LineNumSet            Lines::s_tbds;
+Ut::LineNumSet            Lines::s_contComments;
+Lines::State              Lines::s_state = BDEFLAG_EMPTY;
+int                       Lines::s_purposeFlags;
+Lines::ComponentPrefix    Lines::s_componentPrefix;
+bool                      Lines::s_hasTabs;
+bool                      Lines::s_hasCrs;
+bool                      Lines::s_hasTrailingBlanks;
+bool                      Lines::s_includesAssertH;
+bool                      Lines::s_includesCassert;
+bool                      Lines::s_includesDoubleQuotes;
+bool                      Lines::s_assertFound;
+bool                      Lines::s_includesComponentDotH;
+bool                      Lines::s_couldntOpenFile;
 
 // LOCAL FUNCTIONS
 
@@ -67,7 +93,8 @@ bsl::string componentInclude()
     size_t clip;
     switch (Lines::fileType()) {
       case Lines::BDEFLAG_DOT_CPP: {
-        clip = 4;
+        bsl::size_t idx = s.rfind('.');
+        clip = Ut::npos() == idx ? 0  : s.length() - idx;
       }  break;
       case Lines::BDEFLAG_DOT_T_DOT_CPP: {
         clip = 6;
@@ -204,6 +231,7 @@ void Lines::checkPurpose()
             continue;
         }
 
+#if 0
         if (curLine.length() < 12) {
             s_purposeFlags |= (BDEFLAG_PURPOSE_LACKS_PROVIDE |
                                BDEFLAG_PURPOSE_LACKS_PERIOD);
@@ -218,6 +246,7 @@ void Lines::checkPurpose()
         if ('.' != curLine[curLine.length() - 1]) {
             s_purposeFlags |= BDEFLAG_PURPOSE_LACKS_PERIOD;
         }
+#endif
 
         return;                                                       // RETURN
     }
@@ -232,6 +261,7 @@ void Lines::firstDetect()
     s_longLines.clear();
 
     s_hasTabs = false;
+    s_hasCrs  = false;
     for (int li = 0; li < s_lineCount; ++li) {
         bsl::string& curLine = s_lines[li];
 
@@ -239,8 +269,23 @@ void Lines::firstDetect()
             s_longLines.insert(li);
         }
 
-        if (Ut::npos() != curLine.find('\t')) {
-            s_hasTabs = true;
+        if (Ut::npos() != curLine.find_first_of("\r\t")) {
+            s_hasTabs |= Ut::npos() != curLine.find('\t');
+
+            bool hasCr = Ut::npos() != curLine.find('\r');
+            s_hasCrs |= hasCr;
+            if (hasCr) {
+                bsl::size_t crPos;
+                while (Ut::npos() != (crPos = curLine.find('\r'))) {
+                    if (curLine.length() - 1 == crPos) {
+                        curLine.resize(crPos);
+                        break;
+                    }
+                    else {
+                        curLine[crPos] = ' ';
+                    }
+                }
+            }
         }
 
         if (curLine.length() > 0 && ' ' == curLine[curLine.length() - 1]) {
@@ -361,13 +406,13 @@ void Lines::identifyStatementEnds()
         }
 
         const char lastChar = curLine[cLength - 1];
-        if ('}' == lastChar || '{' == lastChar || ';' == lastChar) {
+        switch (lastChar) {
+          case ';':
+          case '{':
+          case '}': {
             s_statementEnds[li] = true;
-            continue;
-        }
-
-        if (':' == lastChar) {
-            bool found = false;
+          }  break;
+          case ':': {
             switch (Lines::statement(li)) {
               case Lines::BDEFLAG_S_SWITCH:
               case Lines::BDEFLAG_S_CASE:
@@ -375,25 +420,28 @@ void Lines::identifyStatementEnds()
               case Lines::BDEFLAG_S_PRIVATE:
               case Lines::BDEFLAG_S_PUBLIC:
               case Lines::BDEFLAG_S_PROTECTED: {
-                found = true;
-              } break;
-            }
-            if (found) {
                 s_statementEnds[li] = true;
-                continue;
+              }  break;
+              default: {
+                ; // do nothing
+              }
             }
-        }
+          }  break;
+          case ')': {
+            // see if it's in a c'tor init list
 
-        if (')' == lastChar) {
             const int indentLevel = Lines::lineIndent(li);
             const char startChar = curLine[indentLevel];
-            if ((':' == startChar || ',' == startChar) &&
+            if (((':' == startChar) | (',' == startChar)) &&
                                                    cLength > indentLevel + 4 &&
-                                             '_' == curLine[indentLevel + 3] &&
-                                             'd' == curLine[indentLevel + 2]) {
+                                         (('_' == curLine[indentLevel + 3]) &
+                                          ('d' == curLine[indentLevel + 2]))) {
                 s_statementEnds[li] = true;
-                continue;
             }
+          }  break;
+          default: {
+            ; // do nothing
+          }
         }
     }
 
@@ -410,6 +458,9 @@ void Lines::killQuotesComments()
     } legalComments[] = {
         { " RETURN",                  BDEFLAG_RETURN },
         { "RETURN",                   BDEFLAG_RETURN },
+
+        { " IMPLICIT",                BDEFLAG_IMPLICIT },
+        { "IMPLICIT",                 BDEFLAG_IMPLICIT },
 
         { " PUBLIC TYPE",             BDEFLAG_TYPE },
         { " PRIVATE TYPE",            BDEFLAG_TYPE },
@@ -461,7 +512,11 @@ void Lines::killQuotesComments()
         { " close namespace",         BDEFLAG_CLOSE_NAMESPACE },
         { " close unnamed namespace", BDEFLAG_CLOSE_UNNAMED_NAMESPACE },
         { " close enterprise namespace",
-                                      BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE } };
+                                      BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE },
+        { " close package namespace", BDEFLAG_CLOSE_PACKAGE_NAMESPACE },
+        { "! ",                       BDEFLAG_BANG },
+        { " CLASS INVARIANT",         BDEFLAG_IGNORED },
+        { " STANDARD TYPEDEF",        BDEFLAG_IGNORED } };
 
     enum { NUM_LEGAL_COMMENTS = sizeof legalComments / sizeof *legalComments };
 
@@ -549,7 +604,8 @@ void Lines::killQuotesComments()
                         // C++ comment
 
                         ++col;
-                        s_comments[li] = BDEFLAG_UNRECOGNIZED;
+                        CommentType& cmtRef = s_comments[li];
+                        cmtRef = BDEFLAG_UNRECOGNIZED;
                         s_commentIndents[li] = col - 2;
                         bsl::string comment = curLine.substr(col);
 
@@ -566,16 +622,28 @@ void Lines::killQuotesComments()
 
                         if (commentMapBegin != it &&
                              (--it, Ut::frontMatches(comment, it->first, 0))) {
-                            s_comments[li] = it->second;
+                            cmtRef = it->second;
                         }
-                        else if (comment.length() >= 6 &&
-                            !bsl::strcmp(comment.data() + comment.length() - 6,
+                        else if     (comment.length() >= 6) {
+                            if (!bsl::strcmp(
+                                         comment.data() + comment.length() - 6,
                                          "RETURN")) {
-                            s_comments[li] = BDEFLAG_RETURN;
+                                cmtRef = BDEFLAG_RETURN;
+                            }
+                            else if (comment.length() >= 8 &&
+                                    !bsl::strcmp(
+                                         comment.data() + comment.length() - 8,
+                                         "IMPLICIT")) {
+                                cmtRef = BDEFLAG_IMPLICIT;
+                            }
                         }
-                        if (BDEFLAG_RETURN == s_comments[li] &&
-                                                      79 != curLine.length()) {
-                            s_badlyAlignedReturns.insert(li);
+                        if (79 != curLine.length()) {
+                            if      (BDEFLAG_IMPLICIT == cmtRef) {
+                                s_badlyAlignedImplicits.insert(li);
+                            }
+                            else if (BDEFLAG_RETURN   == cmtRef) {
+                                s_badlyAlignedReturns.  insert(li);
+                            }
                         }
 
                         // Wipe out the comment.  Preserve '\' in case we're
@@ -587,6 +655,7 @@ void Lines::killQuotesComments()
                         curLine.resize(col-2);
                         if (lastSlash) {
                             curLine += " \\";
+                            s_contComments.insert(li);
                         }
                         break;
                     }
@@ -624,6 +693,7 @@ void Lines::killQuotesComments()
                 }
                 else {
                     asterisk = false;
+                    s_contComments.insert(li);
                 }
             }
         }
@@ -697,6 +767,10 @@ void Lines::wipeOutMacros()
         int end;
         int col = Lines::lineIndent(li);
         if ('#' == curLine[col]) {
+            if ((int) curLine.length() <= col + 1) {
+                curLine.resize(col);
+                continue;
+            }
             const bsl::string& wa = Ut::wordAfter(curLine, col + 1, &end);
             if (S_ELSE == wa || S_ELIF == wa ||
                       (S_IF == wa && "0" == Ut::wordAfter(curLine, end + 1))) {
@@ -717,6 +791,7 @@ void Lines::wipeOutMacros()
                                 if (0 == depth) {
                                     for (int j = li; j <= li2; ++j) {
                                         s_lines[j] = "";
+                                        s_lineIndents[j] = 0;
                                         s_comments[j] = BDEFLAG_NONE;
                                         s_commentIndents[j] = 0;
                                     }
@@ -770,6 +845,39 @@ void Lines::wipeOutMacros()
 }
 
 // CLASS METHODS
+void Lines::braceReport()
+{
+    cout << "<line#> <curly-brace-depth> <paren-depth> <source-line>\n\n";
+
+    int curly = 0, paren = 0;
+
+    for (int li = 1; li <= s_lineCount; ++li) {
+        const char *pc = li < s_lineCount ? s_lines[li].c_str() : "";
+
+        cout.width(3);
+        cout << li;
+        cout.width(0);
+        cout << ' ' << curly << ' ' << paren << ' ' << pc << endl;
+
+        for (; *pc; ++pc) {
+            switch (*pc) {
+              case ('{'): {
+                ++curly;
+              } break;
+              case ('}'): {
+                --curly;
+              } break;
+              case ('('): {
+                ++paren;
+              } break;
+              case (')'): {
+                --paren;
+              } break;
+            }
+        }
+    }
+}
+
 bsl::string Lines::commentAsString(CommentType comment)
 {
     switch (comment) {
@@ -825,11 +933,16 @@ Lines::Lines(const char *fileName)
     s_lineCount = 0;
 
     s_lines.clear();
+    s_badlyAlignedImplicits.clear();
+    s_badlyAlignedReturns.clear();
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
+    s_tbds.clear();
+    s_contComments.clear();
     s_purposeFlags = 0;
     s_hasTabs = false;
+    s_hasCrs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
@@ -837,17 +950,35 @@ Lines::Lines(const char *fileName)
     s_assertFound = false;
     s_includesComponentDotH = false;
     s_couldntOpenFile = false;
+    s_componentPrefix = BDEFLAG_CP_UNRECOGNIZED;
 
-    if (s_fileName.length() >= 6 &&
-                      s_fileName.substr(s_fileName.length() - 6) == ".t.cpp") {
-        s_fileType = BDEFLAG_DOT_T_DOT_CPP;
+    s_fileType = BDEFLAG_DOT_CPP;
+    if (s_fileName.length() >= 2) {
+        if (s_fileName.substr(s_fileName.length() - 2) == ".h") {
+            s_fileType = BDEFLAG_DOT_H;
+        } else if (s_fileName.length() >= 6) {
+            const bsl::string& suffix =
+                                    s_fileName.substr(s_fileName.length() - 6);
+            if (suffix == ".t.cpp" || suffix == ".m.cpp") {
+                s_fileType = BDEFLAG_DOT_T_DOT_CPP;
+            }
+        }
     }
-    else if (s_fileName.length() >= 2 &&
-                          s_fileName.substr(s_fileName.length() - 2) == ".h") {
-        s_fileType = BDEFLAG_DOT_H;
-    }
-    else {
-        s_fileType = BDEFLAG_DOT_CPP;
+
+    {
+        int matchIdx = Ut::frontMatches(fileName, "bsl",     0)
+                     ? 3
+                     : Ut::frontMatches(fileName, "tst_bsl", 0)
+                     ? 7
+                     : 0;
+        if (matchIdx) {
+            if      (Ut::frontMatches(fileName, "stl_", matchIdx)) {
+                s_componentPrefix = BDEFLAG_CP_BSLSTL;
+            }
+            else if (Ut::frontMatches(fileName, "mf_",  matchIdx)) {
+                s_componentPrefix = BDEFLAG_CP_BSLMF;
+            }
+        }
     }
 
     bsl::ifstream fin(fileName);
@@ -898,8 +1029,8 @@ Lines::Lines(const char *fileName)
     checkPurpose();
     killQuotesComments();
     trimTrailingWhite();
-    wipeOutMacros();
     setLineIndents();
+    wipeOutMacros();
     identifyStatements();
     identifyStatementEnds();
     identifyInlinesNotAlone();
@@ -916,11 +1047,16 @@ Lines::Lines(const bsl::string& string)
     s_lineCount = 0;
 
     s_lines.clear();
+    s_badlyAlignedImplicits.clear();
+    s_badlyAlignedReturns.clear();
     s_comments.clear();
     s_longLines.clear();
     s_cStyleComments.clear();
+    s_tbds.clear();
+    s_contComments.clear();
     s_purposeFlags = 0;
     s_hasTabs = false;
+    s_hasCrs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
@@ -928,6 +1064,7 @@ Lines::Lines(const bsl::string& string)
     s_assertFound = false;
     s_includesComponentDotH = false;
     s_couldntOpenFile = false;
+    s_componentPrefix = BDEFLAG_CP_UNRECOGNIZED;
 
     s_lines.push_back("");
 
@@ -941,6 +1078,8 @@ Lines::Lines(const bsl::string& string)
     }
 
     s_lineCount = s_lines.size();
+    s_lines.push_back("");    // Add 1 extra line so we don't segfault if
+                              // we access one line over.
     s_comments.insert(s_comments.end(), s_lines.size(), BDEFLAG_NONE);
     s_commentIndents.insert(s_commentIndents.end(), s_lines.size(), -1);
     s_lineIndents.insert(s_lineIndents.end(),       s_lines.size(),  0);
@@ -953,9 +1092,9 @@ Lines::Lines(const bsl::string& string)
     checkForAssert();
     checkPurpose();
     killQuotesComments();
-    wipeOutMacros();
     trimTrailingWhite();
     setLineIndents();
+    wipeOutMacros();
     identifyStatements();
     identifyStatementEnds();
     identifyInlinesNotAlone();
@@ -974,10 +1113,13 @@ Lines::~Lines()
     s_longLines.clear();
     s_cStyleComments.clear();
     s_inlinesNotAlone.clear();
+    s_badlyAlignedImplicits.clear();
     s_badlyAlignedReturns.clear();
     s_tbds.clear();
+    s_contComments.clear();
     s_state = BDEFLAG_EMPTY;
     s_hasTabs = false;
+    s_hasCrs = false;
     s_hasTrailingBlanks = false;
     s_includesAssertH = false;
     s_includesCassert = false;
@@ -986,10 +1128,21 @@ Lines::~Lines()
 
 // ACCESSORS
 
-void Lines::printWarnings(bsl::ostream *stream)
+void Lines::printWarnings(bsl::ostream *stream) const
 {
     if (s_hasTabs) {
         *stream << "Warning: file " << s_fileName << " has tab(s).\n";
+    }
+    if (s_hasCrs && !Lines_StartProgram::s_crsOK) {
+        *stream << "Warning: file " << s_fileName << " has '\\r'(s).\n";
+
+        static bool firstTime = true;
+        if (firstTime) {
+            firstTime = false;
+            *stream << "    Note: warnings about '\\r's can be suppressed by"
+                                                " setting environment variable"
+                                     " '$BDEFLAG_TOLERATE_CARRIAGE_RETURNS'\n";
+        }
     }
     if (s_hasTrailingBlanks) {
         *stream << "Warning: file " << s_fileName <<
@@ -1032,6 +1185,11 @@ void Lines::printWarnings(bsl::ostream *stream)
         *stream << "Warning: in " << s_fileName << " 'inline' not on its own"
                 " line ('inline static' is OK): " << s_inlinesNotAlone << endl;
     }
+    if (!s_badlyAlignedImplicits.empty()) {
+        *stream << "Warning: in " << s_fileName << " '// IMPLICIT' comment not"
+                                 " right-justified to 79 chars at line(s): " <<
+                                               s_badlyAlignedImplicits << endl;
+    }
     if (!s_badlyAlignedReturns.empty()) {
         *stream << "Warning: in " << s_fileName << " '// RETURN' comment not"
                                  " right-justified to 79 chars at line(s): " <<
@@ -1040,6 +1198,10 @@ void Lines::printWarnings(bsl::ostream *stream)
     if (!s_tbds.empty()) {
         *stream << "Warning: in " << s_fileName << " 'TBD' comments found on"
                                                  " line(s) " << s_tbds << endl;
+    }
+    if (!s_contComments.empty()) {
+        *stream << "Warning: in " << s_fileName <<
+          " '\\' at end of comment line on line(s) " << s_contComments << endl;
     }
     if (s_purposeFlags) {
         if (s_purposeFlags & BDEFLAG_NO_PURPOSE) {
@@ -1081,7 +1243,76 @@ bsl::string Lines::asString()
     return ret;
 }
 
-}  // close namespace bdeFlag
+// FREE OPERATORS
+bsl::ostream& operator<<(bsl::ostream& stream, Lines::CommentType commentType)
+{
+    switch (commentType) {
+      case Lines::BDEFLAG_NONE: {
+        stream << "BDEFLAG_NONE";
+      }  break;
+      case Lines::BDEFLAG_RETURN: {
+        stream << "BDEFLAG_RETURN";
+      }  break;
+      case Lines::BDEFLAG_TYPE: {
+        stream << "BDEFLAG_TYPE";
+      }  break;
+      case Lines::BDEFLAG_CLASS_DATA: {
+        stream << "BDEFLAG_CLASS_DATA";
+      }  break;
+      case Lines::BDEFLAG_DATA: {
+        stream << "BDEFLAG_DATA";
+      }  break;
+      case Lines::BDEFLAG_FRIEND: {
+        stream << "BDEFLAG_FRIEND";
+      }  break;
+      case Lines::BDEFLAG_TRAITS: {
+        stream << "BDEFLAG_TRAITS";
+      }  break;
+      case Lines::BDEFLAG_INVARIANTS: {
+        stream << "BDEFLAG_INVARIANTS";
+      }  break;
+      case Lines::BDEFLAG_CLASS_METHOD: {
+        stream << "BDEFLAG_CLASS_METHOD";
+      }  break;
+      case Lines::BDEFLAG_NOT_IMPLEMENTED: {
+        stream << "BDEFLAG_NOT_IMPLEMENTED";
+      }  break;
+      case Lines::BDEFLAG_CREATOR: {
+        stream << "BDEFLAG_CREATOR";
+      }  break;
+      case Lines::BDEFLAG_MANIPULATOR: {
+        stream << "BDEFLAG_MANIPULATOR";
+      }  break;
+      case Lines::BDEFLAG_ACCESSOR: {
+        stream << "BDEFLAG_ACCESSOR";
+      }  break;
+      case Lines::BDEFLAG_FREE_OPERATOR: {
+        stream << "BDEFLAG_FREE_OPERATOR";
+      }  break;
+      case Lines::BDEFLAG_CLOSE_NAMESPACE: {
+        stream << "BDEFLAG_CLOSE_NAMESPACE";
+      }  break;
+      case Lines::BDEFLAG_CLOSE_UNNAMED_NAMESPACE: {
+        stream << "BDEFLAG_CLOSE_UNNAMED_NAMESPACE";
+      }  break;
+      case Lines::BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE: {
+        stream << "BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE";
+      }  break;
+      case Lines::BDEFLAG_CLOSE_PACKAGE_NAMESPACE: {
+        stream << "BDEFLAG_CLOSE_PACKAGE_NAMESPACE";
+      }  break;
+      case Lines::BDEFLAG_UNRECOGNIZED: {
+        stream << "BDEFLAG_UNRECOGNIZED";
+      }  break;
+      default: {
+        stream << "invalid comment type";
+      }
+    }
+
+    return stream;
+}
+
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 // ---------------------------------------------------------------------------

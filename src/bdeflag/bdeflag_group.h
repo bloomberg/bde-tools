@@ -47,7 +47,7 @@ BSLS_IDENT("$Id: $")
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 class Group {
     // PRIVATE TYPES
@@ -91,6 +91,7 @@ class Group {
     // PUBLIC TYPES
   public:
     struct GroupPtrLess {
+        // ACCESSOR
         bool operator()(const Group *lhs, const Group *rhs) const;
     };
     typedef bsl::set<Group *, GroupPtrLess> GroupSet_Base;
@@ -150,6 +151,10 @@ class Group {
         // group.  Groups that don't represent routine definitions in classes
         // are ignored.
 
+    void checkClassName() const;
+        // Check class name in .h file starts with component name, or the
+        // component name without the prefix.
+
     void checkCodeComments() const;
         // Check all comments in code are appropriately indented.
 
@@ -157,6 +162,10 @@ class Group {
         // Check all statements in code are appropriately indented.
 
     void checkFunctionDoc() const;
+        // If this is a function decl, check it is docced if that is
+        // approrpriate.
+
+    void checkFunctionSection() const;
         // If this is a function decl, check it is docced if that is
         // approrpriate.
 
@@ -184,17 +193,33 @@ class Group {
         // If this is a routine body, check that the starting '{' is on its own
         // line and properly indented.
 
+    void checkUnintentionalAssigns() const;
+        // Check for assigns not guarded by '()' within if/while or midlle part
+        // of 'for'.
+
+    void checkUnnamedGuards() const;
+        // If this is a routine or code body, check for any declarations of
+        // recognized bde guard types that are unnamed -- that just create
+        // fleeting temporaries and don't guard anything.
+
+    void markClassBoundaries() const;
+        // Mark the beginning and ending of this class in the 'classBoundaries'
+        // vector in the imp.
+
+    void getArgList(bsl::vector<bsl::string> *typeNames,
+                    bsl::vector<bsl::string> *names,
+                    bsl::vector<int>         *lineNums,
+                    bool                     *potentialSingleArg) const;
+        // If this is a routine decl, get the arg list for it.  Care has to be
+        // taken to avoid calling this on things that turn out not to be
+        // routine decls.  This strips '= ...' out of arg names, but returns
+        // 'potentialSingleArg' if there is one arg, or if there are >= 2
+        // args but the second one had a default value.
+
     void registerValidFriendTarget() const;
         // Only called if we're in a .h file.  If this a group, put it on the
         // list of valid friend target groups.  If this is a function decl
         // not in a group, put it in the list of friend target routines.
-
-    void getArgList(bsl::vector<bsl::string> *typeNames,
-                    bsl::vector<bsl::string> *names,
-                    bsl::vector<int>         *lineNums) const;
-        // If this is a routine decl, get the arg list for it.  Care has to be
-        // taken to avoid calling this on things that turn out not to be
-        // routine decls.
 
   public:
     // CLASS METHODS
@@ -214,6 +239,10 @@ class Group {
         // missing.
 
     static
+    void checkAllClassNames();
+        // Check all class names in .h file start with component name.
+
+    static
     void checkAllCodeComments();
         // Check all comments in classes, code blocks and routine bodies are
         // indented and spaced appropriately.
@@ -231,6 +260,10 @@ class Group {
     static
     void checkAllFunctionDoc();
         // Check all functions are appropriately docced.
+
+    static
+    void checkAllFunctionSections();
+        // Check that all functions are in appropriate sections.
 
     static
     void checkAllIfWhileFor();
@@ -272,6 +305,15 @@ class Group {
         // Check all 'template' clauses are on their own lines.
 
     static
+    void checkAllUnintentionalAssigns();
+        // Check all conditions for assignments not guarded by '()'.
+
+    static
+    void checkAllUnnamedGuards();
+        // Check for recognized bde guard types that are don't actually
+        // declare an instance of the type.
+
+    static
     void clearGroups();
         // Free all memory allocated by this component.
 
@@ -286,9 +328,11 @@ class Group {
         // that place.
 
     static
-    void initGroups();
+    int initGroups();
         // Parse file into a recursive group tree structure, then traverse the
-        // tree, initializing group types.
+        // tree, initializing group types.  Return 0 on success and a non-zero
+        // value if the attempt was so unsuccessful that further analysis of
+        // the source file should not proceed.
 
     static
     void printAll();
@@ -328,6 +372,10 @@ class Group {
 
     const Place& open() const;
         // Return 'd_open'.
+
+    bool isMarkedImplicit() const;
+        // Return 'true' if this group represents an arg list of a function
+        // marked with the '// IMPLICIT' comment and 'false' otherwise.
 };
 
 // ===========================================================================
@@ -376,7 +424,7 @@ bool Group::GroupPtrLess::operator()(const Group *lhs, const Group *rhs) const
     return lhs->open() < rhs->open();
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 #endif

@@ -63,7 +63,7 @@ BSLS_IDENT("$Id: $")
 
 namespace BloombergLP {
 
-namespace bdeFlag {
+namespace bdeflag {
 
 class Lines {
   public:
@@ -86,6 +86,10 @@ class Lines {
         BDEFLAG_CLOSE_NAMESPACE,
         BDEFLAG_CLOSE_UNNAMED_NAMESPACE,
         BDEFLAG_CLOSE_ENTERPRISE_NAMESPACE,
+        BDEFLAG_CLOSE_PACKAGE_NAMESPACE,
+        BDEFLAG_IMPLICIT,
+        BDEFLAG_BANG,
+        BDEFLAG_IGNORED,
         BDEFLAG_UNRECOGNIZED };
 
     enum StatementType {
@@ -123,6 +127,11 @@ class Lines {
         BDEFLAG_PURPOSE_LACKS_PROVIDE = 0x2,
         BDEFLAG_PURPOSE_LACKS_PERIOD  = 0x4 };
 
+    enum ComponentPrefix {
+        BDEFLAG_CP_BSLMF,
+        BDEFLAG_CP_BSLSTL,
+        BDEFLAG_CP_UNRECOGNIZED };
+
   private:
     // PRIVATE TYPES
     typedef bsl::vector<bsl::string>   LineVec;
@@ -136,8 +145,8 @@ class Lines {
         BDEFLAG_FIRST_DETECTED,
         BDEFLAG_INCLUDES_CHECKED,
         BDEFLAG_QUOTES_COMMENTS_KILLED,
-        BDEFLAG_MACROS_WIPED_OUT,
         BDEFLAG_LINE_INDENTS_CALCULATED,
+        BDEFLAG_MACROS_WIPED_OUT,
         BDEFLAG_STATEMENTS_IDENTIFIED,
         BDEFLAG_STATEMENT_ENDS_IDENTIFIED,
         BDEFLAG_INLINES_NOT_ALONE };
@@ -156,11 +165,15 @@ class Lines {
     static Ut::LineNumSet      s_longLines;
     static Ut::LineNumSet      s_cStyleComments;
     static Ut::LineNumSet      s_inlinesNotAlone;
+    static Ut::LineNumSet      s_badlyAlignedImplicits;
     static Ut::LineNumSet      s_badlyAlignedReturns;
     static Ut::LineNumSet      s_tbds;
+    static Ut::LineNumSet      s_contComments;
     static State               s_state;
     static int                 s_purposeFlags;
+    static ComponentPrefix     s_componentPrefix;
     static bool                s_hasTabs;
+    static bool                s_hasCrs;
     static bool                s_hasTrailingBlanks;
     static bool                s_includesAssertH;
     static bool                s_includesCassert;
@@ -184,8 +197,9 @@ class Lines {
         // If the file is a .h file, check the 'Purpose' line.
 
     void firstDetect();
-        // Detect any long lines and tabs in the file, don't print out any
-        // errors, just record them in static data.
+        // Detect any long lines, tabs, and '\r' in the file, don't print out
+        // any errors, just record them in static data.  Also correct any
+        // '\r's.
 
     void identifyInlinesNotAlone();
         // Identify any 'inline' statements that are not on their own line,
@@ -225,6 +239,15 @@ class Lines {
         // testing.
 
     static
+    void braceReport();
+        // Dump out the source of the file, with counts of '{}' and '()'
+        // nesting to aid in tracking down files containing unbalanced
+        // '{}' or '()' pairs.  (The Linux g++ compiler was observed tolerating
+        // / correcting such imbalances, but bdeflag really can't cope with it,
+        // and imbalances are hard for a human to track down in a large source
+        // file without help.
+
+    static
     CommentType comment(int index);
         // Return the enum representing any standard comment found at line
         // line indicated by 'index'
@@ -233,6 +256,11 @@ class Lines {
     bsl::string commentAsString(CommentType comment);
         // Given the specified 'comment', which is an enum representing a
         // standard comment, give the comment in string form.
+
+    static
+    ComponentPrefix componentPrefix();
+        // Return a component prefix, based on the beginning of the file name,
+        // to indicate whether the component is a bslmf or bslstl component.
 
     static
     bool couldntOpenFile();
@@ -348,9 +376,13 @@ class Lines {
         // Destructor.  Clears all static data and frees all memory.
 
     // ACCESSORS
-    void printWarnings(bsl::ostream *stream);
+    void printWarnings(bsl::ostream *stream) const;
         // Print warnings according to the static data in this class.
 };
+
+// FREE OPErATORS
+bsl::ostream& operator<<(bsl::ostream& stream, Lines::CommentType commentType);
+    // Output the comment type as a string.
 
 // CLASS METHODS
 inline
@@ -363,6 +395,12 @@ inline
 int Lines::commentIndent(int index)
 {
     return s_commentIndents[index];
+}
+
+inline
+Lines::ComponentPrefix Lines::componentPrefix()
+{
+    return s_componentPrefix;
 }
 
 inline
@@ -471,7 +509,7 @@ const Ut::LineNumSet& Lines::tbds()
     return s_tbds;
 }
 
-}  // close namespace bdeFlag
+}  // close namespace bdeflag
 }  // close namespace BloombergLP
 
 #endif
