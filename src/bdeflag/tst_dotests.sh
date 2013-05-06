@@ -34,5 +34,8 @@ for s in $SRCS ; do
 done
 rm $TMP
 
+echo "/home/bchapman/bin/myBdeflag --brace-report tst_test.cpp >$TMP" | bash -x
+diff $TMP tst_test.brace-report.cpp
+
 runit bdeflag.m.cpp bdeflag_{ut,componenttable,lines}.{h,cpp,t.cpp} \
                                                    bdeflag_place. bdeflag_group
