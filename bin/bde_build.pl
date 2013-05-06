@@ -1322,12 +1322,19 @@ sub getComponentDependencyVar ($$$) {
     } else {
         # includes in same package
         my $PKG=uc $comp->getPackage();
-        $depline.=join($depSep, map {
-            "\$(${PKG}_BLOC)${FS}$_.h"
-        } getAllInternalComponentDependencies($comp,1));
-
         my $package=$comp->getComponentPackage();
         my $group=$comp->getComponentGroup(); #undef if isolated package
+
+        # We need to include "local" headers from this package which the test
+        # driver might (illegally) include without them being in the actual
+        # component's dependencies.  Otherwise, we wind up with intermittent
+        # 'make' failures when the test driver starts to build before the
+        # depended-upon local headers are all done copying over.
+        my @localTestOnlyDependencies = grep {/^${package}_/} getTestOnlyDependencies($comp);
+
+        $depline.=join($depSep, map {
+            "\$(${PKG}_BLOC)${FS}$_.h"
+        } (getAllInternalComponentDependencies($comp,1), @localTestOnlyDependencies));
 
         @compdeps=getAllExternalComponentDependencies($comp);
         @filedeps=getAllComponentFileDependencies($comp);
