@@ -1866,8 +1866,7 @@ int Group::initTopLevelGroup()
     }
 
     bsl::cerr << "Run 'bdeflag --brace_report " << Lines::fileName() <<
- 
-             "' to see a report in cout on nesting of '{}' and '()' braces\n";
+              "' to see a report in cout on nesting of '{}' and '()' braces\n";
 
     return -1;
 }
