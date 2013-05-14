@@ -1,0 +1,31 @@
+#!/usr/bin/ksh
+#==============================================================================
+# Syntax:  bdeflag [-h] <file> ....
+#
+# Purpose: This script executes a platform-specific task which individually
+#          examines the files named on the command line and flags violation of
+#          the BDE coding style.
+#==============================================================================
+
+# Platform discovery for determining correct binaries
+platform=$(uname)
+if   [[ "$platform" = "SunOS" ]]; then
+    ARCHCODE=sundev1
+elif [[ "$platform" = "AIX"   ]]; then
+    ARCHCODE=ibm
+elif [[ "$platform" = "Linux" ]]; then
+    ARCHCODE=linux
+else
+    print -u2 "!! This version must run on SunOS, AIX, or Linux only."
+    exit 1
+fi
+
+# Binaries
+binDir=${BDETOOLS_BINARIES:-/home/bdebuild/bdetools-binaries}
+bdeflag="${binDir}/bdeflag.m.${ARCHCODE}.tsk"
+
+#------------------------------------------------------------------------------
+# Main
+#------------------------------------------------------------------------------
+
+${bdeflag} $@
