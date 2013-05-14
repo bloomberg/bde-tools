@@ -31,3 +31,5 @@ all.pl bdeflag_lines.t.$ARCHCODE.tsk
 all.pl bdeflag_place.t.$ARCHCODE.tsk
 all.pl bdeflag_group.t.$ARCHCODE.tsk
 all.pl bdeflag_componenttable.t.$ARCHCODE.tsk
+
+rm -f bdeflag*.t.*.o *.mapfile 00plink* bdeflag_*.t_plink_timestamp*
