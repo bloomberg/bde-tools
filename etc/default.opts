@@ -188,7 +188,7 @@ unix-                   _       RETRY_ON_SIGNAL = $(RETRY) -a 3 -t $(RETRY_TIMEO
 
 *                       cpp11   CPP11_FLAGS     =   --this-compiler-does-not-have-cpp11-support-configured
 !! unix-HP_UX-*-*-acc   cpp11   CPP11_FLAGS     =   -Ax
-!! unix-*-*-*-gcc-4.6.1 cpp11   CPP11_FLAGS     =   -std=c++0x
+!! unix-*-*-*-gcc-4.4.3 cpp11   CPP11_FLAGS     =   -std=c++0x
 !! unix-*-*-*-gcc-4.7.0 cpp11   CPP11_FLAGS     =   -std=c++11
 
 *                       cpp11   BDE_CXXFLAGS    = $(CPP11_FLAGS)
@@ -935,6 +935,8 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
      -W$(GCCEXTRAWERROR)sign-compare -W$(GCCEXTRAWERROR)format              \
      -W$(GCCEXTRAWERROR)overflow                                            \
      -W$(GCCEXTRAWERROR)larger-than-100000
+
+*-*-*-*-gcc-4.3      _  GCCEXTRAWFLAGS  = -Werror=cast-qual
 
 *                       _   CC64FLAGS   =
 *-*-*-*-gcc             _   CC64FLAGS   = -m32
