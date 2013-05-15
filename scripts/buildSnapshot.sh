@@ -83,7 +83,10 @@ then \
     exit 1
 fi
 
-export BDE_PATH="$PATHS:$BDE_PATH"
+ls $OUTPUTPATH/etc
+rm -f $OUTPUTPATH/etc/default.opts
+
+export BDE_PATH="/home/bdebuild/bde-tools:$PATHS:$BDE_PATH"
 
 # the -e option makes bde_snapshot.pl snapshot the "etc" directory as well
 $SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
