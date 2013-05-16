@@ -108,6 +108,12 @@ done
 # Can't look for bsl anywhere but root repo until it's deleted from bde-core!
 for path in $ROOTPATH $(perl -e'foreach my $path (split /:/,$ENV{PATHS}) { print "$path\n"  }')
 do \
+    # bde_snapshot.pl has a bug - it will only snapshot default.opts from the -w location.
+    if [[ ( ! -e etc/default.opts ) && ( -e $path/etc/default.opts ) ]]
+    then \
+        rsync -av $path/etc/default.opts etc/
+    fi
+
     for group in bst bde bdx
     do \
         if [[ -e $path/groups/$group ]]
