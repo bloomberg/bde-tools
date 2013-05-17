@@ -106,7 +106,7 @@ do \
 done
 
 # Can't look for bsl anywhere but root repo until it's deleted from bde-core!
-for path in $ROOTPATH $(perl -e'foreach my $path (split /:/,$ENV{PATHS}) { print "$path\n"  }')
+for path in $ROOTPATH $(perl -e'foreach my $path (split /:/,$ENV{BDE_PATH}) { print "$path\n"  }')
 do \
     # bde_snapshot.pl has a bug - it will only snapshot default.opts from the -w location.
     if [[ ( ! -e etc/default.opts ) && ( -e $path/etc/default.opts ) ]]
