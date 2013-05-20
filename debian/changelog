@@ -1,12 +1,38 @@
-bde-tools (20130409.1) unstable; urgency=low
+bde-tools (2.18.0.0) unstable; urgency=low
+
   * Bump changelog
+  * cccd601 sweep thru BDE_PATH for default.opts and + packages
+  * 5646e7f manually snapshot default.opts
+  * b792674 get default.opts from bde-tools master (not branched yet)
+  * 94b3e6e [APPROVAL] pending/master/import-default.opts-metadata-from-bde-drqs-40974008 to master
+  * 62ac702 default.opts fixes per hversche review comments
+  * 710a6d1 [APPROVAL] origin/review/bdeflag to master
+  * c414164 add 'bdeflag' script to bde-tools/bin
+  * f7b7899 minor tweak
+  * 7985014 minor correction
+  * 6cf9b69 import xlc-11.2 and cc-5.11 compiler upgrades
+  * fee7997 initial .arcconfig
+  * 1894c13 import default.opts and add debian-rules common snippets
+  * 7192878 [APPROVAL] origin/review/bdeflag to master
+  * fa87ed1 [APPROVAL] origin/review/sim-cpp11-features.pl to master
+  * d8bb605 updates for dependencies
+  * 0e6ebdf Tested --brace-report
+  * 4067626 Accept '--brace-report' as well as '--brace_report'.
+  * 142d87e Add test of '\' at end of C++ comment.
+  * 70834f7 Added 'tst_decimal.h' to test suite.
+  * f3aa1d9 Added capability of doing brace report Improved error handling of unbalanced input Added unbalanced test suite
+  * 722d086 Overhauled parsing of args, improved build script
+  * d2cf429 Permit snug comments starting in col 0 Check for comment lines ending with '\' Detect assignments in conditionals not guarded by '()'
+  * b3ba378 updated the script to simulate c++11 features
+  * 1c62ff3 Revert "add test-only dependencies to generated __DEPS macro in Makefile"
+  * 97d44d3 add test-only dependencies to generated __DEPS macro in Makefile
+  * ddd0824 add script tracing and git resets
+  * 2b82fa3 pick up bsl from bsl-oss for all builds except intdev
+  * bfe1c18 fix snapshotting of bdx again
+  * b89ca26 switch from "dev" to "bdx" for binary decimal
+  * 632833b bump changelog
   * d436124 add support for bde-dev repo
-
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 09 Apr 2013 14:28:00 -0400
-
-bde-tools (20130408.1) unstable; urgency=low
-
-  * Bump changelog
+  * 7aa27b8 bump changelog
   * d39d98b snapshot dev+decnumber correctly
   * 2c9953d add dev UOR to nightly builds
   * f02aeb1 bump changelog
@@ -27,7 +53,7 @@ bde-tools (20130408.1) unstable; urgency=low
   * f77741b [APPROVAL] add-bsl-internal-build to master
   * 5a0d3c0 add support for building bsl out of the bsl-internal repo
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 8 Apr 2013 10:12:06 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 17 May 2013 08:51:10 -0400
 
 bde-tools (20120625.2) git; urgency=low
 
@@ -37,6 +63,20 @@ bde-tools (20120625.2) git; urgency=low
   * fe82254 alternate gcc-4.7.2 builds on different days to speed up results
   * f11ef38 remove i10 weekend build collision
   * e6df2ff move sun-gcc-4.7.2 cleanup earlier in common script so it works
+  * 9a335a5 Tolerate Steve's way of indenting usage examples
+  * cbc7c5e Tolerate stray '#'s at eol
+  * 9d90727 Tolerating 'print' methods with >3 args (in the case of enums). If class is 'A<B>', recognize that c'tor is 'A()'. Tolerate snug '// CLASS INVARIANTS' and '// PUBLIC TYPEDEFS'
+  * 620c240 Detecting unnamed guards.
+  * a7f7d35 Better handling of class names, tolerating std lib class names
+  * b8f0f0c Adapt bdeflag to 'tst_' files, and tolerate special names for bslstl and bslmf classes
+  * 7332d0b Update comparison files
+  * a3c915c Update test files
+  * 1f4806f doc
+  * f9ab0f4 Script to run on all bde source
+  * 51b865f Script to build on any platform
+  * ed05edb Script to build & run test drivers
+  * f722259 Test suite and script
+  * 21725cb Integrated componenttable, works.
   * 8c740e6 fix linux-clang nightly build
   * d2dd8fa add linux-clang-4.1.2 nightly build
   * a7153c3 move a build away from nylxdev1
@@ -135,6 +175,7 @@ bde-tools (20120625.2) git; urgency=low
   * a5557c8 re-enable retry for nightly builds, hopefully fixing transient failures
   * 7e99832 [APPROVAL] remove-api-builds-drqs-32387917 to master
   * fc3a10b delete all api builds
+  * 8d55d05 Fix misspelling of CARRIAGE
   * ad49859 [APPROVAL] bump-linux-builds-to-rhel5 to master
   * a05b5e2 move all linux builds to rhel5
   * 5ee817a escape metacharacters from build name in regex
@@ -161,15 +202,30 @@ bde-tools (20120625.2) git; urgency=low
   * 109fb86 mass build scripts update:
   * 6a1491b [APPROVAL] remotes/origin/review/apply-bslfwd to master
   * 6c5b76d extended apply-bslfwd to remove forward declarations written in a less usual form
+  * 7994007 minor bug in .h file
+  * 154377f Fix handling of rvalue args
+  * a84e500 Accepting '// IMPLICIT', enforcing routines in classes declared in proper sections (// CLASS METHODS, // CREATORS, etc)
   * b33ef9a [APPROVAL] remotes/origin/review/apply-bslfwd to master
   * b42bf44 fixed apply-bslfwd script to replace forward declaration headers in tricky source files
+  * 1dfe4d1 On '\r's, correct input, and tell how to suppress warning in future.
+  * ac65e04 Enhanced prefix logic.
+  * 3f89431 Improve handling of templates in class names
   * 5f92111 [APPROVAL] fix-dev-hp-opt_mt-build to master
   * 4fd8a4d alternate HP/Sun opt_mt/opt_mt_safe for dev/nextrel
   * 6574790 [APPROVAL] fix-dev-hp-opt_mt-build to master
   * 40f56e8 fix HP and sun extra builds to run in both dev/nextrel
   * e12b783 Fix HP opt_mt build to run correctly in dev
+  * dcfaecf fix namespace, better out of bounds checking on operator*
+  * aa2b513 fix namespace, checking for '\r's
+  * 9eeb20b Checking class names, namespace names, fix namespace
+  * 46b70be fix namespace
+  * 67d7fc2 fix namespace
+  * 999bf27 fix namespace, bug
+  * 8109fff fix namespace, clean up bug
+  * 97c2985 fix namespace name, add check class names cmd
   * 9bc3e4e [APPROVAL] remotes/origin/review/apply-bslfwd to master
   * acbf979 added a script to bde-tools that replaces forward declarations of bsl classes with the appropriate #include <bslfwd_bsl_class.h> header
+  * 4a194ba Allow snug comments before lines that start with '{'
   * 0a7bb38 [APPROVAL] rework-opt_mt_safe-builds to master
   * 4e5431d use opt_mt for weekly hp builds
   * ce7b19f [APPROVAL] rework-opt_mt_safe-builds to master
@@ -184,13 +240,18 @@ bde-tools (20120625.2) git; urgency=low
   * 9d3888b [APPROVAL] fix-nightly-snapshots to master
   * 965ddd8 fix snapshot command to pick up new -core and -bb repos
   * 267564e use bde-core and bde-bb for bde checkouts
+  * 268e2af Don't complain about Rvalue refs
   * faa2cd6 [APPROVAL] remotes/origin/review/fix-build-order-for-bap to master
   * fef51fe bump bap ahead of a_bassvc to reflect new dependencies
   * de84b1a [APPROVAL] remotes/origin/review/drqs30468357-remove-producemake to master
   * ec011b5 DRQS 30468357: producemake removed - it lives in cstools
   * cd97db6 turn down jobs level for linux builds
+  * 232e89e accept comment '// close package namespace'
   * ef18b47 [APPROVAL] remotes/origin/review/drqs30192873-clean-test-drivers-on-windows to master
   * f655989 delete test drivers in clean_using_relative_paths
+  * 4975cd1 Eliminated some cases of reporting false "Error"s (not warnings)
+  * c042845 Fix 2 errors detected by purify
+  * e8fbb35 Allow bool routines to retern bslmf_MetaInt Allow more ref to modifiable args Allow single line namespaces with no closing comments
   * 83cf3a2 [APPROVAL] remotes/origin/review/bdeflag to master
   * 10efea9 Add testing for skipped cases in test drivers
   * c2f5ca2 [APPROVAL] switch-off-non-cpp11-builds to master
