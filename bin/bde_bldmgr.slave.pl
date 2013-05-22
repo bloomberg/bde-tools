@@ -377,6 +377,9 @@ MAIN: {
         unshift @basecmd,qq["$^X"]; #prefix with Perl itself (in quotes) for Windows
     }
 
+    $ENV{BDE_ROOT}=$where;
+    $ENV{BDE_PATH}="$where:$ENV{BDE_ROOT}";
+
     # -A, -B, -c, -C, -d, -D, -e, -M, -n, -o, -R, -u, -w
     push @basecmd,"-A",$after if $after;
     push @basecmd,"-B",$before if $before;
@@ -458,19 +461,19 @@ MAIN: {
             }
             else {
                 print FAILED," ",$target,$tagTrailer," ";
-		my $n = undef;
+                my $n = undef;
                 for my $f ($output =~ /\(see (.*?[\\\/]make\.[^\\\/]+\.log)\)/gm) {
-			$n = 1;
-	                print "[see $f]";
+                        $n = 1;
+                        print "[see $f]";
                 }
-		if (!$n) {
-			for my $e ($output =~ /^(ERROR:.*)/gm) {
-				$n = 1;
-		                print "[$e]";
-	                }
-		}
-		if (!$n) {
-	                print "[see $logfile]";
+                if (!$n) {
+                        for my $e ($output =~ /^(ERROR:.*)/gm) {
+                                $n = 1;
+                                print "[$e]";
+                        }
+                }
+                if (!$n) {
+                        print "[see $logfile]";
                 }
             }
         } else {
