@@ -85,7 +85,11 @@ sub rmRCS($) {
     my $endif = qr/^.*?\s*\#\s*endif.*?\n/om;
 
     $$input =~ s/$lint$rcs$endif/\n\n\n/g;
-    $$input =~ s/$rcs/\n/;
+
+    # The $rcs regex is very expensive.  Avoid it if possible.
+    if($$input =~ /\bchar\s+[Rr][Cc][Ss]/) {
+        $$input =~ s/$rcs/\n/;
+    }
 }
 
 #------------------------------------------------------------------------------

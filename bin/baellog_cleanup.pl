@@ -1,4 +1,4 @@
-#!/bb/util/bin/perl -w
+#!/usr/bin/env perl
 
 # The bael log cleanup script.
 #
@@ -13,6 +13,7 @@
 # not used to filter those files specified as non-options on the command line.
 
 use strict;
+use warnings;
 
 use File::Find;
 use File::stat;

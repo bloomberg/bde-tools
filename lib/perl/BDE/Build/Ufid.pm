@@ -60,6 +60,9 @@ Where C<flag> can have the following values and meanings:
     purecov  Build with Pure Coverage
     qnt      Build with Quantify
     win      Use windowed GUI for instrumenting tools (e.g dbg_pure_win)
+    stlport  Build with the STLPort v.4 Standard Library supplied with Sun CC
+             compiler (-library=stlport4, Sun only)
+    cpp11    Build with C++11 (a.k.a. C++0x) features enabled
 
 Example:
 
@@ -114,6 +117,9 @@ my %ufid_flags = (
   purecov => [ SHOW, ORDER_BACK,       'Build with Pure Coverage'           ],
   qnt     => [ SHOW, ORDER_BACK,       'Build with Quantify'                ],
   win     => [ SHOW, ORDER_BACK   + 1, 'Use GUI for instrumenting tools'    ],
+  stlport => [ SHOW, ORDER_BACK      , 'Build with STLPort on Sun'          ],
+  cpp11   => [ SHOW, ORDER_BACK   + 2,
+                            'Build with support for C++11 (C++0x) features' ],
 );
 
 use constant DEFAULT_UFID => "dbg_exc_mt";

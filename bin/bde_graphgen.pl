@@ -1,6 +1,7 @@
-#!/bbs/opt/bin/perl -w
-use strict;
+#!/usr/bin/env perl
 
+use strict;
+use warnings;
 
 use FindBin;
 

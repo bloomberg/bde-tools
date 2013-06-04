@@ -1,6 +1,7 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
+use warnings;
 
 BEGIN {
     exists $ENV{SUID_EXECUTION_PATH}

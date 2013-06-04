@@ -1,5 +1,7 @@
-#!/opt/swt/bin/perl -w
+#!/usr/bin/env perl
+
 use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib/perl";
@@ -10,6 +12,7 @@ use File::Copy;
 use Getopt::Long;
 use POSIX qw(uname strftime);
 use IO::Handle;
+use Sys::Hostname;
 
 use BDE::Build::Uplid;
 use Symbols qw(EXIT_SUCCESS EXIT_FAILURE);
@@ -59,18 +62,25 @@ This script is not intended to be invoked directly; use bde_bldmgr instead.
 umask 002;
 STDOUT->autoflush(1);
 
-my $iamwindows = ($^O =~ /win/i);
+my $iamwindows = ($^O eq 'MSWin32' || $^O eq 'cygwin');
+    # TODO: review the 'cygwin' case
+
 my $prog       = basename($0);
 my $bindir     = $iamwindows ? $FindBin::Bin : dirname($0);
 $bindir =~ s|/|\\|sg if $iamwindows;
 my $FS         = $iamwindows ? "\\" : "/";
+    # TODO: this is a hack - use File::Spec for portable file path manipulation
 
 unless ($iamwindows) {
-    $ENV{PATH} = join(':',$bindir,qw[
-        /usr/local/bin /usr/bin /bin /usr/ccs/bin
-        /opt/SUNWspro/bin /bb/bin
-    ]);
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
+}
+
+if ($^O =~ /solaris/) {
+    # Sun builds require adding a few paths to the prompt to find things like ar
+    $ENV{PATH} .= ":".join(':',$bindir,qw[
+        /usr/ccs/bin
+    ]);
+
 }
 
 if ($^O =~ /aix/) {
@@ -80,6 +90,18 @@ if ($^O =~ /aix/) {
     # -Mark
 
     $ENV{EXTSHM} = "on";
+}
+
+if ($^O =~ /hpux/) {
+    #DRQS 25995466 Updated. OU Q 'bdet_Datetime::printToBuffer' not returning expect
+    #'bdet_Datetime::printToBuffer' not returning expected value on Windows and HP
+    # 6/29/11   14:02:53   RAYMOND SEEHEI CHIU (PROG)
+    # Mike G.,
+    # Can you see if we can compile with macro _XOPEN_SOURCE=600 and environment
+    # variable UNIX_STD=2003 for HP?
+    # This is documented in the manual page ("man standards 5")
+
+    $ENV{UNIX_STD} = "2003";
 }
 
 #------------------------------------------------------------------------------
@@ -142,43 +164,6 @@ my $where    = $opts{where}    || $ENV{BDE_ROOT};
 
 my $tag      = $opts{tag}      || "";
 
-if ($opts{envbat}) {
-    warn "Got --envbat $opts{envbat}";
-
-    open ENVBAT, '"'.$opts{envbat}.'" && set |';
-    while(<ENVBAT>) {
-        /^(.*?)=(.*)$/ and $ENV{$1}=$2;
-    }
-    close(ENVBAT);
-
-    warn "Populated environment to:\n";
-    warn "\t$_=$ENV{$_}\n" foreach sort keys %ENV;
-}
-
-if ($opts{path}) {
-    warn "Got --path @{$opts{path}}";
-
-    my $newpath=(join ":",@{$opts{path}});
-
-    if (exists $ENV{BDE_PATH}) {
-        $ENV{BDE_PATH} = "$newpath:$ENV{BDE_PATH}";
-    }
-    else {
-        $ENV{BDE_PATH} = $newpath;
-    }
-
-    warn "Populated BDE_PATH to: $ENV{BDE_PATH}\n";
-}
-
-if ($opts{uptodate} && $opts{rebuild}) {
-    fatal "--uptodate and --rebuild are mutually exclusive"
-}
-
-# Ensure we pick up tools from the view we are building
-unless ($iamwindows) {
-  $ENV{PATH} = join(':',"$where/tools/bin",$ENV{PATH});
-}
-
 my $uplid;
 if ($opts{uplid}) {
     fatal "--uplid and --compiler are mutually exclusive"
@@ -213,30 +198,17 @@ if ($group) {
     }
 }
 
-unless ($where) {
-   $where = $bindir;
-   $where =~s|tools/bin/?$||s;
-}
-
-usage("No group or package supplied"),exit EXIT_FAILURE
-  unless $opts{group};
-usage("No target build type supplied"), exit EXIT_FAILURE
-  unless $opts{target};
-
-unless ($opts{logdir}) {
-    $opts{logdir}=$bindir;
-    $opts{logdir} =~ s{[/\\][^/\\]+[/\\]?$}{/logs};
-}
-
-my @targets=split /\W+/,$opts{target};
-
 #------------------------------------------------------------------------------
 # logging
 
 {
+    my $logOpened=0;
+    my $logfile;
     my $SLAVELOG;
 
     sub open_slavelog ($) {
+        return $logfile if $logOpened;
+
         my $logdir=shift;
 
         my @lt = localtime();
@@ -248,11 +220,14 @@ my @targets=split /\W+/,$opts{target};
         }
         my $logarch = (uname)[0];
         $logarch =~ s/\s+/_/g;
-        my $logfile = "$logdir/slave.$dtag.$group.$uplid.log";
+        my $hostname = hostname();
+        $logfile = "$logdir/slave.$dtag.$group.$uplid.$hostname.$$.log";
 
         $SLAVELOG=new IO::Handle;
         retry_open($SLAVELOG,">$logfile") or die "cannot open build output file: $!";
         $SLAVELOG->autoflush(1);
+
+        $logOpened = 1;
 
         return $logfile;
     }
@@ -270,6 +245,55 @@ sub write_logandverbose (@) {
     write_slavelog @_,"\n";
     print @_,"\n" if $verbose;
 }
+
+if ($opts{envbat}) {
+    open_slavelog($opts{logdir});
+    write_logandverbose "Got --envbat $opts{envbat}";
+    open ENVBAT,"$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
+    while(<ENVBAT>) {
+        /^(.*?)=(.*)$/ and $ENV{$1}=$2;
+    }
+    close(ENVBAT);
+
+    write_logandverbose "Populated environment to:";
+    write_logandverbose "\t$_=$ENV{$_}" foreach sort keys %ENV;
+}
+
+if ($opts{path}) {
+    write_logandverbose "Got --path @{$opts{path}}";
+
+    my $newpath=(join ":",@{$opts{path}});
+
+    if (exists $ENV{BDE_PATH}) {
+        $ENV{BDE_PATH} = "$newpath:$ENV{BDE_PATH}";
+    }
+    else {
+        $ENV{BDE_PATH} = $newpath;
+    }
+
+    write_logandverbose "Populated BDE_PATH to: $ENV{BDE_PATH}\n";
+}
+
+if ($opts{uptodate} && $opts{rebuild}) {
+    fatal "--uptodate and --rebuild are mutually exclusive"
+}
+
+unless ($where) {
+   $where = $bindir;
+   $where =~s|tools/bin/?$||s;
+}
+
+usage("No group or package supplied"),exit EXIT_FAILURE
+  unless $opts{group};
+usage("No target build type supplied"), exit EXIT_FAILURE
+  unless $opts{target};
+
+unless ($opts{logdir}) {
+    $opts{logdir}=$bindir;
+    $opts{logdir} =~ s{[/\\][^/\\]+[/\\]?$}{/logs};
+}
+
+my @targets=split /\W+/,$opts{target};
 
 #------------------------------------------------------------------------------
 
@@ -353,6 +377,9 @@ MAIN: {
         unshift @basecmd,qq["$^X"]; #prefix with Perl itself (in quotes) for Windows
     }
 
+    $ENV{BDE_ROOT}=$where;
+    $ENV{BDE_PATH}="$where:$ENV{BDE_ROOT}";
+
     # -A, -B, -c, -C, -d, -D, -e, -M, -n, -o, -R, -u, -w
     push @basecmd,"-A",$after if $after;
     push @basecmd,"-B",$before if $before;
@@ -369,8 +396,11 @@ MAIN: {
     push @basecmd,"-u",$uplid if $uplid;
     push @basecmd,"-w",$where if $where;
 
-    # on distributed builds, always rebuild and skip non-compliant package tests
-    push @basecmd,"-R","-E";
+    # on distributed builds, always rebuild
+    push @basecmd,"-R";
+
+    # enable retry to try to work around transient nfs failures
+    push @basecmd,"-x";
 
     # -j, -s
     if ($opts{serial}) {
@@ -431,19 +461,19 @@ MAIN: {
             }
             else {
                 print FAILED," ",$target,$tagTrailer," ";
-		my $n = undef;
+                my $n = undef;
                 for my $f ($output =~ /\(see (.*?[\\\/]make\.[^\\\/]+\.log)\)/gm) {
-			$n = 1;
-	                print "[see $f]";
+                        $n = 1;
+                        print "[see $f]";
                 }
-		if (!$n) {
-			for my $e ($output =~ /^(ERROR:.*)/gm) {
-				$n = 1;
-		                print "[$e]";
-	                }
-		}
-		if (!$n) {
-	                print "[see $logfile]";
+                if (!$n) {
+                        for my $e ($output =~ /^(ERROR:.*)/gm) {
+                                $n = 1;
+                                print "[$e]";
+                        }
+                }
+                if (!$n) {
+                        print "[see $logfile]";
                 }
             }
         } else {

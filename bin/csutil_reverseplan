@@ -1,4 +1,4 @@
-#!/bbs/opt/bin/perl -w -p
+#!/usr/bin/env perl -w -p
 
 /^op:\t/ && do {
   chomp;

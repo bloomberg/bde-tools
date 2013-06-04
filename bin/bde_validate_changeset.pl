@@ -1,9 +1,11 @@
-#!/bbs/opt/bin/perl-5.8.8 -w
-#
+#!/usr/bin/env perl
+
 # Please note -- this frankenstinian monstrosity was part of the
 # oracle before it was ripped out for this sample task, and then
 # ripped to shreds again to make it reasonably performant.
+
 use strict;
+use warnings;
 use Carp;
 use Digest::MD5 qw(md5_hex);
 

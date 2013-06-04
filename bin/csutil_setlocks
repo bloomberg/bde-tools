@@ -1,9 +1,10 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
 
+use strict;
+use warnings;
 use Getopt::Long;
 use SCM::CSDB::Lock;
 use SCM::Symbols qw/$SCM_CSDB $SCM_CSDB_DRIVER/;
-use strict;
 
 my @getopt = qw/verbose help/;
 my %opt;

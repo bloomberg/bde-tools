@@ -1,4 +1,7 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin";
@@ -16,7 +19,6 @@ use Change::Symbols          qw/STAGE_PRODUCTION MOVE_REGULAR STATUS_SUBMITTED
                                 FILE_IS_REMOVED FILE_IS_RENAMED
                                 FILE_IS_NEW FILE_IS_CHANGED FILE_IS_COPIED
 			        $ROBOSCM_MESSAGE/;
-use strict;
 
 my @getopt = qw(dir=s);
 my %opt;

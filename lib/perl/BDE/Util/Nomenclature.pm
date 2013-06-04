@@ -151,9 +151,9 @@ Return true if the supplied name is a valid package name, or false otherwise.
 { my %packageCache;
 
   sub isPackage($) {
-      return $packageCache{$_[0]} if exists $packageCache{$_[0]};
-
       fatal "Undefined package" unless defined $_[0];
+
+      return $packageCache{$_[0]} if exists $packageCache{$_[0]};
 
       return ($packageCache{$_[0]}=0) if isGroup($_[0]);
 
@@ -1465,7 +1465,7 @@ library name.  All consumers of this routine are isolated from such changes.
     sub isUntaggedApplication ($) {
 	my $lib = shift;
 	return 0 unless (LEGACY_SUPPORT eq ENABLED && length($lib) != 0);
-	return 0 if (substr($lib,0,2) eq "m_");
+	return 0 if ($lib=~/^[ms]_/);
 	if (!exists $application{$lib}) {
 	    $application{$lib} = getApplicationLeafPath($lib);
 	    if (!_mr_stat($application{$lib})

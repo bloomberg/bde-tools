@@ -1,4 +1,4 @@
-#!/opt/swt/bin/perl -w
+#!/usr/bin/env perl
 
 # This is used to create a clean, reproducible and documented
 # environment for running other commands. It removes everything from
@@ -122,6 +122,7 @@ my $usagemessage="".
 # should be promted for?
 
 use strict;
+use warnings;
 use Cwd;
 use Getopt::Long;
 use Sys::Hostname;

@@ -1,6 +1,7 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
+use warnings;
 
 use FindBin;
 use File::Path;
@@ -582,10 +583,6 @@ _USAGE_END
     };
 }
 
-if ($^O!~/windows|MSWin32/) {
-    $ENV{PATH}="/opt/swt/bin:$ENV{PATH}";
-}
-
 # if needed, make directory, or, if opts{output} is in effect, make directory
 # under opts{output} and put symlink in place
 sub mkdirOrLink($$) {
@@ -993,20 +990,26 @@ sub nopPackageTarget ($$$$$) { return 0; }
         }
 
         $make_cmd .= " -f $makefile $what";
+
+        if ($opts{silent} and $what eq "test") {
+            #$make_cmd .= " ALLTEST_VERBOSE=-q";
+            $make_cmd .= " ALLTEST_VERBOSE=-f";
+        }
+
         debug("$pkg $what: $make_cmd");
 
         my $rc=_gather_output($make_cmd,$mklog);
 
         my $msg = "$what failed for $pkg when running $make_cmd ".
             "(see $dir${FS}$mklog)\n";  # DO NOT CHANGE - RE-MATCHED IN SLAVE
-	
-	if ($rc && $opts{keepgoing}) {
-	    if ($what =~ /test/) { 
-	        error $msg; 
-            } 
-            else { 
-                fatal $msg; 
-            } 
+
+        if ($rc && $opts{keepgoing}) {
+            if ($what =~ /test/) {
+                error $msg;
+            }
+            else {
+                fatal $msg;
+            }
         }
 
         return $rc;
@@ -1047,8 +1050,8 @@ sub makeMakefilePreamble ($$$$$$$) {
         print $fh "include $makename.".$test_ufid->toString(1).".vars\n";
     }
 
-    # In case default.opts is checked out
-    print $fh "SWITCHCHAR?=-\n\n";
+    # In case default.opts is out of date
+    print $fh "SWITCHCHAR?=-\n";
 
     print $fh "\n";
     print $fh ".SUFFIXES:\n\n";
@@ -1167,10 +1170,12 @@ sub makePackageDependencyMacros ($$$;$$) {
         @builtgroups=@reggroups;
 
         # library flags for link line
+        my %seen_locations;
+        my @grp_lib_locations = grep {!$seen_locations{$_}++} ($root->getRootLocation(),split /:/,$root->getPath());
         print $fh "GRP_LIBS     = ",join(" \\\n               ", map {
-            "\$(LIBPATH_FLAG)\$(".uc($reggroups{$_}).
-              "_ROOTLOCN)${FS}lib${FS}\$(UPLID) "
-          } @builtgroups)," \\\n               ",
+            "\$(LIBPATH_FLAG)".$_.
+              "${FS}lib${FS}\$(UPLID) "
+          } @grp_lib_locations)," \\\n               ",
             join(" \\\n               ", map {
                 getLinkName("\$(LIB_FLAG)\$(LINK_LIB_PREFIX)",$_,"\$(LIBUFID)",
                          "\$(LINK_LIB_EXT)","has_regions")
@@ -1192,7 +1197,9 @@ sub makePackageDependencyMacros ($$$;$$) {
         print $fh "\n";
 
         # the list of 'prebuilt' libraries as simple -l rules
-        my @prebuilt_libs=grep { $_->isPrebuilt() } @groups;
+        # NOTE: Do *NOT* include intbasic, since it's in the NS-suite and
+        # not named intbasic
+        my @prebuilt_libs=grep { $_->isPrebuilt() && !/^intbasic$/ } @groups;
 
         print $fh getUnitMacro($_)."_LIB=".
           getLinkName("\$(LIB_FLAG)\$(LINK_LIB_PREFIX)",$_,"\$(LIBUFID)",
@@ -1315,12 +1322,19 @@ sub getComponentDependencyVar ($$$) {
     } else {
         # includes in same package
         my $PKG=uc $comp->getPackage();
-        $depline.=join($depSep, map {
-            "\$(${PKG}_BLOC)${FS}$_.h"
-        } getAllInternalComponentDependencies($comp,1));
-
         my $package=$comp->getComponentPackage();
         my $group=$comp->getComponentGroup(); #undef if isolated package
+
+        # We need to include "local" headers from this package which the test
+        # driver might (illegally) include without them being in the actual
+        # component's dependencies.  Otherwise, we wind up with intermittent
+        # 'make' failures when the test driver starts to build before the
+        # depended-upon local headers are all done copying over.
+        my @localTestOnlyDependencies = grep {/^${package}_/} getTestOnlyDependencies($comp);
+
+        $depline.=join($depSep, map {
+            "\$(${PKG}_BLOC)${FS}$_.h"
+        } (getAllInternalComponentDependencies($comp,1), @localTestOnlyDependencies));
 
         @compdeps=getAllExternalComponentDependencies($comp);
         @filedeps=getAllComponentFileDependencies($comp);
@@ -1914,6 +1928,16 @@ sub makeMakefile ($@) {
         $alltargets="test install";
     }
 
+    my $mainsrc=$options->getValue("APPLICATION_MAIN");
+    my $mainsrc_clean_rule_name = "";
+    my $have_mainsrc_clean_rule = 0;
+
+    if ($mainsrc) {
+        message "Have mainsrc clean rule";
+        $mainsrc_clean_rule_name = "clean.using_relative_paths.application_main_objects";
+        $have_mainsrc_clean_rule = 1;
+    }
+
     # destination installation paths for include files
     my @pkg_inc_files  = map { "\$(PKG_INC_DIR)${FS}$_" } @inc_files;
     my @grp_inc_files  = map { "\$(GRP_INC_DIR)${FS}$_" } @inc_files;
@@ -2012,7 +2036,7 @@ build_package_library: \$(PACKAGE_LIB)
 #\$(PACKAGE_LIB): \$(OBJS) noop
 \$(PACKAGE_LIB): \$(OBJS)
 \t\$(RM) \$(PACKAGE_LIB)
-\t\$(AR_PACKAGE) \$(notdir \$(OBJS))
+\t\@\$(AR_PACKAGE) \$(notdir \$(OBJS))
 \t\$(RANLIB)
 
 build_package_objects: \$(OBJS)
@@ -2030,7 +2054,7 @@ install_group_library: \$(GRP_LIB_DIR)${FS}\$(GROUP_LIB)
 \$(GRP_LIB_DIR)${FS}\$(GROUP_LIB): \$(OBJS) noop
 \t\@-\$(MKDIR) \$(GRP_LIB_DIR)
 \t\@\$(RM) \$(GRP_LIB_DIR)${FS}\$(GROUP_LIB)
-\t\$(AR_INSTALL) \$(notdir \$(OBJS))
+\t\@\$(AR_INSTALL) \$(notdir \$(OBJS))
 \t\$(RANLIB)
 
 #--- Uninstall (Package from) Group
@@ -2052,14 +2076,15 @@ uninstall_group_library:
 clean: cleancache
 \t\$(CD) \$(${PKG}_BLOC) && \$(MAKE) -f $dir${FS}$makefile clean.using_relative_paths
 
-clean.using_relative_paths:
+clean.using_relative_paths: $mainsrc_clean_rule_name
 \t\$(RM) ${clpkg}*.\$(UFID)\$(OBJ_EXT)
 \t\$(RM) ${clpkg}*.\$(UFID).log
 \t\$(RM) make.*.\$(UFID).log
 \t\$(RM) ${clpkg}*.\$(UFID).out
 \t\$(RM) ${clpkg}*.\$(UFID).pdb
+\t\$(RM) vc*.pdb
 \t\$(RM) ${clpkg}*.cod
-\t\$(RM) ${clpkg}*.t.\$(UFID)
+\t\$(RM) ${clpkg}*.t.\$(UFID)\$(EXE_EXT)
 \t\$(RM) \$(PACKAGE_LIB)
 $remove_subdirs
 # wipes out all build types, unfortunately <<<TODO: fix later
@@ -2227,11 +2252,11 @@ _MAKE_TARGETS_END
             print $FMK "realclean.$comp: clean.$comp\n\n";
         } #foreach my $comp (@build_list)
 
-        my $mainsrc=$options->getValue("APPLICATION_MAIN");
-
         if (isApplication($pkg) and not $mainsrc) {
             $mainsrc="${pkg}.m.cpp=${pkg}.tsk";
         }
+
+        my @srcsNeedingCleanObjs;
 
         if ($mainsrc) {
             my (@exes,$exe);
@@ -2266,11 +2291,24 @@ _MAKE_TARGETS_END
                                         @extraobjs);
                 push @exes,$exe;
 
+                push @srcsNeedingCleanObjs,$src;
+
             }
 
             print $FMK "build_application: ",join(' ',map {
                 "\$(${PKG}_BLOC)${FS}$_"
             } @exes)."\n\n";
+
+            if ($have_mainsrc_clean_rule) {
+                print $FMK "# -- Extra cleanup rule for APPLICATION_MAIN objects\n";
+                print $FMK "$mainsrc_clean_rule_name:\n";
+                foreach my $src (@srcsNeedingCleanObjs) {
+                    # strip extension from sourcename
+                    $src=~s/\.\w+$//;
+                    print $FMK "\t\$(RM) $src.\$(UFID)\$(OBJ_EXT)\n";
+                }
+                print $FMK "\n";
+            }
         }
 
         #----------
@@ -2382,7 +2420,7 @@ _MAKE_TARGETS_END
             }
             if ($extension eq "c") {
                 if ($uplid->platform() ne "win") {
-                    print $FMK "\t\$(CC) \$(CFLAGS) -o \"\$@\"".
+                    print $FMK "\t\$(CLINK) \$(EXE_OPT)".
                                " \$(${PKG}_BLOC)${FS}$base.\$(UFID)\$(OBJ_EXT)";
                 } else {
                     print $FMK "\t\$(CLINK) \$(CFLAGS) \$(EXE_OPT)".
@@ -2476,10 +2514,10 @@ _MAKE_TARGETS_END
         if (-e $makename or -l $makename) {
             if (-l $makename) {
                 unlink $makename;
-                eval { makeLink($makefile,$makename) };
+                eval { makeLink($makefile,$makename,1) };
             }
         } else {
-            eval { makeLink($makefile,$makename) };
+            eval { makeLink($makefile,$makename,1) };
         }
         retry_chdir $curdir;
     }
@@ -2542,7 +2580,12 @@ sub makeLink($$;$) {
         return 1;
     } else {
         my $rc=symlink($from, $to); #<<<TODO: change to copy on Windows?
-        fatal "Could not link $from to $to: $!" unless $rc;
+        if ($existing_ok) {
+            debug "Could not link $from to $to: $!" unless $rc;
+        }
+        else {
+            fatal "Could not link $from to $to: $!" unless $rc;
+        }
         return $rc;
     }
 }
@@ -3055,7 +3098,7 @@ sub makeGroupMakefile($$$$$) {
         push @mkf, "\t\$(RM) \$\@\n";
         push @mkf, "\t\$(CD) $gop_locn_real && ".
           "\$(AR_INSTALL) \\\n\t".
-            (join " \\\n\t",@{$all_objects_relative{$lib}})."\n\n";
+            (join " \\\n\t",@{$all_objects_relative{$lib}})."\n";
     }
 
     push @mkf,"# ---------------- END ".uc($gop)." MAKEFILE ---------------\n";
@@ -3190,7 +3233,7 @@ unless (GetOptions(\%opts, qw[
     options|O=s
     path|p=s
     production|P
-    quit|q|Q
+    quit|Q|q
     rebuild|R
     serial|s
     silent|S|quiet
@@ -3263,9 +3306,6 @@ if ($opts{noretry}) {
     $ENV{RETRY_ALLTEST}="";     # ...
 }
 
-usage("Too many arguments: @ARGV") if @ARGV > 1;
-my $arg = @ARGV ? $ARGV[0] : '.'; # '.' = look in current directory
-
 #---
 # Set up root - for legacy reasons may be true root or groups root
 
@@ -3324,38 +3364,7 @@ if($allow_output) {
             error "Output directory for -o doesn't exist ($opts{output})";
         }
 
-        debug "About to eval";
-        my $cleartool="/usr/atria/bin/cleartool";
-
-        if(!-x $cleartool) {
-            $cleartool="cleartool";
-            system($cleartool)==0 or $cleartool=undef;
-        }
-
-        my $pwv=undef;
-
-        if($cleartool) {
-            $pwv=eval qq{do {
-                chdir("$root");
-                my \$result=`/usr/atria/bin/cleartool pwv -wdview`;
-                chomp \$result;
-                \$result=~s/Working directory view: //;
-                \$result=~s/\\*\\* NONE.*//;
-
-                \$result;
-            };};
-            fatal "Clearcase pwv failed, $@" if $@;
-        }
-
-        if($pwv) {
-            debug "Initial pwv is $pwv";
-            $opts{output}.=${FS} unless $opts{output}=~/${FS}$/;
-            $opts{output}.=$pwv;
-            debug "Output directory adjusted for clearcase: $opts{output}";
-        }
-        else {
-            debug "Output directory not adjusted for clearcase: $opts{output}";
-        }
+        debug "Output directory: $opts{output}";
 
         if(!-d $opts{output}) {
             mkdir($opts{output},0777);
@@ -3422,436 +3431,447 @@ else {
 
 #==============================================================================
 
+my %groupsMakefilesGeneratedFor;
+
 my ($grp,$pkg,$comp,$grp_build);
 
-# if arg is '.', use the parent directory as the build argument
-if ($arg eq ".") {
-    my $location=Cwd::cwd();
+foreach my $arg(@ARGV) {
+    # if arg is '.', use the parent directory as the build argument
+    if ($arg eq ".") {
+        my $location=Cwd::cwd();
     # strip build directory if we happen to be in one
-    $location =~ s{/(unix|windows)-([^-]+)-([^-]+)-([^-]+)-(\w+)/?$}{};
-    $arg=basename($location);
-    message("Building from directory argument '$arg'");
-}
+        $location =~ s{/(unix|windows)-([^-]+)-([^-]+)-([^-]+)-(\w+)/?$}{};
+        $arg=basename($location);
+        message("Building from directory argument '$arg'");
+    }
 
-# if arg is only 3 characters we're building a package group
-if (isGroup($arg)) {
-    alert "Building: $arg (group build)";
-    usage("Can't build group locally"), exit EXIT_FAILURE
-      if $mkdevdir;
-    if ($opts{nodepend}) {
+    # if arg is only 3 characters we're building a package group
+    if (isGroup($arg)) {
+        alert "Building: $arg (group build)";
+        usage("Can't build group locally"), exit EXIT_FAILURE
+        if $mkdevdir;
+        if ($opts{nodepend}) {
         #<<<TODO: This may need to be revisited when more than one thing
         #<<<TODO: can be built at once.
-        warning "Building group without interpackage dependencies";
+            warning "Building group without interpackage dependencies";
+        }
+        $grp_build = 1;
+        $grp = $arg;
+    } elsif (isPackage($arg)) {
+        alert "Building: $arg (package build)";
+        usage("Can't build package locally"), exit EXIT_FAILURE
+        if $mkdevdir;
+        $pkg = $arg;
+        $grp = getPackageGroup($pkg);
+    } elsif (isComponent($arg)) {
+        alert "Building: $arg (component build)";
+        unless ($mkdevdir) {
+            eval { $root->getComponentIntfFilename($arg) };
+            fatal "Component $comp does not exist\n" if $@;
+        }
+        $comp = $arg;
+        $pkg = getComponentPackage($comp);
+        $grp = getPackageGroup($pkg);
+    } elsif (isFunction($arg)) {
+        message "Building: $arg (function build)";
+        $pkg = $arg;
+        $grp = undef;
+    } elsif (isApplication($arg)) {
+        message "Building: $arg (application build)";
+        $pkg = $arg;
+        $grp = undef;
+    } else {
+        usage("Unknown build unit: $arg");
+        exit EXIT_FAILURE;
     }
-    $grp_build = 1;
-    $grp = $arg;
-} elsif (isPackage($arg)) {
-    alert "Building: $arg (package build)";
-    usage("Can't build package locally"), exit EXIT_FAILURE
-      if $mkdevdir;
-    $pkg = $arg;
-    $grp = getPackageGroup($pkg);
-} elsif (isComponent($arg)) {
-    alert "Building: $arg (component build)";
-    unless ($mkdevdir) {
-        eval { $root->getComponentIntfFilename($arg) };
-        fatal "Component $comp does not exist\n" if $@;
+    my $uor = $grp || $pkg; # introduced relatively recently
+
+    message "Build root: $root";
+    message "Build path:",$root->getPath();
+    if ($opts{jobs}==1) {
+        message "Serial build";
+    } elsif ($opts{jobs}>1) {
+        message "Parallel build: up to $opts{jobs} jobs";
     }
-    $comp = $arg;
-    $pkg = getComponentPackage($comp);
-    $grp = getPackageGroup($pkg);
-} elsif (isFunction($arg)) {
-    message "Building: $arg (function build)";
-    $pkg = $arg;
-    $grp = undef;
-} elsif (isApplication($arg)) {
-    message "Building: $arg (application build)";
-    $pkg = $arg;
-    $grp = undef;
-} else {
-    usage("Unknown build unit: $arg");
-    exit EXIT_FAILURE;
-}
-my $uor = $grp || $pkg; # introduced relatively recently
 
-message "Build root: $root";
-message "Build path:",$root->getPath();
-if ($opts{jobs}==1) {
-    message "Serial build";
-} elsif ($opts{jobs}>1) {
-    message "Parallel build: up to $opts{jobs} jobs";
-}
+    message "Building for: $uplid";
 
-message "Building for: $uplid";
+    #--------------------------------------------------------------------
+    # Build type determination
 
-#------------------------------------------------------------------------------
-# Build type determination
+    # get the normalised build target (e.g. exc_dbg -> dbg_exc)
+    $ufid=new BDE::Build::Ufid($target);
+    message("Build type: $ufid");
 
-# get the normalised build target (e.g. exc_dbg -> dbg_exc)
-$ufid=new BDE::Build::Ufid($target);
-message("Build type: $ufid");
+    # can link with libraries built with another ufid
+    $link_ufid = $ufid;
+    if ($link_target) {
+        $link_ufid = new BDE::Build::Ufid($link_target);
+        fatal "Cannot obtain ufid '$link_target'" unless $link_ufid;
+        message("Linking build type: $link_ufid");
+    }
 
-# can link with libraries built with another ufid
-$link_ufid = $ufid;
-if ($link_target) {
-    $link_ufid = new BDE::Build::Ufid($link_target);
-    fatal "Cannot obtain ufid '$link_target'" unless $link_ufid;
-    message("Linking build type: $link_ufid");
-}
+    # can build executables (test drivers) with another ufid
+    $test_ufid = $ufid;
+    if ($test_target) {
+        $test_ufid = new BDE::Build::Ufid($test_target);
+        fatal "Cannot obtain ufid '$test_target'" unless $test_ufid;
+        message("Executable build type: $test_ufid");
+    }
 
-# can build executables (test drivers) with another ufid
-$test_ufid = $ufid;
-if ($test_target) {
-    $test_ufid = new BDE::Build::Ufid($test_target);
-    fatal "Cannot obtain ufid '$test_target'" unless $test_ufid;
-    message("Executable build type: $test_ufid");
-}
-
-if ($mkdevdir) {
-    message("Constructing $comp makefile with ".
+    if ($mkdevdir) {
+        message("Constructing $comp makefile with ".
             ($groupdeps?"group":"package")
             ." dependencies");
-    message("Building against: $root");
-    makeLocalMakefile($comp, $groupdeps, $ufid, $link_ufid, $test_ufid);
-    alert("Makefile constructed for $comp");
-    exit EXIT_SUCCESS;
-}
-
-#------------------------------------------------------------------------------
-# Check capabilities
-
-unless ($factory->isCapable($uor,$uplid,$ufid)) {
-    if ($opts{ifcapable}) {
-        warning "Capabilities of $uor deny build of $ufid on $uplid - ignored";
+        message("Building against: $root");
+        makeLocalMakefile($comp, $groupdeps, $ufid, $link_ufid, $test_ufid);
+        alert("Makefile constructed for $comp");
         exit EXIT_SUCCESS;
-    } else {
-        fatal "Capabilities of $uor deny build of $ufid on $uplid";
     }
-}
 
-#------------------------------------------------------------------------------
-# Build start
+    #---------------------------------------------------------------------
+    # Check capabilities
 
-my $start_time=time;
-alert($ufid->toString(1)." build of $arg started on",
-      scalar localtime($start_time));
-my @pkgs=();
-if ($pkg) {
-    if (getPackageGroup($pkg)) {
-        push @pkgs, getAllPackageDependencies($pkg);
+    unless ($factory->isCapable($uor,$uplid,$ufid)) {
+        if ($opts{ifcapable}) {
+            warning "Capabilities of $uor deny build of $ufid on $uplid - ignored";
+            exit EXIT_SUCCESS;
+        } else {
+            fatal "Capabilities of $uor deny build of $ufid on $uplid";
+        }
     }
+
+    #---------------------------------------------------------------------
+    # Build start
+
+    my $start_time=time;
+    alert($ufid->toString(1)." build of $arg started on",
+        scalar localtime($start_time));
+    my @pkgs=();
+    if ($pkg) {
+        if (getPackageGroup($pkg)) {
+            push @pkgs, getAllPackageDependencies($pkg);
+        }
     # isolated packages don't have dependent packages
-} elsif ($grp) {
-    push @pkgs, getCachedGroup($grp)->getMembers();
-}
+    } elsif ($grp) {
+        push @pkgs, getCachedGroup($grp)->getMembers();
+    }
 
-if ($pkg) {
-    if ($opts{nodepend}) {
-        message("building in $pkg without dependencies");
+    if ($pkg) {
+        if ($opts{nodepend}) {
+            message("building in $pkg without dependencies");
         # ONLY build one package for nodepend
-        @pkgs = $pkg;
-    } elsif (@pkgs) {
-        message("dependencies: @pkgs");
-    }
-    unshift @pkgs,$pkg;
-}
-
-# prepare caches of package dependencies so they are available to all forked
-# child processes in a parallel build.
-foreach my $pkg (@pkgs) {
-    # gather dependencies
-    getAllPackageDependencies($pkg);
-    # preload options
-    $factory->load($pkg) unless $opts{uptodate};
-}
-
-# purify builds: tweak the stack if we have the required binding available
-if ($target=~/pure/) {
-    if (eval { require 'sys/syscall.ph' }) {
-        my $rlimit = pack("LL", ());
-        my $RLIMIT_STACK = 3;  #on solaris, from sys/resource.h
-        $rlimit = pack("LL", 16777216, 16777216);
-        syscall(&SYS_setrlimit, $RLIMIT_STACK, $rlimit);
-        $! and fatal "setrlimit failed: $!";
-    } else {
-        warning "sys/syscall.ph unavailable - unable to adjust stack limit";
-    }
-    $opts{jobs} = 1;  #force serial
-}
-
-#--------------------
-# make makefiles
-
-if (!$opts{uptodate}) {
-    makeGroupMakefile($root, $grp||$pkg, $uplid, $ufid, $opts{jobs});
-    fatal "Error building makefiles" if
-      makeMakefiles($opts{jobs},
-                    [ $groupdeps,$ufid,$link_ufid,$test_ufid ], @pkgs);
-    if ($opts{honordeps}) {
-        alert("Making lower-level makefiles - this may take a few minutes...");
-        for my $tmp (getAllGroupDependencies($grp||$pkg)) {
-            next if getCachedGroupOrIsolatedPackage($tmp)->isPrebuilt;
-            makeGroupMakefile($root, $tmp, $uplid, $ufid, $opts{jobs});
-            fatal "Error building makefiles for $tmp" if
-              makeMakefiles($opts{jobs},
-                            [ $groupdeps,$ufid,$link_ufid,$test_ufid ],
-                            isGroup($tmp) ? getCachedGroup($tmp)->getMembers()
-                                          : ($tmp) );
+            @pkgs = $pkg;
+        } elsif (@pkgs) {
+            message("dependencies: @pkgs");
         }
+        unshift @pkgs,$pkg;
     }
-}
 
-#--------------------
-# determine general make targets
+        # prepare caches of package dependencies so they are available to all
+        # forked child processes in a parallel build.
+    foreach my $pkg (@pkgs) {
+        # gather dependencies
+        getAllPackageDependencies($pkg);
+        # preload options
+        $factory->load($pkg) unless $opts{uptodate};
+    }
 
-my %make_deps=();
-
-if ($opts{make}) {
-    # make targets serially dependent in -M mode
-    my @targets = split /[^\w\.-]+/,$opts{make};
-
-    $make_deps{$targets[0]} = [];
-    if (@targets > 1) {
-        my $previous=$targets[0];
-        foreach my $idx (1..$#targets) {
-            print "PREVIOUS[$idx]:$previous\n";
-            $make_deps{$targets[$idx]} = [ $previous ];
-            $previous = $targets[$idx];
+    # purify builds: tweak the stack if we have the required binding available
+    if ($target=~/pure/) {
+        if (eval { require 'sys/syscall.ph' }) {
+            my $rlimit = pack("LL", ());
+            my $RLIMIT_STACK = 3;  #on solaris, from sys/resource.h
+            $rlimit = pack("LL", 16777216, 16777216);
+            syscall(&SYS_setrlimit, $RLIMIT_STACK, $rlimit);
+            $! and fatal "setrlimit failed: $!";
+        } else {
+            warning "sys/syscall.ph unavailable - unable to adjust stack limit";
         }
-    }
-} else {
-    # before targets are parallel, gather into !before target
-    if (my @befores=$opts{before} ? split(/[^\w\.-]+/,$opts{before}):()) {
-        $make_deps{$_} = [] foreach @befores;
-        $make_deps{"!before"}=[ @befores ];
+        $opts{jobs} = 1;  #force serial
     }
 
-    # core dependencies for each packages - hooked together below
-    $make_deps{preprocess_package_include}=$opts{before} ? ["!before"] : [];
-    $make_deps{build_package_objects}=[
-        "preprocess_package_include"
-    ];
-    $make_deps{build_package_library}=[ "build_package_objects" ];
-    unless ($express) {
-        $make_deps{build_test}=[ "build_package_objects" ];
-        $make_deps{test}=[ "build_test" ];
-    }
+    #--------------------
+    # make makefiles
 
-    unless ($pkg and isIsolatedPackage($pkg)) {
-        $make_deps{install_package} = [ "build_package_library" ];
-    }
-
-    if ($pkg and isIsolatedPackage($pkg)) {
-        $make_deps{install_group} = [ "build_package_library" ];
-    }
-
-    # after targets are parallel, initiate from !after target
-    if (my @afters =$opts{after}  ? split(/[^\w\.-]+/,$opts{after}):()) {
-        $make_deps{"!after"}=[
-            ($pkg and isIsolatedPackage($pkg))
-            ? "install_group" : "install_package" ];
-        $make_deps{$_}=[ "!after" ] foreach @afters;
-    }
-}
-
-debug("Building targets: ",keys %make_deps);
-
-#---------------------
-# do make
-
-my $mgr=new Task::Manager("Building ".$ufid->toString(1));
-$mgr->setQuitOnFailure($opts{quit});
-
-if ($comp) {
-    @pkgs = grep { $_ ne $pkg } @pkgs;
-}
-
-# generate actions from per-package structure above, for each package in build
-for my $target (keys %make_deps) {
-    my $skip_package="";
-    my $unskip_package="";
-
-    my @args=();
-    my $action = ($target=~/^!/) ? \&nopPackageTarget : \&buildPackageTarget;
-
-    for my $thispkg (@pkgs) {
-        # specific specialisation: non-compliant package tests and -E
-        if ($target=~/^(build_)?test$/o and $opts{ncexpress}
-            and isNonCompliant($thispkg)) {
-            debug "skipping non-compliant package tests in ncexpress mode";
-            next;
-        }
-
-        # calculate required actions:
-        my @deps=();
-        # 1 - internal dependencies
-        if (exists $make_deps{$target}) {
-            push @deps, map { "$thispkg.$_" } @{$make_deps{$target}};
-        }
-
-        # 2 - dependant packages - cross-link inter-package dependencies
-        unless ($opts{nodepend}) {
-            if (($target eq "build_package_objects") or
-                ($comp and ($target =~/^build_test/))) {
-                if (my @deppkgs=getAllInternalPackageDependencies($thispkg)) {
-                    push @deps, "$_.install_package" foreach @deppkgs;
-                }
+    if (!$opts{uptodate}) {
+        makeGroupMakefile($root, $grp||$pkg, $uplid, $ufid, $opts{jobs});
+        fatal "Error building makefiles" if
+        makeMakefiles($opts{jobs},
+            [ $groupdeps,$ufid,$link_ufid,$test_ufid ], @pkgs);
+        if ($opts{honordeps}) {
+            alert("Making lower-level makefiles - this may take a few minutes...");
+            for my $tmp (getAllGroupDependencies($grp||$pkg)) {
+                next if $groupsMakefilesGeneratedFor{$tmp}++;
+                next if getCachedGroupOrIsolatedPackage($tmp)->isPrebuilt;
+                makeGroupMakefile($root, $tmp, $uplid, $ufid, $opts{jobs});
+                fatal "Error building makefiles for $tmp" if
+                makeMakefiles($opts{jobs},
+                    [ $groupdeps,$ufid,$link_ufid,$test_ufid ],
+                    isGroup($tmp) ? getCachedGroup($tmp)->getMembers()
+                    : ($tmp) );
             }
         }
-
-        # allow depending build_package_objects actions to carry-on even on
-        # a failure of their dependant install_package actions
-        my $failok=($target eq "install_package")?1:0;
-        $failok=0 if $opts{fail}; #don't permit carry-on if disabled
-
-        # dep groups must be built first
-        push @deps, "build_dependencies" if $opts{honordeps} and
-           ($target eq "!before" or $target eq "preprocess_package_include");
-
-        $mgr->addAction(new Task::Action({
-            name     => "$thispkg.$target",
-            action   => $action,
-            args     => [ $thispkg, $target, $uplid, $ufid, $opts{makejobs}],
-            requires => \@deps,
-            failok   => $failok,
-        }));
-    } #foreach $thispkg
-}
-
-# add group-level make on to end of tree
-if ($opts{honordeps}) {
-    my $target = $opts{make} || "build_dependencies";
-    $mgr->addAction(new Task::Action({
-            name     => "build_dependencies",
-            action   => \&groupMake,
-            args     => [ $root, $grp||$pkg, $uplid, $ufid,
-                          $opts{makejobs}, $target ],
-            requires => [],
-            failok   => 0,
-        }));
-}
-
-if ($grp_build) {
-    my $target = $opts{make} || "install_group";
-    if ($target eq "install_group") { #??or $target =~ /^(clean|realclean)$/) {
-        $mgr->addAction(new Task::Action({
-                name     => "install_group",
-                action   => \&groupMake,
-                args     => [ $root, $grp, $uplid, $ufid,
-                              $opts{makejobs}, $target ],
-                requires => [ map { "$_.install_package" } @pkgs ],
-                failok   => 0,
-           }));
     }
-}
 
-# add tasks for application mains, if present.
-if ($pkg and !$comp and !$opts{make}) {
-    # Retrieve options to determine if application mains are to be built
-    my $options=$factory->construct({
-        uplid   => $uplid,
-        ufid    => $ufid,
-        what    => $pkg,
-    });
+    #--------------------
+    # determine general make targets
 
-    if (isApplication($pkg) or $options->getValue("APPLICATION_MAIN")) {
-        $mgr->addAction(new Task::Action({
-            name     => "$pkg.build_application",
-            action   => \&buildPackageTarget,
-            args     => [ $pkg, "build_application", $uplid, $ufid,
-                          $opts{makejobs}],
-            requires => [ "$pkg.build_package_objects" ],
-            failok   => 0,
-        }));
+    my %make_deps=();
 
-        # applications are one package in size and have a special build rule
-        if (isApplication($pkg)) {
-            $mgr->removeAction("$pkg.build_package_library");
-            $mgr->removeAction("$pkg.install");
-            $mgr->removeAction("$pkg.install_group");
-            $mgr->removeAction("$pkg.install_package");
+    if ($opts{make}) {
+        # make targets serially dependent in -M mode
+        my @targets = split /[^\w\.-]+/,$opts{make};
+
+        $make_deps{$targets[0]} = [];
+        if (@targets > 1) {
+            my $previous=$targets[0];
+            foreach my $idx (1..$#targets) {
+                print "PREVIOUS[$idx]:$previous\n";
+                $make_deps{$targets[$idx]} = [ $previous ];
+                $previous = $targets[$idx];
+            }
         }
-    }
-}
-
-# component-only mode - add component-specific targets; currently this is
-# the only such mode: 'clean.<component>' and similar will come later.
-if ($comp) {
-    if ($opts{express} and $opts{express}>=2) {
-        # build object
-        $mgr->addAction(new Task::Action({
-            name     => "$comp.build",
-            action   => \&buildPackageTarget,
-            args     => [ $comp, "build", $uplid, $ufid, $opts{makejobs}],
-            requires => $opts{nodepend} ?
-                      [] : [ map { "$_.install_package" } @pkgs ],
-            failok   => 0,
-        }));
     } else {
-        # build_test and test
-        $mgr->addAction(new Task::Action({
-            name     => "$comp.build_test",
-            action   => \&buildPackageTarget,
-            args     => [ $comp,"build_test",$uplid,$ufid,$opts{makejobs}],
-            requires => $opts{nodepend} ?
-                      [] : [ map { "$_.install_package" } @pkgs ],
-            failok   => 0,
-        }));
-        $mgr->addAction(new Task::Action({
-            name     => "$comp.test",
-            action   => \&buildPackageTarget,
-            args     => [ $comp, "test", $uplid, $ufid, $opts{makejobs} ],
-            requires => [ "$comp.build_test" ],
-            failok   => 0,
-        }));
-    }
-}
-
-# dump out the task list of what we're about to do if asked
-$mgr->dump() if Util::Message::get_debug() > 1;
-
-# do it
-my $result=$mgr->run($opts{jobs});
-
-# post-build (a hack prior to introduction of group-level operation)
-# takes place at the end of the build, if a group-level build was done.
-# this is hackish because it uses the old options system to get a
-# variable from the top level unit-of-release
-if (!$opts{make} and
-    ($grp_build or (!$comp and isIsolatedPackage($pkg)))) {
-
-    my $options=$factory->construct({
-        uplid => $uplid,
-        ufid  => $ufid,
-        what  => $grp || $pkg, #group or isolated package
-    });
-
-    if (my $postbuild=$options->getValue("POST_BUILD")) {
-        my $postbuildopt=$options->getValue("POST_BUILD_OPT") || "";
-        if ($postbuildopt) {
-            message "Post-build executing: $postbuild $postbuildopt";
-            print "<< ",retry_output3($postbuild,$postbuildopt);
-        } else {
-            message "Post-build executing: $postbuild $postbuildopt";
-            print "<< ",retry_output3($postbuild);
+        # before targets are parallel, gather into !before target
+        if (my @befores=$opts{before} ? split(/[^\w\.-]+/,$opts{before}):()) {
+            $make_deps{$_} = [] foreach @befores;
+            $make_deps{"!before"}=[ @befores ];
         }
-        message "Post-build done";
+
+        # core dependencies for each packages - hooked together below
+        $make_deps{preprocess_package_include}=$opts{before} ? ["!before"] : [];
+        $make_deps{build_package_objects}=[
+        "preprocess_package_include"
+        ];
+        $make_deps{build_package_library}=[ "build_package_objects" ];
+        unless ($express) {
+            $make_deps{build_test}=[ "build_package_objects" ];
+            $make_deps{test}=[ "build_test" ];
+        }
+
+        unless ($pkg and isIsolatedPackage($pkg)) {
+            $make_deps{install_package} = [ "build_package_library" ];
+        }
+
+        if ($pkg and isIsolatedPackage($pkg)) {
+            $make_deps{install_group} = [ "build_package_library" ];
+        }
+
+        # after targets are parallel, initiate from !after target
+        if (my @afters =$opts{after}  ? split(/[^\w\.-]+/,$opts{after}):()) {
+            $make_deps{"!after"}=[
+            ($pkg and isIsolatedPackage($pkg))
+            ? "install_group" : "install_package" ];
+            $make_deps{$_}=[ "!after" ] foreach @afters;
+        }
+    }
+
+    debug("Building targets: ",keys %make_deps);
+
+    #---------------------
+    # do make
+
+    my $mgr=new Task::Manager("Building ".$ufid->toString(1));
+    $mgr->setQuitOnFailure($opts{quit});
+
+    if ($comp) {
+        @pkgs = grep { $_ ne $pkg } @pkgs;
+    }
+
+    # generate actions from per-package structure above, for each package in
+    # build
+    for my $target (keys %make_deps) {
+        my $skip_package="";
+        my $unskip_package="";
+
+        my @args=();
+        my $action = ($target=~/^!/) ? \&nopPackageTarget : \&buildPackageTarget;
+
+        for my $thispkg (@pkgs) {
+            # specific specialisation: non-compliant package tests and -E
+            if ($target=~/^(build_)?test$/o and $opts{ncexpress}
+                    and isNonCompliant($thispkg)) {
+                debug "skipping non-compliant package tests in ncexpress mode";
+                next;
+            }
+
+            # calculate required actions:
+            my @deps=();
+            # 1 - internal dependencies
+            if (exists $make_deps{$target}) {
+                push @deps, map { "$thispkg.$_" } @{$make_deps{$target}};
+            }
+
+            # 2 - dependant packages - cross-link inter-package dependencies
+            unless ($opts{nodepend}) {
+                if (($target eq "build_package_objects") or
+                    ($comp and ($target =~/^build_test/))) {
+                    if (my @deppkgs=getAllInternalPackageDependencies($thispkg)) {
+                        push @deps, "$_.install_package" foreach @deppkgs;
+                    }
+                }
+            }
+
+            # allow depending build_package_objects actions to carry-on even
+            # on a failure of their dependant install_package actions
+            my $failok=($target eq "install_package")?1:0;
+            $failok=0 if $opts{fail}; #don't permit carry-on if disabled
+
+            # dep groups must be built first
+            push @deps, "build_dependencies" if $opts{honordeps} and
+            ($target eq "!before" or $target eq "preprocess_package_include");
+
+            $mgr->addAction(new Task::Action({
+                        name     => "$thispkg.$target",
+                        action   => $action,
+                        args     => [ $thispkg,
+                                      $target,
+                                      $uplid,
+                                      $ufid,
+                                      $opts{makejobs}
+                                    ],
+                        requires => \@deps,
+                        failok   => $failok,
+                    }));
+        } #foreach $thispkg
+    }
+
+    # add group-level make on to end of tree
+    if ($opts{honordeps}) {
+        my $target = $opts{make} || "build_dependencies";
+        $mgr->addAction(new Task::Action({
+                    name     => "build_dependencies",
+                    action   => \&groupMake,
+                    args     => [ $root, $grp||$pkg, $uplid, $ufid,
+                    $opts{makejobs}, $target ],
+                    requires => [],
+                    failok   => 0,
+                }));
+    }
+
+    if ($grp_build) {
+        my $target = $opts{make} || "install_group";
+        if ($target eq "install_group") { #??or $target =~ /^(clean|realclean)$/)
+            $mgr->addAction(new Task::Action({
+                        name     => "install_group",
+                        action   => \&groupMake,
+                        args     => [ $root, $grp, $uplid, $ufid,
+                        $opts{makejobs}, $target ],
+                        requires => [ map { "$_.install_package" } @pkgs ],
+                        failok   => 0,
+                    }));
+        }
+    }
+
+    # add tasks for application mains, if present.
+    if ($pkg and !$comp and !$opts{make}) {
+        # Retrieve options to determine if application mains are to be built
+        my $options=$factory->construct({
+                uplid   => $uplid,
+                ufid    => $ufid,
+                what    => $pkg,
+            });
+
+        if (isApplication($pkg) or $options->getValue("APPLICATION_MAIN")) {
+            $mgr->addAction(new Task::Action({
+                        name     => "$pkg.build_application",
+                        action   => \&buildPackageTarget,
+                        args     => [ $pkg, "build_application", $uplid, $ufid,
+                        $opts{makejobs}],
+                        requires => [ "$pkg.build_package_objects" ],
+                        failok   => 0,
+                    }));
+
+            # applications are one package in size and have a special build
+            # rule
+            if (isApplication($pkg)) {
+                $mgr->removeAction("$pkg.build_package_library");
+                $mgr->removeAction("$pkg.install");
+                $mgr->removeAction("$pkg.install_group");
+                $mgr->removeAction("$pkg.install_package");
+            }
+        }
+    }
+
+    # component-only mode - add component-specific targets; currently this is
+    # the only such mode: 'clean.<component>' and similar will come later.
+    if ($comp) {
+        if ($opts{express} and $opts{express}>=2) {
+            # build object
+            $mgr->addAction(new Task::Action({
+                        name     => "$comp.build",
+                        action   => \&buildPackageTarget,
+                        args     => [ $comp, "build", $uplid, $ufid, $opts{makejobs}],
+                        requires => $opts{nodepend} ?
+                        [] : [ map { "$_.install_package" } @pkgs ],
+                        failok   => 0,
+                    }));
+        } else {
+            # build_test and test
+            $mgr->addAction(new Task::Action({
+                        name     => "$comp.build_test",
+                        action   => \&buildPackageTarget,
+                        args     => [ $comp,"build_test",$uplid,$ufid,$opts{makejobs}],
+                        requires => $opts{nodepend} ?
+                        [] : [ map { "$_.install_package" } @pkgs ],
+                        failok   => 0,
+                    }));
+            $mgr->addAction(new Task::Action({
+                        name     => "$comp.test",
+                        action   => \&buildPackageTarget,
+                        args     => [ $comp, "test", $uplid, $ufid, $opts{makejobs} ],
+                        requires => [ "$comp.build_test" ],
+                        failok   => 0,
+                    }));
+        }
+    }
+
+    # dump out the task list of what we're about to do if asked
+    $mgr->dump() if Util::Message::get_debug() > 1;
+
+    # do it
+    my $result=$mgr->run($opts{jobs});
+
+    # post-build (a hack prior to introduction of group-level operation)
+    # takes place at the end of the build, if a group-level build was done.
+    # this is hackish because it uses the old options system to get a
+    # variable from the top level unit-of-release
+    if (!$opts{make} and
+        ($grp_build or (!$comp and isIsolatedPackage($pkg)))) {
+
+        my $options=$factory->construct({
+                uplid => $uplid,
+                ufid  => $ufid,
+                what  => $grp || $pkg, #group or isolated package
+            });
+
+        if (my $postbuild=$options->getValue("POST_BUILD")) {
+            my $postbuildopt=$options->getValue("POST_BUILD_OPT") || "";
+            if ($postbuildopt) {
+                message "Post-build executing: $postbuild $postbuildopt";
+                print "<< ",retry_output3($postbuild,$postbuildopt);
+            } else {
+                message "Post-build executing: $postbuild $postbuildopt";
+                print "<< ",retry_output3($postbuild);
+            }
+            message "Post-build done";
+        }
+    }
+
+    if ($result) {
+        error $ufid->toString(1)." build of $arg FAILED on ".
+        scalar(localtime);
+        exit EXIT_FAILURE;
+    } else {
+        my $duration=time-$start_time;
+        message("elapsed time: $duration seconds");
+        alert $ufid->toString(1)." build of $arg finished OK on ".
+        scalar localtime;
     }
 }
 
-if ($result) {
-    error $ufid->toString(1)." build of $arg FAILED on ".
-      scalar(localtime);
-    exit EXIT_FAILURE;
-} else {
-    my $duration=time-$start_time;
-    message("elapsed time: $duration seconds");
-    alert $ufid->toString(1)." build of $arg finished OK on ".
-      scalar localtime;
-    exit EXIT_SUCCESS;
-}
-
-#==============================================================================
+#============================================================================
 
 =head1 AUTHOR
 

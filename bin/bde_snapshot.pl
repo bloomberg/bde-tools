@@ -1,5 +1,7 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
+
 use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin";
@@ -39,7 +41,7 @@ use Symbols qw(
 use Task::Manager;
 use Task::Action;
 
-my @metafiles = qw[mem dep opts pub cap defs];
+my @metafiles = qw[mem dep opts pub cap defs dums];
 
 #==============================================================================
 
@@ -140,6 +142,7 @@ Usage: $prog -h | [-d] [-D] [-m] [-f] [-t <dir>] [-w <root>] <unit> ...
   --category   | -c           create/use category directory (e.g. 'groups')
                               under destination directory (not with --flat)
   --debug      | -d           enable debug reporting
+  --etc        | -e           include "etc/" directory
   --drivers    | -T           include test drivers
   --flat       | -f           do not create subdirectories
   --help       | -h           usage information (this text)
@@ -179,6 +182,7 @@ sub getoptions {
         debug|d+
         drivers|T!
         honordeps|honourdeps|H|dependants|dependents|D!
+        etc|e!
         flat|f!
         help|h
         jobs|parallel|j|p=i
@@ -498,6 +502,11 @@ MAIN {
     foreach my $item (@ARGV) {
         fatal "Unknown source unit: $item"
           unless isGroup($item) or isPackage($item);
+    }
+
+    if (defined $opts->{etc}) {
+        message "Snapshotting etc";
+        system("/opt/swt/bin/rsync -av $opts->{where}/etc $opts->{to}/");
     }
 
     my @items=();

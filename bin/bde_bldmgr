@@ -1,5 +1,7 @@
-#!/opt/swt/bin/perl -w     # -*-Perl-*-
+#!/usr/bin/env perl
+
 use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib/perl";
@@ -56,6 +58,9 @@ use vars qw(
              $enableLogArchive $logArchiveBase
              $enableHtmlOutput $htmlOutputBase $htmlOutputBaseURL
              $resultsBase
+             $mailLogPath
+             %opts
+             $deadline
            );
 
 #------------------------------------------------------------------------------
@@ -74,7 +79,10 @@ set_default_category();
 
 # parse options
 my $prog = basename $0;
-my %opts;
+
+# Note that there are 2 environment variables also used for configuration:
+# BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
+# LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 
 Getopt::Long::Configure("bundling");
 unless (GetOptions(\%opts,qw[
@@ -101,8 +109,8 @@ unless (GetOptions(\%opts,qw[
     recipients|r=s@
     serial|s
     targets|t=s@
+    deadline|T=s
     verbose|v+
-    where|who|w=s
 ])) {
     usage(), exit(EXIT_BAD_OPT);
 }
@@ -152,7 +160,7 @@ foreach my $pi (0..$#platforms) {
 }
 
 ($path,$view)=(undef,undef);
-$view=$opts{where} if defined $opts{where};
+#$view=$opts{where} if defined $opts{where};
 
 my $started_at=time;
 alert("Build started at ".localtime($started_at));
@@ -198,6 +206,13 @@ if ($opts{config}) {
 }
 require $opts{config} or fatal "Failed to load configuration '$opts{config}':".
   "\n\t$!";
+
+if (exists $opts{deadline}) {
+    $deadline = $opts{deadline};
+}
+
+message "Deadline is $deadline - will kill processes once that time is reached";
+
 unless (defined %configured_builds) {
     error("No valid build configurations found");
     usage();
@@ -293,9 +308,11 @@ sub expand_macros($$) {
 
     return $platform->{$key} unless $platform->{$key}=~/\[/;
 
-    debug "Expanding $key <- '$platform->{$key}'";
+    # When/if problems occur, it's too late to toggle debug on for
+    # these.  Better to print them out every time.
+    message "Expanding $key <- '$platform->{$key}'";
     $platform->{$key} =~ s/\[(\w+)\]/expand_macros($platform,$1)/esg;
-    debug "Expanded  $key -> '$platform->{$key}'";
+    message "Expanded  $key -> '$platform->{$key}'";
 
     return $platform->{$key}
 }
@@ -306,6 +323,13 @@ sub colour_and_htmlize ($$) {
     my $warningColor=qq{<SPAN style="color: red; font-weight: bold; font-style: italic">};
 
     my ($line, $anchor_r)=@_;
+
+    # Escape HTML characters in $line
+
+    $line=~s/&/&amp;/g; # do this one first so as not to undo others...
+    $line=~s/</&lt;/g;
+    $line=~s/>/&gt;/g;
+    $line=~s/"/&quot;/g;
 
     if(    $line!~/is not a valid default record buffer size/
         && $line!~/Error: could not find a route for request/
@@ -698,7 +722,10 @@ sub assemble_command ($$) {
     $command .= " -T " . $build->{tag} if defined $build->{tag};
 
     # targets
-    $command .= " -t $build->{targets}";
+    my $targets=$build->{targets};
+    $targets=~s/\s+/,/g;
+
+    $command .= " -t $targets";
 
     # group (what to build - can also be package)
     $command .= " $group";
@@ -734,8 +761,10 @@ foreach my $platform (@platforms) {
     $build->{FS}=($platform eq 'win')?"\\":"/";
 
     # Avoid warnings by making sure these values are defined.
-    $build->{do_not_build} = '' unless length($build->{do_not_build});
-    $build->{no_64_groups} = '' unless length($build->{no_64_groups});
+    $build->{do_not_build} = '' unless exists($build->{do_not_build})
+                                    && length($build->{do_not_build});
+    $build->{no_64_groups} = '' unless exists($build->{no_64_groups})
+                                    && length($build->{no_64_groups});
 
     debug("for platform $platform, \$build is: ".Dumper($build));
 
@@ -930,9 +959,10 @@ foreach my $platform (@platforms) {
             }
 
             # execute rsh - if rsh itself fails, try next host.
+            alert("Invoking '$command' on $host");
             my ($cmd_status, $cmd_out) = invoke($host,$command,$newBuild);
             if ($cmd_status) {
-                error(($newBuild->{local}?"local":"remote")." build failed to run");
+                error(($newBuild->{local}?"local":"remote")." build failed to run '$command'");
                 for my $l (@$cmd_out) { error($l); }
                 error("trying next machine");
                 $results{unreachable_hosts} .= " $host (build run failed)";
@@ -960,12 +990,16 @@ foreach my $platform (@platforms) {
                        or (exists $newBuild->{do_not_run_tests}
                         and $newBuild->{do_not_run_tests}=~ /\b$group\b/)
                         ) {
+
                     if(exists $test_build{test_host}
                             && exists $test_build{test_host}{$group}) {
                         $test_host = $test_build{test_host}{$group};
-                        my $startview_cmd="/usr/atria/bin/cleartool startview $view";
-                        my ($cmd_status, $cmd_out) = invoke($test_build{test_host}{$group},
-                                $startview_cmd,$newBuild);
+
+                        if (!exists $test_build{no_clearcase}) {
+                            my $startview_cmd="/usr/atria/bin/cleartool startview $view";
+                            my ($cmd_status, $cmd_out) = invoke($test_build{test_host}{$group},
+                                    $startview_cmd,$newBuild);
+                        }
                     }
 
                     $command = assemble_command(\%test_build, $group);
@@ -989,6 +1023,22 @@ foreach my $platform (@platforms) {
                     $results{unreachable_hosts} .= " $host (postbuild failed)";
                     $results{host} = undef;
                     push @badCmdOutput, @$cmd_out;
+                    next;
+                }
+            }
+
+            # Like postbuild_cmd, except that this command is run locally.
+            if (exists $build->{postbuild_pull_cmd}) {
+                message("running postbuild pull command");
+                my $cmd_out = system($build->{postbuild_pull_cmd});
+                my $cmd_status = $?;
+
+                if ($cmd_status) {
+                    error("Postbuild pull command failed");
+                    for my $l (split /\n/,$cmd_out) { error($l); }
+                    $results{unreachable_hosts} .= " $host (postbuild pull failed)";
+                    $results{host} = undef;
+                    push @badCmdOutput, $cmd_out;
                     next;
                 }
             }
@@ -1103,6 +1153,16 @@ sub gatherResults
 
 my $startTime=time;
 
+if(!defined $deadline) {
+    $deadline = "11:00";
+}
+
+sub deadlineReached {
+    my $now = strftime("%H:%M",localtime);
+
+    return ($now ge $deadline);
+}
+
 while(scalar keys %kids) {
     my $kid;
     while (($kid=waitpid(-1, WNOHANG)) > 0) {
@@ -1127,6 +1187,7 @@ while(scalar keys %kids) {
             gatherResults($pid);
             next;
         }
+
         if (-e "/proc/$pid") {
             my $owner_id=(stat "/proc/$pid")[4];
             if($owner_id != $<) {
@@ -1135,7 +1196,17 @@ while(scalar keys %kids) {
                 next;
             }
         }
+
+        if(deadlineReached()) {
+            warn "Deadline $deadline reached - killing $pid and gathering";
+            kill 2,$pid; # SIGINT
+            sleep(1);
+            gatherResults($pid);
+            kill 9,$pid; # SIGKILL
+        }
+
         message("Checking for results for PLATFORM $platformByPid{$pid} PID $pid");
+
         if (waitpid($pid, WNOHANG) == $pid) {
             gatherResults($pid);
             next;
@@ -1156,7 +1227,7 @@ MAIL_GROUP: foreach my $group (@groups) {
 
     if ($opts{mail}) {
         my $dtag = strftime("%Y%m%d-%H%M%S",localtime);
-        my $mail_file = "$FindBin::Bin/../logs/$prog.$group.$dtag.log";
+        my $mail_file = "$mailLogPath/$prog.$group.$dtag.log";
         $mail_file =~ s|/[^/]+/\.\./|/|g;
         debug("mail file: ".$mail_file);
 
@@ -1171,23 +1242,9 @@ MAIL_GROUP: foreach my $group (@groups) {
         $success = 0 unless $this_success;
 
         # construct subject
-        if ($view) {
+        if ($opts{id}) {
             my $manually=($interactive)?" (manually invoked)":"";
-            $sub = "${manually}: $sub";
-            my $v;
-            if ($view eq "bde_devintegrator") {
-                $v = "DEV/latest";
-            }
-            elsif ($view eq "bde_integrator") {
-                $v = "BB/latest";
-            }
-            elsif ($view eq "bde_releaseintegrator") {
-                $v = "RELEASE";
-            }
-            else {
-                $v = $view;
-            }
-            $sub = "${v}${sub}";
+            $sub = "$opts{id}${manually}: $sub";
         }
         print $mfh "\n=> $sub <=\n";
 
@@ -1200,12 +1257,12 @@ MAIL_GROUP: foreach my $group (@groups) {
         my $mail_dst = join ",",@recipients;
 
         # assume sdv2 has the right view started
-        if($mail_file =~ m{/view/([^/]+)}) {
-            system("ssh -2 sundev2 /usr/atria/bin/cleartool startview $1");
-        }
-        else {
-            system("ssh -2 sundev2 /usr/atria/bin/cleartool startview bde_devintegrator");
-        }
+        #if($mail_file =~ m{/view/([^/]+)}) {
+        #    system("ssh -2 sundev2 /usr/atria/bin/cleartool startview $1");
+        #}
+        #else {
+        #    system("ssh -2 sundev2 /usr/atria/bin/cleartool startview bde_devintegrator");
+        #}
         message(join " ",("ssh","-2","sundev2","/bb/bin/ratmail","-s",
                          "\"$sub\"",$mail_file,$mail_dst)
                );
@@ -1237,6 +1294,7 @@ print $rfh "#target,system,build,elapsed,failurePackage,logFile,htmlURL,unreacha
 while(my ($target, $target_ar) = each %all_results) {
     foreach my $system_hr(@$target_ar) {
         foreach my $build(@{$system_hr->{target_combos}}) {
+            my $build_re = qr(^\Q$build\E$);
             print $rfh "$target,$system_hr->{system},$build,$system_hr->{elapsed},";
 
             print $rfh ",,,";
@@ -1247,13 +1305,13 @@ while(my ($target, $target_ar) = each %all_results) {
 
             print $rfh ",";
 
-            if(grep /^$build$/,@{$system_hr->{notsup_targets}}) {
+            if(grep /$build_re/,@{$system_hr->{notsup_targets}}) {
                 print $rfh "C";
             }
-            elsif(grep /^$build$/,@{$system_hr->{ok_targets}}) {
+            elsif(grep /$build_re/,@{$system_hr->{ok_targets}}) {
                 print $rfh "Y";
             }
-            elsif(grep /^$build$/,@{$system_hr->{err_targets}}) {
+            elsif(grep /$build_re/,@{$system_hr->{err_targets}}) {
                 print $rfh "N";
             }
             else {
@@ -1320,7 +1378,7 @@ sub display_results ($$$;$) {
     for my $result (@$results_array) {
         for my $result_target (@{$result->{target_combos}}) {
             push @all_targets, $result_target if
-              ! grep(/^$result_target$/, @all_targets);
+              ! grep(/^\Q$result_target\E$/, @all_targets);
             $maxtargetlen = length($result_target) if
               $maxtargetlen < length($result_target);
         }
@@ -1344,16 +1402,18 @@ sub display_results ($$$;$) {
         for my $result (@$results_array) {
             $statcount{total}++;
             if (1 || $result->{host}) {
-                if (grep(/^$target$/, @{$result->{ok_targets}})) {
+                my $target_pattern = qr/^\Q$target\E$/;
+
+                if (grep(/$target_pattern/, @{$result->{ok_targets}})) {
                     push(@target_results, OK);
                     $statcount{ok}++;
                     next;
-                } elsif (grep(/^$target$/, @{$result->{notsup_targets}})) {
+                } elsif (grep(/$target_pattern/, @{$result->{notsup_targets}})) {
                     push(@target_results, NOTSUP);
                     $statcount{total}--;
                     next;
                 } elsif (ref $result->{err_targets}) {
-                    if (grep(/^$target$/, @{$result->{err_targets}})) {
+                    if (grep(/$target_pattern/, @{$result->{err_targets}})) {
                     push(@target_results, ERR);
                     $statcount{err}++;
                     next;
@@ -1462,18 +1522,15 @@ sub display_results ($$$;$) {
                       || $err=~m{\\}i) {
                         my $originalErrTarget=$err;
                         $err=~s{\\}{/}g;
-                        # w32 uses e:/clearcase/bdebuild_     prefixes
-                        # w64 uses d:/clearcase/bdebuild_w64_ prefixes
                         # The drive part (e: or d:) sometimes goes away.
                         $err=~s{([de]:)?/clearcase/bdebuild_(w64_)?}{/view/}i;
-                        $err=~s{(d:)?/views/}{/view/}i;
-                        $err=~s{(?<!/bbcm)/infrastructure}{/bbcm/infrastructure}i;
-                        $err=~s{(?<!/bbcm)/api}{/bbcm/api}i;
+                        $err=~s{([de]:)?/nightly_builds/}{/home/bdebuild/bs/build-};
+                        $err=~s{([de]:)?/nightly_logs/}{/home/bdebuild/bs/nightly-logs/};
                         print "$err_target-FIXUP: $originalErrTarget -> $err\n";
                     }
 
                     print "$err\n";
-                    if ($err=~m!(/view.*)!) {
+                    if ($err=~m!(/home.*)! || $err=~m!(/view.*)!) {
                         my $logFile = $1;
                         deep_copy($logFile, "$logArchiveBase$datePathPart")
                                         if defined $enableLogArchive;
@@ -1528,7 +1585,6 @@ Local options:
                                   meaning: 1 - basic messages
                                            2 - add sent requests
                                            3 - add recieved responses
-  --where      | -w <dir|view> where (dir) or who (view) to build from
 
 Passed to build:
   --after      | -A <target>    make explicit target(s) after regular build

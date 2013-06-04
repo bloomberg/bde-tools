@@ -1,6 +1,7 @@
-#!/bbs/opt/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
+use warnings;
 use FindBin;
 use File::Path;
 use lib "$FindBin::Bin";
@@ -39,16 +40,16 @@ use vars qw(
              $resultsBase
            );
 
-my @otherBuilds = qw(
-        nextrel
-        nextrel-api
-        dev-nextrel-api
-        robo
-        dev
-        dev-api
-        dev-bus
-        dev-fde
-        );
+my @otherBuilds = (
+    'bslintdev-core'
+);
+
+
+foreach my $target (qw(core bb bas router)) {
+    foreach my $build (qw(dev nextrel)) {
+        push @otherBuilds, "$build-$target";
+    }
+}
 
 my $configFile = $FindBin::Bin;
 $configFile =~s|bin/?$|etc|;
@@ -180,8 +181,6 @@ my %timingData;
 #target,system,build,elapsed,failurePackage,logFile,htmlURL,unreachabe,YNC-
 
 while(<INPUT>) {
-    #bte,i6,dbg_exc_mt,4135,bteso,/view/bde_devintegrator/bbcm/infrastructure/groups/bte/bteso/unix-AIX-powerpc-5.3-xlc-6.0/make.test.bteso.dbg_exc_mt.log,http://sundev3.bloomberg.com/~bdebuild/fail/20060619/_7FhWb2D5zXTw.html,,N
-
     next if /^#/;
     next if /^$/;
     s/[\r\n]+//g;
@@ -227,14 +226,17 @@ close(INPUT);
 
 #print Dumper(\%data);
 
+# preferred targets, with their relative priority levels
 my %preferredTargets = (
-    i8       => 1,
-    i10      => 1,
-    i10_opt  => 1,
-    i10_safe => 1,
-    s12      => 1,
-    s12_opt  => 1,
-    s12_safe => 1,
+    w32_2008_dbg => 1,
+    w64a_dbg     => 2,
+    i8           => 3,
+    i10          => 3,
+    i10_opt      => 3,
+    i10_safe     => 3,
+    s12          => 3,
+    s12_opt      => 3,
+    s12_safe     => 3,
 );
 
 my %cellColors = (
@@ -249,8 +251,8 @@ sub targetCmp {
     #print "Comparing $a/$b: ";
     if(exists $preferredTargets{$a}) {
         if(exists $preferredTargets{$b}) {
-            #print (-($a cmp $b),"\n");
-            return ($a cmp $b);
+            # If both preferred, check relative priority first
+            return ($preferredTargets{$a} <=> $preferredTargets{$b}) || ($a cmp $b);
         }
         #print "-1\n";
         return -1;
@@ -260,7 +262,6 @@ sub targetCmp {
         return 1;
     }
 
-    #print (-($a cmp $b),"\n");
     return ($a cmp $b);
 }
 
@@ -295,7 +296,7 @@ my %buildOrder; # map build targets => levels
 
 $buildOrder{$_}=999 foreach keys %buildTargets;
 
-set_debug(1);
+#set_debug(1);
 
 my $root=new BDE::FileSystem($ENV{BDE_ROOT});
 $root->setPath(CONSTANT_PATH);

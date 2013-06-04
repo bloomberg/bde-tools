@@ -1,4 +1,8 @@
-#!/bbs/opt/bin/perl
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
 use Getopt::Std;
 if (!@ARGV) {
   print STDERR "cutcols: usage: cutcols colname ...";

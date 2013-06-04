@@ -1,0 +1,11 @@
+# Common makefile snippet used to populate the set of ufid flavors to build in
+# the package-based build
+DEFAULT_STATIC_FLAVOR_32bit:=opt_exc_mt
+DEFAULT_STATIC_FLAVOR_64bit:=opt_exc_mt_64
+STATIC_FLAVORS_32bit:=$(shell echo {opt,dbg,opt_dbg}_exc_mt{,_safe})
+STATIC_FLAVORS_64bit:=$(shell echo {opt,dbg,opt_dbg}_exc_mt_64{,_safe} {opt,dbg}_exc_mt_64_pic)
+STATIC_FLAVORS:=$(STATIC_FLAVORS_64bit) $(STATIC_FLAVORS_32bit)
+DYNAMIC_FLAVOR_32bit:=opt_exc_mt_shr
+DYNAMIC_FLAVOR_64bit:=opt_exc_mt_64_shr
+DYNAMIC_FLAVORS:=$(DYNAMIC_FLAVOR_32bit) $(DYNAMIC_FLAVOR_64bit)
+ALL_FLAVORS:=$(STATIC_FLAVORS) $(DYNAMIC_FLAVORS)
