@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for repo in bde-tools bde-core bsl-oss bsl-internal
+do \
+    banner $repo
+    ssh -t devgit vsync-push bde/$repo
+done

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if [[ -z "$1" ]]
+then \
+    echo USAGE: $0 version-number
+    exit 1
+fi
+
+REGEX="APPROVAL|changelog|releases|version"
+if [[ ! -z "$2" ]]
+then \
+    echo "Extending regex with $2"
+    REGEX="$REGEX|$2"
+fi
+
+devgit-debchange --version="$1" --grep="$REGEX"
+
