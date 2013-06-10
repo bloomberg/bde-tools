@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+echo You must run this script from the repo where you want to
+echo update the opengrok ref, with the correct ref currently
+echo checked out.
+echo
+echo Hit enter if that is the case, and ^C if not:
+
+read
+
+git update-ref refs/heads/opengrok HEAD
+git push origin :opengrok
+git push origin opengrok:opengrok
