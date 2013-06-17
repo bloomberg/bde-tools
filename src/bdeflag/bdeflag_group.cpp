@@ -252,11 +252,13 @@ StartProgram::StartProgram()
         "bslma_DestructorProctor",      "bslma::DestructorProctor",
         "bslma_RawDeleterGuard",        "bslma::RawDeleterGuard",
         "bslma_RawDeleterProctor",      "bslma::RawDeleterProctor",
+        "bdema_ManagedPtr",             "bdema::ManagedPtr",
         "bcemt_LockGuard",              "bcemt::LockGuard",
         "bcemt_QLockGuard",             "bcemt::QLockGuard",
         "bcemt_ReadLockGuard",          "bcemt::ReadLockGuard",
         "bcemt_ReadLockGuardUnlock",    "bcemt::ReadLockGuardUnlock",
         "bcemt_ReadLockGuardTryLock",   "bcemt::ReadLockGuardTryLock",
+        "bcema_SharedPtr",              "bcema::SharedPtr",
         "bcemt_WriteLockGuard",         "bcemt::WriteLockGuard",
         "bcemt_WriteLockGuardUnlock",   "bcemt::WriteLockGuardUnlock",
         "bcemt_WriteLockGuardTryLock",  "bcemt::WriteLockGuardTryLock" };
@@ -3293,7 +3295,7 @@ void Group::checkUnnamedGuards() const
                     if (!isalpha(c) && '*' != c && '&' != c) {
                         typeStart.warning() << "Unnamed temporary of type '" <<
                                   tn << "' created -- will not guard anything,"
-                                               " needs a name -- i.e. 'guard',"
+                                        " needs a name -- i.e. 'ptr', 'guard',"
                                                  " 'proctor', or 'deleter'.\n";
                     }
                 }
