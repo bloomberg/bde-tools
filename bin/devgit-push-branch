@@ -31,7 +31,9 @@ then
     echo branch is $BRANCH - remote branch is $REMOTE_BRANCH
     git push $TRACKING origin $BRANCH:$REMOTE_BRANCH
 else
-    echo branch is master - doing "bare" git push
-    git push
+    echo branch is master - NOT PUSHING
+    echo branch is master - NOT PUSHING
+    echo branch is master - NOT PUSHING
+    #git push
 fi
 
