@@ -185,6 +185,10 @@ class Group {
         // Check that the args to this routine call are either all on one line
         // or each on a separate line.
 
+    void checkSpaceAfterIfWhileFor() const;
+        // Check all asserts at the start of routine bodies are followed by
+        // blank lines.
+
     void checkStartingAsserts() const;
         // If this is a routine body, check any asserts starting it out are
         // followed by a blank line.
@@ -285,6 +289,11 @@ class Group {
     void checkAllRoutineCallArgLists();
         // Check all routine call arg lists, that either all args are on one
         // line or each arg is on a separate line.
+
+    static
+    void checkAllSpaceAfterIfWhileFor();
+        // Check all asserts at the start of routine bodies are followed by
+        // blank lines.
 
     static
     void checkAllStartingAsserts();

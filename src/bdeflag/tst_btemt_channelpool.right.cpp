@@ -1,6 +1,7 @@
 Warning: in tst_btemt_channelpool.cpp 'TBD' comments found on line(s) 359, 1172
 Warning: tst_btemt_channelpool.cpp: '// RETURN' comment(s) needed on returns at line(s) 1379, 1395, 1404, 1444, 1467, 1490, 1529, 1565, 1607, 1639, 1702, 1721, 1789, 1948, 2029, 2055, 2061, 2089, 2141, 2159, 2185, 2215, 2362, 2380, 2419, 2437, 2532, 2565, 2743, 2981, 3018, 3080, 3181, 3431, 3576, 3583, 3624, 3665, 3672, 3728, 3748, 3777, 3820, 3834, 3848, 3869, 3887, 3914, 3919, 3937, 3942, 3960, 3965, 3983, 3988, 4007, 4012, 4051, 4078, 4096, 4116, 4134, 4150, 4167, 4184, 4198, 4214, 4230, 4325, 4355, 4454, 4469, 4483, 4495, 4507, 4519, 4586
 Warning: tst_btemt_channelpool.cpp: (4755, 2): comments on closing namespaces should be indented 2 spaces after the '}'
+Warning: tst_btemt_channelpool.cpp: space needed between if/while/for and '(' on lines: 2067, 3865, 3881
 Warning: tst_btemt_channelpool.cpp: asserts (or groups of asserts) at the beginnings of routines should be followed by blank lines: 3846, 4576
 Warning: tst_btemt_channelpool.cpp: opening '{' of function should be properly aligned alone at start of line(s): 3174
 Warning: tst_btemt_channelpool.cpp: strangely indented comments at line(s) 264, 275, 281, 348, 2692

@@ -7,6 +7,7 @@ tst_pcre.cpp: the following routine(s) should return 'bool': 'is_anchored', 'is_
 Warning: tst_pcre.cpp: (324, 0): class name eptrblock begins with 'e' -- not an upper case char
 Warning: tst_pcre.cpp: the following routine(s) need(s) documentation: 'adjust_recurse', 'auto_callout', 'byteflip', 'check_escape', 'check_posix_name', 'check_posix_syntax', 'compile_branch', 'compile_regex', 'complete_callout', 'could_be_empty', 'could_be_empty_branch', 'find_bracket', 'find_firstassertedchar', 'find_fixedlength', 'find_recurse', 'first_significant_code', 'get_othercase_range', 'get_ucp', 'int', 'is_anchored', 'is_counted_repeat', 'is_startline', 'match', 'match_ref', 'match_xclass', 'ord2utf8', 'pchars', 'pcre_compile', 'pcre_config', 'pcre_exec', 'pcre_fullinfo', 'pcre_info', 'pcre_version', 'read_repeat_counts', 'try_flipped', 'valid_utf8', 'void'
 Warning: tst_pcre.cpp: '// RETURN' comment(s) needed on returns at line(s) 1065, 1266, 1340, 1491, 1511, 1528, 1763, 1797, 1805, 1887, 2236, 4012, 4068, 4114, 4212, 4324, 4331, 4509, 4521, 4534, 5458, 5475, 5549, 5648, 5739, 9182, 9418, 9452, 9472, 9477
+Warning: tst_pcre.cpp: space needed between if/while/for and '(' on lines: 1003, 1262, 1460, 2916, 3518, 6952, 7541, 8033, 8154, 8640, 8679, 8842, 9409
 Warning: tst_pcre.cpp: (527, 59): if/while/for doesn't control a {} block
 Warning: tst_pcre.cpp: (528, 30): if/while/for doesn't control a {} block
 Warning: tst_pcre.cpp: (590, 10): if/while/for doesn't control a {} block

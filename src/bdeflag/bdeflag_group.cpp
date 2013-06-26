@@ -105,6 +105,7 @@ static Ut::LineNumSet badlyAlignedFuncStartBrace;
 static bsl::set<bsl::string> routinesNeedDoc;
 static bsl::set<bsl::string> routinesDocced;
 
+static Ut::LineNumSet needSpaceAfterIfWhileFor;
 static Ut::LineNumSet returnCommentsNeeded;
 static Ut::LineNumSet returnCommentsNotNeeded;
 
@@ -1037,9 +1038,8 @@ void Group::checkAllFunctionDoc()
 
     topLevel().recurseMemTraverse(&Group::checkFunctionDoc);
 
-    if (routinesNeedDoc.count(MATCH_OPERATOR)) {
-        routinesNeedDoc.erase(MATCH_OPERATOR);
-    }
+    routinesNeedDoc.erase(MATCH_OPERATOR);
+    routinesNeedDoc.erase(MATCH_SWAP);
 
     if (!routinesNeedDoc.empty()) {
         typedef bsl::set<bsl::string>::iterator It;
@@ -1131,6 +1131,19 @@ void Group::checkAllRoutineCallArgLists()
 {
     if (Lines::BDEFLAG_DOT_T_DOT_CPP != Lines::fileType()) {
         topLevel().recurseMemTraverse(&Group::checkRoutineCallArgList);
+    }
+}
+
+void Group::checkAllSpaceAfterIfWhileFor()
+{
+    topLevel().recurseMemTraverse(&Group::checkSpaceAfterIfWhileFor);
+
+    if (!needSpaceAfterIfWhileFor.empty()) {
+        cerr << "Warning: " << Lines::fileName() <<
+                      ": space needed between if/while/for and '(' on lines: ";
+        cerr << needSpaceAfterIfWhileFor << endl;
+
+        needSpaceAfterIfWhileFor.clear();
     }
 }
 
@@ -1291,6 +1304,7 @@ void Group::doEverything()
         checkAllReturns();
         checkAllNotImplemented();
         checkAllNamespaces();
+        checkAllSpaceAfterIfWhileFor();
         checkAllStartingAsserts();
         checkAllStartingBraces();
         checkAllTemplateOnOwnLine();
@@ -3119,6 +3133,18 @@ void Group::checkRoutineCallArgList() const
     if (differentLineNums && twoShareLineNum) {
         d_open.warning() << d_prevWord << ": arguments should either be"
                            " all on one line or each on a separate line\n";
+    }
+}
+
+void Group::checkSpaceAfterIfWhileFor() const
+{
+    if (BDEFLAG_IF_WHILE_FOR != d_type) {
+        return;                                                       // RETURN
+    }
+
+    const int col = d_open.col();
+    if (col > 0 && ' ' != Lines::line(d_open.lineNum())[col - 1]) {
+        needSpaceAfterIfWhileFor.insert(d_open.lineNum());
     }
 }
 
