@@ -15,6 +15,9 @@ use Getopt::Long;
 use Carp;
 use IO::File;
 
+use Config;
+my $PS = $Config{path_sep};
+
 use BDE::Build::Invocation qw($FS $FSRE $INVOKE);
 use BDE::FileSystem;
 use BDE::Group;
@@ -65,6 +68,9 @@ use Util::Message qw(
     set_debug get_debug set_verbose verbose
 );
 use Util::Retry qw(:all);
+
+# platform independent constant paths
+my $constant_path = join($PS, split(/:/, CONSTANT_PATH));
 
 #==============================================================================
 
@@ -1171,7 +1177,9 @@ sub makePackageDependencyMacros ($$$;$$) {
 
         # library flags for link line
         my %seen_locations;
-        my @grp_lib_locations = grep {!$seen_locations{$_}++} ($root->getRootLocation(),split /:/,$root->getPath());
+        my @grp_lib_locations =
+            grep {!$seen_locations{$_}++}
+                 ($root->getRootLocation(), split $PS, $root->getPath());
         print $fh "GRP_LIBS     = ",join(" \\\n               ", map {
             "\$(LIBPATH_FLAG)".$_.
               "${FS}lib${FS}\$(UPLID) "
@@ -1181,11 +1189,11 @@ sub makePackageDependencyMacros ($$$;$$) {
                          "\$(LINK_LIB_EXT)","has_regions")
           } @builtgroups);
         if ($link_ufid->toString(1)=~/shr/o) {
-            print $fh " \$(LIBRUNPATH_FLAG)".join(":", map {
+            print $fh " \$(LIBRUNPATH_FLAG)".join($PS, map {
                 "\$(".uc($reggroups{$_})."_ROOTLOCN)${FS}lib${FS}\$(UPLID)"
             } reverse @builtgroups);
             ##<<<TODO support shared libs of legacy libs?
-            print $fh ":${FS}lib:${FS}usr${FS}lib:." if $depend_on_groups;
+            print $fh "${PS}${FS}lib${PS}${FS}usr${FS}lib${PS}." if $depend_on_groups;
         }
         print $fh "\n";
 
@@ -1241,12 +1249,12 @@ sub makePackageDependencyMacros ($$$;$$) {
         } @packages);
 
         if ($link_ufid->toString(1)=~/shr/o) {
-            print $fh " \$(LIBRUNPATH_FLAG)".join(":", map {
+            print $fh " \$(LIBRUNPATH_FLAG)".join($PS, map {
                 "\$(".uc(getPackageGroup($_))."_LOCN)${FS}${_}${FS}\$(UPLID)"
             } reverse @packages);
 
             #<<<TODO: support shared libs of legacy libs?
-            print $fh ":${FS}lib:${FS}usr${FS}lib:."
+            print $fh "${PS}${FS}lib${PS}${FS}usr${FS}lib${PS}."
         }
         print $fh "\n";
 
@@ -3380,13 +3388,13 @@ else {
 $root=new BDE::FileSystem($root);
 # BDE_PATH is probably wrong since proot got nuked
 if(exists $opts{path}) {
-    $root->setPath($opts{path}.":".CONSTANT_PATH);
+    $root->setPath($opts{path}.$PS.$constant_path);
 }
 elsif(exists $ENV{BDE_PATH}) {
-    $root->setPath($ENV{BDE_PATH}.":".CONSTANT_PATH);
+    $root->setPath($ENV{BDE_PATH}.$PS.$constant_path);
 }
 else {
-    $root->setPath(CONSTANT_PATH);
+    $root->setPath($constant_path);
 }
 
 $root->setGroupsSubdir($subdir) if $subdir;
