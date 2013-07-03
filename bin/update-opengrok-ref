@@ -14,7 +14,7 @@ if [[ "x$OLD_REF" == "x" ]]
 then \
     echo "================================"
     echo "No old opengrok ref in this repo"
-    echo "No old opengrok ref in this repo"
+    echo "================================"
 else
     echo "======="
     echo "OLD REF"
