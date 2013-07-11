@@ -2285,8 +2285,10 @@ void Group::checkBooleanRoutineNames() const
     }
 
     if (Ut::npos() == d_prevWord.find(':')
-       && (Ut::frontMatches(d_prevWord, MATCH_IS,  0)
-           || Ut::frontMatches(d_prevWord, MATCH_ARE, 0)
+       && ((Ut::frontMatches(d_prevWord, MATCH_IS,  0) &&
+                             d_prevWord.length() > 2 && isupper(d_prevWord[2]))
+           || (Ut::frontMatches(d_prevWord, MATCH_ARE, 0) &&
+                             d_prevWord.length() > 3 && isupper(d_prevWord[3]))
            || (Ut::frontMatches(d_prevWord, MATCH_HAS,  0) &&
                              d_prevWord.length() > 3 && isupper(d_prevWord[3]))
            || (Ut::frontMatches(d_prevWord, MATCH_OPERATOR, 0) &&
