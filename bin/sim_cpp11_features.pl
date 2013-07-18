@@ -1527,8 +1527,8 @@ EOT
 
             $output .= <<EOT;
 #else
-// The following generated code uses an argument-passing workaround applied
-// to those compilers that lack support for perfect-forwarding.
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
 $forwardingWorkaround
 $generatedCodeEnd
 #endif
@@ -1957,8 +1957,8 @@ int bar(int a, BSLS_COMPILERFEATURES_FORWARD_REF(T) v)
     xyz(a, BSLS_COMPILERFEATURES_FORWARD(T, v));
 }
 #else
-// The following generated code uses an argument-passing workaround applied
-// to those compilers that lack support for perfect-forwarding.
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
 #  ifdef NESTED
 template <int ...B, class... A>
 void foo(C<B...> *c, BSLS_COMPILERFEATURES_FORWARD_REF(A)... a)
@@ -2303,8 +2303,8 @@ template <class T_1,
 template <typename T>
     void z(const vector<T>& v);
 #else
-// The following generated code uses an argument-passing workaround applied
-// to those compilers that lack support for perfect-forwarding.
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
 template <typename... A>
     void g(const vector<A>&... a)
     {
@@ -2393,8 +2393,8 @@ class NonVaridadicClassWithVariadicMember
                                             const U_4& u_4);
 
 #else
-// The following generated code uses an argument-passing workaround applied
-// to those compilers that lack support for perfect-forwarding.
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
     template <class... U>
         NonVaridadicClassWithVariadicMember(const U&... u);
 
@@ -2472,8 +2472,8 @@ void Cls<TYPE_1,
                                   double b);
 
 #else
-// The following generated code uses an argument-passing workaround applied
-// to those compilers that lack support for perfect-forwarding.
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
 template <class T>
     template <class... U>
 NonVaridadicClassWithVariadicMember<T>::
@@ -2576,8 +2576,8 @@ allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
 }
 
 #else
-// The following generated code uses an argument-passing workaround applied
-// to those compilers that lack support for perfect-forwarding.
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
 template <class ALLOCATOR_TYPE>
 template <class ELEMENT_TYPE, class CTOR_ARG, class... CTOR_ARGS>
 inline void
@@ -2600,8 +2600,8 @@ allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
 template <typename A>
 void forwardingFunction(A&& x);
 #else
-// The following generated code uses an argument-passing workaround applied
-// to those compilers that lack support for perfect-forwarding.
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
 template <typename A>
 void forwardingFunction(BSLS_COMPILERFEATURES_FORWARD_REF(A) x);
 // }}} END GENERATED CODE
@@ -2615,8 +2615,8 @@ void nonTemplateFunction(int x);
 template <typename X>
 void normalTemplate(const X& v);
 #else
-// The following generated code uses an argument-passing workaround applied
-// to those compilers that lack support for perfect-forwarding.
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
 void nonTemplateFunction(int x);
 
 template <typename X>
