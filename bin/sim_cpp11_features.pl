@@ -30,7 +30,7 @@ use common::sense;
 use Getopt::Long;
 use File::Spec;
 
-my $debug = 0;
+my $debug = 1;
 my $clean = 0;
 my $defaultMaxArgs = 10;
 my $maxArgs = $defaultMaxArgs;
@@ -1167,24 +1167,39 @@ sub transformVariadicClass($$$)
 
     my @templateParams = getTemplateParams($templateBegin);
 
-    cppSearch(qr/\G\s*(class|struct)\s*([[:word:]]+)\b/, $templateHeadEnd);
-    my $classOrStruct = $cppMatch[1];
-    my $className     = $cppMatch[2];
+    cppSearch(qr/\G\s*(class|struct)\s*([[:word:]]+)\b(<)?/, $templateHeadEnd);
+    my $classOrStruct  = $cppMatch[1];
+    my $className      = $cppMatch[2];
+    my $specialization = $cppMatch[3];
+    my $classHdrEnd    = $cppMatchEnd[2];
 
-    # Modify class declaration to look like a template specialization.
-    my $buffer = substr($input, $templateBegin,
-                         $cppMatchEnd[2] - $templateBegin);
-    my $sep = "<";
-    for my $param (@templateParams) {
-        $buffer .= $sep;
-        $buffer .= $param->[1];
-        $buffer .= "..." if ($param->[0] =~ m/\.\.\./);
-        $sep = ", ";
+    my $buffer;
+    if ($specialization) {
+        # Declaration is already a class template partial specialization.
+        # Don't modify the declaration.
+        $classHdrEnd = findMatchingBrace('<', $cppMatchStart[3])+1;
+
+        $buffer = substr($input, $templateBegin,
+                         $classHdrEnd - $templateBegin);
     }
-    $buffer .= ">";
+    else {
+        # Modify class declaration to look like a template specialization.
+        $buffer = substr($input, $templateBegin,
+                         $cppMatchEnd[2] - $templateBegin);
+        my $sep = "<";
+        for my $param (@templateParams) {
+            $buffer .= $sep;
+            $buffer .= $param->[1];
+            $buffer .= "..." if ($param->[0] =~ m/\.\.\./);
+            $sep = ", ";
+        }
+        $buffer .= ">";
+    }
 
-    $buffer .= transformForwarding(substr($input, $cppMatchEnd[2],
-                                          $templateEnd - $cppMatchEnd[2]));
+    print STDERR "*** xform class: buffer=[$buffer]\n" if $debug;
+
+    $buffer .= transformForwarding(substr($input, $classHdrEnd,
+                                          $templateEnd - $classHdrEnd));
 
     pushInput($buffer);
     my @packExpansions = markPackExpansions();
@@ -1193,7 +1208,7 @@ sub transformVariadicClass($$$)
 
     my $output = "template <";
     my $indent = "          ";
-    $sep = "";
+    my $sep = "";
     for my $param (@templateParams) {
         my ($paramType, $paramName) = @$param;
         if ($paramType =~ s/\.\.\.//) {
@@ -1228,6 +1243,8 @@ sub transformTemplates($$$)
 {
     my ($buffer, $transformFunction, $transformClass) = @_;
 
+    print STDERR "*** transformTemplates($buffer)\n" if $debug;
+
     # Line and column at start of this segment
     my ($lineNum, $col) = lineAndColumn(pos($input));
     my $isClass = 0;
@@ -1253,6 +1270,7 @@ sub transformTemplates($$$)
             # class.
             $pos = findMatchingBrace('<', $pos);
         }
+
         my $templateHeadEnd = $pos;
 
         # For debugging only
