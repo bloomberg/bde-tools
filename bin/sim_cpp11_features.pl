@@ -1206,30 +1206,37 @@ sub transformVariadicClass($$$)
     $buffer = $input;
     popInput();
 
-    my $output = "template <";
-    my $indent = "          ";
-    my $sep = "";
-    for my $param (@templateParams) {
-        my ($paramType, $paramName) = @$param;
-        if ($paramType =~ s/\.\.\.//) {
-            my $paramNil = ($paramType =~ m/(struct|class)/ ?
-                            "BSLS_COMPILERFEATURES_TNIL" :
-                            "BSLS_COMPILERFEATURES_VNIL");
-            for (my $i = 0; $i < $maxArgs; ++$i) {
+    my $output = "";
+
+    # Generate forward-reference for the primary template, with all of the
+    # variadic parameters present but defaulted.  Suppress this primary
+    # template if the class we are expanding is a partial specialization.
+    unless ($specialization) {
+        $output .= "template <";
+        my $indent = "          ";
+        my $sep = "";
+        for my $param (@templateParams) {
+            my ($paramType, $paramName) = @$param;
+            if ($paramType =~ s/\.\.\.//) {
+                my $paramNil = ($paramType =~ m/(struct|class)/ ?
+                                "BSLS_COMPILERFEATURES_TNIL" :
+                                "BSLS_COMPILERFEATURES_VNIL");
+                for (my $i = 0; $i < $maxArgs; ++$i) {
+                    $output .= $sep;
+                    $sep = ",\n".$indent;
+                    $output .= sprintf("%s %s_%d = %s", $paramType,
+                                       $paramName, $i, $paramNil);
+                }
+                $output .= $sep . "$paramType = $paramNil";
+            }
+            else {
                 $output .= $sep;
                 $sep = ",\n".$indent;
-                $output .= sprintf("%s %s_%d = %s", $paramType,
-                                   $paramName, $i, $paramNil);
+                $output .= $paramType." ".$paramName;
             }
-            $output .= $sep . "$paramType = $paramNil";
         }
-        else {
-            $output .= $sep;
-            $sep = ",\n".$indent;
-            $output .= $paramType." ".$paramName;
-        }
+        $output .= ">\n".$classOrStruct." ".$className.";\n\n";
     }
-    $output .= ">\n".$classOrStruct." ".$className.";\n\n";
 
     $output .= repeatPacks($buffer, $maxArgs, @packExpansions);
     return $output;
