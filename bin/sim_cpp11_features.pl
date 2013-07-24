@@ -30,7 +30,7 @@ use common::sense;
 use Getopt::Long;
 use File::Spec;
 
-my $debug = 1;
+my $debug = 0;
 my $clean = 0;
 my $defaultMaxArgs = 10;
 my $maxArgs = $defaultMaxArgs;
