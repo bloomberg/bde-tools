@@ -30,6 +30,13 @@ use common::sense;
 use Getopt::Long;
 use File::Spec;
 
+use Util::Message qw(fatal debug message);
+
+# Debug settings
+$Util::Message::DEBUG_PREFIX =  "##";   # Prefix for each debug line
+$Util::Message::DEBUG2_PREFIX = "###";  # Prefix for each detailed debug line
+Util::Message::set_prog("");  # Don't prefix each debug line with prog name
+
 my $debug = 0;
 my $clean = 0;
 my $defaultMaxArgs = 10;
@@ -106,14 +113,17 @@ my $commentAndStringRe =
 # parameters.
 sub makeCommandLine {
     my @args = @_;
+    my $ret = "";
 
     # simplify args
-    for (my $i = 0; $i < scalar @args; $i++) {
-        my ($vol, $dirs, $file) = File::Spec->splitpath($args[$i]);
-        $args[$i] = $file;
+    for my $arg (@args) {
+        next if ($arg =~ /^--debug/);
+        my ($vol, $dirs, $file) = File::Spec->splitpath($arg);
+        $ret .= ' ' if ($ret);
+        $ret .= $file;
     }
 
-    return join ' ', @args;
+    return $ret;
 }
 
 # Return a string of whitespace to be used in place of the specified
@@ -150,7 +160,7 @@ sub commentToWhitespace($;$)
         $comment =~ s/[^\n]/ /g;
     }
     else {
-        die "Illegal option $option";
+        fatal("Illegal option $option");
     }
 
     return $comment;
@@ -187,7 +197,7 @@ sub shroudCommentsAndStrings($)
             substr($replacement, -1)   = $last;
         }
         else {
-            die "Shouldn't get here";
+            fatal("Shouldn't get here");
         }
 
         substr($input, $start, $end - $start) = $replacement;
@@ -270,7 +280,7 @@ sub setInput($)
     # Restore the input context from the top of the context stack
     sub popInput()
     {
-        die "Empty input stack" unless (@inputStack);
+        fatal("Empty input stack") unless (@inputStack);
         my $ret = $input;
         $input = pop @inputStack;
         $inputEnd = pop @inputEndStack;
@@ -521,9 +531,9 @@ sub findMatchingBrace($$)
 
         my $matchingBrace = $matchingBrackets{$foundBrace};
 
-        # print STDERR "*** Brace-matching status\n".
-        #     "    foundBrace  = $foundBrace\n",
-        #     "    bracePos    = $bracePos\n";
+        # debug("*** Brace-matching status\n".
+        #       "    foundBrace  = $foundBrace\n",
+        #       "    bracePos    = $bracePos");
 
         if (defined($matchingBrace)) {
             # Found an open brace
@@ -537,7 +547,7 @@ sub findMatchingBrace($$)
 
             # push matching brace onto the brace stack
             push @matchingBraceStack, $matchingBrace;
-            # print STDERR "    push matchingBraceStack = [@matchingBraceStack]\n";
+            # debug("    push matchingBraceStack = [@matchingBraceStack]");
         }
         else {
             # Found closing brace.  Pop matching brace off the stack.  If
@@ -552,24 +562,24 @@ sub findMatchingBrace($$)
                    $matchingBraceStack[-1] ne $foundBrace &&
                    $matchingBraceStack[-1] eq '>') {
                 pop @matchingBraceStack;
-                # print STDERR "    pop matchingBraceStack = [@matchingBraceStack]\n";
+                # debug("    pop matchingBraceStack = [@matchingBraceStack]");
             }
 
             # Pop the matching brace off the stack
             if (@matchingBraceStack &&
                 $matchingBraceStack[-1] eq $foundBrace) {
                 pop @matchingBraceStack;
-                # print STDERR "    pop matchingBraceStack = [@matchingBraceStack]\n";
+                # debug("    pop matchingBraceStack = [@matchingBraceStack]");
             }
             elsif ($foundBrace eq '>') {
                 # Ignore unmatched '>'.
                 next;
             }
             else {
-                die "Mismatched brace '$foundBrace'; ".
-                    "expecting '$matchingBraceStack[-1]' at line ".
-                    scalar(lineAndColumn($bracePos)).
-                    "\n".displayPos($bracePos);
+                fatal("Mismatched brace '$foundBrace'; ".
+                      "expecting '$matchingBraceStack[-1]' at line ".
+                      scalar(lineAndColumn($bracePos)).
+                      "\n".displayPos($bracePos));
             }
 
             $done = (0 == @matchingBraceStack);
@@ -899,7 +909,7 @@ sub markPackExpansions()
         $packNum = @packExpansions;
     }
 
-    die "Expected only variadic functions" if (0 == $packNum);
+    fatal("Expected only variadic functions") if (0 == $packNum);
 
     # Mark packs in template bodies: Find a pattern coming after a '(', '{',
     # '<', ',', ';', or ':' delimiter (but not '::'), ending with an elipsis
@@ -912,7 +922,7 @@ sub markPackExpansions()
     while (cppSearch(qr/([$B]\s*)([^$B]+)\.\.\.(?:\s*([[:word:]]+))?(\s*[$E])/,
                      0))
     {
-        print STDERR "found pack = ".$cppMatchAll."\n" if ($debug);
+        debug("found pack = ".$cppMatchAll);
         my $PACKR = "__PACK_V".$packNum."R__";
 
         my $FB = "\\".$cppMatch[1];  # Found begining delimiter
@@ -967,14 +977,11 @@ sub markPackExpansions()
         }
     }
 
-    if ($debug) {
-        print STDERR "*** DEBUG: Begin markPackExpansion Results ***\n";
-        print STDERR "=== before: ===\n$original";
-        print STDERR "=== after: ===\n$input";
-        print STDERR "=== Expansions: ===\n    \"",
-            join("\"\n    \"", @packExpansions);
-        print STDERR "\"\n*** DEBUG: End markPackExpansion Results ***\n";
-    }
+    debug("*** DEBUG: Begin markPackExpansion Results ***\n".
+          "=== before: ===\n$original".
+          "=== after: ===\n$input".
+          "=== Expansions: ===\n    \"".join("\"\n    \"", @packExpansions).
+          "\"\n*** DEBUG: End markPackExpansion Results ***");
 
     return @packExpansions;
 }
@@ -1027,7 +1034,7 @@ sub repeatPacks($$@)
         for (my $expandNum = 0; $expandNum < @packExpansions; ++$expandNum)
         {
             $workingBuffer =~ m/(.*)__PACK_([VT])$expandNum([RF])__(.*)/g or
-                die "Can't find pack $expandNum in working buffer";
+                fatal("Can't find pack $expandNum in working buffer");
             my $packStart = $+[1];    # Start of pack
             my $packType  = $2;       # 'T' for type, 'V' for value.
             my $isFill    = ($3 eq 'F');
@@ -1196,7 +1203,7 @@ sub transformVariadicClass($$$)
         $buffer .= ">";
     }
 
-    print STDERR "*** xform class: buffer=[$buffer]\n" if $debug;
+    debug("*** xform class: buffer=[$buffer]");
 
     $buffer .= transformForwarding(substr($input, $classHdrEnd,
                                           $templateEnd - $classHdrEnd));
@@ -1250,7 +1257,7 @@ sub transformTemplates($$$)
 {
     my ($buffer, $transformFunction, $transformClass) = @_;
 
-    print STDERR "*** transformTemplates($buffer)\n" if $debug;
+    debug("*** transformTemplates($buffer)");
 
     # Line and column at start of this segment
     my ($lineNum, $col) = lineAndColumn(pos($input));
@@ -1283,8 +1290,7 @@ sub transformTemplates($$$)
         # For debugging only
         my $templateHeadLine = lineAndColumn($pos);
         $templateHeadLine += $lineNum;
-        print STDERR "Template header ends at line $templateHeadLine\n"
-            if ($debug);
+        debug("Template header ends at line $templateHeadLine");
 
         # If the next word is "class" or "struct", then this is a class
         # template.
@@ -1292,14 +1298,14 @@ sub transformTemplates($$$)
 
         # Saw start of template, now look for end of template: either a
         # semicolon or a matched set of curly braces, whichever comes first.
-        cppSearch(qr/[{;]/, $pos) or die "Cannot find end of template";
+        cppSearch(qr/[{;]/, $pos) or fatal("Cannot find end of template");
         my $templateEnd = $cppMatchEnd[0];
         if ($cppMatchAll eq '{') {
             $templateEnd = findMatchingBrace('{', $templateEnd - 1);
             if ($isClass) {
                 # Class template must be terminated by a semicolon after the
                 # close curly brace.
-                cppSearch(qr/;/, $templateEnd) or die "Missing semicolon";
+                cppSearch(qr/;/, $templateEnd) or fatal("Missing semicolon");
                 $templateEnd = $cppMatchEnd[0];
             }
         }
@@ -1332,7 +1338,7 @@ sub transformTemplates($$$)
     $output .= stripComments(substr($input, $pos));
 
     popInput();
-    print STDERR "*** transform output = [".$output."]\n" if ($debug);
+    debug("*** transform output = [".$output."]");
     return $output;
 }
 
@@ -1402,10 +1408,11 @@ sub main() {
     $commandLine = makeCommandLine($0, @ARGV);
 
     GetOptions("output=s"      => \$outputFilename,
-               "debug"         => \$debug,
+               "debug=i"       => \$debug,
                "clean"         => \$clean,
                "var-args=i"    => \$maxArgsOpt) or usage("Invalid option");
 
+    Util::Message::set_debug($debug);
     my $timestamp = localtime();
     my $timestampPrefix = "Generated by sim_cpp11_features.pl on ";
     my $timestampComment = $timestampPrefix . $timestamp;
@@ -1419,11 +1426,11 @@ sub main() {
 
     if ("TEST" eq $inputFilename) {
         $inputFilename = "__DATA__";
-        open INPUT, "<& DATA" or die "Cannot re-open DATA for reading\n";
+        open INPUT, "<& DATA" or fatal("Cannot re-open DATA for reading\n");
     }
     else {
         open INPUT, "<$inputFilename"
-            or die "Cannot open $inputFilename for reading\n";
+            or fatal("Cannot open $inputFilename for reading\n");
     }
 
     # Read contents of INPUT file and use to set input
@@ -1490,7 +1497,7 @@ sub main() {
             $ppDirective = $cppMatch[1];
             if (1 == $depth and $ppDirective =~ /^(else|elif|endif)$/ ) {
                 $endCpp11Segment = $cppMatchStart[0];
-                print STDERR "ppDirective = [".$cppMatchAll."]\n" if ($debug);
+                debug("ppDirective = [".$cppMatchAll."]");
                 last;
             }
             $depth++ if ($ppDirective =~ /^if/);
@@ -1498,7 +1505,7 @@ sub main() {
         }
 
         $endCpp11Segment or
-            die "Unmatched #if:\n".displayPos($endVerbetim);
+            fatal("Unmatched #if:\n".displayPos($endVerbetim));
 
         my $cpp11Segment = substr($input, $startCpp11Segment,
                                   $endCpp11Segment - $startCpp11Segment);
@@ -1569,7 +1576,7 @@ EOT
         }
         elsif ($inputFilename eq "__DATA__") {
             if ($output eq $input) {
-                print STDERR "File is unchanged\n";
+                message("File is unchanged");
                 unlink "sim_cpp11_features.data.h";
                 unlink "sim_cpp11_features.output.h";
                 return 0;
@@ -1579,13 +1586,13 @@ EOT
                 print INPUTDATA $input;
                 close INPUTDATA;
                 $outputFilename = "sim_cpp11_features.output.h";
-                print STDERR "File is changed.\n".
-                    "Input in sim_cpp11_features.data.h,".
-                    " Output in sim_cpp11_features.output.h\n";
+                message("File is changed.\n".
+                        "Input in sim_cpp11_features.data.h,".
+                        " Output in sim_cpp11_features.output.h");
             }
         }
         elsif ($output eq $input) {
-            print STDERR "File is unchanged\n" if ($debug);
+            debug("File is unchanged");
             return 0;  # No change to file
         }
         else {
@@ -1595,7 +1602,7 @@ EOT
     }
 
     open OUTPUT, ">$outputFilename" or
-        die "Cannot open $outputFilename for writing\n";
+        fatal("Cannot open $outputFilename for writing\n");
 
     print OUTPUT $output;
     close OUTPUT;
@@ -1635,11 +1642,11 @@ sub testCppSearch()
             my $found = cppSearch($re, $pos);
             $pos = $cppMatchEnd[0];
             if ($found) {
-                die "\$found but not \@found" unless (@found);
-                die "mismatch end" unless ($end == $pos);
+                fatal("\$found but not \@found") unless (@found);
+                fatal("mismatch end") unless ($end == $pos);
             }
             else {
-                die "\@found but not \$found" unless (! @found);
+                fatal("\@found but not \$found") unless (! @found);
             }
             if (@found) {
                 print "[@found]\t$start\t$end\n";
@@ -1660,7 +1667,7 @@ sub testLineAndColumn()
     for (my $pos = 0; $pos <= $inputEnd; ++$pos) {
         my ($line, $col) = lineAndColumn($pos);
         my $scalarLine = lineAndColumn($pos);
-        die "$line mismatch" unless ($line == $scalarLine);
+        fatal("$line mismatch") unless ($line == $scalarLine);
         print "$pos\t($line $col)\n";
     }
 
