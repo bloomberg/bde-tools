@@ -52,6 +52,53 @@ my $spaces = ("                                        ".
 # interpunct (centered dot) is less likely to show up in search.
 our $dummyChar = $debug ? "." : "\267";
 
+my %traceCtrls;
+
+# Return the larger of the level for the specified trace label or the
+# currently-specified debug level.
+sub getTraceLevel($)
+{
+    my $traceLabel = $_[0];
+
+    my $traceLevel = $traceCtrls{$traceLabel} || 0;
+    my $debugLevel = Util::Message::get_debug();
+
+    if ($debugLevel > $traceLevel) {
+        return $debugLevel;
+    }
+    else {
+        return $traceLevel;
+    }
+}
+
+sub doTrace($$$@) {
+    my ($traceLabel, $debugLevel, $msgfunc, $message, @args) = @_;
+
+    my $traceLevel = getTraceLevel($traceLabel);
+    return unless ($traceLevel >= $debugLevel);
+
+    my $oldDebugLevel = Util::Message::get_debug();
+    my $oldMsgPrefix = Util::Message::get_prefix();
+    Util::Message::set_debug($traceLevel);
+    Util::Message::set_prefix($traceLabel);
+    &$msgfunc(sprintf($message, @args));
+    Util::Message::set_prefix($oldMsgPrefix);
+    Util::Message::set_debug($oldDebugLevel);
+}
+
+sub trace($@)
+{
+    my ($traceLabel, @message) = @_;
+    doTrace($traceLabel, 1, \&debug, @message);
+}
+
+sub trace2($@)
+{
+    my ($traceLabel, @message) = @_;
+    doTrace($traceLabel, 2, \&debug2, @message);
+}
+
+# Return a unique generated name using the supplied prefix argument.
 my $nextGenParam = 0;
 sub genName($)
 {
@@ -117,7 +164,9 @@ sub makeCommandLine {
 
     # simplify args
     for my $arg (@args) {
-        next if ($arg =~ /^--debug/);
+        next if ($arg =~ /^--(debug|trace)/);  # discard debugging options
+
+        # Discard the path part of the filename
         my ($vol, $dirs, $file) = File::Spec->splitpath($arg);
         $ret .= ' ' if ($ret);
         $ret .= $file;
@@ -390,6 +439,7 @@ sub cppSubstitute($$$)
     $inputEnd += $lengthChange;
 }
 
+# TBD: THIS FUNCTION IS NOT CURRENTLY PRODUCING ACCURATE RESULTS. 
 # Return the input line number and column number at the specified '$pos'.  If
 # called in a scalar context, return only the line number.  Line and column
 # numbers are 1-based.  If the character at '$position' is a newline
@@ -430,6 +480,7 @@ sub lineAndColumn($)
     return wantarray() ? ($lineNum, $colNum) : $lineNum;
 }
 
+# TBD: THIS FUNCTION IS NOT CURRENTLY PRODUCING ACCURATE RESULTS. 
 # Error-handling routine to print the line within '$input' at the specified
 # '$pos' with a caret at under the column.
 sub displayPos($)
@@ -627,6 +678,16 @@ sub getTemplateParams($)
     }
 
     pos($input) = $searchEnd;
+
+    if (getTraceLevel("getTemplateParams") > 0) {
+        my $packStr = "[\n";
+        for my $pack (@packs) {
+            $packStr .= "  [ ".$pack->[0].", ".$pack->[1]." ]\n";
+        }
+        $packStr .= "]";
+        trace("getTemplateParams", "packs = %s", $packStr);
+    }
+
     return @packs;
 }
 
@@ -650,6 +711,8 @@ sub noopTemplateTransform($$$;$)
 sub replaceAndFitOnLine($$$$) {
     my ($workingBuffer, $packStart, $packLen, $replacement) = @_;
     my $packEnd = $packStart + $packLen;
+
+    trace("replaceAndFitOnLine", "START workingBuffer = [%s]", $workingBuffer);
 
     # $prePack is the text on same line preceding the current pack.
     pos($workingBuffer) = $packStart;
@@ -749,11 +812,13 @@ sub replaceAndFitOnLine($$$$) {
     $packLen = $packEnd - $packStart;
     if ($shroudedInput && $workingBuffer eq $shroudedInput) {
         cppSubstitute($packStart, $packLen, $replacement);
+        trace("replaceAndFitOnLine", "RETURN = [%s]", $shroudedInput);
         return $shroudedInput;
     }
     else {
         substr($workingBuffer,
                $packStart, $packLen, $replacement);
+        trace("replaceAndFitOnLine", "RETURN = [%s]", $workingBuffer);
         return $workingBuffer;
     }
 }
@@ -771,6 +836,7 @@ sub replaceForwarding($$$;$)
                                       $templateEnd - $templateBegin));
 
     pushInput($buffer);
+    trace("replaceForwarding", "Stripped input = [%s]", $buffer);
 
     my @typenames;
     my $pos = 0;
@@ -807,6 +873,8 @@ sub replaceForwarding($$$;$)
             $pos = $cppMatchEnd[0];
         }
     }
+
+    trace("replaceForwarding", "Result = [%s]", $input);
 
     $buffer = popInput();
     return $buffer;
@@ -870,7 +938,7 @@ sub replaceForwarding($$$;$)
 #..
 sub markPackExpansions()
 {
-    my $original = $input if ($debug);
+    trace("markPackExpansions", "ORIGINAL = [%s]", $input);
 
     my %typeNames = ();
     my @packIdents;
@@ -922,7 +990,7 @@ sub markPackExpansions()
     while (cppSearch(qr/([$B]\s*)([^$B]+)\.\.\.(?:\s*([[:word:]]+))?(\s*[$E])/,
                      0))
     {
-        debug("found pack = ".$cppMatchAll);
+        trace2("markPackExpansions", "found pack = %s", $cppMatchAll);
         my $PACKR = "__PACK_V".$packNum."R__";
 
         my $FB = "\\".$cppMatch[1];  # Found begining delimiter
@@ -977,11 +1045,9 @@ sub markPackExpansions()
         }
     }
 
-    debug("*** DEBUG: Begin markPackExpansion Results ***\n".
-          "=== before: ===\n$original".
-          "=== after: ===\n$input".
-          "=== Expansions: ===\n    \"".join("\"\n    \"", @packExpansions).
-          "\"\n*** DEBUG: End markPackExpansion Results ***");
+    trace("markPackExpansion", "AFTER XFORM = [\n%s\n]", $input);
+    trace("markPackExpansion", "EXPANSIONS =\n    \"%s",
+          join("\"\n    \"", @packExpansions));
 
     return @packExpansions;
 }
@@ -1172,6 +1238,9 @@ sub transformVariadicClass($$$)
                                  $templateHeadEnd,
                                  $templateEnd) unless ($isVariadic);
 
+    trace("transformVariadicClass", "TEMPLATE = [%s]",
+          substr($input, $templateBegin, $templateEnd - $templateBegin));
+
     my @templateParams = getTemplateParams($templateBegin);
 
     cppSearch(qr/\G\s*(class|struct)\s*([[:word:]]+)\b(<)?/, $templateHeadEnd);
@@ -1203,7 +1272,7 @@ sub transformVariadicClass($$$)
         $buffer .= ">";
     }
 
-    debug("*** xform class: buffer=[$buffer]");
+    trace2("transformVariadicClass", "specialization buffer=[%s]", $buffer);
 
     $buffer .= transformForwarding(substr($input, $classHdrEnd,
                                           $templateEnd - $classHdrEnd));
@@ -1246,6 +1315,7 @@ sub transformVariadicClass($$$)
     }
 
     $output .= repeatPacks($buffer, $maxArgs, @packExpansions);
+    trace("transformVariadicClass", "OUTPUT = [%s]", $output);
     return $output;
 }
 
@@ -1257,7 +1327,7 @@ sub transformTemplates($$$)
 {
     my ($buffer, $transformFunction, $transformClass) = @_;
 
-    debug("*** transformTemplates($buffer)");
+    trace("transformTemplates", "buffer = [%s]", $buffer);
 
     # Line and column at start of this segment
     my ($lineNum, $col) = lineAndColumn(pos($input));
@@ -1290,7 +1360,8 @@ sub transformTemplates($$$)
         # For debugging only
         my $templateHeadLine = lineAndColumn($pos);
         $templateHeadLine += $lineNum;
-        debug("Template header ends at line $templateHeadLine");
+        trace2("transformTemplates",
+               "Template header ends at line %d", $templateHeadLine);
 
         # If the next word is "class" or "struct", then this is a class
         # template.
@@ -1338,7 +1409,7 @@ sub transformTemplates($$$)
     $output .= stripComments(substr($input, $pos));
 
     popInput();
-    debug("*** transform output = [".$output."]");
+    trace("transformTemplates", "output = [%s]", $output);
     return $output;
 }
 
@@ -1404,15 +1475,29 @@ sub main() {
     my $inputFilename;
     my $outputFilename;
     my $maxArgsOpt = 0;
+    my @traceLabels;
 
     $commandLine = makeCommandLine($0, @ARGV);
 
     GetOptions("output=s"      => \$outputFilename,
                "debug=i"       => \$debug,
+               "trace=s"       => \@traceLabels,
                "clean"         => \$clean,
                "var-args=i"    => \$maxArgsOpt) or usage("Invalid option");
 
     Util::Message::set_debug($debug);
+
+    # Multiple trace labels can be specified using either a comma-separated
+    # list or multiple --trace options or both.  Combine them all into one
+    # array of labels.
+    @traceLabels = split(/,/, join(',', @traceLabels));
+    for my $traceLabel (@traceLabels) {
+        my ($label, $level) = split(/:/, $traceLabel);
+        $level = $level || 1;  # "xyz" is equivalent to "xyz:1"
+        $level = $level + 0;   # Make numeric
+        $traceCtrls{$label} = $level;
+    }
+
     my $timestamp = localtime();
     my $timestampPrefix = "Generated by sim_cpp11_features.pl on ";
     my $timestampComment = $timestampPrefix . $timestamp;
