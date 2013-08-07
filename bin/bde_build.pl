@@ -547,6 +547,9 @@ Usage: $prog -h | [-c <comp>] [-d] [-s|-j<n>] [-t <tgt>] [-u <upl>]
   --output     | -o <path>    place derived files on different filesystem, rooted
                               at <path>
                               If ~/.bde_build_output_location is a symlink, its
+  --no-output  | -O           place output files locally, ignoring
+                              ~/.bde_build_output_location if present (overrides
+                              -o if both are present)
                               target will be used if -o is not specified
   --path       | -p           override BDE_PATH
   --quit       | -Q           quit immediately on failure (see also -F)
@@ -575,7 +578,6 @@ _USAGE_END
 #  --groupdeps  | -G           construct makefile with local group dependencies
 #                              rather than depend on local packages directly
 #  --production | -P           production-style build (under development)
-#  --options    | -O <file>    specify additional build options from file
 
 #------------------------------------------------------------------------------
 
@@ -3238,7 +3240,7 @@ unless (GetOptions(\%opts, qw[
     nodepend|n
     nolog|N
     output|o=s
-    options|O=s
+    no-output|O
     path|p=s
     production|P
     quit|Q|q
@@ -3355,7 +3357,12 @@ my $symlink_exists = eval { symlink("",""); 1 };
 
 # if symlinks aren't allowed on platform, there's no point in the -o option
 # Also, if clearmake is used, the output options is probably harmful
-my $allow_output = $symlink_exists && !(exists $opts{clearmake});
+debug "Suppressed output location with --no-output or -O"
+                                                       if $opts{'no-output'};
+
+my $allow_output = !$opts{'no-output'}
+                   && $symlink_exists
+                   && !(exists $opts{clearmake});
 
 if($allow_output) {
     if(!$opts{output}) {
