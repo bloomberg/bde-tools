@@ -641,7 +641,8 @@ sub findMatchingBrace($$)
     return $pos;
 }
 
-my @packTypes = ("class", "typename", "int", "unsigned", "unsigned int");
+my @packTypes = ("class", "typename", "int", "unsigned", "unsigned int",
+                 "std::size_t", "bsl::size_t", "size_t");
 my $packTypesStr = join("|", @packTypes);
 
 # Given an '$input' string where the substring at '$pos' starts with:
@@ -666,13 +667,15 @@ sub getTemplateParams($)
     my @packs = ();
     my $searchEnd = $pos;
 
-    while (cppSearch(qr/([<,]\s*)($packTypesStr)\s*(\.\.\.)?(?:\s*([[:word:]]+))?(\s*[>,])/, $pos))
+    while (cppSearch(qr/([<,]\s*)($packTypesStr)\s*(\.\.\.)?(?:\s*([[:word:]]+))?(\s*=\s*[^>,]*)?(\s*[>,])/, $pos))
     {
         my $packType = $cppMatch[2];
         $packType .= $cppMatch[3] if defined $cppMatch[3];
         my $packName = $cppMatch[4] || genName("__Param__");
+        my $packDflt = $cppMatch[5] || "";
+#        push @packs, [ $packType,  $packName, $packDflt ];
         push @packs, [ $packType,  $packName ];
-        $pos = $cppMatchStart[5];  # Include closing delimiter in next search
+        $pos = $cppMatchStart[6];  # Include closing delimiter in next search
         $searchEnd = $cppMatchEnd[0];
         last if ($cppMatch[5] =~ />/);
     }
@@ -823,11 +826,12 @@ sub replaceAndFitOnLine($$$$) {
     }
 }
 
-# Replace uses of perfect forwarding within the specified '$input' with special
-# macros and return the result: A template argument of type 'T&&' is replaced
-# with 'BSLS_COMPILERFEATURES_FORWARD_REF(T)'.  An expression of the form
-# 'bsl::forward<T>(expr)' is replaced with 'BSLS_COMPILERFEATURES_FORWARD(T, #expr)',
-# where 'T' is a template type parameter.
+# Replace uses of perfect forwarding within the specified '$input' with
+# special macros and return the result: A template argument of type 'T&&' is
+# replaced with 'BSLS_COMPILERFEATURES_FORWARD_REF(T)'.  An expression of the
+# form 'bsl::forward<T>(expr)' is replaced with
+# 'BSLS_COMPILERFEATURES_FORWARD(T, #expr)', where 'T' is a template type
+# parameter.
 sub replaceForwarding($$$;$)
 {
     my ($templateBegin, $templateHeadEnd, $templateEnd, $isVariadic) = @_;
@@ -1111,7 +1115,7 @@ sub repeatPacks($$@)
             # number of fill parameters as a 2-character decimal string.
             my $fillCountStr = ((($maxArgs - $repCount) > 9) ? "" : $spacePad).
                 ($maxArgs - $repCount);
-            my $FILL = "BSLS_COMPILERFEATURES_".$packType."FILL(".$fillCountStr.")";
+            my $FILL = "BSLS_COMPILERFEATURES_FILL".$packType."(".$fillCountStr.")";
 
             my $expansionTerm = $packExpansions[$expandNum];
             my $replacement = "";
@@ -1295,8 +1299,8 @@ sub transformVariadicClass($$$)
             my ($paramType, $paramName) = @$param;
             if ($paramType =~ s/\.\.\.//) {
                 my $paramNil = ($paramType =~ m/(struct|class)/ ?
-                                "BSLS_COMPILERFEATURES_TNIL" :
-                                "BSLS_COMPILERFEATURES_VNIL");
+                                "BSLS_COMPILERFEATURES_NILT" :
+                                "BSLS_COMPILERFEATURES_NILV");
                 for (my $i = 0; $i < $maxArgs; ++$i) {
                     $output .= $sep;
                     $sep = ",\n".$indent;
@@ -2198,10 +2202,10 @@ template <typename A_1,
 
 
 template <int X,
-          class T_0 = BSLS_COMPILERFEATURES_TNIL,
-          class T_1 = BSLS_COMPILERFEATURES_TNIL,
-          class T_2 = BSLS_COMPILERFEATURES_TNIL,
-          class = BSLS_COMPILERFEATURES_TNIL>
+          class T_0 = BSLS_COMPILERFEATURES_NILT,
+          class T_1 = BSLS_COMPILERFEATURES_NILT,
+          class T_2 = BSLS_COMPILERFEATURES_NILT,
+          class = BSLS_COMPILERFEATURES_NILT>
 class C;
 
 template <int X>
@@ -2251,13 +2255,13 @@ public:
 
 
 template <int X>
-typename mf<X>::type C<X, BSLS_COMPILERFEATURES_TFILL(3)>::member()
+typename mf<X>::type C<X, BSLS_COMPILERFEATURES_FILLT(3)>::member()
 {
 }
 
 template <int X, class T_1>
 typename mf<X>::type C<X, T_1,
-                          BSLS_COMPILERFEATURES_TFILL(2)>::member(
+                          BSLS_COMPILERFEATURES_FILLT(2)>::member(
                                                                 const T_1& z_1)
 {
 }
@@ -2266,7 +2270,7 @@ template <int X, class T_1,
                  class T_2>
 typename mf<X>::type C<X, T_1,
                           T_2,
-                          BSLS_COMPILERFEATURES_TFILL(1)>::member(
+                          BSLS_COMPILERFEATURES_FILLT(1)>::member(
                                                                 const T_1& z_1,
                                                                 const T_2& z_2)
 {
@@ -2278,7 +2282,7 @@ template <int X, class T_1,
 typename mf<X>::type C<X, T_1,
                           T_2,
                           T_3,
-                          BSLS_COMPILERFEATURES_TFILL(0)>::member(
+                          BSLS_COMPILERFEATURES_FILLT(0)>::member(
                                                                 const T_1& z_1,
                                                                 const T_2& z_2,
                                                                 const T_3& z_3)
@@ -2288,7 +2292,7 @@ typename mf<X>::type C<X, T_1,
 
 template <int X>
     template <class U>
-void C<X, BSLS_COMPILERFEATURES_TFILL(3)
+void C<X, BSLS_COMPILERFEATURES_FILLT(3)
           >::member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v)
 {
     q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
@@ -2297,7 +2301,7 @@ void C<X, BSLS_COMPILERFEATURES_TFILL(3)
 template <int X, class T_1>
     template <class U>
 void C<X, T_1,
-          BSLS_COMPILERFEATURES_TFILL(2)
+          BSLS_COMPILERFEATURES_FILLT(2)
           >::member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v)
 {
     q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
@@ -2308,7 +2312,7 @@ template <int X, class T_1,
     template <class U>
 void C<X, T_1,
           T_2,
-          BSLS_COMPILERFEATURES_TFILL(1)
+          BSLS_COMPILERFEATURES_FILLT(1)
           >::member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v)
 {
     q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
@@ -2321,7 +2325,7 @@ template <int X, class T_1,
 void C<X, T_1,
           T_2,
           T_3,
-          BSLS_COMPILERFEATURES_TFILL(0)
+          BSLS_COMPILERFEATURES_FILLT(0)
           >::member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v)
 {
     q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
@@ -2329,10 +2333,10 @@ void C<X, T_1,
 
 
 template <int X,
-          unsigned V_0 = BSLS_COMPILERFEATURES_VNIL,
-          unsigned V_1 = BSLS_COMPILERFEATURES_VNIL,
-          unsigned V_2 = BSLS_COMPILERFEATURES_VNIL,
-          unsigned = BSLS_COMPILERFEATURES_VNIL>
+          unsigned V_0 = BSLS_COMPILERFEATURES_NILV,
+          unsigned V_1 = BSLS_COMPILERFEATURES_NILV,
+          unsigned V_2 = BSLS_COMPILERFEATURES_NILV,
+          unsigned = BSLS_COMPILERFEATURES_NILV>
 struct D;
 
 template <int X>
@@ -2367,13 +2371,13 @@ struct D<X, V_1,
 
 
 template <int X>
-typename mf<X>::type D<BSLS_COMPILERFEATURES_VFILL(3)>::member()
+typename mf<X>::type D<BSLS_COMPILERFEATURES_FILLV(3)>::member()
 {
 }
 
 template <int X, unsigned V_1>
 typename mf<X>::type D<V_1,
-                       BSLS_COMPILERFEATURES_VFILL(2)>::member()
+                       BSLS_COMPILERFEATURES_FILLV(2)>::member()
 {
 }
 
@@ -2381,7 +2385,7 @@ template <int X, unsigned V_1,
                  unsigned V_2>
 typename mf<X>::type D<V_1,
                        V_2,
-                       BSLS_COMPILERFEATURES_VFILL(1)>::member()
+                       BSLS_COMPILERFEATURES_FILLV(1)>::member()
 {
 }
 
@@ -2391,7 +2395,7 @@ template <int X, unsigned V_1,
 typename mf<X>::type D<V_1,
                        V_2,
                        V_3,
-                       BSLS_COMPILERFEATURES_VFILL(0)>::member()
+                       BSLS_COMPILERFEATURES_FILLV(0)>::member()
 {
 }
 
@@ -2558,12 +2562,12 @@ NonVaridadicClassWithVariadicMember<T>::
                                         const U_3& u_3);
 
 
-void Cls<BSLS_COMPILERFEATURES_TFILL(3)>::functionWithLongExpansion79Columns(
+void Cls<BSLS_COMPILERFEATURES_FILLT(3)>::functionWithLongExpansion79Columns(
                                   double b);
 
 template <class TYPE_1>
 void Cls<TYPE_1,
-         BSLS_COMPILERFEATURES_TFILL(2)>::functionWithLongExpansion79Columns(
+         BSLS_COMPILERFEATURES_FILLT(2)>::functionWithLongExpansion79Columns(
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_1) a_1,
                                   double b);
 
@@ -2571,7 +2575,7 @@ template <class TYPE_1,
           class TYPE_2>
 void Cls<TYPE_1,
          TYPE_2,
-         BSLS_COMPILERFEATURES_TFILL(1)>::functionWithLongExpansion79Columns(
+         BSLS_COMPILERFEATURES_FILLT(1)>::functionWithLongExpansion79Columns(
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_1) a_1,
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_2) a_2,
                                   double b);
@@ -2582,7 +2586,7 @@ template <class TYPE_1,
 void Cls<TYPE_1,
          TYPE_2,
          TYPE_3,
-         BSLS_COMPILERFEATURES_TFILL(0)>::functionWithLongExpansion79Columns(
+         BSLS_COMPILERFEATURES_FILLT(0)>::functionWithLongExpansion79Columns(
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_1) a_1,
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_2) a_2,
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_3) a_3,
