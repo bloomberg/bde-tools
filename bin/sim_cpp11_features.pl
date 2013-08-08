@@ -673,11 +673,10 @@ sub getTemplateParams($)
         $packType .= $cppMatch[3] if defined $cppMatch[3];
         my $packName = $cppMatch[4] || genName("__Param__");
         my $packDflt = $cppMatch[5] || "";
-#        push @packs, [ $packType,  $packName, $packDflt ];
-        push @packs, [ $packType,  $packName ];
+        push @packs, [ $packType,  $packName, $packDflt ];
         $pos = $cppMatchStart[6];  # Include closing delimiter in next search
         $searchEnd = $cppMatchEnd[0];
-        last if ($cppMatch[5] =~ />/);
+        last if ($cppMatch[6] =~ />/);
     }
 
     pos($input) = $searchEnd;
@@ -685,7 +684,8 @@ sub getTemplateParams($)
     if (getTraceLevel("getTemplateParams") > 0) {
         my $packStr = "[\n";
         for my $pack (@packs) {
-            $packStr .= "  [ ".$pack->[0].", ".$pack->[1]." ]\n";
+            $packStr .= "  [ ".$pack->[0].", ".$pack->[1].", ".$pack->[2].
+                " ]\n";
         }
         $packStr .= "]";
         trace("getTemplateParams", "packs = %s", $packStr);
@@ -1296,7 +1296,7 @@ sub transformVariadicClass($$$)
         my $indent = "          ";
         my $sep = "";
         for my $param (@templateParams) {
-            my ($paramType, $paramName) = @$param;
+            my ($paramType, $paramName, $paramDflt) = @$param;
             if ($paramType =~ s/\.\.\.//) {
                 my $paramNil = ($paramType =~ m/(struct|class)/ ?
                                 "BSLS_COMPILERFEATURES_NILT" :
@@ -1312,7 +1312,7 @@ sub transformVariadicClass($$$)
             else {
                 $output .= $sep;
                 $sep = ",\n".$indent;
-                $output .= $paramType." ".$paramName;
+                $output .= $paramType." ".$paramName.$paramDflt;
             }
         }
         $output .= ">\n".$classOrStruct." ".$className.";\n\n";
