@@ -30,7 +30,7 @@ use common::sense;
 use Getopt::Long;
 use File::Spec;
 
-use Util::Message qw(fatal debug message);
+use Util::Message qw(fatal debug debug2 message);
 
 # Debug settings
 $Util::Message::DEBUG_PREFIX =  "##";   # Prefix for each debug line
@@ -981,7 +981,7 @@ sub markPackExpansions()
         $packNum = @packExpansions;
     }
 
-    fatal("Expected only variadic functions") if (0 == $packNum);
+    fatal("Expected only variadic templates") if (0 == $packNum);
 
     # Mark packs in template bodies: Find a pattern coming after a '(', '{',
     # '<', ',', ';', or ':' delimiter (but not '::'), ending with an elipsis
@@ -1264,9 +1264,39 @@ sub transformVariadicClass($$$)
     }
     else {
         # Modify class declaration to look like a template specialization.
-        $buffer = substr($input, $templateBegin,
-                         $cppMatchEnd[2] - $templateBegin);
-        my $sep = "<";
+        #
+        # Example:
+        #   template <class X = int, class... Y> class C { ... };
+        # becomes:
+        #   template <class X, class... Y> class<X, Y...> C { ... };
+        
+        # First, generate template head, but exclude parameter defaults.
+        $buffer    = "template <";
+        my $indent = "          ";  # Indent enough for "template <"
+        my $col = length($buffer);
+        my $sep = "";
+        my $sepSpace = "";
+        for my $param (@templateParams) {
+            my $paramStr = $param->[0].' '.$param->[1];
+            if ($col + length($sep) + length($paramStr) > $maxColumn) {
+                $sep =~ s/\s*$//;
+                $buffer .= $sep."\n".$indent.$paramStr;
+                $col = length($indent) + length($paramStr);
+            }
+            else {
+                $buffer .= $sep.$paramStr;
+                $col += length($sep) + length($paramStr);
+            }
+            $sep = ", ";
+        }
+        $buffer .= ">";
+
+        # Then, add the rest of the class head.
+        $buffer .= substr($input, $templateHeadEnd,
+                          $classHdrEnd - $templateHeadEnd);
+
+        # Now put it all of the paramters as if they were specialized.
+        $sep = "<";
         for my $param (@templateParams) {
             $buffer .= $sep;
             $buffer .= $param->[1];
@@ -1961,8 +1991,8 @@ sub testReplaceAndFitOnLine {
 
 __DATA__
 
-#ifndef INCLUDED_BSL_M
-#   include <bsls_m.h>
+#ifndef INCLUDED_BSLS_COMPILERFEATURES
+#   include <bsls_compilerfeatures.h>
 #endif
 
 // Sample input
@@ -2742,5 +2772,115 @@ void nonTemplateFunction(int x);
 
 template <typename X>
 void normalTemplate(const X& v);
+// }}} END GENERATED CODE
+#endif
+
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
+template <class T,
+          class U,
+          class... X>
+class P
+{
+};
+
+template <class A_very_long_template_parameter_name_that_will_force_wrapping,
+          class T,
+          class... X>
+class Q
+{
+};
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
+// {{{ BEGIN GENERATED CODE
+// The following section is automatically generated.  **DO NOT EDIT**
+// Generator command line: sim_cpp11_features.pl TEST
+template <class T,
+          class U,
+          class X_0 = BSLS_COMPILERFEATURES_NILT,
+          class X_1 = BSLS_COMPILERFEATURES_NILT,
+          class X_2 = BSLS_COMPILERFEATURES_NILT,
+          class = BSLS_COMPILERFEATURES_NILT>
+class P;
+
+template <class T, class U>
+class P<T, U>
+{
+};
+
+template <class T, class U, class X_1>
+class P<T, U, X_1>
+{
+};
+
+template <class T, class U, class X_1,
+                            class X_2>
+class P<T, U, X_1,
+              X_2>
+{
+};
+
+template <class T, class U, class X_1,
+                            class X_2,
+                            class X_3>
+class P<T, U, X_1,
+              X_2,
+              X_3>
+{
+};
+
+
+template <class A_very_long_template_parameter_name_that_will_force_wrapping,
+          class T,
+          class X_0 = BSLS_COMPILERFEATURES_NILT,
+          class X_1 = BSLS_COMPILERFEATURES_NILT,
+          class X_2 = BSLS_COMPILERFEATURES_NILT,
+          class = BSLS_COMPILERFEATURES_NILT>
+class Q;
+
+template <class A_very_long_template_parameter_name_that_will_force_wrapping,
+          class T>
+class Q<A_very_long_template_parameter_name_that_will_force_wrapping, T>
+{
+};
+
+template <class A_very_long_template_parameter_name_that_will_force_wrapping,
+          class T, class X_1>
+class Q<A_very_long_template_parameter_name_that_will_force_wrapping, T, X_1>
+{
+};
+
+template <class A_very_long_template_parameter_name_that_will_force_wrapping,
+          class T, class X_1,
+                   class X_2>
+class Q<A_very_long_template_parameter_name_that_will_force_wrapping, T, X_1,
+                                                                         X_2>
+{
+};
+
+template <class A_very_long_template_parameter_name_that_will_force_wrapping,
+          class T, class X_1,
+                   class X_2,
+                   class X_3>
+class Q<A_very_long_template_parameter_name_that_will_force_wrapping, T, X_1,
+                                                                         X_2,
+                                                                         X_3>
+{
+};
+
+#else
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
+template <class T,
+          class U,
+          class... X>
+class P
+{
+};
+
+template <class A_very_long_template_parameter_name_that_will_force_wrapping,
+          class T,
+          class... X>
+class Q
+{
+};
 // }}} END GENERATED CODE
 #endif
