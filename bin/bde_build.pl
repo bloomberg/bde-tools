@@ -1849,10 +1849,18 @@ sub makeMakefile ($@) {
               join($sep, map {
                   "\$(${PKG}_BLOC)${FS}${_}.t.\$(TEST_UFID)\$(EXE_EXT)"
               } @build_list)."\n\n";
+            print $FMK "TEST_OBJS   = " .
+              join($sep, map {
+                  "\$(${PKG}_BLOC)${FS}${_}.t.\$(TEST_UFID)\$(OBJ_EXT)"
+              } @build_list)."\n\n";
         } else {
             print $FMK "TESTS       = " .
               join($sep, map {
                   "\$(${PKG}_BLOC)${FS}${_}.t.\$(UFID)\$(EXE_EXT)"
+              } @build_list)."\n\n";
+            print $FMK "TEST_OBJS   = " .
+              join($sep, map {
+                  "\$(${PKG}_BLOC)${FS}${_}.t.\$(UFID)\$(OBJ_EXT)"
               } @build_list)."\n\n";
         }
         # a rule to delete build sources, for compliant packages only
@@ -2015,8 +2023,8 @@ GRP_INC_FILES = @grp_inc_files
         install_group install_group_library install_group_include \\
         uninstall_group uninstall_group_library uninstall_group_include \\
         lib clean cleancache realclean build_test \\
-        build_package_objects build_package_library \\
-        preprocess_package_include noop
+        build_package_objects build_package_test_objects \\
+        build_package_library preprocess_package_include noop
 
 all: $alltargets
 
@@ -2050,6 +2058,8 @@ build_package_library: \$(PACKAGE_LIB)
 \t\$(RANLIB)
 
 build_package_objects: \$(OBJS)
+
+build_package_test_objects: \$(TEST_OBJS)
 
 $groupedpkg_rules
 #--- Install (Package to) Group
