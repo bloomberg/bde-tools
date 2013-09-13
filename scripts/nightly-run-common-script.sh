@@ -3,6 +3,11 @@
 # this script requires that several variables be set - see
 # runFromGitDevThenAPI.sh for an example.
 
+# If the TARGET_OPTION variable is set in the environment (usually, from
+# OUTSIDE the script which calls this one), it should be set to a
+# comma-separated list of platforms to run, prefixed with -p:
+#       -ps12,i10
+
 if [[ -z "$TOOLSPATH" || -z "$SCRIPT_PATH" || -z "$SCRIPT_NAME" || -z "$BUILD_TYPE" || -z "$BDE_CORE_BRANCH" || -z "$BDE_BB_BRANCH" ||  -z "$CORE_UORS" || -z "$ALL_UORS" || -z "$BSL_TYPE" ]]
 then \
     echo "USAGE: $0"
@@ -133,6 +138,7 @@ rsync -av --rsync-path=/usr/bin/rsync \
 $TOOLSPATH/bin/bde_bldmgr -v                \
        -k $TOOLSPATH/etc/bde_bldmgr.config  \
        -f -k -m -i${BUILD_TYPE}-core        \
+       $TARGET_OPTION                       \
        $CORE_UORS                           \
        -vvv                                 \
        < /dev/null 2>&1                     \
@@ -146,6 +152,7 @@ then
            -k $TOOLSPATH/etc/bde_bldmgr.config  \
            -f -k -m -i${BUILD_TYPE}-bb          \
            $BB_UORS                             \
+           $TARGET_OPTION                       \
            < /dev/null 2>&1                     \
        | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-bb   \
        && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-bb
