@@ -339,5 +339,9 @@ void arfarf()
     }
 }
 
-// continuation in comment \
+// OK continuation in comment \
 // this comment is OK
+
+// Not OK continuation in comment \
+
+// Not OK continuation in comment \

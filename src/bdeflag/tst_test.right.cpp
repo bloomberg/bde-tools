@@ -1,7 +1,7 @@
 Warning: tst_test.cpp: should include, as the first include, '#include <tst_test.h>'.
 Warning: C-style comment(s) in tst_test.cpp at line(s): 302
 Warning: in tst_test.cpp 'TBD' comments found on line(s) 238
-Warning: in tst_test.cpp '\' at end of comment line on line(s) 302, 342
+Warning: in tst_test.cpp '\' at end of comment line on line(s) 345, 347
 Warning: tst_test.cpp: the following routine(s) need(s) documentation: 'bark', 'bdesu_stacktrace_walkbackCb'
 Warning: tst_test.cpp: (116, 17): non-const method testBreak declared in '// ACCESSORS' section
 Warning: tst_test.cpp: (131, 13): non-const method swap declared in '// ACCESSORS' section
