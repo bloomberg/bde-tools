@@ -435,6 +435,9 @@ bsl::string Place::templateNameAfter(Place *endName, bool known) const
 
     col = endName->col() + 1;
     if (':' == line[col] && ':' == line[col + 1]) {
+        // Note this is recursive because 'nameAfter' potentially calls this
+        // function.
+
         ret += Place(li, col).nameAfter(endName, known);
     }
 
