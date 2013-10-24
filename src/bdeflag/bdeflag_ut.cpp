@@ -205,17 +205,30 @@ bsl::string Ut::spacesOut(bsl::string s)
     return ret;
 }
 
-void Ut::stripAngleBrackets(bsl::string *s)
+int Ut::stripAngleBrackets(bsl::string *s)
 {
-    bsl::size_t firstAngle = s->find_first_of("<>");
-    if (Ut::npos() == firstAngle) {
-        return;                                                       // RETURN
+    while (true) {
+        bsl::size_t left = s->find_first_of("<>");
+        if (Ut::npos() == left) {
+            return 0;                                                 // RETURN
+        }
+        if ('>' == (*s)[left]) {
+            return -1;                                                // RETURN
+        }
+        bsl::size_t right;
+        while (true) {
+            right = s->find_first_of("<>", left + 1);
+            if (Ut::npos() == right) {
+                return -1;                                            // RETURN
+            }
+            if ('>' == (*s)[right]) {
+                break;
+            }
+            left = right;
+        }
+
+        *s = s->substr(0, left) + s->substr(right + 1);
     }
-    bsl::size_t lastAngle  = s->find_last_of( "<>");
-    BSLS_ASSERT(Ut::npos() != lastAngle);
-    BSLS_ASSERT(lastAngle < s->length());
-    BSLS_ASSERT(lastAngle >= firstAngle);
-    s->erase(s->data() + firstAngle, s->data() + lastAngle + 1);
 }
 
 void Ut::trim(bsl::string *string)

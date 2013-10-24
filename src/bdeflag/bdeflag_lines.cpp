@@ -655,7 +655,20 @@ void Lines::killQuotesComments()
                         curLine.resize(col-2);
                         if (lastSlash) {
                             curLine += " \\";
-                            s_contComments.insert(li);
+                            if (li + 1 >= s_lineCount) {
+                                s_contComments.insert(li);
+                            }
+                            else {
+                                const bsl::string& nextLine = s_lines[li + 1];
+                                bsl::size_t firstNonBlank =
+                                               nextLine.find_first_not_of(' ');
+                                if (Ut::npos() == firstNonBlank
+                                   || firstNonBlank + 2 > nextLine.size()
+                                   || '/' != nextLine[firstNonBlank]
+                                   || '/' != nextLine[firstNonBlank + 1]) {
+                                    s_contComments.insert(li);
+                                }
+                            }
                         }
                         break;
                     }
@@ -693,7 +706,6 @@ void Lines::killQuotesComments()
                 }
                 else {
                     asterisk = false;
-                    s_contComments.insert(li);
                 }
             }
         }

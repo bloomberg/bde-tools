@@ -301,17 +301,6 @@ bool isAllocatorPtrType(const bsl::string& typeName)
 }
 
 static
-void removeUpThroughLastColon(bsl::string *s)
-    // Remove any namespaces, containing classes, from a name -- everything up
-    // through, and including, the last ':'.
-{
-    size_t u = s->rfind(':');
-    if (Ut::npos() != u) {
-        s->erase(0, u + 1);
-    }
-}
-
-static
 bool isExemptClassName(const bsl::string className)
     // Certain special class names, especially in bslstl and bslmf, are exempt
     // from normal rules for class names (i.e. starting with upper case).
@@ -592,6 +581,22 @@ void Group::recurseMemTraverse(const Group::GroupMemFuncConst func)
     for (GroupSetIt it = d_subGroups.begin(); end != it; ++it) {
         (*it)->recurseMemTraverse(func);
     }
+}
+
+void Group::simplifyClassName(const Place& whereNameIs)
+{
+    bsl::string name = d_className;
+    if (0 != Ut::stripAngleBrackets(&name)) {
+        whereNameIs.error() << " confused class name " << d_className << endl;
+        return;                                                       // RETURN
+    }
+
+    size_t u = name.rfind(':');
+    if (Ut::npos() != u) {
+        name.erase(0, u + 1);
+        d_flags.d_isSubClass = true;
+    }
+    d_className = name;
 }
 
 // CLASS METHODS
@@ -1385,7 +1390,7 @@ void Group::determineGroupType()
 
         if (d_prevWord.empty()) {
             bool expression = false;
-            if (Ut::charInString(pwbc, "~!%^&*-+=<>,?:(){}|[]/")) {
+            if (Ut::charInString(pwbc, "~!%^&*-+=<>.,?:(){}|[]/")) {
                 expression = true;
                 const bsl::string curLine = Lines::line(
                                                     d_prevWordBegin.lineNum());
@@ -1598,8 +1603,7 @@ void Group::determineGroupType()
             char c = ':' == Ut::lastCharOf(name) ? ':' : *(endName + 1);
             if (Ut::charInString(c, ":{")) {
                 d_className = name;
-                Ut::stripAngleBrackets(&d_className);
-                removeUpThroughLastColon(&d_className);
+                simplifyClassName(d_statementStart);
                 d_type = BDEFLAG_CLASS;
                 return;                                               // RETURN
             }
@@ -1670,8 +1674,7 @@ void Group::determineGroupType()
                 // prevWord or secondPrevWord are 'struct', 'class', or 'union'
 
                 d_className = d_prevWord;
-                Ut::stripAngleBrackets(&d_className);
-                removeUpThroughLastColon(&d_className);
+                simplifyClassName(d_prevWordBegin);
                 d_type = BDEFLAG_CLASS;
                 return;                                               // RETURN
             }
@@ -1710,8 +1713,7 @@ void Group::determineGroupType()
                                        : *(nameEnd + 1);
                                 if (Ut::charInString(c, ":{")) {
                                     d_className = name;
-                                    Ut::stripAngleBrackets(&d_className);
-                                    removeUpThroughLastColon(&d_className);
+                                    simplifyClassName(cursor);
                                     d_type = BDEFLAG_CLASS;
                                     return;                           // RETURN
                                 }
@@ -1731,8 +1733,7 @@ void Group::determineGroupType()
                                    : *(nameEnd + 1);
                             if (Ut::charInString(c, ":{")) {
                                 d_className = name;
-                                Ut::stripAngleBrackets(&d_className);
-                                removeUpThroughLastColon(&d_className);
+                                simplifyClassName(cursor);
                                 d_type = BDEFLAG_CLASS;
                                 return;                               // RETURN
                             }
@@ -1751,8 +1752,7 @@ void Group::determineGroupType()
                                    : *(nameEnd + 1);
                             if (Ut::charInString(c, ":{")) {
                                 d_className = name;
-                                Ut::stripAngleBrackets(&d_className);
-                                removeUpThroughLastColon(&d_className);
+                                simplifyClassName(cursor);
                                 d_type = BDEFLAG_CLASS;
                                 return;                               // RETURN
                             }
@@ -2148,16 +2148,7 @@ void Group::checkArgNames() const
             }
         }
 
-        bsl::string lastPartOfClassName = d_parent->d_className;
-        Ut::stripAngleBrackets(&lastPartOfClassName);
-        {
-            size_t u = lastPartOfClassName.rfind(':');
-            if (Ut::npos() != u) {
-                lastPartOfClassName = lastPartOfClassName.substr(u + 1);
-            }
-        }
-
-        if (d_prevWord == lastPartOfClassName) {
+        if (d_prevWord == d_parent->d_className) {
             switch (argCount) {
               case 0: {
                 ; // do nothing
@@ -2325,17 +2316,6 @@ void Group::checkClassName() const
     }
 
     bsl::string className(d_className);
-    Ut::stripAngleBrackets(&className);
-    if (MATCH_ANGLES == className) {    // match_angles == "<>"
-        d_statementStart.error() << "strange class name '" << d_className <<
-                                                                     bsl::endl;
-        return;                                                       // RETURN
-    }
-
-    bsl::size_t u = className.rfind(':');
-    if (Ut::npos() != u) {
-        className = className.substr(u + 1);
-    }
 
     const ClassNameVals& cnv = classNameVals;
 
@@ -2391,6 +2371,10 @@ void Group::checkClassName() const
     }
 
     if (isExemptClassName(className)) {
+        return;                                                       // RETURN
+    }
+
+    if (d_flags.d_isSubClass) {
         return;                                                       // RETURN
     }
 

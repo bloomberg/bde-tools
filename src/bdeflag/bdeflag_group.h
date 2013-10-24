@@ -52,14 +52,20 @@ namespace bdeflag {
 class Group {
     // PRIVATE TYPES
     struct Flags {
-        unsigned        d_parenBased : 1;
-            // initialized before 'recurseInitGroup' starts with the group
+        // CREATORS
+        Flags();
+            // Initialize all fields to 0.
 
         // all of these are initialized by 'recurseInitGroup'
 
         unsigned        d_closedWrong : 1;
         unsigned        d_earlyEof : 1;
         unsigned        d_noGroupsFound : 1;
+        unsigned        d_isSubClass : 1;
+
+        // initialized before 'recurseInitGroup' starts with the group
+
+        unsigned        d_parenBased : 1;
     };
 
     enum GroupType {
@@ -120,10 +126,7 @@ class Group {
     bsl::string     d_prevWord;
     bsl::string     d_className;
     GroupType       d_type;
-    union {
-        Flags       d_flags;
-        int         d_zeroFlags;
-    };
+    Flags           d_flags;
     GroupSet        d_subGroups;
 
     // PRIVATE MANIPULATORS
@@ -141,6 +144,11 @@ class Group {
     void recurseMemTraverse(const GroupMemFuncConst func);
         // Recurse all the groups in the tree starting at 's_topLevel', calling
         // 'func' on each one.
+
+    void simplifyClassName(const Place& whereNameIs);
+        // Get rid of angle brackets and everything preceding and including the
+        // last "::" in the class name, leaving only the last subclass without
+        // angle brackets.
 
     // PRIVATE ACCESSORS
     void checkArgNames() const;
@@ -408,7 +416,7 @@ Group::Group(GroupType groupType, bool parenBased)
 : d_parent(0)
 , d_prevWordBegin(Place::rEnd())
 , d_type(groupType)
-, d_zeroFlags(0)
+, d_flags()
 {
     d_flags.d_parenBased = parenBased;
 }
@@ -419,6 +427,19 @@ const Place& Group::open() const
 {
     return d_open;
 }
+
+                            // -------------------
+                            // class Groups::Flags
+                            // -------------------
+
+inline
+Group::Flags::Flags()
+: d_closedWrong(0)
+, d_earlyEof(0)
+, d_noGroupsFound(0)
+, d_isSubClass(0)
+, d_parenBased(0)
+{}
 
                         // -------------------------
                         // class Group::GroupPtrLess
