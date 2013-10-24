@@ -2,13 +2,11 @@
 
 set -x
 
-SRCS="bdeflag.m.cpp bdeflag_group.cpp bdeflag_place.cpp bdeflag_lines.cpp bdeflag_componenttable.cpp bdeflag_ut.cpp"
-
-tabs="$(greptab $SRCS)"
+tabs="$(greptab bdeflag{.m,_group,_place,_lines,_ut,_componenttable}.{h,cpp,t.cpp})"
 if [ ! -z "$tabs" ] ; then
     echo Tabs found in $tabs 1>&2
     exit 1
 fi
 
-pcomp -I. $SRCS
+pcomp -I. bdeflag{.m,_group,_place,_lines,_ut,_componenttable}.cpp
 rm -f *plink_timestamp* 00plink_*
