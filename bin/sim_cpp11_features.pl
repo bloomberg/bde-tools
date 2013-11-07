@@ -12,11 +12,13 @@
 #   template <typename T_1, typename T_2> f(const T_1& a_1, const T_2& a_2);
 #   // etc.
 #
-# Usage: sim_cpp11_features.pl [options] <input-file-name>
+# Usage: sim_cpp11_features.pl [options] <input-file-name>...
 #
 #   The input file contains the variadic function templates.  The optional
 #   num-reps argument specifies the maximum number of variadic arguments to be
-#   supported (default 15).  Output is written to standard out.
+#   supported (default 15).  Output is written back to the original input
+#   file.  If the output is identical to the input, then the input file is not
+#   touched (i.e., its timestamp is not changed).
 
 use strict;
 use 5.010;
@@ -861,12 +863,16 @@ sub replaceForwarding($$$;$)
             my $argname = $cppMatch[2] || "";
             $argname =~ s/\s+/ /g;  # squash all whitespace to a single space
 
+            my $replStart = $cppMatchStart[1];
+            my $replEnd = $cppMatch[2] ? $cppMatchEnd[2] : $cppMatchEnd[1];
+
             replaceAndFitOnLine($shroudedInput,
-                                $cppMatchStart[1],
-                                $cppMatchEnd[2] - $cppMatchStart[1],
+                                $replStart, $replEnd - $replStart,
                                 "BSLS_COMPILERFEATURES_FORWARD_REF($typename)".
                                 $argname);
-            $pos = $cppMatchEnd[2];
+
+            fatal("No forward progress; endless loop") unless $pos < $replEnd;
+            $pos = $replEnd;
         }
 
         $pos = 0;
@@ -1695,6 +1701,11 @@ EOT
             # Overwrite input file
             $outputFilename = $inputFilename;
         }
+    }
+
+    if ($outputFilename eq $inputFilename && $inputFilename ne "-") {
+        # Save a backup of the input file
+        rename $inputFilename, $inputFilename . ".bak";
     }
 
     open OUTPUT, ">$outputFilename" or
