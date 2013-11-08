@@ -158,6 +158,9 @@
 *                       _       SWITCHCHAR = -
 !! windows              _       SWITCHCHAR = /
 
+# Flag to add a directory to the include path for compilation step
+!! *                    _       INCPATH_FLAG = $(SWITCHCHAR)I
+
 #==============================================================================
 # Retry false-negative wrapper. Use -X in bde_build.pl to override this,
 # or override RETRY_ON_EXIT and RETRY_ON_SIGNAL in the environment.
