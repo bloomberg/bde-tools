@@ -4,5 +4,7 @@
 *.obj
 *.tsk
 *.exe
+*.orig
 *~
 .*.sw?
+TAGS
