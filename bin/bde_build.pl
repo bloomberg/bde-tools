@@ -15,6 +15,9 @@ use Getopt::Long;
 use Carp;
 use IO::File;
 
+use Config;
+my $PS = $Config{path_sep};
+
 use BDE::Build::Invocation qw($FS $FSRE $INVOKE);
 use BDE::FileSystem;
 use BDE::Group;
@@ -65,6 +68,9 @@ use Util::Message qw(
     set_debug get_debug set_verbose verbose
 );
 use Util::Retry qw(:all);
+
+# platform independent constant paths
+my $constant_path = join($PS, split(/:/, CONSTANT_PATH));
 
 #==============================================================================
 
@@ -541,6 +547,9 @@ Usage: $prog -h | [-c <comp>] [-d] [-s|-j<n>] [-t <tgt>] [-u <upl>]
   --output     | -o <path>    place derived files on different filesystem, rooted
                               at <path>
                               If ~/.bde_build_output_location is a symlink, its
+  --no-output  | -O           place output files locally, ignoring
+                              ~/.bde_build_output_location if present (overrides
+                              -o if both are present)
                               target will be used if -o is not specified
   --path       | -p           override BDE_PATH
   --quit       | -Q           quit immediately on failure (see also -F)
@@ -569,7 +578,6 @@ _USAGE_END
 #  --groupdeps  | -G           construct makefile with local group dependencies
 #                              rather than depend on local packages directly
 #  --production | -P           production-style build (under development)
-#  --options    | -O <file>    specify additional build options from file
 
 #------------------------------------------------------------------------------
 
@@ -1171,7 +1179,9 @@ sub makePackageDependencyMacros ($$$;$$) {
 
         # library flags for link line
         my %seen_locations;
-        my @grp_lib_locations = grep {!$seen_locations{$_}++} ($root->getRootLocation(),split /:/,$root->getPath());
+        my @grp_lib_locations =
+            grep {!$seen_locations{$_}++}
+                 ($root->getRootLocation(), split $PS, $root->getPath());
         print $fh "GRP_LIBS     = ",join(" \\\n               ", map {
             "\$(LIBPATH_FLAG)".$_.
               "${FS}lib${FS}\$(UPLID) "
@@ -1181,11 +1191,11 @@ sub makePackageDependencyMacros ($$$;$$) {
                          "\$(LINK_LIB_EXT)","has_regions")
           } @builtgroups);
         if ($link_ufid->toString(1)=~/shr/o) {
-            print $fh " \$(LIBRUNPATH_FLAG)".join(":", map {
+            print $fh " \$(LIBRUNPATH_FLAG)".join($PS, map {
                 "\$(".uc($reggroups{$_})."_ROOTLOCN)${FS}lib${FS}\$(UPLID)"
             } reverse @builtgroups);
             ##<<<TODO support shared libs of legacy libs?
-            print $fh ":${FS}lib:${FS}usr${FS}lib:." if $depend_on_groups;
+            print $fh "${PS}${FS}lib${PS}${FS}usr${FS}lib${PS}." if $depend_on_groups;
         }
         print $fh "\n";
 
@@ -1241,12 +1251,12 @@ sub makePackageDependencyMacros ($$$;$$) {
         } @packages);
 
         if ($link_ufid->toString(1)=~/shr/o) {
-            print $fh " \$(LIBRUNPATH_FLAG)".join(":", map {
+            print $fh " \$(LIBRUNPATH_FLAG)".join($PS, map {
                 "\$(".uc(getPackageGroup($_))."_LOCN)${FS}${_}${FS}\$(UPLID)"
             } reverse @packages);
 
             #<<<TODO: support shared libs of legacy libs?
-            print $fh ":${FS}lib:${FS}usr${FS}lib:."
+            print $fh "${PS}${FS}lib${PS}${FS}usr${FS}lib${PS}."
         }
         print $fh "\n";
 
@@ -1839,10 +1849,18 @@ sub makeMakefile ($@) {
               join($sep, map {
                   "\$(${PKG}_BLOC)${FS}${_}.t.\$(TEST_UFID)\$(EXE_EXT)"
               } @build_list)."\n\n";
+            print $FMK "TEST_OBJS   = " .
+              join($sep, map {
+                  "\$(${PKG}_BLOC)${FS}${_}.t.\$(TEST_UFID)\$(OBJ_EXT)"
+              } @build_list)."\n\n";
         } else {
             print $FMK "TESTS       = " .
               join($sep, map {
                   "\$(${PKG}_BLOC)${FS}${_}.t.\$(UFID)\$(EXE_EXT)"
+              } @build_list)."\n\n";
+            print $FMK "TEST_OBJS   = " .
+              join($sep, map {
+                  "\$(${PKG}_BLOC)${FS}${_}.t.\$(UFID)\$(OBJ_EXT)"
               } @build_list)."\n\n";
         }
         # a rule to delete build sources, for compliant packages only
@@ -2005,8 +2023,8 @@ GRP_INC_FILES = @grp_inc_files
         install_group install_group_library install_group_include \\
         uninstall_group uninstall_group_library uninstall_group_include \\
         lib clean cleancache realclean build_test \\
-        build_package_objects build_package_library \\
-        preprocess_package_include noop
+        build_package_objects build_package_test_objects \\
+        build_package_library preprocess_package_include noop
 
 all: $alltargets
 
@@ -2040,6 +2058,8 @@ build_package_library: \$(PACKAGE_LIB)
 \t\$(RANLIB)
 
 build_package_objects: \$(OBJS)
+
+build_package_test_objects: \$(TEST_OBJS)
 
 $groupedpkg_rules
 #--- Install (Package to) Group
@@ -3230,7 +3250,7 @@ unless (GetOptions(\%opts, qw[
     nodepend|n
     nolog|N
     output|o=s
-    options|O=s
+    no-output|O
     path|p=s
     production|P
     quit|Q|q
@@ -3347,7 +3367,12 @@ my $symlink_exists = eval { symlink("",""); 1 };
 
 # if symlinks aren't allowed on platform, there's no point in the -o option
 # Also, if clearmake is used, the output options is probably harmful
-my $allow_output = $symlink_exists && !(exists $opts{clearmake});
+debug "Suppressed output location with --no-output or -O"
+                                                       if $opts{'no-output'};
+
+my $allow_output = !$opts{'no-output'}
+                   && $symlink_exists
+                   && !(exists $opts{clearmake});
 
 if($allow_output) {
     if(!$opts{output}) {
@@ -3380,13 +3405,13 @@ else {
 $root=new BDE::FileSystem($root);
 # BDE_PATH is probably wrong since proot got nuked
 if(exists $opts{path}) {
-    $root->setPath($opts{path}.":".CONSTANT_PATH);
+    $root->setPath($opts{path}.$PS.$constant_path);
 }
 elsif(exists $ENV{BDE_PATH}) {
-    $root->setPath($ENV{BDE_PATH}.":".CONSTANT_PATH);
+    $root->setPath($ENV{BDE_PATH}.$PS.$constant_path);
 }
 else {
-    $root->setPath(CONSTANT_PATH);
+    $root->setPath($constant_path);
 }
 
 $root->setGroupsSubdir($subdir) if $subdir;

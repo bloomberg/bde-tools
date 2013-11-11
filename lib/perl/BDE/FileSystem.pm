@@ -1,6 +1,8 @@
 package BDE::FileSystem;
 use strict;
 
+use Config;
+
 use base 'BDE::Object';
 use overload '""' => "toString", fallback => 1;
 
@@ -91,6 +93,11 @@ sub fromString ($$) {
     $self->{path} ||= PATH;
 
     return $self;
+}
+
+sub splitPaths {
+    my $paths = shift;
+    return split($Config{path_sep}, $paths);
 }
 
 #------------------------------------------------------------------------------
@@ -235,7 +242,7 @@ the FILESYSTEM_NO_CACHE mode flag.
 	  unless ($nolocal & FILESYSTEM_NO_PATH) {
 	      push @paths, map {
 		  $_.$FS.$dir.$FS.$group
-	      } (split ':',$self->getPath);
+	      } (splitPaths($self->getPath));
 	  }
 
 	  my $found=undef;
@@ -335,13 +342,7 @@ sub getDefaultGroupLocation ($$) {
         );
     }
 
-    #return $location.$FS.$group; # borked.
-
-    ##<<<FIXME: this is bad.  this is borked.  I don't want to commit this. -gps
-    ## broken once infrastructure started returning multiple colon-separated
-    ## paths for the called routines above.  We want to avoid filesystem
-    ## call here.  Should be abstracted in different place.
-    my @locations = split ':',$location;
+    my @locations = splitPaths($location);
     foreach my $p (@locations) {
 	return $p.$FS.$group if -d $p.$FS.$group;
     }
@@ -474,15 +475,15 @@ the C<FILESYSTEM_NO_CACHE> mode flag.
 	  #      might be an optimization to avoid unnecessary stat()s.
 
 	  unless ($nolocal & FILESYSTEM_NO_ROOT) {
-	      push @paths, map {$_.$FS.$leafpath} (split /:/,$self);
+	      push @paths, map {$_.$FS.$leafpath} (splitPaths($self));
 	      push @paths, map {$_.$FS.$legacyleafpath,
 				$_.$FS.$thirdpartyleafpath,
 				$_.$FS.$applicationleafpath
-			       } (split /:/,$self) if $isIsolatedPackage;
+			       } (splitPaths($self)) if $isIsolatedPackage;
 	  }
 
 	  unless ($nolocal & FILESYSTEM_NO_PATH) {
-	      foreach (split ':',$self->getPath) {
+	      foreach (splitPaths($self->getPath)) {
 		  push @paths,  $_.$FS.$leafpath;
 		  push @paths,  $_.$FS.$legacyleafpath,
 				$_.$FS.$thirdpartyleafpath,
@@ -639,13 +640,7 @@ sub getDefaultPackageLocation ($$;$) {
         );
     }
 
-    #return $location.$FS.$package; # borked.
-
-    ##<<<FIXME: this is bad.  this is borked.  I don't want to commit this. -gps
-    ## broken once infrastructure started returning multiple colon-separated
-    ## paths for the called routines above.  We want to avoid filesystem
-    ## call here.  Should be abstracted in different place.
-    my @locations = split ':',$location;
+    my @locations = splitPaths($location);
     foreach my $p (@locations) {
 	return $p.$FS.$package if -d $p.$FS.$package;
     }
@@ -2179,7 +2174,7 @@ desired.
 sub toString($) {
     my $self = shift;
     return $self->getRootLocation || do {
-        my ($path) = split /:/, $self->getPath;
+        my ($path) = splitPaths($self->getPath);
         $path;
     };
 }
@@ -2209,7 +2204,7 @@ sub _genPaths ($) {
         push @roots, $self->getRootLocation;
     }
     unless ($nolocal & FILESYSTEM_NO_PATH) {
-        push @roots, split ':', $self->getPath;
+        push @roots, splitPaths($self->getPath);
     }
 
     my (@paths,%paths);

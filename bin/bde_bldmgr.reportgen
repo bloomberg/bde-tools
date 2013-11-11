@@ -229,14 +229,17 @@ close(INPUT);
 # preferred targets, with their relative priority levels
 my %preferredTargets = (
     w32_2008_dbg => 1,
-    w64a_dbg     => 2,
-    i8           => 3,
-    i10          => 3,
-    i10_opt      => 3,
-    i10_safe     => 3,
-    s12          => 3,
-    s12_opt      => 3,
-    s12_safe     => 3,
+    w32_2008_opt => 1,
+    w32_2010     => 2,
+    w64a_dbg     => 3,
+    w64a_opt     => 3,
+    i8           => 4,
+    i10          => 4,
+    i10_opt      => 4,
+    i10_safe     => 4,
+    s12          => 4,
+    s12_opt      => 4,
+    s12_safe     => 4,
 );
 
 my %cellColors = (

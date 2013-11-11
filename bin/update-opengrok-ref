@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+echo You must run this script from the repo where you want to
+echo update the opengrok ref, with the correct ref currently
+echo checked out.
+echo
+echo Hit enter if that is the case, and ^C if not:
+
+read
+
+OLD_REF=`git show-ref | grep -w opengrok | head -1 | awk '{print $1}'`
+
+if [[ "x$OLD_REF" == "x" ]]
+then \
+    echo "================================"
+    echo "No old opengrok ref in this repo"
+    echo "================================"
+else
+    echo "======="
+    echo "OLD REF"
+    echo "======="
+    git show-ref | grep "$OLD_REF"
+fi
+
+echo "======="
+echo "New ref"
+echo "======="
+git show-ref | grep "refs/heads/$(git br | grep '\*' | awk '{print $NF}')"
+
+echo "================"
+echo "Update local ref"
+echo "================"
+git update-ref refs/heads/opengrok HEAD
+
+echo "=============="
+echo "Delete old ref"
+echo "=============="
+git push origin :opengrok
+
+echo "================="
+echo "Update remote ref"
+echo "================="
+git push origin opengrok:opengrok
