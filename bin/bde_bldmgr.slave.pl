@@ -80,8 +80,12 @@ if ($^O =~ /solaris/) {
     $ENV{PATH} .= ":".join(':',$bindir,qw[
         /usr/ccs/bin
     ]);
-
 }
+
+# Need /opt/swt/bin to find gmake - DRQS 46663127
+$ENV{PATH} .= ":".join(':',qw[
+    /opt/swt/bin
+]);
 
 if ($^O =~ /aix/) {
     # Email from Mark Hannum on 20100720 @ 15:16:33
