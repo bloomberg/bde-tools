@@ -73,10 +73,7 @@
 *           mt      BUILD_TYPE  = -DBDE_BUILD_TARGET_MT
 *           opt     BUILD_TYPE  = -DBDE_BUILD_TARGET_OPT
 *           shr     BUILD_TYPE  = -DBDE_BUILD_TARGET_SHR
-*           pure    BUILD_TYPE  = -DBDE_BUILD_TARGET_PURE
 *           win     BUILD_TYPE  = -DBDE_BUILD_TARGET_WINDOWED
-*           ins     BUILD_TYPE  = -DBDE_BUILD_TARGET_INS
-*           qnt     BUILD_TYPE  = -DBDE_BUILD_TARGET_QNT
 *           safe    BUILD_TYPE  = -DBDE_BUILD_TARGET_SAFE
 *           safe2   BUILD_TYPE  = -DBDE_BUILD_TARGET_SAFE_2
 *           stlport BUILD_TYPE  = -DBDE_BUILD_TARGET_STLPORT
@@ -193,8 +190,6 @@ unix-                   _       RETRY_ON_SIGNAL = $(RETRY) -a 3 -t $(RETRY_TIMEO
 # Test driver execution
 
 *                       _       TEST_TIMEOUT    = 600
-# purify tests can be up to 10 times slower than normal, but 50 minutes is a sufficient cap
-!! *                    pure    TEST_TIMEOUT    = 3000
 
 # Disable timeout on retry wrapper because all.pl has its own, per-case timeout
 *                       _       RETRY_ALLTEST   =
@@ -216,9 +211,6 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 
 # run tests in series for windows
 !! windows  _      ALLTEST_PARALLEL = -s
-
-# run tests in series for purify - we need to be able to parse each test driver's log file
-!! *        pure   ALLTEST_PARALLEL = -s
 
 #==============================================================================
 # Basic commands and nomenclature
@@ -1089,99 +1081,6 @@ unix-SunOS      _   F77     = -xarch=v8plusa -xchip=generic -xcache=generic
 # on Linux, the default gmake cannot handle plink's new makefile forwarding logic.  Disable it by setting MKINCL to the source
 # location
 !! unix-Linux-*-*-*       _   MKINCL      = /bbsrc/source/proot/mk/
-
-
-#==============================================================================
-# Instrumenting compilers: ins, pure, purecov and qnt + win
-#==============================================================================
-# Insure++ compiler
-
-# no retry if insuring
-!! *            ins     RETRY_ON_SIGNAL =
-!! *            ins     RETRY_ON_EXIT   =
-
-!! unix-SunOS   ins     INSURE_PATH = /opt/parasoft/insure-6.1.4/bin.solaris
-!! unix-AIX     ins     INSURE_PATH = /opt/parasoft/insure-6.1.4/bin.aix5
-
-*               ins     INSURE_CMD  = false NO_INSURE
-!! unix-SunOS   ins     INSURE_CMD  = $(INSURE_PATH)/insure
-!! unix-AIX     ins     INSURE_CMD  = $(INSURE_PATH)/insure
-
-!! *            ins_mt  MT_LDFLAGS  =
-*               ins_mt  BDE_LDFLAGS = $(BDE_DYNAMIC) -mt $(BDE_STATIC)
-
-# prepend to existing compiler command
--- *            ins     CC      = $(INSURE_CMD) $(INSURE_OPTS) $(INSURE_USEROPTS)
--- *            ins     CXX     = $(INSURE_CMD) $(INSURE_OPTS) $(INSURE_USEROPTS)
-
-#==============================================================================
-# Rational - Shared Configuration
-
-#-# This will become a 'delete after use' option later, when pre-expansion  #-#
-#-# of options is supported in the options subsystem.                       #-#
-
-!! unix                 _   RATIONAL_TMP_DIR = /bb/data/tmp/$(USER)
-
-unix-*                  _   RATIONAL_WIN_OPT = -windows=no
-!! unix-*             win   RATIONAL_WIN_OPT =
-
-!! unix-*               _   RATIONAL_OPTS   = $(RATIONAL_WIN_OPT) -ignore-runtime-environment -recursion-depth-limit=40000 -thread-stack-change=0x3000 -max-threads=320 -chain-length=20 -cache-dir=$(RATIONAL_TMP_DIR) -always-use-cache-dir=yes -run-at-exit='echo %v %e %l %L %x %p' -enable-new-cache-scheme
-
-# in quanity config we can also delete the -chain-length=20 option as it does
-# not have meaning there.
-
-#==============================================================================
-# Purify compiler
-
-# no retry if purifying
-!! *            pure    RETRY_ON_SIGNAL =
-!! *            pure    RETRY_ON_EXIT   =
-
-!! *            pure    PURE_SET_TMPDIR = TMPDIR=$(TMPDIR)
-!! *            pure    SET_TMPDIR      =
-
-!! unix-SunOS   pure    PURIFYHOME  = /opt/swt/rational/releases/PurifyPlus.7.0.1.0-000.C/sun4_solaris2/bin
-!! unix-Linux   pure    PURIFYHOME  = /opt/swt/rational/releases/PurifyPlus.7.0.1.0-000.B/i386_linux2/bin
-
-!! *            pure    PURIFY_CMD  = false NO_PURIFY
-!! unix-SunOS   pure    PURIFY_CMD  = $(PURIFYHOME)/purify
-!! unix-Linux   pure    PURIFY_CMD  = $(PURIFYHOME)/purify
-
-# prepend to existing compiler command
--- *            pure    CC      = mkdir -p $(RATIONAL_TMP_DIR); $(PURE_SET_TMPDIR) $(PURIFY_CMD) $(RATIONAL_OPTS) $(PURIFY_USEROPTS)
--- *            pure    CXX     = mkdir -p $(RATIONAL_TMP_DIR); $(PURE_SET_TMPDIR) $(PURIFY_CMD) $(RATIONAL_OPTS) $(PURIFY_USEROPTS)
-
-#==============================================================================
-# Pure coverage compiler
-
-# no retry if purecovering
-!! *            purecov RETRY_ON_SIGNAL =
-!! *            purecov RETRY_ON_EXIT   =
-
-!! unix-SunOS   purecov PURECOVHOME = /opt/rational/releases/purecov.sol.2003a.06.13.ER.0149
-*               purecov PURECOV_CMD = false NO_PURECOV
-!! unix-SunOS   purecov PURECOV_CMD = $(PURECOVHOME)/purecov
-
-# prepend to existing compiler command
--- *            purecov CC      = $(PURECOV_CMD) $(RATIONAL_OPTS) $(PURECOV_USEROPTS)
--- *            purecov CXX     = $(PURECOV_CMD) $(RATIONAL_OPTS) $(PURECOV_USEROPTS)
-
-#==============================================================================
-# Quantify
-
-# no retry if quantifying
-!! *            qnt RETRY_ON_SIGNAL =
-!! *            qnt RETRY_ON_EXIT   =
-
-# quantify location
-!! unix-SunOS   qnt QUANTIFYHOME    = /opt/rational/releases/quantify.sol.2003a.06.13.ER.0149
-*               qnt QUANTIFY_CMD    = false NO_QUANTIFY
-!! unix-SunOS   qnt QUANTIFY_CMD    = $(QUANTIFYHOME)/quantify
-
-# prepend to existing compiler command
--- *            qnt CC      = $(QUANTIFY_CMD) $(RATIONAL_OPTS) $(QUANTIFY_USEROPTS)
--- *            qnt CXX     = $(QUANTIFY_CMD) $(RATIONAL_OPTS) $(QUANTIFY_USEROPTS)
-
 
 #==============================================================================
 # Integration
