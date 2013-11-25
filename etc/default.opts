@@ -156,7 +156,6 @@
 
 *                       cpp11   BDE_CXXFLAGS    = $(CPP11_FLAGS)
 
-
 #=========
 
 unix-           _   OUT_OPT     = -o $@
@@ -252,7 +251,6 @@ unix-AIX-*-*-*           shr SHR_NO_UNDEFINED_SYMBOLS =
 !! unix-                    shr AR      = $(CXX) -G $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS) -o
 
 unix-AIX-*-*-*-*           _   XLC_SPECIAL_BBINDER_FLAGS   = -bweaklocal -bbigtoc
-!! unix-AIX-*-*-xlc-9.0    _   XLC_SPECIAL_BBINDER_FLAGS   = -bbinder:$(XLC_PATCHED_LD_LOCATION)/exe/bind64 -bweaklocal -bbigtoc
 !! unix-AIX-*-*-xlc-10.1   _   XLC_SPECIAL_BBINDER_FLAGS   = -bbinder:/usr/ccs/bin/bind64 -bweaklocal -bbigtoc
 
 !! unix-AIX-*-*-*           shr AR      = $(CXX) -G $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS) $(XLC_SPECIAL_BBINDER_FLAGS) -o
@@ -370,9 +368,6 @@ unix-AIX-*-*-*           _   ARCH_TUNE       = -qarch=pwr5 -qtune=pwr5
 !! unix-SunOS-*-*-cc-5.9 64 DEF_CXXFLAGS    = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
 !! unix-SunOS-*-*-CC64   _  DEF_CXXFLAGS    =
 !! unix-AIX-*-*-xlc-*   _   AIX_UNLOCK_STREAMS = -D__NOLOCK_ON_INPUT -D__NOLOCK_ON_OUTPUT
-!! unix-AIX-*-*-xlc-6.0 _   DEF_CXXFLAGS    = -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -Q $(AIX_UNLOCK_STREAMS)
-!! unix-AIX-*-*-xlc-8.0 _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qxflag=v6align -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
-!! unix-AIX-*-*-xlc-9.0 _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 !! unix-AIX-*-*-xlc-10.0 _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 # inline rather than inline and optimize
 !! unix-*-*-*-gcc   _   DEF_CXXFLAGS    = -pipe
@@ -546,9 +541,6 @@ unix-          _   BDE_LDFLAGS =  $(LIBPATH_FLAG)/bbsrc/bde/registry/lroot/lib/$
 !! unix-SunOS-*-*-cc-5.9 dbg     DBG_CXXFLAGS    = -g0 -xdebugformat=stabs
 !! unix-AIX-*-*-*        dbg     DBG_CXXFLAGS    = -g
 # -Q suppressed above
-!! unix-AIX-*-*-xlc-8.0  dbg     DBG_CXXFLAGS    = -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
-# xlC9 does v6align by default
-!! unix-AIX-*-*-xlc-9.0  dbg     DBG_CXXFLAGS    = -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 !! unix-AIX-*-*-xlc-10.0  dbg     DBG_CXXFLAGS    = -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 
 !! unix-*-*-*-gcc        dbg     DBG_CXXFLAGS    = -g
@@ -620,10 +612,6 @@ windows         dbg DBG_LIBSUFFIX   = d
 # DRQS 16407776: Studio 12 switched the meaning of -O from -xO2 to -xO3 - we want to use -xO3 explicitly to match plink.
 !! unix-SunOS-*-*-cc-5.9 opt OPT_CFLAGS        = -xO3 -DNDEBUG
 !! unix-SunOS-*-*-cc-5.9 opt OPT_CXXFLAGS      = -xO3 -DNDEBUG -xbuiltin=%all -xprefetch=no%auto,explicit
-
-!! unix-AIX-*-*-xlc-8.0 opt     OPT_CXXFLAGS    = -qxflag=v6align -O -DNDEBUG -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage
-# xlC9 does v6align by default
-!! unix-AIX-*-*-xlc-9.0 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage
 
 #!! windows-        opt OPT_CXXFLAGS    = /Ogitb1 /Gs /D"NDEBUG"
 #Changing these per Brock Peabody
@@ -803,17 +791,6 @@ unix-                   _   CXX     = $(RETRY_ON_SIGNAL) CC $(CXX64FLAGS)
 !! unix-AIX-*-*-*       _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 !! unix-AIX-*-*-*       mt  CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 
-!! unix-AIX-*-*-xlc-8.0 _   XLC_LOCATION        = /bb/util/version8-112008/usr/
-!! unix-AIX-*-*-xlc-8.0 _   XLC_PATCH_1_LOCATION      = /bb/util/version8-090103
-!! unix-AIX-*-*-xlc-8.0 _   XLC_LIBPATH         = LIBPATH=$(XLC_PATCH_1_LOCATION)/lib
-
-!! unix-AIX-*-*-xlc-8.0 _   XLC_QPATH                = -qpath=ILbc:$(XLC_PATCH_1_LOCATION)/exe/
-
-!! unix-AIX-*-*-xlc-9.0 _   XLC_LOCATION             = /bb/util/version9-082008/usr
-!! unix-AIX-*-*-xlc-9.0 _   XLC_PATCHED_LD_LOCATION  = /bb/util/xlC8-20071010
-!! unix-AIX-*-*-xlc-9.0 _   XLC_QPATH                = -qpath=l:$(XLC_PATCHED_LD_LOCATION)/exe/
-!! unix-AIX-*-*-xlc-9.0 _   XLC_LIBPATH              = LIBPATH=$(XLC_LOCATION)/lib
-
 !! unix-AIX-*-*-xlc-10.0 _   XLC_LOCATION            = /bb/util/version10-062009/usr
 
 !! unix-AIX-*-*-xlc-10.1 _   XLC_LOCATION            = /bb/util/version10-082009/usr
@@ -827,23 +804,11 @@ unix-                   _   CXX     = $(RETRY_ON_SIGNAL) CC $(CXX64FLAGS)
 !! unix-AIX-*-*-xlc-11.2 _   XLC_LOCATION            = /bb/util/version11-042012/usr
 !! unix-AIX-*-*-xlc-11.2 _   XLC_QPATH               =
 
-!! unix-AIX-*-*-xlc-8.0 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(XLC_QPATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-AIX-*-*-xlc-8.0 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(XLC_QPATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-
-!! unix-AIX-*-*-xlc-9.0 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(XLC_QPATH) $(CC64FLAGS)
-!! unix-AIX-*-*-xlc-9.0 mt  CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(XLC_QPATH) $(CC64FLAGS)
-
 !! unix-AIX-*-*-xlc-10.0 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 !! unix-AIX-*-*-xlc-10.0 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 
 !! unix-AIX-*-*-*   _   CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlC $(CXX64FLAGS)
 !! unix-AIX-*-*-*   mt  CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlC_r $(CXX64FLAGS)
-
-!! unix-AIX-*-*-xlc-8.0 _   CXX     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC    $(XLC_QPATH) $(CC64FLAGS)
-!! unix-AIX-*-*-xlc-8.0 mt   CXX    = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r  $(XLC_QPATH) $(CC64FLAGS)
-
-!! unix-AIX-*-*-xlc-9.0 _   CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC   $(XLC_QPATH) $(CC64FLAGS)
-!! unix-AIX-*-*-xlc-9.0 mt  CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r $(XLC_QPATH) $(CC64FLAGS)
 
 !! unix-AIX-*-*-xlc-10.0 _   CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC $(CC64FLAGS)
 !! unix-AIX-*-*-xlc-10.0 mt  CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r $(CC64FLAGS)
