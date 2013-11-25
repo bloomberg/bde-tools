@@ -791,19 +791,6 @@ unix-                   _   CXX     = $(RETRY_ON_SIGNAL) CC $(CXX64FLAGS)
 !! unix-AIX-*-*-*       _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 !! unix-AIX-*-*-*       mt  CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 
-!! unix-AIX-*-*-xlc-10.0 _   XLC_LOCATION            = /bb/util/version10-062009/usr
-
-!! unix-AIX-*-*-xlc-10.1 _   XLC_LOCATION            = /bb/util/version10-082009/usr
-!! unix-AIX-*-*-xlc-10.1 _   XLC_PATCHED_LD_LOCATION = /bb/util/xlC10-pmr21426
-!! unix-AIX-*-*-xlc-10.1 _   XLC_QPATH               = -qpath=ILbcC:$(XLC_PATCHED_LD_LOCATION)/exe
-!! unix-AIX-*-*-xlc-10.1 _   XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
-
-!! unix-AIX-*-*-xlc-11.1 _   XLC_LOCATION            = /bb/util/version11-012011/usr
-!! unix-AIX-*-*-xlc-11.1 _   XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
-
-!! unix-AIX-*-*-xlc-11.2 _   XLC_LOCATION            = /bb/util/version11-042012/usr
-!! unix-AIX-*-*-xlc-11.2 _   XLC_QPATH               =
-
 !! unix-AIX-*-*-xlc-10.0 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 !! unix-AIX-*-*-xlc-10.0 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 
@@ -856,10 +843,6 @@ windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D
 !! unix-SunOS-*-*-cc-5.2   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/SUNWspro61/bin/CC $(CXX64FLAGS)
 !! unix-SunOS-*-*-cc-5.5   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bb/util/common/studio8-v10/SUNWspro/bin/CC $(CXX64FLAGS)
 
-!! unix-SunOS-*-*-cc-5.9   _   STUDIO_LOC = /bb/util/common/studio12-v4
-!! unix-SunOS-*-*-cc-5.10  _   STUDIO_LOC = /bb/util/common/SS12U1-20120621
-!! unix-SunOS-*-*-cc-5.11  _   STUDIO_LOC = /bb/util/common/SS12U1-20130312
-
 !! unix-SunOS-*-*-cc-5.9   _    CC        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(STUDIO_LOC)/SUNWspro/bin/cc $(CC64FLAGS)
 !! unix-SunOS-*-*-cc-5.9   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(STUDIO_LOC)/SUNWspro/bin/CC $(CXX64FLAGS)
 
@@ -868,10 +851,6 @@ windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D
 
 !! unix-SunOS-*-*-CC64     _    CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bb/util/common/studio8-v10/SUNWspro/bin/CC $(CXX64FLAGS)
 
-!! unix-Linux-*-*-gcc-3.4.6            _  COMPILERPATH = /usr/bin
-!! unix-Linux-*-2.6.18-gcc-4.1.2       _  COMPILERPATH = /usr/bin
-!! unix-Linux-*-*-gcc-4.2              _  COMPILERPATH = /opt/swt/install/gcc-$(GCC_VER)/bin
-
 !! unix-Linux-*-*-gcc                  _  CXX          = $(RETRY_ON_SIGNAL) $(COMPILERPATH)/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 
 # for development only; use GCC found in PATH; no retry
@@ -879,7 +858,6 @@ windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D
 !! unix-Linux-*-*-gcc-def              _  CC           = gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)
 
 # for development only; use Clang instead of gcc
-!! unix-Linux-*-*-gcc-clang            _  COMPILERPATH = /opt/swt/install/llvm-3.1-64/bin
 !! unix-Linux-*-*-gcc-clang            _  CC           = $(COMPILERPATH)/clang -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)  $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu/32 -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
 !! unix-Linux-*-*-gcc-clang           64  CC           = $(COMPILERPATH)/clang -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)  $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu    -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
 !! unix-Linux-*-*-gcc-clang            _  CXX          = $(COMPILERPATH)/clang++                 $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu/32 -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward

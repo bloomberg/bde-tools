@@ -136,3 +136,29 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 
 # run tests in series for windows
 !! windows  _      ALLTEST_PARALLEL = -s
+
+
+#==============================================================================
+# Compiler Paths
+
+!! unix-Linux-*-*-gcc-3.4.6            _  COMPILERPATH = /usr/bin
+!! unix-Linux-*-2.6.18-gcc-4.1.2       _  COMPILERPATH = /usr/bin
+!! unix-Linux-*-*-gcc-4.2              _  COMPILERPATH = /opt/swt/install/gcc-$(GCC_VER)/bin
+!! unix-Linux-*-*-gcc-clang            _  COMPILERPATH = /opt/swt/install/llvm-3.1-64/bin
+
+!! unix-AIX-*-*-xlc-10.0 _   XLC_LOCATION            = /bb/util/version10-062009/usr
+
+!! unix-AIX-*-*-xlc-10.1 _   XLC_LOCATION            = /bb/util/version10-082009/usr
+!! unix-AIX-*-*-xlc-10.1 _   XLC_PATCHED_LD_LOCATION = /bb/util/xlC10-pmr21426
+!! unix-AIX-*-*-xlc-10.1 _   XLC_QPATH               = -qpath=ILbcC:$(XLC_PATCHED_LD_LOCATION)/exe
+!! unix-AIX-*-*-xlc-10.1 _   XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
+
+!! unix-AIX-*-*-xlc-11.1 _   XLC_LOCATION            = /bb/util/version11-012011/usr
+!! unix-AIX-*-*-xlc-11.1 _   XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
+
+!! unix-AIX-*-*-xlc-11.2 _   XLC_LOCATION            = /bb/util/version11-042012/usr
+!! unix-AIX-*-*-xlc-11.2 _   XLC_QPATH               =
+
+!! unix-SunOS-*-*-cc-5.9   _   STUDIO_LOC = /bb/util/common/studio12-v4
+!! unix-SunOS-*-*-cc-5.10  _   STUDIO_LOC = /bb/util/common/SS12U1-20120621
+!! unix-SunOS-*-*-cc-5.11  _   STUDIO_LOC = /bb/util/common/SS12U1-20130312
