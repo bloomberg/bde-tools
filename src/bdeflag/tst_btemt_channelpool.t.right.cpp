@@ -1,6 +1,5 @@
 Warning: in tst_btemt_channelpool.t.cpp '// RETURN' comment not right-justified to 79 chars at line(s): 1945, 2008, 2036
 Warning: in tst_btemt_channelpool.t.cpp 'TBD' comments found on line(s) 7756, 8308, 8320, 8366, 8369, 11241
-Warning: in tst_btemt_channelpool.t.cpp '\' at end of comment line on line(s) 8342, 8343
 Warning: tst_btemt_channelpool.t.cpp: (2757, 0): class name case23CallbackInfo begins with 'c' -- not an upper case char
 Warning: tst_btemt_channelpool.t.cpp: (2943, 0): class name case22ThreadInfo begins with 'c' -- not an upper case char
 Warning: tst_btemt_channelpool.t.cpp: (3136, 0): class name case22CallbackInfo begins with 'c' -- not an upper case char
@@ -50,6 +49,7 @@ Warning: tst_btemt_channelpool.t.cpp: (6937, 0): when closed, namespaces should 
 Warning: tst_btemt_channelpool.t.cpp: (7181, 0): when closed, namespaces should have the comment '// close namespace <name of namespace>' or '// close package namespace'
 Warning: tst_btemt_channelpool.t.cpp: (7418, 0): when closed, namespaces should have the comment '// close namespace <name of namespace>' or '// close package namespace'
 Warning: tst_btemt_channelpool.t.cpp: (7743, 0): when closed, namespaces should have the comment '// close namespace <name of namespace>' or '// close package namespace'
+Warning: tst_btemt_channelpool.t.cpp: space needed between if/while/for and '(' on lines: 760, 786, 6922, 7408
 Warning: tst_btemt_channelpool.t.cpp: opening '{' of function should be properly aligned alone at start of line(s): 284, 289, 294, 312, 329, 386, 4780, 6474, 6701, 6708, 6753, 6762, 6774, 6945, 7021, 7079, 7084, 7105, 7113, 7118, 7122, 7162, 7292, 7327, 7338, 7427, 7483, 7497, 7559, 7564, 7576, 7584, 7589, 7640
 Warning: tst_btemt_channelpool.t.cpp: comments should be separated from code by a blank line at line(s) 1324, 1335, 1590, 1607, 3622, 3854, 6802, 6807, 6987, 6993, 7217, 7459, 7465
 Warning: tst_btemt_channelpool.t.cpp: (498, 28): ChannelPoolStateCbTester: double argument constructor with default 2nd arg not declared 'explicit' or marked '// IMPLICIT'

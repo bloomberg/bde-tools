@@ -162,11 +162,10 @@ struct Ut {
         // Return the specified 's' with all spaces removed.
 
     static
-    void stripAngleBrackets(bsl::string *s);
+    int stripAngleBrackets(bsl::string *s);
         // Remove all template '<...>' sequences (possibly nested) from
-        // 's'.  Note this makes no assumptions about balance, it just removes
-        // everything at or after the first '[<>]', until at or before the last
-        // '[<>]'.
+        // 's'.  Only succeeds if the brackets are balanced.  Return 0 on
+        // success and a non-zero value otherwise.
 
     static
     void trim(bsl::string *string);

@@ -181,6 +181,8 @@ class Lines {
     static bool                s_assertFound;
     static bool                s_includesComponentDotH;
     static bool                s_couldntOpenFile;
+    static Ut::LineNumSet      s_nonAsciiLines;
+
 
     // Only manipulators can change the value of static members
 

@@ -105,6 +105,7 @@ static Ut::LineNumSet badlyAlignedFuncStartBrace;
 static bsl::set<bsl::string> routinesNeedDoc;
 static bsl::set<bsl::string> routinesDocced;
 
+static Ut::LineNumSet needSpaceAfterIfWhileFor;
 static Ut::LineNumSet returnCommentsNeeded;
 static Ut::LineNumSet returnCommentsNotNeeded;
 
@@ -296,17 +297,6 @@ bool isAllocatorPtrType(const bsl::string& typeName)
       default: {
         return false;                                                 // RETURN
       }
-    }
-}
-
-static
-void removeUpThroughLastColon(bsl::string *s)
-    // Remove any namespaces, containing classes, from a name -- everything up
-    // through, and including, the last ':'.
-{
-    size_t u = s->rfind(':');
-    if (Ut::npos() != u) {
-        s->erase(0, u + 1);
     }
 }
 
@@ -591,6 +581,22 @@ void Group::recurseMemTraverse(const Group::GroupMemFuncConst func)
     for (GroupSetIt it = d_subGroups.begin(); end != it; ++it) {
         (*it)->recurseMemTraverse(func);
     }
+}
+
+void Group::simplifyClassName(const Place& whereNameIs)
+{
+    bsl::string name = d_className;
+    if (0 != Ut::stripAngleBrackets(&name)) {
+        whereNameIs.error() << " confused class name " << d_className << endl;
+        return;                                                       // RETURN
+    }
+
+    size_t u = name.rfind(':');
+    if (Ut::npos() != u) {
+        name.erase(0, u + 1);
+        d_flags.d_isSubClass = true;
+    }
+    d_className = name;
 }
 
 // CLASS METHODS
@@ -1037,9 +1043,8 @@ void Group::checkAllFunctionDoc()
 
     topLevel().recurseMemTraverse(&Group::checkFunctionDoc);
 
-    if (routinesNeedDoc.count(MATCH_OPERATOR)) {
-        routinesNeedDoc.erase(MATCH_OPERATOR);
-    }
+    routinesNeedDoc.erase(MATCH_OPERATOR);
+    routinesNeedDoc.erase(MATCH_SWAP);
 
     if (!routinesNeedDoc.empty()) {
         typedef bsl::set<bsl::string>::iterator It;
@@ -1131,6 +1136,19 @@ void Group::checkAllRoutineCallArgLists()
 {
     if (Lines::BDEFLAG_DOT_T_DOT_CPP != Lines::fileType()) {
         topLevel().recurseMemTraverse(&Group::checkRoutineCallArgList);
+    }
+}
+
+void Group::checkAllSpaceAfterIfWhileFor()
+{
+    topLevel().recurseMemTraverse(&Group::checkSpaceAfterIfWhileFor);
+
+    if (!needSpaceAfterIfWhileFor.empty()) {
+        cerr << "Warning: " << Lines::fileName() <<
+                      ": space needed between if/while/for and '(' on lines: ";
+        cerr << needSpaceAfterIfWhileFor << endl;
+
+        needSpaceAfterIfWhileFor.clear();
     }
 }
 
@@ -1291,6 +1309,7 @@ void Group::doEverything()
         checkAllReturns();
         checkAllNotImplemented();
         checkAllNamespaces();
+        checkAllSpaceAfterIfWhileFor();
         checkAllStartingAsserts();
         checkAllStartingBraces();
         checkAllTemplateOnOwnLine();
@@ -1371,7 +1390,7 @@ void Group::determineGroupType()
 
         if (d_prevWord.empty()) {
             bool expression = false;
-            if (Ut::charInString(pwbc, "~!%^&*-+=<>,?:(){}|[]/")) {
+            if (Ut::charInString(pwbc, "~!%^&*-+=<>.,?:(){}|[]/")) {
                 expression = true;
                 const bsl::string curLine = Lines::line(
                                                     d_prevWordBegin.lineNum());
@@ -1584,8 +1603,7 @@ void Group::determineGroupType()
             char c = ':' == Ut::lastCharOf(name) ? ':' : *(endName + 1);
             if (Ut::charInString(c, ":{")) {
                 d_className = name;
-                Ut::stripAngleBrackets(&d_className);
-                removeUpThroughLastColon(&d_className);
+                simplifyClassName(d_statementStart);
                 d_type = BDEFLAG_CLASS;
                 return;                                               // RETURN
             }
@@ -1656,8 +1674,7 @@ void Group::determineGroupType()
                 // prevWord or secondPrevWord are 'struct', 'class', or 'union'
 
                 d_className = d_prevWord;
-                Ut::stripAngleBrackets(&d_className);
-                removeUpThroughLastColon(&d_className);
+                simplifyClassName(d_prevWordBegin);
                 d_type = BDEFLAG_CLASS;
                 return;                                               // RETURN
             }
@@ -1696,8 +1713,7 @@ void Group::determineGroupType()
                                        : *(nameEnd + 1);
                                 if (Ut::charInString(c, ":{")) {
                                     d_className = name;
-                                    Ut::stripAngleBrackets(&d_className);
-                                    removeUpThroughLastColon(&d_className);
+                                    simplifyClassName(cursor);
                                     d_type = BDEFLAG_CLASS;
                                     return;                           // RETURN
                                 }
@@ -1717,8 +1733,7 @@ void Group::determineGroupType()
                                    : *(nameEnd + 1);
                             if (Ut::charInString(c, ":{")) {
                                 d_className = name;
-                                Ut::stripAngleBrackets(&d_className);
-                                removeUpThroughLastColon(&d_className);
+                                simplifyClassName(cursor);
                                 d_type = BDEFLAG_CLASS;
                                 return;                               // RETURN
                             }
@@ -1737,8 +1752,7 @@ void Group::determineGroupType()
                                    : *(nameEnd + 1);
                             if (Ut::charInString(c, ":{")) {
                                 d_className = name;
-                                Ut::stripAngleBrackets(&d_className);
-                                removeUpThroughLastColon(&d_className);
+                                simplifyClassName(cursor);
                                 d_type = BDEFLAG_CLASS;
                                 return;                               // RETURN
                             }
@@ -2134,16 +2148,7 @@ void Group::checkArgNames() const
             }
         }
 
-        bsl::string lastPartOfClassName = d_parent->d_className;
-        Ut::stripAngleBrackets(&lastPartOfClassName);
-        {
-            size_t u = lastPartOfClassName.rfind(':');
-            if (Ut::npos() != u) {
-                lastPartOfClassName = lastPartOfClassName.substr(u + 1);
-            }
-        }
-
-        if (d_prevWord == lastPartOfClassName) {
+        if (d_prevWord == d_parent->d_className) {
             switch (argCount) {
               case 0: {
                 ; // do nothing
@@ -2271,8 +2276,10 @@ void Group::checkBooleanRoutineNames() const
     }
 
     if (Ut::npos() == d_prevWord.find(':')
-       && (Ut::frontMatches(d_prevWord, MATCH_IS,  0)
-           || Ut::frontMatches(d_prevWord, MATCH_ARE, 0)
+       && ((Ut::frontMatches(d_prevWord, MATCH_IS,  0) &&
+                             d_prevWord.length() > 2 && isupper(d_prevWord[2]))
+           || (Ut::frontMatches(d_prevWord, MATCH_ARE, 0) &&
+                             d_prevWord.length() > 3 && isupper(d_prevWord[3]))
            || (Ut::frontMatches(d_prevWord, MATCH_HAS,  0) &&
                              d_prevWord.length() > 3 && isupper(d_prevWord[3]))
            || (Ut::frontMatches(d_prevWord, MATCH_OPERATOR, 0) &&
@@ -2309,17 +2316,6 @@ void Group::checkClassName() const
     }
 
     bsl::string className(d_className);
-    Ut::stripAngleBrackets(&className);
-    if (MATCH_ANGLES == className) {    // match_angles == "<>"
-        d_statementStart.error() << "strange class name '" << d_className <<
-                                                                     bsl::endl;
-        return;                                                       // RETURN
-    }
-
-    bsl::size_t u = className.rfind(':');
-    if (Ut::npos() != u) {
-        className = className.substr(u + 1);
-    }
 
     const ClassNameVals& cnv = classNameVals;
 
@@ -2375,6 +2371,10 @@ void Group::checkClassName() const
     }
 
     if (isExemptClassName(className)) {
+        return;                                                       // RETURN
+    }
+
+    if (d_flags.d_isSubClass) {
         return;                                                       // RETURN
     }
 
@@ -3119,6 +3119,18 @@ void Group::checkRoutineCallArgList() const
     if (differentLineNums && twoShareLineNum) {
         d_open.warning() << d_prevWord << ": arguments should either be"
                            " all on one line or each on a separate line\n";
+    }
+}
+
+void Group::checkSpaceAfterIfWhileFor() const
+{
+    if (BDEFLAG_IF_WHILE_FOR != d_type) {
+        return;                                                       // RETURN
+    }
+
+    const int col = d_open.col();
+    if (col > 0 && ' ' != Lines::line(d_open.lineNum())[col - 1]) {
+        needSpaceAfterIfWhileFor.insert(d_open.lineNum());
     }
 }
 

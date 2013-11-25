@@ -78,6 +78,7 @@ bool                      Lines::s_includesDoubleQuotes;
 bool                      Lines::s_assertFound;
 bool                      Lines::s_includesComponentDotH;
 bool                      Lines::s_couldntOpenFile;
+Ut::LineNumSet            Lines::s_nonAsciiLines;
 
 // LOCAL FUNCTIONS
 
@@ -262,11 +263,20 @@ void Lines::firstDetect()
 
     s_hasTabs = false;
     s_hasCrs  = false;
+    s_nonAsciiLines.clear();
     for (int li = 0; li < s_lineCount; ++li) {
         bsl::string& curLine = s_lines[li];
 
         if (curLine.length() > 79) {
             s_longLines.insert(li);
+        }
+
+        for (const unsigned char *pc = (unsigned char *) curLine.c_str();
+                                                                   *pc; ++pc) {
+            if (0x80 & *pc) {
+                s_nonAsciiLines.insert(li);
+                break;
+            }
         }
 
         if (Ut::npos() != curLine.find_first_of("\r\t")) {
@@ -655,7 +665,20 @@ void Lines::killQuotesComments()
                         curLine.resize(col-2);
                         if (lastSlash) {
                             curLine += " \\";
-                            s_contComments.insert(li);
+                            if (li + 1 >= s_lineCount) {
+                                s_contComments.insert(li);
+                            }
+                            else {
+                                const bsl::string& nextLine = s_lines[li + 1];
+                                bsl::size_t firstNonBlank =
+                                               nextLine.find_first_not_of(' ');
+                                if (Ut::npos() == firstNonBlank
+                                   || firstNonBlank + 2 > nextLine.size()
+                                   || '/' != nextLine[firstNonBlank]
+                                   || '/' != nextLine[firstNonBlank + 1]) {
+                                    s_contComments.insert(li);
+                                }
+                            }
                         }
                         break;
                     }
@@ -693,7 +716,6 @@ void Lines::killQuotesComments()
                 }
                 else {
                     asterisk = false;
-                    s_contComments.insert(li);
                 }
             }
         }
@@ -1143,6 +1165,10 @@ void Lines::printWarnings(bsl::ostream *stream) const
                                                 " setting environment variable"
                                      " '$BDEFLAG_TOLERATE_CARRIAGE_RETURNS'\n";
         }
+    }
+    if (!s_nonAsciiLines.empty()) {
+        *stream << "Warning: file " << s_fileName <<
+                 " has non-ascii chars on line(s) " << s_nonAsciiLines << endl;
     }
     if (s_hasTrailingBlanks) {
         *stream << "Warning: file " << s_fileName <<
