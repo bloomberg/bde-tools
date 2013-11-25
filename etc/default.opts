@@ -307,8 +307,6 @@ windows-        shr BDE_API_IMPORT  = " "
 windows-        shr BDE_DCL_IMPORT  = __declspec(dllimport)
 windows-        shr BDE_DCL_EXPORT  = " "
 
-windows         shr MAKE_DEFS   = perl -Mstrict -we "my (%%s,$$d); foreach my $$g (@ARGV) { foreach my $$f (glob $$g) { $$d=`dumpbin /symbols $$f`; $$s{$$1}=$$2 while $$d=~/\sSECT\w+\s+.*\s+External\s+\|\s+(\S+BloombergLP\S+)\s+(.*)$$/mg } }; print qq[EXPORTS\n], map {qq[\t$$_\n]} sort(grep($$s{$$_}!~/deleting destructor/,keys %%s))" --
-
 unix-           _   ZIP     = zip
 windows-        _   ZIP     = "C:\Program Files\WinZip\wzzip.exe"
 
