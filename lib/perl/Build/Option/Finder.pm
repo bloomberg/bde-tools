@@ -12,7 +12,7 @@ use BDE::Util::Nomenclature qw(
 use BDE::Util::DependencyCache qw(getAllGroupDependencies getBuildOrder);
 
 use Symbols qw[
-    GROUP_META_SUBDIR PACKAGE_META_SUBDIR DEFAULT_OPTFILE
+    GROUP_META_SUBDIR PACKAGE_META_SUBDIR DEFAULT_OPTFILE DEFAULT_OPTFILE_INTERNAL
     OPTFILE_EXTENSION CAPFILE_EXTENSION DEFFILE_EXTENSION
 ];
 
@@ -26,7 +26,7 @@ Build::Option::Finder - Locate options files in multi-rooting filesystem
 
     my $optroot=new Build::Option::Root("/local/root");
 
-    my $default_opts=$optroot->getDefaultOptionFile();
+    my @default_optss=$optroot->getDefaultOptionFiles();
     my @btemt_opts=$optroot->getOptionFiles("btemt");
 
 =head1 DESCRIPTION
@@ -233,25 +233,45 @@ Note that the search mode does I<not> constrain this search.
 
 =cut
 
-sub getDefaultOptionFile ($) {
+sub getDefaultOptionFiles ($) {
     my $self=shift;
 
     my @etcs=$self->getEtcLocations();
-    my $found=undef;
+
+    my $found_default = undef;
+    my $found_internal = undef;
+    my $file = undef;
 
     foreach my $etc_locn (@etcs) {
-	my $file=$etc_locn.$FS.DEFAULT_OPTFILE;
-	if ($self->haveFile(DEFAULT_OPTFILE() => $file)) {
-	    $found=$file;
-	    last;
-	}
+
+        $file=$etc_locn.$FS.DEFAULT_OPTFILE;
+        if (!$found_default && $self->haveFile(DEFAULT_OPTFILE() => $file)) {
+
+            $found_default=$file;
+        }
+
+        $file=$etc_locn.$FS.DEFAULT_OPTFILE_INTERNAL;
+        if (!$found_internal && $self->haveFile(DEFAULT_OPTFILE_INTERNAL() => $file)) {
+            $found_internal=$file;
+        }
+
+        if ($found_default && $found_internal) {
+            last;
+        }
     }
 
-    return $found if $found;
+    if (!$found_default) {
+        $self->noFile(DEFAULT_OPTFILE);
+        # a default.opts is mandatory.
+        $self->throw("Unable to locate ${\DEFAULT_OPTFILE} in @etcs");
+    }
 
-    $self->noFile(DEFAULT_OPTFILE);
-    # a default.opts is mandatory.
-    $self->throw("Unable to locate ${\DEFAULT_OPTFILE} in @etcs");
+    my @files = ($found_default);
+    if ($found_internal) {
+        push @files, $found_internal
+    }
+
+    return @files
 }
 
 =head2 getOptionFiles($what)
@@ -270,7 +290,7 @@ this method; see L<"getDefinitionFiles"> below.
 sub getOptionFiles ($$) {
     my ($self,$what)=@_;
 
-    my @files=($self->getDefaultOptionFile);
+    my @files=$self->getDefaultOptionFiles;
     push @files, ($self->getGoPOptionFiles($what));
 
     return @files;

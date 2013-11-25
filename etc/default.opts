@@ -98,13 +98,11 @@
 !! unix-*                           _   BDE_STATIC = -Bstatic
 !! unix-AIX-*                       _   BDE_STATIC = -bstatic
 !! unix-Linux-*                     _   BDE_STATIC =
-!! unix-Cygwin-*                    _   BDE_STATIC =
 !! windows-*                        _   BDE_STATIC =
 
 !! unix-*                           _   BDE_DYNAMIC = -Bdynamic
 !! unix-AIX-*                       _   BDE_DYNAMIC = -bdynamic
 !! unix-Linux-*                     _   BDE_DYNAMIC =
-!! unix-Cygwin-*                    _   BDE_DYNAMIC =
 !! windows-*                        _   BDE_DYNAMIC =
 
 #-# This variable converts 'def' to a specific compiler, i.e. it upgrades   #-#
@@ -117,8 +115,6 @@
 !! unix-AIX             _       BDE_COMPILER_FLAG        = xlc
 !! unix-Linux           _       BDE_COMPILER_FLAG        = gcc
 !! unix-Darwin          _       BDE_COMPILER_FLAG        = gcc
-!! unix-FreeBSD         _       BDE_COMPILER_FLAG        = gcc
-!! unix-Cygwin          _       BDE_COMPILER_FLAG        = gcc
 !! unix-NONSUCH         _       BDE_COMPILER_FLAG        = <Uncollapsed!>
 
 #-# These configured values will be replaced with a mechanism to evaluate   #-#
@@ -136,8 +132,6 @@
 !! unix-AIX-*-*-xlc           _       BDE_COMPILERVERSION_FLAG = 11.2
 !! unix-Linux                 _       BDE_COMPILERVERSION_FLAG = 3.4.6
 !! unix-Linux-x86_64-2.6.18   _       BDE_COMPILERVERSION_FLAG = 4.1.2
-!! unix-FreeBSD               _       BDE_COMPILERVERSION_FLAG = 4.2.1
-!! unix-Cygwin                _       BDE_COMPILERVERSION_FLAG = 3.4.1
 !! unix-Darwin                _       BDE_COMPILERVERSION_FLAG = 4.2.1
 !! unix-NONSUCH               _       BDE_COMPILERVERSION_FLAG = <Uncollapsed!>
 
@@ -167,15 +161,12 @@
 !! unix-AIX-*         opt       RETRY_TIMEOUT   = 2400
 
 unix-                   _       RETRY       = $(BDE_BINDIR)retry $(RETRY_OPT)
-!! unix-Cygwin          _       RETRY       =
 !! windows-             _       RETRY       =
 
 unix-                   _       RETRY_ON_EXIT   = $(RETRY) -a 3 -t $(RETRY_TIMEOUT) -x'!0' --
-!! unix-Cygwin          _       RETRY_ON_EXIT   =
 !! windows-             _       RETRY_ON_EXIT   =
 
 unix-                   _       RETRY_ON_SIGNAL = $(RETRY) -a 3 -t $(RETRY_TIMEOUT) -s'!0' --
-!! unix-Cygwin          _       RETRY_ON_SIGNAL =
 !! windows-             _       RETRY_ON_SIGNAL =
 
 #==============================================================================
@@ -194,7 +185,6 @@ unix-                   _       RETRY_ON_SIGNAL = $(RETRY) -a 3 -t $(RETRY_TIMEO
 # Disable timeout on retry wrapper because all.pl has its own, per-case timeout
 *                       _       RETRY_ALLTEST   =
 unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP,BUS,ABRT,SEGV,PIPE,CHLD --
-!! unix-Cygwin          _       RETRY_ALLTEST   =
 
 *                       _       ALLTEST_VERBOSE = -v
 *                       _       ALLTEST_PREFIX  =
@@ -254,7 +244,6 @@ unix                    _       TOUCH           = touch
 windows                 _       TOUCH           = perl -e "open(FILE,'>>'.$$ARGV[0]) and close(FILE)" --
 
 unix            _   DIFF        = diff -C1
-unix-Cygwin     _   DIFF        = -b
 windows         _   DIFF        = fc
 
 unix-           _   SHELL           = /bin/ksh
@@ -267,8 +256,6 @@ unix-               _   MKDIR   = $(RETRY_ON_EXIT) perl -MFile::Path -e 'mkpath(
 windows-            _   MKDIR   = perl -MFile::Path -e "mkpath(\@ARGV)" --
 
 unix-           _   TMPDIR      = /bb/data/tmp
-!! unix-FreeBSD     _   TMPDIR      = /tmp
-!! unix-Cygwin      _   TMPDIR      = /tmp
 !! unix-Darwin      _   TMPDIR      = /tmp
 windows         _   TMPDIR      = C:\temp
 *           _   SET_TMPDIR  = TMPDIR=$(TMPDIR)
@@ -817,8 +804,6 @@ windows         _   MT_LIBTYPE  = L
 !! unix-SunOS-*-*-gcc   mt  MT_LDFLAGS  = -lthread
 !! unix-AIX-*-*-gcc     mt  MT_LDFLAGS  = -lpthread
 !! unix-Linux-*-*-*     mt  MT_LDFLAGS  = -lpthread
-!! unix-FreeBSD-*-*-*   mt  MT_LDFLAGS  = -lpthread
-!! unix-Cygwin-*-*-*    mt  MT_LDFLAGS  = -lpthread
 !! unix-Darwin-*-*-*    mt  MT_LDFLAGS  = -lpthread
 
 !! unix-SunOS       mt  MT_F77FLAGS = -mt
@@ -917,8 +902,6 @@ unix-                   _   CC      = $(RETRY_ON_SIGNAL) cc -DUSE_REAL_MALLOC $(
 unix-                   _   CXX     = $(RETRY_ON_SIGNAL) CC $(CXX64FLAGS)
 
 !! unix-Linux-*-*-def   _   CC      = $(RETRY_ON_SIGNAL) $(COMPILERPATH)/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)
-!! unix-FreeBSD-*-*-def _   CC      = $(RETRY_ON_SIGNAL) gcc $(GCCEXTRAWFLAGS) $(CC64FLAGS)
-!! unix-Cygwin-*-*-def  _   CC      = $(RETRY_ON_SIGNAL) gcc -DUSE_REAL_MALLOC -D__cygwin -D__linux $(CC64FLAGS)
 !! unix-Darwin-*-*-def  _   CC      = $(RETRY_ON_SIGNAL) clang -DUSE_REAL_MALLOC -D__unix $(CC64FLAGS)
 !! unix-AIX-*-*-*       _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 !! unix-AIX-*-*-*       mt  CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
@@ -1002,7 +985,6 @@ unix-AIX-*-*-xlc-        _   DEF_CXXFLAGS    = -qxflag=UnwindTypedefInClassDecl
 !! unix-SunOS-*-*-gcc-4.1.2 _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
 !! unix-AIX-*-*-gcc _   CC      = $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
 !! unix-Linux-*-*-gcc   _   CC      = $(RETRY_ON_SIGNAL) $(COMPILERPATH)/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-FreeBSD-*-*-gcc   _   CC      = $(RETRY_ON_SIGNAL) /usr/bin/gcc $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
 windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D"_WINDOWS" /D"_MBCS" /D"NOMINMAX" /DNOGDI $(CC64FLAGS)
 # For VS2008, all options have been moved to DEF_CFLAGS, where they belong,
 # and redundant options have been dropped.
@@ -1041,8 +1023,6 @@ windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D
 !! unix-Linux-*-*-gcc-clang            _  CXX          = $(COMPILERPATH)/clang++                 $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu/32 -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
 !! unix-Linux-*-*-gcc-clang           64  CXX          = $(COMPILERPATH)/clang++                 $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu    -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
 
-!! unix-Cygwin-*-*-def                 _  CXX          = $(RETRY_ON_SIGNAL) g++ -D__cygwin -D__linux $(CXX64FLAGS)
-
 !! unix-Darwin-*-*-def                 _  CXX          = $(RETRY_ON_SIGNAL) clang++ -D__unix $(CXX64FLAGS) $(CLANG_GCC_VER_CPP)
 
 !! unix-SunOS-*-*-gcc   _   CXX         = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/opt/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
@@ -1050,8 +1030,6 @@ windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D
 !! unix-SunOS-*-*-gcc-4.2   _   CXX         = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 
 !! unix-AIX-*-*-gcc _   CXX         = $(RETRY_ON_SIGNAL) /bbs/opt/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-
-!! unix-FreeBSD-*-*-gcc   _   CXX         = $(RETRY_ON_SIGNAL) g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 
 unix-SunOS-*-*-gcc  _   CXX     = -ftemplate-depth-150
 

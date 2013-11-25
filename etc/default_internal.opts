@@ -1,0 +1,24 @@
+!! unix-Cygwin-*                    _   BDE_STATIC =
+!! unix-Cygwin-*                    _   BDE_DYNAMIC =
+!! unix-Cygwin          _       BDE_COMPILER_FLAG        = gcc
+!! unix-Cygwin                _       BDE_COMPILERVERSION_FLAG = 3.4.1
+!! unix-Cygwin          _       RETRY       =
+!! unix-Cygwin          _       RETRY_ON_EXIT   =
+!! unix-Cygwin          _       RETRY_ON_SIGNAL =
+!! unix-Cygwin          _       RETRY_ALLTEST   =
+unix-Cygwin     _   DIFF        = -b
+!! unix-Cygwin      _   TMPDIR      = /tmp
+!! unix-Cygwin-*-*-*    mt  MT_LDFLAGS  = -lpthread
+!! unix-Cygwin-*-*-def  _   CC      = $(RETRY_ON_SIGNAL) gcc -DUSE_REAL_MALLOC -D__cygwin -D__linux $(CC64FLAGS)
+!! unix-Cygwin-*-*-def                 _  CXX          = $(RETRY_ON_SIGNAL) g++ -D__cygwin -D__linux $(CXX64FLAGS)
+
+!! unix-FreeBSD         _       BDE_COMPILER_FLAG        = gcc
+!! unix-FreeBSD               _       BDE_COMPILERVERSION_FLAG = 4.2.1
+!! unix-FreeBSD     _   TMPDIR      = /tmp
+!! unix-FreeBSD-*-*-*   mt  MT_LDFLAGS  = -lpthread
+!! unix-FreeBSD-*-*-def _   CC      = $(RETRY_ON_SIGNAL) gcc $(GCCEXTRAWFLAGS) $(CC64FLAGS)
+!! unix-FreeBSD-*-*-gcc   _   CC      = $(RETRY_ON_SIGNAL) /usr/bin/gcc $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!! unix-FreeBSD-*-*-gcc   _   CXX         = $(RETRY_ON_SIGNAL) g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+
+unix-                  _  CXX          = overwrite all
+!! unix-*                           _   CHEN = chenvalue
