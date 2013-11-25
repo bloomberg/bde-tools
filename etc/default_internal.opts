@@ -87,6 +87,13 @@ unix-           _   TMPDIR      = /bb/data/tmp
 windows         _   TMPDIR      = C:\temp
 *           _   SET_TMPDIR  = TMPDIR=$(TMPDIR)
 
+*           _   PROCESS_INC = $(CP)
+
+# IMPORTANT: use of stat and utime to preserve timestamps on the processed file!
+!! windows-     _   PROCESS_INC = perl -e "$$d=pop(@ARGV); $$o=$$d; $$/=undef; while ($$i=shift @ARGV) { $$mtime=((stat $$i)[9]); open I,$$i; if (-d $$d) { $$i=~m|([\w.]+)$$| and $$o=$$d.'/'.$$1 }; open O,'>'.$$o; $$c=<I>; $$c=~s/^    static ([^({;]+;)$$/    ::GROUP::_DCL static $$1/mg; print O $$c; close I; close O; utime $$mtime,$$mtime,$$o; }; print \"\tpreprocessed to $$d\n\"" --
+
+*           _   PROCESS_IMP     = $(CP)
+!! windows-     _   PROCESS_IMP = $(F2FCP)
 
 #==============================================================================
 # Retry false-negative wrapper. Use -X in bde_build.pl to override this,

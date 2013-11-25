@@ -307,14 +307,6 @@ windows-        shr BDE_API_IMPORT  = " "
 windows-        shr BDE_DCL_IMPORT  = __declspec(dllimport)
 windows-        shr BDE_DCL_EXPORT  = " "
 
-*           _   PROCESS_INC = $(CP)
-
-# IMPORTANT: use of stat and utime to preserve timestamps on the processed file!
-!! windows-     _   PROCESS_INC = perl -e "$$d=pop(@ARGV); $$o=$$d; $$/=undef; while ($$i=shift @ARGV) { $$mtime=((stat $$i)[9]); open I,$$i; if (-d $$d) { $$i=~m|([\w.]+)$$| and $$o=$$d.'/'.$$1 }; open O,'>'.$$o; $$c=<I>; $$c=~s/^    static ([^({;]+;)$$/    ::GROUP::_DCL static $$1/mg; print O $$c; close I; close O; utime $$mtime,$$mtime,$$o; }; print \"\tpreprocessed to $$d\n\"" --
-
-*           _   PROCESS_IMP     = $(CP)
-!! windows-     _   PROCESS_IMP = $(F2FCP)
-
 windows         shr MAKE_DEFS   = perl -Mstrict -we "my (%%s,$$d); foreach my $$g (@ARGV) { foreach my $$f (glob $$g) { $$d=`dumpbin /symbols $$f`; $$s{$$1}=$$2 while $$d=~/\sSECT\w+\s+.*\s+External\s+\|\s+(\S+BloombergLP\S+)\s+(.*)$$/mg } }; print qq[EXPORTS\n], map {qq[\t$$_\n]} sort(grep($$s{$$_}!~/deleting destructor/,keys %%s))" --
 
 unix-           _   ZIP     = zip
