@@ -146,28 +146,6 @@
 # Flag to add a directory to the include path for compilation step
 !! *                    _       INCPATH_FLAG = $(SWITCHCHAR)I
 
-#==============================================================================
-# Retry false-negative wrapper. Use -X in bde_build.pl to override this,
-# or override RETRY_ON_EXIT and RETRY_ON_SIGNAL in the environment.
-
-# Bump default timeout from 5 minutes to 10 minutes (600 sec) to prevent
-# timeout when compiling huge test drivers.  And even 600 isn't always
-# enough for IBM.
-*                       _       RETRY_TIMEOUT   = 600
-!! unix-AIX-*           _       RETRY_TIMEOUT   = 1200
-
-# 20060927 - double timeouts when building opt code
-!! *                  opt       RETRY_TIMEOUT   = 1200
-!! unix-AIX-*         opt       RETRY_TIMEOUT   = 2400
-
-unix-                   _       RETRY       = $(BDE_BINDIR)retry $(RETRY_OPT)
-!! windows-             _       RETRY       =
-
-unix-                   _       RETRY_ON_EXIT   = $(RETRY) -a 3 -t $(RETRY_TIMEOUT) -x'!0' --
-!! windows-             _       RETRY_ON_EXIT   =
-
-unix-                   _       RETRY_ON_SIGNAL = $(RETRY) -a 3 -t $(RETRY_TIMEOUT) -s'!0' --
-!! windows-             _       RETRY_ON_SIGNAL =
 
 #==============================================================================
 # C++11 (a.k.a. C++0x) support
@@ -177,88 +155,7 @@ unix-                   _       RETRY_ON_SIGNAL = $(RETRY) -a 3 -t $(RETRY_TIMEO
 !! unix-*-*-*-gcc-4.7.0 cpp11   CPP11_FLAGS     =   -std=c++11
 
 *                       cpp11   BDE_CXXFLAGS    = $(CPP11_FLAGS)
-#==============================================================================
-# Test driver execution
 
-*                       _       TEST_TIMEOUT    = 600
-
-# Disable timeout on retry wrapper because all.pl has its own, per-case timeout
-*                       _       RETRY_ALLTEST   =
-unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP,BUS,ABRT,SEGV,PIPE,CHLD --
-
-*                       _       ALLTEST_VERBOSE = -v
-*                       _       ALLTEST_PREFIX  =
-!! unix-AIX-*           _       ALLTEST_PREFIX  = $(XLC_LIBPATH)
-!! unix-SunOS-*-*-gcc-4     _   ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib:$(LD_LIBRARY_PATH)
-!! unix-SunOS-*-*-gcc-4     64  ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib/sparcv9:$(LD_LIBRARY_PATH)
-
-*                       _       ALLTEST = $(ALLTEST_PREFIX) $(RETRY_ALLTEST) $(BDE_BINDIR)all.pl $(ALLTEST_VERBOSE) -t $(TEST_TIMEOUT) $(ALLTEST_OPT)
-!! windows              _       ALLTEST = D:/bin/wrun.exe -A -a$@ $(ALLTEST_VERBOSE) -t 5 -m100 -M1024 -t $(TEST_TIMEOUT) $(ALLTEST_OPT)
-# maximize test iterations to 100
-*           _      ALLTEST_OPT = -m100
-*           _      ALLTEST_SERIAL  = -s
-*           _      ALLTEST_PARALLEL = -j4
-
-# run tests in series for windows
-!! windows  _      ALLTEST_PARALLEL = -s
-
-#==============================================================================
-# Basic commands and nomenclature
-
-# file(s)-to-unspecified copy
-!! unix-           _       RSYNC           = rsync -a
-!! unix-           _       CP              = cp -p
-windows-           _       CP              = perl -MFile::Copy -MFile::Basename -e "$$d=pop(@ARGV); die unless -d($$d) or -d($$d=dirname($$d)); while ($$f=shift @ARGV) { copy $$_,$$d foreach glob($$f) }; print \"\tcopied to $$d\n\"" --
-
-# file(s)-to-dir copy
-unix-                   _       F2DCP           = $(CP)
-# add /k to preserve timestamps
-windows-                _       F2DCP           = echo d | xcopy /k /Y /I /R
-# file-to-file copy
-unix-           _   F2FCP       = $(CP)
-# add /k to preserve timestamps
-windows-                _       F2FCP           = echo f | xcopy /k /Y /I /R
-# recursive copy
-unix-           _   CPRECURSE   = $(RETRY_ON_EXIT) $(RSYNC)
-# add /k to preserve timestamps
-windows-        _   CPRECURSE   = xcopy /k /Y /I /R /E /Q
-# trailing directory separator to balance differing xcopy/rsync command semantics
-unix-           _   TRAILFS     = /
-
-unix            _   LINK        = ln
-windows         _   LINK        = $(F2FCP)
-
-unix-                   _       RM              = $(RETRY_ON_EXIT) rm -f
-windows-                _       RM              = -del /F /Q
-# recursive remove
-unix-           _   RMRECURSE   = $(RM) -r
-windows-        _   RMRECURSE   = -del /F /Q /S
-
-unix-           _   MV      = mv
-windows-        _   MV      = rename
-
-unix-                   _       TEST            = test -d
-windows-                _       TEST            =
-
-unix                    _       TOUCH           = touch
-windows                 _       TOUCH           = perl -e "open(FILE,'>>'.$$ARGV[0]) and close(FILE)" --
-
-unix            _   DIFF        = diff -C1
-windows         _   DIFF        = fc
-
-unix-           _   SHELL           = /bin/ksh
-windows-        _   SHELL           =
-
-unix-           _   CD      = cd
-windows-        _   CD      = chdir
-
-unix-               _   MKDIR   = $(RETRY_ON_EXIT) perl -MFile::Path -e 'mkpath(@ARGV)' --
-windows-            _   MKDIR   = perl -MFile::Path -e "mkpath(\@ARGV)" --
-
-unix-           _   TMPDIR      = /bb/data/tmp
-!! unix-Darwin      _   TMPDIR      = /tmp
-windows         _   TMPDIR      = C:\temp
-*           _   SET_TMPDIR  = TMPDIR=$(TMPDIR)
 
 #=========
 
