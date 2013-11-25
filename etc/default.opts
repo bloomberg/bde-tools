@@ -307,9 +307,6 @@ windows-        shr BDE_API_IMPORT  = " "
 windows-        shr BDE_DCL_IMPORT  = __declspec(dllimport)
 windows-        shr BDE_DCL_EXPORT  = " "
 
-unix-           _   ZIP     = zip
-windows-        _   ZIP     = "C:\Program Files\WinZip\wzzip.exe"
-
 *           _   TEMPLATE_CACHE_DIR     = nonexistent
 !! unix-SunOS       _   TEMPLATE_CACHE_DIR     = SunWS_cache/$(UFID)
 !! unix-SunOS-*-*-gcc   _   TEMPLATE_CACHE_DIR     = nonexistent
