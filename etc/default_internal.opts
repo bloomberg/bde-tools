@@ -19,6 +19,3 @@ unix-Cygwin     _   DIFF        = -b
 !! unix-FreeBSD-*-*-def _   CC      = $(RETRY_ON_SIGNAL) gcc $(GCCEXTRAWFLAGS) $(CC64FLAGS)
 !! unix-FreeBSD-*-*-gcc   _   CC      = $(RETRY_ON_SIGNAL) /usr/bin/gcc $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
 !! unix-FreeBSD-*-*-gcc   _   CXX         = $(RETRY_ON_SIGNAL) g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-
-unix-                  _  CXX          = overwrite all
-!! unix-*                           _   CHEN = chenvalue
