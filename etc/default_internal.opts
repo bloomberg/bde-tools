@@ -242,3 +242,9 @@ windows-                _       AR_INSTALL      = $(RETRY_ON_EXIT) perl -e "unsh
 unix-                   _   RANLIB          = $(RETRY_ON_EXIT) true $@
 !! unix-Darwin-*-*-*    _   RANLIB          = $(RETRY_ON_EXIT) ranlib $@
 windows-                _   RANLIB          =
+
+#old flags
+unix-AIX-*-*-CC64   _   ASFLAGS     = -a64
+#new flags for 64 bits
+unix-AIX-*-*-xlc    64  ASFLAGS     = -a64
+#done

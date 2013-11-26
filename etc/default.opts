@@ -230,12 +230,6 @@ windows             shr LIB_LDPATH  = PATH
 !! unix-*-*-*-gcc-4.7.0     _   GCC_VER = 4.7.0
 !! unix-*-*-*-gcc-4.7.2     _   GCC_VER = 4.7.2
 
-#old flags
-unix-AIX-*-*-CC64   _   ASFLAGS     = -a64
-#new flags for 64 bits
-unix-AIX-*-*-xlc    64  ASFLAGS     = -a64
-#done
-
 windows-        _   RC      = rc
 windows-        _   RCFLAGS     = /r /n
 
