@@ -235,7 +235,7 @@ windows-                _       AR_INSTALL      = $(RETRY_ON_EXIT) perl -e "unsh
 
 
 #==============================================================================
-# MISC Rules
+# Misc Rules
 # Rules used by bde_build.pl that does not fit with any of the above
 # categories.
 
@@ -248,3 +248,27 @@ unix-AIX-*-*-CC64   _   ASFLAGS     = -a64
 #new flags for 64 bits
 unix-AIX-*-*-xlc    64  ASFLAGS     = -a64
 #done
+
+*           _   TEMPLATE_CACHE_DIR     = nonexistent
+!! unix-SunOS       _   TEMPLATE_CACHE_DIR     = SunWS_cache/$(UFID)
+!! unix-SunOS-*-*-gcc   _   TEMPLATE_CACHE_DIR     = nonexistent
+*           _   SET_TEMPLATE_CACHE_DIR =
+!! unix-SunOS       _   SET_TEMPLATE_CACHE_DIR = SUNWS_CACHE_NAME=$(TEMPLATE_CACHE_DIR)
+!! unix-SunOS-*-*-gcc   _   SET_TEMPLATE_CACHE_DIR =
+
+#==============================================================================
+# Unused
+# Rules from default.opts that seem to be unused. Once we confirm the rules are
+# unused, they can be removed from this section
+
+
+windows-        shr BDE_API_EXPORT  = " "
+#windows-       shr BDE_API_EXPORT  = __declspec(dllexport)
+windows-        shr BDE_API_IMPORT  = " "
+
+windows-        shr BDE_DCL_IMPORT  = __declspec(dllimport)
+windows-        shr BDE_DCL_EXPORT  = " "
+
+# I don't think we use the resource compiler
+windows-        _   RC      = rc
+windows-        _   RCFLAGS     = /r /n

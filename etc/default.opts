@@ -230,24 +230,6 @@ windows             shr LIB_LDPATH  = PATH
 !! unix-*-*-*-gcc-4.7.0     _   GCC_VER = 4.7.0
 !! unix-*-*-*-gcc-4.7.2     _   GCC_VER = 4.7.2
 
-windows-        _   RC      = rc
-windows-        _   RCFLAGS     = /r /n
-
-windows-        shr BDE_API_EXPORT  = " "
-#windows-       shr BDE_API_EXPORT  = __declspec(dllexport)
-windows-        shr BDE_API_IMPORT  = " "
-
-windows-        shr BDE_DCL_IMPORT  = __declspec(dllimport)
-windows-        shr BDE_DCL_EXPORT  = " "
-
-*           _   TEMPLATE_CACHE_DIR     = nonexistent
-!! unix-SunOS       _   TEMPLATE_CACHE_DIR     = SunWS_cache/$(UFID)
-!! unix-SunOS-*-*-gcc   _   TEMPLATE_CACHE_DIR     = nonexistent
-*           _   SET_TEMPLATE_CACHE_DIR =
-!! unix-SunOS       _   SET_TEMPLATE_CACHE_DIR = SUNWS_CACHE_NAME=$(TEMPLATE_CACHE_DIR)
-!! unix-SunOS-*-*-gcc   _   SET_TEMPLATE_CACHE_DIR =
-
-
 #==============================================================================
 # FLAGS: BDE_CFLAGS, BDE_CXXFLAGS, BDE_LDFLAGS
 #==============================================================================
