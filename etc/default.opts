@@ -57,6 +57,7 @@
 
 #==============================================================================
 # Metadata
+#==============================================================================
 
 *           _       BUILD_TYPE  =
 
@@ -82,16 +83,6 @@
 *           _   BDE_CFLAGS    = $(BUILD_TYPE)
 *           _   BDE_CXXFLAGS  = $(BUILD_TYPE)
 
-# Portable 64 bit indicators
-
-!! *                       _ BDE_WORD64 =
-!! *                      64 BDE_WORD64 = 64
-
-!! *                       _ BDE_WORD_64 =
-!! *                      64 BDE_WORD_64 = _64
-
-!! *                       _ BDE_32_OR_64 = 32
-!! *                      64 BDE_32_OR_64 = 64
 
 # Portable linker symbols
 
@@ -135,9 +126,6 @@
 !! unix-Darwin                _       BDE_COMPILERVERSION_FLAG = 4.2.1
 !! unix-NONSUCH               _       BDE_COMPILERVERSION_FLAG = <Uncollapsed!>
 
-# this compiler version facilitates local builds on standalone Linux machines
-!! unix-Linux-i686-2.6.32     _       BDE_COMPILERVERSION_FLAG = def
-
 # The default command line option separator.  It's '-' on most platforms,
 # and '/' on Windows
 *                       _       SWITCHCHAR = -
@@ -146,89 +134,14 @@
 # Flag to add a directory to the include path for compilation step
 !! *                    _       INCPATH_FLAG = $(SWITCHCHAR)I
 
-
 #==============================================================================
 # C++11 (a.k.a. C++0x) support
+#==============================================================================
 
 *                       cpp11   CPP11_FLAGS     =   --this-compiler-does-not-have-cpp11-support-configured
 !! unix-*-*-*-gcc-4.4.3 cpp11   CPP11_FLAGS     =   -std=c++0x
 !! unix-*-*-*-gcc-4.7.0 cpp11   CPP11_FLAGS     =   -std=c++11
-
 *                       cpp11   BDE_CXXFLAGS    = $(CPP11_FLAGS)
-
-#=========
-
-unix-           _   OUT_OPT     = -o $@
-# for newer VS2008 builds, generate a debug symbol file for each .obj
-windows-        _   OUT_OPT     = /Fo"$@"
-# disabled one .pdb per .obj which it taking too much space
-# !! windows-*-*-*-cl-15.00        _   OUT_OPT     = /Fo"$@" /Fd"$(patsubst %.obj,%.pdb,$@)"
-
-unix-           _   OBJ_OPT         = -c $(OUT_OPT)
-windows-        _   OBJ_OPT         = /c $(OUT_OPT)
-!! unix-SunOS-*-*-xml   _   OBJ_OPT         = -fxml=$@
-
-unix-           _   OBJ_EXT     = .o
-windows-        _   OBJ_EXT     = .obj
-
-unix-           _   EXE_OPT         = $(OUT_OPT)
-windows-        _   EXE_OPT         = /out:"$@"
-
-unix-           _   EXE_EXT     =
-windows         _   EXE_EXT     = .exe
-
-windows-        _   LIBPATH_FLAG    = /libpath:
-unix-           _   LIBPATH_FLAG    = -L
-
-unix-           _   LIB_FLAG        = -l
-windows-        _   LIB_FLAG        = /defaultlib:
-
-unix-           _   LIB_EXT         = .a
-!! unix-        shr LIB_EXT     = .so
-windows-        _   LIB_EXT         = .lib
-!! windows-     shr LIB_EXT     = .dll
-
-unix-           _   LIB_WLDEXT  = $(LIB_EXT)
-# ddl lib pdb
-windows-        _   LIB_WLDEXT  = .[dlp][lid][lb]
-
-unix-           _   LIB_PREFIX      = lib
-windows-        _   LIB_PREFIX      =
-
-unix-           _   LINK_LIB_EXT    =
-windows-        _   LINK_LIB_EXT    = .lib
-
-unix-           _   LINK_LIB_PREFIX =
-windows-        _   LINK_LIB_PREFIX =
-
-unix-               shr LIBRUNPATH_FLAG = -R
-!! unix-AIX-*-*-*   shr LIBRUNPATH_FLAG = -blibpath:
-!! unix-*-*-*-gcc   shr LIBRUNPATH_FLAG = -rpath
-windows-            shr LIBRUNPATH_FLAG = /libpath:
-
-unix-           shr LIB_LDPATH  = LD_LIBRARY_PATH
-#old flags
-!! unix-SunOS-*-*-CC64  shr LIB_LDPATH  = LD_LIBRARY_PATH_64
-#new flags for 64 bits
-!! unix-SunOS-*-*-cc    shr_64  LIB_LDPATH  = LD_LIBRARY_PATH_64
-#done
-!! unix-AIX-*-*-*   shr LIB_LDPATH  = LIBPATH
-windows             shr LIB_LDPATH  = PATH
-
-#==========
-
-!! unix-*-*-*-gcc-3.4.6     _   GCC_VER = 3.4.6
-!! unix-*-*-*-gcc-4.1.2     _   GCC_VER = 4.1.2
-!! unix-*-*-*-gcc-4.2.1     _   GCC_VER = 4.2.1
-!! unix-*-*-*-gcc-4.3.0     _   GCC_VER = 4.3.0
-!! unix-*-*-*-gcc-4.3.1     _   GCC_VER = 4.3.1
-!! unix-*-*-*-gcc-4.3.2     _   GCC_VER = 4.3.2
-!! unix-*-*-*-gcc-4.3.4     _   GCC_VER = 4.3.4
-!! unix-*-*-*-gcc-4.3.5     _   GCC_VER = 4.3.5
-!! unix-*-*-*-gcc-4.5.2     _   GCC_VER = 4.5.2
-!! unix-*-*-*-gcc-4.6.1     _   GCC_VER = 4.6.1
-!! unix-*-*-*-gcc-4.7.0     _   GCC_VER = 4.7.0
-!! unix-*-*-*-gcc-4.7.2     _   GCC_VER = 4.7.2
 
 #==============================================================================
 # FLAGS: BDE_CFLAGS, BDE_CXXFLAGS, BDE_LDFLAGS
@@ -254,18 +167,6 @@ windows             shr LIB_LDPATH  = PATH
 unix-*-*-*-gcc      _   DEF_CFLAGS      = -pipe -std=gnu99
 unix-*              _   DEF_CFLAGS      = -I$(DEPLOYED_INCLUDE)
 
-# DRQS 15979661: once AIX gets -qtls=global-dynamic working right, we'll enable
-# it here.  But, for now, it's in bce.opts and bae.opts.
-unix-AIX-*-*-*      _   ENABLE_TLS      =
-
-unix-AIX-*-*-*           _   ARCH_TUNE       = -qarch=pwr5 -qtune=pwr5
-!! unix-AIX-*-*-xlc-11.2 _   ARCH_TUNE       = -qarch=pwr5 -qtune=pwr7
-
-!! unix-SunOS-*-*-cc-5.2 _  DEF_CXXFLAGS    = -instances=static
-# DRQS 10505346 -- switch to -xtarget=ultra3 for Sun, -qarch=pwr4 -qtune=pwr5 for AIX
-# Changed 20110111 per gstrauss to match plink
-!! unix-SunOS-*-*-cc-5.5 _  DEF_CXXFLAGS    = -xarch=v8plusa -xchip=generic -xcache=generic
-!! unix-SunOS-*-*-cc-5.5 64 DEF_CXXFLAGS    = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
 !! unix-SunOS-*-*-cc-5.9 _  DEF_CXXFLAGS    = -m32 -xarch=sparcvis -xchip=generic -xcache=generic
 !! unix-SunOS-*-*-cc-5.9 64 DEF_CXXFLAGS    = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
 !! unix-SunOS-*-*-CC64   _  DEF_CXXFLAGS    =
@@ -742,14 +643,8 @@ windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D
 !! windows-*-*-*-cl-15.00        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /W4 $(CC64FLAGS)
 !! windows-*-*-*-cl-16.00        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /W4 $(CC64FLAGS)
 
-!! unix-SunOS-*-*-cc-5.2   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/SUNWspro61/bin/CC $(CXX64FLAGS)
-!! unix-SunOS-*-*-cc-5.5   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bb/util/common/studio8-v10/SUNWspro/bin/CC $(CXX64FLAGS)
-
 !! unix-SunOS-*-*-cc-5.9   _    CC        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(STUDIO_LOC)/SUNWspro/bin/cc $(CC64FLAGS)
 !! unix-SunOS-*-*-cc-5.9   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(STUDIO_LOC)/SUNWspro/bin/CC $(CXX64FLAGS)
-
-!! unix-SunOS-i386-*-cc-5.8   _ CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/SUNWspro/bin/CC $(CXX64FLAGS)
-!! unix-SunOS-i386-*-cc-5.8   64    CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/SUNWspro/bin/CC $(CXX64FLAGS)
 
 !! unix-SunOS-*-*-CC64     _    CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bb/util/common/studio8-v10/SUNWspro/bin/CC $(CXX64FLAGS)
 
@@ -802,38 +697,6 @@ unix-SunOS      _   F77     = -xarch=v8plusa -xchip=generic -xcache=generic
 # location
 !! unix-Linux-*-*-*       _   MKINCL      = /bbsrc/source/proot/mk/
 
-#==============================================================================
-# Integration
-#==============================================================================
-
-# This macro can be used by units of release that link against external .o
-*                       _       PLINK_ARCH      =
-!! unix-SunOS           _       PLINK_ARCH      = sundev1
-!! unix-AIX             _       PLINK_ARCH      = ibm
-!! unix-Linux           _       PLINK_ARCH      = linux
-
-!! *            _   PLINK_ARCH64        = $(PLINK_ARCH)$(BDE_WORD64)
-!! *            _   PLINK_ARCH_64       = $(PLINK_ARCH)$(BDE_WORD_64)
-!! *            _   PLINK_ARCH32_OR_64  = $(PLINK_ARCH)$(BDE_WORD_32_OR_64)
-!! *            _   PLINK_ARCH_32_OR_64 = $(PLINK_ARCH)_$(BDE_WORD_32_OR_64)
-
-!! *            _   BBSRC       = /bbsrc/proot/include
-!! *            _   BBSRCBBINC  = $(BBSRC)/bbinc
-!! *            _   DEPLOYED_INCLUDE   = $(BBSRC)/00deployed
-!! *            _   DEPBUILD_INCLUDE   = $(BBSRC)/00depbuild
-!! *            _   OFFLONLY_INCLUDE   = $(BBSRC)/00offlonly
-!! *            _   BBINC       = $(BBSRCBBINC)/bbinc
-!! *            _   CINCLUDE    = $(BBSRCBBINC)/Cinclude
-
-# Package-based build refroot computation
-unix-AIX-*         _ BDE_REFROOT_PLATFORM_NAME = aix6-powerpc
-unix-SunOS-*       _ BDE_REFROOT_PLATFORM_NAME = solaris10-sparc
-unix-Linux-*       _ BDE_REFROOT_PLATFORM_NAME = amd64
-
-unix-*             _ BDE_REFROOT_VER           = $(shell cat /bb/build/share/stage/etc/distribution.conf)
-unix-*             _ BDE_REFROOT               = /bb/build/share/packages/refroot/$(BDE_REFROOT_PLATFORM_NAME)
-unix-*             _ BDE_LIBREFROOT            = $(BDE_REFROOT)/$(BDE_REFROOT_VER)/bb/lib$(BDE_WORD64)
-unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/$(BDE_REFROOT_VER)/bb/include
 
 #==============================================================================
 # User Customisation
