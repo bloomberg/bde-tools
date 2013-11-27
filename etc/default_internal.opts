@@ -223,6 +223,17 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-Linux-*-*-gcc  _  LINUX_GCC_PATH = $(COMPILERPATH)/gcc
 !! unix-Linux-*-*-gcc  _  LINUX_GXX_PATH = $(COMPILERPATH)/g++
 
+# tell Clang where GCC libraries are located
+
+!! unix-Linux-*-*-gcc-clang  _  CLANG_PATH = $(COMPILERPATH)/clang
+!! unix-Linux-*-*-gcc-clang  _  CLANGXX_PATH = $(COMPILERPATH)/clang++
+!! unix-Linux-*-*-gcc-clang  _  CLANG_GCC_VER = 4.7.0
+
+
+!! unix-Linux-*-*-gcc-clang  _  CLANG_INTERNAL_INC = -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu/32 -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
+
+!! unix-Linux-*-*-gcc-clang  _  CLANG_INTERNAL_INC_64 = -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu    -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
+
 !! windows-*-*-*-cl  _  WINDOWS_CC_PREFIX = $(RETRY_ON_SIGNAL)
 
 #==============================================================================
@@ -506,11 +517,6 @@ unix-Linux-*-*-gcc-4          _  RPATH_LIBDIR = lib
 unix-Linux-*-*-gcc-4.2        _  RPATH_FLAGS = -Wl,-rpath -Wl,/opt/swt/install/gcc-$(GCC_VER)/$(RPATH_LIBDIR)
 
 unix-Linux-*-*-*        _   DEF_ENDLDFLAGS = $(RPATH_FLAGS)
-
-# tell Clang where GCC libraries are located
-!! unix-Linux-*-*-gcc-clang     _  CLANG_GCC_VER = 4.7.0
-!! unix-Linux-*-*-gcc-clang     _  CLANG_GCC_VER_CPP = -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=7 -D__CLANG_GNUC_PATCHLEVEL__=0
-!! unix-Darwin-*-*-*            _  CLANG_GCC_VER_CPP = -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=2 -D__CLANG_GNUC_PATCHLEVEL__=1
 
 !! unix-Linux-*-*-gcc-clang     _  DEF_LDFLAGS = -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER)/32 -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER)/32 -Wl,-rpath -Wl,/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib
 !! unix-Linux-*-*-gcc-clang    64  DEF_LDFLAGS = -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64 -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64 -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER) -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER) -Wl,-rpath -Wl,/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64
