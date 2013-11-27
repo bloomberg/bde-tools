@@ -228,6 +228,8 @@ unix-Linux-*-*-*             _  DEF_ENDLDFLAGS = -lrt
 *           _   BDE_LDFLAGS     = $(DEF_LDFLAGS)
 *           _   BDE_ENDLDFLAGS  = $(DEF_ENDLDFLAGS)
 
+unix-          _   BDE_LDFLAGS =  $(INTERNAL_LDFLAGS)
+
 #==============================================================================
 # Exception support - non-exceptions is default, so must override for exc
 
@@ -507,49 +509,38 @@ unix-AIX-*-*-xlc    64  CC64FLAGS   = -q64
 
 unix-                   _   CC      = $(RETRY_ON_SIGNAL) cc -DUSE_REAL_MALLOC $(CC64FLAGS)
 unix-                   _   CXX     = $(RETRY_ON_SIGNAL) CC $(CXX64FLAGS)
-
 !! unix-Linux-*-*-def   _   CC      = $(RETRY_ON_SIGNAL) $(COMPILERPATH)/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)
 !! unix-Darwin-*-*-def  _   CC      = $(RETRY_ON_SIGNAL) clang -DUSE_REAL_MALLOC -D__unix $(CC64FLAGS)
-!! unix-AIX-*-*-*       _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-AIX-*-*-*       mt  CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 
-!! unix-AIX-*-*-xlc-10.0 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-AIX-*-*-xlc-10.0 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-
-!! unix-AIX-*-*-*   _   CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlC $(CXX64FLAGS)
-!! unix-AIX-*-*-*   mt  CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlC_r $(CXX64FLAGS)
-
-!! unix-AIX-*-*-xlc-10.0 _   CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC $(CC64FLAGS)
-!! unix-AIX-*-*-xlc-10.0 mt  CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r $(CC64FLAGS)
-
+#==== The section below should probably be moved to another section for CXXFLAGS
 # xlc 10 August PTF - All settings are identical to xlc-10.0 except for XLC_LOCATION
 # xlc 11 January 2011 PTF - All settings are identical to xlc-10.0 except for XLC_LOCATION
-
 !! unix-AIX-*-*-xlc-10.1 _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 ++ unix-AIX-*-*-xlc-11.1 _   DEF_CXXFLAGS    = -qdebug=nparseasm
-
 # Note: must be the very last option for AIX/xlC/DEF_CXXFLAGS, to avoid
 # overriding it with other options
 unix-AIX-*-*-xlc-        _   DEF_CXXFLAGS    = -qxflag=UnwindTypedefInClassDecl
-
 !! unix-AIX-*-*-xlc-10.1  dbg     DBG_CXXFLAGS    = -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 !! unix-AIX-*-*-xlc-11.1  dbg     DBG_CXXFLAGS    = -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
-
 !! unix-AIX-*-*-xlc-10.1 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
 !! unix-AIX-*-*-xlc-11.1 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
 
-!! unix-AIX-*-*-xlc-10.1 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!! unix-AIX-*-*-xlc-11.1 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-*  _   XLC_PATH = xlc
+!! unix-AIX-*-*-*  mt  XLC_PATH = xlc_r
+!! unix-AIX-*-*-*  _   XLCXX_PATH = xlC
+!! unix-AIX-*-*-*  mt  XLCXX_PATH = xlC_r
 
-!! unix-AIX-*-*-xlc-10.1 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!! unix-AIX-*-*-xlc-11.1 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-*         _  CC   = $(XLC_INTERNAL_PREFIX1) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-*         _  CXX  = $(XLC_INTERNAL_PREFIX1) $(XLCXX_PATH) $(CXX64FLAGS)
 
-!! unix-AIX-*-*-xlc-10.1 _   CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!! unix-AIX-*-*-xlc-11.1 _   CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-10.0  _  CC   = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-10.0  _  CXX  = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS)
 
-!! unix-AIX-*-*-xlc-10.1 mt  CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!! unix-AIX-*-*-xlc-11.1 mt  CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-10.1  _  CC   = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
+!! unix-AIX-*-*-xlc-10.1  _  CXX  = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
 
+!! unix-AIX-*-*-xlc-11.1  _  CC   = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-11.1  _  CXX  = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 
 !! unix-SunOS-*-*-gcc   _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/opt/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
 !! unix-SunOS-*-*-gcc-4.1.1 _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/swtlib/gcc-4.1.1/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99

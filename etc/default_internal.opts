@@ -175,6 +175,17 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-SunOS-*-*-cc-5.10  _   STUDIO_LOC = /bb/util/common/SS12U1-20120621
 !! unix-SunOS-*-*-cc-5.11  _   STUDIO_LOC = /bb/util/common/SS12U1-20130312
 
+!! unix-AIX-*-*-xlc-10  _   XLC_PATH  = $(XLC_LOCATION)/vac/bin/xlc
+!! unix-AIX-*-*-xlc-10  mt  XLC_PATH  = $(XLC_LOCATION)/vac/bin/xlc_r
+!! unix-AIX-*-*-xlc-10  _   XLCXX_PATH  = $(XLC_LOCATION)/vacpp/bin/xlC
+!! unix-AIX-*-*-xlc-10  mt  XLCXX_PATH  = $(XLC_LOCATION)/vacpp/bin/xlC_r
+!! unix-AIX-*-*-xlc-11  _   XLC_PATH  = $(XLC_LOCATION)/vac/bin/xlc
+!! unix-AIX-*-*-xlc-11  mt  XLC_PATH  = $(XLC_LOCATION)/vac/bin/xlc_r
+!! unix-AIX-*-*-xlc-11  _   XLCXX_PATH  = $(XLC_LOCATION)/vacpp/bin/xlC
+!! unix-AIX-*-*-xlc-11  mt  XLCXX_PATH  = $(XLC_LOCATION)/vacpp/bin/xlC_r
+
+!! unix-AIX-*-*-*  _  XLC_INTERNAL_PREFIX1 = $(SET_TMPDIR) $(RETRY_ON_SIGNAL)
+!! unix-AIX-*-*-*  _  XLC_INTERNAL_PREFIX2 = $(XLC_LIBPATH) $(XLC_INTERNAL_PREFIX1)
 
 #==============================================================================
 # AR rules
@@ -479,8 +490,7 @@ unix-Linux-*-*-*        _   DEF_ENDLDFLAGS = $(RPATH_FLAGS)
 !! unix-Linux-*-*-gcc-clang    64  DEF_LDFLAGS = -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64 -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64 -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER) -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER) -Wl,-rpath -Wl,/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64
 
 #=== Default location for mapping prebuilt lib names to robocop lib names
-unix-          _   BDE_LDFLAGS =  $(LIBPATH_FLAG)/bbsrc/bde/registry/lroot/lib/$(UPLID)
-!! unix-Darwin-*-*-*    _  BDE_LDFLAGS =
+unix-  _  INTERNAL_LDFLAGS =  $(LIBPATH_FLAG)/bbsrc/bde/registry/lroot/lib/$(UPLID)
 
 #==============================================================================
 # Unused
