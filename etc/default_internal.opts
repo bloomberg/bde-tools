@@ -148,44 +148,82 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 # run tests in series for windows
 !! windows  _      ALLTEST_PARALLEL = -s
 
+#==============================================================================
+# GCC
+#==============================================================================
+
+!! unix-*-*-*-gcc-3.4.6     _   GCC_VER = 3.4.6
+!! unix-*-*-*-gcc-4.1.2     _   GCC_VER = 4.1.2
+!! unix-*-*-*-gcc-4.2.1     _   GCC_VER = 4.2.1
+!! unix-*-*-*-gcc-4.3.0     _   GCC_VER = 4.3.0
+!! unix-*-*-*-gcc-4.3.1     _   GCC_VER = 4.3.1
+!! unix-*-*-*-gcc-4.3.2     _   GCC_VER = 4.3.2
+!! unix-*-*-*-gcc-4.3.4     _   GCC_VER = 4.3.4
+!! unix-*-*-*-gcc-4.3.5     _   GCC_VER = 4.3.5
+!! unix-*-*-*-gcc-4.5.2     _   GCC_VER = 4.5.2
+!! unix-*-*-*-gcc-4.6.1     _   GCC_VER = 4.6.1
+!! unix-*-*-*-gcc-4.7.0     _   GCC_VER = 4.7.0
+!! unix-*-*-*-gcc-4.7.2     _   GCC_VER = 4.7.2
 
 #==============================================================================
 # Compiler Paths
 #==============================================================================
 
-!! unix-Linux-*-*-gcc-3.4.6            _  COMPILERPATH = /usr/bin
-!! unix-Linux-*-2.6.18-gcc-4.1.2       _  COMPILERPATH = /usr/bin
-!! unix-Linux-*-*-gcc-4.2              _  COMPILERPATH = /opt/swt/install/gcc-$(GCC_VER)/bin
-!! unix-Linux-*-*-gcc-clang            _  COMPILERPATH = /opt/swt/install/llvm-3.1-64/bin
+!! unix-AIX-*-*-xlc-10.0  _  XLC_LOCATION            = /bb/util/version10-062009/usr
+!! unix-AIX-*-*-xlc-10.1  _  XLC_LOCATION            = /bb/util/version10-082009/usr
+!! unix-AIX-*-*-xlc-10.1  _  XLC_PATCHED_LD_LOCATION = /bb/util/xlC10-pmr21426
+!! unix-AIX-*-*-xlc-10.1  _  XLC_QPATH               = -qpath=ILbcC:$(XLC_PATCHED_LD_LOCATION)/exe
+!! unix-AIX-*-*-xlc-10.1  _  XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
+!! unix-AIX-*-*-xlc-11.1  _  XLC_LOCATION            = /bb/util/version11-012011/usr
+!! unix-AIX-*-*-xlc-11.1  _  XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
+!! unix-AIX-*-*-xlc-11.2  _  XLC_LOCATION            = /bb/util/version11-042012/usr
+!! unix-AIX-*-*-xlc-11.2  _  XLC_QPATH               =
 
-!! unix-AIX-*-*-xlc-10.0 _   XLC_LOCATION            = /bb/util/version10-062009/usr
+!! unix-AIX-*-*-xlc  _  XLC_INTERNAL_PREFIX1 = $(SET_TMPDIR) $(RETRY_ON_SIGNAL)
+!! unix-AIX-*-*-xlc  _  XLC_INTERNAL_PREFIX2 = $(XLC_LIBPATH) $(XLC_INTERNAL_PREFIX1)
 
-!! unix-AIX-*-*-xlc-10.1 _   XLC_LOCATION            = /bb/util/version10-082009/usr
-!! unix-AIX-*-*-xlc-10.1 _   XLC_PATCHED_LD_LOCATION = /bb/util/xlC10-pmr21426
-!! unix-AIX-*-*-xlc-10.1 _   XLC_QPATH               = -qpath=ILbcC:$(XLC_PATCHED_LD_LOCATION)/exe
-!! unix-AIX-*-*-xlc-10.1 _   XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
+!! unix-AIX-*-*-xlc-10  _   XLC_PATH   = $(XLC_LOCATION)/vac/bin/xlc
+!! unix-AIX-*-*-xlc-10  mt  XLC_PATH   = $(XLC_LOCATION)/vac/bin/xlc_r
+!! unix-AIX-*-*-xlc-10  _   XLCXX_PATH = $(XLC_LOCATION)/vacpp/bin/xlC
+!! unix-AIX-*-*-xlc-10  mt  XLCXX_PATH = $(XLC_LOCATION)/vacpp/bin/xlC_r
+!! unix-AIX-*-*-xlc-11  _   XLC_PATH   = $(XLC_LOCATION)/vac/bin/xlc
+!! unix-AIX-*-*-xlc-11  mt  XLC_PATH   = $(XLC_LOCATION)/vac/bin/xlc_r
+!! unix-AIX-*-*-xlc-11  _   XLCXX_PATH = $(XLC_LOCATION)/vacpp/bin/xlC
+!! unix-AIX-*-*-xlc-11  mt  XLCXX_PATH = $(XLC_LOCATION)/vacpp/bin/xlC_r
 
-!! unix-AIX-*-*-xlc-11.1 _   XLC_LOCATION            = /bb/util/version11-012011/usr
-!! unix-AIX-*-*-xlc-11.1 _   XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
+!! unix-AIX-*-*-gcc  _  AIX_GCC_PREFIX = $(RETRY_ON_SIGNAL)
 
-!! unix-AIX-*-*-xlc-11.2 _   XLC_LOCATION            = /bb/util/version11-042012/usr
-!! unix-AIX-*-*-xlc-11.2 _   XLC_QPATH               =
+!! unix-AIX-*-*-gcc  _  AIX_GCC_PATH = /opt/swt/install/gcc-$(GCC_VER)/bin/gcc
+!! unix-AIX-*-*-gcc  _  AIX_GXX_PATH = /opt/swt/install/gcc-$(GCC_VER)/bin/gcc
 
-!! unix-SunOS-*-*-cc-5.9   _   STUDIO_LOC = /bb/util/common/studio12-v4
-!! unix-SunOS-*-*-cc-5.10  _   STUDIO_LOC = /bb/util/common/SS12U1-20120621
-!! unix-SunOS-*-*-cc-5.11  _   STUDIO_LOC = /bb/util/common/SS12U1-20130312
+!! unix-SunOS-*-*-cc-5.9   _  STUDIO_LOC = /bb/util/common/studio12-v4
+!! unix-SunOS-*-*-cc-5.10  _  STUDIO_LOC = /bb/util/common/SS12U1-20120621
+!! unix-SunOS-*-*-cc-5.11  _  STUDIO_LOC = /bb/util/common/SS12U1-20130312
 
-!! unix-AIX-*-*-xlc-10  _   XLC_PATH  = $(XLC_LOCATION)/vac/bin/xlc
-!! unix-AIX-*-*-xlc-10  mt  XLC_PATH  = $(XLC_LOCATION)/vac/bin/xlc_r
-!! unix-AIX-*-*-xlc-10  _   XLCXX_PATH  = $(XLC_LOCATION)/vacpp/bin/xlC
-!! unix-AIX-*-*-xlc-10  mt  XLCXX_PATH  = $(XLC_LOCATION)/vacpp/bin/xlC_r
-!! unix-AIX-*-*-xlc-11  _   XLC_PATH  = $(XLC_LOCATION)/vac/bin/xlc
-!! unix-AIX-*-*-xlc-11  mt  XLC_PATH  = $(XLC_LOCATION)/vac/bin/xlc_r
-!! unix-AIX-*-*-xlc-11  _   XLCXX_PATH  = $(XLC_LOCATION)/vacpp/bin/xlC
-!! unix-AIX-*-*-xlc-11  mt  XLCXX_PATH  = $(XLC_LOCATION)/vacpp/bin/xlC_r
+!! unix-SunOS-*-*-cc  _  SUN_CC_INTERNAL_PREFIX = $(SET_TMPDIR) $(RETRY_ON_SIGNAL)
 
-!! unix-AIX-*-*-*  _  XLC_INTERNAL_PREFIX1 = $(SET_TMPDIR) $(RETRY_ON_SIGNAL)
-!! unix-AIX-*-*-*  _  XLC_INTERNAL_PREFIX2 = $(XLC_LIBPATH) $(XLC_INTERNAL_PREFIX1)
+!! unix-SunOS-*-*-cc  _  SUN_CC_PATH  = $(STUDIO_LOC)/SUNWspro/bin/cc
+!! unix-SunOS-*-*-cc  _  SUN_CXX_PATH = $(STUDIO_LOC)/SUNWspro/bin/CC
+
+!! unix-SunOS-*-*-gcc  _  SUN_GCC_INTERNAL_PREFIX  = $(SET_TMPDIR) $(RETRY_ON_SIGNAL)
+
+!! unix-SunOS-*-*-gcc        _  SUN_GCC_PATH = /bbs/opt/bin/gcc
+!! unix-SunOS-*-*-gcc        _  SUN_GXX_PATH = /bbs/opt/bin/g++
+!! unix-SunOS-*-*-gcc-4.1.2  _  SUN_GCC_PATH = /opt/swt/install/gcc-$(GCC_VER)/bin/gcc
+!! unix-SunOS-*-*-gcc-4.1.2  _  SUN_GXX_PATH = /opt/swt/install/gcc-$(GCC_VER)/bin/g++
+
+
+!! unix-Linux-*-*-gcc-3.4.6       _  COMPILERPATH = /usr/bin
+!! unix-Linux-*-2.6.18-gcc-4.1.2  _  COMPILERPATH = /usr/bin
+!! unix-Linux-*-*-gcc-4.2         _  COMPILERPATH = /opt/swt/install/gcc-$(GCC_VER)/bin
+!! unix-Linux-*-*-gcc-clang       _  COMPILERPATH = /opt/swt/install/llvm-3.1-64/bin
+
+!! unix-Linux-*-*-gcc  _  LINUX_GCC_PREFIX = $(RETRY_ON_SIGNAL)
+
+!! unix-Linux-*-*-gcc  _  LINUX_GCC_PATH = $(COMPILERPATH)/gcc
+!! unix-Linux-*-*-gcc  _  LINUX_GXX_PATH = $(COMPILERPATH)/g++
+
+!! windows-*-*-*-cl  _  WINDOWS_CC_PREFIX = $(RETRY_ON_SIGNAL)
 
 #==============================================================================
 # AR rules
@@ -317,6 +355,10 @@ unix-           shr LIB_LDPATH  = LD_LIBRARY_PATH
 !! unix-AIX-*-*-*   shr LIB_LDPATH  = LIBPATH
 windows             shr LIB_LDPATH  = PATH
 
+# on Linux, the default gmake cannot handle plink's new makefile forwarding logic.  Disable it by setting MKINCL to the source
+# location
+!! unix-Linux-*-*-*       _   MKINCL      = /bbsrc/source/proot/mk/
+
 #==============================================================================
 # Integration
 #==============================================================================
@@ -417,22 +459,6 @@ unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/$(BDE_REFROOT_VE
 *           _   BDE_LDFLAGS = $(SHR_LDFLAGS)
 *           _   BDE_ENDLDFLAGS  = $(SHR_ENDLDFLAGS)
 
-#==============================================================================
-# GCC
-#==============================================================================
-
-!! unix-*-*-*-gcc-3.4.6     _   GCC_VER = 3.4.6
-!! unix-*-*-*-gcc-4.1.2     _   GCC_VER = 4.1.2
-!! unix-*-*-*-gcc-4.2.1     _   GCC_VER = 4.2.1
-!! unix-*-*-*-gcc-4.3.0     _   GCC_VER = 4.3.0
-!! unix-*-*-*-gcc-4.3.1     _   GCC_VER = 4.3.1
-!! unix-*-*-*-gcc-4.3.2     _   GCC_VER = 4.3.2
-!! unix-*-*-*-gcc-4.3.4     _   GCC_VER = 4.3.4
-!! unix-*-*-*-gcc-4.3.5     _   GCC_VER = 4.3.5
-!! unix-*-*-*-gcc-4.5.2     _   GCC_VER = 4.5.2
-!! unix-*-*-*-gcc-4.6.1     _   GCC_VER = 4.6.1
-!! unix-*-*-*-gcc-4.7.0     _   GCC_VER = 4.7.0
-!! unix-*-*-*-gcc-4.7.2     _   GCC_VER = 4.7.2
 
 #==============================================================================
 # Misc Rules

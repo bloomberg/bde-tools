@@ -525,44 +525,54 @@ unix-AIX-*-*-xlc-        _   DEF_CXXFLAGS    = -qxflag=UnwindTypedefInClassDecl
 !! unix-AIX-*-*-xlc-10.1 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
 !! unix-AIX-*-*-xlc-11.1 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
 
-!! unix-AIX-*-*-*  _   XLC_PATH = xlc
-!! unix-AIX-*-*-*  mt  XLC_PATH = xlc_r
-!! unix-AIX-*-*-*  _   XLCXX_PATH = xlC
-!! unix-AIX-*-*-*  mt  XLCXX_PATH = xlC_r
+!! unix-AIX-*-*-xlc  _   XLC_PATH   = xlc
+!! unix-AIX-*-*-xlc  mt  XLC_PATH   = xlc_r
+!! unix-AIX-*-*-xlc  _   XLCXX_PATH = xlC
+!! unix-AIX-*-*-xlc  mt  XLCXX_PATH = xlC_r
 
-!! unix-AIX-*-*-*         _  CC   = $(XLC_INTERNAL_PREFIX1) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-AIX-*-*-*         _  CXX  = $(XLC_INTERNAL_PREFIX1) $(XLCXX_PATH) $(CXX64FLAGS)
+!! unix-AIX-*-*-xlc       _  CC  = $(XLC_INTERNAL_PREFIX1) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc       _  CXX = $(XLC_INTERNAL_PREFIX1) $(XLCXX_PATH) $(CXX64FLAGS)
 
-!! unix-AIX-*-*-xlc-10.0  _  CC   = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-AIX-*-*-xlc-10.0  _  CXX  = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS)
+!! unix-AIX-*-*-xlc-10.0  _  CC  = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-10.0  _  CXX = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS)
 
-!! unix-AIX-*-*-xlc-10.1  _  CC   = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!! unix-AIX-*-*-xlc-10.1  _  CXX  = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
+!! unix-AIX-*-*-xlc-10.1  _  CC  = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
+!! unix-AIX-*-*-xlc-10.1  _  CXX = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
 
-!! unix-AIX-*-*-xlc-11.1  _  CC   = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-AIX-*-*-xlc-11.1  _  CXX  = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-11.1  _  CC  = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-11.1  _  CXX = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 
-!! unix-SunOS-*-*-gcc   _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/opt/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-SunOS-*-*-gcc-4.1.1 _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/swtlib/gcc-4.1.1/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-SunOS-*-*-gcc-4.1.2 _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-AIX-*-*-gcc _   CC      = $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-Linux-*-*-gcc   _   CC      = $(RETRY_ON_SIGNAL) $(COMPILERPATH)/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D"_WINDOWS" /D"_MBCS" /D"NOMINMAX" /DNOGDI $(CC64FLAGS)
-# For VS2008, all options have been moved to DEF_CFLAGS, where they belong,
-# and redundant options have been dropped.
-!! windows-*-*-*-cl-15.00        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /W4 $(CC64FLAGS)
-!! windows-*-*-*-cl-16.00        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /W4 $(CC64FLAGS)
+!! unix-AIX-*-*-gcc  _  AIX_GCC_PATH = gcc
+!! unix-AIX-*-*-gcc  _  AIX_GXX_PATH = g++
 
-!! unix-SunOS-*-*-cc-5.9   _    CC        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(STUDIO_LOC)/SUNWspro/bin/cc $(CC64FLAGS)
-!! unix-SunOS-*-*-cc-5.9   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(STUDIO_LOC)/SUNWspro/bin/CC $(CXX64FLAGS)
+!! unix-AIX-*-*-gcc  _  CC  = $(AIX_GCC_PREFIX) $(AIX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!! unix-AIX-*-*-gcc  _  CXX = $(AIX_GCC_PREFIX) $(AIX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+unix-AIX-*-*-gcc  _  CXX = -ftemplate-depth-150
 
-!! unix-SunOS-*-*-CC64     _    CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bb/util/common/studio8-v10/SUNWspro/bin/CC $(CXX64FLAGS)
+!! unix-SunOS-*-*-cc  _  SUN_CC_PATH  = cc
+!! unix-SunOS-*-*-cc  _  SUN_CXX_PATH = CC
 
-!! unix-Linux-*-*-gcc                  _  CXX          = $(RETRY_ON_SIGNAL) $(COMPILERPATH)/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+!! unix-SunOS-*-*-cc-5.9  _   CC = $(SUN_CC_INTERNAL_PREFIX) $(SUN_CC_PATH) $(CC64FLAGS)
+!! unix-SunOS-*-*-cc-5.9  _  CXX = $(SUN_CC_INTERNAL_PREFIX) $(SUN_CXX_PATH) $(CXX64FLAGS)
 
-# for development only; use GCC found in PATH; no retry
-!! unix-Linux-*-*-gcc-def              _  CXX          = g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-!! unix-Linux-*-*-gcc-def              _  CC           = gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)
+!! unix-SunOS-*-*-gcc  _  SUN_GCC_PATH = gcc
+!! unix-SunOS-*-*-gcc  _  SUN_GXX_PATH = g++
+
+!! unix-SunOS-*-*-gcc  _  CC  = $(SUN_GCC_INTERNAL_PREFIX) $(SUN_GCC_PATH)  -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!! unix-SunOS-*-*-gcc  _  CXX = $(SUN_GCC_INTERNAL_PREFIX) $(SUN_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+unix-SunOS-*-*-gcc  _  CXX = -ftemplate-depth-150
+
+
+!! unix-Linux-*-*-gcc  _  LINUX_GCC_PATH = gcc
+!! unix-Linux-*-*-gcc  _  LINUX_GXX_PATH = g++
+
+!! unix-Linux-*-*-gcc  _  CC  = $(LINUX_GCC_PREFIX) $(LINUX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!! unix-Linux-*-*-gcc  _  CXX = $(LINUX_GCC_PREFIX) $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+
+!! windows-*-*-*-cl-15.00  _  CC  = $(WINDOWS_CC_PREFIX) cl /TC /W4 $(CC64FLAGS)
+!! windows-*-*-*-cl-16.00  _  CC  = $(WINDOWS_CC_PREFIX) cl /TC /W4 $(CC64FLAGS)
+!! windows-*-*-*-cl-15.00  _  CXX = $(WINDOWS_CC_PREFIX) cl /TP /W4 $(CXX64FLAGS)
+!! windows-*-*-*-cl-16.00  _  CXX = $(WINDOWS_CC_PREFIX) cl /TP /W4 $(CXX64FLAGS)
 
 # for development only; use Clang instead of gcc
 !! unix-Linux-*-*-gcc-clang            _  CC           = $(COMPILERPATH)/clang -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)  $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu/32 -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
@@ -572,36 +582,14 @@ windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D
 
 !! unix-Darwin-*-*-def                 _  CXX          = $(RETRY_ON_SIGNAL) clang++ -D__unix $(CXX64FLAGS) $(CLANG_GCC_VER_CPP)
 
-!! unix-SunOS-*-*-gcc   _   CXX         = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/opt/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-!! unix-SunOS-*-*-gcc-4.1.1 _   CXX         = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/swtlib/gcc-4.1.1/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-!! unix-SunOS-*-*-gcc-4.2   _   CXX         = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-
-!! unix-AIX-*-*-gcc _   CXX         = $(RETRY_ON_SIGNAL) /bbs/opt/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-
-unix-SunOS-*-*-gcc  _   CXX     = -ftemplate-depth-150
-
-unix-AIX-*-*-gcc    _   CXX     = -ftemplate-depth-150
-
-# /RTC1 /Wp64
-windows-        _   CXX     = $(RETRY_ON_SIGNAL) cl /TP /nologo /W4 /D"WIN32" /D"_WINDOWS" /D"_MBCS" /D"NOMINMAX" /DNOGDI /Zc:wchar_t /Zc:forScope /Zm2000 /Zi /wd4099 /wd4800 $(CXX64FLAGS)
-# For VS2008, all options have been moved to DEF_CXXFLAGS, where they belong,
-# and redundant options have been dropped.
-!! windows-*-*-*-cl-15.00        _   CXX     = $(RETRY_ON_SIGNAL) cl /TP /W4 $(CXX64FLAGS)
-!! windows-*-*-*-cl-16.00        _   CXX     = $(RETRY_ON_SIGNAL) cl /TP /W4 $(CXX64FLAGS)
-
 unix-               _   CXXLINK     = $(CXX)
 unix-               _   CLINK   = $(CXXLINK)
-
 windows-                _   CXXLINK     = $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:ix86 ws2_32.lib
-!! windows-*-amd64-*-*                _   CXXLINK     = $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:X64 ws2_32.lib
 windows-                _   CLINK   = $(CXXLINK)
 
 unix            _   F77     = f77
 # DRQS 10505346 -- switch to -xtarget=ultra3
 unix-SunOS      _   F77     = -xarch=v8plusa -xchip=generic -xcache=generic
-#old flags
-!! unix-SunOS-*-*-CC64 _   F77     = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
-#done
 
 # on Linux, the default gmake cannot handle plink's new makefile forwarding logic.  Disable it by setting MKINCL to the source
 # location
