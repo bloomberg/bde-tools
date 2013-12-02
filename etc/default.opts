@@ -1060,6 +1060,7 @@ unix-AIX-*-*-xlc-        _   DEF_CXXFLAGS    = -qxflag=UnwindTypedefInClassDecl
 
 !! unix-AIX-*-*-xlc-10.1 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
 !! unix-AIX-*-*-xlc-11.1 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
+unix-AIX-*-*-xlc-11.2 opt     OPT_CXXFLAGS    = -qmaxmem=-1
 
 !! unix-AIX-*-*-xlc-10.1 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
 !! unix-AIX-*-*-xlc-11.1 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
