@@ -75,6 +75,11 @@ unless ($iamwindows) {
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
 }
 
+# gmake standard location: /opt/swt/bin
+$ENV{PATH} .= ":".join(':',qw[
+    /opt/swt/bin
+]);
+
 if ($^O =~ /solaris/) {
     # Sun builds require adding a few paths to the prompt to find things like ar
     $ENV{PATH} .= ":".join(':',$bindir,qw[

@@ -84,9 +84,10 @@ then \
 fi
 
 ls $OUTPUTPATH/etc
-rm -f $OUTPUTPATH/etc/default.opts
+rm -f $OUTPUTPATH/etc/*.opts
 
-export BDE_PATH="/home/bdebuild/bde-tools:$PATHS:$BDE_PATH"
+export BDE_ROOT="$TOOLSPATH"
+export BDE_PATH="$TOOLSPATH:$PATHS:$BDE_PATH"
 
 # the -e option makes bde_snapshot.pl snapshot the "etc" directory as well
 $SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
@@ -111,7 +112,7 @@ do \
     # bde_snapshot.pl has a bug - it will only snapshot default.opts from the -w location.
     if [[ ( ! -e etc/default.opts ) && ( -e $path/etc/default.opts ) ]]
     then \
-        rsync -av $path/etc/default.opts etc/
+        rsync -av $path/etc/default*.opts etc/
     fi
 
     for group in bst bde bdx

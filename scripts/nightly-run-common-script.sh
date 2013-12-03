@@ -43,8 +43,12 @@ LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 W32_BUILD_DIR=bdenydev01:/e/nightly_builds/${BUILD_TYPE}
 W64_BUILD_DIR=apinydev01:/d/nightly_builds/${BUILD_TYPE}
 
+W32_TOOLS_DIR=bdenydev01:/e/git/bde-tools-${BUILD_TYPE}
+W64_TOOLS_DIR=apinydev01:/d/git/bde-tools-${BUILD_TYPE}
+
 MAC_BASE_DIR=bdenydev02:/Development/bdebuild/
 MAC_BUILD_DIR=${MAC_BASE_DIR}/${BUILD_TYPE}
+MAC_TOOLS_DIR=${MAC_BASE_DIR}/bde-tools-${BUILD_TYPE}
 
 SNAPSHOT_DIR=/home/bdebuild/bs/snapshot-${BUILD_TYPE}
 TARBALL=/home/bdebuild/bs/tars-${BUILD_TYPE}/snapshot-${BUILD_TYPE}.`date +"%Y%m%d"`.tar.gz
@@ -132,7 +136,13 @@ rsync -av --rsync-path=/usr/bin/rsync \
     $SNAPSHOT_DIR/ $MAC_BUILD_DIR/ 2>&1 | perl -pe's/^/MAC-CP: /'
 
 rsync -av --rsync-path=/usr/bin/rsync \
-    /bbshr/bde/bde-tools/ $MAC_BASE_DIR/bde-tools/ 2>&1 | perl -pe's/^/MAC-TOOLS: /'
+    $TOOLSPATH/ $MAC_TOOLS_DIR/ 2>&1 | perl -pe's/^/MAC-TOOLS: /'
+
+rsync -av --rsync-path=/usr/bin/rsync \
+    $TOOLSPATH/ $W32_TOOLS_DIR/ 2>&1 | perl -pe's/^/MAC-TOOLS: /'
+
+rsync -av --rsync-path=/usr/bin/rsync \
+    $TOOLSPATH/ $W64_TOOLS_DIR/ 2>&1 | perl -pe's/^/MAC-TOOLS: /'
 
 # run ${BUILD_TYPE}-core build
 $TOOLSPATH/bin/bde_bldmgr -v                \
