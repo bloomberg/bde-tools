@@ -14,7 +14,7 @@ use BDE::Build::Uplid;
 use BDE::Build::Ufid;
 use BDE::Util::Nomenclature qw(isPackage isGroup isGroupedPackage);
 use Symbols qw(
-    PACKAGE_META_SUBDIR GROUP_META_SUBDIR TOOLS_ETCDIR DEFAULT_OPTIONS_FILE
+    PACKAGE_META_SUBDIR GROUP_META_SUBDIR TOOLS_ETCDIR DEFAULT_OPTFILE
 );
 use Util::Message qw(error debug debug2 debug3);
 
@@ -40,13 +40,13 @@ BDE::Build::Options -- Derive build options for a specified group or package.
 B<*THIS MODULE IS DEPRECATED*> -- use L<Build::Option::Factory> instead.
 
 This module extracts build options from the configured options files for a
-given group or package, and returns the appropriate values for the 
+given group or package, and returns the appropriate values for the
 specified platform and build type.
 
 This module does not process capabilities or understand external definitions
-(i.e. C<.defs> files), and is therefore not supported for newer releases of 
+(i.e. C<.defs> files), and is therefore not supported for newer releases of
 C<default.opts> or other metadata files. Use L<Build::Option::Factory> for
-modern build applications. 
+modern build applications.
 
 =cut
 
@@ -67,7 +67,7 @@ sub getOptionFiles ($;$@) {
     my ($thisdir, $parentdir) = (reverse split('/|\\\\', $location))[0, 1];
 
     my $UP="..".$FS; #shorthand for 'up one directory'
-    my $ETCDFLOPTS=TOOLS_ETCDIR.$FS.DEFAULT_OPTIONS_FILE; #trailing path
+    my $ETCDFLOPTS=TOOLS_ETCDIR.$FS.DEFAULT_OPTFILE; #trailing path
 
     # assemble list of possible locations for default and context options files
     my (@default_files,@context_files);
@@ -156,7 +156,7 @@ sub setLocationContext ($$) {
 	  && -d "$location${FS}..${FS}group") {
         $self->setPackage($thisdir);
 	$self->setGroup($parentdir);
-	return 2; 
+	return 2;
     } elsif (isGroup($thisdir) && -d "$location${FS}group") {
        $self->setPackage(undef);
        $self->setGroup($thisdir);
@@ -284,7 +284,7 @@ sub processOptionFile ($$;$) {
 	next if /^\s*\#/;
 
 	# continuations
-	if (/(.*)\\\s*$/) {		
+	if (/(.*)\\\s*$/) {
 	    if ($saveline) {
 		$saveline.=" $1";
 	    } else {

@@ -125,7 +125,8 @@ DEFFILE_EXTENSION       => .defs
 LCKFILE_EXTENSION       => .lck
 MAKEFILE_NAME           => Makefile
 
-DEFAULT_OPTFILE         => default.opts
+DEFAULT_OPTFILE          => "default${OPTFILE_EXTENSION}"
+DEFAULT_OPTFILE_INTERNAL => "default_internal${OPTFILE_EXTENSION}"
 
 # Source category directories
 
@@ -234,8 +235,6 @@ FILESYSTEM_FLAT         => 256
 FILESYSTEM_NO_CONTEXT   => 512
 FILESYSTEM_VERY_FLAT    => 768
 FILESYSTEM_CACHE        => "$ENABLED"
-
-DEFAULT_OPTIONS_FILE    => "default${OPTFILE_EXTENSION}"
 
 # Paths to authoritative registries
 

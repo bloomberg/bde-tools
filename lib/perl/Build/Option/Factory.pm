@@ -83,7 +83,7 @@ sub initialise ($$) {
 
     unless ($self->getValueSet) {
 	my $valueset=new Build::Option::Set();
-	$self->setValueSet($valueset);		
+	$self->setValueSet($valueset);
     }
 
     return $self;
@@ -114,7 +114,7 @@ sub initialiseFromScalar ($$) {
 	} elsif ($init->isa("Build::Option::Finder")) {
 	    $self->setFinder($init);
 	    unless ($self->getValueSet) {
-		$self->setValueSet(new Build::Option::Set);		
+		$self->setValueSet(new Build::Option::Set);
 	    }
 	} else {
 	    $self->throw("invalid initialiser: $init");
@@ -122,7 +122,7 @@ sub initialiseFromScalar ($$) {
     } else {
 	# init = composite value classname
 	my $valueset=new Build::Option::Set($init);
-	$self->setValueSet($valueset);	
+	$self->setValueSet($valueset);
     }
 
     return $self;
@@ -198,7 +198,7 @@ files actually exists -- L<"load">, which calls this method, deals with that.
 This method is a thin wrapper for L<Build::Option::Finder/getOptionFiles>. It
 augments that method by recognizing the special arguments C<default> and C<*>
 and returning the default option file only in these cases (derived from
-L<Build::Option::Finder/getDefaultOptionFile>.
+L<Build::Option::Finder/getDefaultOptionFiles>.
 
 =cut
 
@@ -209,7 +209,7 @@ sub getElegibleOptionFiles ($$) {
     $self->throw("No root available") unless defined $root;
 
     my @optsfiles=($unit eq "default" or $unit eq "*")
-      ? $root->getDefaultOptionFile()
+      ? $root->getDefaultOptionFiles()
 	: $root->getOptionFiles($unit);
 
     return @optsfiles;

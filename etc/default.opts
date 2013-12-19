@@ -57,6 +57,7 @@
 
 #==============================================================================
 # Metadata
+#==============================================================================
 
 *           _       BUILD_TYPE  =
 
@@ -73,10 +74,7 @@
 *           mt      BUILD_TYPE  = -DBDE_BUILD_TARGET_MT
 *           opt     BUILD_TYPE  = -DBDE_BUILD_TARGET_OPT
 *           shr     BUILD_TYPE  = -DBDE_BUILD_TARGET_SHR
-*           pure    BUILD_TYPE  = -DBDE_BUILD_TARGET_PURE
 *           win     BUILD_TYPE  = -DBDE_BUILD_TARGET_WINDOWED
-*           ins     BUILD_TYPE  = -DBDE_BUILD_TARGET_INS
-*           qnt     BUILD_TYPE  = -DBDE_BUILD_TARGET_QNT
 *           safe    BUILD_TYPE  = -DBDE_BUILD_TARGET_SAFE
 *           safe2   BUILD_TYPE  = -DBDE_BUILD_TARGET_SAFE_2
 *           stlport BUILD_TYPE  = -DBDE_BUILD_TARGET_STLPORT
@@ -85,31 +83,17 @@
 *           _   BDE_CFLAGS    = $(BUILD_TYPE)
 *           _   BDE_CXXFLAGS  = $(BUILD_TYPE)
 
-# Portable 64 bit indicators
-
-!! *                       _ BDE_WORD64 =
-!! *                      64 BDE_WORD64 = 64
-
-!! *                       _ BDE_WORD_64 =
-!! *                      64 BDE_WORD_64 = _64
-
-!! *                       _ BDE_32_OR_64 = 32
-!! *                      64 BDE_32_OR_64 = 64
 
 # Portable linker symbols
 
 !! unix-*                           _   BDE_STATIC = -Bstatic
 !! unix-AIX-*                       _   BDE_STATIC = -bstatic
-!! unix-HP_UX-*                     _   BDE_STATIC =
 !! unix-Linux-*                     _   BDE_STATIC =
-!! unix-Cygwin-*                    _   BDE_STATIC =
 !! windows-*                        _   BDE_STATIC =
 
 !! unix-*                           _   BDE_DYNAMIC = -Bdynamic
 !! unix-AIX-*                       _   BDE_DYNAMIC = -bdynamic
-!! unix-HP_UX-*                     _   BDE_DYNAMIC =
 !! unix-Linux-*                     _   BDE_DYNAMIC =
-!! unix-Cygwin-*                    _   BDE_DYNAMIC =
 !! windows-*                        _   BDE_DYNAMIC =
 
 #-# This variable converts 'def' to a specific compiler, i.e. it upgrades   #-#
@@ -120,11 +104,8 @@
 !! windows              _       BDE_COMPILER_FLAG        = cl
 !! unix-SunOS           _       BDE_COMPILER_FLAG        = cc
 !! unix-AIX             _       BDE_COMPILER_FLAG        = xlc
-!! unix-HP_UX           _       BDE_COMPILER_FLAG        = acc
 !! unix-Linux           _       BDE_COMPILER_FLAG        = gcc
 !! unix-Darwin          _       BDE_COMPILER_FLAG        = gcc
-!! unix-FreeBSD         _       BDE_COMPILER_FLAG        = gcc
-!! unix-Cygwin          _       BDE_COMPILER_FLAG        = gcc
 !! unix-NONSUCH         _       BDE_COMPILER_FLAG        = <Uncollapsed!>
 
 #-# These configured values will be replaced with a mechanism to evaluate   #-#
@@ -138,20 +119,12 @@
 !! unix-SunOS-i386-*-cc       _       BDE_COMPILERVERSION_FLAG = 5.11
 !! unix-SunOS-i386-*-cc      64       BDE_COMPILERVERSION_FLAG = 5.11
 !! unix-SunOS-*-*-gcc         _       BDE_COMPILERVERSION_FLAG = 4.3.2
-!! unix-HP_UX-*-*-acc         _       BDE_COMPILERVERSION_FLAG = 6.2
-!! unix-HP_UX-*-*-gcc         _       BDE_COMPILERVERSION_FLAG = 4.3.2
 !! unix-AIX-*-*-gcc           _       BDE_COMPILERVERSION_FLAG = 3.4.3
 !! unix-AIX-*-*-xlc           _       BDE_COMPILERVERSION_FLAG = 11.2
 !! unix-Linux                 _       BDE_COMPILERVERSION_FLAG = 3.4.6
 !! unix-Linux-x86_64-2.6.18   _       BDE_COMPILERVERSION_FLAG = 4.1.2
-!! unix-Linux-x86_64-3.2.0    _       BDE_COMPILERVERSION_FLAG = 4.6.3
-!! unix-FreeBSD               _       BDE_COMPILERVERSION_FLAG = 4.2.1
-!! unix-Cygwin                _       BDE_COMPILERVERSION_FLAG = 3.4.1
 !! unix-Darwin                _       BDE_COMPILERVERSION_FLAG = 4.2.1
 !! unix-NONSUCH               _       BDE_COMPILERVERSION_FLAG = <Uncollapsed!>
-
-# this compiler version facilitates local builds on standalone Linux machines
-!! unix-Linux-i686-2.6.32     _       BDE_COMPILERVERSION_FLAG = def
 
 # The default command line option separator.  It's '-' on most platforms,
 # and '/' on Windows
@@ -162,346 +135,13 @@
 !! *                    _       INCPATH_FLAG = $(SWITCHCHAR)I
 
 #==============================================================================
-# Retry false-negative wrapper. Use -X in bde_build.pl to override this,
-# or override RETRY_ON_EXIT and RETRY_ON_SIGNAL in the environment.
-
-# Bump default timeout from 5 minutes to 10 minutes (600 sec) to prevent
-# timeout when compiling huge test drivers.  And even 600 isn't always
-# enough for IBM.
-*                       _       RETRY_TIMEOUT   = 600
-!! unix-AIX-*           _       RETRY_TIMEOUT   = 1200
-
-# 20060927 - double timeouts when building opt code
-!! *                  opt       RETRY_TIMEOUT   = 1200
-!! unix-AIX-*         opt       RETRY_TIMEOUT   = 2400
-
-unix-                   _       RETRY       = $(BDE_BINDIR)retry $(RETRY_OPT)
-!! unix-Cygwin          _       RETRY       =
-!! windows-             _       RETRY       =
-
-unix-                   _       RETRY_ON_EXIT   = $(RETRY) -a 3 -t $(RETRY_TIMEOUT) -x'!0' --
-!! unix-Cygwin          _       RETRY_ON_EXIT   =
-!! windows-             _       RETRY_ON_EXIT   =
-
-unix-                   _       RETRY_ON_SIGNAL = $(RETRY) -a 3 -t $(RETRY_TIMEOUT) -s'!0' --
-!! unix-Cygwin          _       RETRY_ON_SIGNAL =
-!! windows-             _       RETRY_ON_SIGNAL =
-
-#==============================================================================
 # C++11 (a.k.a. C++0x) support
+#==============================================================================
 
 *                       cpp11   CPP11_FLAGS     =   --this-compiler-does-not-have-cpp11-support-configured
-!! unix-HP_UX-*-*-acc   cpp11   CPP11_FLAGS     =   -Ax
 !! unix-*-*-*-gcc-4.4.3 cpp11   CPP11_FLAGS     =   -std=c++0x
-!! unix-*-*-*-gcc-4.6.3 cpp11   CPP11_FLAGS     =   -std=c++0x
 !! unix-*-*-*-gcc-4.7.0 cpp11   CPP11_FLAGS     =   -std=c++11
-
 *                       cpp11   BDE_CXXFLAGS    = $(CPP11_FLAGS)
-#==============================================================================
-# Test driver execution
-
-*                       _       TEST_TIMEOUT    = 600
-# purify tests can be up to 10 times slower than normal, but 50 minutes is a sufficient cap
-!! *                    pure    TEST_TIMEOUT    = 3000
-
-# Disable timeout on retry wrapper because all.pl has its own, per-case timeout
-*                       _       RETRY_ALLTEST   =
-unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP,BUS,ABRT,SEGV,PIPE,CHLD --
-!! unix-Cygwin          _       RETRY_ALLTEST   =
-
-*                       _       ALLTEST_VERBOSE = -v
-*                       _       ALLTEST_PREFIX  =
-!! unix-AIX-*           _       ALLTEST_PREFIX  = $(XLC_LIBPATH)
-!! unix-SunOS-*-*-gcc-4     _   ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib:$(LD_LIBRARY_PATH)
-!! unix-SunOS-*-*-gcc-4     64  ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib/sparcv9:$(LD_LIBRARY_PATH)
-
-*                       _       ALLTEST = $(ALLTEST_PREFIX) $(RETRY_ALLTEST) $(BDE_BINDIR)all.pl $(ALLTEST_VERBOSE) -t $(TEST_TIMEOUT) $(ALLTEST_OPT)
-!! windows              _       ALLTEST = D:/bin/wrun.exe -A -a$@ $(ALLTEST_VERBOSE) -t 5 -m100 -M1024 -t $(TEST_TIMEOUT) $(ALLTEST_OPT)
-# maximize test iterations to 100
-*           _      ALLTEST_OPT = -m100
-*           _      ALLTEST_SERIAL  = -s
-*           _      ALLTEST_PARALLEL = -j4
-
-# run tests in series for windows
-!! windows  _      ALLTEST_PARALLEL = -s
-
-# run tests in series for purify - we need to be able to parse each test driver's log file
-!! *        pure   ALLTEST_PARALLEL = -s
-
-#==============================================================================
-# Basic commands and nomenclature
-
-# file(s)-to-unspecified copy
-!! unix-           _       RSYNC           = rsync -a
-!! unix-           _       CP              = cp -p
-windows-           _       CP              = perl -MFile::Copy -MFile::Basename -e "$$d=pop(@ARGV); die unless -d($$d) or -d($$d=dirname($$d)); while ($$f=shift @ARGV) { copy $$_,$$d foreach glob($$f) }; print \"\tcopied to $$d\n\"" --
-
-# file(s)-to-dir copy
-unix-                   _       F2DCP           = $(CP)
-# add /k to preserve timestamps
-windows-                _       F2DCP           = echo d | xcopy /k /Y /I /R
-# file-to-file copy
-unix-           _   F2FCP       = $(CP)
-# add /k to preserve timestamps
-windows-                _       F2FCP           = echo f | xcopy /k /Y /I /R
-# recursive copy
-unix-           _   CPRECURSE   = $(RETRY_ON_EXIT) $(RSYNC)
-# add /k to preserve timestamps
-windows-        _   CPRECURSE   = xcopy /k /Y /I /R /E /Q
-# trailing directory separator to balance differing xcopy/rsync command semantics
-unix-           _   TRAILFS     = /
-
-unix            _   LINK        = ln
-windows         _   LINK        = $(F2FCP)
-
-unix-                   _       RM              = $(RETRY_ON_EXIT) rm -f
-windows-                _       RM              = -del /F /Q
-# recursive remove
-unix-           _   RMRECURSE   = $(RM) -r
-windows-        _   RMRECURSE   = -del /F /Q /S
-
-unix-           _   MV      = mv
-windows-        _   MV      = rename
-
-unix-                   _       TEST            = test -d
-windows-                _       TEST            =
-
-unix                    _       TOUCH           = touch
-windows                 _       TOUCH           = perl -e "open(FILE,'>>'.$$ARGV[0]) and close(FILE)" --
-
-unix            _   DIFF        = diff -C1
-unix-Cygwin     _   DIFF        = -b
-windows         _   DIFF        = fc
-
-unix-           _   SHELL           = /bin/ksh
-windows-        _   SHELL           =
-
-unix-           _   CD      = cd
-windows-        _   CD      = chdir
-
-unix-               _   MKDIR   = $(RETRY_ON_EXIT) perl -MFile::Path -e 'mkpath(@ARGV)' --
-windows-            _   MKDIR   = perl -MFile::Path -e "mkpath(\@ARGV)" --
-
-unix-           _   TMPDIR      = /bb/data/tmp
-!! unix-FreeBSD     _   TMPDIR      = /tmp
-!! unix-Cygwin      _   TMPDIR      = /tmp
-!! unix-Darwin      _   TMPDIR      = /tmp
-windows         _   TMPDIR      = C:\temp
-*           _   SET_TMPDIR  = TMPDIR=$(TMPDIR)
-
-#=========
-
-unix-           _   OUT_OPT     = -o $@
-# for newer VS2008 builds, generate a debug symbol file for each .obj
-windows-        _   OUT_OPT     = /Fo"$@"
-# disabled one .pdb per .obj which it taking too much space
-# !! windows-*-*-*-cl-15.00        _   OUT_OPT     = /Fo"$@" /Fd"$(patsubst %.obj,%.pdb,$@)"
-
-unix-           _   OBJ_OPT         = -c $(OUT_OPT)
-windows-        _   OBJ_OPT         = /c $(OUT_OPT)
-!! unix-SunOS-*-*-xml   _   OBJ_OPT         = -fxml=$@
-
-unix-           _   OBJ_EXT     = .o
-windows-        _   OBJ_EXT     = .obj
-
-unix-           _   EXE_OPT         = $(OUT_OPT)
-windows-        _   EXE_OPT         = /out:"$@"
-
-unix-           _   EXE_EXT     =
-windows         _   EXE_EXT     = .exe
-
-windows-        _   LIBPATH_FLAG    = /libpath:
-unix-           _   LIBPATH_FLAG    = -L
-
-unix-           _   LIB_FLAG        = -l
-windows-        _   LIB_FLAG        = /defaultlib:
-
-unix-           _   LIB_EXT         = .a
-!! unix-        shr LIB_EXT     = .so
-!! unix-HP_UX-*-*-* shr LIBRUNPATH_FLAG = -Wl,+b
-windows-        _   LIB_EXT         = .lib
-!! windows-     shr LIB_EXT     = .dll
-
-unix-           _   LIB_WLDEXT  = $(LIB_EXT)
-# ddl lib pdb
-windows-        _   LIB_WLDEXT  = .[dlp][lid][lb]
-
-!! unix-HP_UX-*-*-acc   _       ACC_DIST   = /bb/util/common/aCC-6.25-v9/opt/aCC
-!! unix-HP_UX-*-*-acc   _       AFC_DIST   = /bb/util/common/f90-3.4-v2
-!! unix-HP_UX-*-*-acc   _       ACC_BIN    = $(ACC_DIST)/bin
-!! unix-HP_UX-*-*-acc   _       ALD_DIST   = /bb/util/common/ld-v2
-!! unix-HP_UX-*-*-acc   _       ALD_PATH   = $(ALD_DIST)/usr/ccs/bin/ld
-
-!! unix-HP_UX-*-*-acc   shr     LIB_LDPATH  = SHLIB_PATH
-!! unix-HP_UX-*-*-CC64  shr     LIB_LDPATH  = LD_LIBRARY_PATH #old
-!! unix-HP_UX-*-*-acc   shr_64  LIB_LDPATH  = LD_LIBRARY_PATH #new
-
-!! unix-HP_UX-*-*-acc   _       HP_SPECIFIC_COMMON_CFLAGS=-D_SYS_SYSMACROS_INCLUDED +Oprocelim +Orelaxed_debug +nosrcpos +macro_debug=none
-!! unix-HP_UX-*-*-acc   _       HP_SPECIFIC_CFLAGS=$(HP_SPECIFIC_COMMON_CFLAGS) -AC99
-!! unix-HP_UX-*-*-acc   _       HP_SPECIFIC_CPPFLAGS=$(HP_SPECIFIC_COMMON_CFLAGS) -AA -ext -Aa -Wc,--ignore_fptr_lang_linkage
-!! unix-HP_UX-*-*-gcc   _       HP_SPECIFIC_CPPFLAGS=
-
-!! unix-HP_UX-*-*-acc   _       LINKARGSCOMMON=-Wl,+concatrpath $(LINKPATH) -tl,$(ALD_PATH) -Wl,-z -Wl,-N -Wl,+as,mpas -Wl,+k -Wl,+afs,main=_start +Oprocelim +Orelaxed_debug +nosrcpos -Wl,+nocgorder
-
-unix-           _   LIB_PREFIX      = lib
-windows-        _   LIB_PREFIX      =
-
-unix-           _   LINK_LIB_EXT    =
-windows-        _   LINK_LIB_EXT    = .lib
-
-unix-           _   LINK_LIB_PREFIX =
-windows-        _   LINK_LIB_PREFIX =
-
-unix-               shr LIBRUNPATH_FLAG = -R
-!! unix-AIX-*-*-*   shr LIBRUNPATH_FLAG = -blibpath:
-!! unix-*-*-*-gcc   shr LIBRUNPATH_FLAG = -rpath
-windows-            shr LIBRUNPATH_FLAG = /libpath:
-
-unix-           shr LIB_LDPATH  = LD_LIBRARY_PATH
-#old flags
-!! unix-SunOS-*-*-CC64  shr LIB_LDPATH  = LD_LIBRARY_PATH_64
-#new flags for 64 bits
-!! unix-SunOS-*-*-cc    shr_64  LIB_LDPATH  = LD_LIBRARY_PATH_64
-#done
-!! unix-AIX-*-*-*   shr LIB_LDPATH  = LIBPATH
-windows             shr LIB_LDPATH  = PATH
-
-#==========
-
-unix-                   _   ARFLAGS     = -ruv
-#old flags
-!! unix-AIX-*-*-CC64    _   ARFLAGS     = -ruv -X64
-#new flags for 64 bits
-!! unix-AIX-*-*-xlc shr_64  ARFLAGS     = -ruv -X64
-#done
-
-unix-                       _   AR      = $(RETRY_ON_EXIT) ar -ruv
-!! unix-SunOS-*-*-*         _   AR      = $(CXX) -xar -instances=extern -o
-!! unix-HP_UX-*-*-*         _   AR      = $(RETRY_ON_EXIT) ar -ruvl
-
-!! unix-SunOS-*-*-cc-5.5    _   AR      = $(CXX) -xar -o
-!! unix-SunOS-*-*-cc-5.9    _   AR      = $(CXX) -xar -o
-
-!! unix-SunOS-*-*-gcc       _   AR      = $(RETRY_ON_EXIT) ar -ruv
-!! unix-AIX-*-*-gcc         _   AR      = $(RETRY_ON_EXIT) ar -ruv
-!! unix-HP_UX-*-*-gcc       _   AR      = $(RETRY_ON_EXIT) ar -ruv
-#old flags
-!! unix-AIX-*-*-CC64        _   AR      = $(RETRY_ON_EXIT) ar -X64 -ruv
-#new flags for 64 bits
-
-unix-Linux-*-*-*         shr SHR_SONAME_ARGS = -Wl,-soname,$(SONAME)
-unix-HP_UX-*-*-*         shr SHR_SONAME_ARGS = -Wl,+h,$(SONAME)
-unix-SunOS-*-*-*         shr SHR_SONAME_ARGS = -h $(SONAME)
-*                        shr SHR_SONAME_SET  = $(if $(SONAME),$(SHR_SONAME_ARGS))
-
-*                        shr SHR_SHLIB_DEPS  =
-
-unix-Linux-*-*-*         shr SHR_NO_UNDEFINED_SYMBOLS = -Wl,--no-undefined
-unix-SunOS-*-*-*         shr SHR_NO_UNDEFINED_SYMBOLS = -zdefs
-unix-AIX-*-*-*           shr SHR_NO_UNDEFINED_SYMBOLS =
-unix-HP_UX-*-*-*         shr SHR_NO_UNDEFINED_SYMBOLS =
-
-!! unix-AIX-*-*-xlc         64  AR      = $(RETRY_ON_EXIT) ar -X64 -ruv
-#done
-!! unix-                    shr AR      = $(CXX) -G $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS) -o
-
-unix-AIX-*-*-*-*           _   XLC_SPECIAL_BBINDER_FLAGS   = -bweaklocal -bbigtoc
-!! unix-AIX-*-*-xlc-9.0    _   XLC_SPECIAL_BBINDER_FLAGS   = -bbinder:$(XLC_PATCHED_LD_LOCATION)/exe/bind64 -bweaklocal -bbigtoc
-!! unix-AIX-*-*-xlc-10.1   _   XLC_SPECIAL_BBINDER_FLAGS   = -bbinder:/usr/ccs/bin/bind64 -bweaklocal -bbigtoc
-
-!! unix-AIX-*-*-*           shr AR      = $(CXX) -G $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS) $(XLC_SPECIAL_BBINDER_FLAGS) -o
-!! unix-*-*-*-gcc           shr AR      = $(CXX) -shared $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS) -o
-!! unix-HP_UX-*-*-*         shr AR      = $(CXX) -b +nostl $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS) -o
-
-!! unix-*-*-*-gcc-3.4.6     _   GCC_VER = 3.4.6
-!! unix-*-*-*-gcc-4.1.2     _   GCC_VER = 4.1.2
-!! unix-*-*-*-gcc-4.2.1     _   GCC_VER = 4.2.1
-!! unix-*-*-*-gcc-4.3.0     _   GCC_VER = 4.3.0
-!! unix-*-*-*-gcc-4.3.1     _   GCC_VER = 4.3.1
-!! unix-*-*-*-gcc-4.3.2     _   GCC_VER = 4.3.2
-!! unix-*-*-*-gcc-4.3.4     _   GCC_VER = 4.3.4
-!! unix-*-*-*-gcc-4.3.5     _   GCC_VER = 4.3.5
-!! unix-*-*-*-gcc-4.5.2     _   GCC_VER = 4.5.2
-!! unix-*-*-*-gcc-4.6.1     _   GCC_VER = 4.6.1
-!! unix-*-*-*-gcc-4.6.3     _   GCC_VER = 4.6.3
-!! unix-*-*-*-gcc-4.7.0     _   GCC_VER = 4.7.0
-!! unix-*-*-*-gcc-4.7.2     _   GCC_VER = 4.7.2
-
-!! unix-SunOS-*-*-gcc       shr AR      = $(RETRY_ON_EXIT) /bbs/opt/bin/gcc -shared $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS) -o
-!! unix-SunOS-*-*-gcc-4.*   shr AR      = $(RETRY_ON_EXIT) /opt/swt/install/gcc-$(GCC_VER)/bin/g++ -shared $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS)  -o
-!! unix-AIX-*-*-gcc         shr AR      = $(RETRY_ON_EXIT) /bbs/opt/bin/gcc -shared $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS) -o
-!! unix-AIX-*-*-gcc-4.*     shr AR      = $(RETRY_ON_EXIT) /opt/swt/install/gcc-$(GCC_VER)/bin/g++ -shared $(SHR_NO_UNDEFINED_SYMBOLS) $(SHR_SONAME_SET) $(SHR_SHLIB_DEPS) -o
-
-windows-                    _   AR      = $(RETRY_ON_EXIT) lib /nologo
-
-!! windows-                 shr AR      = link /nologo /incremental:no /subsystem:console /machine:ix86 /dll /implib:"$(@R)_shr.lib" ws2_32.lib /pdb:"$(@R)_shr.pdb"
-
-unix-               _   AR_PACKAGE      = $(AR) $@
-windows-            _   AR_PACKAGE      = $(AR) /out:"$@"
-
-unix-           _   SERIALIZE   = $(BDE_BINDIR)serialize -l$(TMPDIR) -im $(LIB_EXT)$$
-
-unix-               _   AR_INSTALL      = $(SERIALIZE) $(AR) $@
-windows-                _       AR_INSTALL      = $(RETRY_ON_EXIT) perl -e "unshift @ARGV,'$@' if -f '$@'; system('lib','/OUT:$@',@ARGV)" --
-!! windows      shr AR_INSTALL  = $(AR) /out:"$@"
-
-#old flags
-unix-AIX-*-*-CC64   _   ASFLAGS     = -a64
-#new flags for 64 bits
-unix-AIX-*-*-xlc    64  ASFLAGS     = -a64
-#done
-
-unix-                   _   RANLIB          = $(RETRY_ON_EXIT) true $@
-!! unix-Darwin-*-*-*    _   RANLIB          = $(RETRY_ON_EXIT) ranlib $@
-windows-                _   RANLIB          =
-
-windows-        _   RC      = rc
-windows-        _   RCFLAGS     = /r /n
-
-windows-        shr BDE_API_EXPORT  = " "
-#windows-       shr BDE_API_EXPORT  = __declspec(dllexport)
-windows-        shr BDE_API_IMPORT  = " "
-# DRQS 18244248: HP suggests -D_SYS_SYSMACROS_INCLUDED as a workaround for sys/sysmacros.h
-# defining major and minor
-!! unix-HP_UX-*-*-* _   DEF_CFLAGS  = -Ae -z -D_SYS_SYSMACROS_INCLUDED
-# DRQS 18912346: HP needs -D__STDC_LIMIT_MACROS to define LLONG_MIN/MAX and ULLONG_MAX
-unix-HP_UX-*-*-* _   DEF_CFLAGS  = -D__STDC_LIMIT_MACROS
-# 20100330 - we need -D_HP_SOURCE so bb_inttypes.h defines ulonglong_t and longlong_t for a_comdb2
-unix-HP_UX-*-*-* _   DEF_CFLAGS  = -D_HP_SOURCE
-
-windows-        shr BDE_DCL_IMPORT  = __declspec(dllimport)
-windows-        shr BDE_DCL_EXPORT  = " "
-
-*           _   PROCESS_INC = $(CP)
-
-# DRQS 18244248: HP suggests -D_SYS_SYSMACROS_INCLUDED as a workaround for sys/sysmacros.h
-# defining major and minor
-# -Wc,--funcptrs_ignore_linkage added to test extern "C" fix.
-# 2010-02-08 - the 1/30 compiler patch changes the option name to
-#        -Wc,--ignore_fptr_lang_linkage
-# DRQS 18912346: HP needs -D__STDC_LIMIT_MACROS to define LLONG_MIN/MAX and ULLONG_MAX
-# 20100330 - we need -D_HP_SOURCE so bb_inttypes.h defines ulonglong_t and longlong_t for a_comdb2
-# DRQS 23276327: added -Wc,--no_nonconst_ref_anachronism
-!! unix-HP_UX-*-*-* _   DEF_CXXFLAGS    = -AA -z +W749 +Ovolatile=__unordered -Wc,--ignore_fptr_lang_linkage -D_SYS_SYSMACROS_INCLUDED -D__STDC_LIMIT_MACROS -D_HP_SOURCE -Wc,--no_nonconst_ref_anachronism
-
-# IMPORTANT: use of stat and utime to preserve timestamps on the processed file!
-!! windows-     _   PROCESS_INC = perl -e "$$d=pop(@ARGV); $$o=$$d; $$/=undef; while ($$i=shift @ARGV) { $$mtime=((stat $$i)[9]); open I,$$i; if (-d $$d) { $$i=~m|([\w.]+)$$| and $$o=$$d.'/'.$$1 }; open O,'>'.$$o; $$c=<I>; $$c=~s/^    static ([^({;]+;)$$/    ::GROUP::_DCL static $$1/mg; print O $$c; close I; close O; utime $$mtime,$$mtime,$$o; }; print \"\tpreprocessed to $$d\n\"" --
-
-*           _   PROCESS_IMP     = $(CP)
-!! windows-     _   PROCESS_IMP = $(F2FCP)
-
-windows         shr MAKE_DEFS   = perl -Mstrict -we "my (%%s,$$d); foreach my $$g (@ARGV) { foreach my $$f (glob $$g) { $$d=`dumpbin /symbols $$f`; $$s{$$1}=$$2 while $$d=~/\sSECT\w+\s+.*\s+External\s+\|\s+(\S+BloombergLP\S+)\s+(.*)$$/mg } }; print qq[EXPORTS\n], map {qq[\t$$_\n]} sort(grep($$s{$$_}!~/deleting destructor/,keys %%s))" --
-
-unix-           _   ZIP     = zip
-windows-        _   ZIP     = "C:\Program Files\WinZip\wzzip.exe"
-
-*           _   TEMPLATE_CACHE_DIR     = nonexistent
-!! unix-SunOS       _   TEMPLATE_CACHE_DIR     = SunWS_cache/$(UFID)
-!! unix-SunOS-*-*-gcc   _   TEMPLATE_CACHE_DIR     = nonexistent
-*           _   SET_TEMPLATE_CACHE_DIR =
-!! unix-SunOS       _   SET_TEMPLATE_CACHE_DIR = SUNWS_CACHE_NAME=$(TEMPLATE_CACHE_DIR)
-!! unix-SunOS-*-*-gcc   _   SET_TEMPLATE_CACHE_DIR =
-
 
 #==============================================================================
 # FLAGS: BDE_CFLAGS, BDE_CXXFLAGS, BDE_LDFLAGS
@@ -527,28 +167,11 @@ windows-        _   ZIP     = "C:\Program Files\WinZip\wzzip.exe"
 unix-*-*-*-gcc      _   DEF_CFLAGS      = -pipe -std=gnu99
 unix-*              _   DEF_CFLAGS      = -I$(DEPLOYED_INCLUDE)
 
-# DRQS 15979661: once AIX gets -qtls=global-dynamic working right, we'll enable
-# it here.  But, for now, it's in bce.opts and bae.opts.
-unix-AIX-*-*-*      _   ENABLE_TLS      =
-
-unix-AIX-*-*-*           _   ARCH_TUNE       = -qarch=pwr5 -qtune=pwr5
-!! unix-AIX-*-*-xlc-11.2 _   ARCH_TUNE       = -qarch=pwr5 -qtune=pwr7
-
-!! unix-SunOS-*-*-cc-5.2 _  DEF_CXXFLAGS    = -instances=static
-# DRQS 10505346 -- switch to -xtarget=ultra3 for Sun, -qarch=pwr4 -qtune=pwr5 for AIX
-# Changed 20110111 per gstrauss to match plink
-!! unix-SunOS-*-*-cc-5.5 _  DEF_CXXFLAGS    = -xarch=v8plusa -xchip=generic -xcache=generic
-!! unix-SunOS-*-*-cc-5.5 64 DEF_CXXFLAGS    = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
 !! unix-SunOS-*-*-cc-5.9 _  DEF_CXXFLAGS    = -m32 -xarch=sparcvis -xchip=generic -xcache=generic
 !! unix-SunOS-*-*-cc-5.9 64 DEF_CXXFLAGS    = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
-!! unix-HP_UX-*-*-* shr SHR_CFLAGS  = +Z
 !! unix-SunOS-*-*-CC64   _  DEF_CXXFLAGS    =
 !! unix-AIX-*-*-xlc-*   _   AIX_UNLOCK_STREAMS = -D__NOLOCK_ON_INPUT -D__NOLOCK_ON_OUTPUT
-!! unix-AIX-*-*-xlc-6.0 _   DEF_CXXFLAGS    = -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -Q $(AIX_UNLOCK_STREAMS)
-!! unix-AIX-*-*-xlc-8.0 _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qxflag=v6align -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
-!! unix-AIX-*-*-xlc-9.0 _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 !! unix-AIX-*-*-xlc-10.0 _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
-!! unix-HP_UX-*-*-* shr SHR_CXXFLAGS    = +Z
 # inline rather than inline and optimize
 !! unix-*-*-*-gcc   _   DEF_CXXFLAGS    = -pipe
 !! unix-SunOS-*-*-gcc    _  DEF_CXXFLAGS    = -pipe -mcpu=ultrasparc3
@@ -582,11 +205,6 @@ unix-SunOS-*-*-cc-5.11 _  DEF_CXXFLAGS    = -xannotate=no
 !! windows-*-*-*-cl-15.00           _    DEF_CXXFLAGS    = /nologo /Oi /bigobj /we4715 /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE /DNOMINMAX $(NOGDI) /GR /wd4661 /we4150 /wd4510 /wd4610 $(WIN_VERSION_FLAGS)
 !! windows-*-*-*-cl-16.00           _    DEF_CFLAGS      = /nologo /Oi /bigobj /we4715 /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE /DNOMINMAX $(NOGDI) $(WIN_VERSION_FLAGS)
 !! windows-*-*-*-cl-16.00           _    DEF_CXXFLAGS    = /nologo /Oi /bigobj /we4715 /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE /DNOMINMAX $(NOGDI) /GR /wd4661 /we4150 /wd4510 /wd4610 $(WIN_VERSION_FLAGS)
-!! windows-*-*-*-cl-14.00           _    DEF_CFLAGS      = /nologo /Oi /bigobj /we4715 /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE /DNOMINMAX $(NOGDI) $(WIN_VERSION_FLAGS)
-!! windows-*-*-*-cl-14.00           _    DEF_CXXFLAGS    = /nologo /Oi /bigobj /we4715 /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE /DNOMINMAX $(NOGDI) /GR /wd4661 /we4150 /wd4510 /wd4610 $(WIN_VERSION_FLAGS)
-
-!! unix-HP_UX-*-*-* _   SHR_PRELDFLAGS  =
-!! unix-HP_UX-*-*-* shr SHR_PRELDFLAGS  = -Wl,-a,shared
 
 # DRQS 13597546 - add -bmaxdata:0x5000000 to work around new exception issues
 # and match our production setup
@@ -597,31 +215,6 @@ unix-AIX-*-*-xlc            64  DEF_LDFLAGS = -b64
 
 # some POSIX API is provided in librt on Linux
 unix-Linux-*-*-*             _  DEF_ENDLDFLAGS = -lrt
-
-#DRQS 29841359
-# add "-Wl,-rpath -Wl,/opt/swt/install/gcc-4.3.5/lib" to 4.3.5 link lines to add search
-# path for .so files
-
-unix-Linux-*-*-gcc-4          _  RPATH_LIBDIR = lib
-!! unix-Linux-*-*-gcc-4       64 RPATH_LIBDIR = lib64
-
-# we don't want these options for the "built-in" gcc 4.1.2 on RHEL5,
-# so only enable RPATH starting from gcc-4.2
-unix-Linux-*-*-gcc-4.2        _  RPATH_FLAGS = -Wl,-rpath -Wl,/opt/swt/install/gcc-$(GCC_VER)/$(RPATH_LIBDIR)
-
-unix-Linux-*-*-*        _   DEF_ENDLDFLAGS = $(RPATH_FLAGS)
-
-# tell Clang where GCC libraries are located
-!! unix-Linux-*-*-gcc-clang     _  CLANG_GCC_VER = 4.7.0
-!! unix-Linux-*-*-gcc-clang     _  CLANG_GCC_VER_CPP = -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=7 -D__CLANG_GNUC_PATCHLEVEL__=0
-!! unix-Darwin-*-*-*            _  CLANG_GCC_VER_CPP = -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=2 -D__CLANG_GNUC_PATCHLEVEL__=1
-
-!! unix-Linux-*-*-gcc-clang     _  DEF_LDFLAGS = -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER)/32 -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER)/32 -Wl,-rpath -Wl,/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib
-!! unix-Linux-*-*-gcc-clang    64  DEF_LDFLAGS = -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64 -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64 -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER) -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER) -Wl,-rpath -Wl,/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64
-
-# Flags for shared memory access compatibility on HP
-unix-HP_UX-*-*-*       _   DEF_LDFLAGS    = $(LINKARGSCOMMON) -AA -ext
-!! unix-HP_UX-*-*-gcc  _   DEF_LDFLAGS    = $(LINKARGSCOMMON)
 
 #===
 
@@ -635,63 +228,7 @@ unix-HP_UX-*-*-*       _   DEF_LDFLAGS    = $(LINKARGSCOMMON) -AA -ext
 *           _   BDE_LDFLAGS     = $(DEF_LDFLAGS)
 *           _   BDE_ENDLDFLAGS  = $(DEF_ENDLDFLAGS)
 
-#=== Default location for mapping prebuilt lib names to robocop lib names
-unix-          _   BDE_LDFLAGS =  $(LIBPATH_FLAG)/bbsrc/bde/registry/lroot/lib/$(UPLID)
-!! unix-Darwin-*-*-*    _  BDE_LDFLAGS =
-
-#==============================================================================
-# Build static/dynamic
-!! unix-HP_UX-*-*-*     _   EXC_CXXFLAGS    = +noeh
-!! unix-HP_UX-*-*-*     exc EXC_CXXFLAGS    =
-
-*           _   SHR_CFLAGS  =
-*           _   SHR_CXXLFLAGS   =
-*           _   SHR_F77FLAGS    =
-*           _   SHR_PRELDFLAGS  =
-*           _   SHR_LDFLAGS =
-*           _   SHR_ENDLDFLAGS  =
-
-#===
-
-!! unix-SunOS-*-*-def   shr SHR_CFLAGS  = -KPIC
-!! unix-AIX-*-*-*   shr SHR_CFLAGS  =
-!! unix-*-*-*-gcc   shr SHR_CFLAGS  = -fPIC
-
-!! unix-SunOS-*-*-def   shr SHR_CXXFLAGS    = -KPIC
-!! unix-AIX-*-*-*   shr SHR_CXXFLAGS    =
-!! unix-*-*-*-gcc   shr SHR_CXXFLAGS    = -fPIC
-
-!! unix         shr SHR_F77FLAGS    = -KPIC
-
-!! windows      _   SHR_CXXFLAGS    = /M$(MT_LIBTYPE)$(DBG_LIBSUFFIX)
-!! windows      rtd SHR_CXXFLAGS    = /MD$(DBG_LIBSUFFIX)
-!! windows      shr SHR_CXXFLAGS    = /MD$(DBG_LIBSUFFIX) /D"_USRDLL" /D"_WINDLL"
-!! windows      _   SHR_CFLAGS  = $(SHR_CXXFLAGS)
-
-!! *                _   SHR_PRELDFLAGS  =
-!! unix-SunOS-*-*-* _   SHR_PRELDFLAGS  = $(BDE_STATIC)
-!! unix-SunOS-*-*-* shr SHR_PRELDFLAGS  = $(BDE_DYNAMIC)
-!! unix-AIX-*-*-*   _   SHR_PRELDFLAGS  = $(BDE_STATIC)
-!! unix-AIX-*-*-*   shr SHR_PRELDFLAGS  = $(BDE_DYNAMIC) -brtl
-!! unix-*-*-*-gcc   _   SHR_PRELDFLAGS  = $(BDE_DYNAMIC)
-
-!! unix             _           SHR_ENDLDFLAGS  =
-!! unix-SunOS-*-*-* _           SHR_ENDLDFLAGS  = $(BDE_DYNAMIC)
-!! unix-AIX-*-*-*   _           SHR_ENDLDFLAGS  = $(BDE_DYNAMIC)
-!! unix-SunOS-*-*-gcc-4.1.1 _   SHR_ENDLDFLAGS  = $(BDE_DYNAMIC) -Wl,-R/bbs/swtlib/gcc-4.1.1/lib
-!! unix-SunOS-*-*-gcc-4.1.2 _   SHR_ENDLDFLAGS  = $(BDE_DYNAMIC) -Wl,-R/opt/swt/install/gcc-$(GCC_VER)/lib
-!! unix-SunOS-*-*-gcc-4.2   _   SHR_ENDLDFLAGS  = $(BDE_DYNAMIC) -Wl,-R/opt/swt/install/gcc-$(GCC_VER)/lib
-!! unix-SunOS-*-*-gcc-4.2  64   SHR_ENDLDFLAGS  = $(BDE_DYNAMIC) -Wl,-R/opt/swt/install/gcc-$(GCC_VER)/lib/sparcv9
-!! unix-                  shr   SHR_ENDLDFLAGS  =
-
-#===
-
-*           _   BDE_CFLAGS  = $(SHR_CFLAGS)
-*           _   BDE_CXXFLAGS    = $(SHR_CXXFLAGS)
-*           _   BDE_F77FLAGS    = $(SHR_F77FLAGS)
-*           _   BDE_PRELDFLAGS  = $(SHR_PRELDFLAGS)
-*           _   BDE_LDFLAGS = $(SHR_LDFLAGS)
-*           _   BDE_ENDLDFLAGS  = $(SHR_ENDLDFLAGS)
+unix-          _   BDE_LDFLAGS =  $(INTERNAL_LDFLAGS)
 
 #==============================================================================
 # Exception support - non-exceptions is default, so must override for exc
@@ -730,15 +267,10 @@ unix-          _   BDE_LDFLAGS =  $(LIBPATH_FLAG)/bbsrc/bde/registry/lroot/lib/$
 !! unix-SunOS-*-*-cc-5.9 dbg     DBG_CXXFLAGS    = -g0 -xdebugformat=stabs
 !! unix-AIX-*-*-*        dbg     DBG_CXXFLAGS    = -g
 # -Q suppressed above
-!! unix-AIX-*-*-xlc-8.0  dbg     DBG_CXXFLAGS    = -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
-# xlC9 does v6align by default
-!! unix-AIX-*-*-xlc-9.0  dbg     DBG_CXXFLAGS    = -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 !! unix-AIX-*-*-xlc-10.0  dbg     DBG_CXXFLAGS    = -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 
 !! unix-*-*-*-gcc        dbg     DBG_CXXFLAGS    = -g
 #!! unix-*-*-*-gcc       dbg     DBG_CXXFLAGS    = -g -O #correct but problematic
-!! windows-*-*-cl-13.10         dbg     DBG_CXXFLAGS    = /ZI /Od /Ge /D"_DEBUG" /V"DEBUG"
-!! windows-*-*-cl-14.0          dbg     DBG_CXXFLAGS    = /ZI /Od /D"_DEBUG" /D"_CRT_SECURE_NO_DEPRECATE"
 !! windows-*-*-*-cl-15.00                  dbg     DBG_CXXFLAGS    = /Zi /RTC1
 !! windows-*-*-*-cl-15.00                  dbg     DBG_CFLAGS      = /Zi /RTC1
 !! windows-*-*-*-cl-16.00                  dbg     DBG_CXXFLAGS    = /Zi /RTC1
@@ -754,8 +286,6 @@ unix-          _   BDE_LDFLAGS =  $(LIBPATH_FLAG)/bbsrc/bde/registry/lroot/lib/$
 # For MDd/MD and MTd/MT
 windows         _   DBG_LIBSUFFIX   =
 windows         dbg DBG_LIBSUFFIX   = d
-
-!! unix-HP_UX-*-*-* mt  MT_CXXFLAGS = -D_POSIX_PTHREAD_SEMANTICS -mt
 !! windows-         dbg DBG_LDFLAGS     = /debug
 
 #===
@@ -794,26 +324,18 @@ windows         dbg DBG_LIBSUFFIX   = d
 
 !! unix-                opt OPT_CFLAGS      = -O -DNDEBUG
 !! unix-*-*-*-gcc       opt OPT_CFLAGS      = -O2 -fno-strict-aliasing -DNDEBUG
-!! unix-HP_UX-*-*-*     opt OPT_CFLAGS      = +O2 +Osize +inline_level 1 -DNDEBUG
 
 !! unix-*-*-*-gcc       opt OPT_EXTRA_64_CXXFLAGS =
 !! unix-*-*-*-gcc        64 OPT_EXTRA_64_CXXFLAGS = -fno-gcse
 
 !! unix-                opt OPT_CXXFLAGS    = -O -DNDEBUG
 !! unix-*-*-*-gcc       opt OPT_CXXFLAGS    = -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
-!! unix-HP_UX-*-*-*     opt OPT_CXXFLAGS    = +O2 +Osize +inline_level 1 -DNDEBUG
 !! unix-SunOS-*-*-cc    opt OPT_CXXFLAGS    = -O -DNDEBUG -xbuiltin=%all -xprefetch=no%auto,explicit
 !! unix-AIX-*-*-xlc opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi
 
 # DRQS 16407776: Studio 12 switched the meaning of -O from -xO2 to -xO3 - we want to use -xO3 explicitly to match plink.
 !! unix-SunOS-*-*-cc-5.9 opt OPT_CFLAGS        = -xO3 -DNDEBUG
 !! unix-SunOS-*-*-cc-5.9 opt OPT_CXXFLAGS      = -xO3 -DNDEBUG -xbuiltin=%all -xprefetch=no%auto,explicit
-
-unix-HP_UX-*-*-CC64 _   CC64FLAGS   = +DD64 #old
-unix-HP_UX-*-*-acc  64  CC64FLAGS   = +DD64 #new
-!! unix-AIX-*-*-xlc-8.0 opt     OPT_CXXFLAGS    = -qxflag=v6align -O -DNDEBUG -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage
-# xlC9 does v6align by default
-!! unix-AIX-*-*-xlc-9.0 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage
 
 #!! windows-        opt OPT_CXXFLAGS    = /Ogitb1 /Gs /D"NDEBUG"
 #Changing these per Brock Peabody
@@ -890,10 +412,7 @@ windows         _   MT_LIBTYPE  = L
 !! unix-*-*-*-gcc       mt  MT_LDFLAGS  = -lthread
 !! unix-SunOS-*-*-gcc   mt  MT_LDFLAGS  = -lthread
 !! unix-AIX-*-*-gcc     mt  MT_LDFLAGS  = -lpthread
-!! unix-HP_UX-*-*-*     mt  MT_LDFLAGS  = -lpthread
 !! unix-Linux-*-*-*     mt  MT_LDFLAGS  = -lpthread
-!! unix-FreeBSD-*-*-*   mt  MT_LDFLAGS  = -lpthread
-!! unix-Cygwin-*-*-*    mt  MT_LDFLAGS  = -lpthread
 !! unix-Darwin-*-*-*    mt  MT_LDFLAGS  = -lpthread
 
 !! unix-SunOS       mt  MT_F77FLAGS = -mt
@@ -949,7 +468,6 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !! *-*-*-*-gcc          64  CC64FLAGS   = -m64
 !! *-*-x86_64-*-gcc     _   CC64FLAGS   = -m32 -march=pentium2 -mtune=opteron
 !! *-*-x86_64-*-gcc     64  CC64FLAGS   = -m64 -mtune=opteron
-!! unix-HP_UX-*-*-gcc   _   CC64FLAGS   =
 # DRQS 10505346 -- switch to -xtarget=ultra3 for Sun, -qarch=pwr4 -qtune=pwr5 for AIX
 #old flags
 unix-SunOS-*-*-CC64     _   CC64FLAGS   =  -m32 -xarch=sparcvis -xchip=generic -xcache=generic
@@ -991,306 +509,93 @@ unix-AIX-*-*-xlc    64  CC64FLAGS   = -q64
 
 unix-                   _   CC      = $(RETRY_ON_SIGNAL) cc -DUSE_REAL_MALLOC $(CC64FLAGS)
 unix-                   _   CXX     = $(RETRY_ON_SIGNAL) CC $(CXX64FLAGS)
-
 !! unix-Linux-*-*-def   _   CC      = $(RETRY_ON_SIGNAL) $(COMPILERPATH)/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)
-!! unix-FreeBSD-*-*-def _   CC      = $(RETRY_ON_SIGNAL) gcc $(GCCEXTRAWFLAGS) $(CC64FLAGS)
-!! unix-Cygwin-*-*-def  _   CC      = $(RETRY_ON_SIGNAL) gcc -DUSE_REAL_MALLOC -D__cygwin -D__linux $(CC64FLAGS)
 !! unix-Darwin-*-*-def  _   CC      = $(RETRY_ON_SIGNAL) clang -DUSE_REAL_MALLOC -D__unix $(CC64FLAGS)
-!! unix-AIX-*-*-*       _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-AIX-*-*-*       mt  CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-HP_UX-*-*-*     _   CC      = $(RETRY_ON_SIGNAL) $(ACC_BIN)/cc $(CC64FLAGS)
 
-!! unix-AIX-*-*-xlc-8.0 _   XLC_LOCATION        = /bb/util/version8-112008/usr/
-!! unix-AIX-*-*-xlc-8.0 _   XLC_PATCH_1_LOCATION      = /bb/util/version8-090103
-!! unix-AIX-*-*-xlc-8.0 _   XLC_LIBPATH         = LIBPATH=$(XLC_PATCH_1_LOCATION)/lib
-
-!! unix-AIX-*-*-xlc-8.0 _   XLC_QPATH                = -qpath=ILbc:$(XLC_PATCH_1_LOCATION)/exe/
-
-!! unix-AIX-*-*-xlc-9.0 _   XLC_LOCATION             = /bb/util/version9-082008/usr
-!! unix-AIX-*-*-xlc-9.0 _   XLC_PATCHED_LD_LOCATION  = /bb/util/xlC8-20071010
-!! unix-AIX-*-*-xlc-9.0 _   XLC_QPATH                = -qpath=l:$(XLC_PATCHED_LD_LOCATION)/exe/
-!! unix-AIX-*-*-xlc-9.0 _   XLC_LIBPATH              = LIBPATH=$(XLC_LOCATION)/lib
-
-!! unix-AIX-*-*-xlc-10.0 _   XLC_LOCATION            = /bb/util/version10-062009/usr
-
-!! unix-AIX-*-*-xlc-10.1 _   XLC_LOCATION            = /bb/util/version10-082009/usr
-!! unix-AIX-*-*-xlc-10.1 _   XLC_PATCHED_LD_LOCATION = /bb/util/xlC10-pmr21426
-!! unix-AIX-*-*-xlc-10.1 _   XLC_QPATH               = -qpath=ILbcC:$(XLC_PATCHED_LD_LOCATION)/exe
-!! unix-AIX-*-*-xlc-10.1 _   XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
-
-!! unix-AIX-*-*-xlc-11.1 _   XLC_LOCATION            = /bb/util/version11-012011/usr
-!! unix-AIX-*-*-xlc-11.1 _   XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
-
-!! unix-AIX-*-*-xlc-11.2 _   XLC_LOCATION            = /bb/util/version11-042012/usr
-!! unix-AIX-*-*-xlc-11.2 _   XLC_QPATH               =
-
-!! unix-AIX-*-*-xlc-8.0 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(XLC_QPATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-AIX-*-*-xlc-8.0 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(XLC_QPATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-
-!! unix-AIX-*-*-xlc-9.0 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(XLC_QPATH) $(CC64FLAGS)
-!! unix-AIX-*-*-xlc-9.0 mt  CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(XLC_QPATH) $(CC64FLAGS)
-
-!! unix-AIX-*-*-xlc-10.0 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!! unix-AIX-*-*-xlc-10.0 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-
-!! unix-AIX-*-*-*   _   CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlC $(CXX64FLAGS)
-!! unix-AIX-*-*-*   mt  CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) xlC_r $(CXX64FLAGS)
-
-!! unix-AIX-*-*-xlc-8.0 _   CXX     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC    $(XLC_QPATH) $(CC64FLAGS)
-!! unix-AIX-*-*-xlc-8.0 mt   CXX    = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r  $(XLC_QPATH) $(CC64FLAGS)
-
-!! unix-AIX-*-*-xlc-9.0 _   CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC   $(XLC_QPATH) $(CC64FLAGS)
-!! unix-AIX-*-*-xlc-9.0 mt  CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r $(XLC_QPATH) $(CC64FLAGS)
-
-!! unix-AIX-*-*-xlc-10.0 _   CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC $(CC64FLAGS)
-!! unix-AIX-*-*-xlc-10.0 mt  CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r $(CC64FLAGS)
-
+#==== The section below should probably be moved to another section for CXXFLAGS
 # xlc 10 August PTF - All settings are identical to xlc-10.0 except for XLC_LOCATION
 # xlc 11 January 2011 PTF - All settings are identical to xlc-10.0 except for XLC_LOCATION
-
 !! unix-AIX-*-*-xlc-10.1 _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 ++ unix-AIX-*-*-xlc-11.1 _   DEF_CXXFLAGS    = -qdebug=nparseasm
-
 # Note: must be the very last option for AIX/xlC/DEF_CXXFLAGS, to avoid
 # overriding it with other options
 unix-AIX-*-*-xlc-        _   DEF_CXXFLAGS    = -qxflag=UnwindTypedefInClassDecl
-
 !! unix-AIX-*-*-xlc-10.1  dbg     DBG_CXXFLAGS    = -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 !! unix-AIX-*-*-xlc-11.1  dbg     DBG_CXXFLAGS    = -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
-
 !! unix-AIX-*-*-xlc-10.1 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
 !! unix-AIX-*-*-xlc-11.1 opt     OPT_CXXFLAGS    = -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
-unix-AIX-*-*-xlc-11.2 opt     OPT_CXXFLAGS    = -qmaxmem=-1
 
-!! unix-AIX-*-*-xlc-10.1 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!! unix-AIX-*-*-xlc-11.1 _   CC      = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc   $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc  _   XLC_PATH   = xlc
+!! unix-AIX-*-*-xlc  mt  XLC_PATH   = xlc_r
+!! unix-AIX-*-*-xlc  _   XLCXX_PATH = xlC
+!! unix-AIX-*-*-xlc  mt  XLCXX_PATH = xlC_r
 
-!! unix-AIX-*-*-xlc-10.1 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!! unix-AIX-*-*-xlc-11.1 mt   CC     = $(XLC_LIBPATH) $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vac/bin/xlc_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc       _  CC  = $(XLC_INTERNAL_PREFIX1) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc       _  CXX = $(XLC_INTERNAL_PREFIX1) $(XLCXX_PATH) $(CXX64FLAGS)
 
-!! unix-AIX-*-*-xlc-10.1 _   CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!! unix-AIX-*-*-xlc-11.1 _   CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-10.0  _  CC  = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-10.0  _  CXX = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS)
 
-!! unix-AIX-*-*-xlc-10.1 mt  CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!! unix-AIX-*-*-xlc-11.1 mt  CXX     = LIBPATH=$(XLC_LOCATION)/lib $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(XLC_LOCATION)/vacpp/bin/xlC_r $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-10.1  _  CC  = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
+!! unix-AIX-*-*-xlc-10.1  _  CXX = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
+
+!! unix-AIX-*-*-xlc-11.1  _  CC  = $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!! unix-AIX-*-*-xlc-11.1  _  CXX = $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+
+!! unix-AIX-*-*-gcc  _  AIX_GCC_PATH = gcc
+!! unix-AIX-*-*-gcc  _  AIX_GXX_PATH = g++
+
+!! unix-AIX-*-*-gcc  _  CC  = $(AIX_GCC_PREFIX) $(AIX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!! unix-AIX-*-*-gcc  _  CXX = $(AIX_GCC_PREFIX) $(AIX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+unix-AIX-*-*-gcc  _  CXX = -ftemplate-depth-150
+
+!! unix-SunOS-*-*-cc  _  SUN_CC_PATH  = cc
+!! unix-SunOS-*-*-cc  _  SUN_CXX_PATH = CC
+
+!! unix-SunOS-*-*-cc-5.9  _   CC = $(SUN_CC_INTERNAL_PREFIX) $(SUN_CC_PATH) $(CC64FLAGS)
+!! unix-SunOS-*-*-cc-5.9  _  CXX = $(SUN_CC_INTERNAL_PREFIX) $(SUN_CXX_PATH) $(CXX64FLAGS)
+
+!! unix-SunOS-*-*-gcc  _  SUN_GCC_PATH = gcc
+!! unix-SunOS-*-*-gcc  _  SUN_GXX_PATH = g++
+
+!! unix-SunOS-*-*-gcc  _  CC  = $(SUN_GCC_INTERNAL_PREFIX) $(SUN_GCC_PATH)  -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!! unix-SunOS-*-*-gcc  _  CXX = $(SUN_GCC_INTERNAL_PREFIX) $(SUN_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+unix-SunOS-*-*-gcc  _  CXX = -ftemplate-depth-150
 
 
-!! unix-SunOS-*-*-gcc   _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/opt/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-SunOS-*-*-gcc-4.1.1 _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/swtlib/gcc-4.1.1/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-SunOS-*-*-gcc-4.1.2 _   CC      = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-AIX-*-*-gcc _   CC      = $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-HP_UX-*-*-gcc _   CC      = $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-Linux-*-*-gcc   _   CC      = $(RETRY_ON_SIGNAL) $(COMPILERPATH)/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!! unix-FreeBSD-*-*-gcc   _   CC      = $(RETRY_ON_SIGNAL) /usr/bin/gcc $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-windows-        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /nologo /W4 /D"WIN32" /D"_WINDOWS" /D"_MBCS" /D"NOMINMAX" /DNOGDI $(CC64FLAGS)
-# For VS2008, all options have been moved to DEF_CFLAGS, where they belong,
-# and redundant options have been dropped.
-!! windows-*-*-*-cl-15.00        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /W4 $(CC64FLAGS)
-!! windows-*-*-*-cl-16.00        _   CC      = $(RETRY_ON_SIGNAL) cl /TC /W4 $(CC64FLAGS)
+!! unix-Linux-*-*-gcc  _  LINUX_GCC_PATH = gcc
+!! unix-Linux-*-*-gcc  _  LINUX_GXX_PATH = g++
 
-!! unix-SunOS-*-*-cc-5.2   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/SUNWspro61/bin/CC $(CXX64FLAGS)
-!! unix-SunOS-*-*-cc-5.5   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bb/util/common/studio8-v10/SUNWspro/bin/CC $(CXX64FLAGS)
+!! unix-Linux-*-*-gcc  _  CC  = $(LINUX_GCC_PREFIX) $(LINUX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!! unix-Linux-*-*-gcc  _  CXX = $(LINUX_GCC_PREFIX) $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 
-!! unix-SunOS-*-*-cc-5.9   _   STUDIO_LOC = /bb/util/common/studio12-v4
-!! unix-SunOS-*-*-cc-5.10  _   STUDIO_LOC = /bb/util/common/SS12U1-20120621
-!! unix-SunOS-*-*-cc-5.11  _   STUDIO_LOC = /bb/util/common/SS12U1-20130312
-
-!! unix-SunOS-*-*-cc-5.9   _    CC        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(STUDIO_LOC)/SUNWspro/bin/cc $(CC64FLAGS)
-!! unix-SunOS-*-*-cc-5.9   _   CXX        = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) $(STUDIO_LOC)/SUNWspro/bin/CC $(CXX64FLAGS)
-
-!! unix-HP_UX-*-*-*        _   CXX        = $(RETRY_ON_SIGNAL) $(ACC_BIN)/aCC $(CXX64FLAGS)
-
-!! unix-SunOS-i386-*-cc-5.8   _ CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/SUNWspro/bin/CC $(CXX64FLAGS)
-!! unix-SunOS-i386-*-cc-5.8   64    CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/SUNWspro/bin/CC $(CXX64FLAGS)
-
-!! unix-SunOS-*-*-CC64     _    CXX     = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bb/util/common/studio8-v10/SUNWspro/bin/CC $(CXX64FLAGS)
-
-!! unix-Linux-*-*-gcc-3.4.6            _  COMPILERPATH = /usr/bin
-!! unix-Linux-*-2.6.18-gcc-4.1.2       _  COMPILERPATH = /usr/bin
-!! unix-Linux-*-*-gcc-4.2              _  COMPILERPATH = /opt/swt/install/gcc-$(GCC_VER)/bin
-
-!! unix-Linux-*-*-gcc                  _  CXX          = $(RETRY_ON_SIGNAL) $(COMPILERPATH)/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-
-# for development only; use GCC found in PATH; no retry
-!! unix-Linux-*-*-gcc-def              _  CXX          = g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-!! unix-Linux-*-*-gcc-def              _  CC           = gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)
+!! windows-*-*-*-cl-15.00  _  CC  = $(WINDOWS_CC_PREFIX) cl /TC /W4 $(CC64FLAGS)
+!! windows-*-*-*-cl-16.00  _  CC  = $(WINDOWS_CC_PREFIX) cl /TC /W4 $(CC64FLAGS)
+!! windows-*-*-*-cl-15.00  _  CXX = $(WINDOWS_CC_PREFIX) cl /TP /W4 $(CXX64FLAGS)
+!! windows-*-*-*-cl-16.00  _  CXX = $(WINDOWS_CC_PREFIX) cl /TP /W4 $(CXX64FLAGS)
 
 # for development only; use Clang instead of gcc
-!! unix-Linux-*-*-gcc-clang            _  COMPILERPATH = /opt/swt/install/llvm-3.1-64/bin
-!! unix-Linux-*-*-gcc-clang            _  CC           = $(COMPILERPATH)/clang -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)  $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu/32 -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
-!! unix-Linux-*-*-gcc-clang           64  CC           = $(COMPILERPATH)/clang -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)  $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu    -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
-!! unix-Linux-*-*-gcc-clang            _  CXX          = $(COMPILERPATH)/clang++                 $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu/32 -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
-!! unix-Linux-*-*-gcc-clang           64  CXX          = $(COMPILERPATH)/clang++                 $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER) -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/x86_64-unknown-linux-gnu    -isystem/opt/swt/install/gcc-$(CLANG_GCC_VER)/include/c++/$(CLANG_GCC_VER)/backward
+!! unix-Linux-*-*-gcc-clang  _  CLANG_GCC_VER_CPP = -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=7 -D__CLANG_GNUC_PATCHLEVEL__=0
+!! unix-Darwin-*-*-*         _  CLANG_GCC_VER_CPP = -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=2 -D__CLANG_GNUC_PATCHLEVEL__=1
+!! unix-Linux-*-*-gcc-clang  _  CLANG_PATH   = clang
+!! unix-Linux-*-*-gcc-clang  _  CLANGXX_PATH = clang++
 
-!! unix-Cygwin-*-*-def                 _  CXX          = $(RETRY_ON_SIGNAL) g++ -D__cygwin -D__linux $(CXX64FLAGS)
+!! unix-Linux-*-*-gcc-clang  _   CC = $(CLANG_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC)
+!! unix-Linux-*-*-gcc-clang  64  CC = $(CLANG_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC_64)
+!! unix-Linux-*-*-gcc-clang  _  CXX = $(CLANGXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC)
+!! unix-Linux-*-*-gcc-clang  64 CXX = $(CLANGXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC_64)
 
-!! unix-Darwin-*-*-def                 _  CXX          = $(RETRY_ON_SIGNAL) clang++ -D__unix $(CXX64FLAGS) $(CLANG_GCC_VER_CPP)
-
-!! unix-SunOS-*-*-gcc   _   CXX         = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/opt/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-!! unix-SunOS-*-*-gcc-4.1.1 _   CXX         = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /bbs/swtlib/gcc-4.1.1/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-!! unix-SunOS-*-*-gcc-4.2   _   CXX         = $(SET_TMPDIR) $(RETRY_ON_SIGNAL) /opt/swt/install/gcc-$(GCC_VER)/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-
-!! unix-AIX-*-*-gcc _   CXX         = $(RETRY_ON_SIGNAL) /bbs/opt/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-
-!! unix-HP_UX-*-*-gcc _   CXX         = $(RETRY_ON_SIGNAL) /opt/swt/bin/g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-
-!! unix-FreeBSD-*-*-gcc   _   CXX         = $(RETRY_ON_SIGNAL) g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-
-unix-SunOS-*-*-gcc  _   CXX     = -ftemplate-depth-150
-
-unix-AIX-*-*-gcc    _   CXX     = -ftemplate-depth-150
-
-# /RTC1 /Wp64
-windows-        _   CXX     = $(RETRY_ON_SIGNAL) cl /TP /nologo /W4 /D"WIN32" /D"_WINDOWS" /D"_MBCS" /D"NOMINMAX" /DNOGDI /Zc:wchar_t /Zc:forScope /Zm2000 /Zi /wd4099 /wd4800 $(CXX64FLAGS)
-# For VS2008, all options have been moved to DEF_CXXFLAGS, where they belong,
-# and redundant options have been dropped.
-!! windows-*-*-*-cl-15.00        _   CXX     = $(RETRY_ON_SIGNAL) cl /TP /W4 $(CXX64FLAGS)
-!! windows-*-*-*-cl-16.00        _   CXX     = $(RETRY_ON_SIGNAL) cl /TP /W4 $(CXX64FLAGS)
+!! unix-Darwin-*-*-def  _  CXX = $(RETRY_ON_SIGNAL) clang++ -D__unix $(CXX64FLAGS) $(CLANG_GCC_VER_CPP)
 
 unix-               _   CXXLINK     = $(CXX)
 unix-               _   CLINK   = $(CXXLINK)
-
 windows-                _   CXXLINK     = $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:ix86 ws2_32.lib
-!! windows-*-amd64-*-*                _   CXXLINK     = $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:X64 ws2_32.lib
+!! windows-*-amd64-*-*  _   CXXLINK     = $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:X64 ws2_32.lib
 windows-                _   CLINK   = $(CXXLINK)
 
 unix            _   F77     = f77
 # DRQS 10505346 -- switch to -xtarget=ultra3
 unix-SunOS      _   F77     = -xarch=v8plusa -xchip=generic -xcache=generic
-#old flags
-!! unix-SunOS-*-*-CC64 _   F77     = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
-#done
-
-# on Linux, the default gmake cannot handle plink's new makefile forwarding logic.  Disable it by setting MKINCL to the source
-# location
-!! unix-Linux-*-*-*       _   MKINCL      = /bbsrc/source/proot/mk/
-
-
-#==============================================================================
-# Instrumenting compilers: ins, pure, purecov and qnt + win
-#==============================================================================
-# Insure++ compiler
-
-# no retry if insuring
-!! *            ins     RETRY_ON_SIGNAL =
-!! *            ins     RETRY_ON_EXIT   =
-
-!! unix-SunOS   ins     INSURE_PATH = /opt/parasoft/insure-6.1.4/bin.solaris
-!! unix-AIX     ins     INSURE_PATH = /opt/parasoft/insure-6.1.4/bin.aix5
-
-*               ins     INSURE_CMD  = false NO_INSURE
-!! unix-SunOS   ins     INSURE_CMD  = $(INSURE_PATH)/insure
-!! unix-AIX     ins     INSURE_CMD  = $(INSURE_PATH)/insure
-
-!! *            ins_mt  MT_LDFLAGS  =
-*               ins_mt  BDE_LDFLAGS = $(BDE_DYNAMIC) -mt $(BDE_STATIC)
-
-# prepend to existing compiler command
--- *            ins     CC      = $(INSURE_CMD) $(INSURE_OPTS) $(INSURE_USEROPTS)
--- *            ins     CXX     = $(INSURE_CMD) $(INSURE_OPTS) $(INSURE_USEROPTS)
-
-#==============================================================================
-# Rational - Shared Configuration
-
-#-# This will become a 'delete after use' option later, when pre-expansion  #-#
-#-# of options is supported in the options subsystem.                       #-#
-
-!! unix                 _   RATIONAL_TMP_DIR = /bb/data/tmp/$(USER)
-
-unix-*                  _   RATIONAL_WIN_OPT = -windows=no
-!! unix-*             win   RATIONAL_WIN_OPT =
-
-!! unix-*               _   RATIONAL_OPTS   = $(RATIONAL_WIN_OPT) -ignore-runtime-environment -recursion-depth-limit=40000 -thread-stack-change=0x3000 -max-threads=320 -chain-length=20 -cache-dir=$(RATIONAL_TMP_DIR) -always-use-cache-dir=yes -run-at-exit='echo %v %e %l %L %x %p' -enable-new-cache-scheme
-
-# in quanity config we can also delete the -chain-length=20 option as it does
-# not have meaning there.
-
-#==============================================================================
-# Purify compiler
-
-# no retry if purifying
-!! *            pure    RETRY_ON_SIGNAL =
-!! *            pure    RETRY_ON_EXIT   =
-
-!! *            pure    PURE_SET_TMPDIR = TMPDIR=$(TMPDIR)
-!! *            pure    SET_TMPDIR      =
-
-!! unix-SunOS   pure    PURIFYHOME  = /opt/swt/rational/releases/PurifyPlus.7.0.1.0-000.C/sun4_solaris2/bin
-!! unix-Linux   pure    PURIFYHOME  = /opt/swt/rational/releases/PurifyPlus.7.0.1.0-000.B/i386_linux2/bin
-
-!! *            pure    PURIFY_CMD  = false NO_PURIFY
-!! unix-SunOS   pure    PURIFY_CMD  = $(PURIFYHOME)/purify
-!! unix-Linux   pure    PURIFY_CMD  = $(PURIFYHOME)/purify
-
-# prepend to existing compiler command
--- *            pure    CC      = mkdir -p $(RATIONAL_TMP_DIR); $(PURE_SET_TMPDIR) $(PURIFY_CMD) $(RATIONAL_OPTS) $(PURIFY_USEROPTS)
--- *            pure    CXX     = mkdir -p $(RATIONAL_TMP_DIR); $(PURE_SET_TMPDIR) $(PURIFY_CMD) $(RATIONAL_OPTS) $(PURIFY_USEROPTS)
-
-#==============================================================================
-# Pure coverage compiler
-
-# no retry if purecovering
-!! *            purecov RETRY_ON_SIGNAL =
-!! *            purecov RETRY_ON_EXIT   =
-
-!! unix-SunOS   purecov PURECOVHOME = /opt/rational/releases/purecov.sol.2003a.06.13.ER.0149
-*               purecov PURECOV_CMD = false NO_PURECOV
-!! unix-SunOS   purecov PURECOV_CMD = $(PURECOVHOME)/purecov
-
-# prepend to existing compiler command
--- *            purecov CC      = $(PURECOV_CMD) $(RATIONAL_OPTS) $(PURECOV_USEROPTS)
--- *            purecov CXX     = $(PURECOV_CMD) $(RATIONAL_OPTS) $(PURECOV_USEROPTS)
-
-#==============================================================================
-# Quantify
-
-# no retry if quantifying
-!! *            qnt RETRY_ON_SIGNAL =
-!! *            qnt RETRY_ON_EXIT   =
-
-# quantify location
-!! unix-SunOS   qnt QUANTIFYHOME    = /opt/rational/releases/quantify.sol.2003a.06.13.ER.0149
-*               qnt QUANTIFY_CMD    = false NO_QUANTIFY
-!! unix-SunOS   qnt QUANTIFY_CMD    = $(QUANTIFYHOME)/quantify
-
-# prepend to existing compiler command
--- *            qnt CC      = $(QUANTIFY_CMD) $(RATIONAL_OPTS) $(QUANTIFY_USEROPTS)
--- *            qnt CXX     = $(QUANTIFY_CMD) $(RATIONAL_OPTS) $(QUANTIFY_USEROPTS)
-
-
-#==============================================================================
-# Integration
-#==============================================================================
-
-# This macro can be used by units of release that link against external .o
-*                       _       PLINK_ARCH      =
-!! unix-SunOS           _       PLINK_ARCH      = sundev1
-!! unix-AIX             _       PLINK_ARCH      = ibm
-!! unix-HP_UX           _       PLINK_ARCH      = hp
-!! unix-Linux           _       PLINK_ARCH      = linux
-
-!! *            _   PLINK_ARCH64        = $(PLINK_ARCH)$(BDE_WORD64)
-!! *            _   PLINK_ARCH_64       = $(PLINK_ARCH)$(BDE_WORD_64)
-!! *            _   PLINK_ARCH32_OR_64  = $(PLINK_ARCH)$(BDE_WORD_32_OR_64)
-!! *            _   PLINK_ARCH_32_OR_64 = $(PLINK_ARCH)_$(BDE_WORD_32_OR_64)
-
-!! *            _   BBSRC       = /bbsrc/proot/include
-!! *            _   BBSRCBBINC  = $(BBSRC)/bbinc
-!! *            _   DEPLOYED_INCLUDE   = $(BBSRC)/00deployed
-!! *            _   DEPBUILD_INCLUDE   = $(BBSRC)/00depbuild
-!! *            _   OFFLONLY_INCLUDE   = $(BBSRC)/00offlonly
-!! *            _   BBINC       = $(BBSRCBBINC)/bbinc
-!! *            _   CINCLUDE    = $(BBSRCBBINC)/Cinclude
-
-# Package-based build refroot computation
-unix-AIX-*         _ BDE_REFROOT_PLATFORM_NAME = aix6-powerpc
-unix-SunOS-*       _ BDE_REFROOT_PLATFORM_NAME = solaris10-sparc
-unix-Linux-*       _ BDE_REFROOT_PLATFORM_NAME = amd64
-
-unix-*             _ BDE_REFROOT_VER           = $(shell cat /bb/build/share/stage/etc/distribution.conf)
-unix-*             _ BDE_REFROOT               = /bb/build/share/packages/refroot/$(BDE_REFROOT_PLATFORM_NAME)
-unix-*             _ BDE_LIBREFROOT            = $(BDE_REFROOT)/$(BDE_REFROOT_VER)/bb/lib$(BDE_WORD64)
-unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/$(BDE_REFROOT_VER)/bb/include
 
 #==============================================================================
 # User Customisation

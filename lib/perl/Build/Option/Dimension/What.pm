@@ -5,7 +5,7 @@ use base 'Composite::Dimension';
 use Composite::Dimension;
 
 use Symbols qw[
-    OPTFILE_EXTENSION DEFFILE_EXTENSION CAPFILE_EXTENSION DEFAULT_OPTFILE
+    OPTFILE_EXTENSION DEFFILE_EXTENSION CAPFILE_EXTENSION DEFAULT_OPTFILE DEFAULT_OPTFILE_INTERNAL
 ];
 
 use BDE::Util::DependencyCache qw(getAllGroupDependencies);
@@ -63,6 +63,7 @@ sub match {
 
     # default.opts always matches
     return 1 if $what eq DEFAULT_OPTFILE;
+    return 1 if $what eq DEFAULT_OPTFILE_INTERNAL;
     return 0 if $dimensionvalue eq "default"; #<<< hardwired, fix later
 
     my ($base,$ext)=($what,"");
