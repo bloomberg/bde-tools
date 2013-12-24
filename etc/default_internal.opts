@@ -139,7 +139,7 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-SunOS-*-*-gcc-4     64  ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib/sparcv9:$(LD_LIBRARY_PATH)
 
 *                       _       ALLTEST = $(ALLTEST_PREFIX) $(RETRY_ALLTEST) $(BDE_BINDIR)all.pl $(ALLTEST_VERBOSE) -t $(TEST_TIMEOUT) $(ALLTEST_OPT)
-!! windows              _       ALLTEST = D:/bin/wrun.exe -A -a$@ $(ALLTEST_VERBOSE) -t 5 -m100 -M1024 -t $(TEST_TIMEOUT) $(ALLTEST_OPT)
+!! windows              _       ALLTEST = wrun.exe -A -a$@ $(ALLTEST_VERBOSE) -t 5 -m100 -M1024 -t $(TEST_TIMEOUT) $(ALLTEST_OPT)
 # maximize test iterations to 100
 *           _      ALLTEST_OPT = -m100
 *           _      ALLTEST_SERIAL  = -s
