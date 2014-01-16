@@ -99,41 +99,50 @@ if __name__ == "__main__":
     usage = \
 """ eval `bde_setwafenv.py [list|unset] -i <root_install_dir> [-c <compiler> -t <ufid>]`
 
-The bde_setwafenv.py script provides a convenient way to configure the BDE waf build tool in a way similar to
-bde_build.pl. It works by printing Bourne shell commands that sets environment variables understood by waf. Therefore,
-the output by the current Bourne shell (using 'eval') for them to be visible by waf.
+The bde_setwafenv.py script configures the BDE waf build tool in a way similar
+to bde_build.pl. It works by printing Bourne shell commands that sets
+environment variables understood by waf. Therefore, the output by the current
+Bourne shell (using 'eval') for them to be visible by waf.
 
-This script provides two options that work the same as bde_build: '-c' specifies the compiler and its version, and '-t'
-specifies the ufid.  This script uses the same meta-data files read by bde_build, 'default.opts' and
-'default_internal.opts', to ensure that the two options exhibit the same behavior. If '-c' is not specified, then the
-default compiler is used (you can find out what the default compiler is by using the 'list' command).  If '-t' is not
-specified, then the default ufid is used.
+This script provides two options that work the same as bde_build: '-c'
+specifies the compiler and its version, and '-t' specifies the ufid.  This
+script uses the same meta-data files read by bde_build, 'default.opts' and
+'default_internal.opts', to ensure that the two options exhibit the same
+behavior. If '-c' is not specified, then the default compiler is used (you can
+find out what the default compiler is by using the 'list' command).  If '-t' is
+not specified, then the default ufid is used.
 
-In addition, this script provides the '-i' option to specify the "root installation directory".  This directory is not
-the same as the '--prefix' option passed to the 'waf configure' command. Instead, it serves as the directory under which
-a sub-directory named according to the uplid (determined by the specified compiler and the current platform) is located.
-This sub-directory is the actual prefix location. This design decision is made so that multiple builds using different
-configurations may be installed to the same "root installation directory".
+In addition, this script provides the '-i' option to specify the "root
+installation directory".  This directory is not the same as the '--prefix'
+option passed to the 'waf configure' command. Instead, it serves as the
+directory under which a sub-directory named according to the uplid (determined
+by the specified compiler and the current platform) is located.  This
+sub-directory is the actual prefix location. This design decision is made so
+that multiple builds using different configurations may be installed to the
+same "root installation directory".
 
 This script also provides two optional  commands, 'list' and 'unset'.
 
-The 'list' command lists the available compilers based on the BDE meta-data. This list is useful when you don't know the
-available compilers on the current system. Note that this script does not verify that all compilers shown are available
-on the current system.  The list of compilers and their locations are maintained in the BDE meta-data, which is only
-applicable on certain development machines at Bloombery.
+The 'list' command lists the available compilers based on the BDE
+meta-data. This list is useful when you don't know the available compilers on
+the current system. Note that this script does not verify that all compilers
+shown are available on the current system.  The list of compilers and their
+locations are maintained in the BDE meta-data, which is only applicable on
+certain development machines at Bloomberg.
 
-The 'unset' command unsets all the environment variables that may be set by this script.
+The 'unset' command unsets all the environment variables that may be set by
+this script.
 
-If not using the optional commands, this script print the following Bourne shell statements to set environment variables
-(with sample values):
+If not using the optional commands, this script print the following Bourne
+shell statements to set environment variables (with sample values):
 
 export CXX="/opt/swt/install/gcc-4.7.2/bin/g++"
 export BDE_WAF_UFID="dbg_mt_exc"
 export BDE_WAF_UPLID="unix-linux-x86_64-2.6.18-gcc-4.7.2"
 export BDE_WAF_BUILD_DIR="unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc"
 export WAFLOCK=".lock-waf-unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc"
-export PREFIX="/home/che2/ws/bde-install/unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc"
-export PKG_CONFIG_PATH="/home/che2/ws/bde-install/unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc/lib/pkgconfig"
+export PREFIX="${HOME}/bde-install/unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc"
+export PKG_CONFIG_PATH="${HOME}/bde-install/unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc/lib/pkgconfig"
 
 /Explaination of Environment Variables
 /-------------------------------------
@@ -142,35 +151,44 @@ CXX               - the path to the C++ compiler
 
 BDE_WAF_UFID      - the ufid to use
 
-BDE_WAF_UPLID     - the uplid determined by bde_setewafenv. Note that waf will still generate a uplid based on the
-                    current platform and the compiler being used. If the generated uplid does not match BDE_WAF_UPLID,
-                    then waf will print a warning message and proceed to use 'BDE_WAF_UPLID' as the uplid.
+BDE_WAF_UPLID     - the uplid determined by bde_setewafenv. Note that waf will
+                    still generate a uplid based on the current platform and
+                    the compiler being used. If the generated uplid does not
+                    match BDE_WAF_UPLID, then waf will print a warning message
+                    and proceed to use 'BDE_WAF_UPLID' as the uplid.
 
-BDE_WAF_BUILD_DIR - the subdirectory under the source root in which build artifacts will be generated
+BDE_WAF_BUILD_DIR - the subdirectory under the source root in which build
+                    artifacts will be generated
 
-WAFLOCK           - the lock file used by waf, this file will be unique for each uplid-ufid combination
+WAFLOCK           - the lock file used by waf, this file will be unique for
+                    each uplid-ufid combination
 
 PREFIX            - the installation prefix
 
-PKG_CONFIG_PATH   - the path containing the .pc files for the installed libraries
+PKG_CONFIG_PATH   - the path containing the .pc files for the installed
+                    libraries
 
 /Usage Examples
 /--------------
 
 1) eval `bde_setwafenv.py -c gcc-4.7.2 -t dbg_mt_exc -i ~/mbig/bde-install
 
-Set up the environment variables so that the BDE waf build tool uses the gcc-4.7.2 compiler, builds with the ufid
-options 'dbg_mt_exc' to the ouput directory <uplid>-<ufid>, and install the library to a installation prefix of
+Set up the environment variables so that the BDE waf build tool uses the
+gcc-4.7.2 compiler, builds with the ufid options 'dbg_mt_exc' to the ouput
+directory <uplid>-<ufid>, and install the library to a installation prefix of
 ~/mbig/bde-install/<uplid>-<ufid>.
 
-On a paritcular unix system, the uplid will be 'unix-linux-x86_64-2.6.18-gcc-4.7.2', which will also be the name of the
-build output directory.
+On a paritcular unix system, the uplid will be
+'unix-linux-x86_64-2.6.18-gcc-4.7.2', which will also be the name of the build
+output directory.
 
 2) eval `bde_setwafenv.py`
 
-Set up the environment variables so that the BDE waf build tool uses the default compiler on the current system
-configured using the default ufid. use the default installation prefix, which typically will be /usr/local -- this is
-not recommened, because the default prefix is typically not writable by a regular user.
+Set up the environment variables so that the BDE waf build tool uses the
+default compiler on the current system configured using the default ufid. use
+the default installation prefix, which typically will be /usr/local -- this is
+not recommened, because the default prefix is typically not writable by a
+regular user.
 """
 
     parser = OptionParser(usage = usage)
