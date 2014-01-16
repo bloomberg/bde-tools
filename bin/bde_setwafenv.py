@@ -19,7 +19,8 @@ def _get_tools_path():
 
     bde_path = os.getenv('BDE_PATH')
     if not bde_path:
-        print >>sys.stderr, 'BDE waf customizations do not exist locally, and the BDE_PATH environment variable is not defined.'
+        print >>sys.stderr, 'BDE waf customizations do not exist locally, '\
+            'and the BDE_PATH environment variable is not defined.'
         sys.exit(1)
 
 
@@ -34,7 +35,7 @@ def _get_tools_path():
                 os.path.isdir(os.path.join(path, 'tools', 'waf', 'bde')):
             return os.path.join(path, 'tools', 'waf', 'bde');
 
-    print >>sys.stderr, 'The BDE_PATH environment variable is defined, but the location of BDE waf customizations, ' + \
+    print >>sys.stderr, 'The BDE_PATH environment variable is defined, but the location of BDE waf customizations, ' \
         'which should be in bsl, could not be found.'
     sys.exit(1)
 
@@ -101,9 +102,9 @@ if __name__ == "__main__":
 
 The bde_setwafenv.py script configures the BDE waf build tool in a way similar
 to bde_build.pl. It works by printing Bourne shell commands that sets
-environment variables understood by waf. Therefore, the output must be
-evaluated by the current Bourne shell (using 'eval') for them to be visible by
-waf.
+environment variables understood by waf to stdout. Therefore, the output must
+be executed by the current Bourne shell (using 'eval') for them to be visible
+by waf.
 
 This script provides two options that work the same as bde_build: '-c'
 specifies the compiler and its version, and '-t' specifies the ufid.  This
@@ -134,8 +135,8 @@ certain development machines at Bloomberg.
 The 'unset' command unsets all the environment variables that may be set by
 this script.
 
-If not using the optional commands, this script print the following Bourne
-shell statements to set environment variables (with sample values):
+If none of the optional commands are used, this script print the following
+Bourne shell statements to set environment variables (with sample values):
 
 export CXX="/opt/swt/install/gcc-4.7.2/bin/g++"
 export BDE_WAF_UFID="dbg_mt_exc"
@@ -175,20 +176,21 @@ PKG_CONFIG_PATH   - the path containing the .pc files for the installed
 1) eval `bde_setwafenv.py -c gcc-4.7.2 -t dbg_mt_exc -i ~/mbig/bde-install
 
 Set up the environment variables so that the BDE waf build tool uses the
-gcc-4.7.2 compiler, builds with the ufid options 'dbg_mt_exc' to the ouput
-directory <uplid>-<ufid>, and install the library to a installation prefix of
-~/mbig/bde-install/<uplid>-<ufid>.
+gcc-4.7.2 compiler, builds with the ufid options 'dbg_mt_exc' to the output
+directory '<uplid>-<ufid>', and install the libraries to a installation prefix
+of '~/mbig/bde-install/<uplid>-<ufid>'.
 
-On a paritcular unix system, the uplid will be
-'unix-linux-x86_64-2.6.18-gcc-4.7.2', which will also be the name of the build
+On a particular unix system, the uplid will be
+'unix-linux-x86_64-2.6.18-gcc-4.7.2', and
+'unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc' will be the name of the build
 output directory.
 
 2) eval `bde_setwafenv.py`
 
 Set up the environment variables so that the BDE waf build tool uses the
-default compiler on the current system configured using the default ufid. use
+default compiler on the current system configured using the default ufid. Use
 the default installation prefix, which typically will be /usr/local -- this is
-not recommened, because the default prefix is typically not writable by a
+not recommended, because the default prefix is typically not writable by a
 regular user.
 """
 
@@ -199,10 +201,7 @@ regular user.
     parser.add_option("-t", "--ufid", help="universal flag id")
     parser.add_option("-d", "--debug-opt-keys")
 
-    if '--help' in sys.argv:
-        # manually prints help and exists with a non-zero return code -- optparse by default exist with return code of 0
-        parser.print_help()
-        sys.exit(1)
+    (options, args) = parser.parse_args()
 
     if 'unset' in sys.argv:
         print 'unset CXX'
@@ -213,8 +212,6 @@ regular user.
         print 'unset PREFIX'
         print 'unset PKG_CONFIG_PATH'
         sys.exit(0)
-
-    (options, args) = parser.parse_args()
 
     CXX = None
     PREFIX = None
