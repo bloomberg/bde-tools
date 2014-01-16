@@ -101,8 +101,9 @@ if __name__ == "__main__":
 
 The bde_setwafenv.py script configures the BDE waf build tool in a way similar
 to bde_build.pl. It works by printing Bourne shell commands that sets
-environment variables understood by waf. Therefore, the output by the current
-Bourne shell (using 'eval') for them to be visible by waf.
+environment variables understood by waf. Therefore, the output must be
+evaluated by the current Bourne shell (using 'eval') for them to be visible by
+waf.
 
 This script provides two options that work the same as bde_build: '-c'
 specifies the compiler and its version, and '-t' specifies the ufid.  This
@@ -115,13 +116,13 @@ not specified, then the default ufid is used.
 In addition, this script provides the '-i' option to specify the "root
 installation directory".  This directory is not the same as the '--prefix'
 option passed to the 'waf configure' command. Instead, it serves as the
-directory under which a sub-directory named according to the uplid (determined
-by the specified compiler and the current platform) is located.  This
+directory under which a sub-directory, named according to the uplid (determined
+by the specified compiler and the current platform) and ufid, is located.  This
 sub-directory is the actual prefix location. This design decision is made so
 that multiple builds using different configurations may be installed to the
 same "root installation directory".
 
-This script also provides two optional  commands, 'list' and 'unset'.
+This script also provides two optional commands, 'list' and 'unset'.
 
 The 'list' command lists the available compilers based on the BDE
 meta-data. This list is useful when you don't know the available compilers on
