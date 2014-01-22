@@ -1,4 +1,4 @@
-bde-tools (2.20.0.0.bsl_freeze) unstable; urgency=low
+bde-tools (2.20.0.0.bsl.freeze) unstable; urgency=low
 
   * Bump changelog
   * cc8e854 [APPROVAL] origin/review/bsl-arm-atomics-default-opts-drqs-40879968 to master
