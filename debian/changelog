@@ -1,3 +1,27 @@
+bde-tools (2.20.0.0.bsl-freeze) unstable; urgency=low
+
+  * Bump changelog
+  * cc8e854 [APPROVAL] origin/review/bsl-arm-atomics-default-opts-drqs-40879968 to master
+  * 32acc76 [APPROVAL] add-bdl-to-nightlies to master
+  * ea9983a [APPROVAL] remotes/origin/review/drqs-29641821-bsl_migrate.pl to master
+  * f3aa789 [APPROVAL] remove-fixed-path-for-wrun to master
+  * 8292412 [APPROVAL] add-emacs-macros to master
+  * 397dc3c [APPROVAL] default-opts-clean-up-drqs-46746246 to master
+  * 00ef78f [APPROVAL] use-unlimited-memory-for-aix-optimizer-drqs-47278674 to master
+  * 4e9c39f Removed rules for visual studio version < 2008.
+  * 0299ae7 Moved rules used only by bde_build.pl to generate make files, rules for gcc version to default_internal.opts. Removed rules for sun cc pre version 5.9.
+  * bfad202 [APPROVAL] origin/review/bdeflag to master
+  * 9f7e995 [APPROVAL] igit/phalpern/sim_cpp11_features to master
+  * 3a0fd11 [APPROVAL] add-a_cdrdb-to-dev-builds to master
+  * cd971a4 [APPROVAL] add-compile_tests-target to master
+  * 99326d1 [APPROVAL] INCPATH_FLAG-drqs-39657739 to master
+  * a280af7 [APPROVAL] add-refroot-include-support-drqs-42818632 to master
+  * 0de1624 [APPROVAL] origin/review/winpaths-drqs42360181 to master
+  * 4f5a84a [APPROVAL] origin/review/bdeflag to master
+  * 36db92d add scripts to sync repos to igit and to generate debian/changelog file
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 21 Jan 2014 10:59:39 -0500
+
 bde-tools (2.18.0.1) unstable; urgency=low
 
   * Use correct compiler versions for AIX and Solaris
