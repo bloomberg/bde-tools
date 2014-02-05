@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BRANCH=$(git branch | awk '/\*/ { print $NF }');
+BRANCH=$(git branch --color=never | awk '/\*/ { print $NF }');
 
 PREFIX="dev/$USER"
 TRACKING=-u
