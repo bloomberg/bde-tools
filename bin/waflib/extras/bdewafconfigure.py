@@ -19,12 +19,14 @@ class BdeWafConfigure(object):
         self.group_opts = {}
         self.group_doc = {}
         self.group_cap = {}
+        self.group_ver = {}
 
         # Stores the subdirectory under which the stand-alone package is stored
         # e.g. { 'a_comdb2': 'adapters' }  = package 'a_comdb2' is stored under 'adapters'
         # meta-data of stand-alone packages are stored with package groups
         self.sa_package_locs = {}
 
+        self.soname_override = {}
 
         # Stores the subdirectory under which the package group is stored.  Almost all package groups currently reside
         # under 'groups', except for 'e_ipc', which resides under 'enterprise'.
@@ -44,6 +46,23 @@ class BdeWafConfigure(object):
         self.group_export_options = {}
         self.package_options = {}
         self.custom_envs = {}
+
+
+    def configure(self, uplid, ufid):
+        self.ctx.msg('os_type', uplid.uplid['os_type'])
+        self.ctx.msg('os_name', uplid.uplid['os_name'])
+        self.ctx.msg('cpu_type', uplid.uplid['cpu_type'])
+        self.ctx.msg('os_ver', uplid.uplid['os_ver'])
+        self.ctx.msg('comp_type', uplid.uplid['comp_type'])
+        self.ctx.msg('comp_ver', uplid.uplid['comp_ver'])
+        self.ctx.msg('uplid', uplid)
+        self.ctx.msg('ufid', '_'.join(sorted(list(ufid.ufid))))
+        self.ctx.msg('prefix', self.ctx.options.prefix)
+
+        self._load_metadata()
+        self._configure_external_libs(ufid)
+        self._configure_options(uplid)
+        self._save()
 
 
     REMOVE_COMMENT_RE = re.compile(r'^([^#]*)(#.*)?$')
@@ -91,6 +110,7 @@ class BdeWafConfigure(object):
 
 
     def _load_metadata(self):
+        self.ctx.start_msg('Loading BDE metadata')
 
         groups_nodes = [x.parent.parent for x in self.ctx.path.ant_glob('groups/*/group/*.mem')]
         enterprise_nodes = [x.parent.parent for x in self.ctx.path.ant_glob('enterprise/*/group/*.mem')]
@@ -153,22 +173,9 @@ class BdeWafConfigure(object):
                 if dums_file:
                     self.package_dums.append(package_node.name)
 
-
-    def configure(self, uplid, ufid):
-        self.ctx.msg('os_type', uplid.uplid['os_type'])
-        self.ctx.msg('os_name', uplid.uplid['os_name'])
-        self.ctx.msg('cpu_type', uplid.uplid['cpu_type'])
-        self.ctx.msg('os_ver', uplid.uplid['os_ver'])
-        self.ctx.msg('comp_type', uplid.uplid['comp_type'])
-        self.ctx.msg('comp_ver', uplid.uplid['comp_ver'])
-        self.ctx.msg('uplid', uplid)
-        self.ctx.msg('ufid', '_'.join(sorted(list(ufid.ufid))))
-        self.ctx.msg('prefix', self.ctx.options.prefix)
-
-        self.load_metadata()
-        self.configure_external_libs(ufid)
-        self.configure_options(uplid)
-        self.save()
+        self._load_group_vers()
+        self._load_soname_override()
+        self.ctx.end_msg('ok')
 
     def _levelize_group_dependencies(self, group):
         from collections import defaultdict
@@ -262,14 +269,7 @@ class BdeWafConfigure(object):
 
         return 'ok'
 
-
-    def load_metadata(self):
-        self.ctx.start_msg('Loading BDE metadata')
-        self._load_metadata()
-        self.ctx.end_msg('ok')
-
-
-    def configure_external_libs(self, ufid):
+    def _configure_external_libs(self, ufid):
         self.ufid = copy.deepcopy(ufid)
 
         pkgconfig_args = [ '--libs', '--cflags' ]
@@ -315,7 +315,7 @@ class BdeWafConfigure(object):
                     del self.ctx.env[dlp_key]
 
 
-    def configure_options(self, uplid):
+    def _configure_options(self, uplid):
 
         self.uplid = uplid
         self.option_mask = OptionMask(self.uplid, self.ufid)
@@ -479,8 +479,138 @@ class BdeWafConfigure(object):
         self.ctx.env[package + '_libpaths'] = libpaths
         self.ctx.env[package + '_linkflags'] = linkflags
 
+    def _load_group_vers(self):
+        # this is a big hack to get the version numbers for package groups and sa-packages
+        for group_name in self.export_groups:
+            self.group_ver[group_name] = self._get_group_ver(group_name)
+            if not self.group_ver[group_name][0]:
+                Logs.warn("Could not indentify the version number for '%s'." % group_name)
 
-    def save(self):
+        for group_name in self.export_groups:
+            if self.group_ver[group_name][0] == 'BDE_VERSION_MAJOR':
+                if 'bde' in self.group_ver:
+                    self.group_ver[group_name] = self.group_ver['bde']
+                else:
+                    self.group_ver[group_name] = self.group_ver['bsi']
+
+        print self.group_ver
+
+    def _get_group_ver(self, group_name):
+
+        if group_name in ('a_bdema',):
+            return ('BDE_VERSION_MAJOR', 'BDE_VERSION_MINOR', 'BDE_VERSION_PATCH')
+        elif group_name in ('bap', 'zde', 'e_ipc'):
+            return self._get_group_ver2(group_name)
+        elif group_name.startswith('a_') and not group_name in ('a_xercesc', 'a_bteso'):
+            return self._get_group_ver3(group_name)
+        else:
+            return self._get_group_ver1(group_name)
+
+
+    def _get_group_ver1(self, group_name):
+        if group_name not in self.sa_package_locs:
+            group_node = self.ctx.path.make_node([self.group_locs[group_name], group_name])
+            versiontag_node = group_node.find_node('%sscm/%sscm_versiontag.h' % (group_name, group_name))
+            if group_name == 'bde':
+                version_node = group_node.find_node('%sscm/%sscm_patchversion.h' % (group_name, group_name))
+            else:
+                version_node = group_node.find_node('%sscm/%sscm_version.cpp' % (group_name, group_name))
+        else:
+            package_node = self.ctx.path.make_node([self.sa_package_locs[group_name], group_name])
+            versiontag_node = package_node.find_node('%s_versiontag.h' % group_name)
+            version_node = package_node.find_node('%s_version.cpp' % group_name)
+
+        versiontag_source = versiontag_node.read()
+        version_source = version_node.read()
+        major_ver_re = re.compile(r'''^\s*#define\s+%s_VERSION_MAJOR\s+(\S+)\s*$''' % group_name.upper(),
+                                  re.MULTILINE)
+        minor_ver_re = re.compile(r'''^\s*#define\s+%s_VERSION_MINOR\s+(\S+)\s*$''' % group_name.upper(),
+                                  re.MULTILINE)
+
+        if group_name == 'bde':
+            patch_ver_re = re.compile(r'''^\s*#define\s+%sSCM_PATCHVERSION_PATCH\s+(\S+)\s*$''' % group_name.upper(),
+                                      re.MULTILINE)
+        else:
+            patch_ver_re = re.compile(r'''^\s*#define\s+%s_VERSION_PATCH\s+(\S+)\s*$''' % group_name.upper(),
+                                      re.MULTILINE)
+
+        (major_ver, minor_ver, patch_ver) = (None, None, None)
+
+        m = major_ver_re.search(versiontag_source)
+        if m:
+            major_ver = m.group(1)
+
+        m = minor_ver_re.search(versiontag_source)
+        if m:
+            minor_ver = m.group(1)
+
+        m = patch_ver_re.search(version_source)
+        if m:
+            patch_ver = m.group(1)
+
+        return (major_ver, minor_ver, patch_ver)
+
+
+    def _get_group_ver2(self, group_name):
+
+        if not group_name in self.sa_package_locs:
+            group_node = self.ctx.path.make_node([self.group_locs[group_name], group_name])
+            version_node = group_node.find_node('%sscm/%sscm_version.cpp' % (group_name, group_name))
+            if not version_node:
+                version_node = group_node.find_node('%sscm/%sscm_version.c' % (group_name, group_name))
+        else:
+            package_node = self.ctx.path.make_node([self.sa_package_locs[group_name], group_name])
+            version_node = package_node.find_node('%s_version.cpp' % group_name)
+
+        source = version_node.read()
+
+        if group_name.startswith('e_'):
+            type_name = 'ENT'
+            lib_name = group_name[2:].upper()
+        else:
+            type_name = 'LIB'
+            lib_name = group_name.upper()
+
+        exp = r'''BLP_%s_BDE_%s_(?P<major>\d+)\.(?P<minor>\d+).(?P<patch>\d+)''' % (type_name, lib_name)
+        version_re = re.compile(exp)
+
+        (major_ver, minor_ver, patch_ver) = (None, None, None)
+
+        m = version_re.search(source)
+        if m:
+            major_ver = m.group('major')
+            minor_ver = m.group('minor')
+            patch_ver = m.group('patch')
+
+        return (major_ver, minor_ver, patch_ver)
+
+
+    def _get_group_ver3(self, group_name):
+        package_node = self.ctx.path.make_node([self.sa_package_locs[group_name], group_name])
+        version_node = package_node.find_node('%s_version.cpp' % group_name)
+
+        source = version_node.read()
+        exp = r'''(?P<major>\d+)\.(?P<minor>\d+).(?P<patch>\d+)'''
+        version_re = re.compile(exp, re.MULTILINE)
+
+        (major_ver, minor_ver, patch_ver) = (None, None, None)
+
+        m = version_re.search(source)
+        if m:
+            major_ver = m.group('major')
+            minor_ver = m.group('minor')
+            patch_ver = m.group('patch')
+
+        return (major_ver, minor_ver, patch_ver)
+
+
+    def _load_soname_override(self):
+        for group_name in self.export_groups:
+            soname = os.environ.get('BDE_%s_SONAME' % group_name.upper())
+            if soname:
+                self.soname_override[group_name] = soname
+
+    def _save(self):
         self.ctx.start_msg('Saving configuration')
         self.ctx.env['ufid'] = self.option_mask.ufid.ufid
 
@@ -523,8 +653,11 @@ class BdeWafConfigure(object):
         self.ctx.env['group_dep'] = self.group_dep
         self.ctx.env['group_mem'] = self.group_mem
         self.ctx.env['group_doc'] = self.group_doc
+        self.ctx.env['group_ver'] = self.group_ver
 
         self.ctx.env['sa_package_locs'] = self.sa_package_locs
+        self.ctx.env['soname_override'] = self.soname_override
+
         self.ctx.env['group_locs'] = self.group_locs
 
         self.ctx.env['package_dep'] = self.package_dep
@@ -542,6 +675,7 @@ class BdeWafConfigure(object):
             self._save_package_options(p)
 
         self.ctx.end_msg('ok')
+
 
 # ----------------------------------------------------------------------------
 # Copyright (C) 2013-2014 Bloomberg Finance L.P.

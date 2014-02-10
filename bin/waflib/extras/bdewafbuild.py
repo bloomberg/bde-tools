@@ -18,9 +18,12 @@ class BdeWafBuild(object):
         self.group_dep = self.ctx.env['group_dep']
         self.group_mem = self.ctx.env['group_mem']
         self.group_doc = self.ctx.env['group_doc']
+        self.group_ver = self.ctx.env['group_ver']
+
         self.export_groups = self.ctx.env['export_groups']
 
         self.sa_package_locs = self.ctx.env['sa_package_locs']
+        self.soname_override = self.ctx.env['soname_override']
         self.group_locs = self.ctx.env['group_locs']
 
         self.package_dep = self.ctx.env['package_dep']
@@ -264,6 +267,8 @@ class BdeWafBuild(object):
                  uselib          = external_deps,
                  install_path    = install_path,
                  export_includes = packages,
+                 bdevnum         = '.'.join(self.group_ver[group_name]) if group_name in self.group_ver else None,
+                 bdesoname       = self.soname_override[group_name] if group_name in self.soname_override else None
                  )
 
         self.ctx(name       = group_name,
@@ -281,6 +286,7 @@ class BdeWafBuild(object):
         self.ctx(name       = group_name + '.pc',
                  features   = ['bdepc'],
                  path       = vc_node,
+                 version    = '.'.join(self.group_ver[group_name]),
                  target     = group_name + '.pc',
                  doc        = self.group_doc[group_name],
                  dep        = self.group_dep[group_name],
@@ -339,6 +345,63 @@ def post_the_other(self):
     for name in self.to_list(deps):
         other = self.bld.get_tgen_by_name(name)
         other.post()
+
+
+@feature('cshlib', 'cxxshlib', 'dshlib', 'fcshlib', 'bdevnum')
+@after_method('apply_link', 'propagate_uselib_vars')
+def apply_bdevnum(self):
+    if not getattr(self, 'bdevnum', '') or os.name != 'posix' or self.env.DEST_BINFMT not in ('elf', 'mac-o'):
+        return
+
+    link = self.link_task
+    nums = self.bdevnum.split('.')
+    node = link.outputs[0]
+
+    libname = node.name
+    if libname.endswith('.dylib'):
+        name3 = libname.replace('.dylib', '.%s.dylib' % self.bdevnum)
+        name2 = libname.replace('.dylib', '.%s.dylib' % (nums[0] + '.' + nums[1]))
+    else:
+        name3 = libname + '.' + self.bdevnum
+        name2 = libname + '.' + nums[0] + '.' + nums[1]
+
+    # add the so name for the ld linker - to disable, just unset env.SONAME_ST
+    if self.env.SONAME_ST:
+        if getattr(self, 'bdesoname', None):
+            v = self.env.SONAME_ST % self.bdesoname
+        else:
+            v = self.env.SONAME_ST % name2
+        self.env.append_value('LINKFLAGS', v.split())
+
+    # the following task is just to enable execution from the build dir :-/
+
+    if self.env.DEST_OS != 'openbsd':
+        self.create_task('vnum', node, [node.parent.find_or_declare(name2), node.parent.find_or_declare(name3)])
+
+    if getattr(self, 'install_task', None):
+        self.install_task.hasrun = Task.SKIP_ME
+        bld = self.bld
+        path = self.install_task.dest
+        if self.env.DEST_OS == 'openbsd':
+            libname = self.link_task.outputs[0].name
+            t1 = bld.install_as('%s%s%s' % (path, os.sep, libname), node, env=self.env, chmod=self.link_task.chmod)
+            self.vnum_install_task = (t1,)
+        else:
+            t1 = bld.install_as(path + os.sep + name3, node, env=self.env, chmod=self.link_task.chmod)
+            t2 = bld.symlink_as(path + os.sep + name2, name3)
+            t3 = bld.symlink_as(path + os.sep + libname, name3)
+            self.vnum_install_task = (t1, t2, t3)
+
+    if '-dynamiclib' in self.env['LINKFLAGS']:
+        # this requires after(propagate_uselib_vars)
+        try:
+            inst_to = self.install_path
+        except AttributeError:
+            inst_to = self.link_task.__class__.inst_to
+        if inst_to:
+            p = Utils.subst_vars(inst_to, self.env)
+            path = os.path.join(p, self.link_task.outputs[0].name)
+            self.env.append_value('LINKFLAGS', ['-install_name', path])
 
 
 @feature('cstlib', 'cshlib', 'cxxstlib', 'cxxshlib', 'fcstlib', 'fcshlib')
@@ -493,12 +556,7 @@ Cflags: -I${includedir} %s
     def run(self):
         bld = self.generator.bld
         group_name = self.generator.group_name
-
-        # if task.inputs and 'cxxstlib' in self.libtype_features:
-        #     version = self.ctx.cmd_and_log(task.inputs[0].abspath()).strip()
-        # TODO: have to use LD_LIBRARY_PATH for linking against 'so' files
-        # else:
-        version = ''
+        version = self.generator.version
 
         libs = [bld.env['LIB_ST'] % l for l in bld.env[group_name + '_export_libs']]
 

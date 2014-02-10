@@ -15,7 +15,7 @@ def options(ctx):
     if (sys.hexversion < 0x2060000 or 0x3000000 <= sys.hexversion ):
         ctx.fatal('Pyhon 2.6 or Python 2.7 is required to build BDE using waf.')
 
-    ctx.load('bdeunittest', tooldir = os.path.join('tools', 'waf', 'bde'))
+    ctx.load('bdeunittest')
 
     from waflib.Tools.compiler_c import c_compiler
     c_compiler['win32'] = ['msvc']
@@ -36,7 +36,7 @@ def options(ctx):
 
 
 def configure(ctx):
-    ctx.load('bdeunittest', tooldir = os.path.join('tools', 'waf', 'bde'))
+    ctx.load('bdeunittest')
 
     ufid = _make_ufid_from_options(ctx.options)
 
