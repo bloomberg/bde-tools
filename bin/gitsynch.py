@@ -127,11 +127,11 @@ def main():
         for path in paths:
             status = getStatus(path)
             if len(status):
-                print "{0:30}: branch {1:20}".format(path, initialBranch[path])
+                print "{0:30}: branch {1:30}".format(path, initialBranch[path])
                 for line in status.rstrip('\n').split('\n'):
                     print "#\t{0}".format(line)
             else:
-                print "{0:30}: branch {1:20} ** STATUS IS CLEAN **".\
+                print "{0:30}: branch {1:30} ** STATUS IS CLEAN **".\
                                               format(path, initialBranch[path])
             sys.stdout.flush()
 
@@ -141,11 +141,11 @@ def main():
         for path in paths:
             status = getDiff(path)
             if len(status):
-                print "{0:30}: branch {1:20}".format(path, initialBranch[path])
+                print "####### {0:30}: branch {1:30}".format(path, initialBranch[path])
                 for line in status.rstrip('\n').split('\n'):
-                    print "#\t{0}".format(line)
+                    print line
             else:
-                print "{0:30}: branch {1:20} ** DIFF IS CLEAN **".\
+                print "{0:30}: branch {1:30} ** DIFF IS CLEAN **".\
                                               format(path, initialBranch[path])
             sys.stdout.flush()
 
