@@ -1,6 +1,5 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
-VERSION=$(shell dpkg-parsechangelog | grep '^Version:' | cut -c 10-)
 
 clean:
 	rm -rf debian/tmp
@@ -9,15 +8,15 @@ clean:
 	rm -f debian/files
 
 debian/build-stamp:
-	touch debian/build-stamp
-	mkdir -p debian/tmp/bbshr/bde/bde-tools
-	cp -r bin/ doc/ etc/ expected-test-output/ lib/ scripts/ src/ debian/tmp/bbshr/bde/bde-tools
+	mkdir -p debian/tmp/opt/bb/etc/bde-tools/
+	cp etc/* debian/tmp/opt/bb/etc/bde-tools/
+	touch $@
 
 debian/binary-stamp: debian/build-stamp
-	touch debian/binary-stamp
 	mkdir -p debian/tmp/DEBIAN
 	dpkg-gencontrol
-	dpkg-deb -b debian/tmp ../bde-tools_$(VERSION)_all.deb
+	dpkg-deb -b debian/tmp ../
+	touch $@
 
 build: build-arch build-indep
 
