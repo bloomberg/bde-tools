@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+include /bbsrc/build-base/build-base.mk
+
 clean:
 	rm -rf debian/tmp
 	rm -f debian/build-stamp
@@ -8,8 +10,8 @@ clean:
 	rm -f debian/files
 
 debian/build-stamp:
-	mkdir -p debian/tmp/opt/bb/etc/bde-tools/
-	cp etc/* debian/tmp/opt/bb/etc/bde-tools/
+	mkdir -p debian/tmp/$(PREFIX)/etc/bde-tools/
+	cp etc/* debian/tmp/$(PREFIX)/etc/bde-tools/
 	touch $@
 
 debian/binary-stamp: debian/build-stamp

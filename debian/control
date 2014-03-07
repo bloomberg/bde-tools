@@ -2,6 +2,7 @@ Source: bde-tools
 Section: unknown
 Priority: extra
 Maintainer: Daniel Ruoso <druoso@bloomberg.net>
+Build-Depends: build-base
 Standards-Version: 3.8.4
 
 Package: bde-tools
