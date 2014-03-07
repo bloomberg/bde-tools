@@ -1,3 +1,10 @@
+bde-tools (2.20.0.2) unstable; urgency=low
+
+  * Bump changelog
+  * 87b978e [APPROVAL] origin/dev/druoso/minimalist_install to releases/2.20.x
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 7 Mar 2014 14:56:50 -0500
+
 bde-tools (2.20.0.1) unstable; urgency=low
 
   * Bump changelog
