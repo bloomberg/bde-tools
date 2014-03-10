@@ -298,7 +298,10 @@ class BdeWafBuild(object):
 
 
     def build(self):
-        print 'Waf: using %d jobs (change with -j)' % self.ctx.options.jobs
+        for klass in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
+                      'c', 'cprogram', 'cshlib', 'cstlib'):
+            klass = type('cxx', (Task.classes['cxx'],), {})
+            setattr(klass, 'exec_command', custom_exec_command)
 
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.custom_envs)
@@ -474,6 +477,37 @@ def propagate_uselib_vars(self):
 from waflib.TaskGen import task_gen
 from waflib.Tools import ccroot
 setattr(task_gen, ccroot.propagate_uselib_vars.__name__, propagate_uselib_vars)
+
+
+def custom_exec_command(task, cmd, **kw):
+    bld = task.generator.bld
+    kw['shell'] = isinstance(cmd, str)
+    kw['cwd'] = bld.variant_dir
+    Logs.debug('runner: %r' % cmd)
+    Logs.debug('runner_env: kw=%s' % kw)
+
+    if bld.logger:
+        bld.logger.info(cmd)
+
+    if 'stdout' not in kw:
+        kw['stdout'] = Utils.subprocess.PIPE
+    if 'stderr' not in kw:
+        kw['stderr'] = Utils.subprocess.PIPE
+
+    try:
+        p = Utils.subprocess.Popen(cmd, **kw)
+        (out, err) = p.communicate()
+        ret = p.returncode
+    except Exception as e:
+        raise Errors.WafError('Execution failure: %s' % str(e), ex=e)
+
+    if out or err:
+        msg = '' + out + err
+        src_str = ' '.join([a.nice_path() for a in task.inputs])
+        status_str = 'WARNING' if ret == 0 else 'ERROR'
+        sys.stdout.write('[%s (%s)] <<<<<<<<<<\n%s>>>>>>>>>>\n' % (src_str, status_str, msg))
+
+    return ret
 
 
 from waflib.Build import BuildContext

@@ -86,6 +86,9 @@ def build(ctx):
         ctx.projects_dir = ctx.srcnode.make_node('.depproj')
         ctx.projects_dir.mkdir()
 
+    if ctx.cmd == 'build':
+        print 'Waf: using %d jobs (change with -j)' % ctx.options.jobs
+
     bde_build = BdeWafBuild(ctx)
     bde_build.build()
 
