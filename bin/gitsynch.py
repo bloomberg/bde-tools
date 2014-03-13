@@ -62,6 +62,16 @@ def checkoutBranchAndPull(path, branch, forceCheckout):
     subprocess.check_call(["git", "checkout", branch]);
     subprocess.check_call(["git", "pull", "--ff-only"])
 
+def gitFetch(path):
+    """
+    Does a fetch for the specified 'path'.
+    """
+    os.chdir(path)
+    try:
+        subprocess.check_call(["git", "fetch"])
+    except subprocess.CalledProcessError:
+        print "##### {0} repo fetch failed - aborting".format(path)
+        raise
 
 USAGE = "Usage: %prog [options] [path]*"
 DESCRIPTION = """
@@ -94,6 +104,12 @@ def main():
                       dest="force",
                       default=False ,
                       help="force a checkout (even with uncommitted changes)")
+    parser.add_option("-F",
+                      "--fetch",
+                      action="store_true",
+                      dest="fetch",
+                      default=False ,
+                      help="Fetch updates for all repos (without merging)")
     parser.add_option("-s",
                       "--status",
                       action="store_true",
@@ -122,6 +138,15 @@ def main():
             print "{0:30}: {1}".format(path, branch.rstrip())
             sys.stdout.flush()
         initialBranch[path]=branch
+
+    if options.fetch:
+        for path in paths:
+            print "\nFetching {0}\n=================================".format(path)
+            sys.stdout.flush()
+            gitFetch(path)
+            sys.stdout.flush()
+
+        exit(0)
 
     if options.status:
         for path in paths:
