@@ -167,7 +167,7 @@ sub slimSrcLine ($;$) {
         # Found start of an "#if" block.
         my $condition = $1;
         my $comment = $2;
-        if ($condition =~ /\s*0\s*/ox) {
+        if ($condition =~ /^\s*\b0\b\s*$/ox) {
             # Found start of an "#if 0" block.  Remove everything up until
             # the optional comment.
             $$line = $comment;
