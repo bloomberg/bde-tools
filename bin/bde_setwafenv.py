@@ -61,9 +61,8 @@ class ctx():
         (out, err) = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE).communicate()
         return out
 
-def _make_uplid_from_context(compiler_name, compiler_version):
+def determine_os_info():
     platform = _unversioned_sys_platform()
-
 
     from bdeoptions import get_linux_osinfo, get_aix_osinfo, get_sunos_osinfo, get_darwin_osinfo, get_windows_osinfo
     osinfo_getters = {
@@ -87,6 +86,12 @@ def _make_uplid_from_context(compiler_name, compiler_version):
     elif platform == 'darwin':
         cpu_type = os.uname()[4]
 
+    return (os_type, os_name, cpu_type, os_ver)
+
+
+def _make_uplid_from_context(compiler_name, compiler_version):
+    (os_type, os_name, cpu_type, os_ver) = determine_os_info()
+
     uplid = Uplid(os_type,
                   os_name,
                   cpu_type,
@@ -95,6 +100,30 @@ def _make_uplid_from_context(compiler_name, compiler_version):
                   compiler_version)
     return uplid
 
+def determine_installation_location(prefix):
+    """
+    Return the installation location for BDE from the specified 'prefix', or
+    None if a location cannot be determined.  If 'prefix' matches the pattern
+    of a PREFIX environment variable emitted by 'bde_setwafenv.py' -- i.e.,
+    it contains this cpu-architectures uplid as part of the last elemenet of a
+    directory location -- return the installation directory previously used
+    by 'bde_setwafenv.py'.
+    
+    Args:
+        prefix: a string that contains a PREFIX environment variable
+    """
+    if (prefix is None):
+        return None
+    
+    (os_type, os_name, cpu_type, os_ver) = determine_os_info()
+
+    partialUplid = os_type + '-' + os_name + '-' + cpu_type + '-' + os_ver
+   
+    pattern = "(.*/){0}(?:\-[\w\.]*)*".format(partialUplid)
+    match = re.match(pattern, prefix)
+    if (match):
+        return match.group(1)
+    return None
 
 if __name__ == "__main__":
     usage = \
@@ -308,7 +337,12 @@ regular user.
         print 'export BDE_WAF_BUILD_DIR="%s"' % id_str
         print 'export WAFLOCK=".lock-waf-%s"' % id_str
 
-        if options.install_dir:
-            PREFIX = os.path.join(options.install_dir, id_str)
+        if (options.install_dir is not None):
+            install_dir = options.install_dir
+        else:
+            install_dir = determine_installation_location(
+                                                      os.environ.get("PREFIX"))
+        if (install_dir):
+            PREFIX = os.path.join(install_dir, id_str)
             print 'export PREFIX="%s"' % PREFIX
             print 'export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX
