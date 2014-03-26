@@ -167,9 +167,12 @@ sub slimSrcLine ($;$) {
         # Found start of an "#if" block.
         my $condition = $1;
         my $comment = $2;
-        if ($condition =~ /^\s*\b0\b\s*$/ox) {
+        if ($condition =~ /^\s*\b0\b/ox) {
             # Found start of an "#if 0" block.  Remove everything up until
-            # the optional comment.
+            # the optional comment.  Allow for "#if"'s like
+            #       #if 0 || defined(XML2)
+            # (from baexml_schemaparser.t.cpp) to be treated as "#if 0" blocks
+            # as well.
             $$line = $comment;
             beginIfBlk(1);
         }
