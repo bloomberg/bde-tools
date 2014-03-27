@@ -62,6 +62,9 @@ class ctx():
         return out
 
 def determine_os_info():
+    """
+    Return a tuple containing the (OS type, OS name, CPU type, OS version).
+    """
     platform = _unversioned_sys_platform()
 
     from bdeoptions import get_linux_osinfo, get_aix_osinfo, get_sunos_osinfo, get_darwin_osinfo, get_windows_osinfo
@@ -150,7 +153,10 @@ directory under which a sub-directory, named according to the uplid (determined
 by the specified compiler and the current platform) and ufid, is located.  This
 sub-directory is the actual prefix location. This design decision is made so
 that multiple builds using different configurations may be installed to the
-same "root installation directory".
+same "root installation directory".  If no installation directory is supplied,
+but the PREFIX environment variable value matches the pattern produced by this
+script, then the installation directory previously configured by this script
+is used.
 
 This script also provides two optional commands, 'list' and 'unset'.
 
