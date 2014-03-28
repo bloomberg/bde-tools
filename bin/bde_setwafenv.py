@@ -61,7 +61,7 @@ class ctx():
         (out, err) = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE).communicate()
         return out
 
-def determine_os_info():
+def _determine_os_info():
     """
     Return a tuple containing the (OS type, OS name, CPU type, OS version).
     """
@@ -93,7 +93,7 @@ def determine_os_info():
 
 
 def _make_uplid_from_context(compiler_name, compiler_version):
-    (os_type, os_name, cpu_type, os_ver) = determine_os_info()
+    (os_type, os_name, cpu_type, os_ver) = _determine_os_info()
 
     uplid = Uplid(os_type,
                   os_name,
@@ -103,12 +103,13 @@ def _make_uplid_from_context(compiler_name, compiler_version):
                   compiler_version)
     return uplid
 
-def determine_installation_location(prefix):
+def _determine_installation_location(prefix, uplid):
     """
-    Return the installation location for BDE from the specified 'prefix', or
-    None if a location cannot be determined.  If 'prefix' matches the pattern
-    of a PREFIX environment variable emitted by 'bde_setwafenv.py' -- i.e.,
-    it contains this cpu-architectures uplid as part of the last elemenet of a
+    Return the installation location for BDE that has been encoded in the
+    specified 'prefix' for the specified 'uplid', or None if a location cannot
+    be determined.  If 'prefix' matches the pattern of a PREFIX environment
+    variable emitted by 'bde_setwafenv.py' -- i.e., it contains this
+    cpu-architectures portions of 'uplid' as part of the last element of a
     directory location -- return the installation directory previously used
     by 'bde_setwafenv.py'.
     
@@ -117,9 +118,13 @@ def determine_installation_location(prefix):
     """
     if (prefix is None):
         return None
-    
-    (os_type, os_name, cpu_type, os_ver) = determine_os_info()
 
+    (os_type, os_name, cpu_type, os_ver) = (uplid.uplid['os_type'],
+                                            uplid.uplid['os_name'],
+                                            uplid.uplid['cpu_type'],
+                                            uplid.uplid['os_ver'])
+
+	
     partialUplid = os_type + '-' + os_name + '-' + cpu_type + '-' + os_ver
    
     pattern = "(.*/){0}(?:\-[\w\.]*)*".format(partialUplid)
@@ -346,9 +351,10 @@ regular user.
         if (options.install_dir is not None):
             install_dir = options.install_dir
         else:
-            install_dir = determine_installation_location(
-                                                      os.environ.get("PREFIX"))
+            install_dir = _determine_installation_location(
+                                             os.environ.get("PREFIX"), uplid)
         if (install_dir):
+            print >>sys.stderr, "using install directory: %s" % install_dir
             PREFIX = os.path.join(install_dir, id_str)
             print 'export PREFIX="%s"' % PREFIX
             print 'export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX
