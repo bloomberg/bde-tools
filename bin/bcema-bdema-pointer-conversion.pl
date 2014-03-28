@@ -75,6 +75,32 @@ RESULT:
 my @bslModeConversions = (
     sub {
         my $count = 0;
+        my $replacement="bsl::dynamic_pointer_cast";
+        my $replacementLength=length($replacement);
+
+        $count++
+            foreach
+                s!BloombergLP\s*::\s*bcema_SharedPtrUtil\s*::\s*dynamicCast
+                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
+
+        return $count;
+     },
+
+    sub {
+        my $count = 0;
+        my $replacement="bsl::dynamic_pointer_cast";
+        my $replacementLength=length($replacement);
+
+        $count++
+            foreach
+                s!bcema_SharedPtrUtil\s*::\s*dynamicCast
+                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
+
+        return $count;
+     },
+
+    sub {
+        my $count = 0;
         my $replacement="BloombergLP::bslma::ManagedPtr";
         my $replacementLength=length($replacement);
 
