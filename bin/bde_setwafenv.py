@@ -61,9 +61,11 @@ class ctx():
         (out, err) = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE).communicate()
         return out
 
-def _make_uplid_from_context(compiler_name, compiler_version):
+def _determine_os_info():
+    """
+    Return a tuple containing the (OS type, OS name, CPU type, OS version).
+    """
     platform = _unversioned_sys_platform()
-
 
     from bdeoptions import get_linux_osinfo, get_aix_osinfo, get_sunos_osinfo, get_darwin_osinfo, get_windows_osinfo
     osinfo_getters = {
@@ -87,6 +89,12 @@ def _make_uplid_from_context(compiler_name, compiler_version):
     elif platform == 'darwin':
         cpu_type = os.uname()[4]
 
+    return (os_type, os_name, cpu_type, os_ver)
+
+
+def _make_uplid_from_context(compiler_name, compiler_version):
+    (os_type, os_name, cpu_type, os_ver) = _determine_os_info()
+
     uplid = Uplid(os_type,
                   os_name,
                   cpu_type,
@@ -95,6 +103,35 @@ def _make_uplid_from_context(compiler_name, compiler_version):
                   compiler_version)
     return uplid
 
+def _determine_installation_location(prefix, uplid):
+    """
+    Return the installation location for BDE that has been encoded in the
+    specified 'prefix' for the specified 'uplid', or None if a location cannot
+    be determined.  If 'prefix' matches the pattern of a PREFIX environment
+    variable emitted by 'bde_setwafenv.py' -- i.e., it contains this
+    cpu-architectures portions of 'uplid' as part of the last element of a
+    directory location -- return the installation directory previously used
+    by 'bde_setwafenv.py'.
+    
+    Args:
+        prefix: a string that contains a PREFIX environment variable
+    """
+    if (prefix is None):
+        return None
+
+    (os_type, os_name, cpu_type, os_ver) = (uplid.uplid['os_type'],
+                                            uplid.uplid['os_name'],
+                                            uplid.uplid['cpu_type'],
+                                            uplid.uplid['os_ver'])
+
+	
+    partialUplid = os_type + '-' + os_name + '-' + cpu_type + '-' + os_ver
+   
+    pattern = "(.*/){0}(?:\-[\w\.]*)*".format(partialUplid)
+    match = re.match(pattern, prefix)
+    if (match):
+        return match.group(1)
+    return None
 
 if __name__ == "__main__":
     usage = \
@@ -121,7 +158,10 @@ directory under which a sub-directory, named according to the uplid (determined
 by the specified compiler and the current platform) and ufid, is located.  This
 sub-directory is the actual prefix location. This design decision is made so
 that multiple builds using different configurations may be installed to the
-same "root installation directory".
+same "root installation directory".  If no installation directory is supplied,
+but the PREFIX environment variable value matches the pattern produced by this
+script, then the installation directory previously configured by this script
+is used.
 
 This script also provides two optional commands, 'list' and 'unset'.
 
@@ -308,7 +348,13 @@ regular user.
         print 'export BDE_WAF_BUILD_DIR="%s"' % id_str
         print 'export WAFLOCK=".lock-waf-%s"' % id_str
 
-        if options.install_dir:
-            PREFIX = os.path.join(options.install_dir, id_str)
+        if (options.install_dir is not None):
+            install_dir = options.install_dir
+        else:
+            install_dir = _determine_installation_location(
+                                             os.environ.get("PREFIX"), uplid)
+        if (install_dir):
+            print >>sys.stderr, "using install directory: %s" % install_dir
+            PREFIX = os.path.join(install_dir, id_str)
             print 'export PREFIX="%s"' % PREFIX
             print 'export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX
