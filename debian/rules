@@ -12,6 +12,8 @@ clean:
 debian/build-stamp:
 	mkdir -p debian/tmp/$(PREFIX)/etc/bde-tools/
 	cp etc/* debian/tmp/$(PREFIX)/etc/bde-tools/
+	mkdir -p debian/tmp/$(PREFIX)/libexec/bde-tools/
+	cp bin/bde_setwafenv.py debian/tmp/$(PREFIX)/libexc/bde-tools/
 	touch $@
 
 debian/binary-stamp: debian/build-stamp
