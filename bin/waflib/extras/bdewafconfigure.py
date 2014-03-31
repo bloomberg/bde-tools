@@ -46,6 +46,7 @@ class BdeWafConfigure(object):
         self.group_export_options = {}
         self.package_options = {}
         self.custom_envs = {}
+        self.pc_lib_suffix = ""
 
 
     def configure(self, uplid, ufid):
@@ -175,6 +176,7 @@ class BdeWafConfigure(object):
 
         self._load_group_vers()
         self._load_soname_override()
+        self._load_pc_lib_suffix()
         self.ctx.end_msg('ok')
 
     def _levelize_group_dependencies(self, group):
@@ -289,7 +291,7 @@ class BdeWafConfigure(object):
         dl_overrides = ['pthread', 'rt', 'nsl', 'socket']
 
         for lib in self.external_libs:
-            self.ctx.check_cfg(package = lib,
+            self.ctx.check_cfg(package = lib + self.pc_lib_suffix,
                                args = pkgconfig_args,
                                errmsg = "Make sure the path indicated by environment variable 'PKG_CONFIG_PATH' contains '%s.pc'" % lib)
 
@@ -430,6 +432,7 @@ class BdeWafConfigure(object):
 
         return export_flags
 
+
     def _save_group_options(self, group):
         export_options = self.group_export_options[group]
         options = self.group_options[group]
@@ -479,6 +482,7 @@ class BdeWafConfigure(object):
         self.ctx.env[package + '_libpaths'] = libpaths
         self.ctx.env[package + '_linkflags'] = linkflags
 
+
     def _load_group_vers(self):
         # this is a big hack to get the version numbers for package groups and sa-packages
         for group_name in self.export_groups:
@@ -494,6 +498,7 @@ class BdeWafConfigure(object):
                     self.group_ver[group_name] = self.group_ver['bsi']
 
         print self.group_ver
+
 
     def _get_group_ver(self, group_name):
 
@@ -610,6 +615,11 @@ class BdeWafConfigure(object):
             if soname:
                 self.soname_override[group_name] = soname
 
+    def _load_pc_lib_suffix(self):
+        pc_lib_suffix = os.environ.get('BDE_PC_LIB_SUFFIX')
+        if pc_lib_suffix:
+            self.pc_lib_suffix = pc_lib_suffix
+
     def _save(self):
         self.ctx.start_msg('Saving configuration')
         self.ctx.env['ufid'] = self.option_mask.ufid.ufid
@@ -657,6 +667,7 @@ class BdeWafConfigure(object):
 
         self.ctx.env['sa_package_locs'] = self.sa_package_locs
         self.ctx.env['soname_override'] = self.soname_override
+        self.ctx.env['pc_lib_suffix'] = self.pc_lib_suffix
 
         self.ctx.env['group_locs'] = self.group_locs
 

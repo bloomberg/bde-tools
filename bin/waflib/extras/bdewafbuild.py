@@ -37,6 +37,8 @@ class BdeWafBuild(object):
         self.run_tests = self.ctx.options.test == 'run'
         self.build_tests = self.run_tests or self.ctx.options.test == 'build'
 
+        self.pc_lib_suffix = self.ctx.env['pc_lib_suffix']
+
         test_runner_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
                                         'run_unit_tests.py')
 
@@ -271,8 +273,12 @@ class BdeWafBuild(object):
                  bdesoname       = self.soname_override[group_name] if group_name in self.soname_override else None
                  )
 
+        depends_on = [group_name + '_lib'] + [p + '_tst' for p in packages]
+        if group_name in self.export_groups:
+            depends_on.append(group_name + '.pc')
+
         self.ctx(name       = group_name,
-                 depends_on = [group_name + '_lib']  + [p + '_tst' for p in packages])
+                 depends_on = depends_on)
 
     def _make_pc_group(self, group_name, internal_deps, external_deps):
 
@@ -283,14 +289,15 @@ class BdeWafBuild(object):
                 group_name + 'scm',
                 group_name + 'scm_versiontag.h'])
 
-        self.ctx(name       = group_name + '.pc',
-                 features   = ['bdepc'],
-                 path       = vc_node,
-                 version    = '.'.join(self.group_ver[group_name]),
-                 target     = group_name + '.pc',
-                 doc        = self.group_doc[group_name],
-                 dep        = self.group_dep[group_name],
-                 group_name = group_name
+        self.ctx(name          = group_name + '.pc',
+                 features      = ['bdepc'],
+                 path          = vc_node,
+                 version       = '.'.join(self.group_ver[group_name]),
+                 target        = group_name + '.pc',
+                 doc           = self.group_doc[group_name],
+                 dep           = self.group_dep[group_name],
+                 group_name    = group_name,
+                 pc_lib_suffix = self.pc_lib_suffix,
                  )
 
         self.ctx.install_files(os.path.join('${PREFIX}', 'lib', 'pkgconfig'),
@@ -583,7 +590,7 @@ Cflags: -I${includedir} %s
 
     def signature(self):
         # Add prefix as part of the signature, so that the .pc file will be regenerated when the prefix changes
-        self.hcode = Options.options.prefix
+        self.hcode = Options.options.prefix + self.generator.pc_lib_suffix
         ret = super(bdepc, self).signature()
         return ret
 
@@ -591,6 +598,7 @@ Cflags: -I${includedir} %s
         bld = self.generator.bld
         group_name = self.generator.group_name
         version = self.generator.version
+        pc_lib_suffix = self.generator.pc_lib_suffix
 
         libs = [bld.env['LIB_ST'] % l for l in bld.env[group_name + '_export_libs']]
 
@@ -599,8 +607,8 @@ Cflags: -I${includedir} %s
                                                self.generator.doc[0],
                                                self.generator.doc[1],
                                                version,
-                                               ' '.join(self.generator.dep),
-                                               group_name,
+                                               ' '.join([dep + pc_lib_suffix for dep in self.generator.dep]),
+                                               group_name + pc_lib_suffix,
                                                ' '.join(libs),
                                                ' '.join(bld.env[group_name + '_export_cxxflags'])
                                                )
