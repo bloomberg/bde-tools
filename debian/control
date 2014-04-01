@@ -1,0 +1,11 @@
+Source: bde-oss-tools
+Section: unknown
+Priority: extra
+Maintainer: Chen He <che24@bloomberg.net>
+Build-Depends: build-base
+Standards-Version: 3.8.4
+
+Package: bde-oss-tools
+Architecture: all
+Description: BDE OSS Tools
+ This is used to build BDE and some other libraries
