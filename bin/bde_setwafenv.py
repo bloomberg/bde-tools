@@ -164,7 +164,6 @@ def _print_setenvs(uplid, ufid, raw_options, options):
     print 'export BDE_WAF_BUILD_DIR="%s"' % id_str
     print 'export WAFLOCK=".lock-waf-%s"' % id_str
 
-
     if options.install_dir:
         install_dir = options.install_dir
     else:
