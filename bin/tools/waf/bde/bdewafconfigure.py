@@ -336,7 +336,7 @@ class BdeWafConfigure(object):
             defines_old = self.ctx.env['DEFINES']
             defines_new = []
             for d in defines_old:
-                index = d.find('%s=1', self.lib_suffix.supper())
+                index = d.find('%s=1' % self.lib_suffix.upper())
                 if index >= 0:
                     defines_new.append('%s=1' % d[0:index])
                 else:
