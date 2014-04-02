@@ -291,7 +291,19 @@ def _add_commandline_options(ctx):
         (('debug-opt-keys',),
          {'type': 'string',
           'default': None,
-          'help': 'debug rules in the opts files for the specified (comma separated) list of opts keys'})
+          'help': 'debug rules in the opts files for the specified (comma separated) list of opts keys'}),
+        (('lib-suffix',),
+         {'type': 'string',
+          'default': '',
+          'help': 'add a suffix to the names of the package group library files being built'}),
+        (('install-flat-include',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'install all headers into $PREFIX/include instead of $PREFIX/include/<package_group>'}),
+        (('install-lib-dir',),
+         {'type': 'string',
+          'default': 'lib',
+          'help': 'the name of the directory under $PREFIX where library files are installed [default: %default]'}),
         )
 
     configure_group = ctx.get_option_group('configure options')

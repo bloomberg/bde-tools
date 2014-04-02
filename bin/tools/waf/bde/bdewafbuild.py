@@ -37,7 +37,10 @@ class BdeWafBuild(object):
         self.run_tests = self.ctx.options.test == 'run'
         self.build_tests = self.run_tests or self.ctx.options.test == 'build'
 
-        self.pc_lib_suffix = self.ctx.env['pc_lib_suffix']
+        self.lib_suffix = self.ctx.env['lib_suffix']
+        self.install_flat_include = self.ctx.env['install_flat_include']
+        self.install_lib_dir = self.ctx.env['install_lib_dir']
+        self.pc_extra_include_dirs = self.ctx.env['pc_extra_include_dirs']
 
         # Get the path of run_unit_tests.py. Assume the directory containing this script is
         # <repo_root>/bin/tools/waf/bde and run_unit_tests.py is located in the directory <repo_root>/bin/tools.
@@ -92,8 +95,11 @@ class BdeWafBuild(object):
             path_headers[path].append(h)
 
         for path in path_headers:
-            self.ctx.install_files(os.path.join('${PREFIX}', 'include', group_node.name, path),
-                                   path_headers[path])
+            if self.install_flat_include:
+                self.ctx.install_files(os.path.join('${PREFIX}', 'include', path), path_headers[path])
+            else:
+                self.ctx.install_files(os.path.join('${PREFIX}', 'include', group_node.name, path),
+                                       path_headers[path])
 
         cpp_flag = len(package_node.ant_glob('*.cpp')) > 0
 
@@ -217,7 +223,7 @@ class BdeWafBuild(object):
         components = self.group_mem[package_name]
 
         if package_name in self.export_groups:
-            install_path = os.path.join('${PREFIX}', 'lib')
+            install_path = os.path.join('${PREFIX}', self.install_lib_dir)
             self._make_pc_group(package_name, internal_deps, external_deps)
         else:
             install_path = None
@@ -254,14 +260,14 @@ class BdeWafBuild(object):
             self._build_normal_package(p, group_node, internal_deps, external_deps)
 
         if group_name in self.export_groups:
-            install_path = os.path.join('${PREFIX}', 'lib')
+            install_path = os.path.join('${PREFIX}', self.install_lib_dir)
             self._make_pc_group(group_name, internal_deps, external_deps)
         else:
             install_path = None
 
         self.ctx(name            = group_name + '_lib',
                  path            = group_node,
-                 target          = group_name,
+                 target          = group_name + self.lib_suffix,
                  features        = ['cxx'] + self.libtype_features,
                  linkflags       = linkflags,
                  lib             = libs,
@@ -286,25 +292,28 @@ class BdeWafBuild(object):
     def _make_pc_group(self, group_name, internal_deps, external_deps):
 
         vc_node = self.ctx.path.make_node('vc');
-        version_tag_node = self.ctx.srcnode.find_resource([
-                'groups',
-                group_name,
-                group_name + 'scm',
-                group_name + 'scm_versiontag.h'])
 
-        self.ctx(name          = group_name + '.pc',
-                 features      = ['bdepc'],
-                 path          = vc_node,
-                 version       = '.'.join(self.group_ver[group_name]),
-                 target        = group_name + '.pc',
-                 doc           = self.group_doc[group_name],
-                 dep           = self.group_dep[group_name],
-                 group_name    = group_name,
-                 pc_lib_suffix = self.pc_lib_suffix,
+        if self.install_flat_include:
+            install_include_dir = "include"
+        else:
+            install_include_dir = "include/%s" % group_name
+
+        self.ctx(name                  = group_name + '.pc',
+                 features              = ['bdepc'],
+                 path                  = vc_node,
+                 version               = '.'.join(self.group_ver[group_name]),
+                 target                = group_name + self.lib_suffix + '.pc',
+                 doc                   = self.group_doc[group_name],
+                 dep                   = self.group_dep[group_name],
+                 group_name            = group_name,
+                 lib_suffix            = self.lib_suffix,
+                 install_lib_dir       = self.install_lib_dir,
+                 install_include_dir   = install_include_dir,
+                 pc_extra_include_dirs = self.pc_extra_include_dirs
                  )
 
-        self.ctx.install_files(os.path.join('${PREFIX}', 'lib', 'pkgconfig'),
-                               [os.path.join(vc_node.relpath(), group_name + '.pc')])
+        self.ctx.install_files(os.path.join('${PREFIX}', self.install_lib_dir, 'pkgconfig'),
+                               [os.path.join(vc_node.relpath(), group_name + self.lib_suffix + '.pc')])
 
 
     def build(self):
@@ -575,10 +584,10 @@ def make_pc(self):
 
 class bdepc(Task.Task):
 
-    # replacement parameters: prefix, group_name, name, description, version, requires.private, name, libs, cflags
+    # replacement parameters: prefix, lib_dir, include_dir, description, version, requires.private, name, libs, cflags
     PKGCONFIG_TEMPLATE = '''prefix=%s
-libdir=${prefix}/lib
-includedir=${prefix}/include/%s
+libdir=${prefix}/%s
+includedir=${prefix}/%s
 
 Name: %s
 Description: %s
@@ -588,12 +597,15 @@ Requires:
 Requires.private: %s
 Libs: -L${libdir} -l%s %s
 Libs.private:
-Cflags: -I${includedir} %s
+Cflags: -I${includedir} %s %s
 '''
 
     def signature(self):
-        # Add prefix as part of the signature, so that the .pc file will be regenerated when the prefix changes
-        self.hcode = Options.options.prefix + self.generator.pc_lib_suffix
+        # Make sure that the signatures include the appropriate dependencies, so that the .pc file will be regenerated
+        # when needed
+        self.hcode = Options.options.prefix + self.generator.lib_suffix + \
+            self.generator.install_lib_dir + self.generator.install_include_dir + \
+            ','.join(self.generator.pc_extra_include_dirs)
         ret = super(bdepc, self).signature()
         return ret
 
@@ -601,18 +613,23 @@ Cflags: -I${includedir} %s
         bld = self.generator.bld
         group_name = self.generator.group_name
         version = self.generator.version
-        pc_lib_suffix = self.generator.pc_lib_suffix
+        lib_suffix = self.generator.lib_suffix
+        install_lib_dir = self.generator.install_lib_dir
+        install_include_dir = self.generator.install_include_dir
+        extra_include_dirs_str = ' '.join(['-I%s' % d for d in self.generator.pc_extra_include_dirs])
 
         libs = [bld.env['LIB_ST'] % l for l in bld.env[group_name + '_export_libs']]
 
         pc_source = self.PKGCONFIG_TEMPLATE % (Options.options.prefix,
-                                               group_name,
+                                               install_lib_dir,
+                                               install_include_dir,
                                                self.generator.doc[0],
                                                self.generator.doc[1],
                                                version,
-                                               ' '.join([dep + pc_lib_suffix for dep in self.generator.dep]),
-                                               group_name + pc_lib_suffix,
+                                               ' '.join([dep + lib_suffix for dep in self.generator.dep]),
+                                               group_name + lib_suffix,
                                                ' '.join(libs),
+                                               extra_include_dirs_str,
                                                ' '.join(bld.env[group_name + '_export_cxxflags'])
                                                )
         self.outputs[0].write(pc_source)

@@ -46,8 +46,9 @@ class BdeWafConfigure(object):
         self.group_export_options = {}
         self.package_options = {}
         self.custom_envs = {}
-        self.pc_lib_suffix = ""
 
+        self.lib_suffix = self.ctx.options.lib_suffix
+        self.pc_extra_include_dirs = []
 
     def configure(self, uplid, ufid):
         self.ctx.msg('os_type', uplid.uplid['os_type'])
@@ -176,8 +177,10 @@ class BdeWafConfigure(object):
 
         self._load_group_vers()
         self._load_soname_override()
-        self._load_pc_lib_suffix()
+        self._load_pc_extra_include_dirs()
+
         self.ctx.end_msg('ok')
+
 
     def _levelize_group_dependencies(self, group):
         from collections import defaultdict
@@ -271,6 +274,7 @@ class BdeWafConfigure(object):
 
         return 'ok'
 
+
     def _configure_external_libs(self, ufid):
         self.ufid = copy.deepcopy(ufid)
 
@@ -290,10 +294,22 @@ class BdeWafConfigure(object):
         # affected libraries to be linked dynamically instead.
         dl_overrides = ['pthread', 'rt', 'nsl', 'socket']
 
+        # If lib_suffix is set, we expect the pkgconfig files being depended on to have the same suffix as well. Since
+        # the .dep files will not have the suffix, we will remove the suffix from the names of the options loaded into
+        # the waf environment.
+        rename_keys = ['defines', 'includes', 'libpath', 'stlib', 'lib']
         for lib in self.external_libs:
-            self.ctx.check_cfg(package = lib + self.pc_lib_suffix,
+            actual_lib = lib + str(self.lib_suffix or '')
+            self.ctx.check_cfg(package = actual_lib,
                                args = pkgconfig_args,
-                               errmsg = "Make sure the path indicated by environment variable 'PKG_CONFIG_PATH' contains '%s.pc'" % lib)
+                               errmsg = "Make sure the path indicated by environment variable 'PKG_CONFIG_PATH' "
+                                        "contains '%s.pc'" % actual_lib)
+            if self.lib_suffix:
+                for k in rename_keys:
+                    key_old = (k + '_' + actual_lib).upper()
+                    key_new = (k + '_' + lib).upper()
+                    self.ctx.env[key_new] = self.ctx.env[key_old]
+                    del self.ctx.env[key_old]
 
             sl_key = ('stlib_' + lib).upper()
             dl_key = ('lib_' + lib).upper()
@@ -316,6 +332,18 @@ class BdeWafConfigure(object):
                     self.ctx.env[slp_key] = self.ctx.env[dlp_key]
                     del self.ctx.env[dlp_key]
 
+        if self.lib_suffix:
+            defines_old = self.ctx.env['DEFINES']
+            defines_new = []
+            for d in defines_old:
+                index = d.find('%s=1', self.lib_suffix.supper())
+                if index >= 0:
+                    defines_new.append('%s=1' % d[0:index])
+                else:
+                    defines_new.append(d)
+
+            self.ctx.env['DEFINES'] = defines_new
+
 
     def _configure_options(self, uplid):
 
@@ -325,13 +353,24 @@ class BdeWafConfigure(object):
         # Get the path of default.opts. Assume the directory containing this script is <repo_root>/bin/tools/waf/bde and
         # default.opts is located in the directory <repo_root>/etc.
         upd = os.path.dirname
+
+        bde_root = os.environ.get('BDE_ROOT')
         repo_root = upd(upd(upd(upd(upd(os.path.realpath(__file__))))))
         default_opts_path = os.path.join(repo_root, 'etc', 'default.opts')
+
+        default_opts_flag = os.path.isfile(default_opts_path)
+        if not default_opts_flag and bde_root:
+            default_opts_path = os.path.join(bde_root, 'etc', 'default.opts')
+            default_opts_flag = os.path.isfile(default_opts_path)
+
+        if not default_opts_flag:
+            ctx.fatal("Can not find default.opts from the /etc directory of the waf executable "
+                      ", nor the BDE_ROOT environment variable.")
+
         raw_options = RawOptions()
         raw_options.read(default_opts_path)
 
         # At BB, default_internal.opts contains some variables that is required for building bde-bb.
-        bde_root = os.environ.get('BDE_ROOT')
         if bde_root:
             default_internal_opts_path = os.path.join(bde_root, 'etc', 'default_internal.opts')
             raw_options.read(default_internal_opts_path)
@@ -357,6 +396,7 @@ class BdeWafConfigure(object):
             if e in tmp_opts.options:
                 m = setenv_re.match(tmp_opts.options[e])
                 self.custom_envs[m.group(1)] = m.group(2)
+
 
     def _parse_ldflags(self, ldflags):
         """
@@ -423,6 +463,7 @@ class BdeWafConfigure(object):
             flags.append(flag)
 
         return (includes, flags)
+
 
     def _get_export_cxxflags(self, cxxflags):
         "only defines is required to be in export flags"
@@ -498,8 +539,6 @@ class BdeWafConfigure(object):
                     self.group_ver[group_name] = self.group_ver['bde']
                 else:
                     self.group_ver[group_name] = self.group_ver['bsi']
-
-        print self.group_ver
 
 
     def _get_group_ver(self, group_name):
@@ -617,16 +656,17 @@ class BdeWafConfigure(object):
             if soname:
                 self.soname_override[group_name] = soname
 
-    def _load_pc_lib_suffix(self):
-        pc_lib_suffix = os.environ.get('BDE_PC_LIB_SUFFIX')
-        if pc_lib_suffix:
-            self.pc_lib_suffix = pc_lib_suffix
+    def _load_pc_extra_include_dirs(self):
+        include_dirs = os.environ.get('PC_EXTRA_INCLUDE_DIRS')
+        if include_dirs:
+            self.pc_extra_include_dirs = include_dirs.split(':')
+
 
     def _save(self):
         self.ctx.start_msg('Saving configuration')
         self.ctx.env['ufid'] = self.option_mask.ufid.ufid
 
-        # For visual studio, waf explicitly includes the system header files by setting the 'INCLUD'
+        # For visual studio, waf explicitly includes the system header files by setting the 'INCLUDES'
         # variable. BSL_OVERRIDE_STD mode requires that the system header files, which contains the standard library, be
         # overridden with custom versions in bsl, so we workaround the issue by moving the system includes to
         # 'INCLUDE_BSL' if it exists. This solution is not perfect, because it doesn't support package groups that
@@ -669,7 +709,6 @@ class BdeWafConfigure(object):
 
         self.ctx.env['sa_package_locs'] = self.sa_package_locs
         self.ctx.env['soname_override'] = self.soname_override
-        self.ctx.env['pc_lib_suffix'] = self.pc_lib_suffix
 
         self.ctx.env['group_locs'] = self.group_locs
 
@@ -680,6 +719,11 @@ class BdeWafConfigure(object):
         self.ctx.env['libtype_features'] = self.libtype_features
         self.ctx.env['prefix'] = self.ctx.options.prefix
         self.ctx.env['custom_envs']  = self.custom_envs
+
+        self.ctx.env['lib_suffix'] = self.lib_suffix
+        self.ctx.env['install_flat_include'] = self.ctx.options.install_flat_include
+        self.ctx.env['install_lib_dir'] = self.ctx.options.install_lib_dir
+        self.ctx.env['pc_extra_include_dirs'] = self.pc_extra_include_dirs
 
         for g in self.group_dep:
             self._save_group_options(g)
