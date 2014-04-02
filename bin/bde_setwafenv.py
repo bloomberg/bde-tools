@@ -30,14 +30,14 @@ def _get_tools_path():
     path = _where('waf')
 
     def err():
-        print >>sys.stderr, ('Cannot find the bde customization in the waflib directory. '
+        print >>sys.stderr, ('Cannot find the BDE customizations for waf in the waflib directory. '
                              'Make sure that the bde-oss-tools version of waf can be found in PATH.')
         sys.exit(1)
 
     if not path:
         err()
 
-    path = os.path.join(path, 'waflib', 'extras')
+    path = os.path.join(path, 'tools', 'waf', 'bde')
 
     if not os.path.isdir(path):
         err()
@@ -301,14 +301,39 @@ regular user.
     CXX = None
     PREFIX = None
 
+    # default.opts is expected to be under either:
+    #   1 <repo_root>/etc, assuming the tools directory is <repo_root>/bin/tools/waf/bde and default.opts is located in
+    #     the directory <repo_root>/etc.
+    #   2 $BDE_ROOT/etc
+    bde_root = os.environ.get('BDE_ROOT')
+    upd = os.path.dirname
+    repo_root = upd(upd(upd(upd(tools_path))))
+
+    default_opts_path = os.path.join(repo_root, 'etc', 'default.opts')
+    default_opts_flag = os.path.isfile(default_opts_path)
+    if not default_opts_flag and bde_root:
+        default_opts_path = os.path.join(bde_root, 'etc', 'default.opts')
+        default_opts_flag = os.path.isfile(default_opts_path)
+
+    if not default_opts_flag:
+        ctx.fatal("Can not find default.opts from the /etc directory of the parent directory of the waf executable "
+                  ", nor the path pointed to by the BDE_ROOT environment variable.")
+
     raw_options = RawOptions()
-    default_opts_path = os.path.join(tools_path, 'default.opts')
     raw_options.read(default_opts_path)
 
-    bde_root = os.environ.get('BDE_ROOT')
+    # default_internal.opts is expected to be under:
+    #   1 $BDE_ROOT/etc
+    default_internal_opts_flag = False
     if bde_root:
         default_internal_opts_path = os.path.join(bde_root, 'etc', 'default_internal.opts')
-        raw_options.read(default_internal_opts_path)
+        default_internal_opts_flag = os.path.isfile(default_internal_opts_path)
+
+    if not default_opts_flag:
+        ctx.fatal("Can not find default_internal.opts from the /etc directory from the path pointed to by the"
+                  " BDE_ROOT environment variable.")
+
+    raw_options.read(default_internal_opts_path)
 
     ufid = options.ufid
     if not ufid:
