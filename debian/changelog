@@ -1,4 +1,4 @@
-bde-oss-tools (2.20.0.1.waf-1) unstable; urgency=low
+bde-oss-tools (2.20.0.0.waf.1) unstable; urgency=low
 
   * 4e016fc Updated debian/rules to not include *pyc files when building dpkg.
   * 300e7f6 Added files for building a dpkg.
