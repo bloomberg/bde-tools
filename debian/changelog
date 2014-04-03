@@ -1,44 +1,11 @@
-bde-tools (2.20.0.1.waf-1) unstable; urgency=low
+bde-tools (2.20.0.2) unstable; urgency=low
 
-  * a783e10 Merge branch 'review/waf-dpkg-drqs-49353577' of devgit:bde/bde-tools into review/waf-dpkg-drqs-49353577
-  * 4a255f6 Updated debian/rules to include bde_setwafenv.py in dpkg.
-  * 05631f4 Updated bde_setwafenv.py to use bde-oss-tools version of the waf-based build tool.
-  * ffd6ad6 Updated debian/rules to include bin/bde_setwafenv.py.
-  * b7f50f0 Updated bde_setwafenv to acquire bde waf customizations from the location of the 'waf' executable. Added a new option '--force_uplid' to manually specify a uplid value instead of automatically determine the value based on the current system.
-  * 5b95c1f add symlink to bde_verify
-  * 01d7758 [APPROVAL] pending/master/update-bde_setwafenv-installation-dir to master
-  * 1125396 Apply Chen's review comments, and add an output line about install directories
-  * ad9b47a Update bde_setwafenv.py documentation
-  * 88b39f2 Update bde_setwafenv.py to attempt to determine the installation dir from PREFIX
-  * 5575179 Improve "#if 0 || something" handling
-  * 448efcc Make slimSrcLine more intelligent about #if 0
-  * 7774b41 add -F (--fetch) support to gitsynch.py
-  * a64070b [APPROVAL] origin/dev/druoso/minimalist_install to master
-  * 3638727 Depends on build-base
-  * 1975146 add gcc 4.8.1 support
-  * f50aec0 [APPROVAL] pending/master/minimalist_install to master
-  * 667924e fix diff formatting
-  * 42fdfac [APPROVAL] add-gitsync-py to master
-  * 9541956 Add gitsynch.py
-  * 935cdb6 add a_cdrdb and a_iconv to nextrel build
-  * b2e3999 Updated bde_setwafenv to acquire bde waf customizations from the location of the 'waf' executable. Added a new option '--force_uplid' to manually specify a uplid value instead of automatically determine the value based on the current system.
-  * 0fb9762 [APPROVAL] origin/review/devgit-push-branch-fix-drqs-49150683 to master
-  * dbb6bd9 Fixed devgit-push-branch (git pd) for use of color
-  * 01ab728 [APPROVAL] origin/review/no_iconv_build_on_windows to master
-  * 498e1c2 suppress building a_iconv on windows and mac
-  * 961209b [APPROVAL] origin/review/ss12.3-support-drqs-48238026 to master
-  * 1a3986b fix s12_opt runner
-  * dc54287 add missing -features=rvalueref for cc-5.12
-  * 7f87670 add s12.3 build for solaris - drqs 48238026
-  * 7a29485 [APPROVAL] pending/master/add-waf-support-tools-drqs-48413481 to master
-  * 305aad9 Updated bde_setwafenv.py per MikeG. Removed some unneeded code.
-  * cc4d149 Updated .gitignore to ignore files extracted by waf.
-  * 692d99e Minor doc fixes for bde_setwafenv.py.
-  * e8a06d3 Better format the online help for bde_setwafenv.py.
-  * 19ed4aa Added bde_setwafenv.py and waf to bde-tools/bin.
+  * Bump changelog
+  * 87b978e [APPROVAL] origin/dev/druoso/minimalist_install to releases/2.20.x
 
- -- Chen He <che24@bloomberg.net>  Wed, 2 Apr 2014 17:30:12 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 7 Mar 2014 14:56:50 -0500
 
+>>>>>>> remotes/origin/releases/2.20.x
 bde-tools (2.20.0.1) unstable; urgency=low
 
   * Bump changelog
