@@ -4,12 +4,36 @@
 # Copy this file to the root directory of a BDE-style source repo to enable building it using the waf-based build tool.
 
 import os
+import sys
 
 from waflib import Logs, Utils
 from waflib.Configure import ConfigurationContext
 
 top = '.'
 out = 'build'
+
+def _get_tools_path(ctx):
+
+    waf_path = sys.argv[0]
+
+    base = os.path.dirname(waf_path)
+
+    if os.path.isdir(os.path.join(base, 'tools', 'waf', 'bde')):
+        return os.path.join(base, 'tools', 'waf', 'bde');
+
+    ctx.fatal("BDE waf customizations can not be found under tools/waf/bde in the path of waf.")
+
+
+def options(ctx):
+    import sys
+
+    # check version numbers here because options() is called before any other command-handling function
+    if (sys.hexversion < 0x2060000 or 0x3000000 <= sys.hexversion ):
+        ctx.fatal('Pyhon 2.6 or Python 2.7 is required to build BDE using waf.')
+
+
+    ctx.load('bdewscript', tooldir = _get_tools_path(ctx))
+
 
 class PreConfigure(ConfigurationContext):
     cmd = 'configure'
@@ -25,14 +49,12 @@ class PreConfigure(ConfigurationContext):
 
         super(PreConfigure, self).__init__(**kw)
 
-def options(ctx):
-    ctx.load('bdewscript')
 
 def configure(ctx):
-    ctx.load('bdewscript')
+    ctx.load('bdewscript', tooldir = _get_tools_path(ctx))
 
 def build(ctx):
-    ctx.load('bdewscript')
+    ctx.load('bdewscript', tooldir = _get_tools_path(ctx))
 
 # ----------------------------------------------------------------------------
 # Copyright (C) 2013-2014 Bloomberg Finance L.P.
