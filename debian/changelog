@@ -1,5 +1,14 @@
-bde-oss-tools (2.20.0.1) unstable; urgency=low
+bde-oss-tools (2.20.0.1.waf-1) unstable; urgency=low
 
+  * 4e016fc Updated debian/rules to not include *pyc files when building dpkg.
+  * 300e7f6 Added files for building a dpkg.
+  * 189651d Fixed bug for the lib_suffix option.
+  * e1d659a Added 3 configure options (lib-suffix, install-flat-include, and install-lib-dir), and 1 environment variable option (PC_EXTRA_INCLUDE_DIRS).
+  * a55714f Refactored the directory structure to use standard waf installation and moved default.opts to /etc.
+  * e1898d3 Added custom library suffix in pkgconfig files to support dpkg build.
+  * b855e4b Added decorator to error and warning messages. Made other minor changes to waf outputs.
+  * 92a49c1 Added support for including the appropriate SONAME header in so files.
+  * 564ae8f Added the waf-based build tool.
   * be41975 Initial commit
 
- -- Chen He <che24@bloomberg.net>  Tue, 1 Apr 2014 13:46:08 -0400
+ -- Chen He <che24@bloomberg.net>  Wed, 2 Apr 2014 19:45:19 -0400
