@@ -317,10 +317,10 @@ class BdeWafBuild(object):
 
 
     def build(self):
-        for klass in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
-                      'c', 'cprogram', 'cshlib', 'cstlib'):
-            klass = type('cxx', (Task.classes['cxx'],), {})
-            setattr(klass, 'exec_command', custom_exec_command)
+        # for klass in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
+        #               'c', 'cprogram', 'cshlib', 'cstlib'):
+        #     klass = type('cxx', (Task.classes['cxx'],), {})
+        #     setattr(klass, 'exec_command', custom_exec_command)
 
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.custom_envs)
