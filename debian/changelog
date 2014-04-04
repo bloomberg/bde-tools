@@ -1,3 +1,9 @@
+bde-oss-tools (2.20.0.0.waf.3) unstable; urgency=low
+
+  * 83fbf9d Updated to link in c++ std library for building so files using suncc.
+
+ -- Chen He <che24@bloomberg.net>  Fri, 4 Apr 2014 11:49:37 -0400
+
 bde-oss-tools (2.20.0.0.waf.2) unstable; urgency=low
 
   * bf724cd Update changelog.
