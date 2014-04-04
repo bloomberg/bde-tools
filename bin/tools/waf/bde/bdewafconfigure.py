@@ -681,6 +681,11 @@ class BdeWafConfigure(object):
         if '64' in self.option_mask.ufid.ufid and self.option_mask.uplid.uplid['comp_type'] == 'xlc':
             self.ctx.env['ARFLAGS'] = ['-rcs', '-X64']
 
+        # Work around bug in waf's suncxx plugin to allow the proper adding of SONAMES. TODO: submit patch
+        if self.option_mask.uplid.uplid['os_name'] == 'sunos' and self.option_mask.uplid.uplid['comp_type'] == 'cc':
+            self.ctx.env['SONAME_ST'] = '-h %s'
+            self.ctx.env['DEST_BINFMT'] = 'elf'
+
         # Remove unsupported package groups and packages.  We don't need to do dependency analysis because the
         # unsupported sets already contain all transitively unsupported nodes.
 
