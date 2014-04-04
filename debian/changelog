@@ -1,3 +1,15 @@
+bde-oss-tools (2.20.0.0.waf.2) unstable; urgency=low
+
+  * bf724cd Update changelog.
+  * 08163fa Update changelog for waf debian build
+  * d639e07 Updated debian/rules to not include *pyc files when building dpkg.
+  * 00125ee Added files for building a dpkg.
+  * 714b445 Fixed adding SONAME for suncc.
+  * fa16476 Updated wscript.
+  * f022720 Stopped adding decorator around warnings and errors to temporarily fix build on windows.
+
+ -- Chen He <che24@bloomberg.net>  Thu, 3 Apr 2014 22:19:51 -0400
+
 bde-oss-tools (2.20.0.0.waf.1) unstable; urgency=low
 
   * 4e016fc Updated debian/rules to not include *pyc files when building dpkg.
