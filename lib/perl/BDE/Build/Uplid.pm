@@ -166,10 +166,19 @@ sub initialise ($;$) {
     $self->{model} =~ s/[-\s]+/_/g;
 
     # arch
+    my $uname = "/bin/uname";
+    if (!-x $uname) {
+        $uname = "/usr/bin/uname";
+
+        if (!-x $uname) {
+            $uname = "uname";
+        }
+    }
+
     if ($self->{kin} ne "windows") {
         $self->{system} =~ /^(linux|HP.?UX)$/i
-          and $self->{arch} = `uname -m 2> /dev/null`
-            or $self->{arch} = `uname -p 2> /dev/null`;
+          and $self->{arch} = `$uname -m 2> /dev/null`
+            or $self->{arch} = `$uname -p 2> /dev/null`;
     } else {
         if ($self->{compiler} eq 'def') {
         	# find microsoft compiler in path and detect its version and 
