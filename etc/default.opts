@@ -141,6 +141,7 @@
 *                       cpp11   CPP11_FLAGS     =   --this-compiler-does-not-have-cpp11-support-configured
 !! unix-*-*-*-gcc-4.4.3 cpp11   CPP11_FLAGS     =   -std=c++0x
 !! unix-*-*-*-gcc-4.7.0 cpp11   CPP11_FLAGS     =   -std=c++11
+!! unix-*-*-*-xlc-12.0  cpp11   CPP11_FLAGS     =   -qlanglvl=extended0x
 *                       cpp11   BDE_CXXFLAGS    = $(CPP11_FLAGS)
 
 #==============================================================================
