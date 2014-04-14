@@ -1,0 +1,32 @@
+bde-oss-tools (2.20.0.0.waf.3) unstable; urgency=low
+
+  * 83fbf9d Updated to link in c++ std library for building so files using suncc.
+
+ -- Chen He <che24@bloomberg.net>  Fri, 4 Apr 2014 11:49:37 -0400
+
+bde-oss-tools (2.20.0.0.waf.2) unstable; urgency=low
+
+  * bf724cd Update changelog.
+  * 08163fa Update changelog for waf debian build
+  * d639e07 Updated debian/rules to not include *pyc files when building dpkg.
+  * 00125ee Added files for building a dpkg.
+  * 714b445 Fixed adding SONAME for suncc.
+  * fa16476 Updated wscript.
+  * f022720 Stopped adding decorator around warnings and errors to temporarily fix build on windows.
+
+ -- Chen He <che24@bloomberg.net>  Thu, 3 Apr 2014 22:19:51 -0400
+
+bde-oss-tools (2.20.0.0.waf.1) unstable; urgency=low
+
+  * 4e016fc Updated debian/rules to not include *pyc files when building dpkg.
+  * 300e7f6 Added files for building a dpkg.
+  * 189651d Fixed bug for the lib_suffix option.
+  * e1d659a Added 3 configure options (lib-suffix, install-flat-include, and install-lib-dir), and 1 environment variable option (PC_EXTRA_INCLUDE_DIRS).
+  * a55714f Refactored the directory structure to use standard waf installation and moved default.opts to /etc.
+  * e1898d3 Added custom library suffix in pkgconfig files to support dpkg build.
+  * b855e4b Added decorator to error and warning messages. Made other minor changes to waf outputs.
+  * 92a49c1 Added support for including the appropriate SONAME header in so files.
+  * 564ae8f Added the waf-based build tool.
+  * be41975 Initial commit
+
+ -- Chen He <che24@bloomberg.net>  Wed, 2 Apr 2014 19:45:19 -0400
