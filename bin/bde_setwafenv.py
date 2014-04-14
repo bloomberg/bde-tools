@@ -12,33 +12,37 @@ if platform.system() == 'Windows':
     print >> sys.stderr, 'This tool is currently not supported on windows.'
     sys.exit(1)
 
+def _where(program):
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    for path in os.environ["PATH"].split(os.pathsep):
+        path = path.strip('"')
+        exe_file = os.path.join(path, program)
+        if is_exe(exe_file):
+            return path
+
+    return None
+
 def _get_tools_path():
     # Uses the local BDE waf customziations if they exist
-    if os.path.isdir(os.path.join('tools', 'waf', 'bde')):
-        return os.path.join('tools', 'waf', 'bde');
 
-    bde_path = os.getenv('BDE_PATH')
-    if not bde_path:
-        print >>sys.stderr, 'BDE waf customizations do not exist locally, '\
-            'and the BDE_PATH environment variable is not defined.'
+    path = _where('waf')
+
+    def err():
+        print >>sys.stderr, ('Cannot find the BDE customizations for waf in the waflib directory. '
+                             'Make sure that the bde-oss-tools version of waf can be found in PATH.')
         sys.exit(1)
 
+    if not path:
+        err()
 
-    bde_path = os.getenv('BDE_PATH')
-    if not bde_path:
-        return os.path.join('tools', 'waf', 'bde')
+    path = os.path.join(path, 'tools', 'waf', 'bde')
 
-    delimiter = ':'
-    paths = bde_path.split(delimiter);
-    for path in paths:
-        if os.path.isdir(os.path.join(path, 'groups', 'bsl')) and \
-                os.path.isdir(os.path.join(path, 'tools', 'waf', 'bde')):
-            return os.path.join(path, 'tools', 'waf', 'bde');
+    if not os.path.isdir(path):
+        err()
 
-    print >>sys.stderr, 'The BDE_PATH environment variable is defined, but the location of BDE waf customizations, ' \
-        'which should be in bsl, could not be found.'
-    sys.exit(1)
-
+    return path
 
 tools_path = _get_tools_path()
 sys.path = [tools_path] + sys.path
@@ -112,7 +116,7 @@ def _determine_installation_location(prefix, uplid):
     cpu-architectures portions of 'uplid' as part of the last element of a
     directory location -- return the installation directory previously used
     by 'bde_setwafenv.py'.
-    
+
     Args:
         prefix: a string that contains a PREFIX environment variable
     """
@@ -124,14 +128,54 @@ def _determine_installation_location(prefix, uplid):
                                             uplid.uplid['cpu_type'],
                                             uplid.uplid['os_ver'])
 
-	
+
     partialUplid = os_type + '-' + os_name + '-' + cpu_type + '-' + os_ver
-   
+
     pattern = "(.*/){0}(?:\-[\w\.]*)*".format(partialUplid)
     match = re.match(pattern, prefix)
     if (match):
         return match.group(1)
     return None
+
+def _print_setenvs(uplid, ufid, raw_options, options):
+    option_mask = OptionMask(uplid, Ufid(ufid.split('_')))
+
+    default_opts = Options(option_mask)
+
+    debug_opt_keys = options.debug_opt_keys
+    if debug_opt_keys:
+        debug_opt_keys = debug_opt_keys.split(',')
+
+    default_opts.read(raw_options.options, ctx, debug_opt_keys=debug_opt_keys)
+    default_opts.evaluate()
+
+    cxx_line = default_opts.options['CXX'].split()
+    cxx_index = 0
+    if cxx_line[0].strip().startswith('LIBPATH'):
+        cxx_index = 1
+
+    CXX = cxx_line[cxx_index]
+
+    print 'export CXX="%s"' % CXX
+
+    print 'export BDE_WAF_UFID="%s"' % ufid
+    print 'export BDE_WAF_UPLID="%s"' % uplid
+    id_str = str(uplid) + '-' + ufid
+    print 'export BDE_WAF_BUILD_DIR="%s"' % id_str
+    print 'export WAFLOCK=".lock-waf-%s"' % id_str
+
+
+    if options.install_dir:
+        install_dir = options.install_dir
+    else:
+        install_dir = _determine_installation_location(os.environ.get("PREFIX"), uplid)
+
+    if install_dir:
+        print >>sys.stderr, "using install directory: %s" % install_dir
+        PREFIX = os.path.join(install_dir, id_str)
+        print 'export PREFIX="%s"' % PREFIX
+        print 'export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX
+
 
 if __name__ == "__main__":
     usage = \
@@ -213,7 +257,7 @@ PKG_CONFIG_PATH   - the path containing the .pc files for the installed
 /Usage Examples
 /--------------
 
-1) eval `bde_setwafenv.py -c gcc-4.7.2 -t dbg_mt_exc -i ~/mbig/bde-install
+1) eval `bde_setwafenv.py -c gcc-4.7.2 -t dbg_mt_exc -i ~/mbig/bde-install`
 
 Set up the environment variables so that the BDE waf build tool uses the
 gcc-4.7.2 compiler, builds with the ufid options 'dbg_mt_exc' to the output
@@ -240,6 +284,7 @@ regular user.
     parser.add_option("-i", "--install-dir", help="install directory")
     parser.add_option("-t", "--ufid", help="universal flag id")
     parser.add_option("-d", "--debug-opt-keys")
+    parser.add_option("--force_uplid", help="force uplid to specified value")
 
     (options, args) = parser.parse_args()
 
@@ -256,15 +301,48 @@ regular user.
     CXX = None
     PREFIX = None
 
+    # default.opts is expected to be under either:
+    #   1 <repo_root>/etc, assuming the tools directory is <repo_root>/bin/tools/waf/bde and default.opts is located in
+    #     the directory <repo_root>/etc.
+    #   2 $BDE_ROOT/etc
+    bde_root = os.environ.get('BDE_ROOT')
+    upd = os.path.dirname
+    repo_root = upd(upd(upd(upd(tools_path))))
+
+    default_opts_path = os.path.join(repo_root, 'etc', 'default.opts')
+    default_opts_flag = os.path.isfile(default_opts_path)
+    if not default_opts_flag and bde_root:
+        default_opts_path = os.path.join(bde_root, 'etc', 'default.opts')
+        default_opts_flag = os.path.isfile(default_opts_path)
+
+    if not default_opts_flag:
+        ctx.fatal("Can not find default.opts from the /etc directory of the parent directory of the waf executable "
+                  ", nor the path pointed to by the BDE_ROOT environment variable.")
+
     raw_options = RawOptions()
-    default_opts_path = os.path.join(tools_path, 'default.opts')
     raw_options.read(default_opts_path)
 
-    bde_root = os.environ.get('BDE_ROOT')
-
+    # default_internal.opts is expected to be under:
+    #   1 $BDE_ROOT/etc
+    default_internal_opts_flag = False
     if bde_root:
         default_internal_opts_path = os.path.join(bde_root, 'etc', 'default_internal.opts')
-        raw_options.read(default_internal_opts_path)
+        default_internal_opts_flag = os.path.isfile(default_internal_opts_path)
+
+    if not default_opts_flag:
+        ctx.fatal("Can not find default_internal.opts from the /etc directory from the path pointed to by the"
+                  " BDE_ROOT environment variable.")
+
+    raw_options.read(default_internal_opts_path)
+
+    ufid = options.ufid
+    if not ufid:
+        ufid = 'dbg_mt_exc'
+
+    if options.force_uplid:
+        uplid = Uplid.from_platform_str(options.force_uplid)
+        _print_setenvs(uplid, ufid, raw_options, options)
+        sys.exit(0)
 
     comps = set()
 
@@ -305,10 +383,6 @@ regular user.
             print c
         sys.exit(1)
 
-    ufid = options.ufid
-    if not ufid:
-        ufid = 'dbg_mt_exc'
-
     print >>sys.stderr, "using compiler: %s" % compiler
     print >>sys.stderr, "using ufid: %s" % ufid
 
@@ -322,39 +396,4 @@ regular user.
             comp_ver = '*'
 
         uplid = _make_uplid_from_context(comp_type, comp_ver)
-        option_mask = OptionMask(uplid, Ufid(ufid.split('_')))
-
-        default_opts = Options(option_mask)
-
-        debug_opt_keys = options.debug_opt_keys
-        if debug_opt_keys:
-            debug_opt_keys = debug_opt_keys.split(',')
-
-        default_opts.read(raw_options.options, ctx, debug_opt_keys=debug_opt_keys)
-        default_opts.evaluate()
-
-        cxx_line = default_opts.options['CXX'].split()
-        cxx_index = 0
-        if cxx_line[0].strip().startswith('LIBPATH'):
-            cxx_index = 1
-
-        CXX = cxx_line[cxx_index]
-
-        print 'export CXX="%s"' % CXX
-
-        print 'export BDE_WAF_UFID="%s"' % ufid
-        print 'export BDE_WAF_UPLID="%s"' % uplid
-        id_str = str(uplid) + '-' + ufid
-        print 'export BDE_WAF_BUILD_DIR="%s"' % id_str
-        print 'export WAFLOCK=".lock-waf-%s"' % id_str
-
-        if (options.install_dir is not None):
-            install_dir = options.install_dir
-        else:
-            install_dir = _determine_installation_location(
-                                             os.environ.get("PREFIX"), uplid)
-        if (install_dir):
-            print >>sys.stderr, "using install directory: %s" % install_dir
-            PREFIX = os.path.join(install_dir, id_str)
-            print 'export PREFIX="%s"' % PREFIX
-            print 'export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX
+        _print_setenvs(uplid, ufid, raw_options, options)

@@ -1,3 +1,30 @@
+bde-tools (2.20.0.2.waf.1) unstable; urgency=low
+
+  * a64070b [APPROVAL] origin/dev/druoso/minimalist_install to master
+  * f50aec0 [APPROVAL] pending/master/minimalist_install to master
+  * 42fdfac [APPROVAL] add-gitsync-py to master
+  * 0fb9762 [APPROVAL] origin/review/devgit-push-branch-fix-drqs-49150683 to master
+  * 01ab728 [APPROVAL] origin/review/no_iconv_build_on_windows to master
+  * 961209b [APPROVAL] origin/review/ss12.3-support-drqs-48238026 to master
+  * 1a3986b fix s12_opt runner
+  * dc54287 add missing -features=rvalueref for cc-5.12
+  * 7f87670 add s12.3 build for solaris - drqs 48238026
+  * 7a29485 [APPROVAL] pending/master/add-waf-support-tools-drqs-48413481 to master
+  * 305aad9 Updated bde_setwafenv.py per MikeG. Removed some unneeded code.
+  * cc4d149 Updated .gitignore to ignore files extracted by waf.
+  * 692d99e Minor doc fixes for bde_setwafenv.py.
+  * e8a06d3 Better format the online help for bde_setwafenv.py.
+  * 19ed4aa Added bde_setwafenv.py and waf to bde-tools/bin.
+
+ -- Chen He <che24@bloomberg.net>  Thu, 3 Apr 2014 10:59:25 -0400
+
+bde-tools (2.20.0.2) unstable; urgency=low
+
+  * Bump changelog
+  * 87b978e [APPROVAL] origin/dev/druoso/minimalist_install to releases/2.20.x
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 7 Mar 2014 14:56:50 -0500
+
 bde-tools (2.20.0.1) unstable; urgency=low
 
   * Bump changelog

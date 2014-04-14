@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-include /bbsrc/build-base/build-base.mk
+include $(DISTRIBUTION_REFROOT)/bbsrc/build-base/build-base.mk
 
 clean:
 	rm -rf debian/tmp
@@ -12,6 +12,8 @@ clean:
 debian/build-stamp:
 	mkdir -p debian/tmp/$(PREFIX)/etc/bde-tools/
 	cp etc/* debian/tmp/$(PREFIX)/etc/bde-tools/
+	mkdir -p debian/tmp/$(PREFIX)/libexec/bde-tools/
+	cp bin/bde_setwafenv.py debian/tmp/$(PREFIX)/libexec/bde-tools/
 	touch $@
 
 debian/binary-stamp: debian/build-stamp
