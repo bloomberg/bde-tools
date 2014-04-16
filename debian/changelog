@@ -1,3 +1,16 @@
+bde-tools (2.21.0.0.beta.1) unstable; urgency=low
+
+  * 51e0110 [APPROVAL] origin/review/waf-dpkg-drqs-49353577 to master
+  * ca231b1 Update changelog.
+  * c69642e Updated bde_setwafenv.py to use bde-oss-tools version of the waf-based build tool.
+  * cb38b00 bump changelog
+  * 19c502a [APPROVAL] origin/review/add-xlc12-201403 to master
+  * 9f4fe8a [APPROVAL] origin/review/add-xlc12-201403 to master
+  * 971030d [APPROVAL] origin/review/add-xlc12-201403 to master
+  * da7b443 [APPROVAL] origin/review/add-xlc12-201403 to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 14 Apr 2014 15:56:07 -0400
+
 bde-tools (2.20.0.2.waf.1) unstable; urgency=low
 
   * a64070b [APPROVAL] origin/dev/druoso/minimalist_install to master
