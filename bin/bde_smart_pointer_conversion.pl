@@ -7,13 +7,18 @@ use File::Copy;
 sub Usage()
 {
     return <<USAGE;
-$0 [-h|--help|--bsl|--macro] files...
+$0 [-h|--help|--bsl|--macro] [--backups] files...
     -h or --help: print this help text and exit
+
     --macro     : converts "BloombergLP::bcema_SharedPtr" into its
                   macro equivalent to prepare for the bsl::shared_ptr
                   transition.  This is the default!
+
     --bsl       : converts the --macro macros and the "old" bcema/bdema forms
                   to their bsl equivalents.
+
+    --backups   : saves backup files (.bak)
+
 
     This script converts C++ header/source files to help with the
     change from bcema/bslma pointer types into more-standard bsl types, working
@@ -226,6 +231,8 @@ if (!@ARGV || $ARGV[0] =~ m!-h|--help!) {
 
 my $isBslMode = 0; # 0 for macro mode, 1 for bsl.
 
+my $useBackups = 0;
+
 if ($ARGV[0] =~ m!^--bsl!) {
     print STDERR "--bsl mode selected\n";
     $isBslMode = 1;
@@ -238,15 +245,27 @@ if ($ARGV[0] =~ m!^--macro!) {
     shift @ARGV;
 }
 
+if ($ARGV[0] =~ m!^--backups!) {
+    print STDERR "--backups enabled\n";
+    $useBackups = 1;
+    shift @ARGV;
+}
+
 for my $originalFilename(@ARGV) {
-    my $backupFilename = findBackupName($originalFilename);
-    print STDERR "$originalFilename ($backupFilename)... ";
+    my $bakFilename = findBackupName($originalFilename);
 
-    copy($originalFilename, $backupFilename)
-      or die "Copy from $originalFilename to $backupFilename failed, error $!";
+    if ($useBackups) {
+        print STDERR "$originalFilename ($bakFilename)... ";
+    }
+    else {
+        print STDERR "$originalFilename... ";
+    }
 
-    open(my $inFile, "<", $backupFilename)
-      or die "Error '$!' opening $backupFilename";
+    copy($originalFilename, $bakFilename)
+        or die "Copy from $originalFilename to $bakFilename failed, error $!";
+
+    open(my $inFile, "<", $bakFilename)
+      or die "Error '$!' opening $bakFilename";
 
     open(my $outFile, ">", $originalFilename)
       or die "Error '$!' opening $originalFilename";
@@ -275,4 +294,8 @@ for my $originalFilename(@ARGV) {
 
     close($outFile);
     close($inFile);
+
+    if (!$useBackups) {
+        unlink $bakFilename;
+    }
 }
