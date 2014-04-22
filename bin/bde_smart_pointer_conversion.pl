@@ -77,150 +77,98 @@ RESULT:
     return $result;
 }
 
+sub doSubstitution {
+    my $needle            = shift;
+    my $replacement       = shift;
+
+    my $count             = 0;
+    my $replacementLength = length($replacement);
+
+    $count++
+        foreach
+            s!$needle
+             !$replacement.(" "x(length($&)-$replacementLength))!gex;
+
+    return $count;
+
+}
+
 my @bslModeConversions = (
     sub {
-        my $count = 0;
-        my $replacement="bsl::dynamic_pointer_cast";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!BloombergLP\s*::\s*bcema_SharedPtrUtil\s*::\s*dynamicCast
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
+        return doSubstitution(
+                    'BloombergLP\s*::\s*bcema_SharedPtrUtil\s*::\s*dynamicCast'
+                  , "bsl::dynamic_pointer_cast"
+               );
      },
 
     sub {
-        my $count = 0;
-        my $replacement="bsl::dynamic_pointer_cast";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!bcema_SharedPtrUtil\s*::\s*dynamicCast
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
+        return doSubstitution(
+                    'bcema_SharedPtrUtil\s*::\s*dynamicCast'
+                  , "bsl::dynamic_pointer_cast"
+               );
      },
 
     sub {
-        my $count = 0;
-        my $replacement="BloombergLP::bslma::ManagedPtr";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!BloombergLP\s*::\s*bdema_ManagedPtr
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
+        return doSubstitution(
+                    'BloombergLP\s*::\s*bdema_ManagedPtr'
+                  , "BloombergLP::bslma::ManagedPtr"
+               );
      },
 
     sub {
-        my $count = 0;
-        my $replacement="BloombergLP::bslma::ManagedPtr";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!BLOOMBERGLP_BDEMA_MANAGEDPTR
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
+        return doSubstitution(
+                    'BLOOMBERGLP_BDEMA_MANAGEDPTR'
+                  , "BloombergLP::bslma::ManagedPtr"
+               );
      },
 
     sub {
-        my $count = 0;
-        my $replacement="bslma::ManagedPtr";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!bdema_ManagedPtr
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
-     },
-
-
-    sub {
-        my $count = 0;
-        my $replacement="bsl::shared_ptr";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!BloombergLP\s*::\s*bcema_SharedPtr
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
+        return doSubstitution(
+                    'bdema_ManagedPtr'
+                  , "bslma::ManagedPtr"
+               );
      },
 
     sub {
-        my $count = 0;
-        my $replacement="bsl::shared_ptr";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!BLOOMBERGLP_BCEMA_SHAREDPTR
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
+        return doSubstitution(
+                    'BloombergLP\s*::\s*bcema_SharedPtr'
+                  , "bsl::shared_ptr"
+               );
      },
 
     sub {
-        my $count = 0;
-        my $replacement="bsl::shared_ptr";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!bcema_SharedPtr
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
-     },
-
-
-    sub {
-        my $count = 0;
-        my $replacement="bsl::weak_ptr";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!BloombergLP\s*::\s*bcema_WeakPtr
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
+        return doSubstitution(
+                    'BLOOMBERGLP_BCEMA_SHAREDPTR'
+                  , "bsl::shared_ptr"
+               );
      },
 
     sub {
-        my $count = 0;
-        my $replacement="bsl::weak_ptr";
-        my $replacementLength=length($replacement);
-
-        $count++
-            foreach
-                s!BLOOMBERGLP_BCEMA_WEAKPTR
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
-
-        return $count;
+        return doSubstitution(
+                    'bcema_SharedPtr'
+                  , "bsl::shared_ptr"
+               );
      },
 
     sub {
-        my $count = 0;
-        my $replacement="bsl::weak_ptr";
-        my $replacementLength=length($replacement);
+        return doSubstitution(
+                    'BloombergLP\s*::\s*bcema_WeakPtr'
+                  , "bsl::weak_ptr"
+               );
+     },
 
-        $count++
-            foreach
-                s!bcema_WeakPtr
-                 !$replacement.(" "x(length($&)-$replacementLength))!gex;
+    sub {
+        return doSubstitution(
+                    'BLOOMBERGLP_BCEMA_WEAKPTR'
+                  , "bsl::weak_ptr"
+               );
+     },
 
-        return $count;
+    sub {
+        return doSubstitution(
+                    'bcema_WeakPtr'
+                  , "bsl::weak_ptr"
+               );
      },
 );
 
