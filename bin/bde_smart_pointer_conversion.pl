@@ -3,11 +3,12 @@
 use strict;
 use warnings;
 use File::Copy;
+use Getopt::Long;
 
 sub Usage()
 {
     return <<USAGE;
-$0 [-h|--help|--bsl|--macro] [--backups] files...
+$0 [-h|--help|--bsl|--macro] [--backups] [--check] files...
     -h or --help: print this help text and exit
 
     --macro     : converts "BloombergLP::bcema_SharedPtr" into its
@@ -19,6 +20,8 @@ $0 [-h|--help|--bsl|--macro] [--backups] files...
 
     --backups   : saves backup files (.bak)
 
+    --check     : check-only mode - prints any files which would be modified, but
+                  has no on-disk effect (and ignores the --backups switch).
 
     This script converts C++ header/source files to help with the
     change from bcema/bslma pointer types into more-standard bsl types, working
@@ -84,10 +87,10 @@ sub doSubstitution {
     my $count             = 0;
     my $replacementLength = length($replacement);
 
-    $count++
-        foreach
-            s!$needle
-             !$replacement.(" "x(length($&)-$replacementLength))!gex;
+    while(s!$needle
+           !$replacement.(" "x(length($&)-$replacementLength))!gex) {
+        ++$count;
+    }
 
     return $count;
 
@@ -172,51 +175,63 @@ my @bslModeConversions = (
      },
 );
 
-if (!@ARGV || $ARGV[0] =~ m!-h|--help!) {
-    print Usage();
+my $isBslMode   = 0; # 0 for macro mode, 1 for bsl.
+my $isMacroMode = 0; # 1 for macro mode, 0 for bsl.
+
+my $useBackups  = 0;
+
+my $isCheckMode = 0;
+
+my $isHelp      = 0;
+
+GetOptions("bsl"     => \$isBslMode,
+           "macro"   => \$isMacroMode,
+           "backups" => \$useBackups,
+           "check"   => \$isCheckMode,
+           "h|help"  => \$isHelp,
+       );
+
+if ($isHelp) {
+    Usage();
+    exit 0;
+}
+
+if ($isMacroMode && $isBslMode) {
+    print STDERR "Only one of --macro or --bsl may be specified\n";
     exit 1;
 }
 
-my $isBslMode = 0; # 0 for macro mode, 1 for bsl.
-
-my $useBackups = 0;
-
-if ($ARGV[0] =~ m!^--bsl!) {
-    print STDERR "--bsl mode selected\n";
-    $isBslMode = 1;
-    shift @ARGV;
+# Default to macro mode
+if (!($isMacroMode || $isBslMode)) {
+    $isMacroMode = 1;
 }
 
-if ($ARGV[0] =~ m!^--macro!) {
-    print STDERR "--macro mode selected (which is already the default)\n";
-    $isBslMode = 0;
-    shift @ARGV;
-}
-
-if ($ARGV[0] =~ m!^--backups!) {
-    print STDERR "--backups enabled\n";
-    $useBackups = 1;
-    shift @ARGV;
+# Check mode disables backup logic
+if ($isCheckMode) {
+    $useBackups = 0;
 }
 
 for my $originalFilename(@ARGV) {
+    my ($inFile, $outFile);
     my $bakFilename = findBackupName($originalFilename);
 
-    if ($useBackups) {
-        print STDERR "$originalFilename ($bakFilename)... ";
+    if (!$isCheckMode) {
+        copy($originalFilename, $bakFilename)
+            or die "Copy from $originalFilename to $bakFilename failed, error $!";
+
+        open($inFile, "<", $bakFilename)
+            or die "Error '$!' opening $bakFilename";
+
+        open($outFile, ">", $originalFilename)
+            or die "Error '$!' opening $originalFilename";
     }
     else {
-        print STDERR "$originalFilename... ";
+        open($inFile, "<", $originalFilename)
+            or die "Error '$!' opening $originalFilename";
+
+        open($outFile, ">", "/dev/null")
+            or die "Error '$!' opening /dev/null";
     }
-
-    copy($originalFilename, $bakFilename)
-        or die "Copy from $originalFilename to $bakFilename failed, error $!";
-
-    open(my $inFile, "<", $bakFilename)
-      or die "Error '$!' opening $bakFilename";
-
-    open(my $outFile, ">", $originalFilename)
-      or die "Error '$!' opening $originalFilename";
 
     my $count = 0;
     if ($isBslMode) {
@@ -229,21 +244,35 @@ for my $originalFilename(@ARGV) {
     }
     else {
         while(<$inFile>) {
-            $count++
-                foreach
-              s!BloombergLP\s*::\s*(bcema_(SharedPtr|WeakPtr)|bdema_ManagedPtr)
-               !"BLOOMBERGLP_".uc($1)." "!egx;
-                    # Trailing space added to keep lengths equal
+            while(s!BloombergLP\s*::\s*(bcema_(SharedPtr|WeakPtr)|bdema_ManagedPtr)
+                !"BLOOMBERGLP_".uc($1)." "!egx
+            ) {
+                ++$count;
+            }
+            # Trailing space added to keep lengths equal
             print $outFile $_;
         }
     }
 
-    print STDERR "$count change(s)\n";
+    if (!$isCheckMode) {
+        print STDERR "$originalFilename... ";
+
+        if ($useBackups) {
+            print STDERR "(backed up to $bakFilename)... ";
+        }
+
+        print STDERR "$count change(s)\n";
+
+        if (!$useBackups) {
+            unlink $bakFilename;
+        }
+    }
+    else {
+        if ($count) {
+            printf "%-50s would be changed %4d time(s)\n", $originalFilename, $count;
+        }
+    }
 
     close($outFile);
     close($inFile);
-
-    if (!$useBackups) {
-        unlink $bakFilename;
-    }
 }
