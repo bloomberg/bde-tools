@@ -417,14 +417,9 @@ windows             shr LIB_LDPATH  = PATH
 !! *            _   CINCLUDE    = $(BBSRCBBINC)/Cinclude
 
 # Package-based build refroot computation
-unix-AIX-*         _ BDE_REFROOT_PLATFORM_NAME = aix6-powerpc
-unix-SunOS-*       _ BDE_REFROOT_PLATFORM_NAME = solaris10-sparc
-unix-Linux-*       _ BDE_REFROOT_PLATFORM_NAME = amd64
-
-unix-*             _ BDE_REFROOT_VER           = $(shell cat /bb/build/share/stage/etc/distribution.conf)
-unix-*             _ BDE_REFROOT               = /bb/build/share/packages/refroot/$(BDE_REFROOT_PLATFORM_NAME)
-unix-*             _ BDE_LIBREFROOT            = $(BDE_REFROOT)/$(BDE_REFROOT_VER)/bb/lib$(BDE_WORD64)
-unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/$(BDE_REFROOT_VER)/bb/include
+unix-*             _ BDE_REFROOT               = $(shell $(MAKE) -f /bb/build/share/trunk/mk/machindep.defines -f /bb/build/share/trunk/mk/build_maint.mk print-DISTRIBUTION_REFROOT | awk '{print $$NF}')
+unix-*             _ BDE_LIBREFROOT            = $(BDE_REFROOT)/bb/lib$(BDE_WORD64)
+unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/bb/include
 
 #==============================================================================
 # Build static/dynamic
