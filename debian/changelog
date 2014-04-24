@@ -1,3 +1,14 @@
+bde-tools (2.21.0.0.beta.2) unstable; urgency=low
+
+  * 1005062 [APPROVAL] origin/review/linux-on-power-uplid-fix-drqs-51864727 to master
+  * f311d50 [APPROVAL] origin/review/use-gmake-to-find-refroot-drqs-51858847 to master
+  * deeaa23 [APPROVAL] origin/review/bcema-to-bslma-conversion-tool-drqs-51637885 to master
+  * 66a67f8 add --check mode to smartptr conversion
+  * b91958a [APPROVAL] origin/review/bcema-to-bslma-conversion-tool-drqs-51637885 to master
+  * 3c2469b initial version - --bsl mode not complete yet
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 24 Apr 2014 13:43:12 -0400
+
 bde-tools (2.21.0.0.beta.1) unstable; urgency=low
 
   * 51e0110 [APPROVAL] origin/review/waf-dpkg-drqs-49353577 to master
