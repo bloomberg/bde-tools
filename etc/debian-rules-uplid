@@ -8,7 +8,12 @@ else ifeq ($(UNAME),SunOS)
 else ifeq ($(UNAME),AIX)
  UPLID:=unix-AIX-powerpc-6.1-xlc-11.2
 else ifeq ($(UNAME),Linux)
+PROCESSOR:=$(shell uname -p)
+ifeq ($(PROCESSOR),ppc64)
+ UPLID:=unix-Linux-ppc64-2.6.32-gcc-3.4.6
+else
  UPLID:=unix-Linux-x86_64-2.6.18-gcc-4.1.2
+endif
 else
  $(error Unsupported platform $(UNAME))
 endif
