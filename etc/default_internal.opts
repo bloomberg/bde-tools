@@ -417,7 +417,7 @@ windows             shr LIB_LDPATH  = PATH
 !! *            _   CINCLUDE    = $(BBSRCBBINC)/Cinclude
 
 # Package-based build refroot computation
-unix-*             _ BDE_REFROOT               = $(shell gmake -f /bb/build/share/trunk/mk/machindep.defines -f /bb/build/share/trunk/mk/build_maint.mk print-DISTRIBUTION_REFROOT | awk '{print $$NF}')
+unix-*             _ BDE_REFROOT               = $(shell test -e /bb/build/share/trunk/mk/machindep.defines && gmake -f /bb/build/share/trunk/mk/machindep.defines -f /bb/build/share/trunk/mk/build_maint.mk print-DISTRIBUTION_REFROOT | awk '{print $$NF}' || echo "NO-SUCH-LOCATION")
 unix-*             _ BDE_LIBREFROOT            = $(BDE_REFROOT)/bb/lib$(BDE_WORD64)
 unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/bb/include
 
