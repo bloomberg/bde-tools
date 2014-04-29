@@ -1,3 +1,9 @@
+bde-tools (2.21.0.3) unstable; urgency=low
+
+  * 199865b [APPROVAL] origin/review/make-BDE_REFROOT-conditional to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 29 Apr 2014 15:57:57 -0400
+
 bde-tools (2.21.0.2) unstable; urgency=low
 
   * a3828b3 [APPROVAL] origin/review/default_internal-waf-fix-drqs-51993486 to master
