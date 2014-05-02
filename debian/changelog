@@ -1,3 +1,9 @@
+bde-oss-tools (2.21.0.2) unstable; urgency=low
+
+  * 2727232 [APPROVAL] origin/review/binary-compatibility-fix-drqs-52115794 to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 2 May 2014 09:52:21 -0400
+
 bde-oss-tools (2.21.0.1) unstable; urgency=low
 
   * No commits found
