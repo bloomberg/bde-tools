@@ -677,9 +677,16 @@ class BdeWafConfigure(object):
                                                                            # headers only
             del self.ctx.env['INCLUDES']
 
-        # ar on aix only processes 32-bit object files by default
-        if '64' in self.option_mask.ufid.ufid and self.option_mask.uplid.uplid['comp_type'] == 'xlc':
-            self.ctx.env['ARFLAGS'] = ['-rcs', '-X64']
+        # The default xlc linker options for linking shared objects for waf are
+        # '-brtl' and '-bexpfull', bde_build does not use '-bexpfull', change
+        # the options to preserve binary compatibility.
+        if self.option_mask.uplid.uplid['comp_type'] == 'xlc':
+            self.ctx.env['LINKFLAGS_cxxshlib'] = ['-G','-brtl']
+            self.ctx.env['LINKFLAGS_cshlib'] = ['-G','-brtl']
+
+            # ar on aix only processes 32-bit object files by default
+            if '64' in self.option_mask.ufid.ufid:
+                self.ctx.env['ARFLAGS'] = ['-rcs', '-X64']
 
         if self.option_mask.uplid.uplid['os_name'] == 'sunos' and self.option_mask.uplid.uplid['comp_type'] == 'cc':
             # Work around bug in waf's suncxx plugin to allow the proper adding of SONAMES. TODO: submit patch
