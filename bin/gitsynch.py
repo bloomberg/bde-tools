@@ -104,6 +104,12 @@ def main():
                       dest="force",
                       default=False ,
                       help="force a checkout (even with uncommitted changes)")
+    parser.add_option("-c",
+                      "--clean",
+                      action="store_true",
+                      dest="clean",
+                      default=False ,
+                      help="Clean the git repository ('git clean -xfd')")
     parser.add_option("-F",
                       "--fetch",
                       action="store_true",
