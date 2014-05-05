@@ -3226,6 +3226,24 @@ sub makeGroupMakefile($$$$$) {
 
 STDOUT->autoflush(1);
 
+print <<_WARNING_END;
+
+
+#     #   #####   #######        #     #     #     #######   ###
+#     #  #     #  #              #  #  #    # #    #         ###
+#     #  #        #              #  #  #   #   #   #         ###
+#     #   #####   #####          #  #  #  #     #  #####      #
+#     #        #  #              #  #  #  #######  #
+#     #  #     #  #              #  #  #  #     #  #         ###
+ #####    #####   #######         ## ##   #     #  #         ###
+
+
+Pausing for 3 seconds for you to consider your decision...
+
+_WARNING_END
+sleep(3);
+
+
 Getopt::Long::Configure("bundling");
 unless (GetOptions(\%opts, qw[
     after|A=s
