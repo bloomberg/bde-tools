@@ -3237,6 +3237,9 @@ print <<_WARNING_END;
 #     #  #     #  #              #  #  #  #     #  #         ###
  #####    #####   #######         ## ##   #     #  #         ###
 
+TEAM PAGE: {TEAM BDEI:BUILDING USING WAF<GO>}
+TEAM URL:  http://cms.prod.bloomberg.com/team/display/bdei/Building+Using+WAF
+CONTACT:   Chen He, Henry Verschell, Mike Giroux
 
 Pausing for 3 seconds for you to consider your decision...
 
