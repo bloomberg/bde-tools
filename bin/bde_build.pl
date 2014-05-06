@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 
+use English;
 use FindBin;
 use File::Path;
 use lib "$FindBin::Bin";
@@ -3244,7 +3245,8 @@ CONTACT:   Chen He, Henry Verschell, Mike Giroux
 Pausing for 3 seconds for you to consider your decision...
 
 _WARNING_END
-sleep(3);
+
+sleep(3) unless $UID == 31041; # Don't sleep for bdebuild role account.
 
 
 Getopt::Long::Configure("bundling");
