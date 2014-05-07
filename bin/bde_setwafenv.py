@@ -62,7 +62,14 @@ def _unversioned_sys_platform():
 class ctx():
     @staticmethod
     def cmd_and_log(cmd):
-        (out, err) = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE).communicate()
+        try:
+            kw = {}
+            kw['shell'] = isinstance(cmd, str)
+            kw['stdout'] = kw['stderr'] = subprocess.PIPE
+            (out, err) = subprocess.Popen(cmd, **kw).communicate()
+        except Exception as e:
+            print >>sys.stderr, "*Error: failed to execute command: %s" % cmd
+            raise
         return out
 
 def _determine_os_info():
