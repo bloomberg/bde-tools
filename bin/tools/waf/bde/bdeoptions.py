@@ -140,7 +140,7 @@ class Options(object):
 
             mc2 = Options.OPT_INLINE_COMMAND_RE2.match(option.value)
             if mc2:
-                cmd_out = ctx.cmd_and_log(mc2.group(1).split()).rstrip()
+                cmd_out = ctx.cmd_and_log(mc2.group(1)).rstrip()
                 option.value = cmd_out
 
             if option.modifier == '--':
