@@ -1,5 +1,6 @@
 bde-tools (2.21.0.4) unstable; urgency=low
 
+  * 4c602d9 bump changelog
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 7 May 2014 12:57:55 -0400
 
