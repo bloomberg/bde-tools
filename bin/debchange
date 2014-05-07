@@ -6,12 +6,12 @@ then \
     exit 1
 fi
 
-REGEX="APPROVAL|changelog|releases|version"
+REGEX="APPROVAL|changelog|releases|version|bump"
 if [[ ! -z "$2" ]]
 then \
     echo "Extending regex with $2"
     REGEX="$REGEX|$2"
 fi
 
-devgit-debchange --version="$1" --grep="$REGEX"
+devgit-debchange --version="$1" --grep="$REGEX" --full-rewrite
 
