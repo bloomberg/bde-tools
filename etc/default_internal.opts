@@ -227,6 +227,7 @@ unix-SunOS-*-*-cc-5.12       _  DEF_CFLAGS   = -features=rvalueref
 !! unix-Linux-*-2.6.18-gcc-4.1.2  _  COMPILERPATH = /usr/bin
 !! unix-Linux-*-*-gcc-4.2         _  COMPILERPATH = /opt/swt/install/gcc-$(GCC_VER)/bin
 !! unix-Linux-*-*-gcc-clang       _  COMPILERPATH = /opt/swt/install/llvm-3.1-64/bin
+!! unix-Linux-ppc64-*             _  COMPILERPATH = /opt/at7.0/bin/
 
 !! unix-Linux-*-*-gcc  _  LINUX_GCC_PREFIX = $(RETRY_ON_SIGNAL)
 
