@@ -1,29 +1,40 @@
-bde-tools (2.21.0.4) unstable; urgency=low
+bde-tools (2.21.0.5) unstable; urgency=low
 
+  * 899556b [APPROVAL] origin/review/remove-waf-drqs-51904148 to master
+  * 09ad096 [APPROVAL] origin/review/bde_setwafenv-error-handling-and-use-shell-drqs-52316856 to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 8 May 2014 11:36:30 -0400
+
+bde-tools (2.21.0.4) git; urgency=low
+
+  * 4d048ad fix changelog again
   * 4c602d9 bump changelog
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 7 May 2014 12:57:55 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 7 May 2014 13:00:39 -0400
 
-bde-tools (2.21.0.3) unstable; urgency=low
+bde-tools (2.21.0.3) git; urgency=low
 
+  * 39aaa47 bump changelog
   * 199865b [APPROVAL] origin/review/make-BDE_REFROOT-conditional to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 29 Apr 2014 15:57:57 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 29 Apr 2014 15:58:20 -0400
 
-bde-tools (2.21.0.2) unstable; urgency=low
+bde-tools (2.21.0.2) git; urgency=low
 
+  * 6a4b15a bump changelog
   * a3828b3 [APPROVAL] origin/review/default_internal-waf-fix-drqs-51993486 to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 29 Apr 2014 10:38:49 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 29 Apr 2014 10:39:07 -0400
 
-bde-tools (2.21.0.1) unstable; urgency=low
+bde-tools (2.21.0.1) git; urgency=low
 
-  * No commits found
+  * 0f515a5 bump changelog
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 24 Apr 2014 13:46:54 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 28 Apr 2014 19:52:10 -0400
 
-bde-tools (2.21.0.0.beta.2) unstable; urgency=low
+bde-tools (2.21.0.0.beta.2) git; urgency=low
 
+  * 13383e0 Bump changelog
   * 1005062 [APPROVAL] origin/review/linux-on-power-uplid-fix-drqs-51864727 to master
   * f311d50 [APPROVAL] origin/review/use-gmake-to-find-refroot-drqs-51858847 to master
   * deeaa23 [APPROVAL] origin/review/bcema-to-bslma-conversion-tool-drqs-51637885 to master
@@ -31,10 +42,11 @@ bde-tools (2.21.0.0.beta.2) unstable; urgency=low
   * b91958a [APPROVAL] origin/review/bcema-to-bslma-conversion-tool-drqs-51637885 to master
   * 3c2469b initial version - --bsl mode not complete yet
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 24 Apr 2014 13:43:12 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 24 Apr 2014 13:46:54 -0400
 
-bde-tools (2.21.0.0.beta.1) unstable; urgency=low
+bde-tools (2.21.0.0.beta.1) git; urgency=low
 
+  * 096f0bb bump changelog for 2.21.0.0.beta.1
   * 51e0110 [APPROVAL] origin/review/waf-dpkg-drqs-49353577 to master
   * ca231b1 Update changelog.
   * c69642e Updated bde_setwafenv.py to use bde-oss-tools version of the waf-based build tool.
@@ -43,46 +55,24 @@ bde-tools (2.21.0.0.beta.1) unstable; urgency=low
   * 9f4fe8a [APPROVAL] origin/review/add-xlc12-201403 to master
   * 971030d [APPROVAL] origin/review/add-xlc12-201403 to master
   * da7b443 [APPROVAL] origin/review/add-xlc12-201403 to master
-
- -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 14 Apr 2014 15:56:07 -0400
-
-bde-tools (2.20.0.2.waf.1) unstable; urgency=low
-
+  * 01d7758 [APPROVAL] pending/master/update-bde_setwafenv-installation-dir to master
   * a64070b [APPROVAL] origin/dev/druoso/minimalist_install to master
   * f50aec0 [APPROVAL] pending/master/minimalist_install to master
+  * ad795d9 Bump changelog
   * 42fdfac [APPROVAL] add-gitsync-py to master
   * 0fb9762 [APPROVAL] origin/review/devgit-push-branch-fix-drqs-49150683 to master
   * 01ab728 [APPROVAL] origin/review/no_iconv_build_on_windows to master
   * 961209b [APPROVAL] origin/review/ss12.3-support-drqs-48238026 to master
-  * 1a3986b fix s12_opt runner
-  * dc54287 add missing -features=rvalueref for cc-5.12
-  * 7f87670 add s12.3 build for solaris - drqs 48238026
   * 7a29485 [APPROVAL] pending/master/add-waf-support-tools-drqs-48413481 to master
-  * 305aad9 Updated bde_setwafenv.py per MikeG. Removed some unneeded code.
-  * cc4d149 Updated .gitignore to ignore files extracted by waf.
-  * 692d99e Minor doc fixes for bde_setwafenv.py.
-  * e8a06d3 Better format the online help for bde_setwafenv.py.
-  * 19ed4aa Added bde_setwafenv.py and waf to bde-tools/bin.
 
- -- Chen He <che24@bloomberg.net>  Thu, 3 Apr 2014 10:59:25 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 16 Apr 2014 13:18:18 -0400
 
-bde-tools (2.20.0.2) unstable; urgency=low
+bde-tools (2.20.0.0.bsl.freeze) git; urgency=low
 
-  * Bump changelog
-  * 87b978e [APPROVAL] origin/dev/druoso/minimalist_install to releases/2.20.x
-
- -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 7 Mar 2014 14:56:50 -0500
-
-bde-tools (2.20.0.1) unstable; urgency=low
-
-  * Bump changelog
-  * 41d0a2f Change to only install etc
-
- -- Daniel Ruoso <druoso@bloomberg.net>  Mon, 3 Mar 2014 17:41:12 -0500
-
-bde-tools (2.20.0.0.bsl.freeze) unstable; urgency=low
-
-  * Bump changelog
+  * b4fdc90 [APPROVAL] bump-changelog-2.20.0.bsl-freeze to master
+  * e77bc32 [APPROVAL] bump-changelog-2.20.0.bsl-freeze to master
+  * 79a0aef [APPROVAL] bump-changelog-2.20.0.bsl-freeze to master
+  * 8e8a69f bump changelog to 2.20.0.0.bsl-freeze
   * cc8e854 [APPROVAL] origin/review/bsl-arm-atomics-default-opts-drqs-40879968 to master
   * 32acc76 [APPROVAL] add-bdl-to-nightlies to master
   * ea9983a [APPROVAL] remotes/origin/review/drqs-29641821-bsl_migrate.pl to master
@@ -102,15 +92,15 @@ bde-tools (2.20.0.0.bsl.freeze) unstable; urgency=low
   * 4f5a84a [APPROVAL] origin/review/bdeflag to master
   * 36db92d add scripts to sync repos to igit and to generate debian/changelog file
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 21 Jan 2014 10:59:39 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 22 Jan 2014 12:08:39 -0500
 
-bde-tools (2.18.0.1) unstable; urgency=low
+bde-tools (2.18.0.1) git; urgency=low
 
-  * Use correct compiler versions for AIX and Solaris
+  * b1b1efc Updated compiler versions and bump changelog version
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 5 Jun 2013 11:56:08 -0400
+ -- (Henry) Mike Verschell <hverschell@bloomberg.net>  Thu, 6 Jun 2013 18:42:16 -0400
 
-bde-tools (BDE_TOOLS_ROBO_2.18.0.0) git; urgency=low
+bde-tools (2.18.0.0) git; urgency=low
 
   * 7528ba5 bump changelog for 2.18.0.0 release
   * 94b3e6e [APPROVAL] pending/master/import-default.opts-metadata-from-bde-drqs-40974008 to master
@@ -118,13 +108,23 @@ bde-tools (BDE_TOOLS_ROBO_2.18.0.0) git; urgency=low
   * 7192878 [APPROVAL] origin/review/bdeflag to master
   * fa87ed1 [APPROVAL] origin/review/sim-cpp11-features.pl to master
   * 632833b bump changelog
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 20 May 2013 10:24:36 -0400
+
+bde-tools (20130408.1) git; urgency=low
+
   * 7aa27b8 bump changelog
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 8 Apr 2013 11:53:33 -0400
+
+bde-tools (20130404.1) git; urgency=low
+
   * f02aeb1 bump changelog
   * 742d43f [APPROVAL] origin/dev/druoso/debian-packaging to master
   * 7a863b6 [APPROVAL] add-bsl-internal-build to master
   * f77741b [APPROVAL] add-bsl-internal-build to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 20 May 2013 10:24:36 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 8 Apr 2013 10:12:06 -0400
 
 bde-tools (20120625.2) git; urgency=low
 
@@ -154,6 +154,7 @@ bde-tools (20120625.2) git; urgency=low
   * 5c0d473 [APPROVAL] remove-a_cdrcache-on-windows to master
   * c803f41 [APPROVAL] try_fixing_pull_command to master
   * 379a4fe [APPROVAL] use-system-for-pull to master
+  * 3606e98 add safe gcc-4.6.1 builds, and bump verbosity for core build to help debug Mac build issues
   * 66b9704 [APPROVAL] restore-minimal-hp-builds to master
   * c612e22 [APPROVAL] remove-hp-builds to master
   * 99667e4 [APPROVAL] fix-TOOLSPATH-for-nextrel to master
@@ -189,10 +190,12 @@ bde-tools (20120625.2) git; urgency=low
   * a3de84d [APPROVAL] get-api-from-repo-for-dev to master
   * 9d3888b [APPROVAL] fix-nightly-snapshots to master
   * faa2cd6 [APPROVAL] remotes/origin/review/fix-build-order-for-bap to master
+  * fef51fe bump bap ahead of a_bassvc to reflect new dependencies
   * de84b1a [APPROVAL] remotes/origin/review/drqs30468357-remove-producemake to master
   * ef18b47 [APPROVAL] remotes/origin/review/drqs30192873-clean-test-drivers-on-windows to master
   * 83cf3a2 [APPROVAL] remotes/origin/review/bdeflag to master
   * c2f5ca2 [APPROVAL] switch-off-non-cpp11-builds to master
+  * 88625a7 bump up jobs level when only building cpp11
   * b86978a [APPROVAL] switch-off-non-cpp11-builds to master
   * 5f7bc6b [APPROVAL] move-off-of-linxdevs to master
   * 52b630b [APPROVAL] move-off-of-linxdevs to master
@@ -216,11 +219,6 @@ bde-tools (20120625.2) git; urgency=low
   * de87348 [APPROVAL] move-linxdev-builds-to-nylnxbldo1 to master
   * ce637e1 [APPROVAL] move-linux-builds-to-nylnxbldo1 to master
   * 39e1cac [APPROVAL] move-api-builds-from-ibm4 to master
-
- -- Daniel Ruoso <druoso@bloomberg.net>  Thu, 31 Jan 2013 18:09:07 -0500
-
-bde-tools (TOOLS_TO_PABLO_20111006) git; urgency=low
-
   * eaa9c56 [APPROVAL] phalpern-Doxygen to master
   * 06b68ac [APPROVAL] bde_build-better-silence to master
   * 5d29ce8 [APPROVAL] bde_build-multiple-targets to master
@@ -234,11 +232,6 @@ bde-tools (TOOLS_TO_PABLO_20111006) git; urgency=low
   * 54a8a6c [APPROVAL] use-test-hosts-for-linux-and-hp to master
   * 2112c3e [APPROVAL] drqs27084948-add-cpp11-ufid-support to master
   * 2b7cc98 [APPROVAL] drqs27195911-switch-bas-to-nextrel-and-kill-dev-bus to master
-
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 6 Oct 2011 15:43:27 -0400
-
-bde-tools (TOOLS_TO_PABLO_20110902) git; urgency=low
-
   * c2917cc [APPROVAL] DRQS27020131-enable-nextrel-gcc-4.6.1-build to master
   * 65f5bd7 [APPROVAL] jobs-to-3-for-linxdev2 to master
   * 87d34a8 [APPROVAL] add_sgcc-4.6.1_build_in_dev to master
@@ -283,4 +276,4 @@ bde-tools (TOOLS_TO_PABLO_20110902) git; urgency=low
   * b054ac5 [APPROVAL] remotes/origin/pending/master/gitignore to master
   * fba8d85 [APPROVAL] remotes/origin/pending/master/last-clearcase-dev-import to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 2 Sep 2011 13:37:10 -0400
+ -- Daniel Ruoso <druoso@bloomberg.net>  Thu, 31 Jan 2013 18:09:07 -0500
