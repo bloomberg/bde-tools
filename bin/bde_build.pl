@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 
+use English qw( -no_match_vars );
+
 use FindBin;
 use File::Path;
 use lib "$FindBin::Bin";
@@ -3225,6 +3227,28 @@ sub makeGroupMakefile($$$$$) {
 # OPTIONS
 
 STDOUT->autoflush(1);
+
+print <<_WARNING_END;
+
+
+#     #   #####   #######        #     #     #     #######   ###
+#     #  #     #  #              #  #  #    # #    #         ###
+#     #  #        #              #  #  #   #   #   #         ###
+#     #   #####   #####          #  #  #  #     #  #####      #
+#     #        #  #              #  #  #  #######  #
+#     #  #     #  #              #  #  #  #     #  #         ###
+ #####    #####   #######         ## ##   #     #  #         ###
+
+TEAM PAGE: {TEAM BDEI:BUILDING USING WAF<GO>}
+TEAM URL:  http://cms.prod.bloomberg.com/team/display/bdei/Building+Using+WAF
+CONTACT:   Chen He, Henry Verschell, Mike Giroux
+
+Pausing for 3 seconds for you to consider your decision...
+
+_WARNING_END
+
+sleep(3) unless $UID == 31041; # Don't sleep for bdebuild role account.
+
 
 Getopt::Long::Configure("bundling");
 unless (GetOptions(\%opts, qw[
