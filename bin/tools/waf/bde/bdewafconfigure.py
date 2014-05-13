@@ -677,12 +677,19 @@ class BdeWafConfigure(object):
                                                                            # headers only
             del self.ctx.env['INCLUDES']
 
-        # The default xlc linker options for linking shared objects for waf are
-        # '-brtl' and '-bexpfull', bde_build does not use '-bexpfull', change
-        # the options to preserve binary compatibility.
         if self.option_mask.uplid.uplid['comp_type'] == 'xlc':
+            # The default xlc linker options for linking shared objects for waf
+            # are '-brtl' and '-bexpfull', bde_build does not use '-bexpfull',
+            # change the options to preserve binary compatibility.
             self.ctx.env['LINKFLAGS_cxxshlib'] = ['-G','-brtl']
             self.ctx.env['LINKFLAGS_cshlib'] = ['-G','-brtl']
+
+            # The envrionment variables SHLIB_MARKER and STLIB_MARKERS are used
+            # by the '_parse_ldflags' function to determine wheter a library is
+            # to be linked staticcally or dyanmically.  These are not set by
+            # waf xlc plugin.
+            self.ctx.env['SHLIB_MARKER'] = '-bdynamic'
+            self.ctx.env['STLIB_MARKER'] = '-bstatic'
 
             # ar on aix only processes 32-bit object files by default
             if '64' in self.option_mask.ufid.ufid:
