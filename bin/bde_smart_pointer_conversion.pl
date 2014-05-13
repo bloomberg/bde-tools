@@ -182,7 +182,7 @@ my $useBackups  = 0;
 
 my $isCheckMode = 0;
 
-my $isHelp      = 0;
+my $isHelp      = @ARGV==0;
 
 GetOptions("bsl"     => \$isBslMode,
            "macro"   => \$isMacroMode,
@@ -192,7 +192,7 @@ GetOptions("bsl"     => \$isBslMode,
        );
 
 if ($isHelp) {
-    Usage();
+    print Usage();
     exit 0;
 }
 
