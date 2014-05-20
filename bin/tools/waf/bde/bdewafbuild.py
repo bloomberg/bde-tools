@@ -119,6 +119,7 @@ class BdeWafBuild(object):
                      source          = [package_name + '_dums.c'],
                      features        = ['c'],
                      cflags          = cflags,
+                     cincludes       = cincludes,
                      depends_on      = package_name + '.dums',
                      )
             dum_task_gens.append(package_name + '_dums')
