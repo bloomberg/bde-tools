@@ -461,7 +461,8 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
      -W$(GCCEXTRAWERROR)overflow                                            \
      -W$(GCCEXTRAWERROR)larger-than-100000
 
-*-*-*-*-gcc-4.3      _  GCCEXTRAWFLAGS  = -Werror=cast-qual
+!! *                 _  GCCEXTRAWFLAGS_CAST_QUAL  = -Werror=cast-qual
+*-*-*-*-gcc-4.3      _  GCCEXTRAWFLAGS  = $(GCCEXTRAWFLAGS_CAST_QUAL)
 
 *                       _   CC64FLAGS   =
 *-*-*-*-gcc             _   CC64FLAGS   = -m32
