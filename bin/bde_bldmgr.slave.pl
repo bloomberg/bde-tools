@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/bbs/opt/bin/perl
 
 use strict;
 use warnings;
