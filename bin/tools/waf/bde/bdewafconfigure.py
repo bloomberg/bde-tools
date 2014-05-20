@@ -189,19 +189,23 @@ class BdeWafConfigure(object):
     def _load_package_and_component_types(self):
 
         def load_package_types(package_name, component_names, package_node):
+            if 0 == len(component_names):
+                cpp_nodes = package_node.ant_glob('*.cpp')
+                self.package_type[package_name] = 'cpp' if 0 < len(cpp_nodes) else 'c'
+                return
+
             cpp_count = 0
+            c_count = 0
             for c in component_names:
-                if package_node.find_node("%s.cpp" % c):
-                    self.component_type[c] = "cpp"
+                if package_node.find_node('%s.cpp' % c):
+                    self.component_type[c] = 'cpp'
                     cpp_count += 1
                 else:
                     # assume that only c or cpp components exist
-                    self.component_type[c] = "c"
+                    self.component_type[c] = 'c'
+                    c_count += 1
 
-            if cpp_count < len(component_names) - cpp_count:
-                self.package_type[package_name] = "c"
-            else:
-                self.package_type[package_name] = "cpp"
+            self.package_type[package_name] = 'cpp' if c_count <= cpp_count else 'c'
 
         for g in self.group_mem:
             if not g in self.sa_package_locs:
