@@ -31,6 +31,9 @@ class BdeWafBuild(object):
         self.package_pub = self.ctx.env['package_pub']
         self.package_dums = self.ctx.env['package_dums']
 
+        self.package_type = self.ctx.env['package_type']
+        self.component_type = self.ctx.env['component_type']
+
         self.libtype_features = self.ctx.env['libtype_features']
         self.custom_envs = self.ctx.env['custom_envs']
 
@@ -101,16 +104,6 @@ class BdeWafBuild(object):
                 self.ctx.install_files(os.path.join('${PREFIX}', 'include', group_node.name, path),
                                        path_headers[path])
 
-        cpp_flag = len(package_node.ant_glob('*.cpp')) > 0
-
-        src_extension = '.cpp' if cpp_flag else '.c'
-
-        if cpp_flag:
-            features = ['cxx']
-        else:
-            features = ['c']
-
-
         dum_task_gens = []
         if package_name in self.package_dums:
 
@@ -130,8 +123,26 @@ class BdeWafBuild(object):
                      )
             dum_task_gens.append(package_name + '_dums')
 
+        package_type = self.package_type[package_name]
+        other_type = 'c' if package_type == 'cpp' else 'cpp'
+        package_type_props = {
+            'cpp': {
+                'src_ext': '.cpp',
+                'features': ['cxx']
+            },
+            'c': {
+                'src_ext': '.c',
+                'features': ['c']
+            }
+        }
+        ptp = package_type_props
+        lib_src_ext = ptp[package_type]['src_ext']
+
         if components:
-            cpp_files = [component + src_extension for component in components]
+            lib_components = [ c for c in components if self.component_type[c] == package_type ]
+            other_components = [ c for c in components if self.component_type[c] == other_type]
+            lib_src_files = [ c + lib_src_ext for c in lib_components ]
+
         else:
             # packages whose name contains a '+' are special in that their 'mem' files are empty and they do not contain
             # typical bde-style components.  These packages contain either only headers, or contain 'cpp' files that do
@@ -139,16 +150,16 @@ class BdeWafBuild(object):
 
             # These header-only packages should always have a dummy.cpp file.
 
-            cpp_files = [x.name for x in package_node.ant_glob('*' + src_extension)]
+            lib_src_files = [x.name for x in package_node.ant_glob('*' + lib_src_ext)]
 
-        if not cpp_files:
+        if not lib_src_files:
             self.ctx.fatal('package %s does not contain any components' % package_name)
 
         self.ctx(name            = package_name + '_lib',
                  target          = package_name,
                  path            = package_node,
-                 source          = cpp_files,
-                 features        = features + self.libtype_features,
+                 source          = lib_src_files,
+                 features        = ptp[package_type]['features'] + self.libtype_features,
                  cflags          = cflags,
                  cincludes       = cincludes,
                  cxxflags        = cxxflags,
@@ -165,17 +176,37 @@ class BdeWafBuild(object):
                  )
 
         if self.build_tests:
-            test_features = features + ['cxxprogram']
+            test_features = ['cxxprogram']
             if self.run_tests:
                 test_features = test_features + ['test']
 
-            for c in components:
+            for c in lib_components:
                 build_test = self.ctx(
                     name          = c + '.t',
                     path          = package_node,
-                    source        = c + '.t' + src_extension,
+                    source        = c + '.t' + lib_src_ext,
                     target        = c + '.t',
-                    features      = test_features,
+                    features      = ptp[package_type]['features'] + test_features,
+                    cflags        = cflags,
+                    cincludes     = cincludes,
+                    cxxflags      = cxxflags,
+                    cxxincludes   = cxxincludes,
+                    linkflags     = linkflags,
+                    lib           = libs,
+                    stlib         = stlibs,
+                    cust_libpaths = libpaths,
+                    includes      = [package_node],
+                    use           = [package_name + '_lib'] + dum_task_gens,
+                    uselib        = external_deps
+                    )
+
+            for c in other_components:
+                build_test = self.ctx(
+                    name          = c + '.t',
+                    path          = package_node,
+                    source        = c + '.t' + ptp[other_type]['src_ext'],
+                    target        = c + '.t',
+                    features      = ptp[other_type]['features'] + test_features,
                     cflags        = cflags,
                     cincludes     = cincludes,
                     cxxflags      = cxxflags,
