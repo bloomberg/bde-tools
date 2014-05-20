@@ -3,8 +3,7 @@ import os
 import re
 
 from bdeoptions import Options, OptionMask, Uplid, Ufid, RawOptions
-from waflib import Context
-from waflib import Utils
+from waflib import Context, Utils, Logs
 
 class BdeWafConfigure(object):
 
@@ -38,6 +37,9 @@ class BdeWafConfigure(object):
         self.package_opts = {}
         self.package_cap = {}
         self.package_dums = []
+
+        self.component_type = {}  # c or cpp
+        self.package_type = {}  # c or cpp
 
         self.unsupported_groups = set()
         self.unsupported_packages = set()
@@ -116,8 +118,9 @@ class BdeWafConfigure(object):
 
         groups_nodes = [x.parent.parent for x in self.ctx.path.ant_glob('groups/*/group/*.mem')]
         enterprise_nodes = [x.parent.parent for x in self.ctx.path.ant_glob('enterprise/*/group/*.mem')]
+        wrapper_group_nodes = [x.parent.parent for x in self.ctx.path.ant_glob('wrappers/*/group/*.mem')]
 
-        group_nodes = groups_nodes + enterprise_nodes
+        group_nodes = groups_nodes + enterprise_nodes + wrapper_group_nodes
 
         for g in group_nodes:
             self.group_dep[g.name] = self._get_meta(g, 'group', 'dep')
@@ -133,7 +136,8 @@ class BdeWafConfigure(object):
 
         # stand-alone packages behaves like pakcage groups with a single package
         adapter_nodes = [x.parent.parent for x in self.ctx.path.ant_glob('adapters/*/package/*.mem')]
-        sa_package_nodes = adapter_nodes
+        wrapper_package_nodes = [x.parent.parent for x in self.ctx.path.ant_glob('wrappers/*/package/*.mem')]
+        sa_package_nodes = adapter_nodes + wrapper_package_nodes
 
         for s in sa_package_nodes:
             self.group_dep[s.name] = self._get_meta(s, 'package', 'dep')
@@ -175,11 +179,39 @@ class BdeWafConfigure(object):
                 if dums_file:
                     self.package_dums.append(package_node.name)
 
+        self._load_package_and_component_types()
         self._load_group_vers()
         self._load_soname_override()
         self._load_pc_extra_include_dirs()
 
         self.ctx.end_msg('ok')
+
+    def _load_package_and_component_types(self):
+
+        def load_package_types(package_name, component_names, package_node):
+            cpp_count = 0
+            for c in component_names:
+                if package_node.find_node("%s.cpp" % c):
+                    self.component_type[c] = "cpp"
+                    cpp_count += 1
+                else:
+                    # assume that only c or cpp components exist
+                    self.component_type[c] = "c"
+
+            if cpp_count < len(component_names) - cpp_count:
+                self.package_type[package_name] = "c"
+            else:
+                self.package_type[package_name] = "cpp"
+
+        for g in self.group_mem:
+            if not g in self.sa_package_locs:
+                group_node = self.ctx.path.make_node(self.group_locs[g]).make_node(g)
+                for p in self.group_mem[g]:
+                    package_node = group_node.make_node(p)
+                    load_package_types(p, self.package_mem[p], package_node)
+            else:
+                package_node = self.ctx.path.make_node(self.sa_package_locs[g]).make_node(g)
+                load_package_types(g, self.group_mem[g], package_node)
 
 
     def _levelize_group_dependencies(self, group):
@@ -525,13 +557,14 @@ class BdeWafConfigure(object):
         self.ctx.env[package + '_libpaths'] = libpaths
         self.ctx.env[package + '_linkflags'] = linkflags
 
-
     def _load_group_vers(self):
         # this is a big hack to get the version numbers for package groups and sa-packages
         for group_name in self.export_groups:
-            self.group_ver[group_name] = self._get_group_ver(group_name)
-            if not self.group_ver[group_name][0]:
-                Logs.warn("Could not indentify the version number for '%s'." % group_name)
+            try:
+                self.group_ver[group_name] = self._get_group_ver(group_name)
+            except BaseException as e:
+                Logs.warn("Could not identify the version number for %s." % group_name)
+                self.group_ver[group_name] = ("-1", "-1", "-1")
 
         for group_name in self.export_groups:
             if self.group_ver[group_name][0] == 'BDE_VERSION_MAJOR':
@@ -542,16 +575,19 @@ class BdeWafConfigure(object):
 
 
     def _get_group_ver(self, group_name):
-
         if group_name in ('a_bdema',):
-            return ('BDE_VERSION_MAJOR', 'BDE_VERSION_MINOR', 'BDE_VERSION_PATCH')
+            version = ('BDE_VERSION_MAJOR', 'BDE_VERSION_MINOR', 'BDE_VERSION_PATCH')
         elif group_name in ('bap', 'zde', 'e_ipc'):
-            return self._get_group_ver2(group_name)
+            version = self._get_group_ver2(group_name)
         elif group_name.startswith('a_') and not group_name in ('a_xercesc', 'a_bteso'):
-            return self._get_group_ver3(group_name)
+            version = self._get_group_ver3(group_name)
         else:
-            return self._get_group_ver1(group_name)
+            version = self._get_group_ver1(group_name)
 
+        if version[0] == None or version[1] == None or version[2] == None:
+            raise Exception
+
+        return version
 
     def _get_group_ver1(self, group_name):
         if group_name not in self.sa_package_locs:
@@ -737,6 +773,9 @@ class BdeWafConfigure(object):
         self.ctx.env['libtype_features'] = self.libtype_features
         self.ctx.env['prefix'] = self.ctx.options.prefix
         self.ctx.env['custom_envs']  = self.custom_envs
+
+        self.ctx.env['package_type'] = self.package_type
+        self.ctx.env['component_type'] = self.component_type
 
         self.ctx.env['lib_suffix'] = self.lib_suffix
         self.ctx.env['install_flat_include'] = self.ctx.options.install_flat_include
