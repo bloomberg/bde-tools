@@ -150,7 +150,8 @@ class BdeWafBuild(object):
             # not have corresponding '.h' nad '.t.cpp' files.
 
             # These header-only packages should always have a dummy.cpp file.
-
+            lib_components = []
+            other_components = []
             lib_src_files = [x.name for x in package_node.ant_glob('*' + lib_src_ext)]
 
         if not lib_src_files:
