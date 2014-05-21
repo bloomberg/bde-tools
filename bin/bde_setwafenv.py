@@ -347,9 +347,11 @@ regular user.
 
     raw_options.read(default_internal_opts_path)
 
-    ufid = options.ufid
-    if not ufid:
-        ufid = 'dbg_mt_exc'
+    ufidString = options.ufid
+    if not ufidString:
+        ufidString = 'dbg_mt_exc'
+    # Put ufidString into canonical form
+    ufid = "%s" % Ufid.from_config_str(ufidString)
 
     if options.force_uplid:
         uplid = Uplid.from_platform_str(options.force_uplid)
