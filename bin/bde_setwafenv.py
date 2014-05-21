@@ -72,6 +72,11 @@ class ctx():
             raise
         return out
 
+    @staticmethod
+    def fatal(str):
+        print >>sys.stderr, str
+        sys.exit(1)
+
 def _determine_os_info():
     """
     Return a tuple containing the (OS type, OS name, CPU type, OS version).
@@ -87,7 +92,7 @@ def _determine_os_info():
         }
 
     if platform not in osinfo_getters:
-        cfg.fatal('Unsupported platform: %s' % platform)
+        ctx.fatal('Unsupported platform: %s' % platform)
 
     (os_type, os_name, os_ver) = osinfo_getters[platform](ctx)
 
@@ -336,7 +341,7 @@ regular user.
         default_internal_opts_path = os.path.join(bde_root, 'etc', 'default_internal.opts')
         default_internal_opts_flag = os.path.isfile(default_internal_opts_path)
 
-    if not default_opts_flag:
+    if not default_internal_opts_flag:
         ctx.fatal("Can not find default_internal.opts from the /etc directory from the path pointed to by the"
                   " BDE_ROOT environment variable.")
 
