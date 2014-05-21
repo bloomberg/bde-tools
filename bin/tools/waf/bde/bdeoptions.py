@@ -52,23 +52,21 @@ class RawOptions(object):
             if not continuation:
                 option = RawOptions.Option()
                 m = RawOptions.OPT_LINE_RE.match(line)
-                if m:
-                    got_line = True
-                    option.modifier = m.group('mod')
-                    option.platform = m.group('plat')
-                    option.config = m.group('conf')
-                    option.key = m.group('key')
-                    option.value = m.group('val')
-
-                    continuation = not m.group('cont') is None
-                else:
+                if RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(line):
                     got_line = False
-                    if not RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(
-                            line):
-                        print(line)
-                    assert(RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(
-                        line))
                     self.all_lines.append((line.rstrip(), None))
+                else:
+                    m = RawOptions.OPT_LINE_RE.match(line)
+                    if m:
+                        got_line = True
+                        option.modifier = m.group('mod')
+                        option.platform = m.group('plat')
+                        option.config = m.group('conf')
+                        option.key = m.group('key')
+                        option.value = m.group('val')
+                        continuation = not m.group('cont') is None
+                    else:
+                        assert(False, '"%s" is not valid!' % line)
             else:
                 # previous line continues
 
@@ -207,13 +205,55 @@ class Options(object):
 
 
 class Ufid(object):
-    VALID_FLAGS = [('64', '32'),
-                   ('dbg', 'opt'),
-                   ('safe', 'safe2'),
-                   ('cpp11'),
-                   ('exc'),
-                   ('shr')
-                   ]
+    # The order specified by the first element in the tuples in the VALID_FLAGS
+    # dictionary must result in the following literal dpkg production ufids
+    # when applied to the appropriate combinations of flags:
+    #     opt_exc_mt
+    #     opt_exc_mt_64
+    #     opt_exc_mt
+    #     opt_exc_mt_safe
+    #     dbg_exc_mt
+    #     dbg_exc_mt_safe
+    #     opt_dbg_exc_mt
+    #     opt_dbg_exc_mt_safe
+    #     opt_exc_mt_64
+    #     opt_exc_mt_64_safe
+    #     dbg_exc_mt_64
+    #     dbg_exc_mt_64_safe
+    #     opt_dbg_exc_mt_64
+    #     opt_dbg_exc_mt_64_safe
+    #     opt_exc_mt_64_pic
+    #     dbg_exc_mt_64_pic
+    #     opt_exc_mt_shr
+    #     opt_exc_mt_64_shr
+
+    FRONT  = 0
+    MIDDLE = 50
+    BACK   = 100
+    # allowed UFID flags: flag -> flag's sort order and description
+    VALID_FLAGS = {
+        'dbg':     (FRONT  + 1, 'Build with debugging information'           ),
+        'opt':     (FRONT,      'Build optimized'                            ),
+        'exc':     (MIDDLE,     'Exception support'                          ),
+        'mt':      (MIDDLE + 1, 'Multithread support'                        ),
+        'ndebug':  (MIDDLE + 2, 'Build with NDEBUG defined'                  ),
+        '64':      (BACK   - 5, 'Build for 64-bit architecture'              ),
+        'safe2':   (BACK   - 4,
+                  'Build safe2 (paranoid and binary-incompatible) libraries' ),
+        'safe':    (BACK   - 3, 'Build safe (paranoid) libraries'            ),
+        'shr':     (BACK   - 2, 'Build dynamic libraries'                    ),
+        'pic':     (BACK   - 1, 'Build static PIC libraries'                 ),
+        # 'rtd':     (BACK   + 5, 'Build with dynamic MSVC runtime'          ),
+        # 'ins':     (BACK   + 0, 'Build with Insure++'                      ),
+        # 'pure':    (BACK   + 1, 'Build with Purify (no windows)'           ),
+        # 'pure':    (BACK   + 2, 'Build with Purify (windows)'              ),
+        # 'purecov': (BACK   + 3, 'Build with Pure Coverage'                 ),
+        # 'qnt':     (BACK   + 4, 'Build with Quantify'                      ),
+        # 'win':     (BACK   +11, 'Use GUI for instrumenting tools'          ),
+        # 'stlport': (BACK   + 6, 'Build with STLPort on Sun'                ),
+        'cpp11':   (BACK   +12,
+                             'Build with support for C++11 (C++0x) features' ),
+    }
 
     def __init__(self, flags):
         self.ufid = set()
@@ -222,8 +262,10 @@ class Ufid(object):
             self.add_flag(f)
 
     def add_flag(self, flag):
-        # TODO: do some validation
-        self.ufid.add(flag)
+        if flag in Ufid.VALID_FLAGS:
+            self.ufid.add(flag)
+        else:
+            raise KeyError("Invalid flag: %s" % flag)
 
     @classmethod
     def from_config_str(cls, config_str):
@@ -240,7 +282,9 @@ class Ufid(object):
         return self.ufid <= other.ufid
 
     def __str__(self):
-        return '-'.join(self.ufid)
+        flags = [flag for flag in self.ufid]
+        flags.sort(key=lambda f: Ufid.VALID_FLAGS[f][0])
+        return '_'.join(flags)
 
 
 class Uplid(object):
