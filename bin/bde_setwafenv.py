@@ -150,7 +150,7 @@ def _determine_installation_location(prefix, uplid):
     return None
 
 def _print_setenvs(uplid, ufid, raw_options, options):
-    option_mask = OptionMask(uplid, Ufid(ufid.split('_')))
+    option_mask = OptionMask(uplid, ufid)
 
     default_opts = Options(option_mask)
 
@@ -172,7 +172,7 @@ def _print_setenvs(uplid, ufid, raw_options, options):
 
     print 'export BDE_WAF_UFID="%s"' % ufid
     print 'export BDE_WAF_UPLID="%s"' % uplid
-    id_str = str(uplid) + '-' + ufid
+    id_str = str(uplid) + '-' + str(ufid)
     print 'export BDE_WAF_BUILD_DIR="%s"' % id_str
     print 'export WAFLOCK=".lock-waf-%s"' % id_str
 
@@ -330,7 +330,6 @@ regular user.
     if not default_opts_flag:
         ctx.fatal("Can not find default.opts from the /etc directory of the parent directory of the waf executable "
                   ", nor the path pointed to by the BDE_ROOT environment variable.")
-
     raw_options = RawOptions()
     raw_options.read(default_opts_path)
 
@@ -351,7 +350,7 @@ regular user.
     if not ufid_raw:
         ufid_raw = 'dbg_mt_exc'
     # Put ufid_raw into canonical form
-    ufid = "%s" % Ufid.from_config_str(ufid_raw)
+    ufid = Ufid.from_config_str(ufid_raw)
 
     if options.force_uplid:
         uplid = Uplid.from_platform_str(options.force_uplid)
