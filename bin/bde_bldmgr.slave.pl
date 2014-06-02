@@ -81,10 +81,14 @@ $ENV{PATH} .= ":".join(':',qw[
 ]);
 
 if ($^O =~ /solaris/) {
-    # Sun builds require adding a few paths to the prompt to find things like ar
+    # Sun builds require adding a few paths to the prompt to find things like
+    # ar
     $ENV{PATH} .= ":".join(':',$bindir,qw[
         /usr/ccs/bin
     ]);
+
+    # We need to make sure child processes pick up /bbs/opt/bin/perl.
+    $ENV{PATH} = "/bbs/opt/bin:$ENV{PATH}";
 }
 
 # Need /opt/swt/bin to find gmake - DRQS 46663127
@@ -102,12 +106,13 @@ if ($^O =~ /aix/) {
 }
 
 if ($^O =~ /hpux/) {
-    #DRQS 25995466 Updated. OU Q 'bdet_Datetime::printToBuffer' not returning expect
-    #'bdet_Datetime::printToBuffer' not returning expected value on Windows and HP
+    #DRQS 25995466 Updated. OU Q 'bdet_Datetime::printToBuffer' not returning
+    #expect 'bdet_Datetime::printToBuffer' not returning expected value on
+    #Windows and HP
     # 6/29/11   14:02:53   RAYMOND SEEHEI CHIU (PROG)
     # Mike G.,
-    # Can you see if we can compile with macro _XOPEN_SOURCE=600 and environment
-    # variable UNIX_STD=2003 for HP?
+    # Can you see if we can compile with macro _XOPEN_SOURCE=600 and
+    # environment variable UNIX_STD=2003 for HP?
     # This is documented in the manual page ("man standards 5")
 
     $ENV{UNIX_STD} = "2003";
@@ -233,7 +238,8 @@ if ($group) {
         $logfile = "$logdir/slave.$dtag.$group.$uplid.$hostname.$$.log";
 
         $SLAVELOG=new IO::Handle;
-        retry_open($SLAVELOG,">$logfile") or die "cannot open build output file: $!";
+        retry_open($SLAVELOG,">$logfile")
+                                    or die "cannot open build output file: $!";
         $SLAVELOG->autoflush(1);
 
         $logOpened = 1;
@@ -258,7 +264,8 @@ sub write_logandverbose (@) {
 if ($opts{envbat}) {
     open_slavelog($opts{logdir});
     write_logandverbose "Got --envbat $opts{envbat}";
-    open ENVBAT,"$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
+    open ENVBAT,
+           "$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
     while(<ENVBAT>) {
         /^(.*?)=(.*)$/ and $ENV{$1}=$2;
     }
@@ -345,7 +352,8 @@ Passed to build:
   --options  | -o            specify options file (default: default.opts)
   --serial   | -s            serial build (equivalent to -j1)
                              default if platform is 'dg'
-  --tag      | -T <string>   add "tag" string to lines of output (defaults to "")
+  --tag      | -T <string>   add "tag" string to lines of output
+                                                               (defaults to "")
   --rebuild  | -R            force rebuild makefiles even if up to date
   --uptodate | -U            assume makefiles are up-to-date (not with -R)
   --uplid    | -u <uplid>    specify rather than derive platform ID. -c will
@@ -383,7 +391,8 @@ MAIN: {
     # construct common command arguments
     my @basecmd=("$bindir${FS}bde_build.pl");
     if ($iamwindows) {
-        unshift @basecmd,qq["$^X"]; #prefix with Perl itself (in quotes) for Windows
+        unshift @basecmd,qq["$^X"]; # prefix with Perl itself (in quotes) for
+                                    # Windows
     }
 
     $ENV{BDE_ROOT}=$where;
@@ -424,7 +433,7 @@ MAIN: {
             foreach my $flag (split ",",$flagset) {
                 my ($opt,$value) = split /=/,$flag,2;
                 unless ($opt=~/^-/) {
-                    $opt=((length $opt>1)?"--":"-").$opt; #may omit leading '-';
+                    $opt=((length $opt>1)?"--":"-").$opt; #may omit leading '-'
                 }
                 push @basecmd,$opt;
                 push @basecmd,$value if defined $value;
@@ -471,7 +480,9 @@ MAIN: {
             else {
                 print FAILED," ",$target,$tagTrailer," ";
                 my $n = undef;
-                for my $f ($output =~ /\(see (.*?[\\\/]make\.[^\\\/]+\.log)\)/gm) {
+                for my $f (
+                          $output =~ /\(see (.*?[\\\/]make\.[^\\\/]+\.log)\)/gm
+                          ) {
                         $n = 1;
                         print "[see $f]";
                 }
