@@ -1,4 +1,3 @@
-import re
 import os
 import os.path
 import sys
@@ -6,6 +5,8 @@ import sys
 import bdeunittest
 from waflib.TaskGen import feature, after_method, before_method
 from waflib import Errors, Utils, Options, Task, Logs
+from waflib.Build import BuildContext
+
 
 class BdeWafBuild(object):
 
@@ -45,19 +46,24 @@ class BdeWafBuild(object):
         self.install_lib_dir = self.ctx.env['install_lib_dir']
         self.pc_extra_include_dirs = self.ctx.env['pc_extra_include_dirs']
 
-        # Get the path of run_unit_tests.py. Assume the directory containing this script is
-        # <repo_root>/bin/tools/waf/bde and run_unit_tests.py is located in the directory <repo_root>/bin/tools.
+        # Get the path of run_unit_tests.py. Assume the directory containing
+        # this script is <repo_root>/bin/tools/waf/bde and run_unit_tests.py is
+        # located in the directory <repo_root>/bin/tools.
 
         upd = os.path.dirname
-        test_runner_path = os.path.join(upd(upd(upd(os.path.realpath(__file__)))), 'run_unit_tests.py')
+        test_runner_path = os.path.join(
+            upd(upd(upd(os.path.realpath(__file__)))),
+            'run_unit_tests.py')
 
-        self.ctx.options.testcmd = '%s %s %%s --verbosity %s --timeout %s' % (sys.executable,
-                                                                              test_runner_path,
-                                                                              self.ctx.options.test_verbosity,
-                                                                              self.ctx.options.test_timeout)
+        self.ctx.options.testcmd = \
+            '%s %s %%s --verbosity %s --timeout %s' % (
+                sys.executable,
+                test_runner_path,
+                self.ctx.options.test_verbosity,
+                self.ctx.options.test_timeout)
 
-
-    def _build_package_impl(self, package_name, package_node, group_node, components, internal_deps, external_deps,
+    def _build_package_impl(self, package_name, package_node, group_node,
+                            components, internal_deps, external_deps,
                             install_path):
 
         cflags = self.ctx.env[package_name + '_cflags']
@@ -70,9 +76,10 @@ class BdeWafBuild(object):
         linkflags = self.ctx.env[package_name + '_linkflags']
 
         if package_name in self.package_pub:
-            # Some files necessary for compilation are missing from the pub files
-            # For example, bsl+stdhdrs/sys/time.h
-            # As a work-around, simply export all files listed in the pub files and any missing 'h' or 'SUNWCCh' files
+            # Some files necessary for compilation are missing from the pub
+            # files For example, bsl+stdhdrs/sys/time.h As a work-around,
+            # simply export all files listed in the pub files and any missing
+            # 'h' or 'SUNWCCh' files
 
             install_headers = package_node.ant_glob('**/*.h')
             install_headers.extend(package_node.ant_glob('**/*.SUNWCCh'))
@@ -92,35 +99,40 @@ class BdeWafBuild(object):
         path_headers = {}
         for h in install_headers:
             path = os.path.dirname(h.path_from(package_node))
-            if not path in path_headers:
+            if path not in path_headers:
                 path_headers[path] = []
 
             path_headers[path].append(h)
 
         for path in path_headers:
             if self.install_flat_include:
-                self.ctx.install_files(os.path.join('${PREFIX}', 'include', path), path_headers[path])
+                self.ctx.install_files(os.path.join('${PREFIX}',
+                                                    'include', path),
+                                       path_headers[path])
             else:
-                self.ctx.install_files(os.path.join('${PREFIX}', 'include', group_node.name, path),
+                self.ctx.install_files(os.path.join('${PREFIX}',
+                                                    'include',
+                                                    group_node.name, path),
                                        path_headers[path])
 
         dum_task_gens = []
         if package_name in self.package_dums:
 
-            self.ctx(name = package_name + '.dums',
-                     path = package_node,
-                     rule = 'cp ${SRC} ${TGT}',
-                     source = package_node.make_node(['package', package_name + '.dums']),
-                     target = package_name + '_dums.c'
+            self.ctx(name=package_name + '.dums',
+                     path=package_node,
+                     rule='cp ${SRC} ${TGT}',
+                     source=package_node.make_node(['package',
+                                                   package_name + '.dums']),
+                     target=package_name + '_dums.c'
                      )
 
-            self.ctx(name            = package_name + '_dums',
-                     path            = package_node,
-                     source          = [package_name + '_dums.c'],
-                     features        = ['c'],
-                     cflags          = cflags,
-                     cincludes       = cincludes,
-                     depends_on      = package_name + '.dums',
+            self.ctx(name=package_name + '_dums',
+                     path=package_node,
+                     source=[package_name + '_dums.c'],
+                     features=['c'],
+                     cflags=cflags,
+                     cincludes=cincludes,
+                     depends_on=package_name + '.dums',
                      )
             dum_task_gens.append(package_name + '_dums')
 
@@ -140,28 +152,36 @@ class BdeWafBuild(object):
         lib_src_ext = ptp[package_type]['src_ext']
 
         if components:
-            lib_components = [ c for c in components if self.component_type[c] == package_type ]
-            other_components = [ c for c in components if self.component_type[c] == other_type]
-            lib_src_files = [ c + lib_src_ext for c in lib_components ]
+            lib_components = [c for c in components if
+                              self.component_type[c] == package_type]
+            other_components = [c for c in components if
+                                self.component_type[c] == other_type]
+            lib_src_files = [c + lib_src_ext for c in lib_components]
 
         else:
-            # packages whose name contains a '+' are special in that their 'mem' files are empty and they do not contain
-            # typical bde-style components.  These packages contain either only headers, or contain 'cpp' files that do
-            # not have corresponding '.h' nad '.t.cpp' files.
+            # packages whose name contains a '+' are special in that their
+            # 'mem' files are empty and they do not contain typical bde-style
+            # components.  These packages contain either only headers, or
+            # contain 'cpp' files that do not have corresponding '.h' nad
+            # '.t.cpp' files.
 
             # These header-only packages should always have a dummy.cpp file.
             lib_components = []
             other_components = []
-            lib_src_files = [x.name for x in package_node.ant_glob('*' + lib_src_ext)]
+            lib_src_files = [x.name for x in
+                             package_node.ant_glob('*' + lib_src_ext)]
 
         if not lib_src_files:
-            self.ctx.fatal('package %s does not contain any components' % package_name)
+            self.ctx.fatal('package %s does not contain any components'
+                           % package_name)
 
-        self.ctx(name            = package_name + '_lib',
-                 target          = package_name,
-                 path            = package_node,
-                 source          = lib_src_files,
-                 features        = ptp[package_type]['features'] + self.libtype_features,
+        self.ctx(name=package_name + '_lib',
+                 target = package_name,
+                 path   = package_node,
+                 source = lib_src_files,
+
+                 features = ptp[package_type]['features'] + self.libtype_features,
+
                  cflags          = cflags,
                  cincludes       = cincludes,
                  cxxflags        = cxxflags,
@@ -183,7 +203,7 @@ class BdeWafBuild(object):
                 test_features = test_features + ['test']
 
             for c in lib_components:
-                build_test = self.ctx(
+                self.ctx(
                     name          = c + '.t',
                     path          = package_node,
                     source        = c + '.t' + lib_src_ext,
@@ -203,7 +223,7 @@ class BdeWafBuild(object):
                     )
 
             for c in other_components:
-                build_test = self.ctx(
+                self.ctx(
                     name          = c + '.t',
                     path          = package_node,
                     source        = c + '.t' + ptp[other_type]['src_ext'],
@@ -223,12 +243,13 @@ class BdeWafBuild(object):
                     )
 
         else:
-            # Create the same number of task generators to ensure that the generators created with or without tests
-            # have the same idx
+            # Create the same number of task generators to ensure that the
+            # generators created with or without tests have the same idx
             for c in components:
                 self.ctx(
-                    name         = c + '.t',
-                    path         = package_node)
+                    name = c + '.t',
+                    path = package_node
+                )
 
         self.ctx(name       = package_name + '_tst',
                  depends_on = [c + '.t' for c in components]
@@ -240,12 +261,15 @@ class BdeWafBuild(object):
 
     def _build_sa_package(self, package_name):
 
-        # Standard alone packages are architecturally at the same level as package groups, but have the same physical
-        # structure as regular packages.  I.e., they can depend directly on other package groups and consititute a UOR
-        # (a library) that is on the same hierarchical level as a package group.  Therefore, the metadata for standard
-        # alone packages are stored together with package groups.
+        # Standard alone packages are architecturally at the same level as
+        # package groups, but have the same physical structure as regular
+        # packages.  I.e., they can depend directly on other package groups and
+        # consititute a UOR (a library) that is on the same hierarchical level
+        # as a package group.  Therefore, the metadata for standard alone
+        # packages are stored together with package groups.
 
-        package_node = self.ctx.path.make_node(self.sa_package_locs[package_name]).make_node(package_name)
+        package_node = self.ctx.path.make_node(
+            self.sa_package_locs[package_name]).make_node(package_name)
         deps = set(self.group_dep[package_name])
         internal_deps = deps - self.external_libs
         internal_deps = [g + '_lib' for g in internal_deps]
@@ -261,21 +285,23 @@ class BdeWafBuild(object):
         else:
             install_path = None
 
-        self._build_package_impl(package_name, package_node, package_node, components, internal_deps, external_deps,
+        self._build_package_impl(package_name, package_node, package_node,
+                                 components, internal_deps, external_deps,
                                  install_path)
 
-
-    def _build_normal_package(self, package_name, group_node, group_internal_deps, group_external_deps):
+    def _build_normal_package(self, package_name, group_node,
+                              group_internal_deps, group_external_deps):
         package_node = group_node.make_node(package_name)
         deps = [p + '_lib' for p in self.package_dep[package_name]]
         deps.extend([g + '_lib' for g in group_internal_deps])
         components = self.package_mem[package_name]
 
-        self._build_package_impl(package_name, package_node, group_node, components, deps, group_external_deps, None)
-
+        self._build_package_impl(package_name, package_node, group_node,
+                                 components, deps, group_external_deps, None)
 
     def _build_group(self, group_name):
-        group_node = self.ctx.path.make_node(self.group_locs[group_name]).make_node(group_name)
+        group_node = self.ctx.path.make_node(
+            self.group_locs[group_name]).make_node(group_name)
         deps = set(self.group_dep[group_name])
         internal_deps = deps - self.external_libs
         external_deps = deps & self.external_libs
@@ -290,7 +316,8 @@ class BdeWafBuild(object):
         libpaths = self.ctx.env[group_name + '_libpaths']
 
         for p in packages:
-            self._build_normal_package(p, group_node, internal_deps, external_deps)
+            self._build_normal_package(p, group_node, internal_deps,
+                                       external_deps)
 
         if group_name in self.export_groups:
             install_path = os.path.join('${PREFIX}', self.install_lib_dir)
@@ -324,7 +351,7 @@ class BdeWafBuild(object):
 
     def _make_pc_group(self, group_name, internal_deps, external_deps):
 
-        vc_node = self.ctx.path.make_node('vc');
+        vc_node = self.ctx.path.make_node('vc')
 
         if self.install_flat_include:
             install_include_dir = "include"
@@ -345,9 +372,11 @@ class BdeWafBuild(object):
                  pc_extra_include_dirs = self.pc_extra_include_dirs
                  )
 
-        self.ctx.install_files(os.path.join('${PREFIX}', self.install_lib_dir, 'pkgconfig'),
-                               [os.path.join(vc_node.relpath(), group_name + self.lib_suffix + '.pc')])
-
+        self.ctx.install_files(os.path.join('${PREFIX}', self.install_lib_dir,
+                                            'pkgconfig'),
+                               [os.path.join(vc_node.relpath(),
+                                             group_name +
+                                             self.lib_suffix + '.pc')])
 
     def build(self):
         # for klass in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
@@ -359,7 +388,7 @@ class BdeWafBuild(object):
         self.ctx.env['env'].update(self.custom_envs)
 
         for g in self.group_dep:
-            if not g in self.sa_package_locs:
+            if g not in self.sa_package_locs:
                 self._build_group(g)
             else:
                 self._build_sa_package(g)
@@ -378,13 +407,13 @@ def append_custom_cincludes(self):
     if hasattr(self, 'cust_libpaths'):
         self.env.STLIBPATH.extend(self.cust_libpaths)
 
+
 @feature('cxx')
 @after_method('propagate_uselib_vars')
 @before_method('apply_incpaths')
 def append_custom_cxxincludes(self):
     if hasattr(self, 'cxxincludes'):
         self.env.INCLUDES.extend(self.cxxincludes)
-
 
     if hasattr(self, 'cust_libpaths'):
         self.env.STLIBPATH.extend(self.cust_libpaths)
@@ -405,7 +434,9 @@ def post_the_other(self):
 @feature('cshlib', 'cxxshlib', 'dshlib', 'fcshlib', 'bdevnum')
 @after_method('apply_link', 'propagate_uselib_vars')
 def apply_bdevnum(self):
-    if not getattr(self, 'bdevnum', '') or os.name != 'posix' or self.env.DEST_BINFMT not in ('elf', 'mac-o'):
+    if (not getattr(self, 'bdevnum', '') or
+       os.name != 'posix' or
+       self.env.DEST_BINFMT not in ('elf', 'mac-o')):
         return
 
     link = self.link_task
@@ -415,7 +446,8 @@ def apply_bdevnum(self):
     libname = node.name
     if libname.endswith('.dylib'):
         name3 = libname.replace('.dylib', '.%s.dylib' % self.bdevnum)
-        name2 = libname.replace('.dylib', '.%s.dylib' % (nums[0] + '.' + nums[1]))
+        name2 = libname.replace('.dylib',
+                                '.%s.dylib' % (nums[0] + '.' + nums[1]))
     else:
         name3 = libname + '.' + self.bdevnum
         name2 = libname + '.' + nums[0] + '.' + nums[1]
@@ -431,7 +463,8 @@ def apply_bdevnum(self):
     # the following task is just to enable execution from the build dir :-/
 
     if self.env.DEST_OS != 'openbsd':
-        self.create_task('vnum', node, [node.parent.find_or_declare(name2), node.parent.find_or_declare(name3)])
+        self.create_task('vnum', node, [node.parent.find_or_declare(name2),
+                                        node.parent.find_or_declare(name3)])
 
     if getattr(self, 'install_task', None):
         self.install_task.hasrun = Task.SKIP_ME
@@ -439,10 +472,12 @@ def apply_bdevnum(self):
         path = self.install_task.dest
         if self.env.DEST_OS == 'openbsd':
             libname = self.link_task.outputs[0].name
-            t1 = bld.install_as('%s%s%s' % (path, os.sep, libname), node, env=self.env, chmod=self.link_task.chmod)
+            t1 = bld.install_as('%s%s%s' % (path, os.sep, libname), node,
+                                env=self.env, chmod=self.link_task.chmod)
             self.vnum_install_task = (t1,)
         else:
-            t1 = bld.install_as(path + os.sep + name3, node, env=self.env, chmod=self.link_task.chmod)
+            t1 = bld.install_as(path + os.sep + name3, node, env=self.env,
+                                chmod=self.link_task.chmod)
             t2 = bld.symlink_as(path + os.sep + name2, name3)
             t3 = bld.symlink_as(path + os.sep + libname, name3)
             self.vnum_install_task = (t1, t2, t3)
@@ -463,8 +498,10 @@ def apply_bdevnum(self):
 @before_method('process_source')
 def reuse_lib_objects(self):
     """
-    Find sources that are libs; if any are found, extract their object lists and build this lib from the same
-    objects. If this occurs, skip the normal process_source step.
+    Find sources that are libs; if any are found, extract their object lists
+    and build this lib from the same objects. If this occurs, skip the normal
+    process_source step.
+
     """
     tmp_source = []
     saw_target = False
@@ -480,7 +517,8 @@ def reuse_lib_objects(self):
             continue
 
     if saw_target and tmp_source:
-        raise Errors.WafError("Cannot mix tasks and source files in shlib %s" % self.name)
+        raise Errors.WafError('Cannot mix tasks and source files in shlib %s' %
+                              self.name)
 
     if saw_target:
         self.compiled_tasks = []
@@ -496,7 +534,8 @@ def reuse_lib_objects(self):
 # This is required to support cyclic dependencies and bde-bb.
 def propagate_uselib_vars(self):
     """
-    Process uselib variables for adding flags. For example, the following target::
+    Process uselib variables for adding flags. For example, the following
+    target::
 
         def build(bld):
             bld.env.AFLAGS_aaa = ['bar']
@@ -557,19 +596,19 @@ def custom_exec_command(task, cmd, **kw):
         msg = '' + out + err
         src_str = ' '.join([a.nice_path() for a in task.inputs])
         status_str = 'WARNING' if ret == 0 else 'ERROR'
-        sys.stdout.write('[%s (%s)] <<<<<<<<<<\n%s>>>>>>>>>>\n' % (src_str, status_str, msg))
+        sys.stdout.write('[%s (%s)] <<<<<<<<<<\n%s>>>>>>>>>>\n' %
+                         (src_str, status_str, msg))
 
     return ret
 
 
-from waflib.Build import BuildContext
 class ListContext(BuildContext):
     """
     lists the targets to execute
     Override the ListContext from waflib.Build to hide internal build targets
     """
-
     cmd = 'list'
+
     def execute(self):
         """
         See :py:func:`waflib.Context.Context.execute`.
@@ -615,9 +654,11 @@ def make_pc(self):
     """Create a task to generate the pkg-config file."""
     self.create_task('bdepc', None, self.path.find_or_declare(self.target))
 
+
 class bdepc(Task.Task):
 
-    # replacement parameters: prefix, lib_dir, include_dir, description, version, requires.private, name, libs, cflags
+    # replacement parameters: prefix, lib_dir, include_dir, description,
+    # version, requires.private, name, libs, cflags
     PKGCONFIG_TEMPLATE = '''prefix=%s
 libdir=${prefix}/%s
 includedir=${prefix}/%s
@@ -634,8 +675,8 @@ Cflags: -I${includedir} %s %s
 '''
 
     def signature(self):
-        # Make sure that the signatures include the appropriate dependencies, so that the .pc file will be regenerated
-        # when needed
+        # Make sure that the signatures include the appropriate dependencies,
+        # so that the .pc file will be regenerated when needed
         self.hcode = Options.options.prefix + self.generator.lib_suffix + \
             self.generator.install_lib_dir + self.generator.install_include_dir + \
             ','.join(self.generator.pc_extra_include_dirs)
@@ -649,22 +690,26 @@ Cflags: -I${includedir} %s %s
         lib_suffix = self.generator.lib_suffix
         install_lib_dir = self.generator.install_lib_dir
         install_include_dir = self.generator.install_include_dir
-        extra_include_dirs_str = ' '.join(['-I%s' % d for d in self.generator.pc_extra_include_dirs])
+        extra_include_dirs_str = \
+            ' '.join(['-I%s' % d for d in
+                      self.generator.pc_extra_include_dirs])
 
-        libs = [bld.env['LIB_ST'] % l for l in bld.env[group_name + '_export_libs']]
+        libs = [bld.env['LIB_ST'] % l for l in
+                bld.env[group_name + '_export_libs']]
 
-        pc_source = self.PKGCONFIG_TEMPLATE % (Options.options.prefix,
-                                               install_lib_dir,
-                                               install_include_dir,
-                                               self.generator.doc[0],
-                                               self.generator.doc[1],
-                                               version,
-                                               ' '.join([dep + lib_suffix for dep in self.generator.dep]),
-                                               group_name + lib_suffix,
-                                               ' '.join(libs),
-                                               extra_include_dirs_str,
-                                               ' '.join(bld.env[group_name + '_export_cxxflags'])
-                                               )
+        pc_source = self.PKGCONFIG_TEMPLATE % (
+            Options.options.prefix,
+            install_lib_dir,
+            install_include_dir,
+            self.generator.doc[0],
+            self.generator.doc[1],
+            version,
+            ' '.join([dep + lib_suffix for dep in self.generator.dep]),
+            group_name + lib_suffix,
+            ' '.join(libs),
+            extra_include_dirs_str,
+            ' '.join(bld.env[group_name + '_export_cxxflags'])
+        )
         self.outputs[0].write(pc_source)
 
 
