@@ -5,54 +5,27 @@
 # This file provides the default options for all builds. It may be overidden
 # on a group- or package-level basis by placing a file with the name
 # of the group or package plus the suffix '.opts' in the relevant 'group' or
-# 'package' subdirectory. For example: '<BDEROOT>/groups/bte/group/bte.opts'
-# Options are processed into build macro files called '.vars' files by tools
-# like bde_build.pl, from where they are used in makefiles.
+# 'package' subdirectory.
 #
-# Options that should be inherited into dependent units of release can be
-# placed into a '.defs' file instead -- see bce.defs for an example. The
-# syntax of a '.defs' file is identical to that of an '.opts' file.
+# Options that should be inherited by higher level package groups or
+# stand-alone libraries can be placed into a '.defs' file instead -- see
+# bsl.defs for an example. The syntax of a '.defs' file is identical to that of
+# an '.opts' file.
 #
-# Capabities are not defined here as there are no default capabilities. See
-# bce.cap for an example.
-#
-# Use e.g. 'bde_buildoptions.pl -t dbg_exc_mt bde' to view the generated values
-# for a given group, package, or component, on a given platform and for a
-# given target build type. Use 'bde_buildoptions.pl -v <unit>' to see which
-# options, definitions, and capability files are loaded and scanned to produce
-# the va
+# This file is intended to be consumed by the waf build tool and an internal,
+# legacy build tool, bde_build. Some of the options are not required by waf but
+# are required for backwards compatibility for bde_build.
 #
 # SYNTAX
 #
-# Each record in the 'options' file is a combination of the following fields:
+# Please see the 'Options File Format' section of the wiki page
+# 'BDE Style Repository' on github for more details:
 #
-# * Prefix: an optional command prefix defines how the record combines with
-#   its predecessors. The two most common are:
-#       no prefix or '++': accumulate, append with a space
-#       '!!' override and completely replace the accumulated definition so far
-#   Other commands include '<<' (append without a space) and '>>' (prepend).
-#   See Build::Option::Commands for the full list.
+#   https://github.com/bloomberg/bde-tools/wiki/BDE-Style-Repository
 #
-# * UPLID (Unified PLatform ID) pattern: a wildcarded platform specification
-#   that is matched against the determined or specified UPLID for a build.
-#   The UPLID can be incomplete, or use '*' to indicate fields that match all
-#   possible values.
 #
-# * UFID (Unified Flag ID) set: The record will *not* match if this UFID
-#   contains flags that are *not* set in the UFID requested by the builder.
-#   '_' matches any UFID. This field may now contain multiple flags in the
-#   standard UFID format, i.e. 'shr_64'.
-#
-# * Variable name and value: the variable that is to be modified, and the
-#   value to modify it with, as controlled by the command prefix.
-#
-# SEE ALSO
-#
-# bde_uplid.pl, bde_buildoptions.pl
-
-# include a line like this into any derived opts file to have a list of which
-# files were used to derive a list of values added as a value of the list.
-
+# The following rule is required by bde_build. A similar rule should be
+# included at the beginning of each options file:
 *-          _   OPTS_FILE   = default.opts
 
 #==============================================================================
@@ -663,4 +636,3 @@ unix-SunOS      _   F77     = -xarch=v8plusa -xchip=generic -xcache=generic
 !! *       _   TESTDRIVER_BDEBUILD_CXXFLAGS   = $(BDEBUILD_CXXFLAGS)
 !! *       _   TESTDRIVER_BDEBUILD_F77FLAGS   = $(BDEBUILD_F77FLAGS)
 !! *       _   TESTDRIVER_BDEBUILD_LDFLAGS    = $(BDEBUILD_LDFLAGS)
-
