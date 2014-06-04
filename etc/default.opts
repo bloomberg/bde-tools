@@ -123,7 +123,6 @@
 
 *           _   DEF_CFLAGS  =
 *           _   DEF_CXXFLAGS    =
-*           _   DEF_F77FLAGS    =
 *           _   DEF_LDFLAGS =
 *           _   DEF_ENDLFGLAGS  =
 # Special macros for extra includes, handled separately to allow pre-ordering
@@ -133,7 +132,6 @@
 # Language specific
 *           _   DEF_CINCLUDE    =
 *           _   DEF_CXXINCLUDE  =
-*           _   DEF_F77INCLUDE  =
 
 #===
 
@@ -148,9 +146,6 @@ unix-*              _   DEF_CFLAGS      = -I$(DEPLOYED_INCLUDE)
 # inline rather than inline and optimize
 !! unix-*-*-*-gcc   _   DEF_CXXFLAGS    = -pipe
 !! unix-SunOS-*-*-gcc    _  DEF_CXXFLAGS    = -pipe -mcpu=ultrasparc3
-
-!! unix-SunOS       _   F77_HASFLAG = -xhasi=yes
-!! unix-SunOS       _   DEF_F77FLAGS    = -u -vax=bslash -vax=param -Nq2000 -Qoption f77pass1 $(F77_HASFLAG)
 
 # DRQS 29544311 - some .so's linking against BCE and BAE fail unless the sources are built
 # with -xthreadvar=dynamic
@@ -194,10 +189,8 @@ unix-Linux-*-*-*             _  DEF_ENDLDFLAGS = -lrt
 *           _   BDE_INCLUDE     = $(DEF_INCLUDE)
 *           _   BDE_CINCLUDE    = $(DEF_CINCLUDE)
 *           _   BDE_CXXINCLUDE  = $(DEF_CXXINCLUDE)
-*           _   BDE_F77INCLUDE  = $(DEF_F77INCLUDE)
 *           _   BDE_CFLAGS      = $(DEF_CFLAGS)
 *           _   BDE_CXXFLAGS    = $(DEF_CXXFLAGS)
-*           _   BDE_F77FLAGS    = $(DEF_F77FLAGS)
 *           _   BDE_LDFLAGS     = $(DEF_LDFLAGS)
 *           _   BDE_ENDLDFLAGS  = $(DEF_ENDLDFLAGS)
 
@@ -228,7 +221,6 @@ unix-          _   BDE_LDFLAGS =  $(INTERNAL_LDFLAGS)
 
 *           _   DBG_CFLAGS  =
 *           _   DBG_CXXFLAGS    =
-*           _   DBG_F77FLAGS    =
 *           _   DBG_LDFLAGS =
 
 #===
@@ -253,7 +245,6 @@ unix-          _   BDE_LDFLAGS =  $(INTERNAL_LDFLAGS)
 !! windows-*-*-*-cl-15.00                  opt     DBG_CFLAGS      = /Zi
 !! windows-*-*-*-cl-16.00                  opt     DBG_CXXFLAGS    = /Zi
 !! windows-*-*-*-cl-16.00                  opt     DBG_CFLAGS      = /Zi
-!! unix         dbg DBG_F77FLAGS    = -g
 
 
 # For MDd/MD and MTd/MT
@@ -265,7 +256,6 @@ windows         dbg DBG_LIBSUFFIX   = d
 
 *           _   BDE_CFLAGS  = $(DBG_CFLAGS)
 *           _   BDE_CXXFLAGS    = $(DBG_CXXFLAGS)
-*           _   BDE_F77FLAGS    = $(DBG_F77FLAGS)
 *           _   BDE_LDFLAGS = $(DBG_LDFLAGS)
 
 #==============================================================================
@@ -290,7 +280,6 @@ windows         dbg DBG_LIBSUFFIX   = d
 
 *           _   OPT_CFLAGS  =
 *           _   OPT_CXXFLAGS    =
-*           _   OPT_F77FLAGS    =
 *           _   OPT_LDFLAGS =
 
 #===
@@ -318,8 +307,6 @@ windows         dbg DBG_LIBSUFFIX   = d
 !! windows-*-*-*-cl-15.00     opt OPT_CXXFLAGS    = /O2 /Ob1 /GS- /GT /DNDEBUG
 !! windows-*-*-*-cl-16.00     opt OPT_CXXFLAGS    = /O2 /Ob1 /GS- /GT /DNDEBUG
 
-!! unix         opt OPT_F77FLAGS    = -02
-
 !! windows      opt OPT_LDFLAGS     = /nod:msvcrtd
 # The option above is actually unacceptable, and necessary only due to
 # linking with improperly built third-party libraries. Let's disable it
@@ -334,7 +321,6 @@ windows         dbg DBG_LIBSUFFIX   = d
 
 *           _   BDE_CFLAGS  = $(OPT_CFLAGS)
 *           _   BDE_CXXFLAGS    = $(OPT_CXXFLAGS)
-*           _   BDE_F77FLAGS    = $(OPT_F77FLAGS)
 *           _   BDE_LDFLAGS = $(OPT_LDFLAGS)
 
 #==============================================================================
@@ -359,7 +345,6 @@ unix-           ndebug  NDEBUG_CXXFLAGS = -DNDEBUG
 
 *           _   MT_CFLAGS   =
 *           _   MT_CXXFLAGS =
-*           _   MT_F77FLAGS =
 *           _   MT_LDFLAGS  =
 
 #===
@@ -388,13 +373,10 @@ windows         _   MT_LIBTYPE  = L
 !! unix-Linux-*-*-*     mt  MT_LDFLAGS  = -lpthread
 !! unix-Darwin-*-*-*    mt  MT_LDFLAGS  = -lpthread
 
-!! unix-SunOS       mt  MT_F77FLAGS = -mt
-
 #===
 
 *           _   BDE_CFLAGS  = $(MT_CFLAGS)
 *           _   BDE_CXXFLAGS    = $(MT_CXXFLAGS)
-*           _   BDE_F77FLAGS    = $(MT_F77FLAGS)
 *           _   BDE_LDFLAGS = $(MT_LDFLAGS)
 
 #==============================================================================
@@ -569,9 +551,7 @@ windows-                _   CXXLINK     = $(RETRY_ON_SIGNAL) link /nologo /incre
 !! windows-*-amd64-*-*  _   CXXLINK     = $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:X64 ws2_32.lib
 windows-                _   CLINK   = $(CXXLINK)
 
-unix            _   F77     = f77
 # DRQS 10505346 -- switch to -xtarget=ultra3
-unix-SunOS      _   F77     = -xarch=v8plusa -xchip=generic -xcache=generic
 
 #==============================================================================
 # User Customisation
@@ -581,13 +561,11 @@ unix-SunOS      _   F77     = -xarch=v8plusa -xchip=generic -xcache=generic
 -- *            _   BDE_INCLUDE     = $(USER_INCLUDE)
 -- *            _   BDE_CFLAGS  = $(USER_CFLAGS)
 -- *            _   BDE_CXXFLAGS    = $(USER_CXXFLAGS)
--- *            _   BDE_F77FLAGS    = $(USER_F77FLAGS)
 
 # add to back
 *               _   BDE_INCLUDE     = $(USER_ENDINCLUDE)
 *               _   BDE_CFLAGS      = $(USER_ENDCFLAGS)
 *               _   BDE_CXXFLAGS    = $(USER_ENDCXXFLAGS)
-*               _   BDE_F77FLAGS    = $(USER_ENDF77FLAGS)
 
 # the link line is more involved...
 *           _   BDE_PRELDFLAGS  = $(USER_PRELDFLAGS)
@@ -605,7 +583,6 @@ unix-SunOS      _   F77     = -xarch=v8plusa -xchip=generic -xcache=generic
 
 *           _   BDEBUILD_CFLAGS        = $(BDE_CINCLUDES) $(BDE_CFLAGS)
 *           _   BDEBUILD_CXXFLAGS      = $(BDE_CXXINCLUDES) $(BDE_CXXFLAGS)
-*           _   BDEBUILD_F77FLAGS      = $(BDE_F77INCLUDES) $(BDE_F77FLAGS)
 *           _   BDEBUILD_LDFLAGS       = $(BDE_PRELDFLAGS) $(BDE_LIBS) $(BDE_LDFLAGS) $(PREBUILT_LIBS) $(BDE_ENDLDFLAGS)
 
 #==============================================================================
@@ -629,10 +606,8 @@ unix-SunOS      _   F77     = -xarch=v8plusa -xchip=generic -xcache=generic
 
 !! *       _   COMPONENT_BDEBUILD_CFLAGS      = $(BDEBUILD_CFLAGS)
 !! *       _   COMPONENT_BDEBUILD_CXXFLAGS    = $(BDEBUILD_CXXFLAGS)
-!! *       _   COMPONENT_BDEBUILD_F77FLAGS    = $(BDEBUILD_F77FLAGS)
 !! *       _   COMPONENT_BDEBUILD_LDFLAGS     = $(BDEBUILD_LDFLAGS)
 
 !! *       _   TESTDRIVER_BDEBUILD_CFLAGS     = $(BDEBUILD_CFLAGS)
 !! *       _   TESTDRIVER_BDEBUILD_CXXFLAGS   = $(BDEBUILD_CXXFLAGS)
-!! *       _   TESTDRIVER_BDEBUILD_F77FLAGS   = $(BDEBUILD_F77FLAGS)
 !! *       _   TESTDRIVER_BDEBUILD_LDFLAGS    = $(BDEBUILD_LDFLAGS)
