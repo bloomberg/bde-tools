@@ -30,8 +30,9 @@ class BdeWafConfigure(object):
         self.soname_override = {}
 
         # Stores the subdirectory under which the package group is stored.
-        # Almost all package groups currently reside under 'groups', except for
-        # 'e_ipc', which resides under 'enterprise'.
+        # Almost all package groups currently reside under the 'groups'
+        # directory, with a few exceptions such as 'e_ipc', which resides under
+        # the 'enterprise' directory.
         self.group_locs = {}
 
         self.package_dep = {}
@@ -268,11 +269,31 @@ class BdeWafConfigure(object):
 
     def _evaluate_group_options(self, group):
 
-        # %s_LOCN and BDE_CXXINCLUDES are hard coded in bde_build.pl
+        def patch_options_common(options):
+            '''
+            patch options to mimic hardcoded behaviors in bde_build common to
+            packages and package groups
+            '''
+
+            # By default, Visual Studio uses a single pdb file for all object
+            # files compiled from a particular directory named
+            # vc<vs_version>.pdb.  We want to use a separate pdb file for each
+            # package group and standard alone package.
+            if (self.option_mask.uplid.uplid['os_type'] == 'windows' and
+                self.option_mask.uplid.uplid['comp_type'] == 'cl'):
+                options['BDE_CXXFLAGS'] += " /Fd%s\\%s\\%s.pdb" % (
+                    self.group_locs[group], group, group)
+                options['BDE_CFLAGS'] += " /Fd%s\\%s\\%s.pdb" % (
+                    self.group_locs[group], group, group)
 
         defs = copy.deepcopy(self.default_opts)
 
-        group_node = self.ctx.path.make_node(['groups', group])
+        # %s_LOCN is hard coded in bde_build
+        group_node = self.ctx.path.make_node(
+            [(self.group_locs[group] if group in
+              self.group_locs else
+              self.sa_package_locs[group]),
+             group])
         defs.options['%s_LOCN' % group.upper()] = group_node.abspath()
 
         levels = self._levelize_group_dependencies(group)
@@ -305,23 +326,20 @@ class BdeWafConfigure(object):
 
                 package_node = group_node.make_node(package)
 
-                # hacks to make bst+apache work. bst+apache's opts file
-                # references the _LOCN variable.
-                p_opts.options['%s_LOCN' %
-                               package.upper().replace('+', '_')] = \
-                    package_node.abspath()
-
-                # from bde_build.pl 'BDE_CXXINCLUDES =
-                # $(SWITCHCHAR)I. $(BDE_CXXINCLUDE) $(PKG_INCLUDES)
-                # $(GRP_INCLUDES)'
-                p_opts.options['BDE_CXXINCLUDES'] = '$(BDE_CXXINCLUDE)'
-
                 p_opts.read(self.package_opts[package], self.ctx)
 
                 # Ideally, we should also read the capability files of the
                 # packages on which this depends, but since bde_build.pl
                 # doesn't do this, we don't need to do it for now.
                 p_opts.read(self.package_cap[package], self.ctx)
+
+                # '%s_LOCN' and 'BDE_CXXINCLUDES' are hard coded in bde_build
+                p_opts.options['%s_LOCN' %
+                               package.upper().replace('+', '_')] = \
+                    package_node.abspath()
+                p_opts.options['BDE_CXXINCLUDES'] = '$(BDE_CXXINCLUDE)'
+                patch_options_common(p_opts.options)
+
                 p_opts.evaluate()
 
                 if p_opts.options.get('CAPABILITY') == 'NEVER':
@@ -329,11 +347,12 @@ class BdeWafConfigure(object):
                 else:
                     self.package_options[package] = p_opts.options
 
-        # from bde_build.pl 'BDE_CXXINCLUDES =
-        # $(SWITCHCHAR)I. $(BDE_CXXINCLUDE) $(PKG_INCLUDES) $(GRP_INCLUDES)'
+        # BDE_CXXINCLUDES is hard coded in bde_build
         opts.options['BDE_CXXINCLUDES'] = '$(BDE_CXXINCLUDE)'
+
         opts.evaluate()
         self.group_options[group] = opts.options
+        patch_options_common(p_opts.options)
 
         if unsupported_packages:
             self.unsupported_packages |= unsupported_packages
