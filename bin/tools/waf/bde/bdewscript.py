@@ -9,11 +9,12 @@ from bdeoptions import Uplid, Ufid
 
 from waflib import Context, Utils, Logs
 
-def options(ctx):
 
-    # check version numbers here because options() is called before any other command-handling function
-    if (sys.hexversion < 0x2060000 or 0x3000000 <= sys.hexversion ):
-        ctx.fatal('Pyhon 2.6 or Python 2.7 is required to build BDE using waf.')
+def options(ctx):
+    # check version numbers here because options() is called before any other
+    # command-handling function
+    if sys.hexversion < 0x2060000 or 0x3000000 <= sys.hexversion:
+        ctx.fatal('Pyhon 2.6 or 2.7 is required to build BDE using waf.')
 
     ctx.load('bdeunittest')
 
@@ -47,10 +48,10 @@ def configure(ctx):
         else:
             ctx.options.msvc_targets = 'x86'
 
-    matching_comps = { 'g++': 'gcc',
-                       'clang++': 'clang',
-                       'CC': 'cc',
-                       'xlC_r': 'xlc_r' }
+    matching_comps = {'g++': 'gcc',
+                      'clang++': 'clang',
+                      'CC': 'cc',
+                      'xlC_r': 'xlc_r'}
 
     if 'CXX' in os.environ and 'CC' not in os.environ:
         cxx_path = os.environ['CXX']
@@ -68,10 +69,12 @@ def configure(ctx):
 
     if cxx_name in matching_comps:
         if matching_comps[cxx_name] != cc_name:
-            ctx.fatal('C compiler and C++ compiler must match. Expected c compiler: %s' % matching_comps[cxx_name])
+            ctx.fatal('C compiler and C++ compiler must match. '
+                      'Expected c compiler: %s' % matching_comps[cxx_name])
         if cc_ver != cxx_ver:
             ctx.fatal('C compiler and C++ compiler must be the same version. '
-                      'C compiler version: %s, C++ compiler version: %s' % (cc_ver, cxx_ver))
+                      'C compiler version: %s, '
+                      'C++ compiler version: %s' % (cc_ver, cxx_ver))
 
     uplid = _make_uplid_from_context(ctx)
     bde_configure = BdeWafConfigure(ctx)
@@ -103,12 +106,12 @@ def _make_ufid_from_options(opts):
         return Ufid(opts.legacy_config.split('_'))
 
     ufid_map = {
-        'abi_bits': { '64': '64' },
-        'build_type': { 'debug': 'dbg', 'release': 'opt' },
-        'assert_level': { 'safe': 'safe', 'safe2': 'safe2' },
-        'cpp11': { True: 'cpp11' },
-        'noexception': { False: 'exc' },
-        'library_type': { 'shared': 'shr' }
+        'abi_bits': {'64': '64'},
+        'build_type': {'debug': 'dbg', 'release': 'opt'},
+        'assert_level': {'safe': 'safe', 'safe2': 'safe2'},
+        'cpp11': {True: 'cpp11'},
+        'noexception': {False: 'exc'},
+        'library_type': {'shared': 'shr'}
         }
 
     ufid = []
@@ -127,7 +130,11 @@ def _make_ufid_from_options(opts):
 def _make_uplid_from_context(ctx):
     platform = Utils.unversioned_sys_platform()
 
-    from bdeoptions import get_linux_osinfo, get_aix_osinfo, get_sunos_osinfo, get_darwin_osinfo, get_windows_osinfo
+    from bdeoptions import get_linux_osinfo
+    from bdeoptions import get_aix_osinfo
+    from bdeoptions import get_sunos_osinfo
+    from bdeoptions import get_darwin_osinfo
+    from bdeoptions import get_windows_osinfo
     osinfo_getters = {
         'linux': get_linux_osinfo,
         'aix': get_aix_osinfo,
@@ -148,7 +155,8 @@ def _make_uplid_from_context(ctx):
         ctx.fatal('Unsupported platform: %s' % platform)
 
     (os_type, os_name, os_ver) = osinfo_getters[platform](ctx)
-    (cpu_type, cxx, cxx_version) = _sanitize_comp(ctx, comp_getters[platform](ctx))
+    (cpu_type, cxx, cxx_version) = _sanitize_comp(ctx,
+                                                  comp_getters[platform](ctx))
 
     uplid = Uplid(os_type,
                   os_name,
@@ -162,20 +170,22 @@ def _make_uplid_from_context(ctx):
         env_uplid = Uplid.from_platform_str(env_uplid_str)
 
         if uplid != env_uplid:
-            Logs.warn(("The identified uplid, '%s', is different from the environment variable BDE_WAF_UPLID. "
-                       "The uplid has been overwritten to match BDE_WAF_UPLID, '%s'.") % (uplid, env_uplid))
+            Logs.warn(("The identified uplid, '%s', is different from "
+                       "the environment variable BDE_WAF_UPLID. "
+                       "The uplid has been overwritten to match "
+                       "BDE_WAF_UPLID, '%s'.") % (uplid, env_uplid))
             uplid = env_uplid
 
     return uplid
 
 
 def _sanitize_comp(ctx, comp):
-
-    # waf sets CXX to "gcc" for both clang and gcc. This function changes the cxx_name-cxx_version combination for clang
-    # to match the existing naming scheme used by uplids, which is "gcc-clang".
-
-    # TODO create and send in a patch to allow c_config.get_cc_version to set a variable to indicate that clang is in
-    # use
+    # waf sets CXX to "gcc" for both clang and gcc. This function changes the
+    # cxx_name-cxx_version combination for clang to match the existing naming
+    # scheme used by uplids, which is "gcc-clang".
+    #
+    # TODO create and send in a patch to allow c_config.get_cc_version to set a
+    # variable to indicate that clang is in use
 
     (cpu_type, cxx, cxx_version) = comp
 
@@ -186,13 +196,15 @@ def _sanitize_comp(ctx, comp):
     env = ctx.env.env or None
 
     try:
-        p = Utils.subprocess.Popen(cmd, stdin=Utils.subprocess.PIPE, stdout=Utils.subprocess.PIPE,
-                                   stderr=Utils.subprocess.PIPE, env=env)
+        p = Utils.subprocess.Popen(cmd,
+                                   stdin=Utils.subprocess.PIPE,
+                                   stdout=Utils.subprocess.PIPE,
+                                   stderr=Utils.subprocess.PIPE,
+                                   env=env)
         p.stdin.write('\n'.encode())
         out = p.communicate()[0]
     except Exception:
-        conf.fatal('Could not determine the compiler version %r' % cmd)
-
+        ctx.conf.fatal('Could not determine the compiler version %r' % cmd)
 
     if not isinstance(out, str):
         out = out.decode(sys.stdout.encoding or 'iso8859-1')
@@ -229,13 +241,11 @@ def _get_sunos_comp(ctx):
 def _get_darwin_comp(ctx):
     cpu_type = os.uname()[4]
 
-    cxx_name = ctx.env.CXX_NAME
-
     return (cpu_type, ctx.env.CXX_NAME, '.'.join(ctx.env.CC_VERSION))
 
 
 def _get_windows_comp(ctx):
-    env=dict(os.environ)
+    env = dict(os.environ)
     env.update(PATH=';'.join(ctx.env['PATH']))
     err = ctx.cmd_and_log(ctx.env['CXX'], output=Context.STDERR, env=env)
 
@@ -260,22 +270,25 @@ def _add_commandline_options(ctx):
          {'type': 'choice',
           'default': '32',
           'choices': ('32', '64'),
-          'help': "32 or 64 [default: %default]"}),
+          'help': '32 or 64 [default: %default]'}),
         (('b', 'build-type'),
          {'type': 'choice',
           'default': 'debug',
           'choices': ('release', 'debug'),
-          'help': "the type of build to produce: 'debug' or 'release' [default: %default]"}),
+          'help': "the type of build to produce: 'debug' or 'release' "
+                  "[default: %default]"}),
         (('t', 'library-type'),
          {'type': 'choice',
           'default': 'static',
           'choices': ('static', 'shared'),
-          'help': "the type of libraries to build: 'shared' or 'static' [default: %default]"}),
+          'help': "the type of libraries to build: 'shared' or 'static' "
+                  "[default: %default]"}),
         (('assert-level',),
          {'type': 'choice',
           'default': 'none',
           'choices': ('none', 'safe', 'safe2'),
-          'help': "bsls_assert level: 'none', 'safe' or 'safe2' [default: %default]"}),
+          'help': "bsls_assert level: 'none', 'safe' or 'safe2' "
+                  "[default: %default]"}),
         (('noexception',),
          {'action': 'store_true',
           'default': False,
@@ -287,32 +300,36 @@ def _add_commandline_options(ctx):
         (('t', 'legacy-config'),
          {'type': 'string',
           'default': None,
-          'help': 'backwards compatible ufid configuration that can be used with bde_build.pl (e.g., dbg_mt_exc)'}),
+          'help': 'backwards compatible ufid configuration that can be used '
+                  'with bde_build.pl (e.g., dbg_mt_exc)'}),
         (('debug-opt-keys',),
          {'type': 'string',
           'default': None,
-          'help': 'debug rules in the opts files for the specified (comma separated) list of opts keys'}),
+          'help': 'debug rules in the opts files for the specified '
+                  '(comma separated) list of opts keys'}),
         (('lib-suffix',),
          {'type': 'string',
           'default': '',
-          'help': 'add a suffix to the names of the package group library files being built'}),
+          'help': 'add a suffix to the names of the package group library '
+                  'files being built'}),
         (('install-flat-include',),
          {'action': 'store_true',
           'default': False,
-          'help': 'install all headers into $PREFIX/include instead of $PREFIX/include/<package_group>'}),
+          'help': 'install all headers into $PREFIX/include instead of '
+                  '$PREFIX/include/<package_group>'}),
         (('install-lib-dir',),
          {'type': 'string',
           'default': 'lib',
-          'help': 'the name of the directory under $PREFIX where library files are installed [default: %default]'}),
+          'help': 'the name of the directory under $PREFIX where '
+                  'library files are installed [default: %default]'}),
         )
 
     configure_group = ctx.get_option_group('configure options')
-    build_group = ctx.get_option_group('build and install options')
-
 
     def add_opts(grp, opts):
         for opt in opts:
-            opt_strings = ['-' + a if len(a) == 1 else '--' + a  for a in opt[0]]
+            opt_strings = ['-' + a if len(a) == 1 else '--' + a
+                           for a in opt[0]]
             grp.add_option(*opt_strings, **opt[1])
 
     add_opts(configure_group, configure_opts)

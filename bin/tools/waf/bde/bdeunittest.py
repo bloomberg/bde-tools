@@ -1,17 +1,24 @@
-# This is a fork of waf_unit_test.py containing BDE specific commands and options
+# This is a fork of waf_unit_test.py containing BDE specific commands and
+# options
 # Thomas Nagy, 2005-2012
 
-import os, sys
+import os
 from waflib.TaskGen import feature, after_method
 from waflib import Utils, Task, Logs, Options
 testlock = Utils.threading.Lock()
 
+
 @feature('test')
 @after_method('apply_link')
 def make_test(self):
-    """Create the unit test task. There can be only one unit test task by task generator."""
+    """
+    Create the unit test task. There can be only one unit test task by task
+    generator.
+
+    """
     if getattr(self, 'link_task', None):
         self.create_task('utest', self.link_task.outputs)
+
 
 class utest(Task.Task):
     """
@@ -20,6 +27,7 @@ class utest(Task.Task):
     color = 'PINK'
     after = ['vnum', 'inst']
     vars = []
+
     def runnable_status(self):
         """
         Always execute the task if `waf --test run` was used or no
@@ -36,7 +44,6 @@ class utest(Task.Task):
                 return Task.RUN_ME
 
         return ret
-
 
     def run(self):
         """
@@ -65,7 +72,8 @@ class utest(Task.Task):
                             lst.append(s)
 
             def add_path(dct, path, var):
-                dct[var] = os.pathsep.join(Utils.to_list(path) + [os.environ.get(var, '')])
+                dct[var] = os.pathsep.join(Utils.to_list(path) +
+                                           [os.environ.get(var, '')])
 
             if Utils.is_win32:
                 add_path(fu, lst, 'PATH')
@@ -76,8 +84,8 @@ class utest(Task.Task):
                 add_path(fu, lst, 'LD_LIBRARY_PATH')
             self.generator.bld.all_test_paths = fu
 
-
-        cwd = getattr(self.generator, 'ut_cwd', '') or self.inputs[0].parent.abspath()
+        cwd = (getattr(self.generator, 'ut_cwd', '') or
+               self.inputs[0].parent.abspath())
 
         testcmd = getattr(Options.options, 'testcmd', False)
         if testcmd:
@@ -86,7 +94,9 @@ class utest(Task.Task):
             if Options.options.test_junit:
                 self.ut_exec += ('--junit=%s-junit.xml' % ut_exec).split(' ')
 
-        proc = Utils.subprocess.Popen(self.ut_exec, cwd=cwd, env=fu, stderr=Utils.subprocess.PIPE, stdout=Utils.subprocess.PIPE)
+        proc = Utils.subprocess.Popen(self.ut_exec, cwd=cwd, env=fu,
+                                      stderr=Utils.subprocess.PIPE,
+                                      stdout=Utils.subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
 
         tup = (filename, proc.returncode, stdout, stderr)
@@ -102,6 +112,7 @@ class utest(Task.Task):
                 bld.utest_results = [tup]
         finally:
             testlock.release()
+
 
 def summary(bld):
     """
@@ -142,6 +153,7 @@ def summary(bld):
     if tfail > 0:
         bld.fatal("Some tests failed.")
 
+
 def set_exit_code(bld):
     """
     If any of the tests fail waf will exit with that exit code.
@@ -172,28 +184,32 @@ def options(opt):
 
     grp = opt.get_option_group('build and install options')
 
-    grp.add_option('--test', type='choice', choices=('none', 'build', 'run'), default='none',
+    grp.add_option('--test', type='choice',
+                   choices=('none', 'build', 'run'),
+                   default='none',
                    help="'none': don't build or run tests" +
                    ", 'build': build tests but don't run them" +
                    ", 'run': build and run tests [default: %default]",
                    dest='test')
 
-    grp.add_option('--test-v', type='int', default=0, help='verbosity level of test output [default: %default]',
+    grp.add_option('--test-v', type='int', default=0,
+                   help='verbosity level of test output [default: %default]',
                    dest='test_verbosity')
 
     grp.add_option('--show-test-out', action='store_true', default=False,
-                   help='show output of tests even if they pass [default: %default]',
+                   help='show output of tests even if they pass '
+                        '[default: %default]',
                    dest='show_test_out')
 
-    grp.add_option('--test-timeout', type='int', default=200, help='test driver timeout [default: %default]',
+    grp.add_option('--test-timeout', type='int', default=200,
+                   help='test driver timeout [default: %default]',
                    dest='test_timeout')
 
     grp.add_option('--test-junit', action='store_true', default=False,
-                   help='create jUnit-style test results files for test drivers that are executed',
+                   help='create jUnit-style test results files for '
+                        'test drivers that are executed',
                    dest='test_junit')
 
-
-    testcmd = sys.executable + ' ' + opt.path.make_node(os.path.join('tools', 'waf', 'run_unit_tests.py')).abspath() + ' %s'
 
 # ----------------------------------------------------------------------------
 # Copyright (C) 2013-2014 Bloomberg Finance L.P.

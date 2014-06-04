@@ -1,8 +1,6 @@
-import optparse
-import copy
 import re
 import os
-import sys
+
 
 class RawOptions(object):
 
@@ -33,7 +31,7 @@ class RawOptions(object):
                                  (?P<val>.*?)               # value
                                  (?P<cont>\\)?              # line continuation
                                  $''',
-                            re.VERBOSE)
+                             re.VERBOSE)
 
     OPT_COMMENT_OR_EMTPY_RE = re.compile(r'^\s*([#].*)?$')
 
@@ -58,17 +56,19 @@ class RawOptions(object):
                             got_line = True
                             option.modifier = m.group('mod')
                             option.platform = m.group('plat')
-                            option.config   = m.group('conf')
-                            option.key      = m.group('key')
-                            option.value    = m.group('val')
+                            option.config = m.group('conf')
+                            option.key = m.group('key')
+                            option.value = m.group('val')
 
-                            continuation    = not m.group('cont') is None
+                            continuation = not m.group('cont') is None
                         else:
                             got_line = False
                             option = RawOptions.Option()
-                            if not RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(line):
+                            if not RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(
+                                    line):
                                 print(line)
-                            assert(RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(line))
+                            assert(RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(
+                                line))
                     else:
                         # previous line continues
 
@@ -89,11 +89,14 @@ class RawOptions(object):
             pass
 
 
-# The defualt compiler is set by an option with the key 'BDE_COMPILER_FLAG'. If this option exist any uplid having the
-# value 'def' in its compiler field is equivalent to the value of the said option.
+# The defualt compiler is set by an option with the key 'BDE_COMPILER_FLAG'. If
+# this option exist any uplid having the value 'def' in its compiler field is
+# equivalent to the value of the said option.
 DEFAULT_COMPILER = None
 
+
 class Options(object):
+
     '''Parser for the BDE build opts files.'''
 
     OPT_INLINE_COMMAND_RE = re.compile(r'\\"`([^`]+)`\\"')
@@ -120,7 +123,7 @@ class Options(object):
                        'WINDOWS_CC_PREFIX')
 
         if option.key in ignore_keys:
-            return False;
+            return False
 
         option_mask = OptionMask(Uplid.from_platform_str(option.platform),
                                  Ufid.from_config_str(option.config))
@@ -136,7 +139,9 @@ class Options(object):
             if mc:
                 v = option.value
                 cmd_out = ctx.cmd_and_log(mc.group(1)).rstrip()
-                option.value = v[:mc.start(1) - 3] + '"' + cmd_out + '"'+ v[mc.end(1) + 3:]
+                option.value = '%s"%s"%s' % (v[:mc.start(1) - 3],
+                                             cmd_out,
+                                             v[mc.end(1) + 3:])
 
             mc2 = Options.OPT_INLINE_COMMAND_RE2.match(option.value)
             if mc2:
@@ -147,7 +152,7 @@ class Options(object):
                 # prepend
                 if option.key in self.options:
                     self.options[option.key] = option.value \
-                                             + ' ' + self.options[option.key]
+                        + ' ' + self.options[option.key]
                 else:
                     self.options[option.key] = option.value
             elif option.modifier == '!!':
@@ -167,7 +172,8 @@ class Options(object):
 
         if debug_opt_keys:
             if option.key in debug_opt_keys:
-                print "%s: %s" % (("Accept" if want_option else "Ignore"), option)
+                print "%s: %s" % (("Accept" if want_option else "Ignore"),
+                                  option)
                 if want_option:
                     print "*New value: %s\n" % self.options[option.key]
 
@@ -175,17 +181,16 @@ class Options(object):
         for raw_option in raw_options:
             self._store_raw_option(raw_option, ctx, debug_opt_keys)
 
-
     def evaluate(self):
         '''Evaluate stored options.'''
         for opt in self.options.keys():
             self.options[opt] = self.evaluate_option(opt)
 
-
     def evaluate_option(self, opt):
         if opt in self.options:
             self.options[opt] = re.sub(r'(\$\((\w+)\))',
-                                       lambda m: self.evaluate_option(m.group(2)),
+                                       lambda m:
+                                           self.evaluate_option(m.group(2)),
                                        self.options[opt])
             return self.options[opt]
         else:
@@ -226,11 +231,12 @@ class Ufid(object):
         return self.ufid <= other.ufid
 
     def __str__(self):
-         return '-'.join(self.ufid)
+        return '-'.join(self.ufid)
 
 
 class Uplid(object):
-    def __init__(self, os_type, os_name, cpu_type, os_ver, comp_type, comp_ver):
+    def __init__(self, os_type, os_name, cpu_type, os_ver, comp_type,
+                 comp_ver):
         self.uplid = {
             'os_type': os_type,
             'os_name':  os_name,
@@ -257,27 +263,35 @@ class Uplid(object):
         return uplid
 
     def __eq__(self, other):
-        return (isinstance(other, self.__class__) and self.uplid == other.uplid)
+        return (isinstance(other, self.__class__) and
+                self.uplid == other.uplid)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __str__(self):
-         attrs = ['os_type', 'os_name', 'cpu_type', 'os_ver', 'comp_type', 'comp_ver']
-         return '-'.join([self.uplid[a] for a in attrs])
+        attrs = ['os_type', 'os_name', 'cpu_type', 'os_ver', 'comp_type',
+                 'comp_ver']
+        return '-'.join([self.uplid[a] for a in attrs])
 
     def match(self, other):
-        if not match_str(self.uplid['os_type'], other.uplid['os_type']): return False
-        if not match_str(self.uplid['os_name'], other.uplid['os_name']): return False
-        if not match_str(self.uplid['cpu_type'], other.uplid['cpu_type']): return False
-        if not match_ver(self.uplid['os_ver'], other.uplid['os_ver']): return False
+        if not match_str(self.uplid['os_type'], other.uplid['os_type']):
+            return False
+        if not match_str(self.uplid['os_name'], other.uplid['os_name']):
+            return False
+        if not match_str(self.uplid['cpu_type'], other.uplid['cpu_type']):
+            return False
+        if not match_ver(self.uplid['os_ver'], other.uplid['os_ver']):
+            return False
 
         if not match_str(self.uplid['comp_type'], other.uplid['comp_type']):
             global DEFAULT_COMPILER
-            if not (self.uplid['comp_type'] == 'def' and DEFAULT_COMPILER == other.uplid['comp_type']):
+            if not (self.uplid['comp_type'] == 'def' and
+                    DEFAULT_COMPILER == other.uplid['comp_type']):
                 return False
 
-        if not match_ver(self.uplid['comp_ver'], other.uplid['comp_ver']): return False
+        if not match_ver(self.uplid['comp_ver'], other.uplid['comp_ver']):
+            return False
         return True
 
 
@@ -292,7 +306,7 @@ class OptionMask(object):
 
 def match_str(a, b):
     if not a or a == '*' or not b or b == '*':
-         return True
+        return True
     return a == b
 
 
@@ -322,7 +336,7 @@ def match_ver(a, b):
     return True
 
 
-def match_subver(a, b, exact = False):
+def match_subver(a, b, exact=False):
     if a == '*':
         return True
 
