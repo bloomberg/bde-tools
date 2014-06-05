@@ -34,7 +34,15 @@ def _format_option(option, fill_widths):
 
 if __name__ == "__main__":
     usage = \
-        """ Usage: cat <opts_file> | bde_opts_format.py"""
+        """Usage: cat <opts_file> | bde_opts_format.py
+
+Format the text from stdin in the options file format, which is used by opts
+and defs meta-data files, and print the result to stdout.
+
+The formatter aligns each section of the option rules using two spaces as
+padding. Comments and blank lines will be left in-place unmodified.
+
+"""
 
     if len(sys.argv) > 1:
         print >>sys.stderr, usage
