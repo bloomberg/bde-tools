@@ -3,12 +3,11 @@ import os
 
 
 class RawOptions(object):
-
     class Option:
         '''Empty class representing an option read directly from on disk.
            Attributes get dynamically added.'''
 
-        def __str__(self):
+        def __repr__(self):
             return '%s %s %s %s %s' % (self.modifier,
                                        self.platform,
                                        self.config,
@@ -17,6 +16,12 @@ class RawOptions(object):
 
     def __init__(self):
         self.options = []
+
+        # Store all lines in an array. Each element of the array contains a
+        # pair of (line, option), where line is a string and a option is a
+        # RawOption.Option if the line represents an option rule, or None
+        # otherwise.
+        self.all_lines = []
 
     # Option parsing regular expressions
     OPT_LINE_RE = re.compile(r'''^
@@ -39,49 +44,52 @@ class RawOptions(object):
 
     OPT_INLINE_COMMAND_RE = re.compile(r'\\"`([^`]+)`\\"')
 
+    def read_handle(self, handle):
+        continuation = False
+        got_line = False
+
+        for line in handle:
+            if not continuation:
+                option = RawOptions.Option()
+                m = RawOptions.OPT_LINE_RE.match(line)
+                if m:
+                    got_line = True
+                    option.modifier = m.group('mod')
+                    option.platform = m.group('plat')
+                    option.config = m.group('conf')
+                    option.key = m.group('key')
+                    option.value = m.group('val')
+
+                    continuation = not m.group('cont') is None
+                else:
+                    got_line = False
+                    if not RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(
+                            line):
+                        print(line)
+                    assert(RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(
+                        line))
+                    self.all_lines.append((line.rstrip(), None))
+            else:
+                # previous line continues
+
+                m = RawOptions.OPT_CONTINUE_RE.match(line)
+                assert(m)
+                assert(got_line)
+
+                option.value += m.group('val')
+                continuation = not m.group('cont') is None
+
+            if got_line and not continuation:
+                option.value = option.value.strip()
+                self.options.append(option)
+                self.all_lines.append((line, option))
+
     def read(self, opts_file):
         '''Read the opts file, extract build options and store them.'''
 
         try:
-            with open(opts_file) as opts_strm:
-                continuation = False
-                got_line = False
-
-                for line in opts_strm:
-
-                    if not continuation:
-                        option = RawOptions.Option()
-                        m = RawOptions.OPT_LINE_RE.match(line)
-                        if m:
-                            got_line = True
-                            option.modifier = m.group('mod')
-                            option.platform = m.group('plat')
-                            option.config = m.group('conf')
-                            option.key = m.group('key')
-                            option.value = m.group('val')
-
-                            continuation = not m.group('cont') is None
-                        else:
-                            got_line = False
-                            option = RawOptions.Option()
-                            if not RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(
-                                    line):
-                                print(line)
-                            assert(RawOptions.OPT_COMMENT_OR_EMTPY_RE.match(
-                                line))
-                    else:
-                        # previous line continues
-
-                        m = RawOptions.OPT_CONTINUE_RE.match(line)
-                        assert(m)
-                        assert(got_line)
-
-                        option.value += m.group('val')
-                        continuation = not m.group('cont') is None
-
-                    if got_line and not continuation:
-                        option.value = option.value.strip()
-                        self.options.append(option)
+            with open(opts_file) as opts_handle:
+                self.read_handle(opts_handle)
         except IOError:
             # skip if the option file can't be found
             # (IOError - 2.x/3.x, FileNotFoundError - 3.x)
