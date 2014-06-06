@@ -1,6 +1,7 @@
 import os
 import os.path
 import sys
+import tempfile
 
 import bdeunittest
 from waflib.TaskGen import feature, after_method, before_method
@@ -382,8 +383,6 @@ class BdeWafBuild(object):
         for class_name in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
                            'c', 'cprogram', 'cshlib', 'cstlib'):
             activate_custom_exec_command(class_name)
-            # klass = type('cxx', (Task.classes['cxx'],), {})
-            # setattr(klass, 'exec_command', custom_exec_command)
 
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.custom_envs)
@@ -570,22 +569,50 @@ from waflib.Tools import ccroot
 setattr(task_gen, ccroot.propagate_uselib_vars.__name__, propagate_uselib_vars)
 
 def activate_custom_exec_command(class_name):
+    '''
+    Monkey patch 'exec_command' method for the specified 'class_name' to
+    support decorations around compiler/linker errors and warnings.
+    '''
     cls = Task.classes.get(class_name, None)
 
     if not cls:
-            return None
+        return None
 
     derived_class = type(class_name, (cls,), {})
 
     def exec_command(self, *k, **kw):
-            if self.env['CC_NAME'] == 'msvc':
-                    return self.exec_command_msvc(*k, **kw)
-            else:
-                    return self.bde_exec_command(*k, **kw)
+        if self.env['CC_NAME'] == 'msvc':
+            return super(derived_class, self).exec_command(*k, **kw)
+        else:
+            return self.bde_exec_command(*k, **kw)
 
-    # Chain-up monkeypatch needed since exec_command() is in base class API
     derived_class.exec_command = exec_command
-    derived_class.bde_exec_command = bde_exec_command
+    derived_class.exec_response_command = bde_msvc_exec_response_command
+
+
+def bde_msvc_exec_response_command(task, cmd, **kw):
+    try:
+        tmp = None
+        if (sys.platform.startswith('win') and isinstance(cmd, list) and
+            len(' '.join(cmd)) >= 8192):
+            #unquoted program name, otherwise exec_command will fail
+            program = cmd[0]
+            cmd = [task.quote_response_command(x) for x in cmd]
+            (fd, tmp) = tempfile.mkstemp()
+            os.write(fd, '\r\n'.join(i.replace('\\', '\\\\') for i
+                                     in cmd[1:]).encode())
+            os.close(fd)
+            cmd = [program, '@' + tmp]
+        # no return here, that's on purpose
+        ret = bde_exec_command(task, cmd, **kw)
+    finally:
+        if tmp:
+            try:
+                os.remove(tmp)
+            except OSError:
+                 # anti-virus and indexers can keep the files open -_-
+                pass
+    return ret
 
 def bde_exec_command(task, cmd, **kw):
     bld = task.generator.bld
@@ -611,13 +638,22 @@ def bde_exec_command(task, cmd, **kw):
 
     if out or err:
         msg = '' + out + err
-        src_str = ' '.join([a.nice_path() for a in task.outputs])
+
+        # The Visual Studio compiler always prints name of the input source
+        # file. We try to ignore those outputs using a heuristic.
+        if ret == 0 and msg.strip() == task.inputs[0].name:
+            return ret
+
+        if len(task.inputs) > 1:
+            src_str = task.outputs[0].name
+        else:
+            src_str = task.inputs[0].name
+
         status_str = 'WARNING' if ret == 0 else 'ERROR'
         sys.stdout.write('[%s (%s)] <<<<<<<<<<\n%s>>>>>>>>>>\n' %
                          (src_str, status_str, msg))
 
     return ret
-
 
 class ListContext(BuildContext):
     """
