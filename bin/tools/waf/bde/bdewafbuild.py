@@ -379,10 +379,11 @@ class BdeWafBuild(object):
                                              self.lib_suffix + '.pc')])
 
     def build(self):
-        # for klass in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
-        #               'c', 'cprogram', 'cshlib', 'cstlib'):
-        #     klass = type('cxx', (Task.classes['cxx'],), {})
-        #     setattr(klass, 'exec_command', custom_exec_command)
+        for class_name in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
+                           'c', 'cprogram', 'cshlib', 'cstlib'):
+            activate_custom_exec_command(class_name)
+            # klass = type('cxx', (Task.classes['cxx'],), {})
+            # setattr(klass, 'exec_command', custom_exec_command)
 
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.custom_envs)
@@ -501,7 +502,6 @@ def reuse_lib_objects(self):
     Find sources that are libs; if any are found, extract their object lists
     and build this lib from the same objects. If this occurs, skip the normal
     process_source step.
-
     """
     tmp_source = []
     saw_target = False
@@ -569,8 +569,25 @@ from waflib.TaskGen import task_gen
 from waflib.Tools import ccroot
 setattr(task_gen, ccroot.propagate_uselib_vars.__name__, propagate_uselib_vars)
 
+def activate_custom_exec_command(class_name):
+    cls = Task.classes.get(class_name, None)
 
-def custom_exec_command(task, cmd, **kw):
+    if not cls:
+            return None
+
+    derived_class = type(class_name, (cls,), {})
+
+    def exec_command(self, *k, **kw):
+            if self.env['CC_NAME'] == 'msvc':
+                    return self.exec_command_msvc(*k, **kw)
+            else:
+                    return self.bde_exec_command(*k, **kw)
+
+    # Chain-up monkeypatch needed since exec_command() is in base class API
+    derived_class.exec_command = exec_command
+    derived_class.bde_exec_command = bde_exec_command
+
+def bde_exec_command(task, cmd, **kw):
     bld = task.generator.bld
     kw['shell'] = isinstance(cmd, str)
     kw['cwd'] = bld.variant_dir
@@ -594,7 +611,7 @@ def custom_exec_command(task, cmd, **kw):
 
     if out or err:
         msg = '' + out + err
-        src_str = ' '.join([a.nice_path() for a in task.inputs])
+        src_str = ' '.join([a.nice_path() for a in task.outputs])
         status_str = 'WARNING' if ret == 0 else 'ERROR'
         sys.stdout.write('[%s (%s)] <<<<<<<<<<\n%s>>>>>>>>>>\n' %
                          (src_str, status_str, msg))

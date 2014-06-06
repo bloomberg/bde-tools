@@ -128,7 +128,8 @@ class Options(object):
                        'SUN_CC_INTERNAL_PREFIX',
                        'SUN_GCC_INTERNAL_PREFIX',
                        'LINUX_GCC_PREFIX',
-                       'WINDOWS_CC_PREFIX')
+                       'WINDOWS_CC_PREFIX',
+                       'RETRY_ON_SIGNAL')
 
         if option.key in ignore_keys:
             return False
