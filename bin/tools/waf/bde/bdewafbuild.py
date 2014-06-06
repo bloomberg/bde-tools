@@ -587,6 +587,7 @@ def activate_custom_exec_command(class_name):
             return self.bde_exec_command(*k, **kw)
 
     derived_class.exec_command = exec_command
+    derived_class.bde_exec_command = bde_exec_command
     derived_class.exec_response_command = bde_msvc_exec_response_command
 
 
