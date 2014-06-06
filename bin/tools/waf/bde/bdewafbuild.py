@@ -616,10 +616,18 @@ def bde_msvc_exec_response_command(task, cmd, **kw):
     return ret
 
 def bde_exec_command(task, cmd, **kw):
+
+    def get_quoted_shell_command(cmd):
+        quoted_cmd = ['"%s"' % arg if ' ' in arg else arg for
+                      arg in cmd]
+
+        return ' '.join(quoted_cmd)
+
     bld = task.generator.bld
     kw['shell'] = isinstance(cmd, str)
     kw['cwd'] = bld.variant_dir
-    Logs.debug('runner: %r' % cmd)
+    Logs.debug('runner: %r' % get_quoted_shell_command(cmd))
+    Logs.debug('runner_real: %r' % cmd)
     Logs.debug('runner_env: kw=%s' % kw)
 
     if bld.logger:
