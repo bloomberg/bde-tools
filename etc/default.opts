@@ -325,7 +325,7 @@
 # with improperly built third-party libraries. Let's disable it for newer
 # VS2008 builds.  It would also make sense to add /OPT:REF and /OPT:ICF for
 # building applications, but not test drivers. Test driver link time is too
-# long already without linker optimiations.
+# long already without linker optimizations.
 
 !!  windows-*-*-*-cl-15.00  opt  OPT_LDFLAGS            =
 !!  windows-*-*-*-cl-16.00  opt  OPT_LDFLAGS            =
@@ -443,7 +443,8 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !!  *-*-x86_64-*-gcc           64       CC64FLAGS                 =  -m64 -mtune=opteron
 
 # DRQS 10505346 -- switch to -xtarget=ultra3 for Sun, -qarch=pwr4 -qtune=pwr5 for AIX
-#old flags
+# old flags
+# TODO organize and document xtarget and xpath options
 
 ++  unix-SunOS-*-*-CC64        _        CC64FLAGS                 =  -m32 -xarch=sparcvis -xchip=generic -xcache=generic
 #new flags for 64 bits - override the
@@ -568,8 +569,6 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 ++  windows-                  _    CXXLINK            =  $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:ix86 ws2_32.lib
 !!  windows-*-amd64-*-*       _    CXXLINK            =  $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:X64 ws2_32.lib
 ++  windows-                  _    CLINK              =  $(CXXLINK)
-
-# DRQS 10505346 -- switch to -xtarget=ultra3
 
 #==============================================================================
 # User Customisation
