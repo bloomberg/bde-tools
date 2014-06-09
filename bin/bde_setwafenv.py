@@ -349,6 +349,13 @@ regular user.
     ufid_raw = options.ufid
     if not ufid_raw:
         ufid_raw = 'dbg_mt_exc'
+    else:
+        if not Ufid.is_valid(ufid_raw.split('_')):
+            print >>sys.stderr, \
+                ('"%s" is an invalid ufid. Valid flags are: %s.' %
+                 (ufid_raw, ', '.join(Ufid.VALID_FLAGS.keys())))
+            sys.exit(1)
+
     # Put ufid_raw into canonical form
     ufid = Ufid.from_config_str(ufid_raw)
 
