@@ -262,10 +262,7 @@ class Ufid(object):
             self.add_flag(f)
 
     def add_flag(self, flag):
-        if flag in Ufid.VALID_FLAGS:
-            self.ufid.add(flag)
-        else:
-            raise KeyError("Invalid flag: %s" % flag)
+        self.ufid.add(flag)
 
     @classmethod
     def from_config_str(cls, config_str):

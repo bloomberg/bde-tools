@@ -39,7 +39,7 @@ def options(ctx):
 def configure(ctx):
     ctx.load('bdeunittest')
 
-    ufid = _make_ufid_from_options(ctx.options)
+    ufid = _make_ufid_from_ctx(ctx)
 
     platform = Utils.unversioned_sys_platform()
     if platform == 'win32':
@@ -96,14 +96,32 @@ def build(ctx):
     bde_build.build()
 
 
-def _make_ufid_from_options(opts):
-
+def _make_ufid_from_ctx(ctx):
+    opts = ctx.options
     env_ufid = os.getenv('BDE_WAF_UFID')
-    if env_ufid:
-        return Ufid(env_ufid.split('_'))
+    ufid_str = None
 
-    if opts.legacy_config:
-        return Ufid(opts.legacy_config.split('_'))
+    if env_ufid:
+        if opts.ufid:
+            Logs.warn("The specifie UFID, '%s', is different from "
+                      "the environment variable BDE_WAF_UFID, '%s', "
+                      "which will take precedence. " %
+                      (opts.ufid, env_ufid))
+        else:
+            Logs.warn("Using the value of the environment variable "
+                      "DE_WAF_UFID, '%s', as the UFID." % env_ufid)
+        ufid_str = env_ufid
+    elif opts.ufid:
+        ufid_str = opts.ufid
+
+    if ufid_str:
+        valid_flags = Ufid.VALID_FLAGS.keys()
+        ufid = ufid_str.split('_')
+        if any(f not in valid_flags for f in ufid):
+            ctx.fatal('Invalid UFID, "%s", each part of a UFID must be in '
+                      'the list (of valid flags): %s.' %
+                      (ufid_str, ", ".join(valid_flags)))
+        return Ufid(ufid)
 
     ufid_map = {
         'abi_bits': {'64': '64'},
@@ -170,9 +188,9 @@ def _make_uplid_from_context(ctx):
         env_uplid = Uplid.from_platform_str(env_uplid_str)
 
         if uplid != env_uplid:
-            Logs.warn(("The identified uplid, '%s', is different from "
+            Logs.warn(("The identified UPLID, '%s', is different from "
                        "the environment variable BDE_WAF_UPLID. "
-                       "The uplid has been overwritten to match "
+                       "The UPLID has been overwritten to match "
                        "BDE_WAF_UPLID, '%s'.") % (uplid, env_uplid))
             uplid = env_uplid
 
@@ -297,11 +315,15 @@ def _add_commandline_options(ctx):
          {'action': 'store_true',
           'default': False,
           'help': 'enable C++11 support'}),
-        (('t', 'legacy-config'),
+        (('t', 'ufid'),
          {'type': 'string',
           'default': None,
-          'help': 'backwards compatible ufid configuration that can be used '
-                  'with bde_build.pl (e.g., dbg_mt_exc)'}),
+          'help': 'the Unified Platform ID (UFID) identifying the build '
+                  'configuration (e.g., dbg_mt_exc). '
+                  'see https://github.com/bloomberg/bde-tools/wiki/'
+                  'BDE-Style-Repository#ufid for a list of valid ufids.'
+                  'Note that specifying a UFID will overwrite other build '
+                  'configuration options such as --library_type'}),
         (('debug-opt-keys',),
          {'type': 'string',
           'default': None,
