@@ -104,8 +104,8 @@ def _make_ufid_from_ctx(ctx):
     if env_ufid:
         if opts.ufid:
             Logs.warn("The specifie UFID, '%s', is different from "
-                      "the environment variable BDE_WAF_UFID, '%s', "
-                      "which will take precedence. " %
+                      "the value of the environment variable BDE_WAF_UFID, "
+                      "'%s', which will take precedence. " %
                       (opts.ufid, env_ufid))
         else:
             Logs.warn("Using the value of the environment variable "
@@ -115,12 +115,11 @@ def _make_ufid_from_ctx(ctx):
         ufid_str = opts.ufid
 
     if ufid_str:
-        valid_flags = Ufid.VALID_FLAGS.keys()
         ufid = ufid_str.split('_')
-        if any(f not in valid_flags for f in ufid):
+        if not Ufid.is_valid(ufid):
             ctx.fatal('Invalid UFID, "%s", each part of a UFID must be in '
                       'the list (of valid flags): %s.' %
-                      (ufid_str, ", ".join(valid_flags)))
+                      (ufid_str, ", ".join(Ufid.VALID_FLAGS.keys())))
         return Ufid(ufid)
 
     ufid_map = {

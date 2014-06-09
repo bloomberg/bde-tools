@@ -66,7 +66,7 @@ class RawOptions(object):
                         option.value = m.group('val')
                         continuation = not m.group('cont') is None
                     else:
-                        assert(False, '"%s" is not valid!' % line)
+                        assert False, '"%s" is not valid!' % line
             else:
                 # previous line continues
 
@@ -265,6 +265,10 @@ class Ufid(object):
         self.ufid.add(flag)
 
     @classmethod
+    def is_valid(cls, ufid):
+        return all(f in cls.VALID_FLAGS for f in ufid)
+
+    @classmethod
     def from_config_str(cls, config_str):
 
         flags = []
@@ -280,7 +284,7 @@ class Ufid(object):
 
     def __str__(self):
         flags = [flag for flag in self.ufid]
-        flags.sort(key=lambda f: Ufid.VALID_FLAGS[f][0])
+        flags.sort(key=lambda f: self.VALID_FLAGS[f][0])
         return '_'.join(flags)
 
 
