@@ -319,10 +319,10 @@ def _add_commandline_options(ctx):
           'default': None,
           'help': 'the Unified Platform ID (UFID) identifying the build '
                   'configuration (e.g., dbg_mt_exc). '
-                  'see https://github.com/bloomberg/bde-tools/wiki/'
-                  'BDE-Style-Repository#ufid for a list of valid ufids.'
+                  'See https://github.com/bloomberg/bde-tools/wiki/'
+                  'BDE-Style-Repository#ufid for a list of valid ufids. '
                   'Note that specifying a UFID will overwrite other build '
-                  'configuration options such as --library_type'}),
+                  'configuration options such as --library_type.'}),
         (('debug-opt-keys',),
          {'type': 'string',
           'default': None,
