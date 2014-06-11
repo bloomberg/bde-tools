@@ -352,7 +352,7 @@ class BdeWafConfigure(object):
 
         opts.evaluate()
         self.group_options[group] = opts.options
-        patch_options_common(p_opts.options)
+        patch_options_common(opts.options)
 
         if unsupported_packages:
             self.unsupported_packages |= unsupported_packages
