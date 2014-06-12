@@ -109,7 +109,7 @@ def _make_ufid_from_ctx(ctx):
                       (opts.ufid, env_ufid))
         else:
             Logs.warn("Using the value of the environment variable "
-                      "DE_WAF_UFID, '%s', as the UFID." % env_ufid)
+                      "BDE_WAF_UFID, '%s', as the UFID." % env_ufid)
         ufid_str = env_ufid
     elif opts.ufid:
         ufid_str = opts.ufid
