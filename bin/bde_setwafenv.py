@@ -99,9 +99,9 @@ def _determine_os_info():
     if platform == 'linux':
         cpu_type = os.uname()[4]
     elif platform == 'aix':
-        cpu_type = ctx.cmd_and_log(['uname', '-p']).rstrip()
+        cpu_type = ctx.cmd_and_log(['/bin/uname', '-p']).rstrip()
     elif platform == 'sunos':
-        cpu_type = ctx.cmd_and_log(['uname', '-p']).rstrip()
+        cpu_type = ctx.cmd_and_log(['/bin/uname', '-p']).rstrip()
     elif platform == 'darwin':
         cpu_type = os.uname()[4]
 
