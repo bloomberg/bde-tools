@@ -238,7 +238,7 @@ def _get_linux_comp(ctx):
 
 
 def _get_aix_comp(ctx):
-    cpu_type = ctx.cmd_and_log(['uname', '-p']).rstrip()
+    cpu_type = ctx.cmd_and_log(['/bin/uname', '-p']).rstrip()
     cxx_name = ctx.env.CXX_NAME
     if cxx_name == 'xlc++':
         cxx_name = 'xlc'
@@ -247,7 +247,7 @@ def _get_aix_comp(ctx):
 
 
 def _get_sunos_comp(ctx):
-    cpu_type = ctx.cmd_and_log(['uname', '-p']).rstrip()
+    cpu_type = ctx.cmd_and_log(['/bin/uname', '-p']).rstrip()
     cxx_name = ctx.env.CXX_NAME
     if cxx_name == 'sun':
         cxx_name = 'cc'
