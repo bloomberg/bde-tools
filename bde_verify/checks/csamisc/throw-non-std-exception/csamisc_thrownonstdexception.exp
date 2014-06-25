@@ -1,0 +1,4 @@
+csamisc_thrownonstdexception.t.cpp:28:17: warning: FE01: Object of type 'int' not derived from std::exception is thrown.
+                throw 17;
+                ^
+1 warning generated.

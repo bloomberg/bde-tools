@@ -1,0 +1,23 @@
+In file included from csatr_includeguard1.v.cpp:3:
+./csatr_includeguard1.v.h:3:9: warning: TR14: Wrong name for include guard (expected 'INCLUDED_CSATR_INCLUDEGUARD1')
+#ifndef INCLUDED_CSATR_INCLUDEGUARD0
+        ^
+./csatr_includeguard1.v.h:3:2: warning: SEG01: Include guard 'INCLUDED_CSATR_INCLUDEGUARD0' without include file
+#ifndef INCLUDED_CSATR_INCLUDEGUARD0
+ ^
+./csatr_includeguard1.v.h:3:9: warning: 'INCLUDED_CSATR_INCLUDEGUARD0' is used as a header guard here, followed by #define of a different macro [-Wheader-guard]
+#ifndef INCLUDED_CSATR_INCLUDEGUARD0
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./csatr_includeguard1.v.h:4:9: note: 'INCLUDED_CSATR_INCLUDEGUARD1' is defined here; did you mean 'INCLUDED_CSATR_INCLUDEGUARD0'?
+#define INCLUDED_CSATR_INCLUDEGUARD1
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        INCLUDED_CSATR_INCLUDEGUARD0
+./csatr_includeguard1.v.h:3:9: warning: SHO04: Header without or with wrong include guard
+#ifndef INCLUDED_CSATR_INCLUDEGUARD0
+        ^
+./csatr_includeguard1.v.h:3:9: warning: SHO06: Missing include for bdes_ident.h
+./csatr_includeguard1.v.h:3:9: warning: SHO07: Missing include for csascm_version.h
+csatr_includeguard1.v.cpp:4:1: warning: SHO08: Component source includes '..._ident.h' but header does not
+#include <bdes_ident.h>
+^
+7 warnings generated.

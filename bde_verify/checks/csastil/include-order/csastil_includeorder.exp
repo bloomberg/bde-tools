@@ -1,0 +1,17 @@
+In file included from csastil_includeorder.v.cpp:3:
+./csastil_includeorder.v.h:15:9: warning: SHO01: Package header out of order
+#ifndef INCLUDED_CSASTIL_TESTA
+        ^
+./csastil_includeorder.v.h:24:9: warning: SHO02: Package header coming late
+#ifndef INCLUDED_CSASTIL_TESTD
+        ^
+./csastil_includeorder.v.h:27:9: warning: SHO01: Group header out of order
+#ifndef INCLUDED_CSAPKGA_TESTB
+        ^
+./csastil_includeorder.v.h:39:9: warning: SHO01: Group header out of order
+#ifndef INCLUDED_CSAPKGB_TESTB
+        ^
+./csastil_includeorder.v.h:54:9: warning: SHO01: Component header out of order
+#ifndef INCLUDED_CSAPKGA_TESTD
+        ^
+5 warnings generated.

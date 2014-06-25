@@ -1,0 +1,39 @@
++ make the simple registry independent from analyser.h!
++ move the various parts to subdirectories grouped by what they are about
++ create some test infrastructure to verify that the [only] the correct warnings are being generated
+- create some sort of suppression approach (using yet to be added attributes?)
++ create infrastructure to only report files of the current component (i.e. .cpp and its related .h/.hpp)
+- support optionally reporting all errors
++ create infrastructure to select the tests to be run
+- report the check name
+
+ideas for tests:
++ throw only std::exception
+- bitwise and/or vs. if-statement
+- throw in destructor (half-hearted?); possibly create database of what can throw and use this? could also be used to deal with noexcept stuff!
+- control-structure vs. block-statement
+- compare/convert enum to ints
+- superfluous copy initialization
+- switch fall-through
+- preincrement vs. postincrement
+- end() in for-conditional
+- swap() does all the members
+- do things always in an initializer list
+- warn about reserved names
+- warn about deprecated signatures (use to be added attribute...?)
+- warn about missing (external?) include guards
+- warn about name mismatches of include guards
+- warn about unnecessary copy-construction, e.g. after default constructing its argument
+- check that the source files contain an "ident" of some form
+
+-  9 everything resides in BLP::package
+- 10 enums, constants, variables not in package namespace but nested
++ 11 .cpp includes .h first thing (after possibly RCSid[]
+- 12 non-declared names have to be local
+- 13 what is defined has to be declared in component's header and only there
+- 14 components can't forward declare other component's things
+- 15 anything directly used needs to be ibcluded (or, for class declaration, declared)
+- 16 non-local operators must involve component names
+- 17 friendship to be granted only within the component
+- 18 header files must use include guard INCLUDED_FILENAME (without .h)
+- 19 no using declarations in headers and only after all includes in the source

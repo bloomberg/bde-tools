@@ -1,0 +1,4 @@
+csatr1_packname.t.cpp:1:1: warning: PN05: Component 'csatr1_packname' doesn't seem to be in package 'csatr1'
+// csatr1_packname.t.cpp                                              -*-C++-*-
+^
+1 warning generated.

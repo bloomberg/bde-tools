@@ -1,0 +1,5 @@
+csatr_filestest.cpp:1:1: warning: FI01: Header file 'csatr_filestest.h' not accessible
+// csatr_filestest.cpp                                                -*-C++-*-
+^
+csatr_filestest.cpp:1:1: warning: FI02: Test file 'csatr_filestest.t.cpp' not accessible
+2 warnings generated.

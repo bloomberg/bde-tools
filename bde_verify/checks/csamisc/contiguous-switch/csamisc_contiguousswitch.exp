@@ -1,0 +1,50 @@
+csamisc_contiguousswitch.t.cpp:30:5: warning: ES01: Empty switch statement
+    switch (ac) {
+    ^
+csamisc_contiguousswitch.t.cpp:35:9: warning: CS01: Test code should be within compound (brace-enclosed) statement
+        ++ac;
+        ^
+csamisc_contiguousswitch.t.cpp:34:5: warning: SD01: Switch starts with `default:` label
+    default:
+    ^
+csamisc_contiguousswitch.t.cpp:37:5: warning: SZ01: Switch should start with `case 0:`
+    case 1:
+    ^
+csamisc_contiguousswitch.t.cpp:46:5: warning: SZ01: Switch should start with `case 0:`
+    case 1: {
+    ^
+csamisc_contiguousswitch.t.cpp:49:5: warning: SZ01: Switch should start with `case 0:`
+    case 0: {
+    ^
+csamisc_contiguousswitch.t.cpp:49:5: warning: ZF02: `case 0:` should simply fall through to next case
+csamisc_contiguousswitch.t.cpp:58:5: warning: MD01: `default:` label in the middle of labels
+    default: break;
+    ^
+csamisc_contiguousswitch.t.cpp:65:5: warning: MD01: `default:` label in the middle of labels
+    default: break;
+    ^
+csamisc_contiguousswitch.t.cpp:72:9: warning: CS01: Test code should be within compound (brace-enclosed) statement
+        switch (ac + 1) {
+        ^
+csamisc_contiguousswitch.t.cpp:76:5: warning: MB01: Missing `break;` before this case
+    case 5: break;
+    ^
+csamisc_contiguousswitch.t.cpp:69:5: warning: ED01: Switch doesn't end with `default:` label
+    switch (ac) // missing default
+    ^
+csamisc_contiguousswitch.t.cpp:71:5: warning: ZF02: `case 0:` should simply fall through to next case
+    case 0:
+    ^
+csamisc_contiguousswitch.t.cpp:87:5: warning: LO01: Case label out of order: previous=100 value=5
+    case 5: break;
+    ^
+csamisc_contiguousswitch.t.cpp:101:9: warning: CS01: Test code should be within compound (brace-enclosed) statement
+        ++ac;
+        ^
+csamisc_contiguousswitch.t.cpp:107:9: warning: CS02: Test code should be within single compound (brace-enclosed) statement
+        ++ac;
+        ^
+csamisc_contiguousswitch.t.cpp:109:5: warning: MB01: Missing `break;` before this case
+    case 10: {
+    ^
+17 warnings generated.

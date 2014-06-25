@@ -1,0 +1,22 @@
+csamisc_stringadd.t.cpp:44:37: warning: SA01: Adding integer to string literal
+    bde_verify::csamisc::use("0123" + ac);
+                             ~~~~~~~^~~~
+csamisc_stringadd.t.cpp:48:33: warning: SA01: Adding integer to string literal
+    bde_verify::csamisc::use(ac + "0123");
+                             ~~~^~~~~~~~
+csamisc_stringadd.t.cpp:52:37: warning: SA01: Subtracting integer from string literal
+    bde_verify::csamisc::use("0123" - ac);
+                             ~~~~~~~^~~~
+csamisc_stringadd.t.cpp:58:37: warning: SA01: Adding integer to string literal
+    bde_verify::csamisc::use("0123" + -1);
+                             ~~~~~~~^~~~
+csamisc_stringadd.t.cpp:64:37: warning: SA01: Adding integer to string literal
+    bde_verify::csamisc::use("0123" + 5);
+                             ~~~~~~~^~~
+csamisc_stringadd.t.cpp:66:37: warning: SA01: Subtracting integer from string literal
+    bde_verify::csamisc::use("0123" - 1);
+                             ~~~~~~~^~~
+csamisc_stringadd.t.cpp:72:37: warning: SA01: Subtracting integer from string literal
+    bde_verify::csamisc::use("0123" - -5);
+                             ~~~~~~~^~~~
+7 warnings generated.

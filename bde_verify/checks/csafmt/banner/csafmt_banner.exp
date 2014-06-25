@@ -1,0 +1,38 @@
+csafmt_banner.t.cpp:3:1: warning: BAN02: Banner ends at column 8 instead of 79
+// =====
+^
+csafmt_banner.t.cpp:5:1: warning: BAN02: Banner ends at column 6 instead of 79
+// ---
+^
+csafmt_banner.t.cpp:4:4: warning: BAN03: Improperly centered banner text (not reachable using tab key)
+// INLINE
+   ^
+csafmt_banner.t.cpp:4:4: note: BAN03: Correct text is
+//                                  INLINE
+csafmt_banner.t.cpp:11:1: warning: BAN02: Banner ends at column 8 instead of 79
+// -----
+^
+csafmt_banner.t.cpp:13:1: warning: BAN02: Banner ends at column 6 instead of 79
+// ===
+^
+csafmt_banner.t.cpp:12:4: warning: BAN03: Improperly centered banner text (not reachable using tab key)
+// INLINE
+   ^
+csafmt_banner.t.cpp:12:4: note: BAN03: Correct text is
+//                                  INLINE
+csafmt_banner.t.cpp:16:3: warning: BAN03: Improperly centered banner text (not reachable using tab key)
+//HELLO WORLD
+  ^
+csafmt_banner.t.cpp:16:3: note: BAN03: Correct text is
+//                              HELLO WORLD
+csafmt_banner.t.cpp:19:37: warning: BAN03: Improperly centered banner text
+//                                  HELLO WORLD
+                                    ^
+csafmt_banner.t.cpp:19:37: note: BAN03: Correct text is
+//                              HELLO WORLD
+csafmt_banner.t.cpp:25:38: warning: BAN03: Improperly centered banner text (not reachable using tab key)
+//                                   HELLO WORLD
+                                     ^
+csafmt_banner.t.cpp:25:38: note: BAN03: Correct text is
+//                              HELLO WORLD
+9 warnings generated.

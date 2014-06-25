@@ -1,0 +1,205 @@
+csabbg_testdriver.t.cpp:33:25: warning: TP19: Missing or malformed standard test driver section
+//                       STANDARD BDE ASSERT TEST MACRO
+                        ^
+csabbg_testdriver.t.cpp:33:25: note: TP19: One correct form (of several possible) is
+// ============================================================================
+//                      STANDARD BDE ASSERT TEST MACROS
+// ----------------------------------------------------------------------------
+
+static int testStatus = 0;
+
+static void aSsErT(int c, const char *s, int i)
+{
+    if (c) {
+        cout << "Error " << __FILE__ << "(" << i << "): " << s
+             << "    (failed)" << endl;
+        if (testStatus >= 0 && testStatus <= 100) ++testStatus;
+    }
+}
+
+csabbg_testdriver.t.cpp:49:23: warning: TP19: Missing or malformed standard test driver section
+//                       STANDARD BDE TEST DRIVER MACROS
+                      ^
+csabbg_testdriver.t.cpp:49:23: note: TP19: One correct form (of several possible) is
+
+// ============================================================================
+//                    STANDARD BDE LOOP-ASSERT TEST MACROS
+// ----------------------------------------------------------------------------
+
+#define C_(X)   << #X << ": " << X << '\t'
+#define A_(X,S) { if (!(X)) { cout S << endl; aSsErT(1, #X, __LINE__); } }
+#define LOOP_ASSERT(I,X)            A_(X,C_(I))
+#define LOOP2_ASSERT(I,J,X)         A_(X,C_(I)C_(J))
+#define LOOP3_ASSERT(I,J,K,X)       A_(X,C_(I)C_(J)C_(K))
+#define LOOP4_ASSERT(I,J,K,L,X)     A_(X,C_(I)C_(J)C_(K)C_(L))
+#define LOOP5_ASSERT(I,J,K,L,M,X)   A_(X,C_(I)C_(J)C_(K)C_(L)C_(M))
+#define LOOP6_ASSERT(I,J,K,L,M,N,X) A_(X,C_(I)C_(J)C_(K)C_(L)C_(M)C_(N))
+
+csabbg_testdriver.t.cpp:61:3: warning: TP19: Missing or malformed standard test driver section
+//=============================================================================
+  ^
+csabbg_testdriver.t.cpp:61:3: note: TP19: One correct form (of several possible) is
+
+// ============================================================================
+//                  SEMI-STANDARD TEST OUTPUT MACROS
+// ----------------------------------------------------------------------------
+
+#define P(X) cout << #X " = " << (X) << endl; // Print identifier and value.
+#define Q(X) cout << "<| " #X " |>" << endl;  // Quote identifier literally.
+#define P_(X) cout << #X " = " << (X) << ", " << flush; // 'P(X)' without '\n'
+#define T_ cout << "\t" << flush;             // Print tab w/o newline.
+#define L_ __LINE__                           // current Line number
+
+csabbg_testdriver.t.cpp:283:1: warning: TP25: Cannot find definition of class 'bsl::basic_nonesuch' from @CLASSES section.
+//    bsl::basic_nonesuch : not there::more stuff
+^
+csabbg_testdriver.t.cpp:24:4: warning: TP03: Missing test number
+// [  ] void setF();
+   ^~~~
+csabbg_testdriver.t.cpp:29:4: warning: TP03: Missing test number
+// [  ] BREATHING TEST
+   ^~~~
+csabbg_testdriver.t.cpp:30:4: warning: TP03: Missing test number
+// [  ] USAGE EXAMPLE
+   ^~~~
+csabbg_testdriver.t.cpp:24:1: warning: TP26: Tested classes have 2 functions named 'F' but the test plan has 1
+// [  ] void setF();
+^
+csabbg_testdriver.t.cpp:24:1: warning: TP26: Tested classes have a function named 'G' but the test plan has none
+csabbg_testdriver.t.cpp:24:1: warning: TP26: Tested classes have 2 functions named 'joe' but the test plan has none
+csabbg_testdriver.t.cpp:24:1: warning: TP26: Tested classes have a function named '~joe' but the test plan has none
+csabbg_testdriver.t.cpp:274:38: warning: TP23: Final statement of `main()` must be `return testStatus;`
+    return testStatus ? testStatus : 0;
+                                     ^
+csabbg_testdriver.t.cpp:272:7: warning: TP24: `default:` case should set `testStatus = -1;`
+      }
+      ^
+csabbg_testdriver.t.cpp:267:7: warning: TP17: Test case does not contain 'if (verbose) print test banner'
+      case -1: {
+      ^
+csabbg_testdriver.t.cpp:267:7: warning: TP05: Test case has no comment
+csabbg_testdriver.t.cpp:190:27: warning: TP20: Within loops, act on very verbose
+        for (; b; ) { if (verbose) { cout << endl; } }
+                          ^
+csabbg_testdriver.t.cpp:191:27: warning: TP20: Within loops, act on very verbose
+        while (b)   { if (verbose) { cout << endl; } }
+                          ^
+csabbg_testdriver.t.cpp:192:27: warning: TP20: Within loops, act on very verbose
+        do          { if (verbose) { cout << endl; } } while (b);
+                          ^
+csabbg_testdriver.t.cpp:212:31: warning: TP20: Within loops, act on very verbose
+            for (; b; ) { if (verbose) { cout << endl; } }
+                              ^
+csabbg_testdriver.t.cpp:213:31: warning: TP20: Within loops, act on very verbose
+            while (b)   { if (verbose) { cout << endl; } }
+                              ^
+csabbg_testdriver.t.cpp:214:31: warning: TP20: Within loops, act on very verbose
+            do          { if (verbose) { cout << endl; } } while (b);
+                              ^
+csabbg_testdriver.t.cpp:231:31: warning: TP20: Within loops, act on very verbose
+            for (; b; ) { if (verbose) { cout << endl; } }
+                              ^
+csabbg_testdriver.t.cpp:232:31: warning: TP20: Within loops, act on very verbose
+            while (b)   { if (verbose) { cout << endl; } }
+                              ^
+csabbg_testdriver.t.cpp:233:31: warning: TP20: Within loops, act on very verbose
+            do          { if (verbose) { cout << endl; } } while (b);
+                              ^
+csabbg_testdriver.t.cpp:257:31: warning: TP20: Within loops, act on very verbose
+            for (; b; ) { if (verbose) { cout << endl; } }
+                              ^
+csabbg_testdriver.t.cpp:258:31: warning: TP20: Within loops, act on very verbose
+            while (b)   { if (verbose) { cout << endl; } }
+                              ^
+csabbg_testdriver.t.cpp:259:31: warning: TP20: Within loops, act on very verbose
+            do          { if (verbose) { cout << endl; } } while (b);
+                              ^
+csabbg_testdriver.t.cpp:195:9: warning: TP21: Loops must contain very verbose action
+        for (; b; ) { }
+        ^
+csabbg_testdriver.t.cpp:196:9: warning: TP21: Loops must contain very verbose action
+        while (b)   { }
+        ^
+csabbg_testdriver.t.cpp:197:9: warning: TP21: Loops must contain very verbose action
+        do          { } while (b);
+        ^
+csabbg_testdriver.t.cpp:217:13: warning: TP21: Loops must contain very verbose action
+            for (; b; ) { }
+            ^
+csabbg_testdriver.t.cpp:218:13: warning: TP21: Loops must contain very verbose action
+            while (b)   { }
+            ^
+csabbg_testdriver.t.cpp:219:13: warning: TP21: Loops must contain very verbose action
+            do          { } while (b);
+            ^
+csabbg_testdriver.t.cpp:236:13: warning: TP21: Loops must contain very verbose action
+            for (; b; ) { }
+            ^
+csabbg_testdriver.t.cpp:237:13: warning: TP21: Loops must contain very verbose action
+            while (b)   { }
+            ^
+csabbg_testdriver.t.cpp:238:13: warning: TP21: Loops must contain very verbose action
+            do          { } while (b);
+            ^
+csabbg_testdriver.t.cpp:262:13: warning: TP21: Loops must contain very verbose action
+            for (; b; ) { }
+            ^
+csabbg_testdriver.t.cpp:263:13: warning: TP21: Loops must contain very verbose action
+            while (b)   { }
+            ^
+csabbg_testdriver.t.cpp:264:13: warning: TP21: Loops must contain very verbose action
+            do          { } while (b);
+            ^
+csabbg_testdriver.t.cpp:167:9: warning: TP08: Test plan does not have case number 1 for this item
+        //   BREATHING TEST
+        ^
+csabbg_testdriver.t.cpp:29:6: note: TP08: Test plan item is
+// [  ] BREATHING TEST
+     ^
+csabbg_testdriver.t.cpp:151:21: warning: TP18: Incorrect test banner format
+            cout << "'f' AND 'setf'" << endl
+                    ^
+csabbg_testdriver.t.cpp:151:21: note: TP18: Correct format is
+            cout << endl
+                 << "'f' AND 'setf'" << endl
+                 << "==============" << endl;
+
+csabbg_testdriver.t.cpp:138:20: warning: TP22: Mismatch between title in comment and as printed
+        // 'f' AND "setf"
+                   ^
+csabbg_testdriver.t.cpp:151:21: note: TP22: Printed title is
+            cout << "'f' AND 'setf'" << endl
+                    ^
+csabbg_testdriver.t.cpp:146:9: warning: TP08: Test plan does not have case number 2 for this item
+        //   int F() const;
+        ^
+csabbg_testdriver.t.cpp:27:6: note: TP08: Test plan item is
+// [ 5] int F() const;
+     ^
+csabbg_testdriver.t.cpp:147:9: warning: TP09: Test plan should contain this item from 'Testing' section of case 2
+        //   int G() const;
+        ^
+csabbg_testdriver.t.cpp:25:9: warning: TP06: 'Testing' section of case 2 should contain this item from test plan
+// [ 2] void setG();
+        ^
+csabbg_testdriver.t.cpp:124:21: warning: TP18: Incorrect test banner format
+            cout << "Usage Example" << endl
+                    ^
+csabbg_testdriver.t.cpp:124:21: note: TP18: Correct format is
+            cout << endl
+                 << "USAGE EXAMPLE" << endl
+                 << "=============" << endl;
+
+csabbg_testdriver.t.cpp:107:13: warning: TP22: Mismatch between title in comment and as printed
+        // USAGE EXAMPLE
+            ^
+csabbg_testdriver.t.cpp:124:21: note: TP22: Printed title is
+            cout << "Usage Example" << endl
+                    ^
+csabbg_testdriver.t.cpp:120:9: warning: TP08: Test plan does not have case number 3 for this item
+        //   USAGE EXAMPLE
+        ^
+csabbg_testdriver.t.cpp:30:6: note: TP08: Test plan item is
+// [  ] USAGE EXAMPLE
+     ^
+48 warnings generated.

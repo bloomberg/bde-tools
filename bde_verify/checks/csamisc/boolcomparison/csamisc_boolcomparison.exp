@@ -1,0 +1,52 @@
+csamisc_boolcomparison.t.cpp:23:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (b0    == true) {}
+        ^~~~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:24:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (b0    == false) {}
+        ^~~~~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:26:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (b1    == true) {}
+        ^~~~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:27:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (b1    == false) {}
+        ^~~~~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:29:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (b2    == true) {}
+        ^~~~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:30:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (b2    == false) {}
+        ^~~~~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:35:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (true  == b0) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:36:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (false == b0) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:38:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (true  == b1) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:39:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (false == b1) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:41:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (true  == b2) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:42:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (false == b2) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:44:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (true  != b0) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:45:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (true  <= b0) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:46:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (true  <  b0) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:47:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (true  >= b0) {}
+        ^~~~~~~~~~~
+csamisc_boolcomparison.t.cpp:48:9: warning: BC01: Comparing a Boolean expression to a Boolean literal
+    if (true  >  b0) {}
+        ^~~~~~~~~~~
+17 warnings generated.

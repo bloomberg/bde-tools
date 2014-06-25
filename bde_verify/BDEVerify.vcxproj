@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E92A47B6-8031-471B-8453-6F82628F616D}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BDEVERIFY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;groups\csa\csabase;C:\llvm-svn\install\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <DisableSpecificWarnings>4146;4244;4274;4291;4345;4624;4800;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>C:\llvm-svn\install\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BDEVERIFY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\bde-verify;C:\bde-verify\include;C:\bde-verify\groups\csa\csabase;C:\llvm-svn\install\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4146;4244;4274;4291;4345;4624;4800;4996;</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <AdditionalLibraryDirectories>C:\llvm-svn\install\lib;</AdditionalLibraryDirectories>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="groups\csa\csabase\csabase_abstractvisitor.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_analyser.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_attachments.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_checkregistry.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_config.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_analyse.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_debug.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_diagnosticfilter.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_filenames.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_format.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_location.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_ppobserver.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_registercheck.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_tool.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_util.cpp" />
+    <ClCompile Include="groups\csa\csabase\csabase_visitor.cpp" />
+    <ClCompile Include="groups\csa\csabbg\csabbg_allocatorforward.cpp" />
+    <ClCompile Include="groups\csa\csabbg\csabbg_allocatornewwithpointer.cpp" />
+    <ClCompile Include="groups\csa\csabbg\csabbg_enumvalue.cpp" />
+    <ClCompile Include="groups\csa\csabbg\csabbg_functioncontract.cpp" />
+    <ClCompile Include="groups\csa\csabbg\csabbg_midreturn.cpp" />
+    <ClCompile Include="groups\csa\csafmt\csafmt_banner.cpp" />
+    <ClCompile Include="groups\csa\csafmt\csafmt_comments.cpp" />
+    <ClCompile Include="groups\csa\csafmt\csafmt_headline.cpp" />
+    <ClCompile Include="groups\csa\csafmt\csafmt_nonascii.cpp" />
+    <ClCompile Include="groups\csa\csafmt\csafmt_whitespace.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_charvsstring.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_arrayinitialization.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_anonymousnamespaceinheader.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_boolcomparison.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_cstylecastused.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_constantreturn.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_contiguousswitch.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_funcalpha.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_longinline.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_memberdefinitioninclassdefinition.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_opvoidstar.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_thrownonstdexception.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_verifysameargumentnames.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_stringadd.cpp" />
+    <ClCompile Include="groups\csa\csamisc\csamisc_swapab.cpp" />
+    <ClCompile Include="groups\csa\csastil\csastil_implicitctor.cpp" />
+    <ClCompile Include="groups\csa\csastil\csastil_includeorder.cpp" />
+    <ClCompile Include="groups\csa\csastil\csastil_templatetypename.cpp" />
+    <ClCompile Include="groups\csa\csastil\csastil_leakingmacro.cpp" />
+    <ClCompile Include="groups\csa\csastil\csastil_externalguards.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_groupname.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_componentprefix.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_packagename.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_files.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_friendship.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_globaltypeonlyinsource.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_globalfunctiononlyinsource.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_includeguard.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_componentheaderinclude.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_nesteddeclarations.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_usingdeclarationinheader.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_usingdirectiveinheader.cpp" />
+    <ClCompile Include="groups\csa\csatr\csatr_entityrestrictions.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="groups\csa\csabase\csabase_abstractvisitor.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_analyser.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_attachments.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_binder.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_cast_ptr.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_checkregistry.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_config.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_analyse.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_debug.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_diagnosticfilter.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_diagnostic_builder.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_format.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_localvisitor.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_location.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_ppobserver.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_registercheck.h" />
+    <ClInclude Include="groups\csa\csabase\csabase_visitor.h" />
+    <ClInclude Include="groups\csa\csabbg\bslma_allocator.h" />
+    <ClInclude Include="groups\csa\csadep\csadep_dependencies.h" />
+    <ClInclude Include="groups\csa\csadep\csadep_types.h" />
+    <ClInclude Include="include\bdes_ident.h" />
+    <ClInclude Include="include\bsls_ident.h" />
+    <ClInclude Include="include\csascm_version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="C:\llvm-svn\install\lib\LLVMAnalysis.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMAsmParser.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMAsmPrinter.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMBitReader.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMBitWriter.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMCodeGen.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMCore.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMDebugInfo.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMExecutionEngine.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMIRReader.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMInstCombine.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMInstrumentation.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMInterpreter.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMJIT.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMLinker.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMMC.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMMCParser.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMObjCARCOpts.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMObject.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMOption.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMScalarOpts.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMSelectionDAG.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMSupport.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMTableGen.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMTarget.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMTransformUtils.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMVectorize.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMX86AsmParser.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMX86AsmPrinter.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMX86CodeGen.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMX86Desc.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMX86Info.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMX86Utils.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMipa.lib" />
+    <Library Include="C:\llvm-svn\install\lib\LLVMipo.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangARCMigrate.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangAST.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangASTMatchers.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangAnalysis.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangBasic.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangCodeGen.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangDriver.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangDynamicASTMatchers.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangEdit.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangFormat.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangFrontend.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangFrontendTool.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangIndex.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangLex.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangParse.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangRewriteCore.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangRewriteFrontend.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangSema.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangSerialization.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangStaticAnalyzerCheckers.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangStaticAnalyzerCore.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangStaticAnalyzerFrontend.lib" />
+    <Library Include="C:\llvm-svn\install\lib\clangTooling.lib" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -18,18 +18,14 @@ This is the tool used to build the
 For detail documentation, please see the
 [Waf Build System Wiki](http://github.com/bloomberg/bde-tools/wiki/Waf-Build)
 
-##Future Plans
+##bde_verify
 
-The following tools will be made available in the near future:
-
-* bde_verify
-
-  `bde_verify` is a static analysis tool that verifies that source code adheres
-  to the
-  [BDE coding standards](https://github.com/bloomberg/bde/wiki/Introduction-to-BDE-Coding-Standards).
-  It is built within the clang C++ compiler tool system, and therefore has
-  access to proper syntax and type information about the program it is
-  examining, unlike text-based scanning tools.
+`bde_verify` is a static analysis tool that verifies that source code adheres
+to the
+[BDE coding standards](https://github.com/bloomberg/bde/wiki/Introduction-to-BDE-Coding-Standards).
+It is built within the clang C++ compiler tool system, and therefore has
+access to proper syntax and type information about the program it is
+examining, unlike text-based scanning tools.
 
 #License
 

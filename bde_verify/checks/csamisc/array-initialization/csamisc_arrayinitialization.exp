@@ -1,0 +1,13 @@
+csamisc_arrayinitialization.t.cpp:38:22: warning: II01: Incomplete initialization with non-defaulted last value
+    int array03[5] = { ' ' };
+                     ^ ~~~
+csamisc_arrayinitialization.t.cpp:44:22: warning: II01: Incomplete initialization with non-defaulted last value
+    int array09[5] = { ' ', int(' ') };
+                     ^      ~~~~~~~~
+csamisc_arrayinitialization.t.cpp:50:41: warning: II01: Incomplete initialization with non-defaulted last value
+    bde_verify::csamisc::s array14[5] = { bde_verify::csamisc::s(1) };
+                                        ^ ~~~~~~~~~~~~~~~~~~~~~~~~~
+csamisc_arrayinitialization.t.cpp:55:41: warning: II01: Incomplete initialization with non-defaulted last value
+    bde_verify::csamisc::t array18[5] = { bde_verify::csamisc::t(1) };
+                                        ^ ~~~~~~~~~~~~~~~~~~~~~~~~~
+4 warnings generated.

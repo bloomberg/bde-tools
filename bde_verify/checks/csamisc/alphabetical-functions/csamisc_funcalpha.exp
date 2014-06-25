@@ -1,0 +1,19 @@
+csamisc_funcalpha.t.cpp:7:18: warning: FABC01: Function 'f3' not in alphanumeric order
+            void f3();
+                 ^~
+csamisc_funcalpha.t.cpp:8:18: note: FABC01: Next function is 'f2'
+            void f2();
+                 ^~
+csamisc_funcalpha.t.cpp:23:18: warning: FABC01: Function 'a100' not in alphanumeric order
+            void a100();
+                 ^~~~
+csamisc_funcalpha.t.cpp:24:18: note: FABC01: Next function is 'a99'
+            void a99();
+                 ^~~
+csamisc_funcalpha.t.cpp:27:17: warning: FABC01: Function 'f3' not in alphanumeric order
+        void X::f3() { }
+                ^~
+csamisc_funcalpha.t.cpp:28:17: note: FABC01: Next function is 'f2'
+        void X::f2() { }
+                ^~
+3 warnings generated.

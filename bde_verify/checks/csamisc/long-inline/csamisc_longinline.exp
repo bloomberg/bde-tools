@@ -1,0 +1,7 @@
+csamisc_longinline.t.cpp:52:14: warning: LI01: Inline function is more than 10 lines long
+        void j()
+             ^
+csamisc_longinline.t.cpp:67:14: warning: LI01: Inline function is more than 10 lines long
+        void k()
+             ^
+2 warnings generated.

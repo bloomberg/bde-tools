@@ -1,0 +1,4 @@
+In file included from csatr_includeguard2.t.cpp:3:
+./csatr_includeguard2.t.h:35:1: warning: TR14: Missing define for include guard INCLUDED_CSATR_INCLUDEGUARD2
+^
+1 warning generated.

@@ -1,0 +1,37 @@
+BDE Verify - A Static Checker for C++
+
+There is no autoconf support to create a Makefile.  Set up variables in the
+Makefiles in the top-level and in the csabase directories to configure.
+
+    COMPILER  = gcc, and should also work with clang
+    VERSION   = compiler version, e.g., 4.8.1
+    CCDIR     = path to compiler installation directory
+    LLVM      = path to LLVM installation
+
+Currently, bde_verify is built with llvm/clang 3.4.1.  You may choose to build
+a clang installation from sources.  To do so, download from here,
+<http://llvm.org/releases/download.html#3.4.1>, choosing only LLVM and Clang
+sources, and Clang extra tools:
+    <http://llvm.org/releases/3.4.1/llvm-3.4.1.src.tar.gz>
+    <http://llvm.org/releases/3.4.1/cfe-3.4.1.src.tar.gz>
+    <http://llvm.org/releases/3.4/clang-tools-extra-3.4.src.tar.gz>
+
+Follow these build instructions: <http://clang.llvm.org/get_started.html>.
+
+A configuration for clang sufficient to build bde_verify on Linux is
+    --enable-optimized
+    --enable-cxx11
+    --prefix=<path to where you want clang installed>
+    --with-gcc-toolchain=<$GCCDIR>
+    LDFLAGS=-Wl,-z,muldefs -Wl,-rpath,$GCCDIR/lib64
+    CXXFLAGS=-Wno-unused-local-typedefs
+    CC=$GCCDIR/bin/gcc
+    CXX=$GCCDIR/bin/g++
+    CPP=$GCCDIR/bin/cpp
+
+Once you have Clang installed and bde_verify Makefiles set up, build bde_verify
+as follows.
+
+    make               # build the code, then
+    make check         # run test cases and report differences, or
+    make run           # run test cases and show output
