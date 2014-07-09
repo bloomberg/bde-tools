@@ -64,6 +64,11 @@ export BUILD_DIR LOG_DIR TOOLSPATH TMPDIR
 PATH="$TOOLSPATH/bin:$TOOLSPATH/scripts:/opt/swt/bin:/opt/SUNWspro/bin/:/usr/bin:/usr/sbin:/sbin:/usr/bin/X11:/usr/local/bin:/bb/bin:/bb/shared/bin:/bb/shared/abin:/bb/bin/robo:/bbsrc/tools/bbcm:/bbsrc/tools/bbcm/parent:/usr/atria/bin"
 export PATH
 
+if [[ ! -z "$OSS_TOOLSPATH" ]]
+then
+    PATH="$OSS_TOOLSPATH/bin:$PATH"
+fi
+
 REPO_LIST=
 ROOT_REPO=
 
