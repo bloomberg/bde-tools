@@ -268,6 +268,21 @@ if ($opts{envbat}) {
     write_logandverbose "\t$_=$ENV{$_}" foreach sort keys %ENV;
 }
 
+# This has to happen after envbat processing, or we might get the wrong uplid
+# on Windows...
+my $uplid;
+if ($opts{uplid}) {
+    fatal "--uplid and --compiler are mutually exclusive"
+      if $opts{compiler};
+    $uplid = BDE::Build::Uplid->unexpanded($opts{uplid});
+} elsif ($opts{compiler}) {
+    $uplid = BDE::Build::Uplid->new({ compiler => $opts{compiler},
+                                      where    => $opts{where}
+                                    });
+} else {
+    $uplid = BDE::Build::Uplid->new({ where    => $opts{where} });
+}
+
 if ($opts{path}) {
     write_logandverbose "Got --path @{$opts{path}}";
 
