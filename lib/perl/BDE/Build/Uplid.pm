@@ -197,12 +197,12 @@ sub initialise ($;$) {
                 $2);
         }
         else {
-            die "Could not find Microsoft Visual C++ compiler (cl.exe), PATH=".$ENV{PATH};
+            die "Could not find Microsoft Visual C++ compiler (cl.exe), PATH=".$ENV{PATH} if $self->{compiler} eq 'def';
         }
 
         if ($self->{compiler} eq 'def') {
             $self->{compiler} = 'cl';
-            $self->{compilerversion} = $1;
+            $self->{compilerversion} = $1 || '999.999';
         }
 
         $self->{arch} = $self->{model};
