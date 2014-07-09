@@ -191,18 +191,22 @@ sub initialise ($;$) {
         # We need to get "model" this way unconditionally, since POSIX::uname()
         # can lie and claim a host is amd64 when that is not the case.
         my $cl = `cl.exe 2>&1`;
+        my $compiler = 'cl';
+        my $compilerVersion = '999.999';
+
         if ($cl =~ /Compiler Version ([0-9]+\.[0-9]+).*? for (\S*)/) {
             $self->{model} = ($2 eq '80x86' ? 'x86' :
                 $2 eq 'x64' ? 'amd64' :
                 $2);
+            $compilerVersion = $1;
         }
         else {
             die "Could not find Microsoft Visual C++ compiler (cl.exe), PATH=".$ENV{PATH} if $self->{compiler} eq 'def';
         }
 
         if ($self->{compiler} eq 'def') {
-            $self->{compiler} = 'cl';
-            $self->{compilerversion} = $1 || '999.999';
+            $self->{compiler} = $compiler;
+            $self->{compilerversion} = $compilerVersion;
         }
 
         $self->{arch} = $self->{model};
