@@ -89,13 +89,6 @@ rm -f $OUTPUTPATH/etc/*.opts
 export BDE_ROOT="$TOOLSPATH"
 export BDE_PATH="$TOOLSPATH:$PATHS:$BDE_PATH"
 
-if [[ ! -z "$OSS_TOOLSPATH" ]]
-then
-    BDE_PATH="$OSS_TOOLSPATH:$BDE_PATH"
-    BDE_ROOT="$OSS_TOOLSPATH"
-fi
-
-REPO_LIST=
 # the -e option makes bde_snapshot.pl snapshot the "etc" directory as well
 $SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 
