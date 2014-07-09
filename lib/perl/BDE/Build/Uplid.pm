@@ -187,6 +187,9 @@ sub initialise ($;$) {
         # will break. So when we cannot find the compiler, it makes
         # sense to die instead of falling back to bogus default from
         # default.opts (cl-999.999).
+        #
+        # We need to get "model" this way unconditionally, since POSIX::uname()
+        # can lie and claim a host is amd64 when that is not the case.
         my $cl = `cl.exe 2>&1`;
         if ($cl =~ /Compiler Version ([0-9]+\.[0-9]+).*? for (\S*)/) {
             $self->{model} = ($2 eq '80x86' ? 'x86' :
