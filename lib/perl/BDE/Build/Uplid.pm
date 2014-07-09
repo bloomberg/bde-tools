@@ -180,26 +180,28 @@ sub initialise ($;$) {
           and $self->{arch} = `$uname -m 2> /dev/null`
             or $self->{arch} = `$uname -p 2> /dev/null`;
     } else {
-        if ($self->{compiler} eq 'def') {
-        	# find microsoft compiler in path and detect its version and 
-        	# target platform.
-        	# MS compiler is env driven. If the environment is not set
-        	# up correctly and if the compiler is not in path, the build
-        	# will break. So when we cannot find the compiler, it makes
-        	# sense to die instead of falling back to bogus default from
-        	# default.opts (cl-999.999).
-        	my $cl = `cl.exe 2>&1`;
-        	if ($cl =~ /Compiler Version ([0-9]+\.[0-9]+).*? for (\S*)/) {
-        		$self->{compiler} = 'cl';
-        		$self->{compilerversion} = $1;
-        		$self->{model} = ($2 eq '80x86' ? 'x86' :
-                                          $2 eq 'x64' ? 'amd64' :
-                                          $2);
-	       	}
-	       	else {
-	       	    die "Could not find Microsoft Visual C++ compiler (cl.exe), PATH=".$ENV{PATH};
-	       	}
+        # find microsoft compiler in path and detect its version and 
+        # target platform.
+        # MS compiler is env driven. If the environment is not set
+        # up correctly and if the compiler is not in path, the build
+        # will break. So when we cannot find the compiler, it makes
+        # sense to die instead of falling back to bogus default from
+        # default.opts (cl-999.999).
+        my $cl = `cl.exe 2>&1`;
+        if ($cl =~ /Compiler Version ([0-9]+\.[0-9]+).*? for (\S*)/) {
+            $self->{model} = ($2 eq '80x86' ? 'x86' :
+                $2 eq 'x64' ? 'amd64' :
+                $2);
         }
+        else {
+            die "Could not find Microsoft Visual C++ compiler (cl.exe), PATH=".$ENV{PATH};
+        }
+
+        if ($self->{compiler} eq 'def') {
+            $self->{compiler} = 'cl';
+            $self->{compilerversion} = $1;
+        }
+
         $self->{arch} = $self->{model};
     }
     $self->{arch} =~ s/\s.*$//;
