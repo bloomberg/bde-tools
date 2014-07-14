@@ -411,7 +411,9 @@ MAIN: {
     push @basecmd,"-o",$options if $options;
     push @basecmd,"-R" if $rebuild;
     push @basecmd,"-U" if $uptodate;
-    push @basecmd,"-u",$uplid if $uplid;
+    # Don't specify uplid on windows - bde_build.pl will figure it out from
+    # the compiler and the environment.
+    push @basecmd,"-u",$uplid if $uplid && !$iamwindows;
     push @basecmd,"-w",$where if $where;
 
     # on distributed builds, always rebuild
