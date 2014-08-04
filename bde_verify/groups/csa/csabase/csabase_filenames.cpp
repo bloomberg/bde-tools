@@ -32,32 +32,62 @@ llvm::StringRef subdir(llvm::StringRef path, llvm::StringRef dir)
 
 void csabase::FileName::reset(llvm::StringRef sr)
 {
-    full_ = sr;
-    extension_ = sr.slice(sr.rfind('.'), sr.npos);
-    prefix_ = sr.drop_back(extension_.size());
-    directory_ = prefix_;
-    while (directory_.size() > 0 &&
-           !llvm::sys::path::is_separator(directory_.back())) {
-        directory_ = directory_.drop_back(1);
+    if (sr.startswith("<")) {  // Not a real file
+        name_ = full_ = sr;
+        tag_ = "<";
     }
-    name_ = sr.drop_front(directory_.size());
-    extra_ = name_.slice(name_.find('.'), name_.rfind('.'));
-    component_ = name_.slice(0, name_.find('.'));
+    else {
+        full_ = sr;
 
-    size_t under = component_.find('_');
-    package_ = component_.slice(0, under);
-    group_   = package_.slice(0, 3);
-    if (under == 1) {
-        under = component_.find('_', under + 1);
-        package_ = component_.slice(0, under);
-        if (package_[0] != 'a') {
-            group_ = package_.slice(0, 5);
-        } else {
-            group_ = package_.slice(2, 5);
+        directory_ = full_;
+        while (directory_.size() > 0 &&
+               !llvm::sys::path::is_separator(directory_.back())) {
+            directory_ = directory_.drop_back(1);
+        }
+
+        name_ = sr.drop_front(directory_.size());
+        extension_ = name_.slice(name_.rfind('.'), name_.npos);
+        prefix_ = sr.drop_back(extension_.size());
+        extra_ = name_.slice(name_.find('.'), name_.rfind('.'));
+        component_ = name_.slice(0, name_.find('.'));
+
+        size_t under = component_.find('_');
+        size_t under2 = component_.rfind('_');
+        if (under == 1 && under2 != component_.npos) {
+            // Typical non-library component file, e.g.,
+            // "/some/path/applications/m_NAME/m_NAME_COMP.cpp".
+            package_ = component_.slice(0, under2);
+            pkgdir_ = subdir(directory_, package_);
+            tag_ = component_.slice(0, 1);
+        }
+        else if (under != component_.npos) {
+            // Typical library component file, e.g.,
+            // "/some/path/groups/GRP/GRPPKG/GRPPKG_COMP.cpp".
+            package_ = component_.slice(0, under);
+            group_   = package_.slice(0, 3);
+            pkgdir_ = subdir(directory_, package_);
+            grpdir_ = subdir(pkgdir_, group_);
+        }
+        else {
+            // Something else - don't look for package structure.
         }
     }
-    pkgdir_ = subdir(directory_, package_);
-    grpdir_ = subdir(pkgdir_, group_);
+
+#if 0
+    ERRS() << "component   " << component_; ERNL();
+    ERRS() << "directory   " << directory_; ERNL();
+    ERRS() << "extension   " << extension_; ERNL();
+    ERRS() << "extra       " << extra_    ; ERNL();
+    ERRS() << "full        " << full_     ; ERNL();
+    ERRS() << "group       " << group_    ; ERNL();
+    ERRS() << "grpdir      " << grpdir_   ; ERNL();
+    ERRS() << "name        " << name_     ; ERNL();
+    ERRS() << "package     " << package_  ; ERNL();
+    ERRS() << "pkgdir      " << pkgdir_   ; ERNL();
+    ERRS() << "prefix      " << prefix_   ; ERNL();
+    ERRS() << "tag         " << tag_      ; ERNL();
+    ERNL();
+#endif
 }
 
 // ----------------------------------------------------------------------------

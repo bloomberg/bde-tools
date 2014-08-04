@@ -6,6 +6,7 @@
 #include <csabase_diagnostic_builder.h>
 #include <csabase_ppobserver.h>
 #include <csabase_registercheck.h>
+#include <csabase_util.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <utils/event.hpp>
 #include <utils/function.hpp>
@@ -57,8 +58,7 @@ void files::operator()(SourceLocation     loc,
     for (const char *s = b; s <= e; ++s) {
         if (!(*s & 0x80)) {
             if (begin != 0) {
-                SourceRange bad(loc.getLocWithOffset(begin - b),
-                                loc.getLocWithOffset(s - b - 1));
+                SourceRange bad(getOffsetRange(loc, begin - b, s - begin - 1));
                 d_analyser.report(bad.getBegin(), check_name, "NA01",
                                   "Non-ASCII characters")
                     << bad;

@@ -1,4 +1,5 @@
 // a_pair.cpp                                                         -*-C++-*-
+#define _FLOATINGPOINT_H // Avoid SunOs floatingpoint.h atof conflict.
 #include <bsl_utility.h>
 #include <bsl_map.h>
 

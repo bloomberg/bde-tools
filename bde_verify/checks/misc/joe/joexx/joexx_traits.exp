@@ -1,0 +1,4 @@
+joexx_traits.h:32:5: warning: BT01: Trait declaration does not mention its class 'Traits_Cc'
+    BSLMF_NESTED_TRAIT_DECLARATION(Traits_Bb, bsl::is_trivially_copyable)
+    ^
+1 warning generated.

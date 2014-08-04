@@ -165,8 +165,7 @@ void files::check_fvs(SourceRange range)
                           "The term \"%0\" is deprecated; use a description "
                           "appropriate to the component type")
             << text
-            << SourceRange(range.getBegin().getLocWithOffset(matchpos),
-                           range.getBegin().getLocWithOffset(offset - 1));
+            << getOffsetRange(range, matchpos, offset - 1 - matchpos);
     }
 }
 
@@ -191,8 +190,7 @@ void files::check_pp(SourceRange range)
                           "The term \"%0\" is deprecated; use 'function%1'")
             << text
             << (matches[1].size() == 1 ? "s" : "")
-            << SourceRange(range.getBegin().getLocWithOffset(matchpos),
-                           range.getBegin().getLocWithOffset(offset - 1));
+            << getOffsetRange(range, matchpos, offset - 1 - matchpos);
     }
 }
 
@@ -218,8 +216,7 @@ void files::check_mr(SourceRange range)
                           "offering %0 access\"")
             << matches[1]
             << matches[3]
-            << SourceRange(range.getBegin().getLocWithOffset(matchpos),
-                           range.getBegin().getLocWithOffset(offset - 1));
+            << getOffsetRange(range, matchpos, offset - 1 - matchpos);
     }
 }
 
@@ -304,17 +301,14 @@ void files::check_bubble(SourceRange range)
         offset = matchpos + matches[1].size();
 
         Range b1(d_analyser.manager(),
-                 SourceRange(range.getBegin().getLocWithOffset(matchpos),
-                             range.getBegin().getLocWithOffset(
-                                 matchpos + matches[1].size() - 1)));
+                 getOffsetRange(range, matchpos, matches[1].size() - 1));
         report_bubble(b1, matches[2]);
 
         Range b2(
             d_analyser.manager(),
-            SourceRange(range.getBegin().getLocWithOffset(
-                            matchpos + matches[0].size() - matches[5].size()),
-                        range.getBegin().getLocWithOffset(
-                            matchpos + matches[0].size() - 1)));
+            getOffsetRange(range,
+                           matchpos + matches[0].size() - matches[5].size(),
+                           matches[5].size() - 1));
         report_bubble(b2, matches[6]);
     }
 }
@@ -453,12 +447,10 @@ void files::check_wrapped(SourceRange range)
             d_analyser.report(
                 range.getBegin().getLocWithOffset(matchpos + bad_pos.first),
                 check_name, "BW01",
-                "This text fits on the previous line - "
-                "consider using bdewrap")
-                << SourceRange(range.getBegin().getLocWithOffset(
-                                   matchpos + bad_pos.first),
-                               range.getBegin().getLocWithOffset(
-                                   matchpos + bad_pos.second));
+                "This text fits on the previous line - consider using bdewrap")
+                << getOffsetRange(range,
+                                  matchpos + bad_pos.first,
+                                  bad_pos.second - bad_pos.first);
         }
     }
 }
@@ -547,27 +539,23 @@ void files::check_description(SourceRange range)
         llvm::SmallVector<llvm::StringRef, 7> matches;
         if (!classes.match(comment.slice(cpos, end), &matches)) {
             d_analyser.report(range.getBegin().getLocWithOffset(cpos),
-                              check_name,
-                              "CLS03",
+                              check_name, "CLS03",
                               "Badly formatted class line; should be "
-                              "'//    class: description'");
+                              "'//  class: description'");
         } else {
             cpos += comment.slice(cpos, end).find(matches[2]) +
                     matches[2].size();
             if (matches[4].empty()) {
                 d_analyser.report(range.getBegin().getLocWithOffset(cpos),
-                                  check_name,
-                                  "CLS02",
+                                  check_name, "CLS02",
                                   "Class name must be followed by "
                                   "': description'");
             }
             std::string qc = ("'" + matches[2] + "'").str();
             if (dpos != comment.npos && desc.find(qc) == desc.npos) {
                 d_analyser.report(range.getBegin().getLocWithOffset(dpos),
-                                  check_name,
-                                  "DC01",
-                                  "Description should contain "
-                                  "single-quoted "
+                                  check_name, "DC01",
+                                  "Description should contain single-quoted "
                                   "class name %0")
                     << qc;
             }

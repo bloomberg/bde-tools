@@ -23,9 +23,11 @@
 #include <llvm/Support/Regex.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <utils/array.hpp>
 #include <utils/event.hpp>
 #include <utils/function.hpp>
 #include <map>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -124,6 +126,7 @@ void report::operator()()
     aspell_config_replace(spell_config, "add-extra-dicts", "en_CA");
     aspell_config_replace(spell_config, "add-extra-dicts", "en_GB");
     aspell_config_replace(spell_config, "guess", "true");
+    aspell_config_replace(spell_config, "run-together", "true");
     AspellCanHaveError *possible_err = new_aspell_speller(spell_config);
     if (aspell_error_number(possible_err) != 0) {
         SourceManager& m = d_analyser.manager();
@@ -261,10 +264,10 @@ report::break_for_spelling(std::vector<SourceRange>* words, SourceRange range)
                         }
                     }
                     if (found) {
-                        words->push_back(SourceRange(
-                            range.getBegin().getLocWithOffset(
-                                start_of_last_block),
-                            range.getBegin().getLocWithOffset(last)));
+                        words->push_back(
+                            getOffsetRange(range,
+                                           start_of_last_block,
+                                           last - start_of_last_block));
                     }
                     start_of_last_block = 0;
                 }
@@ -303,6 +306,26 @@ parameter_matcher()
 
 void report::match_parameter(const BoundNodes &nodes)
 {
+    static const char * const abbr[] = {
+        "argc", // main argument
+        "argv", // main argument
+        "cb",   // callback
+        "dst",  // destination
+        "id",   // identifier (not identity)
+        "init", // initializ(e,er)
+        "iter", // iterator
+        "max",  // maximum
+        "min",  // minimum
+        "msg",  // message
+        "num",  // number
+        "pos",  // position
+        "ptr",  // pointer
+        "ref",  // reference
+        "src",  // source
+        "tmp",  // temporary
+    };
+    static std::set<llvm::StringRef> ok(utils::begin(abbr), utils::end(abbr));
+
     const ParmVarDecl *parm = nodes.getNodeAs<ParmVarDecl>("parm");
     if (d_analyser.is_component(parm)) {
         llvm::StringRef name = parm->getName();
@@ -312,7 +335,8 @@ void report::match_parameter(const BoundNodes &nodes)
         while (words.match(name.substr(pos), &matches)) {
             llvm::StringRef word = matches[1];
             pos = name.find(word, pos);
-            if (!aspell_speller_check(
+            if (!ok.count(word) &&
+                !aspell_speller_check(
                 spell_checker, word.data(), word.size())) {
                 d_analyser.report(
                         parm->getLocation().getLocWithOffset(pos),

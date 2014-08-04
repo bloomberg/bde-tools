@@ -18,6 +18,7 @@
 #include <clang/Basic/SourceLocation.h>
 #include <clang/Basic/Specifiers.h>
 #include <csabase_analyser.h>
+#include <csabase_debug.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_registercheck.h>
 #include <csabase_util.h>
@@ -173,6 +174,10 @@ struct report
     void match_dependent_allocator_trait(const BoundNodes& nodes);
         // Callback for discovered classes with dependent allocator traits
         // contained within the specifed 'nodes'.
+
+    void match_should_return_by_value(const BoundNodes& nodes);
+        // Callback for functions which could return by value instead of
+        // through a pointer.
 
     void operator()();
         // Invoke the checking procedures.
@@ -374,7 +379,7 @@ nested_allocator_trait_matcher()
             matchesName("::operator NestedTraitDeclaration($|<)"),
             returns(qualType().bind("type")),
             ofClass(recordDecl().bind("class"))
-        )
+        ).bind("trait")
     ));
     return matcher;
 }
@@ -384,9 +389,17 @@ void report::match_nested_allocator_trait(const BoundNodes& nodes)
     CXXRecordDecl const* decl = nodes.getNodeAs<CXXRecordDecl>("class");
     std::string type = nodes.getNodeAs<QualType>("type")->getAsString();
 
-    if (type.find("bslalg::struct "
-                  "TypeTraitUsesBslmaAllocator::NestedTraitDeclaration<") ==
-            0 ||
+    if (!contains_word(type, decl->getNameAsString())) {
+        analyser_.report(nodes.getNodeAs<CXXMethodDecl>("trait"),
+                         check_name, "BT01",
+                         "Trait declaration does not mention its class '%0'")
+            << decl->getNameAsString();
+    }
+
+    if (type.find("bslalg::struct TypeTraitUsesBslmaAllocator::"
+                  "NestedTraitDeclaration<") == 0 ||
+        type.find("bslalg_TypeTraitUsesBslmaAllocator::"
+                  "NestedTraitDeclaration<") == 0 ||
         (type.find("BloombergLP::bslmf::NestedTraitDeclaration<") == 0 &&
          (type.find(", bslma::UsesBslmaAllocator, true>") != type.npos ||
           type.find(", bslma::UsesBslmaAllocator>") != type.npos))) {
@@ -407,7 +420,6 @@ class_using_allocator_matcher()
 {
     static const DynTypedMatcher matcher = decl(forEachDescendant(recordDecl(
         has(constructorDecl(
-            unless(isPrivate()),
             hasLastParameter(parmVarDecl(anyOf(
                 hasType(referenceType(
                     pointee(hasDeclaration(decl(has(constructorDecl(
@@ -519,6 +531,55 @@ void report::match_dependent_allocator_trait(const BoundNodes& nodes)
         nodes);
 }
 
+static const DynTypedMatcher
+should_return_by_value_matcher()
+{
+    const DynTypedMatcher matcher = decl(forEachDescendant(
+        functionDecl(
+            returns(asString("void")),
+            hasParameter(0, hasType(pointerType(
+                unless(pointee(isConstQualified())),
+                unless(pointee(asString("void"))),
+                unless(pointee(functionType())),
+                unless(pointee(memberPointerType()))
+            ).bind("type"))),
+            anyOf(
+                parameterCountIs(1),
+                hasParameter(1, unless(anyOf(
+                    hasType(isInteger()),
+                    hasType(pointerType(
+                        unless(pointee(isConstQualified())),
+                        unless(pointee(asString("void"))),
+                        unless(pointee(functionType())),
+                        unless(pointee(memberPointerType()))
+                    ))
+                )))
+            )
+        ).bind("func")
+    ));
+    return matcher;
+}
+
+void report::match_should_return_by_value(const BoundNodes& nodes)
+{
+    const FunctionDecl *func = nodes.getNodeAs<FunctionDecl>("func");
+    const PointerType *p1 = nodes.getNodeAs<PointerType>("type");
+    if (analyser_.is_component(func) &&
+        func->getCanonicalDecl() == func &&
+        !func->isTemplateInstantiation() &&
+        !func->getLocation().isMacroID() &&
+        !func->getParamDecl(0)->hasDefaultArg() &&
+        !is_allocator(p1->desugar()) &&
+        !takes_allocator(p1->getPointeeType().getCanonicalType())) {
+        analyser_.report(func, check_name, "RV01",
+                         "Consider returning '%0' by value")
+            << p1->getPointeeType().getCanonicalType().getAsString();
+        analyser_.report(func->getParamDecl(0), check_name, "RV01",
+                         "instead of through pointer parameter",
+                         false, DiagnosticsEngine::Note);
+    }
+}
+
 void report::operator()()
 {
     MatchFinder mf;
@@ -540,6 +601,9 @@ void report::operator()()
 
     OnMatch<report, &report::match_class_using_allocator> m3(this);
     mf.addDynamicMatcher(class_using_allocator_matcher(), &m3);
+
+    OnMatch<report, &report::match_should_return_by_value> m7(this);
+    mf.addDynamicMatcher(should_return_by_value_matcher(), &m7);
 
     mf.match(*analyser_.context()->getTranslationUnitDecl(),
              *analyser_.context());

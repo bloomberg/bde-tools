@@ -115,35 +115,10 @@ static void close_file(Analyser& analyser,
 
 // -----------------------------------------------------------------------------
 
-namespace
-{
-    template <typename T>
-    struct analyser_binder
-    {
-        analyser_binder(
-            void (*function)(Analyser&, SourceLocation, T, std::string const&),
-            Analyser& analyser)
-            : function_(function), analyser_(analyser)
-        {
-        }
-        void
-        operator()(SourceLocation where, T arg, std::string const& name) const
-        {
-            function_(analyser_, where, arg, name);
-        }
-        void (*function_)(Analyser&, SourceLocation, T, std::string const&);
-        Analyser& analyser_;
-    };
-}
-
-// -----------------------------------------------------------------------------
-
 static void subscribe(Analyser& analyser, Visitor&, PPObserver& observer)
 {
-    observer.onOpenFile +=
-        analyser_binder<std::string const&>(open_file, analyser);
-    observer.onCloseFile +=
-        analyser_binder<std::string const&>(close_file, analyser);
+    observer.onOpenFile += bind<Analyser&>(analyser, open_file);
+    observer.onCloseFile += bind<Analyser&>(analyser, close_file);
 }
 
 // -----------------------------------------------------------------------------

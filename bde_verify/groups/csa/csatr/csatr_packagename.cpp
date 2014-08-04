@@ -61,14 +61,16 @@ namespace
                 attachment.d_done = true;
                 Analyser& analyser(*d_analyser);
 
-                bool standalone = fn.name().find("m_") == 0;
+                bool standalone = fn.tag().size() != 0;
 
-                if (standalone && fn.name().find('_', 2) == fn.name().npos) {
-                    analyser.report(where, check_name, "PN01",
+                if (standalone) {
+                    if (fn.name().find('_', 2) == fn.name().npos) {
+                        analyser.report(where, check_name, "PN01",
                                     "Component file name '%0' in standalone "
                                     "component contains only one underscore",
                                     true)
-                        << fn.name();
+                            << fn.name();
+                    }
                     return;                                           // RETURN
                 }
 
@@ -94,7 +96,7 @@ namespace
                 llvm::StringRef srpackage = fn.package();
                 llvm::StringRef srgroup = fn.group();
                 int pkgsize = srpackage.size() - srgroup.size();
-                if (pkgsize < 1 || pkgsize > 4) {
+                if (srpackage != srgroup && (pkgsize < 1 || pkgsize > 4)) {
                     analyser.report(where, check_name, "PN03",
                             "Package name %0 must consist of 1-4 characters "
                             "preceded by the group name: '%0'", true)

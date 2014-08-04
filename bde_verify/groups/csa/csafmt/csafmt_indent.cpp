@@ -92,6 +92,8 @@ struct data
 struct report : public RecursiveASTVisitor<report>
     // Callback object for indentation checking.
 {
+    typedef RecursiveASTVisitor<report> Base;
+
     Analyser& d_analyser;  // analyser object
     data& d_data;          // indentation data
 
@@ -188,7 +190,7 @@ bool report::WalkUpFromCompoundStmt(CompoundStmt *stmt)
         add_indent(stmt->getLBracLoc().getLocWithOffset(1), +4);
         add_indent(stmt->getRBracLoc(), -4);
     }
-    return RecursiveASTVisitor<report>::WalkUpFromCompoundStmt(stmt);
+    return Base::WalkUpFromCompoundStmt(stmt);
 }
 
 bool report::WalkUpFromTagDecl(TagDecl *tag)
@@ -197,7 +199,7 @@ bool report::WalkUpFromTagDecl(TagDecl *tag)
         add_indent(tag->getLocation().getLocWithOffset(1), +4);
         add_indent(tag->getRBraceLoc(), -4);
     }
-    return RecursiveASTVisitor<report>::WalkUpFromTagDecl(tag);
+    return Base::WalkUpFromTagDecl(tag);
 }
 
 bool report::WalkUpFromFunctionTypeLoc(FunctionTypeLoc func)
@@ -295,7 +297,7 @@ bool report::WalkUpFromFunctionTypeLoc(FunctionTypeLoc func)
             add_indent(func.getArg(n - 1)->getLocEnd(), in);
         }
     }
-    return RecursiveASTVisitor<report>::WalkUpFromFunctionTypeLoc(func);
+    return Base::WalkUpFromFunctionTypeLoc(func);
 }
 
 bool report::WalkUpFromTemplateDecl(TemplateDecl *tplt)
@@ -313,7 +315,7 @@ bool report::WalkUpFromTemplateDecl(TemplateDecl *tplt)
         add_indent(l.location(), level);
         add_indent(tpl->getParam(n - 1)->getLocEnd(), -level);
     }
-    return RecursiveASTVisitor<report>::WalkUpFromTemplateDecl(tplt);
+    return Base::WalkUpFromTemplateDecl(tplt);
 }
 
 bool report::WalkUpFromAccessSpecDecl(AccessSpecDecl *as)
@@ -323,7 +325,7 @@ bool report::WalkUpFromAccessSpecDecl(AccessSpecDecl *as)
         add_indent(l.location(), -2);
         add_indent(as->getLocEnd(), +2);
     }
-    return RecursiveASTVisitor<report>::WalkUpFromAccessSpecDecl(as);
+    return Base::WalkUpFromAccessSpecDecl(as);
 }
 
 bool report::WalkUpFromCallExpr(CallExpr *call)
@@ -342,7 +344,7 @@ bool report::WalkUpFromCallExpr(CallExpr *call)
         add_indent(c.location().getLocWithOffset(1), level);
         add_indent(call->getRParenLoc(), -level);
     }
-    return RecursiveASTVisitor<report>::WalkUpFromCallExpr(call);
+    return Base::WalkUpFromCallExpr(call);
 }
 
 bool report::WalkUpFromParenListExpr(ParenListExpr *list)
@@ -381,7 +383,7 @@ bool report::WalkUpFromParenListExpr(ParenListExpr *list)
             }
         }
     }
-    return RecursiveASTVisitor<report>::WalkUpFromParenListExpr(list);
+    return Base::WalkUpFromParenListExpr(list);
 }
 
 bool report::WalkUpFromSwitchCase(SwitchCase *stmt)
@@ -394,7 +396,7 @@ bool report::WalkUpFromSwitchCase(SwitchCase *stmt)
         add_indent(sub->getLBracLoc().getLocWithOffset(1), -4);
         add_indent(sub->getRBracLoc(), +4);
     }
-    return RecursiveASTVisitor<report>::WalkUpFromSwitchCase(stmt);
+    return Base::WalkUpFromSwitchCase(stmt);
 }
 
 void report::do_consecutive()
@@ -442,7 +444,7 @@ void report::add_consecutive(NamedDecl *decl, SourceRange sr)
                                                              r.from().line()) {
         do_consecutive();
     }
-    if (decl && r) {
+    if (decl && r && !decl->getLocation().isMacroID()) {
         d_data.d_consecutive.push_back(std::make_pair(decl, r));
     }
 }

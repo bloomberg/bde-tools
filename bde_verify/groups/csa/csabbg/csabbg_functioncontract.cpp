@@ -666,8 +666,7 @@ bool are_numeric_cognates(llvm::StringRef a, llvm::StringRef b)
 
 SourceRange word_range(SourceRange context, const Word& word)
 {
-    SourceLocation begin = context.getBegin().getLocWithOffset(word.offset);
-    return SourceRange(begin, begin.getLocWithOffset(word.word.size() - 1));
+    return getOffsetRange(context, word.offset, word.word.size() - 1);
 }
 
 void report::critiqueContract(const FunctionDecl* func, SourceRange comment)

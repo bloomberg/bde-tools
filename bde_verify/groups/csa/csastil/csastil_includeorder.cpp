@@ -193,7 +193,9 @@ check_order(Analyser*                       analyser,
         "bslscm_versiontag",
     };
 
-    std::string version = analyser->group() + "scm_version";
+    std::string version = analyser->group().size() ?
+                              analyser->group() + "scm_version" :
+                              analyser->package() + "_version";
     if (   (   analyser->package() == "bsls"
             || analyser->package() == "bdls")
         && header
@@ -214,10 +216,24 @@ check_order(Analyser*                       analyser,
         && (it == headers.end()
             || it->first != version
             || it++ == headers.end())) {
-        analyser->report((it == headers.end() ? it - 1 : it)->second,
-                         check_name, "SHO07",
-                         "Missing include for %0.h")
-            << version;
+        include_order::headers_t::const_iterator lost_it(headers.begin());
+        while (lost_it != headers.end() && lost_it->first != version) {
+            ++lost_it;
+        }
+        if (lost_it == headers.end()) {
+            analyser->report((it == headers.end() ? it - 1 : it)->second,
+                             check_name, "SHO07", "Missing include for %0.h")
+                << version;
+        } else {
+            analyser->report((it == headers.end() ? it - 1 : it)->second,
+                             check_name, "SHO07",
+                             "Include for %0.h should go here")
+                << version;
+            analyser->report(lost_it->second, check_name, "SHO07",
+                             "Include for %0.h is here", true,
+                             DiagnosticsEngine::Note)
+                << version;
+        }
     }
 
     include_order::headers_t::const_iterator end

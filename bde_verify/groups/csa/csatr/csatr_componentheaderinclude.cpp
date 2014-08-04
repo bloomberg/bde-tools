@@ -30,9 +30,9 @@ static std::string const check_name("component-header");
 
 namespace
 {
-    struct status
+    struct data
     {
-        status()
+        data()
         : check_(true)
         , header_seen_(false)
         , line_(std::numeric_limits<size_t>::max())
@@ -59,7 +59,7 @@ static void close_file(Analyser& analyser,
 {
     if (analyser.is_component_header(name))
     {
-        analyser.attachment<status>().line_ =
+        analyser.attachment<data>().line_ =
             analyser.get_location(where).line();
     }
 }
@@ -71,7 +71,7 @@ static void include_file(Analyser& analyser,
                          bool,
                          std::string const& name)
 {
-    ::status& status(analyser.attachment< ::status>());
+    data& status(analyser.attachment<data>());
     if (status.check_)
     {
         if (analyser.is_component_header(name) ||
@@ -98,10 +98,10 @@ static void include_file(Analyser& analyser,
 
 static void declaration(Analyser& analyser, Decl const* decl)
 {
-    status& status(analyser.attachment< ::status>());
+    data& status(analyser.attachment<data>());
     if (status.check_)
     {
-        if (!status.header_seen_ &&
+        if (!status.header_seen_ ||
             analyser.is_component_header(analyser.toplevel()))
         {
             status.header_seen_ = true;

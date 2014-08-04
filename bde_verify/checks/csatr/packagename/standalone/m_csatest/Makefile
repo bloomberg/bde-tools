@@ -1,7 +1,10 @@
 # Makefile                                                       -*-makefile-*-
 FILES := $(wildcard *.cpp)
 ALL := on
-BDE_VERIFY_ARGS := -cl='append dictionary bloomberg noninfringement sublicense'
+BDE_VERIFY_ARGS := -cl='append dictionary bloomberg'                          \
+                   -cl='append dictionary merchantability'                    \
+                   -cl='append dictionary noninfringement'                    \
+                   -cl='append dictionary sublicense'
 
 BDE_VERIFY_DIR ?= ../../../../..
 include $(BDE_VERIFY_DIR)/checks/Makefile.inc

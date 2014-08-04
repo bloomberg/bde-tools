@@ -5,6 +5,7 @@
 #include <clang/Basic/SourceManager.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <csabase_analyser.h>
+#include <csabase_binder.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_filenames.h>
 #include <csabase_ppobserver.h>
@@ -26,29 +27,6 @@ using namespace clang;
 // ----------------------------------------------------------------------------
 
 static std::string const check_name("headline");
-
-// ----------------------------------------------------------------------------
-
-namespace
-{
-    template <typename T>
-    struct analyser_binder
-    {
-        analyser_binder(
-            void (*function)(Analyser&, SourceLocation, T, std::string const&),
-            Analyser& analyser)
-        : function_(function), analyser_(analyser)
-        {
-        }
-        void
-        operator()(SourceLocation where, T arg, std::string const& name) const
-        {
-            function_(analyser_, where, arg, name);
-        }
-        void (*function_)(Analyser&, SourceLocation, T, std::string const&);
-        Analyser& analyser_;
-    };
-}
 
 // ----------------------------------------------------------------------------
 
@@ -94,12 +72,14 @@ static void open_file(Analyser& analyser,
                             "Correct format is\n%0",
                             true, DiagnosticsEngine::Note)
                 << expect;
-            analyser.rewriter().ReplaceText(
-                where.getLocWithOffset(m.first),
-                buf.size() - m.first - m.second,
-                llvm::StringRef(expect)
-                    .drop_front(m.first)
-                    .drop_back(m.second));
+            if (m.first == 0) {
+                analyser.rewriter().InsertText(
+                    where.getLocWithOffset(m.first),
+                    expect + "\n");
+            } else {
+                analyser.rewriter().ReplaceText(
+                    analyser.get_line_range(where), expect);
+            }
         }
     }
 }
@@ -108,8 +88,7 @@ static void open_file(Analyser& analyser,
 
 static void subscribe(Analyser& analyser, Visitor&, PPObserver& observer)
 {
-    observer.onOpenFile +=
-        analyser_binder<std::string const&>(open_file, analyser);
+    observer.onOpenFile += bind<Analyser&>(analyser, open_file);
 }
 
 // ----------------------------------------------------------------------------

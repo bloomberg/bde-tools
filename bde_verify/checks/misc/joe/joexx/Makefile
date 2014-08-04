@@ -1,18 +1,9 @@
-#!/bin/sh
-
-# Script by which bde_build.pl can invoke bde_verify:
-#   bde_build.pl -k -DCC={this} -DCXX={this} -c bde_verify ...
-
-: ${VD:=/home/hrosen4/bde_verify}
-: ${EXE:=$VD/Linux-gcc-4.8.1/bde_verify}
-"$VD/scripts/bde_verify"                                                      \
-    --nodefinc                                                                \
-    --nodefdef                                                                \
-    --config=$VD/bde_verify.cfg                                               \
-    --exe=$EXE                                                                \
-    $@
-
-exit 0
+# Makefile                                                       -*-makefile-*-
+FILES := joexx_traits.h
+ALL := on
+BDE_VERIFY_DIR ?= ../../../..
+BDE_VERIFY_ARGS = -cl='namespace BloombergLP'
+include $(BDE_VERIFY_DIR)/checks/Makefile.inc
 
 ## ----------------------------------------------------------------------------
 ## Copyright (C) 2014 Bloomberg Finance L.P.

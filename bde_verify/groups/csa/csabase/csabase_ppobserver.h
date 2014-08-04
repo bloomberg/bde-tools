@@ -3,18 +3,17 @@
 #ifndef INCLUDED_CSABASE_PPOSERVER
 #define INCLUDED_CSABASE_PPOSERVER
 
-#include <clang/Basic/DiagnosticIDs.h>  // for Mapping
-#include <clang/Basic/SourceLocation.h>  // for SourceLocation (ptr only), etc
-#include <clang/Basic/SourceManager.h>  // for CharacteristicKind, etc
-#include <clang/Lex/ModuleLoader.h>     // for ModuleIdPath
-#include <clang/Lex/PPCallbacks.h>      // for PPCallbacks, etc
-#include <clang/Lex/Pragma.h>           // for PragmaIntroducerKind
-#include <llvm/ADT/ArrayRef.h>          // for ArrayRef
-#include <llvm/ADT/StringRef.h>         // for StringRef
-#include <stack>                        // for stack
-#include <string>                       // for string
-#include <utils/event.hpp>              // for event
-
+#include <clang/Basic/DiagnosticIDs.h>
+#include <clang/Basic/SourceLocation.h>
+#include <clang/Basic/SourceManager.h>
+#include <clang/Lex/ModuleLoader.h>
+#include <clang/Lex/PPCallbacks.h>
+#include <clang/Lex/Pragma.h>
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/StringRef.h>
+#include <stack>
+#include <string>
+#include <utils/event.hpp>
 namespace clang { class CommentHandler; }
 namespace clang { class FileEntry; }
 namespace clang { class IdentifierInfo; }
@@ -31,6 +30,8 @@ namespace csabase
 {
 class PPObserver : public clang::PPCallbacks
 {
+    typedef clang::PPCallbacks Base;
+
 public:
     PPObserver(clang::SourceManager const*, Config*);
     ~PPObserver();
@@ -65,21 +66,61 @@ public:
     utils::event<void(clang::SourceRange)>                                            onComment;
     utils::event<void()>                                                              onContext;
 
+    enum CallbackType {
+        e_None,
+        e_FileChanged,
+        e_FileSkipped,
+        e_FileNotFound,
+        e_InclusionDirective,
+        e_moduleImport,
+        e_EndOfMainFile,
+        e_Ident,
+        e_PragmaDirective,
+        e_PragmaComment,
+        e_PragmaDetectMismatch,
+        e_PragmaDebug,
+        e_PragmaMessage,
+        e_PragmaDiagnosticPush,
+        e_PragmaDiagnosticPop,
+        e_PragmaDiagnostic,
+        e_PragmaOpenCLExtension,
+        e_PragmaWarning,
+        e_PragmaWarningPush,
+        e_PragmaWarningPop,
+        e_MacroExpands,
+        e_MacroDefined,
+        e_MacroUndefined,
+        e_Defined,
+        e_SourceRangeSkipped,
+        e_If,
+        e_Elif,
+        e_Ifdef,
+        e_Ifndef,
+        e_Else,
+        e_Endif,
+    };
+
     void FileChanged(
                   clang::SourceLocation             Loc,
                   FileChangeReason                  Reason,
                   clang::SrcMgr::CharacteristicKind FileType,
-                  clang::FileID                     PrevFID = clang::FileID())
+                  clang::FileID                     PrevFID)
     override;
+
+    utils::event<decltype(&Base::FileChanged)> onPPFileChanged;
 
     void FileSkipped(const clang::FileEntry            &ParentFile,
                      const clang::Token                &FilenameTok,
                      clang::SrcMgr::CharacteristicKind  FileType)
     override;
 
+    utils::event<decltype(&Base::FileSkipped)> onPPFileSkipped;
+
     bool FileNotFound(llvm::StringRef              FileName,
                       llvm::SmallVectorImpl<char> &RecoveryPath)
     override;
+
+    utils::event<decltype(&Base::FileNotFound)> onPPFileNotFound;
 
     void InclusionDirective(clang::SourceLocation   HashLoc,
                             const clang::Token&     IncludeTok,
@@ -92,34 +133,51 @@ public:
                             const clang::Module    *Imported)
     override;
 
+    utils::event<decltype(&Base::InclusionDirective)> onPPInclusionDirective;
+
     void moduleImport(clang::SourceLocation  ImportLoc,
                       clang::ModuleIdPath    Path,
                       const clang::Module   *Imported)
     override;
 
+    utils::event<decltype(&Base::moduleImport)> onPPmoduleImport;
+
     void EndOfMainFile()
     override;
+
+    utils::event<decltype(&Base::EndOfMainFile)> onPPEndOfMainFile;
 
     void Ident(clang::SourceLocation Loc, const std::string &Str)
     override;
 
+    utils::event<decltype(&Base::Ident)> onPPIdent;
+
     virtual void PragmaDirective(clang::SourceLocation       Loc,
                                  clang::PragmaIntroducerKind Introducer)
     override;
+
+    utils::event<decltype(&Base::PragmaDirective)> onPPPragmaDirective;
 
     void PragmaComment(clang::SourceLocation         Loc,
                        const clang::IdentifierInfo  *Kind,
                        const std::string&            Str)
     override;
 
+    utils::event<decltype(&Base::PragmaComment)> onPPPragmaComment;
+
     void PragmaDetectMismatch(clang::SourceLocation     Loc,
                               const std::string        &Name,
                               const std::string        &Value)
     override;
 
+    utils::event<decltype(&Base::PragmaDetectMismatch)>
+                                                      onPPPragmaDetectMismatch;
+
     void PragmaDebug(clang::SourceLocation Loc,
                      llvm::StringRef       DebugType)
     override;
+
+    utils::event<decltype(&Base::PragmaDebug)> onPPPragmaDebug;
 
     void PragmaMessage(clang::SourceLocation Loc,
                        llvm::StringRef       Namespace,
@@ -127,13 +185,20 @@ public:
                        llvm::StringRef       Str)
     override;
 
+    utils::event<decltype(&Base::PragmaMessage)> onPPPragmaMessage;
+
     void PragmaDiagnosticPush(clang::SourceLocation Loc,
                               llvm::StringRef       Namespace)
     override;
 
+    utils::event<decltype(&Base::PragmaDiagnosticPush)>
+                                                      onPPPragmaDiagnosticPush;
+
     void PragmaDiagnosticPop(clang::SourceLocation Loc,
                              llvm::StringRef       Namespace)
     override;
+
+    utils::event<decltype(&Base::PragmaDiagnosticPop)> onPPPragmaDiagnosticPop;
 
     void PragmaDiagnostic(clang::SourceLocation Loc,
                           llvm::StringRef       Namespace,
@@ -141,23 +206,34 @@ public:
                           llvm::StringRef       Str)
     override;
 
+    utils::event<decltype(&Base::PragmaDiagnostic)> onPPPragmaDiagnostic;
+
     void PragmaOpenCLExtension(clang::SourceLocation        NameLoc,
                                const clang::IdentifierInfo *Name,
                                clang::SourceLocation        StateLoc,
                                unsigned                     State)
     override;
 
+    utils::event<decltype(&Base::PragmaOpenCLExtension)>
+                                                     onPPPragmaOpenCLExtension;
+
     void PragmaWarning(clang::SourceLocation Loc,
                        llvm::StringRef       WarningSpec,
                        llvm::ArrayRef<int>   Ids)
     override;
 
+    utils::event<decltype(&Base::PragmaWarning)> onPPPragmaWarning;
+
     void PragmaWarningPush(clang::SourceLocation Loc,
                            int                   Level)
     override;
 
+    utils::event<decltype(&Base::PragmaWarningPush)> onPPPragmaWarningPush;
+
     void PragmaWarningPop(clang::SourceLocation Loc)
     override;
+
+    utils::event<decltype(&Base::PragmaWarningPop)> onPPPragmaWarningPop;
 
     void MacroExpands(const clang::Token&          MacroNameTok,
                       const clang::MacroDirective *MD,
@@ -165,26 +241,38 @@ public:
                       const clang::MacroArgs      *Args)
     override;
 
+    utils::event<decltype(&Base::MacroExpands)> onPPMacroExpands;
+
     void MacroDefined(const clang::Token&          MacroNameTok,
                       const clang::MacroDirective *MD)
     override;
 
+    utils::event<decltype(&Base::MacroDefined)> onPPMacroDefined;
+
     void MacroUndefined(const clang::Token&          MacroNameTok,
                         const clang::MacroDirective *MD)
     override;
+
+    utils::event<decltype(&Base::MacroUndefined)> onPPMacroUndefined;
 
     void Defined(const clang::Token&          MacroNameTok,
                  const clang::MacroDirective *MD,
                  clang::SourceRange           Range)
     override;
 
+    utils::event<decltype(&Base::Defined)> onPPDefined;
+
     void SourceRangeSkipped(clang::SourceRange Range)
     override;
+
+    utils::event<decltype(&Base::SourceRangeSkipped)> onPPSourceRangeSkipped;
 
     void If(clang::SourceLocation Loc,
             clang::SourceRange    ConditionRange,
             bool                  ConditionValue)
     override;
+
+    utils::event<decltype(&Base::If)> onPPIf;
 
     void Elif(clang::SourceLocation Loc,
               clang::SourceRange    ConditionRange,
@@ -192,21 +280,31 @@ public:
               clang::SourceLocation IfLoc)
     override;
 
+    utils::event<decltype(&Base::Elif)> onPPElif;
+
     void Ifdef(clang::SourceLocation        Loc,
                const clang::Token&          MacroNameTok,
                const clang::MacroDirective *MD)
     override;
+
+    utils::event<decltype(&Base::Ifdef)> onPPIfdef;
 
     void Ifndef(clang::SourceLocation        Loc,
                 const clang::Token&          MacroNameTok,
                 const clang::MacroDirective *MD)
     override;
 
+    utils::event<decltype(&Base::Ifndef)> onPPIfndef;
+
     void Else(clang::SourceLocation Loc, clang::SourceLocation IfLoc)
     override;
 
+    utils::event<decltype(&Base::Else)> onPPElse;
+
     void Endif(clang::SourceLocation Loc, clang::SourceLocation IfLoc)
     override;
+
+    utils::event<decltype(&Base::Endif)> onPPEndif;
 
     void Context();
 

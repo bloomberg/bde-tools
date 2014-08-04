@@ -64,45 +64,42 @@ struct on_group_open
         Analyser& analyser(*d_analyser);
         groupname& attachment(analyser.attachment<groupname>());
         FileName fn(name);
-        if (   !attachment.d_done
-            && name == analyser.toplevel()
-            && fn.name().find("m_") != 0) {
+        if (!attachment.d_done && name == analyser.toplevel()) {
             attachment.d_done = true;
-            std::string const& group(analyser.group());
-            if (!((group.size() == 3 &&
-                  groupchar(group[0]) &&
-                  groupchar(group[1]) &&
-                  groupchar(group[2])) ||
-                 (group.size() == 5 &&
-                  groupchar(group[0]) &&
-                  group[1] == '_' &&
-                  groupchar(group[2]) &&
-                  groupchar(group[3]) &&
-                  groupchar(group[4])))) {
-                analyser.report(where, check_name, "GN01",
-                        "Group names must consist of three lower-case letters "
-                        "possibly prefixed by a single lowercase letter and "
-                        "underscore: '%0'", true)
-                    << group;
-            }
 
-            llvm::SmallVector<char, 1024> vpath(fn.pkgdir().begin(),
-                                                fn.pkgdir().end());
-            llvm::sys::path::append(vpath, "..");
-            std::string packagedir(vpath.begin(), vpath.end());
-            struct stat direct;
-            if (stat(packagedir.c_str(), &direct) == 0) {
-                llvm::sys::path::append(vpath, "..", group);
-                std::string groupdir(vpath.begin(), vpath.end());
-                struct stat indirect;
-                if (stat(groupdir.c_str(), &indirect)
-                    || direct.st_ino != indirect.st_ino) {
-                    analyser.report(where, check_name, "GN02",
-                            "Component '%0' doesn't seem to be in package "
-                            "group '%1'", true)
-                        << analyser.component()
-                        << group;
+            std::string const& group(analyser.group());
+
+            bool traditional = group.size() == 3 &&
+                               groupchar(group[0]) &&
+                               groupchar(group[1]) &&
+                               groupchar(group[2]);
+            bool standalone  = fn.tag().size() != 0;
+
+            if (traditional) {
+                llvm::SmallVector<char, 1024> vpath(fn.pkgdir().begin(),
+                                                    fn.pkgdir().end());
+                llvm::sys::path::append(vpath, "..");
+                std::string packagedir(vpath.begin(), vpath.end());
+                struct stat direct;
+                if (stat(packagedir.c_str(), &direct) == 0) {
+                    llvm::sys::path::append(vpath, "..", group);
+                    std::string groupdir(vpath.begin(), vpath.end());
+                    struct stat indirect;
+                    if (stat(groupdir.c_str(), &indirect) ||
+                        direct.st_ino != indirect.st_ino) {
+                        analyser.report(where, check_name, "GN02",
+                                "Component '%0' doesn't seem to be in "
+                                "package group '%1'", true)
+                            << analyser.component()
+                            << group;
+                    }
                 }
+            }
+            else if (!standalone) {
+                analyser.report(where, check_name, "GN01",
+                        "Group names must consist of three lower-case "
+                        "letters: '%0'", true)
+                    << group;
             }
         }
     }

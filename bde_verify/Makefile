@@ -8,20 +8,14 @@ SHELL    = /opt/swt/bin/bash
 
 SYSTEM   = $(shell uname -s)
 
-COMPILER = gcc
-#COMPILER = clang
-
-STD      = CXX2011
-
 # Set up locations and flags for the compiler that will build bde_verify.
 ifeq ($(SYSTEM),Linux)
+    COMPILER ?= gcc
     ifeq    ($(COMPILER),gcc)
 VERSION  = 4.8.1
 CCDIR    = /opt/swt/install/gcc-$(VERSION)
 CXX      = $(CCDIR)/bin/g++
-         ifeq        ($(STD),CXX2011)
-CXXFLAGS += -std=c++0x
-         endif
+CXXFLAGS += -std=c++11
 LINK     = $(CXX)
 AR       = /usr/bin/ar
 LDFLAGS  += -Wl,-rpath,$(CCDIR)/lib64
@@ -31,12 +25,9 @@ CXXFLAGS += -Wno-unused-local-typedefs
 VERSION  = 3.4.1
 CCDIR    = /home/hrosen4/mbig/llvm-$(VERSION)/install-$(SYSTEM)
 CXX      = $(CCDIR)/bin/clang++
-        ifeq    ($(STD),CXX2011)
-CXXFLAGS += -std=c++0x
-        else
-CXXFLAGS += -Wno-c++11-extensions
-        endif
+CXXFLAGS += -std=c++11
 LINK     = $(CXX)
+LDFLAGS += -Wl,-rpath,/opt/swt/install/gcc-4.8.1/lib64
     endif
 ASPELL   = /opt/swt/install/aspell-0.60.6.1-64
 CXXFLAGS += -DSPELL_CHECK=1
@@ -44,16 +35,15 @@ INCFLAGS += -I$(ASPELL)/include
 LDFLAGS  += -L$(ASPELL)/lib64 -laspell
 endif
 ifeq ($(SYSTEM),SunOS)
+    COMPILER ?= gcc
     ifeq    ($(COMPILER),gcc)
 VERSION  = 4.8.1
 CCDIR    = /opt/swt/install/gcc-$(VERSION)
 CXX      = $(CCDIR)/bin/g++
-         ifeq        ($(STD),CXX2011)
 CXXFLAGS += -m64 -pthreads -mno-faster-structs
 CFLAGS   += -m64 -pthreads -mno-faster-structs
 LDFLAGS  += -m64 -pthreads -mno-faster-structs
-CXXFLAGS += -std=c++0x
-         endif
+CXXFLAGS += -std=c++11
 LINK     = $(CXX)
 AR       = /usr/ccs/bin/ar
 LDFLAGS  += -Wl,-L,$(CCDIR)/lib/sparcv9 -Wl,-R,$(CCDIR)/lib/sparcv9
@@ -82,6 +72,7 @@ CXXFILES =                                                                 \
         groups/csa/csabde/csabde_tool.cpp                                     \
         groups/csa/csabbg/csabbg_allocatorforward.cpp                         \
         groups/csa/csabbg/csabbg_allocatornewwithpointer.cpp                  \
+        groups/csa/csabbg/csabbg_bslovrdstl.cpp                               \
         groups/csa/csabbg/csabbg_enumvalue.cpp                                \
         groups/csa/csabbg/csabbg_functioncontract.cpp                         \
         groups/csa/csabbg/csabbg_midreturn.cpp                                \
@@ -104,7 +95,7 @@ CXXFILES =                                                                 \
         groups/csa/csamisc/csamisc_hashptr.cpp                                \
         groups/csa/csamisc/csamisc_longinline.cpp                             \
         groups/csa/csamisc/csamisc_memberdefinitioninclassdefinition.cpp      \
-        groups/csa/csamisc/csamisc_names.cpp                                  \
+        groups/csa/csamisc/csamisc_namespacetags.cpp                          \
         groups/csa/csamisc/csamisc_opvoidstar.cpp                             \
         groups/csa/csamisc/csamisc_spellcheck.cpp                             \
         groups/csa/csamisc/csamisc_stringadd.cpp                              \
@@ -224,7 +215,7 @@ default: $(OBJ)/$(TARGET)
 .PHONY: csabase
 
 $(CSABASEDIR)/$(OBJ)/$(LIBCSABASE): csabase
-	$(VERBOSE) $(MAKE) -s -C $(CSABASEDIR)
+	$(VERBOSE) $(MAKE) -s  -C $(CSABASEDIR)
 
 $(OBJ)/$(TARGET): $(CSABASEDIR)/$(OBJ)/$(LIBCSABASE) $(OFILES)
 	@echo linking executable
@@ -307,7 +298,8 @@ iwyu: $(IWYUFILES)
 depend $(OBJ)/make.depend:
 	@if [ ! -d $(OBJ) ]; then mkdir $(OBJ); fi
 	@echo analysing dependencies
-	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) -M $(CXXFILES) \
+	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) -M $(CXXFILES)                  \
+            $(filter-out -Wno-unused-local-typedefs, $(CXXFLAGS))             \
 		| perl -pe 's[^(?! )][$(OBJ)/]' > $(OBJ)/make.depend
 
 ifneq "$(MAKECMDGOALS)" "clean"

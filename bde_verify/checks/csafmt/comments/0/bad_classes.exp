@@ -4,10 +4,10 @@ bad_classes.t.cpp:2:12: warning: CLS01: '//@CLASSES:' line should contain no oth
 bad_classes.t.cpp:2:17: warning: CLS02: Class name must be followed by ': description'
 //@CLASSES: a::b
                 ^
-bad_classes.t.cpp:3:1: warning: CLS03: Badly formatted class line; should be '//    class: description'
+bad_classes.t.cpp:3:1: warning: CLS03: Badly formatted class line; should be '//  class: description'
 //    'd_e': f
 ^
-bad_classes.t.cpp:4:1: warning: CLS03: Badly formatted class line; should be '//    class: description'
+bad_classes.t.cpp:4:1: warning: CLS03: Badly formatted class line; should be '//  class: description'
 //    'g::h': i
 ^
 bad_classes.t.cpp:5:11: warning: CLS02: Class name must be followed by ': description'

@@ -53,6 +53,30 @@ csabbg_testdriver.t.cpp:61:3: note: TP19: One correct form (of several possible)
 csabbg_testdriver.t.cpp:283:1: warning: TP25: Cannot find definition of class 'bsl::basic_nonesuch' from @CLASSES section.
 //    bsl::basic_nonesuch : not there::more stuff
 ^
+csabbg_testdriver.t.cpp:289:14: warning: TP27: Method not called in test driver
+        void setF();
+             ^
+csabbg_testdriver.t.cpp:290:14: warning: TP27: Method not called in test driver
+        void setG();
+             ^
+csabbg_testdriver.t.cpp:291:13: warning: TP27: Method not called in test driver
+        int F() const;
+            ^
+csabbg_testdriver.t.cpp:292:13: warning: TP27: Method not called in test driver
+        int F();
+            ^
+csabbg_testdriver.t.cpp:293:13: warning: TP27: Method not called in test driver
+        int G() const;
+            ^
+csabbg_testdriver.t.cpp:294:9: warning: TP27: Method not called in test driver
+        joe();
+        ^
+csabbg_testdriver.t.cpp:295:9: warning: TP27: Method not called in test driver
+        joe(int);
+        ^
+csabbg_testdriver.t.cpp:296:9: warning: TP27: Method not called in test driver
+        ~joe();
+        ^
 csabbg_testdriver.t.cpp:24:4: warning: TP03: Missing test number
 // [  ] void setF();
    ^~~~
@@ -79,76 +103,76 @@ csabbg_testdriver.t.cpp:267:7: warning: TP17: Test case does not contain 'if (ve
       ^
 csabbg_testdriver.t.cpp:267:7: warning: TP05: Test case has no comment
 csabbg_testdriver.t.cpp:190:27: warning: TP20: Within loops, act on very verbose
-        for (; b; ) { if (verbose) { cout << endl; } }
+        for (; b; ) { if (verbose) { cout << endl; } F(); }
                           ^
 csabbg_testdriver.t.cpp:191:27: warning: TP20: Within loops, act on very verbose
-        while (b)   { if (verbose) { cout << endl; } }
+        while (b)   { if (verbose) { cout << endl; } F(); }
                           ^
 csabbg_testdriver.t.cpp:192:27: warning: TP20: Within loops, act on very verbose
-        do          { if (verbose) { cout << endl; } } while (b);
+        do          { if (verbose) { cout << endl; } F(); } while (b);
                           ^
 csabbg_testdriver.t.cpp:212:31: warning: TP20: Within loops, act on very verbose
-            for (; b; ) { if (verbose) { cout << endl; } }
+            for (; b; ) { if (verbose) { cout << endl; } F(); }
                               ^
 csabbg_testdriver.t.cpp:213:31: warning: TP20: Within loops, act on very verbose
-            while (b)   { if (verbose) { cout << endl; } }
+            while (b)   { if (verbose) { cout << endl; } F(); }
                               ^
 csabbg_testdriver.t.cpp:214:31: warning: TP20: Within loops, act on very verbose
-            do          { if (verbose) { cout << endl; } } while (b);
+            do          { if (verbose) { cout << endl; } F(); } while (b);
                               ^
 csabbg_testdriver.t.cpp:231:31: warning: TP20: Within loops, act on very verbose
-            for (; b; ) { if (verbose) { cout << endl; } }
+            for (; b; ) { if (verbose) { cout << endl; } F(); }
                               ^
 csabbg_testdriver.t.cpp:232:31: warning: TP20: Within loops, act on very verbose
-            while (b)   { if (verbose) { cout << endl; } }
+            while (b)   { if (verbose) { cout << endl; } F(); }
                               ^
 csabbg_testdriver.t.cpp:233:31: warning: TP20: Within loops, act on very verbose
-            do          { if (verbose) { cout << endl; } } while (b);
+            do          { if (verbose) { cout << endl; } F(); } while (b);
                               ^
 csabbg_testdriver.t.cpp:257:31: warning: TP20: Within loops, act on very verbose
-            for (; b; ) { if (verbose) { cout << endl; } }
+            for (; b; ) { if (verbose) { cout << endl; } F(); }
                               ^
 csabbg_testdriver.t.cpp:258:31: warning: TP20: Within loops, act on very verbose
-            while (b)   { if (verbose) { cout << endl; } }
+            while (b)   { if (verbose) { cout << endl; } F(); }
                               ^
 csabbg_testdriver.t.cpp:259:31: warning: TP20: Within loops, act on very verbose
-            do          { if (verbose) { cout << endl; } } while (b);
+            do          { if (verbose) { cout << endl; } F(); } while (b);
                               ^
 csabbg_testdriver.t.cpp:195:9: warning: TP21: Loops must contain very verbose action
-        for (; b; ) { }
+        for (; b; ) { F(); }
         ^
 csabbg_testdriver.t.cpp:196:9: warning: TP21: Loops must contain very verbose action
-        while (b)   { }
+        while (b)   { F(); }
         ^
 csabbg_testdriver.t.cpp:197:9: warning: TP21: Loops must contain very verbose action
-        do          { } while (b);
+        do          { F(); } while (b);
         ^
 csabbg_testdriver.t.cpp:217:13: warning: TP21: Loops must contain very verbose action
-            for (; b; ) { }
+            for (; b; ) { F(); }
             ^
 csabbg_testdriver.t.cpp:218:13: warning: TP21: Loops must contain very verbose action
-            while (b)   { }
+            while (b)   { F(); }
             ^
 csabbg_testdriver.t.cpp:219:13: warning: TP21: Loops must contain very verbose action
-            do          { } while (b);
+            do          { F(); } while (b);
             ^
 csabbg_testdriver.t.cpp:236:13: warning: TP21: Loops must contain very verbose action
-            for (; b; ) { }
+            for (; b; ) { F(); }
             ^
 csabbg_testdriver.t.cpp:237:13: warning: TP21: Loops must contain very verbose action
-            while (b)   { }
+            while (b)   { F(); }
             ^
 csabbg_testdriver.t.cpp:238:13: warning: TP21: Loops must contain very verbose action
-            do          { } while (b);
+            do          { F(); } while (b);
             ^
 csabbg_testdriver.t.cpp:262:13: warning: TP21: Loops must contain very verbose action
-            for (; b; ) { }
+            for (; b; ) { F(); }
             ^
 csabbg_testdriver.t.cpp:263:13: warning: TP21: Loops must contain very verbose action
-            while (b)   { }
+            while (b)   { F(); }
             ^
 csabbg_testdriver.t.cpp:264:13: warning: TP21: Loops must contain very verbose action
-            do          { } while (b);
+            do          { F(); } while (b);
             ^
 csabbg_testdriver.t.cpp:167:9: warning: TP08: Test plan does not have case number 1 for this item
         //   BREATHING TEST
@@ -202,4 +226,4 @@ csabbg_testdriver.t.cpp:120:9: warning: TP08: Test plan does not have case numbe
 csabbg_testdriver.t.cpp:30:6: note: TP08: Test plan item is
 // [  ] USAGE EXAMPLE
      ^
-48 warnings generated.
+56 warnings generated.

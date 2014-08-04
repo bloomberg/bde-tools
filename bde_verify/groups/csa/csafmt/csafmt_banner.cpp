@@ -6,10 +6,12 @@
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <csabase_analyser.h>
 #include <csabase_config.h>
+#include <csabase_debug.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_ppobserver.h>
 #include <csabase_registercheck.h>
 #include <csabase_util.h>
+#include <csabase_visitor.h>
 #include <ext/alloc_traits.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
@@ -45,6 +47,9 @@ struct comments
     Comments d_comments;
 
     void append(Analyser& analyser, SourceRange range);
+
+    SourceLocation d_inline_banner;      // banner for inline definitions
+    SourceLocation d_inline_definition;  // first inline definition
 };
 
 void comments::append(Analyser& analyser, SourceRange range)
@@ -77,6 +82,9 @@ struct files
 
     void operator()();
         // Report improper banners.
+
+    void operator()(const FunctionDecl *func);
+        // Look for inline function definitions ahead of banner.
 };
 
 files::files(Analyser& analyser)
@@ -100,9 +108,13 @@ static llvm::Regex generic_banner(      // things that look like banners
         "//" "(" SP ")" aba("[-=_]",        SP) SP "$",     // 6, 7, 8
     llvm::Regex::Newline);
 
-static llvm::Regex generic_separator(   // things that look like separators
-        "(//.*[[:alnum:]].*)?\n?"
-        "((//([[:space:]]*)[-=_](([[:space:]][-=_])*|[-=_]*))[[:space:]]*)$",
+static llvm::Regex generic_separator(  // things that look like separators
+    "(//.*[[:alnum:]].*)?\n?"
+    "((//([[:space:]]*)[-=_]"
+    "("
+     "([[:space:]][-=_]*( END-OF-FILE )?[[:space:]][-=_])*" "|"
+     "([-=_]*( END-OF-FILE )?[-=_]*)"
+    "))[[:space:]]*)$",
     llvm::Regex::Newline);
 
 #undef SP
@@ -110,6 +122,10 @@ static llvm::Regex generic_separator(   // things that look like separators
 
 void files::check_comment(SourceRange comment_range)
 {
+    if (!d_analyser.is_component(comment_range.getBegin())) {
+        return;                                                       // RETURN
+    }
+
     SourceManager& manager = d_analyser.manager();
     llvm::SmallVector<llvm::StringRef, 8> matches;
 
@@ -159,6 +175,13 @@ void files::check_comment(SourceRange comment_range)
             continue;
         }
         llvm::StringRef text = matches[4];
+        if (text == "INLINE DEFINITIONS") {
+            SourceLocation& ib =
+                d_analyser.attachment<comments>().d_inline_banner;
+            if (!ib.isValid()) {
+                ib = banner_start;
+            }
+        }
         size_t text_pos = banner.find(text);
         size_t actual_last_space_pos =
             manager.getPresumedColumnNumber(
@@ -168,6 +191,10 @@ void files::check_comment(SourceRange comment_range)
             0, 10);
         size_t expected_last_space_pos =
             ((79 - 2 - text.size()) / 2 + 2) & ~3;
+        if (actual_last_space_pos == 19) {
+            // Banner text can start in column 20.
+            expected_last_space_pos = 19;
+        }
         if (actual_last_space_pos + banner_slack < expected_last_space_pos ||
             actual_last_space_pos > expected_last_space_pos + banner_slack) {
             std::string expected_text =
@@ -236,12 +263,36 @@ void files::operator()()
             check_file_comments(itr->second);
         }
     }
+
+    SourceLocation& ib = d_analyser.attachment<comments>().d_inline_banner;
+    SourceLocation& id = d_analyser.attachment<comments>().d_inline_definition;
+    if (id.isValid() &&
+        !(ib.isValid() &&
+          d_analyser.manager().isBeforeInTranslationUnit(ib, id))) {
+        d_analyser.report(id, check_name, "FB01",
+                         "Inline functions in header must be preceded by an "
+                         "INLINE DEFINITIONS banner");
+    }
 }
 
-void subscribe(Analyser& analyser, Visitor&, PPObserver& observer)
+void files::operator()(const FunctionDecl *func)
+{
+    // Process only function definition.
+    SourceLocation& id = d_analyser.attachment<comments>().d_inline_definition;
+    if (!id.isValid() &&
+        func->hasBody() &&
+        func->getBody() &&
+        func->isInlineSpecified() &&
+        d_analyser.is_component_header(func)) {
+        id = func->getLocation();
+    }
+}
+
+void subscribe(Analyser& analyser, Visitor& visitor, PPObserver& observer)
     // Hook up the callback functions.
 {
     analyser.onTranslationUnitDone += files(analyser);
+    visitor.onFunctionDecl         += files(analyser);
     observer.onComment             += files(analyser);
 }
 

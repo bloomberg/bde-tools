@@ -3,7 +3,7 @@
 #ifndef INCLUDED_CSABASE_DEBUG
 #define INCLUDED_CSABASE_DEBUG
 
-namespace llvm { class raw_ostream; }
+#include <llvm/Support/raw_ostream.h>
 
 // -----------------------------------------------------------------------------
 

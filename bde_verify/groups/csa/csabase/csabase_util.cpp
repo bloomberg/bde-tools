@@ -4,7 +4,9 @@
 #include <clang/Basic/SourceManager.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/Regex.h>
+#include <cctype>
 
+using namespace clang;
 using namespace csabase;
 
 std::pair<size_t, size_t>
@@ -62,6 +64,27 @@ std::string csabase::to_lower(std::string s)
     return llvm::StringRef(s).lower();
 }
 
+bool csabase::contains_word(const std::string &have, const std::string &want)
+{
+    std::pair<size_t, size_t> m = mid_match(have, want);
+    if (m.first == have.npos) {
+        return false;
+    }
+    if (m.first > 0) {
+        char c = have[m.first - 1];
+        if (std::isalnum(c) || c == '_') {
+            return false;
+        }
+    }
+    if (m.second > 0) {
+        char c = have[have.size() - m.second];
+        if (std::isalnum(c) || c == '_') {
+            return false;
+        }
+    }
+    return true;
+}
+
 csabase::OnMatch<UseLambda, &UseLambda::NotFunction>::OnMatch(
     const std::function<void(const clang::ast_matchers::BoundNodes &)> &fun)
     : function_(fun)
@@ -72,6 +95,18 @@ void csabase::OnMatch<UseLambda, &UseLambda::NotFunction>::run(
     const clang::ast_matchers::MatchFinder::MatchResult &result)
 {
     function_(result.Nodes);
+}
+
+SourceRange csabase::getOffsetRange(SourceLocation loc, int offset, int size)
+{
+    return SourceRange(loc.getLocWithOffset(offset),
+                       loc.getLocWithOffset(offset + size));
+}
+
+SourceRange csabase::getOffsetRange(SourceRange range, int offset, int size)
+{
+    return SourceRange(range.getBegin().getLocWithOffset(offset),
+                       range.getBegin().getLocWithOffset(offset + size));
 }
 
 // ----------------------------------------------------------------------------

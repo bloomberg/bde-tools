@@ -1,12 +1,12 @@
-csamisc_spellcheck.t.cpp:6:16: warning: SP01: Misspelled word 'baddly'
-// Missspelled baddly.
-               ^~~~~~~
+csamisc_spellcheck.t.cpp:6:17: warning: SP01: Misspelled word 'baddly'
+// Misssspelled baddly.
+                ^~~~~~~
 csamisc_spellcheck.t.cpp:13:25: warning: SP01: Misspelled word 'judg'
 // Sphnx F Black Qurtz, Judg M Vo!
                         ^~~~
-csamisc_spellcheck.t.cpp:6:4: warning: SP01: Misspelled word 'missspelled'
-// Missspelled baddly.
-   ^~~~~~~~~~~
+csamisc_spellcheck.t.cpp:6:4: warning: SP01: Misspelled word 'misssspelled'
+// Misssspelled baddly.
+   ^~~~~~~~~~~~
 csamisc_spellcheck.t.cpp:13:18: warning: SP01: Misspelled word 'qurtz'
 // Sphnx F Black Qurtz, Judg M Vo!
                  ^~~~~~

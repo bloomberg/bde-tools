@@ -3,9 +3,9 @@
 //@AUTHOR: grbble grmp
 //         sgrffle
 //
-// Missspelled baddly.
+// Misssspelled baddly.
 //..
-// Also missspelled, but too bd.
+// Also misssspelled, but too bd.
 //..
 // Sphinx of black quartz, judge my vow!
 // SphinxA ofB blackC quartzD, judgeE myF vowG!

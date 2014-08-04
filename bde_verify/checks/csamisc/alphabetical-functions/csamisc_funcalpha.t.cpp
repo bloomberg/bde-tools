@@ -6,7 +6,7 @@ namespace bde_verify {
             void f1();
             void f3();
             void f2();
-            
+
             // - - - -
 
             void a1();

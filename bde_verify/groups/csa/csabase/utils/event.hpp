@@ -39,6 +39,18 @@ class event<void(T...)>
 private:
     std::deque<function<void(T...)>> functions_;
 };
+
+// This allows using decltype(function pointer) as the type parameter.
+template <typename R, typename...T>
+class event<R(*)(T...)> : public event<void(T...)>
+{
+};
+
+// This allows using decltype(method pointer) as the type parameter.
+template <typename R, typename C, typename...T>
+class event<R(C::*)(T...)> : public event<void(T...)>
+{
+};
 }
 
 #endif

@@ -22,12 +22,11 @@ static std::string const check_name("throw-non-std-exception");
 
 static void check(Analyser& analyser, CXXThrowExpr const* expr)
 {
-    static const TypeDecl *e = analyser.lookup_type("::std::exception");
+    const TypeDecl *e = analyser.lookup_type("::std::exception");
     Expr *object(const_cast<Expr*>(expr->getSubExpr()));
-    if (e && object) // else it is a rethrow...
+    if (e && e->getTypeForDecl() && object) // else it is a rethrow...
     {
-        QualType t =
-            e->getTypeForDecl()->getCanonicalTypeInternal();
+        QualType t = e->getTypeForDecl()->getCanonicalTypeInternal();
         QualType ot = object->getType()->getCanonicalTypeInternal();
         if (ot != t && !analyser.sema().IsDerivedFrom(ot, t)) {
             analyser.report(expr, check_name, "FE01",

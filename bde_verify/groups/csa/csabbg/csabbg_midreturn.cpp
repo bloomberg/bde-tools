@@ -11,6 +11,7 @@
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Basic/SourceLocation.h>
 #include <clang/Basic/SourceManager.h>
+#include <clang/Lex/Lexer.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <csabase_analyser.h>
 #include <csabase_diagnostic_builder.h>
@@ -47,9 +48,9 @@ namespace
 // Data attached to analyzer for this check.
 struct data
 {
-    std::set<const Stmt*>    d_last_returns;  // Last top-level 'return'
-    std::set<const Stmt*>    d_all_returns;   // All 'return'
-    std::set<SourceLocation> d_rcs;           // Suppression comments
+    std::set<const ReturnStmt*> d_last_returns;  // Last top-level 'return'
+    std::set<const ReturnStmt*> d_all_returns;   // All 'return'
+    std::set<SourceLocation>    d_rcs;           // Suppression comments
 };
 
 // Callback object for inspecting comments.
@@ -142,13 +143,16 @@ struct report
             d_data.d_all_returns.begin(), d_data.d_all_returns.end());
     }
 
-    void process_all_returns(std::set<const Stmt*>::iterator begin,
-                             std::set<const Stmt*>::iterator end)
+    void process_all_returns(std::set<const ReturnStmt*>::iterator begin,
+                             std::set<const ReturnStmt*>::iterator end)
     {
         const data& d = d_analyser.attachment<data>();
-        for (std::set<const Stmt*>::iterator it = begin; it != end; ++it) {
+        for (std::set<const ReturnStmt*>::iterator it = begin;
+             it != end;
+             ++it) {
             // Ignore final top-level return statements.
             if (!d.d_last_returns.count(*it) &&
+                d_analyser.is_component(*it) &&
                 !is_commented(*it, d.d_rcs.begin(), d.d_rcs.end())) {
                 d_analyser.report(*it, check_name, "MR01",
                         "Mid-function 'return' requires '// RETURN' comment");
@@ -172,15 +176,23 @@ struct report
     }
 
     // Determine if a statement has a proper '// RETURN' comment.
-    bool is_commented(const Stmt* stmt,
+    bool is_commented(const ReturnStmt* stmt,
                       std::set<SourceLocation>::iterator comments_begin,
                       std::set<SourceLocation>::iterator comments_end)
     {
+        if (!d_analyser.is_component(stmt)) {
+            return true;                                              // RETURN
+        }
+
         SourceManager& m = d_analyser.manager();
-        SourceLocation loc = m.getFileLoc(stmt->getLocEnd());
+        // This "getLocForEndOfToken" weirdness is necessary because for a
+        // member expression (like "a.def"), "stmt->getLocEnd()" returns the
+        // beginning of the member instead of the end (i.e., 'd', not 'f')!
+        SourceLocation loc = m.getFileLoc(Lexer::getLocForEndOfToken(
+            stmt->getLocEnd(), 0, m, d_analyser.context()->getLangOpts()));
         unsigned       sline = m.getPresumedLineNumber(loc);
         unsigned       scolm = m.getPresumedColumnNumber(loc);
-        FileID  sfile = m.getFileID(loc);
+        FileID         sfile = m.getFileID(loc);
 
         for (std::set<SourceLocation>::iterator it = comments_begin;
              it != comments_end;

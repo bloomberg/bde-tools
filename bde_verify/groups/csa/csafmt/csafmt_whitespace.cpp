@@ -59,7 +59,7 @@ void files::operator()(SourceLocation loc,
 {
     const SourceManager &m = d_analyser.manager();
     llvm::StringRef buf = m.getBufferData(m.getFileID(loc));
-    if (buf.find('\t') != buf.find(" \n")) {
+    if (d_analyser.is_component(loc) && buf.find('\t') != buf.find(" \n")) {
         loc = m.getLocForStartOfFile(m.getFileID(loc));
         size_t offset = 0;
         llvm::StringRef s;

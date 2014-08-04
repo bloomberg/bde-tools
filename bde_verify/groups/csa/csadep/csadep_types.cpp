@@ -3,6 +3,7 @@
 #include <csadep_dependencies.h>
 
 #include <csabase_analyser.h>
+#include <csabase_binder.h>
 #include <csabase_ppobserver.h>
 #include <csabase_registercheck.h>
 #include <csabase_location.h>
@@ -343,50 +344,11 @@ on_expr(Analyser& analyser, Expr const* expr)
 
 // -----------------------------------------------------------------------------
 
-namespace
-{
-    struct binder
-    {
-        binder(void (*function)(Analyser&, SourceLocation, std::string const&, std::string const&),
-               Analyser& analyser):
-            function_(function),
-            analyser_(&analyser)
-        {
-        }
-        void
-        operator()(SourceLocation location, std::string const& from, std::string const& file) const
-        {
-            (*function_)(*analyser_, location, from, file);
-        }
-        void          (*function_)(Analyser&, SourceLocation, std::string const&, std::string const&);
-        Analyser* analyser_;
-    };
-}
-
-namespace
-{
-    struct skip_binder
-    {
-        skip_binder(void (*function)(Analyser&, std::string const&, std::string const&), Analyser& analyser):
-            function_(function),
-            analyser_(&analyser)
-        {
-        }
-        void
-        operator()(std::string const& from, std::string const& file)
-        {
-            (*function_)(*analyser_, from, file);
-        }
-        void          (*function_)(Analyser&, std::string const&, std::string const&);
-        Analyser* analyser_;
-    };
-}
-
 static void
 subscribe(Analyser& analyser, Visitor&, PPObserver& observer)
 {
-    observer.onOpenFile += binder(on_open, analyser);
-    observer.onSkipFile += skip_binder(on_skip, analyser);
+    observer.onOpenFile += bind<Analyser&>(analyser, on_open);
+    observer.onSkipFile += bind<Analyser&>(analyser, on_skip);
 }
 
 // -----------------------------------------------------------------------------

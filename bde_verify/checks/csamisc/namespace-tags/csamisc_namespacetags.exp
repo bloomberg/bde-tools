@@ -1,0 +1,13 @@
+csamisc_namespacetags.t.cpp:6:1: warning: NT01: End of bde_verify namespace should be marked with "}  // close enterprise namespace"
+} // end bde_verify
+^
+csamisc_namespacetags.t.cpp:5:1: warning: NT01: End of csamisc namespace should be marked with "}  // close package namespace"
+} // end csamisc
+^
+csamisc_namespacetags.t.cpp:4:1: warning: NT01: End of anonymous namespace should be marked with "}  // close unnamed namespace"
+} // end anonymous
+^
+csamisc_namespacetags.t.cpp:9:1: warning: NT01: End of joe namespace should be marked with "}  // close ... namespace"
+} // end joe
+^
+4 warnings generated.

@@ -14,7 +14,6 @@
 #include <csabase_visitor.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/Casting.h>
-#include <llvm/Support/Regex.h>
 #include <utils/event.hpp>
 #include <utils/function.hpp>
 #include <map>
@@ -22,7 +21,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 namespace clang { class SourceManager; }
 
 using namespace csabase;
@@ -59,9 +57,9 @@ struct comments
     comments(Analyser& analyser);
         // Create a 'comments' object, accessing the specified 'analyser'.
 
-    static bool isReset(llvm::StringRef comment);
-        // Return wehether the specified 'comment' acts as a "reset" marker for
-        // alphabetical ordering.
+    bool isReset(SourceRange range);
+        // Return wehether the specified comment 'range' acts as a "reset"
+        // marker for alphabetical ordering.
 
     void operator()(SourceRange range);
         // The specified 'range', representing a comment, is added to the
@@ -75,44 +73,23 @@ comments::comments(Analyser& analyser)
 {
 }
 
-bool comments::isReset(llvm::StringRef comment)
+bool comments::isReset(SourceRange range)
 {
-    // Look for "aspect" directives in comments.
-    static llvm::Regex re("^(//|/[*])" "[[:space:]]*"
-                          "("
-                             "CLASS"     "|"
-                             "FREE"      "|"
-                             "NOT"       "|"
-                             "PRIVATE"   "|"
-                             "PROTECTED" "|"
-                             "PUBLIC"    "|"
-                             "."         "|"  // Try allowing everything here.
-                             "[[:space:]]"
-                          ")*"
-                          "("
-                             "ACCESSORS?"    "|"
-                             "Aspects?"      "|"
-                             "CREATORS?"     "|"
-                             "DATA"          "|"
-                             "FUNCTIONS?"    "|"
-                             "IMPLEMENTED"   "|"
-                             "MANIPULATORS?" "|"
-                             "METHODS?"      "|"
-                             "OPERATORS?"    "|"
-                             "TRAITS?"       "|"
-                             "[-=_]+" "(" "[[:space:]]*" "[-=_]+" ")*"
-                          ")"
-                          "[:;.[:space:]]*" "([*]/)?" "[[:space:]]*" "$",
-                          llvm::Regex::IgnoreCase);
-    std::string error;
-    return re.match(comment);
+    llvm::StringRef comment = d_analyser.get_source(
+        SourceRange(d_analyser.get_line_range(range.getBegin())
+                        .getBegin()
+                        .getLocWithOffset(-1),
+                    range.getEnd().getLocWithOffset(1)),
+        true);
+    return comment.startswith("\n") &&
+           comment.endswith("\n") &&
+           comment.count('\n') == 2;
 }
 
 void comments::operator()(SourceRange range)
 {
     Location location(d_analyser.get_location(range.getBegin()));
-    if (   d_analyser.is_component(location.file())
-        && isReset(d_analyser.get_source(range))) {
+    if (d_analyser.is_component(location.file()) && isReset(range)) {
         d_comments[location.file()].insert(location.line());
     }
 }

@@ -1,6 +1,11 @@
 #!/usr/bin/perl -w
 # bde_verify                                                         -*-perl-*-
 
+# Bde_verify is a static analysis tool that verifies that source code adheres 
+# to the BDE coding standards.  Many of the checks are specific to Bloomberg LP
+# and this wrapper script contains default options for the Bloomberg LP
+# environment.
+
 use strict;
 use Getopt::Long qw(:config no_ignore_case);
 use Cwd;
@@ -15,7 +20,7 @@ $hw = 'x86_64' unless grep(/$hw/, @known_hw);
 
 my $clangver = "3.4";
 my $gccver   = "4.8.1";
-my $home     = "/home/hrosen4/bde_verify";
+my $home     = "/bb/mbigc/mbig816/src/bde-oss-tools/bde_verify";
 my $bb       = "/bb/build/$system-$hw-64" .
                "/release/robolibs/trunk/lib/dpkgroot/opt/bb";
 my $config   = "$home/bde_verify.cfg";
@@ -45,6 +50,7 @@ my $warnoff;
 my $tlonly;
 my $rwd;
 my $tag;
+my $ovr = -1;
 
 my $command = join " \\\n ", $0, map { join "\\ ", split(/ /, $_, -1) } @ARGV;
 
@@ -61,8 +67,10 @@ usage: $0 [options] [additional compiler options] file.cpp ...
     --cl=config_line
     --bb=dir                 [$bb]
     --exe=bde_verify         [$exe]
+    --cc=/path/to/g++        [$cc]
     --[no]definc             [$definc]
     --[no]defdef             [$defdef]
+    --[no]ovr                # whether to define BSL_OVERRIDES_STD
     --rewrite=dir
     --toplevel
     --std=type
@@ -88,10 +96,12 @@ GetOptions(
     'cl=s'       => \@cl,
     'debug'      => \$debug,
     'help|?'     => \$help,
+    'cc=s'       => \$cc,
     'exe=s'      => \$exe,
     'verbose|v'  => \$verbose,
     'definc!'    => \$definc,
     'defdef!'    => \$defdef,
+    'ovr!'       => \$ovr,
     'rewrite=s'  => \$rwd,
     'w'          => \$warnoff,
     "I=s"        => \@incs,
@@ -112,11 +122,12 @@ my @tlo    = ("-plugin-arg-bde_verify", "toplevel-only-on") if $tlonly;
 my @rwd    = ("-plugin-arg-bde_verify", "rewrite-dir=$rwd") if $rwd;
 print "No such directory $rwd\n" if $rwd and ! -d $rwd;
 my @tag    = ("-plugin-arg-bde_verify", "tool=$tag") if $tag;
-
-@lflags = map { "-f$_" if $_ ne "no-strict-aliasing" } @lflags;
-@wflags = map { "-W$_" } @wflags;
+my %uf     = ( "no-strict-aliasing" => 1, "PIC" => 1 );
+@lflags = map { "-f$_" } grep { not exists $uf{$_} } @lflags;
+@wflags = map { "-W$_" } grep { not /,/ } @wflags;
 unshift @wflags, "-w" if $warnoff;
 
+push(@defs, ("BDE_VERIFY"));
 push(@defs, (
     "BB_THREADED",
     "BDE_BUILD_TARGET_DBG",
@@ -127,7 +138,7 @@ push(@defs, (
     "_SYS_SYSMACROS_H",
     "_THREAD_SAFE",
 )) if $defdef;
-if ($defdef && !grep(m{\bb[sd]l[^/]*$}, @ARGV)) {
+if ($ovr == 1 || $ovr != 0 && $defdef && !grep(m{\bb[sd]l[^/]*$}, @ARGV)) {
     push(@defs, "BSL_OVERRIDES_STD");
 }
 @defs = map { "-D$_" } @defs;
@@ -145,15 +156,19 @@ push(@incs, (
     "$bb/include",
     "$bb/include/stlport",
 )) if $definc;
-push(@incs, map { chomp; $_; }
-            qx{ $cc -xc++ -E -v /dev/null 2>&1 |
-                sed -n '/^#include/,/^End of search list/p' |
-                sed -n '/^ [/]/s/ //p'});
 for (@incs) { warn "cannot find directory $_\n" unless -d; }
-@incs = map { ( "-I", $_, "-isystem", $_ ) }
+@incs = map { ( "-I", $_ ) }
         map { $_ eq Cwd::cwd() ? "." : $_ }
         map { Cwd::abs_path($_) }
         grep { -d } @incs;
+unshift(@incs,
+        map { ( "-isystem", $_ ) }
+        map { Cwd::abs_path($_) }
+        grep { -d }
+        map { chomp; $_; }
+        qx{ $cc -xc++ -E -v /dev/null 2>&1 |
+            sed -n '/^#include/,/^End of search list/p' |
+            sed -n '/^ [/]/s/ //p'});
 
 push(@std, "-std=$std") if $std;
 
