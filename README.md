@@ -11,7 +11,7 @@ including:
 This repository provides a system, based on
 [waf](https://code.google.com/p/waf/), for building code whose source files are
 organized according to the
-[BDE Style](https://github.com/bloomberg/bde-tools/wiki/BDE-Style-Repository.md).
+[BDE Style](https://github.com/bloomberg/bde-tools/wiki/BDE-Style-Repository).
 This is the tool used to build the
 [BDE libraries](https://github.com/bloomberg/bde).
 
