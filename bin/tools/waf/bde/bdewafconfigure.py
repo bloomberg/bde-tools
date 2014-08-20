@@ -281,10 +281,13 @@ class BdeWafConfigure(object):
             # package group and standard alone package.
             if (self.option_mask.uplid.uplid['os_type'] == 'windows' and
                 self.option_mask.uplid.uplid['comp_type'] == 'cl'):
+                loc = self.group_locs[group] if group in self.group_locs else \
+                      self.sa_package_locs[group]
+
                 options['BDE_CXXFLAGS'] += " /Fd%s\\%s\\%s.pdb" % (
-                    self.group_locs[group], group, group)
+                    loc, group, group)
                 options['BDE_CFLAGS'] += " /Fd%s\\%s\\%s.pdb" % (
-                    self.group_locs[group], group, group)
+                    loc, group, group)
 
         defs = copy.deepcopy(self.default_opts)
 
