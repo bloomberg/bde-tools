@@ -5,6 +5,7 @@ development of [BDE libraries](https://github.com/bloomberg/bde),
 including:
 
 * [Waf-Based Build System](http://github.com/bloomberg/bde-tools/wiki/Waf-Build)
+* [bde_verify](http://github.com/bloomberg/bde-tools/wiki/bde_verify)
 
 ##Waf-Based Build System
 
@@ -26,6 +27,8 @@ to the
 It is built within the clang C++ compiler tool system, and therefore has
 access to proper syntax and type information about the program it is
 examining, unlike text-based scanning tools.
+
+For detailed usage information, please see the [bde_verify wiki](http://github.com/bloomberg/bde-tools/wiki/bde_verify).
 
 #License
 
