@@ -1,0 +1,49 @@
+csamisc_swapab.t.cpp:8:19: warning: SWAB01: First parameter of 'swap' should be named 'a'
+        void swap(int *x, int *y);
+                  ^~~~~~
+csamisc_swapab.t.cpp:8:27: warning: SWAB01: Second parameter of 'swap' should be named 'b'
+        void swap(int *x, int *y);
+                          ^~~~~~
+csamisc_swapab.t.cpp:9:19: warning: SWAB01: First parameter of 'swap' should be named 'a'
+        void swap(int *x, int *b);
+                  ^~~~~~
+csamisc_swapab.t.cpp:10:27: warning: SWAB01: Second parameter of 'swap' should be named 'b'
+        void swap(int *a, int *y);
+                          ^~~~~~
+csamisc_swapab.t.cpp:12:19: warning: SWAB01: First parameter of 'swap' should be named 'a'
+        void swap(int &x, int &y);
+                  ^~~~~~
+csamisc_swapab.t.cpp:12:27: warning: SWAB01: Second parameter of 'swap' should be named 'b'
+        void swap(int &x, int &y);
+                          ^~~~~~
+csamisc_swapab.t.cpp:13:19: warning: SWAB01: First parameter of 'swap' should be named 'a'
+        void swap(int &x, int &b);
+                  ^~~~~~
+csamisc_swapab.t.cpp:14:27: warning: SWAB01: Second parameter of 'swap' should be named 'b'
+        void swap(int &a, int &y);
+                          ^~~~~~
+csamisc_swapab.t.cpp:27:39: warning: SWAB01: First parameter of 'swap' should be named 'a'
+        template <class SS> void swap(SS *x, SS *y);
+                                      ^~~~~
+csamisc_swapab.t.cpp:27:46: warning: SWAB01: Second parameter of 'swap' should be named 'b'
+        template <class SS> void swap(SS *x, SS *y);
+                                             ^~~~~
+csamisc_swapab.t.cpp:28:39: warning: SWAB01: First parameter of 'swap' should be named 'a'
+        template <class SS> void swap(SS *x, SS *b);
+                                      ^~~~~
+csamisc_swapab.t.cpp:29:46: warning: SWAB01: Second parameter of 'swap' should be named 'b'
+        template <class SS> void swap(SS *a, SS *y);
+                                             ^~~~~
+csamisc_swapab.t.cpp:31:39: warning: SWAB01: First parameter of 'swap' should be named 'a'
+        template <class SS> void swap(SS &x, SS &y);
+                                      ^~~~~
+csamisc_swapab.t.cpp:31:46: warning: SWAB01: Second parameter of 'swap' should be named 'b'
+        template <class SS> void swap(SS &x, SS &y);
+                                             ^~~~~
+csamisc_swapab.t.cpp:32:39: warning: SWAB01: First parameter of 'swap' should be named 'a'
+        template <class SS> void swap(SS &x, SS &b);
+                                      ^~~~~
+csamisc_swapab.t.cpp:33:46: warning: SWAB01: Second parameter of 'swap' should be named 'b'
+        template <class SS> void swap(SS &a, SS &y);
+                                             ^~~~~
+16 warnings generated.

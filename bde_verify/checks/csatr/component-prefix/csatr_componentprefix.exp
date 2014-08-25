@@ -1,0 +1,47 @@
+In file included from csatr_componentprefix.v.cpp:3:
+./csatr_componentprefix.v.hpp:21:13: warning: CP01: Globally visible identifier 'bde_verify::csatr::BadEnum::badBadEnumTag' without component prefix
+            badBadEnumTag
+            ^
+./csatr_componentprefix.v.hpp:19:14: warning: CP01: Globally visible identifier 'bde_verify::csatr::BadEnum' without component prefix
+        enum BadEnum
+             ^
+./csatr_componentprefix.v.hpp:24:25: warning: CP01: Globally visible identifier 'bde_verify::csatr::BadTypedef' without component prefix
+        typedef BadEnum BadTypedef;
+                        ^
+./csatr_componentprefix.v.hpp:26:16: warning: CP01: Globally visible identifier 'bde_verify::csatr::BadStruct' without component prefix
+        struct BadStruct
+               ^
+./csatr_componentprefix.v.hpp:36:24: warning: CP01: Globally visible identifier 'bde_verify::csatr::BadStruct1' without component prefix
+        typedef struct BadStruct1
+                       ^
+./csatr_componentprefix.v.hpp:40:11: warning: CP01: Globally visible identifier 'bde_verify::csatr::BadStruct2' without component prefix
+        } BadStruct2;
+          ^
+./csatr_componentprefix.v.hpp:46:11: warning: CP01: Globally visible identifier 'bde_verify::csatr::BadStruct3' without component prefix
+        } BadStruct3;
+          ^
+./csatr_componentprefix.v.hpp:48:15: warning: CP01: Globally visible identifier 'bde_verify::csatr::BadClass' without component prefix
+        class BadClass
+              ^
+./csatr_componentprefix.v.hpp:56:15: warning: CP01: Globally visible identifier 'bde_verify::csatr::BadTemplate' without component prefix
+        class BadTemplate
+              ^
+./csatr_componentprefix.v.hpp:64:13: warning: CP01: Globally visible identifier 'bde_verify::csatr::badTemplate' without component prefix
+        int badTemplate()
+            ^
+./csatr_componentprefix.v.hpp:70:13: warning: CP01: Globally visible identifier 'bde_verify::csatr::badFunction' without component prefix
+        int badFunction()
+            ^
+./csatr_componentprefix.v.hpp:76:13: warning: CP01: Globally visible identifier 'bde_verify::csatr::badVariable' without component prefix
+        int badVariable(0);
+            ^
+./csatr_componentprefix.v.hpp:80:13: warning: CP01: Globally visible identifier 'bde_verify::csatr::ComponentPrefixGoodEnum::badGoodEnumTag' without component prefix
+            badGoodEnumTag,
+            ^
+./csatr_componentprefix.v.hpp:142:16: warning: CP01: Globally visible identifier 'bde_verify::csatr::someVariable' without component prefix
+    extern int someVariable;
+               ^
+./csatr_componentprefix.v.hpp:64:13: warning: CP01: Globally visible identifier 'bde_verify::csatr::badTemplate' without component prefix
+        int badTemplate()
+            ^
+15 warnings generated.

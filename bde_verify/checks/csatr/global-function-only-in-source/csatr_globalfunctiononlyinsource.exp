@@ -1,0 +1,4 @@
+csatr_globalfunctiononlyinsource.v.cpp:11:14: warning: TR10: Globally visible function 'bde_verify::csatr::in_namespace' is not declared in header.
+        void in_namespace();
+             ^~~~~~~~~~~~
+1 warning generated.

@@ -1,0 +1,24 @@
+csamisc_charvsstring.t.cpp:32:7: warning: ADC01: Passing address of char 'value' where a null-terminated string may be expected
+    f(&value); // not OK
+      ^
+csamisc_charvsstring.t.cpp:36:10: warning: ADC01: Passing address of char 'value' where a null-terminated string may be expected
+    f(0, &value); // not OK
+         ^
+csamisc_charvsstring.t.cpp:40:10: warning: ADC01: Passing address of char 'value' where a null-terminated string may be expected
+    f(0, &value, 1); // not OK
+         ^
+csamisc_charvsstring.t.cpp:45:10: warning: ADC01: Passing address of char 'value' where a null-terminated string may be expected
+    g g3(&value); // not OK
+         ^
+csamisc_charvsstring.t.cpp:45:10: warning: ADC01: Passing address of char 'value' where a null-terminated string may be expected
+csamisc_charvsstring.t.cpp:49:13: warning: ADC01: Passing address of char 'value' where a null-terminated string may be expected
+    g g7(0, &value); // not OK
+            ^
+csamisc_charvsstring.t.cpp:49:13: warning: ADC01: Passing address of char 'value' where a null-terminated string may be expected
+csamisc_charvsstring.t.cpp:54:8: warning: ADC01: Passing address of char 'value' where a null-terminated string may be expected
+    g3(&value); // not OK
+       ^
+csamisc_charvsstring.t.cpp:58:11: warning: ADC01: Passing address of char 'value' where a null-terminated string may be expected
+    g7(0, &value); // not OK
+          ^
+9 warnings generated.

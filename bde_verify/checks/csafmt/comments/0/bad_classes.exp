@@ -1,0 +1,22 @@
+bad_classes.t.cpp:2:12: warning: CLS01: '//@CLASSES:' line should contain no other text (classes go on subsequent lines, one per line)
+//@CLASSES: a::b
+           ^
+bad_classes.t.cpp:2:17: warning: CLS02: Class name must be followed by ': description'
+//@CLASSES: a::b
+                ^
+bad_classes.t.cpp:3:1: warning: CLS03: Badly formatted class line; should be '//  class: description'
+//    'd_e': f
+^
+bad_classes.t.cpp:4:1: warning: CLS03: Badly formatted class line; should be '//  class: description'
+//    'g::h': i
+^
+bad_classes.t.cpp:5:11: warning: CLS02: Class name must be followed by ': description'
+//    j::k
+          ^
+bad_classes.t.cpp:6:10: warning: CLS02: Class name must be followed by ': description'
+//    l_m
+         ^
+bad_classes.t.cpp:7:17: warning: CLS02: Class name must be followed by ': description'
+//    n::o::p::q
+                ^
+7 warnings generated.

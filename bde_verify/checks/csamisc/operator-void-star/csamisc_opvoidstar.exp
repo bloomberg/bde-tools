@@ -1,0 +1,19 @@
+csamisc_opvoidstar.t.cpp:8:13: warning: CB01: Consider using conversion to bsls::UnspecifiedBool<ConvX>::BoolType instead
+            operator const void *() const { return this; }
+            ^
+csamisc_opvoidstar.t.cpp:9:13: warning: CB01: Consider using conversion to bsls::UnspecifiedBool<ConvX>::BoolType instead
+            operator       void *()       { return this; }
+            ^
+csamisc_opvoidstar.t.cpp:10:13: warning: CB01: Consider using conversion to bsls::UnspecifiedBool<ConvX>::BoolType instead
+            operator bool        () const { return this; }
+            ^
+csamisc_opvoidstar.t.cpp:21:13: warning: CB01: Consider using conversion to bsls::UnspecifiedBool<ConvZ>::BoolType instead
+            operator const void *() const { return this; }
+            ^
+csamisc_opvoidstar.t.cpp:22:13: warning: CB01: Consider using conversion to bsls::UnspecifiedBool<ConvZ>::BoolType instead
+            operator       void *()       { return this; }
+            ^
+csamisc_opvoidstar.t.cpp:23:13: warning: CB01: Consider using conversion to bsls::UnspecifiedBool<ConvZ>::BoolType instead
+            operator bool        () const { return this; }
+            ^
+6 warnings generated.

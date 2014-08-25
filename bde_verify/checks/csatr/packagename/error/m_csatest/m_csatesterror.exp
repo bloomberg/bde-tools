@@ -1,0 +1,4 @@
+m_csatesterror.v.cpp:1:1: warning: PN01: Component file name 'm_csatesterror.v.cpp' in standalone component contains only one underscore
+// m_csatesterror.v.cpp                                               -*-C++-*-
+^
+1 warning generated.

@@ -1,0 +1,46 @@
+csafmt_whitespace.t.cpp:3:6: warning: ESP01: Space at end of line
+#if 0 
+     ^
+csafmt_whitespace.t.cpp:4:18: warning: TAB01: Tab character in source
+const char *a = "       ";
+                 ^
+csafmt_whitespace.t.cpp:5:18: warning: TAB01: Tab characters in source
+const char *b = "                       ";
+                 ^
+csafmt_whitespace.t.cpp:6:18: warning: TAB01: Tab characters in source
+const char *c = "                       x       ";
+                 ^
+csafmt_whitespace.t.cpp:6:22: warning: TAB01: Tab character in source
+const char *c = "                       x       ";
+                                         ^
+csafmt_whitespace.t.cpp:8:21: warning: TAB01: Tab character in source
+// const char *a = "    ";
+                    ^
+csafmt_whitespace.t.cpp:9:21: warning: TAB01: Tab characters in source
+// const char *b = "                    ";
+                    ^
+csafmt_whitespace.t.cpp:10:21: warning: TAB01: Tab characters in source
+// const char *c = "                    x       ";
+                    ^
+csafmt_whitespace.t.cpp:10:25: warning: TAB01: Tab character in source
+// const char *c = "                    x       ";
+                                         ^
+csafmt_whitespace.t.cpp:11:7: warning: ESP01: Space at end of line
+#endif 
+      ^
+csafmt_whitespace.t.cpp:13:11: warning: ESP01: Space at end of line
+int x = 7; 
+          ^
+csafmt_whitespace.t.cpp:14:11: warning: ESP01: Spaces at end of line
+int y = 7;  
+          ^
+csafmt_whitespace.t.cpp:15:6: warning: ESP01: Space at end of line
+#else 
+     ^
+csafmt_whitespace.t.cpp:16:14: warning: ESP01: Space at end of line
+// int x = 7; 
+             ^
+csafmt_whitespace.t.cpp:17:14: warning: ESP01: Spaces at end of line
+// int y = 7;  
+             ^
+15 warnings generated.

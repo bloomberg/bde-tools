@@ -1,0 +1,83 @@
+In file included from csastil_templatetypename.t.cpp:3:
+./csastil_templatetypename.t.h:16:28: warning: TY01: Template parameter uses 'typename' instead of 'class'
+        template <typename T>
+                           ^
+./csastil_templatetypename.t.h:16:28: warning: TY02: Template parameter uses single-letter name
+./csastil_templatetypename.t.h:20:32: warning: TY01: Template parameter uses 'typename' instead of 'class'
+            template <typename S> TemplateTypenameBad();
+                               ^
+./csastil_templatetypename.t.h:20:32: warning: TY02: Template parameter uses single-letter name
+./csastil_templatetypename.t.h:21:32: warning: TY01: Template parameter uses 'typename' instead of 'class'
+            template <typename SS> void foo();
+                               ^
+./csastil_templatetypename.t.h:27:32: warning: TY01: Template parameter uses 'typename' instead of 'class'
+            template <typename SS> TemplateTypenameMember();
+                               ^
+./csastil_templatetypename.t.h:28:32: warning: TY01: Template parameter uses 'typename' instead of 'class'
+            template <typename S> void foo();
+                               ^
+./csastil_templatetypename.t.h:28:32: warning: TY02: Template parameter uses single-letter name
+./csastil_templatetypename.t.h:31:28: warning: TY01: Template parameter uses 'typename' instead of 'class'
+        template <typename T>
+                           ^
+./csastil_templatetypename.t.h:31:28: warning: TY02: Template parameter uses single-letter name
+./csastil_templatetypename.t.h:38:29: warning: TY02: Template parameter uses single-letter name
+            template <class S> TemplateTypenameGood();
+                            ^
+./csastil_templatetypename.t.h:47:20: warning: TY01: Template parameter uses 'typename' instead of 'class'
+template <typename TT>
+                   ^
+./csastil_templatetypename.t.h:57:28: warning: TY01: Template parameter uses 'typename' instead of 'class'
+        template <typename AA, class BB, typename CC> void foo();
+                           ^
+./csastil_templatetypename.t.h:57:51: warning: TY01: Template parameter uses 'typename' instead of 'class'
+        template <typename AA, class BB, typename CC> void foo();
+                                                  ^
+csastil_templatetypename.t.cpp:6:20: warning: TY01: Template parameter uses 'typename' instead of 'class'
+template <typename T>
+                   ^
+csastil_templatetypename.t.cpp:6:20: warning: TY02: Template parameter uses single-letter name
+csastil_templatetypename.t.cpp:9:20: warning: TY01: Template parameter uses 'typename' instead of 'class'
+template <typename TT>
+                   ^
+csastil_templatetypename.t.cpp:18:32: warning: TY01: Template parameter uses 'typename' instead of 'class'
+            template <typename T>
+                               ^
+csastil_templatetypename.t.cpp:18:32: warning: TY02: Template parameter uses single-letter name
+csastil_templatetypename.t.cpp:25:28: warning: TY01: Template parameter uses 'typename' instead of 'class'
+        template <typename AA>
+                           ^
+csastil_templatetypename.t.cpp:28:32: warning: TY01: Template parameter uses 'typename' instead of 'class'
+            template <typename CC>
+                               ^
+csastil_templatetypename.t.cpp:35:20: warning: TY01: Template parameter uses 'typename' instead of 'class'
+template <typename CC>
+                   ^
+csastil_templatetypename.t.cpp:34:20: warning: TY01: Template parameter uses 'typename' instead of 'class'
+template <typename YY>
+                   ^
+csastil_templatetypename.t.cpp:42:24: warning: TY01: Template parameter uses 'typename' instead of 'class'
+    template <typename CC>
+                       ^
+csastil_templatetypename.t.cpp:44:28: warning: TY01: Template parameter uses 'typename' instead of 'class'
+        template <typename EE>
+                           ^
+csastil_templatetypename.t.cpp:51:20: warning: TY01: Template parameter uses 'typename' instead of 'class'
+template <typename HH>
+                   ^
+csastil_templatetypename.t.cpp:50:20: warning: TY01: Template parameter uses 'typename' instead of 'class'
+template <typename GG>
+                   ^
+csastil_templatetypename.t.cpp:58:24: warning: TY01: Template parameter uses 'typename' instead of 'class'
+    template <typename KK>
+                       ^
+csastil_templatetypename.t.cpp:61:28: warning: TY01: Template parameter uses 'typename' instead of 'class'
+        template <typename MM>
+                           ^
+csastil_templatetypename.t.cpp:68:20: warning: TY01: Template parameter uses 'typename' instead of 'class'
+template <typename PP>
+                   ^
+csastil_templatetypename.t.cpp:67:20: warning: TY01: Template parameter uses 'typename' instead of 'class'
+template <typename OO>
+                   ^
+31 warnings generated.

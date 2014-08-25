@@ -1,0 +1,66 @@
+csafmt_comments.t.cpp:3:28: warning: FVS01: The term "fully value-semantic" is deprecated; use a description appropriate to the component type
+// @DESCRIPTION: this is a fully value-semantic type, don't you know.
+                           ^~~~~~~~~~~~~~~~~~~~
+csafmt_comments.t.cpp:7:8: warning: BADB01: Incorrectly formed inheritance bubble
+//     ( Base_Class )
+       ^~~~~~~~~~~~~~
+csafmt_comments.t.cpp:7:8: note: BADB01: Correct format is
+//     ,-----------.
+//    (  Base_Class )
+//     `-----------'
+csafmt_comments.t.cpp:12:7: warning: BADB01: Incorrectly formed inheritance bubble
+//    ( Derived_Class )
+      ^~~~~~~~~~~~~~~~~
+csafmt_comments.t.cpp:12:7: note: BADB01: Correct format is
+//    ,--------------.
+//   (  Derived_Class )
+//    `--------------'
+csafmt_comments.t.cpp:17:4: warning: BADB01: Incorrectly formed inheritance bubble
+// ( Derived_Derived_Class )
+   ^~~~~~~~~~~~~~~~~~~~~~~~~
+csafmt_comments.t.cpp:17:4: note: BADB01: Correct format is
+//  ,----------------------.
+// (  Derived_Derived_Class )
+//  `----------------------'
+csafmt_comments.t.cpp:41:5: warning: AD01: Display should begin in column 5 (from start of comment)
+// (  Derived_Derived_Class )
+    ^
+csafmt_comments.t.cpp:46:12: warning: BW01: This text fits on the previous line - consider using bdewrap
+        // wrapped.
+           ^~~~~~~~
+csafmt_comments.t.cpp:55:4: warning: BW01: This text fits on the previous line - consider using bdewrap
+// world! This can wrap.
+   ^~~~~~
+csafmt_comments.t.cpp:61:4: warning: BW01: This text fits on the previous line - consider using bdewrap
+// 'world!' This can wrap.
+   ^~~~~~~~~~~~~~~~~~~~~~~
+csafmt_comments.t.cpp:67:4: warning: BW01: This text fits on the previous line - consider using bdewrap
+// "world!" This can wrap.
+   ^~~~~~~~~~~~~~~~~~~~~~~
+csafmt_comments.t.cpp:72:34: warning: PRP01: Invalid format for @PURPOSE line
+//@PURPOSE: None. Why even go on?
+                                 ^
+csafmt_comments.t.cpp:72:34: note: PRP01: Correct format is
+//@PURPOSE: None. Why even go on?.
+csafmt_comments.t.cpp:74:3: warning: PRP01: Invalid format for @PURPOSE line
+// @ Purpose :Too much space, too many dots...
+  ^
+csafmt_comments.t.cpp:74:3: note: PRP01: Correct format is
+//@PURPOSE: Too much space, too many dots.
+csafmt_comments.t.cpp:76:4: warning: PP01: The term "Pure procedure" is deprecated; use 'function'
+// Pure procedure? My god! It's full of pure procedures!
+   ^~~~~~~~~~~~~~
+csafmt_comments.t.cpp:76:41: warning: PP01: The term "pure procedures" is deprecated; use 'functions'
+// Pure procedure? My god! It's full of pure procedures!
+                                        ^~~~~~~~~~~~~~~
+csafmt_comments.t.cpp:90:1: warning: DC01: Description should contain single-quoted class name 'a::b'
+//@DESCRIPTION: flak
+^
+csafmt_comments.t.cpp:90:1: warning: DC01: Description should contain single-quoted class name 'c_d'
+csafmt_comments.t.cpp:92:14: warning: MOR01: The term "modifiable reference" is deprecated; use "reference offering modifiable access"
+// This is a modifiable reference, while this other one contains non-modifiable
+             ^~~~~~~~~~~~~~~~~~~~
+csafmt_comments.t.cpp:92:66: warning: MOR01: The term "non-modifiable references" is deprecated; use "references offering non-modifiable access"
+// This is a modifiable reference, while this other one contains non-modifiable
+                                                                 ^~~~~~~~~~~~~~
+17 warnings generated.

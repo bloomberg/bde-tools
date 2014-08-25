@@ -1,0 +1,22 @@
+csamisc_hashptr.t.cpp:11:53: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+    std::hash<                        char    *>()( "abc");
+                                                    ^
+csamisc_hashptr.t.cpp:13:52: warning: conversion from string literal to 'wchar_t *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+    std::hash<                        wchar_t *>()(L"abc");
+                                                   ^
+csamisc_hashptr.t.cpp:11:5: warning: HC01: Hash will depend only on the pointer value, not the contents, of the argument
+    std::hash<                        char    *>()( "abc");
+    ^
+csamisc_hashptr.t.cpp:12:5: warning: HC01: Hash will depend only on the pointer value, not the contents, of the argument
+    std::hash<const                   char    *>()( "abc");
+    ^
+csamisc_hashptr.t.cpp:13:5: warning: HC01: Hash will depend only on the pointer value, not the contents, of the argument
+    std::hash<                        wchar_t *>()(L"abc");
+    ^
+csamisc_hashptr.t.cpp:14:5: warning: HC01: Hash will depend only on the pointer value, not the contents, of the argument
+    std::hash<const                   wchar_t *>()(L"abc");
+    ^
+csamisc_hashptr.t.cpp:17:5: warning: HC01: Hash will depend only on the pointer value, not the contents, of the argument
+    std::hash<double *>()(&d);
+    ^
+7 warnings generated.

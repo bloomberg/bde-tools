@@ -1,0 +1,8 @@
+In file included from csatr_usingdeclarationinheader.t.cpp:3:
+./csatr_usingdeclarationinheader.t.hpp:22:36: warning: TR16: Namespace level using declaration in header file
+        using bde_verify::csamisc::foo;
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+./csatr_usingdeclarationinheader.t.hpp:26:28: warning: TR16: Namespace level using declaration in header file
+using bde_verify::csamisc::foo;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+2 warnings generated.

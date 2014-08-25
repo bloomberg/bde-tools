@@ -1,0 +1,8 @@
+In file included from csatr_usingdirectiveinheader.t.cpp:3:
+./csatr_usingdirectiveinheader.t.hpp:14:17: warning: TR16: Namespace level using directive for 'bde_verify' in header file
+using namespace bde_verify;
+                ^
+./csatr_usingdirectiveinheader.t.hpp:18:21: warning: TR16: Namespace level using directive for 'bde_verify' in header file
+    using namespace bde_verify;
+                    ^
+2 warnings generated.

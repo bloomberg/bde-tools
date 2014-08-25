@@ -1,0 +1,219 @@
+#!/usr/bin/perl -w
+# bde_verify                                                         -*-perl-*-
+
+# Bde_verify is a static analysis tool that verifies that source code adheres 
+# to the BDE coding standards.  Many of the checks are specific to Bloomberg LP
+# and this wrapper script contains default options for the Bloomberg LP
+# environment.
+
+use strict;
+use Getopt::Long qw(:config no_ignore_case);
+use Cwd;
+
+my @known_systems = ('AIX', 'HP-UX', 'Linux', 'SunOS');
+chomp(my $system   = `uname -s`);
+$system = 'Linux' unless grep(/$system/, @known_systems);
+
+my @known_hw = ('powerpc', 'ia64', 'x86_64', 'sparc', 'i386');
+chomp (my $hw = `uname -p`);
+$hw = 'x86_64' unless grep(/$hw/, @known_hw);
+
+my $clangver = "3.4";
+my $gccver   = "4.8.1";
+my $home     = "/bb/mbigc/mbig816/src/bde-oss-tools/bde_verify";
+my $bb       = "/bb/build/$system-$hw-64" .
+               "/release/robolibs/trunk/lib/dpkgroot/opt/bb";
+my $config   = "$home/bde_verify.cfg";
+my @cl;
+#my $exe      = "$home/$system-clang-$clangver/bde_verify";
+#my $cc       = "/bb/mbigc/mbig816/llvm-$clangver/install-$system/bin/clang++";
+my $exe      = "$home/$system-gcc-$gccver/bde_verify";
+my $cc       = "/opt/swt/install/gcc-$gccver/bin/g++";
+my $debug    = "";
+my $verbose  = "";
+my $help     = "";
+my $definc   = 1;
+my $defdef   = 1;
+my @incs;
+my @defs;
+my @wflags;
+my @lflags = (
+    "cxx-exceptions",
+    "diagnostics-show-name",
+    "diagnostics-show-option",
+);
+my $dummy;
+my @dummy;
+my $std;
+my @std;
+my $warnoff;
+my $tlonly;
+my $rwd;
+my $tag;
+my $ovr = -1;
+
+my $command = join " \\\n ", $0, map { join "\\ ", split(/ /, $_, -1) } @ARGV;
+
+sub usage()
+{
+    print "
+usage: $0 [options] [additional compiler options] file.cpp ...
+    -I{directory}
+    -D{macro}
+    -w                       # disable normal compiler warnings
+    -W{warning}
+    -f{flag}
+    --config=config_file     [$config]  
+    --cl=config_line
+    --bb=dir                 [$bb]
+    --exe=bde_verify         [$exe]
+    --cc=/path/to/g++        [$cc]
+    --[no]definc             [$definc]
+    --[no]defdef             [$defdef]
+    --[no]ovr                # whether to define BSL_OVERRIDES_STD
+    --rewrite=dir
+    --toplevel
+    --std=type
+    --tag=string
+    --debug
+    --verbose
+    --help
+
+For full documentation, see {TEAM BDE:BDE_VERIFY<GO>} or
+<http://cms.prod.bloomberg.com/team/display/bde/bde_verify>.
+
+Invoked as:
+$command
+";
+    exit(1);
+}
+
+@ARGV = map { /^(-+[DIOWf])(.+)/ ? ($1, $2) : $_ } @ARGV;
+
+GetOptions(
+    'bb=s'       => \$bb,
+    'config=s'   => \$config,
+    'cl=s'       => \@cl,
+    'debug'      => \$debug,
+    'help|?'     => \$help,
+    'cc=s'       => \$cc,
+    'exe=s'      => \$exe,
+    'verbose|v'  => \$verbose,
+    'definc!'    => \$definc,
+    'defdef!'    => \$defdef,
+    'ovr!'       => \$ovr,
+    'rewrite=s'  => \$rwd,
+    'w'          => \$warnoff,
+    "I=s"        => \@incs,
+    "D=s"        => \@defs,
+    "W=s"        => \@wflags,
+    "f=s"        => \@lflags,
+    "std=s"      => \$std,
+    "toplevel"   => \$tlonly,
+    'tag=s'      => \$tag,
+    'llvm=s'     => \$dummy,
+    "m32|m64|pipe|pthread|MMD|g|c" => \$dummy,
+    "O|MF|o|march|mtune=s"         => \@dummy,
+) and !$help and $#ARGV >= 0 or usage();
+
+my @config = ("-plugin-arg-bde_verify", "config=$config")   if $config ne "";
+my @debug  = ("-plugin-arg-bde_verify", "debug-on")         if $debug;
+my @tlo    = ("-plugin-arg-bde_verify", "toplevel-only-on") if $tlonly;
+my @rwd    = ("-plugin-arg-bde_verify", "rewrite-dir=$rwd") if $rwd;
+print "No such directory $rwd\n" if $rwd and ! -d $rwd;
+my @tag    = ("-plugin-arg-bde_verify", "tool=$tag") if $tag;
+my %uf     = ( "no-strict-aliasing" => 1, "PIC" => 1 );
+@lflags = map { "-f$_" } grep { not exists $uf{$_} } @lflags;
+@wflags = map { "-W$_" } grep { not /,/ } @wflags;
+unshift @wflags, "-w" if $warnoff;
+
+push(@defs, ("BDE_VERIFY"));
+push(@defs, (
+    "BB_THREADED",
+    "BDE_BUILD_TARGET_DBG",
+    "BDE_BUILD_TARGET_EXC",
+    "BDE_BUILD_TARGET_MT",
+    "_LINUX_SOURCE",
+    "_REENTRANT",
+    "_SYS_SYSMACROS_H",
+    "_THREAD_SAFE",
+)) if $defdef;
+if ($ovr == 1 || $ovr != 0 && $defdef && !grep(m{\bb[sd]l[^/]*$}, @ARGV)) {
+    push(@defs, "BSL_OVERRIDES_STD");
+}
+@defs = map { "-D$_" } @defs;
+
+for (@ARGV) {
+    if (! -f) {
+        warn "Cannot find file $_\n";
+    } elsif (m{^(.*)/.*$}) {
+        push(@incs, $1) unless grep($_ eq $1, @incs);
+    } else {
+        push(@incs, ".") unless grep($_ eq ".", @incs);
+    }
+}
+push(@incs, (
+    "$bb/include",
+    "$bb/include/stlport",
+)) if $definc;
+for (@incs) { warn "cannot find directory $_\n" unless -d; }
+@incs = map { ( "-I", $_ ) }
+        map { $_ eq Cwd::cwd() ? "." : $_ }
+        map { Cwd::abs_path($_) }
+        grep { -d } @incs;
+unshift(@incs,
+        map { ( "-isystem", $_ ) }
+        map { Cwd::abs_path($_) }
+        grep { -d }
+        map { chomp; $_; }
+        qx{ $cc -xc++ -E -v /dev/null 2>&1 |
+            sed -n '/^#include/,/^End of search list/p' |
+            sed -n '/^ [/]/s/ //p'});
+
+push(@std, "-std=$std") if $std;
+
+@cl = map { ("-plugin-arg-bde_verify", "config-line=$_") } @cl;
+
+my @command = (
+    "$exe",
+    "-plugin",
+    "bde_verify",
+    @std,
+    @debug,
+    @config,
+    @tlo,
+    @rwd,
+    @tag,
+    @cl,
+    @defs,
+    @incs,
+    @lflags,
+    @wflags,
+    @ARGV);
+
+print join(" \\\n ", map { join "\\ ", split(/ /, $_, -1) } @command), "\n"
+                                                                   if $verbose;
+
+exec @command;
+
+## ----------------------------------------------------------------------------
+## Copyright (C) 2014 Bloomberg Finance L.P.
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy
+## of this software and associated documentation files (the "Software"), to
+## deal in the Software without restriction, including without limitation the
+## rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+## sell copies of the Software, and to permit persons to whom the Software is
+## furnished to do so, subject to the following conditions:
+##
+## The above copyright notice and this permission notice shall be included in
+## all copies or substantial portions of the Software.
+##
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+## IN THE SOFTWARE.
+## ----------------------------- END-OF-FILE ----------------------------------

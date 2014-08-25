@@ -1,0 +1,8 @@
+In file included from csatr_packagelegacy.t.cpp:3:
+./csatr_packagelegacy.t.h:22:8: warning: CP01: Globally visible identifier 'bde_verify::csat_packagelegacy' without component prefix
+struct csat_packagelegacy
+       ^
+./csatr_packagelegacy.t.h:26:8: warning: CP01: Globally visible identifier 'bde_verify::csatr_packagelegac' without component prefix
+struct csatr_packagelegac
+       ^
+2 warnings generated.

@@ -1,0 +1,7 @@
+csamisc_cstylecastused.t.cpp:15:24: warning: CC01: C-style cast is used
+                return (T*)1;
+                       ^~~~~
+csamisc_cstylecastused.t.cpp:22:20: warning: CC01: C-style cast is used
+            return (char*)1;
+                   ^~~~~~~~
+2 warnings generated.

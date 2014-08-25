@@ -1,0 +1,29 @@
+In file included from csastil_externalguards.t.cpp:3:
+./csastil_externalguards.t.h:13:2: warning: SEG02: Include guard 'INCLUDED_CSASCMVERSION' mismatch for included file 'csascm_version.h' - use 'INCLUDED_CSASCM_VERSION'
+#ifndef INCLUDED_CSASCMVERSION
+ ^
+./csastil_externalguards.t.h:23:2: warning: SEG02: Include guard 'INCLUDED_BDES_IDENT' mismatch for included file 'bdes_identi.h' - use 'INCLUDED_BDES_IDENTI'
+#if !defined INCLUDED_BDES_IDENT
+ ^
+./csastil_externalguards.t.h:26:2: warning: SEG02: Include guard 'INCLUDED_BDES_IDENT' mismatch for included file 'bdes_identi.h' - use 'INCLUDED_BDES_IDENTI'
+#if !defined(INCLUDED_BDES_IDENT)
+ ^
+./csastil_externalguards.t.h:29:2: warning: SEG02: Include guard 'INCLUDED_BDES_IDENT' mismatch for included file 'bdes_identi.h' - use 'INCLUDED_BDES_IDENTI'
+#ifndef INCLUDED_BDES_IDENT
+ ^
+./csastil_externalguards.t.h:32:2: warning: SEG01: Include guard 'INCLUDED_BDES_IDENT' without include file
+#ifndef INCLUDED_BDES_IDENT
+ ^
+./csastil_externalguards.t.h:35:2: warning: SEG01: Include guard 'INCLUDED_BDES_IDENT' without include file
+#ifndef INCLUDED_BDES_IDENT
+ ^
+./csastil_externalguards.t.h:38:2: warning: SEG01: Include guard 'INCLUDED_BDES_IDENT' without include file
+#ifndef INCLUDED_BDES_IDENT
+ ^
+./csastil_externalguards.t.h:40:1: warning: SEG03: Include of 'bdes_ident.h' without external include guard 'INCLUDED_BDES_IDENT'
+#include <bdes_ident.h>
+^
+./csastil_externalguards.t.h:42:1: warning: SEG03: Include of 'bdes_ident.h' without external include guard 'INCLUDED_BDES_IDENT'
+#  include <bdes_ident.h>
+^
+9 warnings generated.

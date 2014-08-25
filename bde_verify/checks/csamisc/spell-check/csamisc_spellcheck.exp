@@ -1,0 +1,22 @@
+csamisc_spellcheck.t.cpp:6:17: warning: SP01: Misspelled word 'baddly'
+// Misssspelled baddly.
+                ^~~~~~~
+csamisc_spellcheck.t.cpp:13:25: warning: SP01: Misspelled word 'judg'
+// Sphnx F Black Qurtz, Judg M Vo!
+                        ^~~~
+csamisc_spellcheck.t.cpp:6:4: warning: SP01: Misspelled word 'misssspelled'
+// Misssspelled baddly.
+   ^~~~~~~~~~~~
+csamisc_spellcheck.t.cpp:13:18: warning: SP01: Misspelled word 'qurtz'
+// Sphnx F Black Qurtz, Judg M Vo!
+                 ^~~~~~
+csamisc_spellcheck.t.cpp:13:4: warning: SP01: Misspelled word 'sphnx'
+// Sphnx F Black Qurtz, Judg M Vo!
+   ^~~~~
+csamisc_spellcheck.t.cpp:2:4: warning: SP01: Misspelled word 'ths'
+// Ths, but not "tht" or the "othr".
+   ^~~~
+csamisc_spellcheck.t.cpp:13:32: warning: SP01: Misspelled word 'vo'
+// Sphnx F Black Qurtz, Judg M Vo!
+                               ^~~
+7 warnings generated.

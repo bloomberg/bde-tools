@@ -1,0 +1,6 @@
+csafmt_headline.t.cpp:1:24: warning: HL01: File headline incorrect
+// csafmt_headline.t.cp                                             -*-C++-*-
+                       ^
+csafmt_headline.t.cpp:1:24: note: HL01: Correct format is
+// csafmt_headline.t.cpp                                              -*-C++-*-
+1 warning generated.
