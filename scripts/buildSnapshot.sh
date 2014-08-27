@@ -127,12 +127,6 @@ do \
     done
 done
 
-if [ $? -ne 0 ]
-then \
-    echo bde_snapshot.pl failed
-    exit 1
-fi
-
 PREV_PWD=$PWD
 
 if [ $GET_DOCS -ne 0 ]
