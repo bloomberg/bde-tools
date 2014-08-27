@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo SCRIPT-TRACE - running $0
+echo SCRIPT-TRACE - running $0 -- $*
 
 if [ -z "$4" ]
 then \

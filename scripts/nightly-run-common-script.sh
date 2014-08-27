@@ -27,7 +27,7 @@ then \
     exit 1
 fi
 
-echo SCRIPT-TRACE - running $0
+echo SCRIPT-TRACE - running $0 -- $*
 
 BDE_BSL_GIT_REPO=/home/bdebuild/bs/bsl-${BSL_TYPE}-${BUILD_TYPE}
 

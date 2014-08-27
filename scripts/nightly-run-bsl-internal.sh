@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo SCRIPT-TRACE - running $0
+echo SCRIPT-TRACE - running $0 -- $*
 
 SCRIPT_NAME=nightly-run-bsl-internal
 BUILD_TYPE=bslintdev
