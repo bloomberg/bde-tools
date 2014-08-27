@@ -104,6 +104,8 @@ do \
             rsync -av $path/groups/$group/*+* ./groups/$group/
         fi
     done
+
+    rsync -av $path/wscript ./
 done
 
 # Can't look for bsl anywhere but root repo until it's deleted from bde-core!
