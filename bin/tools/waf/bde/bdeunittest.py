@@ -95,11 +95,11 @@ class utest(Task.Task):
                 self.ut_exec += ('--junit=%s-junit.xml' % ut_exec).split(' ')
 
         proc = Utils.subprocess.Popen(self.ut_exec, cwd=cwd, env=fu,
-                                      stderr=Utils.subprocess.PIPE,
+                                      stderr=Utils.subprocess.STDOUT,
                                       stdout=Utils.subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
+        stdout = proc.communicate()[0]
 
-        tup = (filename, proc.returncode, stdout, stderr)
+        tup = (filename, proc.returncode, stdout)
         self.generator.utest_result = tup
 
         testlock.acquire()
@@ -131,24 +131,17 @@ def summary(bld):
     tfail = len([x for x in lst if x[1]])
 
     Logs.pprint('CYAN', '  tests that pass %d/%d' % (total-tfail, total))
-    for (f, code, out, err) in lst:
+    for (f, code, out) in lst:
         if not code:
             Logs.pprint('CYAN', '    %s' % f)
             if bld.options.show_test_out:
-                    msg = []
-                    msg.append(out)
-                    msg.append(err)
-                    Logs.pprint('CYAN', os.linesep.join(msg))
+                    Logs.pprint('CYAN', out)
 
     Logs.pprint('CYAN', '  tests that fail %d/%d' % (tfail, total))
-    for (f, code, out, err) in lst:
+    for (f, code, out) in lst:
         if code:
             Logs.pprint('CYAN', '    %s' % f)
-
-            msg = []
-            msg.append(out)
-            msg.append(err)
-            Logs.pprint('CYAN', os.linesep.join(msg))
+            Logs.pprint('CYAN', out)
 
     if tfail > 0:
         bld.fatal("Some tests failed.")
