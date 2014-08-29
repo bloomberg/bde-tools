@@ -455,7 +455,7 @@ class TestRunner:
                 # On Linux, at least, returncode is always forced to unsigned,
                 # but on Windows, at least, returncode is signed.
                 # Cygwin, bless its heart, sees a -1 return code as 127!
-                if returncode == -1 or returncode == 255 or returncode == 127:
+                if testNumber > 99 or returncode == -1 or returncode == 255 or returncode == 127:
                     # Missing test.  We're done.
                     return failures
 
