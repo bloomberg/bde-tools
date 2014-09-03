@@ -479,6 +479,10 @@ if __name__ == '__main__':
     out = None
     out = selectOutputType(commandLineOptions)
 
+    # Don't buffer sterr or stdout.
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+
     verbosityLevel = -1
     if commandLineOptions.verbosity:
         verbosityLevel = commandLineOptions.verbosity
