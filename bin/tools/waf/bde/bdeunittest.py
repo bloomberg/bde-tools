@@ -146,30 +146,7 @@ def summary(bld):
             Logs.pprint('CYAN', '>>>>>>>>>>')
 
     if tfail > 0:
-        bld.fatal("Some tests failed.")
-
-
-def set_exit_code(bld):
-    """
-    If any of the tests fail waf will exit with that exit code.
-    This is useful if you have an automated build system which need
-    to report on errors from the tests.
-    You may use it like this:
-
-        def build(bld):
-            bld(features='cxx cxxprogram test', source='main.c', target='app')
-            from waflib.Tools import waf_unit_test
-            bld.add_post_fun(waf_unit_test.set_exit_code)
-    """
-    lst = getattr(bld, 'utest_results', [])
-    for (f, code, out, err) in lst:
-        if code:
-            msg = []
-            if out:
-                msg.append('stdout:%s%s' % (os.linesep, out.decode('utf-8')))
-            if err:
-                msg.append('stderr:%s%s' % (os.linesep, err.decode('utf-8')))
-            bld.fatal(os.linesep.join(msg))
+        bld.fatal("Some tests failed. (%s)" % (str(bld.log_timer)))
 
 
 def options(opt):
