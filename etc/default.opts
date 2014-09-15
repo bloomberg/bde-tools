@@ -247,7 +247,7 @@
 !!  windows-*-*-*-cl-15.00  dbg  DBG_CFLAGS    =  /Zi /RTC1 /D_DEBUG
 !!  windows-*-*-*-cl-16.00  dbg  DBG_CXXFLAGS  =  /Zi /RTC1 /D_DEBUG
 !!  windows-*-*-*-cl-16.00  dbg  DBG_CFLAGS    =  /Zi /RTC1 /D_DEBUG
-!!  windows-                dbg  DBG_LDFLAGS   =  /D_debug
+!!  windows-                dbg  DBG_LDFLAGS   =  /debug
 
 # /RTC1 will disable optimization completely so we need to turn it off for opt_dbg builds
 !!  windows-*-*-*-cl-15.00  opt  DBG_CXXFLAGS  =  /Zi
