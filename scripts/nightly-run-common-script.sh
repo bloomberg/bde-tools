@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # this script requires that several variables be set - see
-# runFromGitDevThenAPI.sh for an example.
+# nightly-run-nextrel.sh for an example.
 
 # If the TARGET_OPTION variable is set in the environment (usually, from
 # OUTSIDE the script which calls this one), it should be set to a
