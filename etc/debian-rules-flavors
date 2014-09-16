@@ -5,8 +5,8 @@
 DEFAULT_STATIC_FLAVOR_32bit:=opt_exc_mt
 DEFAULT_STATIC_FLAVOR_64bit:=opt_exc_mt_64
 # DRQS 56729929 - remove opt_dbg_exc_mt_safe flavor
-STATIC_FLAVORS_32bit:=$(shell echo {opt,dbg,opt_dbg}_exc_mt) $(shell echo {opt,dbg}_exc_mt_safe)
-STATIC_FLAVORS_64bit:=$(shell echo {opt,dbg,opt_dbg}_exc_mt_64{,_safe} {opt,dbg}_exc_mt_64_pic)
+STATIC_FLAVORS_32bit:=$(shell echo {opt,dbg,opt_dbg}_exc_mt {opt,dbg}_exc_mt_safe)
+STATIC_FLAVORS_64bit:=$(shell echo {opt,dbg,opt_dbg}_exc_mt_64 {opt,dbg}_exc_mt_64_safe {opt,dbg}_exc_mt_64_pic)
 ifeq ($(shell uname),Linux)
  # DRQS 56729929 - add opt_exc_mt_pic for Linux
  STATIC_FLAVORS_32bit:=$(STATIC_FLAVORS_32bit) opt_exc_mt_pic
