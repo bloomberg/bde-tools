@@ -485,7 +485,6 @@ unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/opt/bb/include
 # categories.
 #==============================================================================
 
-
 unix-                   _   RANLIB          = $(RETRY_ON_EXIT) true $@
 !! unix-Darwin-*-*-*    _   RANLIB          = $(RETRY_ON_EXIT) ranlib $@
 windows-                _   RANLIB          =
