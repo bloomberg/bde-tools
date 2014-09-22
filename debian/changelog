@@ -1,5 +1,12 @@
-bde-tools (2.21.0.6) unstable; urgency=low
+bde-tools (2.22.0.3) unstable; urgency=low
 
+  * abe9c65 [APPROVAL] enable-brmwnydgenap05-builds to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 27 Aug 2014 13:50:16 -0400
+
+bde-tools (2.21.0.6) git; urgency=low
+
+  * 4fd9397 bump changelog to 2.21.0.6
   * 2ac5d8c bump Sun uplid to 5.12.3
   * 892e84f [APPROVAL] origin/review/use-absolute-uname-path-drqs-53743523 to master
   * 30c6b11 [APPROVAL] origin/review/sort-ufid-flags-drqs-52775437 to master
@@ -7,11 +14,16 @@ bde-tools (2.21.0.6) unstable; urgency=low
   * 0736efb [APPROVAL] origin/review/fix-bde_setwafenv-error-reporting-drqs-52770558 to master
   * d646426 [APPROVAL] pending/master/bde-tools-bde-bb-building-with-gcc-4.8.1-drqs-52016418 to master
   * d4a2f68 [APPROVAL] origin/review/break-bde_build-drqs52233823 to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 25 Jun 2014 13:48:26 -0400
+
+bde-tools (2.21.0.5) git; urgency=low
+
   * 4c924b7 bump changelog
   * 899556b [APPROVAL] origin/review/remove-waf-drqs-51904148 to master
   * 09ad096 [APPROVAL] origin/review/bde_setwafenv-error-handling-and-use-shell-drqs-52316856 to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 25 Jun 2014 13:47:30 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 8 May 2014 11:53:18 -0400
 
 bde-tools (2.21.0.4) git; urgency=low
 
