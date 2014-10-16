@@ -113,6 +113,13 @@ my @bslModeConversions = (
 
     sub {
         return doSubstitution(
+                    '(BloombergLP\s*::\s*)?\bbcema_SharedPtrNilDeleter\b'
+                  , "bslstl::SharedPtrNilDeleter"
+               );
+     },
+
+    sub {
+        return doSubstitution(
                     'BloombergLP\s*::\s*bdema_ManagedPtr'
                   , "BloombergLP::bslma::ManagedPtr"
                );
