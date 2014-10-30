@@ -1,5 +1,6 @@
 import os
 import os.path
+import platform
 import re
 import sys
 
@@ -41,8 +42,8 @@ def configure(ctx):
 
     ufid = _make_ufid_from_ctx(ctx)
 
-    platform = Utils.unversioned_sys_platform()
-    if platform == 'win32':
+    waf_platform = Utils.unversioned_sys_platform()
+    if waf_platform == 'win32':
         if '64' in ufid.ufid:
             ctx.options.msvc_targets = 'x64'
         else:
@@ -76,7 +77,7 @@ def configure(ctx):
                       'C compiler version: %s, '
                       'C++ compiler version: %s' % (cc_ver, cxx_ver))
 
-    uplid = _make_uplid_from_context(ctx)
+    uplid = _make_uplid_from_ctx(ctx)
     bde_configure = BdeWafConfigure(ctx)
     bde_configure.configure(uplid, ufid)
 
@@ -144,8 +145,8 @@ def _make_ufid_from_ctx(ctx):
     return Ufid(ufid)
 
 
-def _make_uplid_from_context(ctx):
-    platform = Utils.unversioned_sys_platform()
+def _make_uplid_from_ctx(ctx):
+    waf_platform = Utils.unversioned_sys_platform()
 
     from bdeoptions import get_linux_osinfo
     from bdeoptions import get_aix_osinfo
@@ -168,12 +169,13 @@ def _make_uplid_from_context(ctx):
         'darwin': _get_darwin_comp
         }
 
-    if platform not in osinfo_getters:
+    if waf_platform not in osinfo_getters:
         ctx.fatal('Unsupported platform: %s' % platform)
 
-    (os_type, os_name, os_ver) = osinfo_getters[platform](ctx)
-    (cpu_type, cxx, cxx_version) = _sanitize_comp(ctx,
-                                                  comp_getters[platform](ctx))
+    (os_type, os_name, os_ver) = osinfo_getters[waf_platform](ctx)
+    (cpu_type, cxx, cxx_version) = _sanitize_comp(
+        ctx,
+        comp_getters[waf_platform](ctx))
 
     uplid = Uplid(os_type,
                   os_name,
@@ -282,10 +284,23 @@ def _get_windows_comp(ctx):
 
 
 def _add_commandline_options(ctx):
+
+    def is_64bit_system():
+        # Determine whether the system is 64-bit capable by first checking
+        # whether we are running the 64-bit python interpreter.  If so, then we
+        # are done.  Otherwise, we match the current machine type with a set of
+        # known 64-bit machine types.
+
+        if sys.maxsize > 2**32:
+            return True
+
+        return platform.machine().lower()  \
+            in {'amd64', 'x86_64', 'sun4v', 'ppc64'}
+
     configure_opts = (
         (('a', 'abi-bits'),
          {'type': 'choice',
-          'default': '32',
+          'default': '64' if is_64bit_system() else '32',
           'choices': ('32', '64'),
           'help': '32 or 64 [default: %default]'}),
         (('b', 'build-type'),
