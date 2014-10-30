@@ -295,7 +295,7 @@ def _add_commandline_options(ctx):
             return True
 
         return platform.machine().lower()  \
-            in {'amd64', 'x86_64', 'sun4v', 'ppc64'}
+            in ('amd64', 'x86_64', 'sun4v', 'ppc64')
 
     configure_opts = (
         (('a', 'abi-bits'),
