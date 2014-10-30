@@ -65,7 +65,7 @@ class BdeWafConfigure(object):
         self.ctx.msg('comp_ver', uplid.uplid['comp_ver'])
         self.ctx.msg('uplid', uplid)
         self.ctx.msg('ufid', ufid)
-        self.ctx.msg('prefix', self.ctx.options.prefix)
+        self.ctx.msg('prefix', self.ctx.env['PREFIX'])
 
         self._load_metadata()
         self._configure_external_libs(ufid)
@@ -891,7 +891,6 @@ class BdeWafConfigure(object):
         self.ctx.env['package_pub'] = self.package_pub
         self.ctx.env['package_dums'] = self.package_dums
         self.ctx.env['libtype_features'] = self.libtype_features
-        self.ctx.env['prefix'] = self.ctx.options.prefix
         self.ctx.env['custom_envs'] = self.custom_envs
 
         self.ctx.env['package_type'] = self.package_type

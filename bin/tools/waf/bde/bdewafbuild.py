@@ -739,28 +739,30 @@ Cflags: -I${includedir} %s %s
     def signature(self):
         # Make sure that the signatures include the appropriate dependencies,
         # so that the .pc file will be regenerated when needed
-        self.hcode = Options.options.prefix + self.generator.lib_suffix + \
-            self.generator.install_lib_dir + self.generator.install_include_dir + \
-            ','.join(self.generator.pc_extra_include_dirs)
+        gen = self.generator
+        self.hcode = gen.bld.env['PREFIX'] + gen.lib_suffix + \
+            gen.install_lib_dir + gen.install_include_dir + \
+            ','.join(gen.pc_extra_include_dirs)
         ret = super(bdepc, self).signature()
         return ret
 
     def run(self):
-        bld = self.generator.bld
-        group_name = self.generator.group_name
-        version = self.generator.version
-        lib_suffix = self.generator.lib_suffix
-        install_lib_dir = self.generator.install_lib_dir
-        install_include_dir = self.generator.install_include_dir
+        gen = self.generator
+        bld = gen.bld
+        group_name = gen.group_name
+        version = gen.version
+        lib_suffix = gen.lib_suffix
+        install_lib_dir = gen.install_lib_dir
+        install_include_dir = gen.install_include_dir
         extra_include_dirs_str = \
             ' '.join(['-I%s' % d for d in
-                      self.generator.pc_extra_include_dirs])
+                      gen.pc_extra_include_dirs])
 
         libs = [bld.env['LIB_ST'] % l for l in
                 bld.env[group_name + '_export_libs']]
 
         pc_source = self.PKGCONFIG_TEMPLATE % (
-            Options.options.prefix,
+            bld.env['PREFIX'],
             install_lib_dir,
             install_include_dir,
             self.generator.doc[0],
