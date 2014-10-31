@@ -1,4 +1,4 @@
-# This opt file contains rules that is needed by the legacy bde_build.pl or
+# This opt file contains rules that are needed by the legacy bde_build.pl or
 # rules used only internally at Bloomberg.  It will be deprecated once the waf
 # build tool is mature.
 
@@ -493,7 +493,6 @@ unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/opt/bb/include
 # Rules used by bde_build.pl that does not fit with any of the above
 # categories.
 #==============================================================================
-
 
 unix-                   _   RANLIB          = $(RETRY_ON_EXIT) true $@
 !! unix-Darwin-*-*-*    _   RANLIB          = $(RETRY_ON_EXIT) ranlib $@
