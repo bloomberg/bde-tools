@@ -1,8 +1,17 @@
-bde-tools (2.22.0.3) unstable; urgency=low
+bde-tools (2.22.1.0) unstable; urgency=low
 
+  * 3ba71b6 [APPROVAL] add-nowhitespace-option-drqs-57928586 to releases/2.22.x
+  * 65520d2 [APPROVAL] shared_ptr_conversion_nildeleter_fix to master
+  * 595762f [APPROVAL] origin/review/add-xlc-12.1-support-drqs-56270209 to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 3 Nov 2014 08:10:07 -0500
+
+bde-tools (2.22.0.3) git; urgency=low
+
+  * ee44e46 bump changelog
   * abe9c65 [APPROVAL] enable-brmwnydgenap05-builds to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 27 Aug 2014 13:50:16 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 22 Sep 2014 12:22:29 -0400
 
 bde-tools (2.21.0.6) git; urgency=low
 
