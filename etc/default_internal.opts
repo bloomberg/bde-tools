@@ -182,6 +182,8 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-AIX-*-*-xlc-12.0  _  XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
 !! unix-AIX-*-*-xlc-12.0  _  XLC_LOCATION            = /bb/util/version12-032014/usr
 !! unix-AIX-*-*-xlc-12.0  _  XLC_QPATH               =
+!! unix-AIX-*-*-xlc-12.1  _  XLC_LOCATION            = /bb/util/version12-072014/usr
+!! unix-AIX-*-*-xlc-12.1  _  XLC_QPATH               =
 
 !! unix-AIX-*-*-xlc  _  XLC_INTERNAL_PREFIX1 = $(SET_TMPDIR) $(RETRY_ON_SIGNAL)
 !! unix-AIX-*-*-xlc  _  XLC_INTERNAL_PREFIX2 = $(XLC_LIBPATH) $(XLC_INTERNAL_PREFIX1)
@@ -528,6 +530,9 @@ unix-Linux-*-*-*        _   DEF_ENDLDFLAGS = $(RPATH_FLAGS)
 
 !! unix-Linux-*-*-gcc-clang     _  DEF_LDFLAGS = -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER)/32 -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER)/32 -Wl,-rpath -Wl,/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib
 !! unix-Linux-*-*-gcc-clang    64  DEF_LDFLAGS = -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64 -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64 -B/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER) -L/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib/gcc/x86_64-unknown-linux-gnu/$(CLANG_GCC_VER) -Wl,-rpath -Wl,/opt/swt/install/gcc-$(CLANG_GCC_VER)/lib64
+
+# DRQS 56729929 -- make -fPIC available in pic builds on Linux
+unix-Linux-*-*-gcc      pic  BDE_CXXFLAGS   = -fPIC
 
 #=== Default location for mapping prebuilt lib names to robocop lib names
 unix-  _  INTERNAL_LDFLAGS =  $(LIBPATH_FLAG)/bbsrc/bde/registry/lroot/lib/$(UPLID)

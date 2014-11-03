@@ -5,23 +5,37 @@ use warnings;
 use File::Copy;
 use Getopt::Long;
 
+my $isBslMode       = 0; # 0 for macro mode, 1 for bsl.
+my $isMacroMode     = 0; # 1 for macro mode, 0 for bsl.
+
+my $useBackups      = 0;
+
+my $isCheckMode     = 0;
+
+my $useNoWhitespace = 0;
+
+my $isHelp          = @ARGV==0;
+
 sub Usage()
 {
     return <<USAGE;
 $0 [-h|--help|--bsl|--macro] [--backups] [--check] files...
     -h or --help: print this help text and exit
 
-    --macro     : converts "BloombergLP::bcema_SharedPtr" into its
-                  macro equivalent to prepare for the bsl::shared_ptr
-                  transition.  This is the default!
+    --macro         : converts "BloombergLP::bcema_SharedPtr" into its macro
+                      equivalent to prepare for the bsl::shared_ptr transition.
+                      This is the default!
 
-    --bsl       : converts the --macro macros and the "old" bcema/bdema forms
-                  to their bsl equivalents.
+    --bsl           : converts the --macro macros and the "old" bcema/bdema
+                      forms to their bsl equivalents.
 
-    --backups   : saves backup files (.bak)
+    --backups       : saves backup files (.bak)
 
-    --check     : check-only mode - prints any files which would be modified, but
-                  has no on-disk effect (and ignores the --backups switch).
+    --check         : check-only mode - prints any files which would be
+                      modified, but has no on-disk effect (and ignores the
+                      --backups switch).
+
+    --nowhitespace  : do not pad replacement strings to preserve alignment
 
     This script converts C++ header/source files to help with the
     change from bcema/bslma pointer types into more-standard bsl types, working
@@ -87,9 +101,17 @@ sub doSubstitution {
     my $count             = 0;
     my $replacementLength = length($replacement);
 
-    while(s!$needle
-           !$replacement.(" "x(length($&)-$replacementLength))!gex) {
-        ++$count;
+    if ($useNoWhitespace) {
+        while(s!$needle
+               !$replacement!gx) {
+            ++$count;
+        }
+    }
+    else {
+        while(s!$needle
+               !$replacement.(" "x(length($&)-$replacementLength))!gex) {
+            ++$count;
+        }
     }
 
     return $count;
@@ -108,6 +130,13 @@ my @bslModeConversions = (
         return doSubstitution(
                     'bcema_SharedPtrUtil\s*::\s*dynamicCast'
                   , "bsl::dynamic_pointer_cast"
+               );
+     },
+
+    sub {
+        return doSubstitution(
+                    '(BloombergLP\s*::\s*)?\bbcema_SharedPtrNilDeleter\b'
+                  , "bslstl::SharedPtrNilDeleter"
                );
      },
 
@@ -175,20 +204,12 @@ my @bslModeConversions = (
      },
 );
 
-my $isBslMode   = 0; # 0 for macro mode, 1 for bsl.
-my $isMacroMode = 0; # 1 for macro mode, 0 for bsl.
-
-my $useBackups  = 0;
-
-my $isCheckMode = 0;
-
-my $isHelp      = @ARGV==0;
-
-GetOptions("bsl"     => \$isBslMode,
-           "macro"   => \$isMacroMode,
-           "backups" => \$useBackups,
-           "check"   => \$isCheckMode,
-           "h|help"  => \$isHelp,
+GetOptions("bsl"          => \$isBslMode,
+           "macro"        => \$isMacroMode,
+           "backups"      => \$useBackups,
+           "check"        => \$isCheckMode,
+           "nowhitespace" => \$useNoWhitespace,
+           "h|help"       => \$isHelp,
        );
 
 if ($isHelp) {
@@ -244,12 +265,15 @@ for my $originalFilename(@ARGV) {
     }
     else {
         while(<$inFile>) {
+            my $padding = " ";
+            $padding = "" if $useNoWhitespace;
             while(s!BloombergLP\s*::\s*(bcema_(SharedPtr|WeakPtr)|bdema_ManagedPtr)
-                !"BLOOMBERGLP_".uc($1)." "!egx
+                !"BLOOMBERGLP_".uc($1).$padding!egx
             ) {
                 ++$count;
             }
-            # Trailing space added to keep lengths equal
+            # Trailing space added to keep lengths equal as long as
+            # $useNoWhitespace is not in effect.
             print $outFile $_;
         }
     }
