@@ -71,6 +71,8 @@ use Util::Message qw(
 );
 use Util::Retry qw(:all);
 
+use Data::Dumper;
+
 # platform independent constant paths
 my $constant_path = join($PS, split(/:/, CONSTANT_PATH));
 
@@ -1005,6 +1007,8 @@ sub nopPackageTarget ($$$$$) { return 0; }
             #$make_cmd .= " ALLTEST_VERBOSE=-q";
             $make_cmd .= " ALLTEST_VERBOSE=-f";
         }
+
+        print Dumper(\%ENV), "\n" if (Util::Message::get_debug() >= 2);
 
         debug("$pkg $what: $make_cmd");
 
