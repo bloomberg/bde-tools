@@ -204,7 +204,7 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-SunOS-*-*-cc-5.10    _  STUDIO_LOC = /bb/util/common/SS12U1-20120621
 !! unix-SunOS-*-*-cc-5.11    _  STUDIO_LOC = /bb/util/common/SS12U1-20130312
 !! unix-SunOS-*-*-cc-5.12    _  STUDIO_LOC = /bb/util/common/SS12_3-20131030
-!! unix-SunOS-*-*-cc-5.12.3  _  STUDIO_LOC = /bb/util/common/SS12_3-20131030
+!! unix-SunOS-*-*-cc-5.12.3  _  STUDIO_LOC = /bb/util/common/SS12_3-20141031
 
 
 unix-SunOS-*-*-cc-5.12       _  DEF_CXXFLAGS = -features=rvalueref
