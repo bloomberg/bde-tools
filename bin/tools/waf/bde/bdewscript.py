@@ -201,12 +201,10 @@ def _make_uplid_from_ctx(ctx):
 
 
 def _sanitize_comp(ctx, comp):
-    # waf sets CXX to "gcc" for both clang and gcc. This function changes the
-    # cxx_name-cxx_version combination for clang to match the existing naming
-    # scheme used by uplids, which is "gcc-clang".
-    #
-    # TODO create and send in a patch to allow c_config.get_cc_version to set a
-    # variable to indicate that clang is in use
+    # `waf` sets `CXX` to `gcc` for both `clang` and `gcc`. This function
+    # changes the `cxx_name-cxx_version` combination for `clang` to distinctly
+    # identify `clang` when invoked as `gcc` and indicate the `clang` compiler
+    # version that `waf` correctly extracts into `CC_VERSION`.
 
     (cpu_type, cxx, cxx_version) = comp
 
@@ -233,7 +231,7 @@ def _sanitize_comp(ctx, comp):
     if out.find("__clang__ 1") < 0:
         return comp
 
-    return (cpu_type, 'gcc', 'clang')
+    return (cpu_type, 'clang', '.'.join(ctx.env.CC_VERSION))
 
 
 def _get_linux_comp(ctx):

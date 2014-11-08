@@ -119,7 +119,7 @@
 ++  *                     cpp11  CPP11_FLAGS   =  --this-compiler-does-not-have-cpp11-support-configured
 !!  unix-*-*-*-gcc-4.4.3  cpp11  CPP11_FLAGS   =  -std=c++0x
 !!  unix-*-*-*-gcc-4.7.0  cpp11  CPP11_FLAGS   =  -std=c++11
-!!  unix-*-*-*-gcc-clang  cpp11  CPP11_FLAGS   =  -std=c++11
+!!  unix-*-*-*-clang      cpp11  CPP11_FLAGS   =  -std=c++11
 ++  *                     cpp11  BDE_CXXFLAGS  =  $(CPP11_FLAGS)
 
 #==============================================================================
@@ -144,7 +144,8 @@
 
 #===
 
-++  unix-*-*-*-gcc          _     DEF_CFLAGS          =  -std=gnu99
+++  unix-*-*-*-gcc          _     DEF_CFLAGS          =  -pipe -std=gnu99
+++  unix-*-*-*-clang        _     DEF_CFLAGS          =  -pipe -std=gnu99
 ++  unix-*                  _     DEF_CFLAGS          =  -I$(DEPLOYED_INCLUDE)
 
 # DRQS 57720228: switch to target=generic.
@@ -154,7 +155,9 @@
 !!  unix-AIX-*-*-xlc-*      _     AIX_UNLOCK_STREAMS  =  -D__NOLOCK_ON_INPUT -D__NOLOCK_ON_OUTPUT
 !!  unix-AIX-*-*-xlc-10.0   _     DEF_CXXFLAGS        =  $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 # inline rather than inline and optimize
-!!  unix-*-*-*-gcc          _     DEF_CXXFLAGS        =
+!!  unix-*-*-*-gcc          _     DEF_CXXFLAGS        =  -pipe
+!!  unix-*-*-*-clang        _     DEF_CXXFLAGS        =  -pipe
+!!  unix-SunOS-*-*-gcc      _     DEF_CXXFLAGS        =  -pipe -mcpu=niagara2
 
 # DRQS 29544311 - some .so's linking against BCE and BAE fail unless the sources are built
 # with -xthreadvar=dynamic
@@ -225,7 +228,9 @@
 !!  unix-AIX-*-*-*    _    EXC_CXXFLAGS  =  -qnoeh
 !!  unix-AIX-*-*-*    exc  EXC_CXXFLAGS  =  -qeh -qlanglvl=newexcp
 !!  unix-*-*-*-gcc    _    EXC_CXXFLAGS  =  -fno-exceptions
+!!  unix-*-*-*-clang  _    EXC_CXXFLAGS  =  -fno-exceptions
 !!  unix-*-*-*-gcc    exc  EXC_CXXFLAGS  =  -fexceptions
+!!  unix-*-*-*-clang  exc  EXC_CXXFLAGS  =  -fexceptions
 # /EHsc is equivalent to /GX and supported since a least VC2003
 !!  windows-          exc  EXC_CXXFLAGS  =  /EHsc
 
@@ -250,6 +255,7 @@
 !!  unix-AIX-*-*-xlc-10.0   dbg  DBG_CXXFLAGS  =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 
 !!  unix-*-*-*-gcc          dbg  DBG_CXXFLAGS  =  -g
+!!  unix-*-*-*-clang        dbg  DBG_CXXFLAGS  =  -g
 
 !!  windows-*-*-*-cl-15.00  dbg  DBG_CXXFLAGS  =  /Zi /RTC1
 !!  windows-*-*-*-cl-15.00  dbg  DBG_CFLAGS    =  /Zi /RTC1
@@ -303,12 +309,16 @@
 
 !!  unix-                   opt  OPT_CFLAGS             =  -O -DNDEBUG
 !!  unix-*-*-*-gcc          opt  OPT_CFLAGS             =  -O2 -fno-strict-aliasing -DNDEBUG
+!!  unix-*-*-*-clang        opt  OPT_CFLAGS             =  -O2 -fno-strict-aliasing -DNDEBUG
 
 !!  unix-*-*-*-gcc          opt  OPT_EXTRA_64_CXXFLAGS  =
+!!  unix-*-*-*-clang        opt  OPT_EXTRA_64_CXXFLAGS  =
 !!  unix-*-*-*-gcc          64   OPT_EXTRA_64_CXXFLAGS  =  -fno-gcse
+!!  unix-*-*-*-clang        64   OPT_EXTRA_64_CXXFLAGS  =  -fno-gcse
 
 !!  unix-                   opt  OPT_CXXFLAGS           =  -O -DNDEBUG
 !!  unix-*-*-*-gcc          opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
+!!  unix-*-*-*-clang        opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
 # DRQS 57720228: Remove prefetch option
 !!  unix-SunOS-*-*-cc       opt  OPT_CXXFLAGS           =  -O -DNDEBUG -xbuiltin=%all
 !!  unix-AIX-*-*-xlc        opt  OPT_CXXFLAGS           =  -O -DNDEBUG -qalias=noansi
@@ -382,6 +392,8 @@
 !!  unix-SunOS-*-*-*    mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -mt
 !!  unix-AIX-*-*-*      mt       MT_CXXFLAGS  =  -D_THREAD_SAFE -qthreaded -D_REENTRANT
 !!  unix-*-*-*-gcc      mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT
+!!  unix-*-*-*-clang    mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT
+!!  unix-SunOS-*-*-gcc  mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT -pthreads
 
 # On SUN, we need to add -D_PTHREADS to compile in safe mode (don't know why).
 !!  unix-SunOS-*-*-*    mt_safe  MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -mt -D_PTHREADS
@@ -395,6 +407,7 @@
 !!  unix-SunOS-*-*-*    mt       MT_LDFLAGS   =  -Bdynamic -mt $(SHR_PRELDFLAGS)
 !!  unix-AIX-*-*-*      mt       MT_LDFLAGS   =  -bdynamic -lpthread $(SHR_PRELDFLAGS) -qthreaded
 !!  unix-*-*-*-gcc      mt       MT_LDFLAGS   =  -lthread
+!!  unix-*-*-*-clang    mt       MT_LDFLAGS   =  -lthread
 !!  unix-SunOS-*-*-gcc  mt       MT_LDFLAGS   =  -lthread
 !!  unix-AIX-*-*-gcc    mt       MT_LDFLAGS   =  -lpthread
 !!  unix-Linux-*-*-*    mt       MT_LDFLAGS   =  -lpthread
@@ -424,7 +437,7 @@
 *-*-*-*-gcc-4.2 _  GCCEXTRAWFLAGS  = -Wlogical-op -Wstrict-overflow -Wvla \
     -Wvolatile-register-var -fdiagnostics-show-option
 
-!! *-*-*-*-gcc-clang _  GCCEXTRAWFLAGS  = -Wcast-align -Wcast-qual \
+*-*-*-*-clang _  GCCEXTRAWFLAGS  = -Wcast-align -Wcast-qual \
     -Wall -Wextra -Wformat-security -Wformat-y2k -Winit-self \
     -Wno-long-long -Wno-unknown-pragmas \
     -Wpacked -Wpointer-arith \
@@ -436,7 +449,8 @@
 # error= to force these 64-bit portability warnings to be treated as errors.
 
 #unix-SunOS-*-*-gcc  64  GCCEXTRAWERROR  = error=
-unix-*-*-*-gcc   _  GCCEXTRAWERROR  =
+unix-*-*-*-gcc       _  GCCEXTRAWERROR  =
+unix-*-*-*-clang     _  GCCEXTRAWERROR  =
 
 unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
      -Wno-sign-conversion -W$(GCCEXTRAWERROR)conversion -W$(GCCEXTRAWERROR)address \
@@ -453,6 +467,10 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !!  *-*-*-*-gcc                64       CC64FLAGS                 =  -m64
 !!  *-*-x86_64-*-gcc           _        CC64FLAGS                 =  -m32 -march=pentium2 -mtune=opteron
 !!  *-*-x86_64-*-gcc           64       CC64FLAGS                 =  -m64 -mtune=opteron
+++  *-*-*-*-clang              _        CC64FLAGS                 =  -m32
+!!  *-*-*-*-clang              64       CC64FLAGS                 =  -m64
+!!  *-*-x86_64-*-clang         _        CC64FLAGS                 =  -m32 -march=pentium2 -mtune=opteron
+!!  *-*-x86_64-*-clang         64       CC64FLAGS                 =  -m64 -mtune=opteron
 
 # DRQS 10505346 -- switch to -xtarget=ultra3 for Sun, -qarch=pwr4 -qtune=pwr5 for AIX
 # old flags
@@ -477,6 +495,7 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 
 # DRQS 17197057 -- make -fPIC the default for 64-bit Linux builds
 ++  unix-Linux-*-*-gcc         64       CC64FLAGS                 =  -fPIC
+++  unix-Linux-*-*-clang       64       CC64FLAGS                 =  -fPIC
 
 # DRQS 22147649 -- allow PIC builds for static libs under SunOS
 ++  unix-SunOS-sparc-*-cc      pic      BDE_CXXFLAGS              =  -xcode=pic32
@@ -555,10 +574,14 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 
 
 !!  unix-Linux-*-*-gcc        _    LINUX_GCC_PATH     =  gcc
+!!  unix-Linux-*-*-clang      _    LINUX_GCC_PATH     =  gcc
 !!  unix-Linux-*-*-gcc        _    LINUX_GXX_PATH     =  g++
+!!  unix-Linux-*-*-clang      _    LINUX_GXX_PATH     =  g++
 
 !!  unix-Linux-*-*-gcc        _    CC                 =  $(LINUX_GCC_PREFIX) $(LINUX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!!  unix-Linux-*-*-clang      _    CC                 =  $(LINUX_GCC_PREFIX) $(LINUX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
 !!  unix-Linux-*-*-gcc        _    CXX                =  $(LINUX_GCC_PREFIX) $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+!!  unix-Linux-*-*-clang      _    CXX                =  $(LINUX_GCC_PREFIX) $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 
 !!  windows-*-*-*-cl-15.00    _    CC                 =  $(WINDOWS_CC_PREFIX) cl /TC /W4 $(CC64FLAGS)
 !!  windows-*-*-*-cl-16.00    _    CC                 =  $(WINDOWS_CC_PREFIX) cl /TC /W4 $(CC64FLAGS)
@@ -566,15 +589,15 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !!  windows-*-*-*-cl-16.00    _    CXX                =  $(WINDOWS_CC_PREFIX) cl /TP /W4 $(CXX64FLAGS)
 
 # for development only; use Clang instead of gcc
-!!  unix-Linux-*-*-gcc-clang  _    CLANG_GCC_VER_CPP  =  -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=7 -D__CLANG_GNUC_PATCHLEVEL__=0
+!!  unix-Linux-*-*-clang      _    CLANG_GCC_VER_CPP  =  -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=7 -D__CLANG_GNUC_PATCHLEVEL__=0
 !!  unix-Darwin-*-*-*         _    CLANG_GCC_VER_CPP  =  -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=2 -D__CLANG_GNUC_PATCHLEVEL__=1
-!!  unix-Linux-*-*-gcc-clang  _    CLANG_PATH         =  clang
-!!  unix-Linux-*-*-gcc-clang  _    CLANGXX_PATH       =  clang++
+!!  unix-Linux-*-*-clang      _    CLANG_PATH         =  clang
+!!  unix-Linux-*-*-clang      _    CLANGXX_PATH       =  clang++
 
-!!  unix-Linux-*-*-gcc-clang  _    CC                 =  $(CLANG_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC)
-!!  unix-Linux-*-*-gcc-clang  64   CC                 =  $(CLANG_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC_64)
-!!  unix-Linux-*-*-gcc-clang  _    CXX                =  $(CLANGXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC)
-!!  unix-Linux-*-*-gcc-clang  64   CXX                =  $(CLANGXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC_64)
+!!  unix-Linux-*-*-clang      _    CC                 =  $(CLANG_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC)
+!!  unix-Linux-*-*-clang      64   CC                 =  $(CLANG_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC_64)
+!!  unix-Linux-*-*-clang      _    CXX                =  $(CLANGXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC)
+!!  unix-Linux-*-*-clang      64   CXX                =  $(CLANGXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC_64)
 
 !!  unix-Darwin-*-*-def       _    CXX                =  $(RETRY_ON_SIGNAL) clang++ -D__unix $(CXX64FLAGS) $(CLANG_GCC_VER_CPP)
 
