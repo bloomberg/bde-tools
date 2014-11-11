@@ -69,7 +69,7 @@ if [[ $? -ne 0 ]]; then
     exit 8
 fi
 
-"${bindir}/arc-anon" diff
+"${bindir}/arc-anon" diff --reviewers $(${bindir}/map-bb-users-to-oss-arc-accounts $USER)
 if [[ $? -ne 0 ]]; then
     echo "Failed to create Phabricator review."
     exit 9
