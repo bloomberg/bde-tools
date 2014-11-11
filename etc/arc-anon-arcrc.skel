@@ -1,0 +1,8 @@
+{
+  "hosts" : {
+    "https:\/\/review.openbloomberg.com\/api\/" : {
+      "user" : "submissions",
+      "cert" : "ylorxmkxeiaonodec6st7jlc76vh36w4zdzmjjv7d5tjwpad5ieqk4ikhl2nbdnzcy3yhqw3zyp4pgdqtmf33xozm75pqmqctvb6emn5ropyr2nlzlkkw5ycnsqu6b4rol3wwm72twbtjzhh7n4elube6o4fc2k2im7we23nap6nezfxxaxsmczt3drc77wefqo3yu6mjptd6ehj5gquratryntqqdbcsn4z3ewchd357zu42m3imqjg45afl53"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+#!/bbs/opt/bin/perl
+
+use strict;
+use warnings;
+
+my %user_map = (
+    bchapman    => 'lalawala',
+    mgiroux     => 'RMGiroux',
+    cwilson9    => 'cwilson9',
+    hversche    => 'mversche',
+    amartin172  => 'adambde',
+    abeels      => 'abeels',
+    ameredit    => 'AlisdairM',
+    hrosen4     => 'hyrosen',
+    che2        => 'che2',
+);
+
+my $count = 0;
+
+foreach my $user(@ARGV) {
+    print " ",$user_map{$user}||$user;
+    ++$count;
+}
+
+print "\n" if $count;

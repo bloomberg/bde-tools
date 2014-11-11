@@ -1,0 +1,14 @@
+#!/bin/bash
+
+ARC_ANON_HOME=/tmp/arc-anon-$USER
+
+mkdir -p $ARC_ANON_HOME
+cp $(dirname $0)/../etc/arc-anon-arcrc.skel $ARC_ANON_HOME/.arcrc
+chmod 600 $ARC_ANON_HOME/.arcrc
+
+export HOME=$ARC_ANON_HOME
+export EDITOR=vi
+
+/bb/bde/oss/bin/oss-arc "$@"
+
+rm -rf $ARC_ANON_HOME
