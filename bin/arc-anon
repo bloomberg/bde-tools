@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export HOME=/bb/bde/oss/adopt
+export EDITOR=vi
+
+/bb/bde/oss/bin/oss-arc "$@"
+

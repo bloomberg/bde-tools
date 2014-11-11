@@ -1,0 +1,82 @@
+#!/bin/bash
+
+function cleanup () {
+    if [[ -n "$newremote" ]]; then
+        git remote rm "$newremote"
+    fi
+}
+
+trap cleanup EXIT
+
+newremote=''
+bindir=$(dirname "$0")
+
+if [[ $# -lt 2 ]] || [[ "$1" == "--help" ]]; then
+    echo "Usage: $0 <pull request id> <branch name>"
+    echo "   ex: $0 104 issue-104-fix-bufferallocator-example-drqs-47757222"
+    exit 1
+fi
+
+if [[ -n "${1//[0-9]/}" ]]; then
+    echo "Usage: $0 <pull request id> <branch name>"
+    echo "   ex: $0 104 issue-104-fix-bufferallocator-example-drqs-47757222"
+    echo "    <pull request id> must be an integer."
+    exit 2
+fi
+
+if [[ "$2" != "${2/ /}" ]]; then
+    echo "Usage: $0 <pull request id> <branch name>"
+    echo "   ex: $0 104 issue-104-fix-bufferallocator-example-drqs-47757222"
+    echo "    <branch name> may not contain any spaces."
+    exit 3
+fi
+
+if [[ "$2" == "$(echo $2 | sed 's/drqs[-_.][0-9]\+//gi')" ]]; then
+    echo "Usage: $0 <pull request id> <branch name>"
+    echo "   ex: $0 104 issue-104-fix-bufferallocator-example-drqs-47757222"
+    echo "    <branch name> must include the drqs number for this pull request."
+    exit 4
+fi
+
+if ! [[ -f "${bindir}/arc-anon" ]]; then
+    echo "Could not find scripts dir.  (Should be ${bindir})"
+    exit 5
+fi
+
+gh=$(git remote -v | grep -F 'https://github.com/bloomberg/bde.git' | grep fetch | cut -f 1)
+if [[ -z "$gh" ]]; then
+    gh=github-adopt
+    git remote add "$gh" https://github.com/bloomberg/bde.git
+    newremote="$gh"
+fi
+
+git fetch --no-tags "$gh" "pull/${1}/head:${2}"
+git checkout "$2"
+if [[ $? -ne 0 ]]; then
+    echo "Could not check out branch '${2}'."
+    exit 6
+fi
+
+devgit-push-branch review
+if [[ $? -ne 0 ]]; then
+    echo "Could not push branch '${2}' for review."
+    exit 7
+fi
+
+echo "New oss review branch: '${2}'.  Please sync." | mail -s "OSS sync request" abeels@bloomberg.net
+if [[ $? -ne 0 ]]; then
+    echo "Failed to send email to request sync."
+    exit 8
+fi
+
+"${bindir}/arc-anon" diff
+if [[ $? -ne 0 ]]; then
+    echo "Failed to create Phabricator review."
+    exit 9
+fi
+
+echo "Pull request ${1} has been fetched as branch '${2}'."
+echo "    Pushed to devgit as 'review/${2}'"
+echo "    Submitted to Phabricator (see output above for review ID)"
+echo "    You are currently on branch '${2}'"
+
