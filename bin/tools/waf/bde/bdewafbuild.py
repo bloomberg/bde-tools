@@ -25,6 +25,7 @@ class BdeWafBuild(object):
         self.export_groups = self.ctx.env['export_groups']
 
         self.sa_package_locs = self.ctx.env['sa_package_locs']
+        self.third_party_locs = self.ctx.env['third_party_locs']
         self.soname_override = self.ctx.env['soname_override']
         self.group_locs = self.ctx.env['group_locs']
 
@@ -260,6 +261,39 @@ class BdeWafBuild(object):
                  depends_on = [package_name + '_lib', package_name + '_tst']
                  )
 
+    def _build_third_party(self, package_name):
+        print "Trying to build a third party: %s"%(package_name)
+        self.ctx.recurse(package_name)
+        #
+
+        # Third party packages are architecturally at the same level as package
+        # groups, but have the same physical structure as regular packages.
+        # I.e., they can depend directly on other package groups and
+        # consititute a UOR (a library) that is on the same hierarchical level
+        # as a package group.  Therefore, the metadata for standard alone
+        # packages are stored together with package groups.
+
+        #package_node = self.ctx.path.make_node(
+            #self.third_party_locs[package_name]).make_node(package_name)
+        #deps = set(self.group_dep[package_name])
+        #internal_deps = deps - self.external_libs
+        #internal_deps = [g + '_lib' for g in internal_deps]
+        #external_deps = deps & self.external_libs
+        ## waf uses all uppercase words to identify pkgconfig based dependencies
+        #external_deps = [l.upper() for l in external_deps]
+#
+        #components = self.group_mem[package_name]
+#
+        #if package_name in self.export_groups:
+            #install_path = os.path.join('${PREFIX}', self.install_lib_dir)
+            #self._make_pc_group(package_name, internal_deps, external_deps)
+        #else:
+            #install_path = None
+#
+        #self._build_package_impl(package_name, package_node, package_node,
+                                 #components, internal_deps, external_deps,
+                                 #install_path)
+
     def _build_sa_package(self, package_name):
 
         # Standard alone packages are architecturally at the same level as
@@ -306,6 +340,8 @@ class BdeWafBuild(object):
         deps = set(self.group_dep[group_name])
         internal_deps = deps - self.external_libs
         external_deps = deps & self.external_libs
+        print "We think %s is out external deps"%(external_deps)
+        print "We think %s is out internal deps"%(internal_deps)
 
         # waf uses all uppercase words to identify pkgconfig based dependencies
         external_deps = [l.upper() for l in external_deps]
@@ -387,11 +423,19 @@ class BdeWafBuild(object):
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.custom_envs)
 
+        for tp in self.third_party_locs:
+            print "Third party: %s"%(tp)
+
+        print "Group deps: %s"%(self.group_dep)
+
         for g in self.group_dep:
-            if g not in self.sa_package_locs:
-                self._build_group(g)
-            else:
+            print "Exploring: %s"%(g)
+            if g in self.sa_package_locs:
                 self._build_sa_package(g)
+            elif g in self.third_party_locs:
+                self._build_third_party(g)
+            else:
+                self._build_group(g)
 
         if self.run_tests:
             self.ctx.add_post_fun(bdeunittest.summary)
