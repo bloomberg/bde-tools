@@ -1,6 +1,16 @@
-# This opt file contains rules that is needed by the legacy bde_build.pl.  It
-# will be deprecated once the waf build tool is mature.
+# This opt file contains rules that are needed by the legacy bde_build.pl or
+# rules used only internally at Bloomberg.  It will be deprecated once the waf
+# build tool is mature.
 
+#==============================================================================
+# Internal Rules
+#==============================================================================
+
+# Provide a way to selectively disable BSL_OVERRIDES_STD. The BSL_STD_FLAG is
+# used by bsl.defs, and the flag is disabled by bsl+bslhdrs.opts to compile the
+# pacakge's test drivers.
+
+!! *  _  BSL_STD_FLAG  =  $(SWITCHCHAR)DBSL_OVERRIDES_STD
 
 #==============================================================================
 # Rules for cygwin and FreeBSD
@@ -492,7 +502,6 @@ unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/opt/bb/include
 *           _   BDE_PRELDFLAGS  = $(SHR_PRELDFLAGS)
 *           _   BDE_LDFLAGS = $(SHR_LDFLAGS)
 *           _   BDE_ENDLDFLAGS  = $(SHR_ENDLDFLAGS)
-
 
 #==============================================================================
 # Misc Rules
