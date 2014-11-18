@@ -264,35 +264,6 @@ class BdeWafBuild(object):
     def _build_third_party(self, package_name):
         print "Trying to build a third party: %s"%(package_name)
         self.ctx.recurse(package_name)
-        #
-
-        # Third party packages are architecturally at the same level as package
-        # groups, but have the same physical structure as regular packages.
-        # I.e., they can depend directly on other package groups and
-        # consititute a UOR (a library) that is on the same hierarchical level
-        # as a package group.  Therefore, the metadata for standard alone
-        # packages are stored together with package groups.
-
-        #package_node = self.ctx.path.make_node(
-            #self.third_party_locs[package_name]).make_node(package_name)
-        #deps = set(self.group_dep[package_name])
-        #internal_deps = deps - self.external_libs
-        #internal_deps = [g + '_lib' for g in internal_deps]
-        #external_deps = deps & self.external_libs
-        ## waf uses all uppercase words to identify pkgconfig based dependencies
-        #external_deps = [l.upper() for l in external_deps]
-#
-        #components = self.group_mem[package_name]
-#
-        #if package_name in self.export_groups:
-            #install_path = os.path.join('${PREFIX}', self.install_lib_dir)
-            #self._make_pc_group(package_name, internal_deps, external_deps)
-        #else:
-            #install_path = None
-#
-        #self._build_package_impl(package_name, package_node, package_node,
-                                 #components, internal_deps, external_deps,
-                                 #install_path)
 
     def _build_sa_package(self, package_name):
 
