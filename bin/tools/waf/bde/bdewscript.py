@@ -54,12 +54,13 @@ def configure(ctx):
                       'CC': 'cc',
                       'xlC_r': 'xlc_r'}
 
-    if 'CXX' in os.environ and 'CC' not in os.environ:
-        cxx_path = os.environ['CXX']
+    if 'CXX' in ctx.environ and 'CC' not in ctx.environ:
+        cxx_path = ctx.environ['CXX']
         (head_cxx, tail_cxx) = os.path.split(cxx_path)
 
         if tail_cxx in matching_comps:
-            os.environ['CC'] = os.path.join(head_cxx, matching_comps[tail_cxx])
+            ctx.environ['CC'] = os.path.join(head_cxx,
+                                             matching_comps[tail_cxx])
 
     ctx.load('compiler_c')
     cc_ver = ctx.env.CC_VERSION
@@ -264,7 +265,7 @@ def _get_darwin_comp(ctx):
 
 
 def _get_windows_comp(ctx):
-    env = dict(os.environ)
+    env = dict(ctx.environ)
     env.update(PATH=';'.join(ctx.env['PATH']))
     err = ctx.cmd_and_log(ctx.env['CXX'], output=Context.STDERR, env=env)
 
