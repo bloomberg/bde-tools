@@ -11,7 +11,6 @@ def find_scc(conf):
 	v=conf.env
 	cc=None
 	if v['CC']:cc=v['CC']
-	elif'CC'in conf.environ:cc=conf.environ['CC']
 	if not cc:cc=conf.find_program('cc',var='CC')
 	if not cc:conf.fatal('Could not find a Sun C compiler')
 	try:
