@@ -262,7 +262,6 @@ class BdeWafBuild(object):
                  )
 
     def _build_third_party(self, package_name):
-        print "Trying to build a third party: %s"%(package_name)
         self.ctx.recurse(package_name)
 
     def _build_sa_package(self, package_name):
@@ -311,8 +310,6 @@ class BdeWafBuild(object):
         deps = set(self.group_dep[group_name])
         internal_deps = deps - self.external_libs
         external_deps = deps & self.external_libs
-        print "We think %s is out external deps"%(external_deps)
-        print "We think %s is out internal deps"%(internal_deps)
 
         # waf uses all uppercase words to identify pkgconfig based dependencies
         external_deps = [l.upper() for l in external_deps]
@@ -394,13 +391,7 @@ class BdeWafBuild(object):
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.custom_envs)
 
-        for tp in self.third_party_locs:
-            print "Third party: %s"%(tp)
-
-        print "Group deps: %s"%(self.group_dep)
-
         for g in self.group_dep:
-            print "Exploring: %s"%(g)
             if g in self.sa_package_locs:
                 self._build_sa_package(g)
             elif g in self.third_party_locs:

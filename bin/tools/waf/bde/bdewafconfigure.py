@@ -138,11 +138,8 @@ class BdeWafConfigure(object):
 
         group_nodes = groups_nodes + enterprise_nodes + wrapper_group_nodes
 
-        print "Third party mods..."
-
         for t in third_party_nodes:
             self.third_party_locs["third-party/" + t.name] = "third-party/" + t.name
-            print "Third party node detected: %s"%(t)
 
         for g in group_nodes:
             self.group_dep[g.name] = self._get_meta(g, 'group', 'dep')
@@ -184,9 +181,6 @@ class BdeWafConfigure(object):
 
             # assume that std-alone packages are not headers only and do not
             # have 'pub' files.
-
-        for tp in self.third_party_locs:
-            print "ThirdParty: %s"%(tp)
 
         for g in self.group_dep:
             for dep in self.group_dep[g]:
