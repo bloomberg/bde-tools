@@ -665,7 +665,7 @@ def get_suncc_version(conf,cc):
 @conf
 def add_as_needed(self):
 	if self.env.DEST_BINFMT=='elf'and'gcc'in(self.env.CXX_NAME,self.env.CC_NAME):
-		self.env.append_unique('LINKFLAGS','--as-needed')
+		self.env.append_unique('LINKFLAGS','-Wl,--as-needed')
 class cfgtask(Task.TaskBase):
 	def display(self):
 		return''

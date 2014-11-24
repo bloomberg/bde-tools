@@ -2,7 +2,7 @@
 # encoding: utf-8
 # WARNING! Do not edit! http://waf.googlecode.com/git/docs/wafbook/single.html#_obtaining_the_waf_file
 
-import re,sys
+import os,re,sys
 from waflib.Utils import threading
 wlock=threading.Lock()
 try:
@@ -226,7 +226,7 @@ try:
 except ImportError:
 	pass
 else:
-	if sys.stdout.isatty()or sys.stderr.isatty():
+	if(sys.stdout.isatty()or sys.stderr.isatty())and os.environ.get('TERM','')not in('dumb','emacs'):
 		FD=sys.stdout.isatty()and sys.stdout.fileno()or sys.stderr.fileno()
 		def fun():
 			return struct.unpack("HHHH",fcntl.ioctl(FD,termios.TIOCGWINSZ,struct.pack("HHHH",0,0,0,0)))[1]
