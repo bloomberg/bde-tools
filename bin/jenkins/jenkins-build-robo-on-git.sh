@@ -47,9 +47,10 @@ if [[ ! -d data ]]
 then \
     echo Initializing DPKG distro - should be needed only once
     dpkg-distro-dev init .
-    rm -rf source
-    ln -s $WORKSPACE/source .
 fi
+
+echo Synchronizing source trees
+rsync -a $WORKSPACE/source/ ./source/
 
 echo ================================
 echo ======= DPKG BUILD PHASE =======
