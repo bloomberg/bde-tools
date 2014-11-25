@@ -6,6 +6,12 @@ then \
     exit 1
 fi
 
+if [[ -z "$GIT_LOCATION" ]]
+then \
+    echo Must specify GIT_LOCATION environment variable
+    exit 1
+fi
+
 echo Operating in WORKSPACE $WORKSPACE
 
 cd "$WORKSPACE"
@@ -38,6 +44,11 @@ else
 fi
 
 #END   Copied from devgit:deveng/chimera contrib/dpkg
+
+if [[ ! -l source ]]
+then \
+    ln -s $GIT_LOCATION .
+fi
 
 if [[ ! -d data ]]
 then \
