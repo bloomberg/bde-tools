@@ -6,7 +6,7 @@ ifeq ($(UNAME),HP-UX)
 else ifeq ($(UNAME),SunOS)
  UPLID:=unix-SunOS-sparc-5.10-cc-5.12.3
 else ifeq ($(UNAME),AIX)
- UPLID:=unix-AIX-powerpc-6.1-xlc-11.2
+ UPLID:=unix-AIX-powerpc-6.1-xlc-12.2
 else ifeq ($(UNAME),Linux)
 PROCESSOR:=$(shell uname -p)
 ifeq ($(PROCESSOR),ppc64)
