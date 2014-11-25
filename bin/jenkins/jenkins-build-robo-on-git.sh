@@ -6,19 +6,19 @@ then \
     exit 1
 fi
 
-if [[ -z "$GIT_LOCATION" ]]
+if [[ -z "$DPKG_LOCATION" ]]
 then \
-    echo Must specify GIT_LOCATION environment variable
+    echo Must specify DPKG_LOCATION environment variable
     exit 1
 fi
 
-echo Operating in WORKSPACE $WORKSPACE
+echo Operating in WORKSPACE $WORKSPACE and DPKG_LOCATION $DPKG_LOCATION
 
-cd "$WORKSPACE"
+cd "$DPKG_LOCATION"
 
 if [ $? -ne 0 ]
 then \
-    echo FATAL: Unable to cd into $WORKSPACE
+    echo FATAL: Unable to cd into $DPKG_LOCATION
     exit 1
 fi
 
@@ -45,28 +45,12 @@ fi
 
 #END   Copied from devgit:deveng/chimera contrib/dpkg
 
-if [[ ! -l source ]]
-then \
-    if [[ ! -d source ]]
-    then \
-        echo FATAL: source directory is missing, and is not a symlink
-        exit 1
-    fi
-
-    echo Moving source directory to NFS for dpkg
-
-    rsync -av source/ $GIT_LOCATION/
-    rm -rf source
-    ln -s $GIT_LOCATION .
-
-    echo "    ===== moved source"
-    echo "    " $(ls -ld source)
-fi
-
 if [[ ! -d data ]]
 then \
     echo Initializing DPKG distro - should be needed only once
     dpkg-distro-dev init .
+    rm -rf source
+    ln -s $WORKSPACE/source .
 fi
 
 echo ================================
@@ -96,7 +80,7 @@ echo ================================
 echo ======= ROBO BUILD PHASE =======
 echo ================================
 
-cd robo
+cd $WORKSPACE/robo
 
 if [ $? -ne 0 ]
 then \
@@ -122,7 +106,7 @@ echo "    ================================"
 mkdir -p build
 cd       build
 
-DPKG_DISTRIBUTION="unstable --distro-override=\"$WORKSPACE\"/"          \
+DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"      \
     /opt/swt/install/make-3.82/bin/make --no-print-directory -j8 -k     \
     -f ../trunk/etc/buildlibs.mk INSTALLLIBDIR=$(pwd)/lib/              \
     TARGET=install robo_prebuild_libs subdirs 2>&1                      \
