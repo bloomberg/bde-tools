@@ -184,6 +184,8 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-AIX-*-*-xlc-12.0  _  XLC_QPATH               =
 !! unix-AIX-*-*-xlc-12.1  _  XLC_LOCATION            = /bb/util/version12-072014/usr
 !! unix-AIX-*-*-xlc-12.1  _  XLC_QPATH               =
+!! unix-AIX-*-*-xlc-12.2  _  XLC_LOCATION            = /bb/util/version12-102014/usr
+!! unix-AIX-*-*-xlc-12.2  _  XLC_QPATH               =
 
 !! unix-AIX-*-*-xlc  _  XLC_INTERNAL_PREFIX1 = $(SET_TMPDIR) $(RETRY_ON_SIGNAL)
 !! unix-AIX-*-*-xlc  _  XLC_INTERNAL_PREFIX2 = $(XLC_LIBPATH) $(XLC_INTERNAL_PREFIX1)
