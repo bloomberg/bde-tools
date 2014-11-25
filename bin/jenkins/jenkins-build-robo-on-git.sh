@@ -6,11 +6,9 @@ then \
     exit 1
 fi
 
-if [[ -z "$DPKG_LOCATION" ]]
-then \
-    echo Must specify DPKG_LOCATION environment variable
-    exit 1
-fi
+DPKG_LOCATION=/bb/bde/bdebuild/jenkins/$(hostname)/dpkg
+export DPKG_LOCATION
+mkdir -p $DPKG_LOCATION
 
 echo Operating in WORKSPACE $WORKSPACE and DPKG_LOCATION $DPKG_LOCATION
 
