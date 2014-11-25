@@ -8,7 +8,7 @@ fi
 
 echo Operating in WORKSPACE $WORKSPACE
 
-cd $WORKSPACE
+cd "$WORKSPACE"
 
 if [ $? -ne 0 ]
 then \
@@ -98,7 +98,7 @@ echo "    ================================"
 mkdir -p build
 cd       build
 
-DPKG_DISTRIBUTION="unstable --distro-override=$WORKSPACE/"              \
+DPKG_DISTRIBUTION="unstable --distro-override=\"$WORKSPACE\"/"          \
     /opt/swt/install/make-3.82/bin/make --no-print-directory -j8 -k     \
     -f ../trunk/etc/buildlibs.mk INSTALLLIBDIR=$(pwd)/lib/              \
     TARGET=install robo_prebuild_libs subdirs 2>&1                      \
