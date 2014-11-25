@@ -1,10 +1,19 @@
-bde-tools (2.22.1.0) unstable; urgency=low
+bde-tools (2.22.1.1.icbeta) unstable; urgency=low
 
+  * 3f2f8ca bump debian-rules-uplid to target xlc-12.2
+  * 009edf5 xlc version12-102014 support
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 25 Nov 2014 13:38:13 -0500
+
+bde-tools (2.22.1.0) git; urgency=low
+
+  * 957aea6 [APPROVAL] bump-changelog-to-2.22.1.0 to releases/2.22.x
+  * 0f4c73c bump changelog to 2.22.1.0
   * 3ba71b6 [APPROVAL] add-nowhitespace-option-drqs-57928586 to releases/2.22.x
   * 65520d2 [APPROVAL] shared_ptr_conversion_nildeleter_fix to master
   * 595762f [APPROVAL] origin/review/add-xlc-12.1-support-drqs-56270209 to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 3 Nov 2014 08:10:07 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 3 Nov 2014 08:10:44 -0500
 
 bde-tools (2.22.0.3) git; urgency=low
 
