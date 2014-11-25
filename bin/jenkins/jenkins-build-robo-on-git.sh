@@ -47,7 +47,20 @@ fi
 
 if [[ ! -l source ]]
 then \
+    if [[ ! -d source ]]
+    then \
+        echo FATAL: source directory is missing, and is not a symlink
+        exit 1
+    fi
+
+    echo Moving source directory to NFS for dpkg
+
+    rsync -av source/ $GIT_LOCATION/
+    rm -rf source
     ln -s $GIT_LOCATION .
+
+    echo "    ===== moved source"
+    echo "    " $(ls -ld source)
 fi
 
 if [[ ! -d data ]]
