@@ -1044,7 +1044,7 @@ sub makeMakefilePreamble ($$$$$$$) {
     my $group=$package->getGroup() || $package;
 
     # DRQS 12785861: include bbmkvars.mk and libmacros.mk
-    unless($^O=~/MSWin/) {
+    unless($^O=~/MSWin/ || ($^O=~/solaris/ && `uname -p`=~/i386/)) {
         # MS NMAKE doesn't have a "nofail" include syntax that
         # I can find quickly, and these files don't make sense
         # on Windows anyhow

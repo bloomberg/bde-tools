@@ -103,6 +103,7 @@
 *                       _       BDE_COMPILER_FLAG        = def
 !! windows              _       BDE_COMPILER_FLAG        = cl
 !! unix-SunOS           _       BDE_COMPILER_FLAG        = cc
+!! unix-SunOS-i386      _       BDE_COMPILER_FLAG        = gcc
 !! unix-AIX             _       BDE_COMPILER_FLAG        = xlc
 !! unix-Linux           _       BDE_COMPILER_FLAG        = gcc
 !! unix-Darwin          _       BDE_COMPILER_FLAG        = gcc
@@ -119,6 +120,7 @@
 !! unix-SunOS-i386-*-cc       _       BDE_COMPILERVERSION_FLAG = 5.11
 !! unix-SunOS-i386-*-cc      64       BDE_COMPILERVERSION_FLAG = 5.11
 !! unix-SunOS-*-*-gcc         _       BDE_COMPILERVERSION_FLAG = 4.3.2
+!! unix-SunOS-i386-*-gcc      _       BDE_COMPILERVERSION_FLAG = 4.8
 !! unix-AIX-*-*-gcc           _       BDE_COMPILERVERSION_FLAG = 3.4.3
 !! unix-AIX-*-*-xlc           _       BDE_COMPILERVERSION_FLAG = 11.2
 !! unix-Linux                 _       BDE_COMPILERVERSION_FLAG = 3.4.6
@@ -168,14 +170,14 @@
 unix-*-*-*-gcc      _   DEF_CFLAGS      = -pipe -std=gnu99
 unix-*              _   DEF_CFLAGS      = -I$(DEPLOYED_INCLUDE)
 
-!! unix-SunOS-*-*-cc-5.9 _  DEF_CXXFLAGS    = -m32 -xarch=sparcvis -xchip=generic -xcache=generic
-!! unix-SunOS-*-*-cc-5.9 64 DEF_CXXFLAGS    = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
-!! unix-SunOS-*-*-CC64   _  DEF_CXXFLAGS    =
-!! unix-AIX-*-*-xlc-*   _   AIX_UNLOCK_STREAMS = -D__NOLOCK_ON_INPUT -D__NOLOCK_ON_OUTPUT
-!! unix-AIX-*-*-xlc-10.0 _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
+!! unix-SunOS-sparc-*-cc-5.9    _   DEF_CXXFLAGS    = -m32 -xarch=sparcvis -xchip=generic -xcache=generic
+!! unix-SunOS-sparc-*-cc-5.9   64   DEF_CXXFLAGS    = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
+!! unix-SunOS-sparc-*-CC64      _   DEF_CXXFLAGS    =
+!! unix-AIX-*-*-xlc-*       _   AIX_UNLOCK_STREAMS = -D__NOLOCK_ON_INPUT -D__NOLOCK_ON_OUTPUT
+!! unix-AIX-*-*-xlc-10.0    _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 # inline rather than inline and optimize
-!! unix-*-*-*-gcc   _   DEF_CXXFLAGS    = -pipe
-!! unix-SunOS-*-*-gcc    _  DEF_CXXFLAGS    = -pipe -mcpu=ultrasparc3
+!! unix-*-*-*-gcc            _  DEF_CXXFLAGS    = -pipe
+!! unix-SunOS-sparc-*-gcc    _  DEF_CXXFLAGS    = -pipe -mcpu=ultrasparc3
 
 !! unix-SunOS       _   F77_HASFLAG = -xhasi=yes
 !! unix-SunOS       _   DEF_F77FLAGS    = -u -vax=bslash -vax=param -Nq2000 -Qoption f77pass1 $(F77_HASFLAG)
@@ -240,8 +242,8 @@ unix-          _   BDE_LDFLAGS =  $(INTERNAL_LDFLAGS)
 
 #===
 
-!! unix-SunOS-*-*-*     _   EXC_CXXFLAGS    = -features=no%except
-!! unix-SunOS-*-*-*     exc EXC_CXXFLAGS    = -features=except
+!! unix-SunOS-*-*-cc    _   EXC_CXXFLAGS    = -features=no%except
+!! unix-SunOS-*-*-cc    exc EXC_CXXFLAGS    = -features=except
 !! unix-AIX-*-*-*        _  EXC_CXXFLAGS    = -qnoeh
 !! unix-AIX-*-*-*   exc EXC_CXXFLAGS    = -qeh -qlanglvl=newexcp
 !! unix-*-*-*-gcc       _   EXC_CXXFLAGS    = -fno-exceptions
@@ -266,7 +268,7 @@ unix-          _   BDE_LDFLAGS =  $(INTERNAL_LDFLAGS)
 !! unix-        dbg DBG_CFLAGS      = -g
 
 !! unix-        dbg DBG_CXXFLAGS    = -g
-!! unix-SunOS-*-*-*-*    dbg     DBG_CXXFLAGS    = -g0
+!! unix-SunOS-*-*-cc     dbg     DBG_CXXFLAGS    = -g0
 !! unix-SunOS-*-*-cc-5.9 dbg     DBG_CXXFLAGS    = -g0 -xdebugformat=stabs
 !! unix-AIX-*-*-*        dbg     DBG_CXXFLAGS    = -g
 # -Q suppressed above
@@ -478,12 +480,12 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 
 # DRQS 10505346 -- switch to -xtarget=ultra3 for Sun, -qarch=pwr4 -qtune=pwr5 for AIX
 #old flags
-unix-SunOS-*-*-CC64     _   CC64FLAGS   =  -m32 -xarch=sparcvis -xchip=generic -xcache=generic
+unix-SunOS-sparc-*-CC64     _   CC64FLAGS   =  -m32 -xarch=sparcvis -xchip=generic -xcache=generic
 #new flags for 64 bits - override the
 # ultra3 setting
 unix-SunOS-sparc-*-cc   64  CC64FLAGS   = -xarch=v8plusa -xchip=generic -xcache=generic
 !! unix-SunOS-sparc-*-cc-5.9   64  CC64FLAGS   = -m64 -xarch=sparcvis -xchip=generic -xcache=generic
-unix-SunOS-i386-*-cc    64  CC64FLAGS   = -xtarget=ultra3 -xarch=amd64
+unix-SunOS-i386-*-cc    64  CC64FLAGS   = -xarch=amd64
 #done
 # DRQS 11679791 -- override ARCHTUNE so production 64-bit builds work
 # Changed 20110111 per gstrauss to match plink
