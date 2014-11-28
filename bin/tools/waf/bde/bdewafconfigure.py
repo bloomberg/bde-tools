@@ -12,7 +12,6 @@ class BdeWafConfigure(object):
         self.ctx = ctx
 
         self.external_libs = set()
-        self.third_party_libs = set()
         self.export_groups = []
         self.group_dep = {}
         self.group_mem = {}
@@ -73,8 +72,6 @@ class BdeWafConfigure(object):
         self._configure_external_libs(ufid)
         self._configure_options(uplid)
         self._save()
-        for t in self.third_party_locs:
-            self.group_dep[t] = []
 
     REMOVE_COMMENT_RE = re.compile(r'^([^#]*)(#.*)?$')
 
@@ -138,9 +135,6 @@ class BdeWafConfigure(object):
 
         group_nodes = groups_nodes + enterprise_nodes + wrapper_group_nodes
 
-        for t in third_party_nodes:
-            self.third_party_locs["third-party/" + t.name] = "third-party/" + t.name
-
         for g in group_nodes:
             self.group_dep[g.name] = self._get_meta(g, 'group', 'dep')
             self.group_mem[g.name] = self._get_meta(g, 'group', 'mem')
@@ -153,8 +147,8 @@ class BdeWafConfigure(object):
 
             self.group_locs[g.name] = g.parent.name
 
-        # stand-alone packages behaves like pakcage groups with a single
-        # package
+        # Stand-alone packages behaves like package groups with a single
+        # package.
         adapter_nodes = [x.parent.parent for x in
                          self.ctx.path.ant_glob('adapters/*/package/*.mem')]
         wrapper_package_nodes = [x.parent.parent for x in
@@ -163,6 +157,8 @@ class BdeWafConfigure(object):
         sa_package_nodes = adapter_nodes + wrapper_package_nodes
 
         for s in sa_package_nodes:
+            # Assume that std-alone packages are not headers only and do not
+            # have 'pub' files.
             self.group_dep[s.name] = self._get_meta(s, 'package', 'dep')
             self.group_mem[s.name] = self._get_meta(s, 'package', 'mem')
             self.group_defs[s.name] = self._get_raw_options(s, 'package',
@@ -179,15 +175,18 @@ class BdeWafConfigure(object):
             self.export_groups.append(s.name)
             self.sa_package_locs[s.name] = s.parent.name
 
-            # assume that std-alone packages are not headers only and do not
-            # have 'pub' files.
+        # Third party repos, similar to standard along packages, are
+        # hierarchically on the same level as package groups.  They also do not
+        # have any dependency on bde libraries.
+        for t in third_party_nodes:
+            third_party_name = "third-party/" + t.name
+            self.third_party_locs[third_party_name] = third_party_name
+            self.group_dep[third_party_name] = []
 
         for g in self.group_dep:
             for dep in self.group_dep[g]:
-                if dep in self.third_party_locs:
-                    self.third_party_libs.add(dep)
-                    self.ctx.recurse(dep);
-                elif dep not in self.group_dep:
+                if (dep not in self.group_dep and
+                        dep not in self.third_party_locs):
                     self.external_libs.add(dep)
 
         for group_node in group_nodes:
@@ -292,9 +291,9 @@ class BdeWafConfigure(object):
             # vc<vs_version>.pdb.  We want to use a separate pdb file for each
             # package group and standard alone package.
             if (self.option_mask.uplid.uplid['os_type'] == 'windows' and
-                self.option_mask.uplid.uplid['comp_type'] == 'cl'):
+                    self.option_mask.uplid.uplid['comp_type'] == 'cl'):
                 loc = self.group_locs[group] if group in self.group_locs else \
-                      self.sa_package_locs[group]
+                    self.sa_package_locs[group]
 
                 options['BDE_CXXFLAGS'] += " /Fd%s\\%s\\%s.pdb" % (
                     loc, group, group)
@@ -315,10 +314,10 @@ class BdeWafConfigure(object):
 
         for level in levels:
             for group_dependency in sorted(level):
-                if group_dependency not in self.external_libs:
-                    if group_dependency not in self.third_party_libs:
-                        defs.read(self.group_defs[group_dependency], self.ctx)
-                        defs.read(self.group_cap[group_dependency], self.ctx)
+                if (group_dependency not in self.external_libs and
+                        group_dependency not in self.third_party_locs):
+                    defs.read(self.group_defs[group_dependency], self.ctx)
+                    defs.read(self.group_cap[group_dependency], self.ctx)
 
         defs.read(self.group_defs[group], self.ctx)
         defs.read(self.group_cap[group], self.ctx)
@@ -493,8 +492,12 @@ class BdeWafConfigure(object):
 
         for g in self.group_dep:
             self.ctx.start_msg("Evaluating options for '%s'" % g)
-            status_msg = self._evaluate_group_options(g)
-            self.ctx.end_msg(status_msg)
+            if g in self.third_party_locs:
+                self.ctx.recurse(g)
+                self.ctx.end_msg("ok")
+            else:
+                status_msg = self._evaluate_group_options(g)
+                self.ctx.end_msg(status_msg)
 
         tmp_opts = copy.deepcopy(self.default_opts)
         tmp_opts.evaluate()
@@ -638,6 +641,20 @@ class BdeWafConfigure(object):
         self.ctx.env[package + '_stlibs'] = stlibs
         self.ctx.env[package + '_libpaths'] = libpaths
         self.ctx.env[package + '_linkflags'] = linkflags
+
+    def _save_third_party_options(self):
+        # Store options from default.opts for use by the third party packages.
+
+        self.default_opts.evaluate()
+        tmp_opts = copy.deepcopy(self.default_opts)
+        tmp_opts.evaluate()
+        options = tmp_opts.options
+
+        (cincludes, cflags) = self._parse_cflags(
+            options['CC'].split()[1:] +
+            options['COMPONENT_BDEBUILD_CXXFLAGS'].split())
+
+        self.ctx.env['BDE_THIRD_PARTY_CFLAGS'] = cflags
 
     def _load_group_vers(self):
         # This is a big hack to get the version numbers for package groups and
@@ -894,9 +911,6 @@ class BdeWafConfigure(object):
         self.ctx.env['group_doc'] = self.group_doc
         self.ctx.env['group_ver'] = self.group_ver
 
-        default_options= self.default_opts.evaluate()
-        self.ctx.env.thirdparty_c_compiler = default_options["CC"]
-
         self.ctx.env['sa_package_locs'] = self.sa_package_locs
         self.ctx.env['third_party_locs'] = self.third_party_locs
         self.ctx.env['soname_override'] = self.soname_override
@@ -921,10 +935,13 @@ class BdeWafConfigure(object):
         self.ctx.env['pc_extra_include_dirs'] = self.pc_extra_include_dirs
 
         for g in self.group_dep:
-            self._save_group_options(g)
+            if g not in self.third_party_locs:
+                self._save_group_options(g)
 
         for p in self.package_dep:
             self._save_package_options(p)
+
+        self._save_third_party_options()
 
         self.ctx.end_msg('ok')
 

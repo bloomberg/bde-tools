@@ -193,8 +193,6 @@ class Options(object):
         for opt in self.options.keys():
             self.options[opt] = self.evaluate_option(opt)
 
-        return self.options
-
     def evaluate_option(self, opt):
         if opt in self.options:
             self.options[opt] = re.sub(r'(\$\((\w+)\))',
