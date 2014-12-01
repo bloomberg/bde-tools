@@ -53,8 +53,8 @@ class BdeWafBuild(object):
 
         upd = os.path.dirname
         test_runner_path = os.path.join(
-            upd(upd(upd(os.path.realpath(__file__)))),
-            'run_unit_tests.py')
+            upd(upd(upd(upd(os.path.realpath(__file__))))),
+            'bde_runtest.py')
 
         self.ctx.options.testcmd = \
             '%s %s %%s --verbosity %s --timeout %s' % (
