@@ -179,9 +179,8 @@ class BdeWafConfigure(object):
         # hierarchically on the same level as package groups.  They also do not
         # have any dependency on bde libraries.
         for t in third_party_nodes:
-            third_party_name = "third-party/" + t.name
-            self.third_party_locs[third_party_name] = third_party_name
-            self.group_dep[third_party_name] = []
+            self.third_party_locs[t.name] = "third-party/" + t.name
+            self.group_dep[t.name] = []
 
         for g in self.group_dep:
             for dep in self.group_dep[g]:
@@ -493,7 +492,7 @@ class BdeWafConfigure(object):
         for g in self.group_dep:
             self.ctx.start_msg("Evaluating options for '%s'" % g)
             if g in self.third_party_locs:
-                self.ctx.recurse(g)
+                self.ctx.recurse(self.third_party_locs[g])
                 self.ctx.end_msg("ok")
             else:
                 status_msg = self._evaluate_group_options(g)
@@ -652,7 +651,7 @@ class BdeWafConfigure(object):
 
         (cincludes, cflags) = self._parse_cflags(
             options['CC'].split()[1:] +
-            options['COMPONENT_BDEBUILD_CXXFLAGS'].split())
+            options['COMPONENT_BDEBUILD_CFLAGS'].split())
 
         self.ctx.env['BDE_THIRD_PARTY_CFLAGS'] = cflags
 

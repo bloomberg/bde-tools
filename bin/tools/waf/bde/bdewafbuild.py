@@ -262,7 +262,7 @@ class BdeWafBuild(object):
                  )
 
     def _build_third_party(self, package_name):
-        self.ctx.recurse(package_name)
+        self.ctx.recurse(self.third_party_locs[package_name])
 
     def _build_sa_package(self, package_name):
 
