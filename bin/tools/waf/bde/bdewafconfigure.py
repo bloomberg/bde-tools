@@ -652,8 +652,14 @@ class BdeWafConfigure(object):
         (cincludes, cflags) = self._parse_cflags(
             options['CC'].split()[1:] +
             options['COMPONENT_BDEBUILD_CFLAGS'].split())
+        filtered_cflags = []
+        for f in cflags:
+            # Since we don't own the source code from third-party packages, do
+            # not enable warnings for them.
+            if not f.startswith('-W') or not f.startswith("/W"):
+                filtered_cflags.append(f)
 
-        self.ctx.env['BDE_THIRD_PARTY_CFLAGS'] = cflags
+        self.ctx.env['BDE_THIRD_PARTY_CFLAGS'] = filtered_cflags
 
     def _load_group_vers(self):
         # This is a big hack to get the version numbers for package groups and
