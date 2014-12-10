@@ -656,7 +656,7 @@ class BdeWafConfigure(object):
         for f in cflags:
             # Since we don't own the source code from third-party packages, do
             # not enable warnings for them.
-            if not f.startswith('-W') or not f.startswith("/W"):
+            if not f.startswith('-W') and not f.startswith("/W"):
                 filtered_cflags.append(f)
 
         self.ctx.env['BDE_THIRD_PARTY_CFLAGS'] = filtered_cflags
