@@ -147,14 +147,17 @@ class BdeWafConfigure(object):
 
             self.group_locs[g.name] = g.parent.name
 
-        # stand-alone packages behaves like pakcage groups with a single
+        # stand-alone packages behaves like package groups with a single
         # package
+
         adapter_nodes = [x.parent.parent for x in
                          self.ctx.path.ant_glob('adapters/*/package/*.mem')]
         wrapper_package_nodes = [x.parent.parent for x in
                                  self.ctx.path.ant_glob(
                                      'wrappers/*/package/*.mem')]
-        sa_package_nodes = adapter_nodes + wrapper_package_nodes
+        app_nodes = [x.parent.parent for x in
+                     self.ctx.path.ant_glob('applications/*/package/*.mem')]
+        sa_package_nodes = adapter_nodes + wrapper_package_nodes + app_nodes
 
         for s in sa_package_nodes:
             self.group_dep[s.name] = self._get_meta(s, 'package', 'dep')
@@ -216,6 +219,10 @@ class BdeWafConfigure(object):
     def _load_package_and_component_types(self):
 
         def load_package_types(package_name, component_names, package_node):
+            app_file = package_node.find_node(package_node.name + '.m.cpp')
+            if app_file:
+                self.app_packages.append(package_name)
+
             if 0 == len(component_names):
                 cpp_nodes = package_node.ant_glob('*.cpp')
                 self.package_type[package_name] = ('cpp' if 0 < len(cpp_nodes)
@@ -234,10 +241,6 @@ class BdeWafConfigure(object):
                     c_count += 1
 
             package_type = ('cpp' if c_count <= cpp_count else 'c')
-
-            app_file = package_node.find_node(package_node.name + '.m.cpp')
-            if app_file:
-                self.app_packages.append(package_name)
 
             self.package_type[package_name] = package_type
 
