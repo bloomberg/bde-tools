@@ -228,6 +228,7 @@ unix-SunOS-*-*-cc-5.12       _  DEF_CFLAGS   = -features=rvalueref
 !! unix-Linux-*-*-gcc-4.2         _  COMPILERPATH = /opt/swt/install/gcc-$(GCC_VER)/bin
 !! unix-Linux-*-*-gcc-clang       _  COMPILERPATH = /opt/swt/install/llvm-3.1-64/bin
 !! unix-Linux-ppc64-*             _  COMPILERPATH = /opt/at7.0/bin/
+!! unix-Linux-*-*-gcc-99.4.8.1    _  COMPILERPATH = /opt/bb/libexec/build-base/
 
 !! unix-Linux-*-*-gcc  _  LINUX_GCC_PREFIX = $(RETRY_ON_SIGNAL)
 
@@ -523,6 +524,26 @@ unix-Linux-*-*-gcc-4          _  RPATH_LIBDIR = lib
 # we don't want these options for the "built-in" gcc 4.1.2 on RHEL5,
 # so only enable RPATH starting from gcc-4.2
 unix-Linux-*-*-gcc-4.2        _  RPATH_FLAGS = -Wl,-rpath -Wl,/opt/swt/install/gcc-$(GCC_VER)/$(RPATH_LIBDIR)
+
+# flags for the "machine-learning" experimental distribution
+unix-Linux-*-*-gcc-99.4.8.1       _  USER_CXXFLAGS = -DBDE_BUILD_TARGET_CPP11 -std=c++11
+
+!! unix-Linux-*-*-gcc-99.4.8.1    _  COMPILERPATH = /opt/bb/libexec/build-base/
+
+!! unix-Linux-*-*-gcc-99.4.8.1    _  RPATH_SUFFIX =
+!! unix-Linux-*-*-gcc-99.4.8.1   64  RPATH_SUFFIX = 64
+
+!! unix-Linux-*-*-gcc-99.4.8.1    _  RPATH_FLAGS = -Wl,--enable-new-dtags,-R$(PREFIX)/lib$(RPATH_SUFFIX)
+
+!! unix-Linux-*-*-gcc-99.4.8.1    _  CC64FLAGS = -m32 -march=pentium2
+!! unix-Linux-*-*-gcc-99.4.8.1   64  CC64FLAGS = -m64 -mtune=opteron
+
+!! unix-Linux-*-*-gcc-99.4.8.1    _  LINKER_ARCH_FLAGS = -Wl,-melf_i386
+!! unix-Linux-*-*-gcc-99.4.8.1   64  LINKER_ARCH_FLAGS = -Wl,-melf_x86_64
+
+-- unix-Linux-*-*-gcc-99.4.8.1    _  BDE_PRELDFLAGS = $(LINKER_ARCH_FLAGS)
+
+
 
 unix-Linux-*-*-*        _   DEF_ENDLDFLAGS = $(RPATH_FLAGS)
 

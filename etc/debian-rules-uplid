@@ -8,12 +8,18 @@ else ifeq ($(UNAME),SunOS)
 else ifeq ($(UNAME),AIX)
  UPLID:=unix-AIX-powerpc-6.1-xlc-11.2
 else ifeq ($(UNAME),Linux)
-PROCESSOR:=$(shell uname -p)
-ifeq ($(PROCESSOR),ppc64)
- UPLID:=unix-Linux-ppc64-2.6.32-gcc-3.4.6
-else
- UPLID:=unix-Linux-x86_64-2.6.18-gcc-4.1.2
-endif
+ PROCESSOR:=$(shell uname -p)
+ ifeq ($(PROCESSOR),ppc64)
+  UPLID:=unix-Linux-ppc64-2.6.32-gcc-3.4.6
+ else
+  UPLID:=unix-Linux-x86_64-2.6.18-gcc-4.1.2
+ endif
+ ifeq ($(CXX),/opt/bb/libexec/build-base/g++)
+  UPLID:=unix-Linux-x86_64-2.6.32-gcc-99.4.8.1
+  USER_CXXFLAGS:=-std=c++11
+  export USER_CXXFLAGS
+  BDE_EXTRA_PATH=/opt/bb/libexec/build-base/
+ endif
 else
  $(error Unsupported platform $(UNAME))
 endif
