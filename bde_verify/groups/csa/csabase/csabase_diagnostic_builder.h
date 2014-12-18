@@ -13,7 +13,7 @@ class diagnostic_builder
 {
   public:
     diagnostic_builder();
-    explicit diagnostic_builder(clang::DiagnosticBuilder other);
+    diagnostic_builder(clang::DiagnosticBuilder other, bool always = false);
     diagnostic_builder& operator<<(long long argument);
     diagnostic_builder& operator<<(long argument);
     template <typename T>
@@ -30,10 +30,13 @@ diagnostic_builder::diagnostic_builder()
 {
 }
 
-inline
-diagnostic_builder::diagnostic_builder(clang::DiagnosticBuilder other)
+inline diagnostic_builder::diagnostic_builder(clang::DiagnosticBuilder other,
+                                              bool always)
 : empty_(false), builder_(other)
 {
+    if (always) {
+        builder_.setForceEmit();
+    }
 }
 
 inline

@@ -2,7 +2,8 @@
 FILES := joexx_traits.h
 ALL := on
 BDE_VERIFY_DIR ?= ../../../..
-BDE_VERIFY_ARGS = -cl='namespace BloombergLP'
+BDE_VERIFY_ARGS = -cl='namespace BloombergLP' \
+                  -cl='set standard_namespaces bsl std'
 include $(BDE_VERIFY_DIR)/checks/Makefile.inc
 
 ## ----------------------------------------------------------------------------

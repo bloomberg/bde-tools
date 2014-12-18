@@ -370,9 +370,8 @@ void break_into_words(std::vector<Word>* words,
                               noise);
         }
         if (!is_id) {
-            if (c == '\\') {
-                last_char_was_backslash = !last_char_was_backslash;
-            } else if (c == '\'') {
+            last_char_was_backslash = c == '\\' && !last_char_was_backslash;
+            if (c == '\'') {
                 if (in_word) {
                     if (in_single_quotes) {
                         in_single_quotes = false;
@@ -441,6 +440,11 @@ struct report
         // Return the 'SourceRange' of the function contract of the specified
         // 'func' if it is present in the specified range of 'comments_begin'
         // up to 'comments_end', and return an invalid 'SourceRange' otherwise.
+
+    void note_double_tick(SourceLocation *dt, llvm::StringRef tag);
+        // If the specified 'dt' is a valid location, issue a note with the
+        // specified 'tag' about a double tick at that location, and set 'dt'
+        // to an invalid location.
 
     void critiqueContract(const FunctionDecl *func, SourceRange comment);
         // Issue diagnostics for deficiencies in the specified 'comment' with
@@ -669,6 +673,16 @@ SourceRange word_range(SourceRange context, const Word& word)
     return getOffsetRange(context, word.offset, word.word.size() - 1);
 }
 
+void report::note_double_tick(SourceLocation *dt, llvm::StringRef tag)
+{
+    if (dt->isValid()) {
+        d_analyser.report(*dt, check_name, tag,
+                          "Possible mis-detection due to double tick",
+                          false, DiagnosticIDs::Note);
+        *dt = SourceLocation();
+    }
+}
+
 void report::critiqueContract(const FunctionDecl* func, SourceRange comment)
 {
     llvm::StringRef contract = d_analyser.get_source(comment);
@@ -712,6 +726,11 @@ void report::critiqueContract(const FunctionDecl* func, SourceRange comment)
     std::vector<Word> words;
     std::vector<ParmInfo> parm_info(num_parms);
     break_into_words(&words, &parm_info, contract, parms, noise);
+    SourceLocation dt;
+    size_t dtpos = contract.find("''");
+    if (dtpos != contract.npos) {
+        dt = cloc.getLocWithOffset(dtpos);
+    }
 
     for (size_t i = 0; i < num_parms; ++i) {
         const ParmVarDecl* parm = func->getParamDecl(i);
@@ -734,6 +753,7 @@ void report::critiqueContract(const FunctionDecl* func, SourceRange comment)
                 "Parameter '%0' is not documented in the function contract")
                 << name
                 << parm->getSourceRange();
+            note_double_tick(&dt, "FD03");
         }
 
         bool first = true;
@@ -807,6 +827,7 @@ void report::critiqueContract(const FunctionDecl* func, SourceRange comment)
                                 "parameter in a function contract using the "
                                 "phrase 'optionally specify'")
                             << r;
+                        note_double_tick(&dt, "FD05");
                     } else if (!specify_found) {
                         SourceRange r = word_range(comment, words[j]);
                         d_analyser.report(
@@ -816,6 +837,7 @@ void report::critiqueContract(const FunctionDecl* func, SourceRange comment)
                                 "in a function contract using the word "
                                 "'specified' or 'specify'")
                             << r;
+                        note_double_tick(&dt, "FD06");
                     }
                     first = false;
                 } else {
@@ -830,6 +852,7 @@ void report::critiqueContract(const FunctionDecl* func, SourceRange comment)
                                 "parameter in a function contract with the "
                                 "word 'specified' or 'specify'")
                                 << r;
+                            note_double_tick(&dt, "FD07");
                             break;
                         } else if (!word.is_noise) {
                             break;
@@ -863,6 +886,7 @@ void report::critiqueContract(const FunctionDecl* func, SourceRange comment)
                                 "function contract")
                             << parms[i]
                             << r;
+                        note_double_tick(&dt, "FD04");
                     }
                 }
             }

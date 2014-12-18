@@ -61,14 +61,18 @@ static void onCloseFile(Analyser* analyser,
                         std::string const& current,
                         std::string const& closed)
 {
+    SourceManager& m = analyser->manager();
+    if (location.isValid() && m.getMainFileID() == m.getFileID(location)) {
+        return;                                                       // RETURN
+    }
+
     FileName fn(closed);
     std::string component = llvm::StringRef(fn.component()).upper();
 
     leaking_macro& context(analyser->attachment<leaking_macro>());
     for (const auto& macro : context.d_macros.top()) {
         Location where(analyser->get_location(macro.second));
-        if (   where.file() != "<built-in>"
-            && where.file() != "<command line>"
+        if (   analyser->is_header(where.file())
             && macro.first.find("INCLUDED_") != 0
             && (   analyser->is_component_header(macro.second)
                 || macro.first.size() < 4)
@@ -76,8 +80,7 @@ static void onCloseFile(Analyser* analyser,
             )
         {
             analyser->report(macro.second, check_name, "SLM01",
-                             "Macro definition '%0' leaks from header",
-                             true)
+                             "Macro definition '%0' leaks from header")
                 << macro.first;
         }
     }
@@ -104,14 +107,24 @@ static void onMacroUndefined(Analyser* analyser,
     context.d_macros.top().erase(source);
 }
 
+static void onTranslationUnitDone(Analyser* analyser)
+{
+    SourceManager& m = analyser->manager();
+    onCloseFile(analyser,
+                SourceLocation(),
+                "",
+                m.getFilename(m.getLocForStartOfFile(m.getMainFileID())));
+}
+
 // ----------------------------------------------------------------------------
 
 static void subscribe(Analyser& analyser, Visitor&, PPObserver& observer)
 {
-    observer.onOpenFile       += bind(&analyser, &onOpenFile);
-    observer.onCloseFile      += bind(&analyser, &onCloseFile);
-    observer.onMacroDefined   += bind(&analyser, &onMacroDefined);
-    observer.onMacroUndefined += bind(&analyser, &onMacroUndefined);
+    observer.onOpenFile            += bind(&analyser, &onOpenFile);
+    observer.onCloseFile           += bind(&analyser, &onCloseFile);
+    observer.onMacroDefined        += bind(&analyser, &onMacroDefined);
+    observer.onMacroUndefined      += bind(&analyser, &onMacroUndefined);
+    analyser.onTranslationUnitDone += bind(&analyser, &onTranslationUnitDone);
 }
 
 // ----------------------------------------------------------------------------

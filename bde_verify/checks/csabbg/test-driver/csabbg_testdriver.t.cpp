@@ -3,7 +3,8 @@
 #include <bsl_cstdlib.h>
 #include <bsl_iostream.h>
 
-using namespace BloombergLP;
+namespace bde_verify { }
+using namespace bde_verify;
 using bsl::cout;
 using bsl::cerr;
 using bsl::endl;
@@ -16,7 +17,6 @@ using bsl::flush;
 ///                                  --------
 // Primary Manipulators:
 //: o void setF();
-//
 // Basic Accessors:
 //: o int F() const;
 //-----------------------------------------------------------------------------
@@ -121,8 +121,8 @@ int main(int argc, char *argv[])
         // --------------------------------------------------------------------
 
         if (verbose) {
-            cout << "Usage Example" << endl
-                 << "=============" << endl;
+            printf("Usage Example\n=============\n");
+
         }
 
         static volatile const bool b = false;
@@ -148,8 +148,8 @@ int main(int argc, char *argv[])
         // --------------------------------------------------------------------
 
         if (verbose) {
-            cout << "'f' AND 'setf'" << endl
-                 << "==========" << endl;
+            cout << endl << "'f' AND 'setf'" << endl << "==========" << '\n';
+
         }
       } break;
       case 1: {
@@ -167,8 +167,8 @@ int main(int argc, char *argv[])
         //   BREATHING TEST
         // --------------------------------------------------------------------
 
-        if (verbose) cout << "BREATHING TEST" << endl
-                          << "==============" << endl;
+        if (verbose) cout << "\nBREATHING TEST"
+                             "\n==============\n" << bsl::flush;
 
         extern int F();
 
@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
 //    bsl::basic_nonesuch : not there::more stuff
 
 #define x() x()
-namespace BloombergLP
+namespace bde_verify
 {
     struct joe {
         void setF();
@@ -295,6 +295,7 @@ namespace BloombergLP
         joe(int);
         ~joe();
         void x();
+        template <int N> void H();
     };
 }
 

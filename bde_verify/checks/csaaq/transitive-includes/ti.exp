@@ -1,0 +1,13 @@
+ti.cpp:4:21: warning: AQK01: Need #include <utility> for 'std::pair<int, int>'
+std::pair<int, int> p;
+                    ^
+ti.cpp:6:17: warning: AQK01: Need #include <ti5.h> for 'n'
+using namespace n;
+                ^
+ti.cpp:7:1: warning: AQK01: Need #include <ti4.h> for 't'
+t i;
+^
+ti.cpp:8:16: warning: AQK01: Need #include <ti3.h> for 'f'
+void (*pf)() = f;
+               ^
+4 warnings generated.

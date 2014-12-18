@@ -3,6 +3,7 @@
 #include <clang/Basic/SourceLocation.h>
 #include <clang/Basic/SourceManager.h>
 #include <csabase_analyser.h>
+#include <csabase_debug.h>
 #include <csabase_ppobserver.h>
 #include <csabase_registercheck.h>
 #include <llvm/ADT/StringRef.h>
@@ -39,7 +40,7 @@ struct report
         // The file specified by 'loc' is examined for long lines.
 
     void operator()();
-        // End of TU callback - examine main file.
+        // Called on end of translation unit.
 };
 
 report::report(Analyser& analyser)
@@ -51,7 +52,12 @@ void report::
 operator()(SourceLocation loc, std::string const&, std::string const&)
 {
     const SourceManager &m = d_analyser.manager();
-    FileID fid = m.getFileID(loc);
+
+    FileID fid = loc.isValid() ? m.getFileID(loc) : m.getMainFileID();
+    if (loc.isValid() && fid == m.getMainFileID()) {
+        return;                                                       // RETURN
+    }
+
     loc = m.getLocForStartOfFile(fid);
     llvm::StringRef b = m.getBufferData(fid);
 
@@ -71,17 +77,14 @@ operator()(SourceLocation loc, std::string const&, std::string const&)
 
 void report::operator()()
 {
-    (*this)(d_analyser.manager().getLocForEndOfFile(
-                d_analyser.manager().getMainFileID()),
-            std::string(),
-            std::string());
+    (*this)(SourceLocation(), "", "");
 }
 
 void subscribe(Analyser& analyser, Visitor&, PPObserver& observer)
     // Hook up the callback functions.
 {
     observer.onCloseFile += report(analyser);
-    analyser.onTranslationUnitDone += report(analyser);
+    // analyser.onTranslationUnitDone += report(analyser);
 }
 
 }  // close anonymous namespace

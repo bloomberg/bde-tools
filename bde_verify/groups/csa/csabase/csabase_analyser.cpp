@@ -10,9 +10,11 @@
 #include <clang/AST/Stmt.h>
 #include <clang/AST/Type.h>
 #include <clang/AST/UnresolvedSet.h>
+#include <clang/Basic/DiagnosticIDs.h>
 #include <clang/Basic/IdentifierTable.h>
 #include <clang/Basic/SourceManager.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Lex/HeaderSearch.h>
 #include <clang/Lex/Lexer.h>
 #include <clang/Lex/Preprocessor.h>
 #include <clang/Rewrite/Core/Rewriter.h>
@@ -20,12 +22,15 @@
 #include <clang/Sema/Sema.h>
 #include <csabase_checkregistry.h>
 #include <csabase_config.h>
+#include <csabase_debug.h>
 #include <csabase_filenames.h>
 #include <csabase_location.h>
 #include <csabase_ppobserver.h>
 #include <csabase_visitor.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallPtrSet.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/Path.h>
 #include <llvm/Support/Regex.h>
 #include <stddef.h>
 #include <algorithm>
@@ -43,7 +48,8 @@ csabase::Analyser::Analyser(CompilerInstance& compiler,
                             bool debug,
                             std::vector<std::string> const& config,
                             std::string const& name,
-                            std::string const& rewrite_dir)
+                            std::string const& rewrite_dir,
+                            std::string const& rewrite_file)
 : d_config(new Config(
       config.size() == 0 ? std::vector<std::string>(1, "load .bdeverify") :
                            config,
@@ -52,23 +58,16 @@ csabase::Analyser::Analyser(CompilerInstance& compiler,
 , compiler_(compiler)
 , d_source_manager(compiler.getSourceManager())
 , visitor_(new Visitor())
-, pp_observer_(new PPObserver(&d_source_manager, d_config.get()))
 , context_(0)
 , rewriter_(new Rewriter(compiler.getSourceManager(), compiler.getLangOpts()))
 , rewrite_dir_(rewrite_dir)
+, rewrite_file_(rewrite_file)
 {
-    CheckRegistry::attach(*this, *visitor_, *pp_observer_);
+    compiler_.getPreprocessor().addPPCallbacks(std::unique_ptr<PPCallbacks>(
+        new PPObserver(&d_source_manager, d_config.get())));
     compiler_.getPreprocessor().addCommentHandler(
-        pp_observer_->get_comment_handler());
-    compiler_.getPreprocessor().addPPCallbacks(pp_observer_);
-}
-
-csabase::Analyser::~Analyser()
-{
-    if (pp_observer_)
-    {
-        pp_observer_->detach();
-    }
+        pp_observer().get_comment_handler());
+    CheckRegistry::attach(*this, *visitor_, pp_observer());
 }
 
 // -----------------------------------------------------------------------------
@@ -100,12 +99,18 @@ ASTContext* csabase::Analyser::context()
 void csabase::Analyser::context(ASTContext* context)
 {
     context_ = context;
-    pp_observer_->Context();
+    pp_observer().Context();
 }
 
 CompilerInstance& csabase::Analyser::compiler()
 {
     return compiler_;
+}
+
+csabase::PPObserver& csabase::Analyser::pp_observer()
+{
+    return *static_cast<PPObserver *>(
+        compiler_.getPreprocessor().getPPCallbacks());
 }
 
 Rewriter& csabase::Analyser::rewriter()
@@ -116,6 +121,16 @@ Rewriter& csabase::Analyser::rewriter()
 std::string const& csabase::Analyser::rewrite_dir() const
 {
     return rewrite_dir_;
+}
+
+std::string const& csabase::Analyser::rewrite_file() const
+{
+    return rewrite_file_;
+}
+
+clang::tooling::Replacements const& csabase::Analyser::replacements() const
+{
+    return replacements_;
 }
 
 // -----------------------------------------------------------------------------
@@ -171,6 +186,28 @@ std::string const& csabase::Analyser::group() const
 std::string const& csabase::Analyser::component() const
 {
     return component_;
+}
+
+bool csabase::Analyser::is_source(std::string const& path) const
+{
+    FileName fn(path);
+    for (int i = 0; i < NSS; ++i) {
+        if (fn.extension().equals(source_suffixes[i])) {
+            return true;                                              // RETURN
+        }
+    }
+    return false;
+}
+
+bool csabase::Analyser::is_header(std::string const& path) const
+{
+    FileName fn(path);
+    for (int i = 0; i < NSS; ++i) {
+        if (fn.extension().equals(header_suffixes[i])) {
+            return true;                                              // RETURN
+        }
+    }
+    return false;
 }
 
 void csabase::Analyser::toplevel(std::string const& path)
@@ -229,6 +266,27 @@ bool csabase::Analyser::is_global_package(std::string const& pkg) const
     return in->second;
 }
 
+bool csabase::Analyser::is_system_header(llvm::StringRef file)
+{
+    auto i = is_system_header_.find(file);
+    if (i != is_system_header_.end()) {
+        return i->second;
+    }
+
+    const auto& hs = compiler().getPreprocessor().getHeaderSearchInfo();
+    for (auto i = hs.system_dir_begin(); i != hs.system_dir_end(); ++i) {
+        if (file.startswith(i->getName())) {
+            return is_system_header_[file] = true;
+        }
+    }
+    return is_system_header_[file] = false;
+}
+
+bool csabase::Analyser::is_system_header(SourceLocation sl)
+{
+    return is_system_header(manager().getFilename(sl));
+}
+
 bool csabase::Analyser::is_global_package() const
 {
     return is_global_package(package());
@@ -238,8 +296,16 @@ bool csabase::Analyser::is_standard_namespace(std::string const& ns) const
 {
     IsGlobalPackage::iterator in = is_standard_namespace_.find(ns);
     if (in == is_standard_namespace_.end()) {
+        std::string pat = ns;
+        for (size_t i = 0; i < pat.size(); ++i) {
+            if (pat[i] == ':') {
+                pat.insert(i, "(");
+                pat.append(")?");
+                ++i;
+            }
+        }
         llvm::Regex re("(" "^[[:space:]]*" "|" "[^[:alnum:]]" ")" +
-                       ns.substr(0, ns.find(':')) +
+                       pat +
                        "(" "[^[:alnum:]]" "|" "[[:space:]]*$" ")");
         in = is_standard_namespace_
                  .insert(std::make_pair(
@@ -294,18 +360,18 @@ csabase::Analyser::report(SourceLocation where,
                           std::string const& tag,
                           std::string const& message,
                           bool always,
-                          DiagnosticsEngine::Level level)
+                          DiagnosticIDs::Level level)
 {
     Location location(get_location(where));
-    if (   (always || is_component(location.file()))
-        && !config()->suppressed(tag, where))
-    {
-        unsigned int id(compiler_.getDiagnostics().
-            getCustomDiagID(level, tool_name() + tag + ": " + message));
-        return diagnostic_builder(
-            compiler_.getDiagnostics().Report(where, id));
+    if ((always || is_component(location.file())) &&
+        !config()->suppressed(tag, where)) {
+        unsigned int id(
+            compiler_.getDiagnostics().getDiagnosticIDs()->getCustomDiagID(
+                level, tool_name() + tag + ": " + message));
+        return csabase::diagnostic_builder(
+            compiler_.getDiagnostics().Report(where, id), always);
     }
-    return diagnostic_builder();
+    return csabase::diagnostic_builder();
 }
 
 // -----------------------------------------------------------------------------
@@ -347,12 +413,12 @@ SourceRange csabase::Analyser::get_line_range(SourceLocation loc)
 
     if (loc.isValid()) {
         SourceManager& sm(manager());
-        loc = sm.getFileLoc(loc);
+        loc = sm.getExpansionLoc(loc);
         FileID fid = sm.getFileID(loc);
-        size_t line_num = sm.getPresumedLineNumber(loc);
+        size_t line_num = sm.getExpansionLineNumber(loc);
         range.setBegin(sm.translateLineCol(fid, line_num, 1u));
         range.setEnd(sm.translateLineCol(fid, line_num, ~0u));
-    } 
+    }
 
     return range;
 }
@@ -419,7 +485,7 @@ void csabase::Analyser::process_translation_unit_done()
 namespace
 {
     NamedDecl*
-    lookup_name(Sema& sema, DeclContext* context, std::string const& name)
+    lookup_name(Sema& sema, DeclContext* context, llvm::StringRef name)
     {
         std::string::size_type colons(name.find("::"));
         IdentifierInfo const* info(
@@ -429,12 +495,13 @@ namespace
         LookupResult result(sema, nameInfo,
                                    colons == name.npos
                                    ? Sema::LookupUsingDeclName
-                                   : Sema::LookupNestedNameSpecifierName);
+                                   : Sema::LookupNestedNameSpecifierName,
+                                   Sema::ForRedeclaration);
         result.suppressDiagnostics();
 
         if (sema.LookupQualifiedName(result, context) &&
             result.begin() != result.end()) {
-            if (colons == name.npos)
+            if (colons == name.npos || colons == name.size() - 2)
             {
                 return *result.begin();
             }
@@ -442,6 +509,10 @@ namespace
                     llvm::dyn_cast<NamespaceDecl>(*result.begin())) {
                 return lookup_name(sema, decl, name.substr(colons + 2));
             }
+        }
+        std::string::size_type angle = name.find("<");
+        if (angle != name.npos) {
+            return lookup_name(sema, context, name.substr(0, angle));
         }
         return 0;
     }
@@ -557,6 +628,67 @@ bool csabase::Analyser::is_generated(SourceLocation loc) const
         bpos = p;
     }
     return bpos != buf.npos && pos < buf.find(eg, bpos);
+}
+
+// ----------------------------------------------------------------------------
+
+std::string
+csabase::Analyser::get_rewrite_file(std::string file)
+{
+    llvm::SmallVector<char, 512> path(
+        rewrite_dir_.begin(), rewrite_dir_.end());
+    llvm::sys::path::append(path, llvm::sys::path::filename(file));
+    return std::string(path.begin(), path.end()) + "-rewritten";
+}
+
+// ----------------------------------------------------------------------------
+
+int csabase::Analyser::InsertTextAfter(SourceLocation l, llvm::StringRef s)
+{
+    d_source_manager.getDecomposedExpansionLoc(l);
+    return ReplaceText(l.getLocWithOffset(1), 0, s);
+}
+
+int csabase::Analyser::InsertTextBefore(SourceLocation l, llvm::StringRef s)
+{
+    return ReplaceText(l, 0, s);
+}
+
+int csabase::Analyser::RemoveText(SourceRange r)
+{
+    return ReplaceText(r, "");
+}
+
+int csabase::Analyser::RemoveText(SourceLocation l, unsigned n)
+{
+    return ReplaceText(l, n, "");
+}
+
+int
+csabase::Analyser::ReplaceText(SourceLocation l, unsigned n, llvm::StringRef s)
+{
+    l = d_source_manager.getExpansionLoc(l);
+    d_source_manager.getDecomposedLoc(l);
+    tooling::Replacement r(d_source_manager, l, n, s);
+    replacements_.insert(r);
+    return 0;
+}
+
+int csabase::Analyser::ReplaceText(SourceRange r, llvm::StringRef s)
+{
+    unsigned n = d_source_manager.getFileOffset(
+                     d_source_manager.getExpansionLoc(r.getEnd())) -
+                 d_source_manager.getFileOffset(
+                     d_source_manager.getExpansionLoc(r.getBegin()));
+    return ReplaceText(r.getBegin(), n, s);
+}
+
+int csabase::Analyser::ReplaceText(
+          llvm::StringRef file, unsigned offset, unsigned n, llvm::StringRef s)
+{
+    tooling::Replacement r(file, offset, n, s);
+    replacements_.insert(r);
+    return 0;
 }
 
 // ----------------------------------------------------------------------------

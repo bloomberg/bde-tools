@@ -194,6 +194,57 @@ namespace bde_verify
             }
             return NULL;
         }
+
+        int f(int n)
+        {
+            switch (n) {
+              case 1:
+                return 7;
+              default:
+                ++n;
+                return n;
+              case 2:
+                return 8;
+            }
+        }
+
+        int g(int n)
+        {
+            switch (n) {
+              case 1:
+                return 7;
+              default:
+                return 0;
+              case 2:
+                return 8;
+            }
+        }
+
+        int h(int n)
+        {
+            switch (n) {
+              default:
+                return 7;
+              case 1:
+                ++n;
+                return n;
+              case 2:
+                return 8;                                             // RETURN
+            }
+        }
+
+        int i(int n)
+        {
+            switch (n) {
+              case 1:
+                switch (n) {
+                  case 1:
+                    return 7;
+                }
+              default:
+                return n;
+            }
+        }
     }
 }
 

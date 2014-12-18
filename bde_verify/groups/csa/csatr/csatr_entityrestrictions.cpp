@@ -5,10 +5,13 @@
 #include <clang/AST/Type.h>
 #include <clang/Basic/SourceLocation.h>
 #include <csabase_analyser.h>
+#include <csabase_config.h>
+#include <csabase_debug.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_registercheck.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/Support/Regex.h>
 #include <string>
 
 using namespace csabase;
@@ -20,9 +23,21 @@ static std::string const check_name("entity-restrictions");
 
 // ----------------------------------------------------------------------------
 
+static bool is_global_name(Analyser& analyser, NamedDecl const *decl)
+{
+    llvm::Regex re("(^ *|[^[:alnum:]])" +
+                   decl->getNameAsString() +
+                   "([^[:alnum:]]| *$)");
+    return re.match(
+        analyser.config()->value("global_names", decl->getLocation()));
+}
+
+// ----------------------------------------------------------------------------
+
 static void enum_declaration(Analyser& analyser, EnumDecl const* decl)
 {
-    if (llvm::dyn_cast<NamespaceDecl>(decl->getDeclContext())
+    if (   decl->getDeclContext()->isFileContext()
+        && !is_global_name(analyser, decl)
         && !decl->getLocation().isMacroID()
         && analyser.is_component_header(decl)
         && !analyser.is_standard_namespace(decl->getQualifiedNameAsString())) {
@@ -36,7 +51,8 @@ static void enum_declaration(Analyser& analyser, EnumDecl const* decl)
 
 static void var_declaration(Analyser& analyser, VarDecl const* decl)
 {
-    if (llvm::dyn_cast<NamespaceDecl>(decl->getDeclContext())
+    if (   decl->getDeclContext()->isFileContext()
+        && !is_global_name(analyser, decl)
         && !decl->getLocation().isMacroID()
         && analyser.is_component_header(decl)
         && !analyser.is_standard_namespace(decl->getQualifiedNameAsString())) {
@@ -62,7 +78,8 @@ is_swap(FunctionDecl const* decl)
 
 static void function_declaration(Analyser& analyser, FunctionDecl const* decl)
 {
-    if (llvm::dyn_cast<NamespaceDecl>(decl->getDeclContext())
+    if (   decl->getDeclContext()->isFileContext()
+        && !is_global_name(analyser, decl)
         && !decl->getLocation().isMacroID()
         && analyser.is_component_header(decl)
         && !decl->isOverloadedOperator()
@@ -89,7 +106,8 @@ static void typedef_declaration(Analyser& analyser, TypedefDecl const* decl)
     if (package.find("bslfwd_") == 0) {
         package = package.substr(7);
     }
-    if (llvm::dyn_cast<NamespaceDecl>(decl->getDeclContext())
+    if (   decl->getDeclContext()->isFileContext()
+        && !is_global_name(analyser, decl)
         && !decl->getLocation().isMacroID()
         && analyser.is_component_header(decl)
         && decl->getNameAsString().find(package) != 0

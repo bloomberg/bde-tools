@@ -16,6 +16,8 @@ namespace bde_verify
     }
 }
 
+#include <bsl_cstddef.h>
+
 // ----------------------------------------------------------------------------
 // Copyright (C) 2014 Bloomberg Finance L.P.
 //

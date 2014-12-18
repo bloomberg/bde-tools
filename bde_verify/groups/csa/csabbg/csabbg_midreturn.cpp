@@ -12,7 +12,6 @@
 #include <clang/Basic/SourceLocation.h>
 #include <clang/Basic/SourceManager.h>
 #include <clang/Lex/Lexer.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <csabase_analyser.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_location.h>
@@ -143,6 +142,28 @@ struct report
             d_data.d_all_returns.begin(), d_data.d_all_returns.end());
     }
 
+    bool isAllCasesReturn(const ReturnStmt *ret)
+    {
+        const data& d = d_analyser.attachment<data>();
+        const SwitchStmt *ss = d_analyser.get_parent<SwitchStmt>(ret);
+        if (ss) {
+            const SwitchCase *me = d_analyser.get_parent<SwitchCase>(ret);
+            if (!me || me->getSubStmt() != ret) {
+                return false;
+            }
+            for (const SwitchCase* sc = ss->getSwitchCaseList();
+                 sc;
+                 sc = sc->getNextSwitchCase()) {
+                if (llvm::dyn_cast<CaseStmt>(sc) &&
+                    !llvm::dyn_cast<ReturnStmt>(sc->getSubStmt())) {
+                    return false;                                     // RETURN
+                }
+            }
+            return true;                                              // RETURN
+        }
+        return false;
+    }
+
     void process_all_returns(std::set<const ReturnStmt*>::iterator begin,
                              std::set<const ReturnStmt*>::iterator end)
     {
@@ -153,7 +174,8 @@ struct report
             // Ignore final top-level return statements.
             if (!d.d_last_returns.count(*it) &&
                 d_analyser.is_component(*it) &&
-                !is_commented(*it, d.d_rcs.begin(), d.d_rcs.end())) {
+                !is_commented(*it, d.d_rcs.begin(), d.d_rcs.end()) &&
+                !isAllCasesReturn(*it)) {
                 d_analyser.report(*it, check_name, "MR01",
                         "Mid-function 'return' requires '// RETURN' comment");
                 SourceRange line_range =
@@ -166,10 +188,9 @@ struct report
                                       ) + "// RETURN";
                     d_analyser.report(*it, check_name, "MR01",
                                       "Correct text is\n%0",
-                                      false, DiagnosticsEngine::Note)
+                                      false, DiagnosticIDs::Note)
                         << line.str() + tag;
-                    d_analyser.rewriter().InsertTextAfter(
-                        line_range.getEnd(), tag);
+                    d_analyser.InsertTextAfter(line_range.getEnd(), tag);
                 }
             }
         }
@@ -221,11 +242,11 @@ struct report
                                       ) + "// RETURN";
                     d_analyser.report(*it, check_name, "MR01",
                             "Correct text is\n%0",
-                            false, DiagnosticsEngine::Note)
+                            false, DiagnosticIDs::Note)
                         << line.str() + tag;
                     line_range.setBegin(
                         line_range.getBegin().getLocWithOffset(line.size()));
-                    d_analyser.rewriter().ReplaceText(line_range, tag);
+                    d_analyser.ReplaceText(line_range, tag);
                 }
                 return true;
             }

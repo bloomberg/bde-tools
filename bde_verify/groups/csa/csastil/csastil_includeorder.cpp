@@ -5,6 +5,8 @@
 #include <clang/Basic/SourceManager.h>
 #include <clang/Lex/Token.h>
 #include <csabase_analyser.h>
+#include <csabase_config.h>
+#include <csabase_debug.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_ppobserver.h>
 #include <csabase_registercheck.h>
@@ -100,8 +102,8 @@ is_component(std::pair<std::string, SourceLocation> const& entry)
 // ----------------------------------------------------------------------------
 
 static void
-check_order(Analyser*                              analyser,
-            std::string const&                         message,
+check_order(Analyser*                                analyser,
+            std::string const&                       message,
             include_order::headers_t::const_iterator it,
             include_order::headers_t::const_iterator end)
 {
@@ -114,8 +116,8 @@ check_order(Analyser*                              analyser,
 }
 
 static void
-check_order(Analyser*                              analyser,
-            std::string const&                         message,
+check_order(Analyser*                                analyser,
+            std::string const&                       message,
             include_order::headers_t::const_iterator it,
             include_order::headers_t::const_iterator section_end,
             include_order::headers_t::const_iterator end)
@@ -136,6 +138,8 @@ check_order(Analyser*                       analyser,
             include_order::headers_t const& headers,
             bool                            header)
 {
+    include_order& data(analyser->attachment<include_order>());
+
     SourceLocation const* bdes_ident_location(0);
     if (headers.empty()) {
         analyser->report(SourceLocation(), check_name, "SHO03",
@@ -151,9 +155,12 @@ check_order(Analyser*                       analyser,
                          ? "Header without or with wrong include guard"
                          : "Source doesn't include component header first");
     }
-    std::string ident =
-        analyser->group() == "bsl" || analyser->group() == "bdl" ?
-            "bsls_ident" : "bdes_ident";
+    std::string ident = analyser->config()->value("ident_header");
+    if (!ident.size()) {
+        ident = analyser->group() == "bsl" || analyser->group() == "bdl"
+                    ? "bsls_ident"
+                    : "bdes_ident";
+    }
     if (analyser->component() == ident ||
         (analyser->is_test_driver() && !header)) {
         if (it != headers.end()) {
@@ -196,19 +203,23 @@ check_order(Analyser*                       analyser,
     std::string version = analyser->group().size() ?
                               analyser->group() + "scm_version" :
                               analyser->package() + "_version";
+    std::string vh = version + ".h";
     if (   (   analyser->package() == "bsls"
-            || analyser->package() == "bdls")
+            || analyser->package() == "bdls"
+            || (&headers == &data.d_header &&
+                analyser->component() == version))
         && header
         && it != headers.end()
         && it->first == version) {
         analyser->report(it->second, check_name, "SHO09",
                          "'%0' components should not include '%1'")
                     << analyser->package()
-                    << (version + ".h");
+                    << vh;
     }
 
     if (   analyser->package() != "bsls"
         && analyser->package() != "bdls"
+        && (&headers != &data.d_header || analyser->component() != version)
         && std::find(utils::begin(subscm),
                      utils::end(subscm),
                      analyser->component()) == utils::end(subscm)
@@ -216,23 +227,23 @@ check_order(Analyser*                       analyser,
         && (it == headers.end()
             || it->first != version
             || it++ == headers.end())) {
-        include_order::headers_t::const_iterator lost_it(headers.begin());
-        while (lost_it != headers.end() && lost_it->first != version) {
-            ++lost_it;
+        include_order::headers_t::const_iterator last_it(headers.begin());
+        while (last_it != headers.end() && last_it->first != version) {
+            ++last_it;
         }
-        if (lost_it == headers.end()) {
+        if (last_it == headers.end()) {
             analyser->report((it == headers.end() ? it - 1 : it)->second,
-                             check_name, "SHO07", "Missing include for %0.h")
-                << version;
+                             check_name, "SHO07", "Missing include for %0")
+                << vh;
         } else {
             analyser->report((it == headers.end() ? it - 1 : it)->second,
                              check_name, "SHO07",
-                             "Include for %0.h should go here")
-                << version;
-            analyser->report(lost_it->second, check_name, "SHO07",
-                             "Include for %0.h is here", true,
-                             DiagnosticsEngine::Note)
-                << version;
+                             "Include for %0 should go here")
+                << vh;
+            analyser->report(last_it->second, check_name, "SHO07",
+                             "Include for %0 is here", true,
+                             DiagnosticIDs::Note)
+                << vh;
         }
     }
 

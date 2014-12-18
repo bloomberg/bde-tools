@@ -13,7 +13,6 @@
 #include <clang/Tooling/Tooling.h>              // IWYU pragma: keep
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/IntrusiveRefCntPtr.h>
-#include <llvm/ADT/OwningPtr.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/CommandLine.h>
@@ -44,7 +43,7 @@ static void LLVMErrorHandler(void *UserData, const std::string &Message,
 namespace {
     class StringSetSaver : public cl::StringSaver {
       public:
-        const char *SaveString(const char *Str) LLVM_OVERRIDE {
+        const char *SaveString(const char *Str) override {
             return Storage.insert(Str).first->c_str();
         }
       private:
@@ -72,34 +71,32 @@ int csabase::run(int argc_, const char **argv_)
     argv.insert(argv.begin() == argv.end() ? argv.begin() : argv.begin() + 1,
                 "-xc++");
 
-    OwningPtr<CompilerInstance> Clang(new CompilerInstance());
-    IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs());
-
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmParser();
 
+    CompilerInstance                      Clang;
+    TextDiagnosticBuffer                  DiagsBuffer;
+    IntrusiveRefCntPtr<DiagnosticIDs>     DiagID(new DiagnosticIDs());
     IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts(new DiagnosticOptions());
 
-    TextDiagnosticBuffer *DiagsBuffer = new TextDiagnosticBuffer;
-
-    DiagnosticsEngine Diags(DiagID, &*DiagOpts, DiagsBuffer);
+    DiagnosticsEngine Diags(DiagID, &*DiagOpts, &DiagsBuffer, false);
 
     bool Success = CompilerInvocation::CreateFromArgs(
-        Clang->getInvocation(),
+        Clang.getInvocation(),
         argv.data() + 1,
         argv.data() + argv.size(),
         Diags);
 
-    Clang->createDiagnostics();
-
-    install_fatal_error_handler(LLVMErrorHandler, &Clang->getDiagnostics());
-    DiagsBuffer->FlushDiagnostics(Clang->getDiagnostics());
+    Clang.createDiagnostics();
+    install_fatal_error_handler(LLVMErrorHandler, &Clang.getDiagnostics());
+    DiagsBuffer.FlushDiagnostics(Clang.getDiagnostics());
 
     if (Success) {
-        Success = ExecuteCompilerInvocation(Clang.get());
-        remove_fatal_error_handler();
-        llvm::llvm_shutdown();
+        Success = ExecuteCompilerInvocation(&Clang);
     }
+
+    remove_fatal_error_handler();
+    llvm::llvm_shutdown();
 
     return !Success;
 }

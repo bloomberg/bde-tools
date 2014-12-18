@@ -2,74 +2,77 @@ In file included from csabbg_allocatorforward.t.cpp:3:
 ./csabbg_allocatorforward.t.hpp:34:15: warning: AT02: Class 'allocatorforward_alloc_used' uses allocators but does not have an allocator trait
         class allocatorforward_alloc_used;
               ^
-csabbg_allocatorforward.t.cpp:14:19: warning: AT02: Class 'test' uses allocators but does not have an allocator trait
+csabbg_allocatorforward.t.cpp:15:19: warning: AT02: Class 'test' uses allocators but does not have an allocator trait
             class test:
                   ^
-csabbg_allocatorforward.t.cpp:44:5: warning: MA01: Allocator not passed to base class bde_verify::csabbg::allocatorforward_alloc_used
+csabbg_allocatorforward.t.cpp:45:5: warning: MA01: Allocator not passed to base class bde_verify::csabbg::allocatorforward_alloc_used
     allocatorforward_alloc_used(i),
     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-csabbg_allocatorforward.t.cpp:45:5: warning: MA02: Allocator not passed to member used0_
+csabbg_allocatorforward.t.cpp:46:5: warning: MA02: Allocator not passed to member used0_
     used0_(i),
     ^~~~~~~~~
-csabbg_allocatorforward.t.cpp:43:70: warning: MA02: Allocator not passed to member used2_
+csabbg_allocatorforward.t.cpp:44:70: warning: MA02: Allocator not passed to member used2_
 bde_verify::csabbg::test::test(int i, BloombergLP::bslma::Allocator* alloc):
                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
-csabbg_allocatorforward.t.cpp:69:5: warning: MA02: Allocator not passed to member used0_
+csabbg_allocatorforward.t.cpp:70:5: warning: MA02: Allocator not passed to member used0_
     used0_(bde_verify::csabbg::dummy(alloc)),
     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-csabbg_allocatorforward.t.cpp:84:20: warning: AT02: Class 'tbase' uses allocators but does not have an allocator trait
+csabbg_allocatorforward.t.cpp:85:20: warning: AT02: Class 'tbase' uses allocators but does not have an allocator trait
             struct tbase
                    ^
-csabbg_allocatorforward.t.cpp:129:24: warning: AT02: Class 'M' uses allocators but does not have an allocator trait
+csabbg_allocatorforward.t.cpp:130:24: warning: AT02: Class 'M' uses allocators but does not have an allocator trait
                 struct M { M(BloombergLP::bslma::Allocator*) {} };
                        ^
-csabbg_allocatorforward.t.cpp:135:53: warning: MA02: Allocator not passed to member s
+csabbg_allocatorforward.t.cpp:136:53: warning: MA02: Allocator not passed to member s
                 C(BloombergLP::bslma::Allocator*) : s("") { }
                                                     ^~~~~
-csabbg_allocatorforward.t.cpp:133:20: warning: AT02: Class 'C' uses allocators but does not have an allocator trait
+csabbg_allocatorforward.t.cpp:134:20: warning: AT02: Class 'C' uses allocators but does not have an allocator trait
             struct C {
                    ^
-csabbg_allocatorforward.t.cpp:147:16: warning: AT02: Class 'not_alloc' uses allocators but does not have an allocator trait
+csabbg_allocatorforward.t.cpp:148:16: warning: AT02: Class 'not_alloc' uses allocators but does not have an allocator trait
         struct not_alloc {
                ^
-csabbg_allocatorforward.t.cpp:147:16: warning: AC02: Implicit copy constructor cannot be called with an allocator
-csabbg_allocatorforward.t.cpp:286:8: warning: AT02: Class 'alloc_p' uses allocators but does not have an allocator trait
+csabbg_allocatorforward.t.cpp:148:16: warning: AC02: Implicit copy constructor cannot be called with an allocator
+csabbg_allocatorforward.t.cpp:287:8: warning: AT02: Class 'alloc_p' uses allocators but does not have an allocator trait
 struct alloc_p {
        ^
-csabbg_allocatorforward.t.cpp:214:8: warning: AT02: Class 'alloc_d' uses allocators but does not have an allocator trait
+csabbg_allocatorforward.t.cpp:215:8: warning: AT02: Class 'alloc_d' uses allocators but does not have an allocator trait
 struct alloc_d {
        ^
-csabbg_allocatorforward.t.cpp:281:8: warning: AT02: Class 'alloc_o' uses allocators but does not have an allocator trait
+csabbg_allocatorforward.t.cpp:282:8: warning: AT02: Class 'alloc_o' uses allocators but does not have an allocator trait
 struct alloc_o {
        ^
-csabbg_allocatorforward.t.cpp:87:62: warning: MA02: Allocator not passed to member used0_
+csabbg_allocatorforward.t.cpp:88:62: warning: MA02: Allocator not passed to member used0_
                 explicit tbase(BloombergLP::bslma::Allocator*);
                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-csabbg_allocatorforward.t.cpp:131:24: warning: AT02: Class 'S' uses allocators but does not have an allocator trait
+csabbg_allocatorforward.t.cpp:132:24: warning: AT02: Class 'S' uses allocators but does not have an allocator trait
                 struct S { S(const T*) {} S(const T*, const A&) {} };
                        ^
-csabbg_allocatorforward.t.cpp:131:28: warning: AC01: This constructor has no version that can be called with an allocator
+csabbg_allocatorforward.t.cpp:132:28: warning: AC01: This constructor has no version that can be called with an allocator
                 struct S { S(const T*) {} S(const T*, const A&) {} };
                            ^
-csabbg_allocatorforward.t.cpp:176:22: warning: AM01: Allocator argument initializes non-allocator parameter 1 ('na') of type 'struct bde_verify::csabbg::not_alloc' rather than allocator parameter 2
+csabbg_allocatorforward.t.cpp:177:22: warning: AM01: Allocator argument initializes non-allocator parameter 1 ('na') of type 'struct bde_verify::csabbg::not_alloc' rather than allocator parameter 2
             object o(a);
                      ^
-csabbg_allocatorforward.t.cpp:181:17: warning: AR01: Type using allocator is returned by value
+csabbg_allocatorforward.t.cpp:182:17: warning: AR01: Type using allocator is returned by value
                 return o;
                 ^
-csabbg_allocatorforward.t.cpp:183:17: warning: AR01: Type using allocator is returned by value
+csabbg_allocatorforward.t.cpp:184:17: warning: AR01: Type using allocator is returned by value
                 return object(o);
                 ^
-csabbg_allocatorforward.t.cpp:312:29: warning: GA01: Variable with global storage must be initialized with non-default allocator
+csabbg_allocatorforward.t.cpp:313:29: warning: GA01: Variable with global storage must be initialized with non-default allocator
 bde_verify::csabbg::alloc_a a{};
                             ^
-csabbg_allocatorforward.t.cpp:313:29: warning: GA01: Variable with global storage must be initialized with non-default allocator
+csabbg_allocatorforward.t.cpp:314:29: warning: GA01: Variable with global storage must be initialized with non-default allocator
 bde_verify::csabbg::alloc_a b{0};
                             ^
-csabbg_allocatorforward.t.cpp:314:29: warning: GA01: Variable with global storage must be initialized with non-default allocator
+csabbg_allocatorforward.t.cpp:315:29: warning: GA01: Variable with global storage must be initialized with non-default allocator
 bde_verify::csabbg::alloc_a c[2];
                             ^
-csabbg_allocatorforward.t.cpp:315:29: warning: GA01: Variable with global storage must be initialized with non-default allocator
+csabbg_allocatorforward.t.cpp:316:29: warning: GA01: Variable with global storage must be initialized with non-default allocator
 bde_verify::csabbg::alloc_a d[2][2];
                             ^
-25 warnings generated.
+csabbg_allocatorforward.t.cpp:318:35: warning: GA01: Variable with global storage must be initialized with non-default allocator
+BloombergLP::bslma::TestAllocator ta;
+                                  ^
+26 warnings generated.

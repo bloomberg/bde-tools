@@ -1,54 +1,56 @@
-csabbg_testdriver.t.cpp:33:25: warning: TP19: Missing or malformed standard test driver section
+csabbg_testdriver.t.cpp:33:24: warning: TP19: Missing or malformed standard test driver section
 //                       STANDARD BDE ASSERT TEST MACRO
-                        ^
-csabbg_testdriver.t.cpp:33:25: note: TP19: One correct form (of several possible) is
+                       ^
+csabbg_testdriver.t.cpp:33:24: note: TP19: One correct form (of several possible) is
+
 // ============================================================================
-//                      STANDARD BDE ASSERT TEST MACROS
+//                     STANDARD BDE ASSERT TEST FUNCTION
 // ----------------------------------------------------------------------------
 
-static int testStatus = 0;
+namespace {
 
-static void aSsErT(int c, const char *s, int i)
+int testStatus = 0;
+
+void aSsErT(bool condition, const char *message, int line)
 {
-    if (c) {
-        cout << "Error " << __FILE__ << "(" << i << "): " << s
+    if (condition) {
+        cout << "Error " __FILE__ "(" << line << "): " << message
              << "    (failed)" << endl;
-        if (testStatus >= 0 && testStatus <= 100) ++testStatus;
+
+        if (0 <= testStatus && testStatus <= 100) {
+            ++testStatus;
+        }
     }
 }
 
-csabbg_testdriver.t.cpp:49:23: warning: TP19: Missing or malformed standard test driver section
+}  // close unnamed namespace
+
+csabbg_testdriver.t.cpp:49:18: warning: TP19: Missing or malformed standard test driver section
 //                       STANDARD BDE TEST DRIVER MACROS
-                      ^
-csabbg_testdriver.t.cpp:49:23: note: TP19: One correct form (of several possible) is
+                 ^
+csabbg_testdriver.t.cpp:49:18: note: TP19: One correct form (of several possible) is
 
 // ============================================================================
-//                    STANDARD BDE LOOP-ASSERT TEST MACROS
+//               STANDARD BDE TEST DRIVER MACRO ABBREVIATIONS
 // ----------------------------------------------------------------------------
 
-#define C_(X)   << #X << ": " << X << '\t'
-#define A_(X,S) { if (!(X)) { cout S << endl; aSsErT(1, #X, __LINE__); } }
-#define LOOP_ASSERT(I,X)            A_(X,C_(I))
-#define LOOP2_ASSERT(I,J,X)         A_(X,C_(I)C_(J))
-#define LOOP3_ASSERT(I,J,K,X)       A_(X,C_(I)C_(J)C_(K))
-#define LOOP4_ASSERT(I,J,K,L,X)     A_(X,C_(I)C_(J)C_(K)C_(L))
-#define LOOP5_ASSERT(I,J,K,L,M,X)   A_(X,C_(I)C_(J)C_(K)C_(L)C_(M))
-#define LOOP6_ASSERT(I,J,K,L,M,N,X) A_(X,C_(I)C_(J)C_(K)C_(L)C_(M)C_(N))
+#define ASSERT       BDLS_TESTUTIL_ASSERT
+#define ASSERTV      BDLS_TESTUTIL_ASSERTV
 
-csabbg_testdriver.t.cpp:61:3: warning: TP19: Missing or malformed standard test driver section
-//=============================================================================
-  ^
-csabbg_testdriver.t.cpp:61:3: note: TP19: One correct form (of several possible) is
+#define LOOP_ASSERT  BDLS_TESTUTIL_LOOP_ASSERT
+#define LOOP0_ASSERT BDLS_TESTUTIL_LOOP0_ASSERT
+#define LOOP1_ASSERT BDLS_TESTUTIL_LOOP1_ASSERT
+#define LOOP2_ASSERT BDLS_TESTUTIL_LOOP2_ASSERT
+#define LOOP3_ASSERT BDLS_TESTUTIL_LOOP3_ASSERT
+#define LOOP4_ASSERT BDLS_TESTUTIL_LOOP4_ASSERT
+#define LOOP5_ASSERT BDLS_TESTUTIL_LOOP5_ASSERT
+#define LOOP6_ASSERT BDLS_TESTUTIL_LOOP6_ASSERT
 
-// ============================================================================
-//                  SEMI-STANDARD TEST OUTPUT MACROS
-// ----------------------------------------------------------------------------
-
-#define P(X) cout << #X " = " << (X) << endl; // Print identifier and value.
-#define Q(X) cout << "<| " #X " |>" << endl;  // Quote identifier literally.
-#define P_(X) cout << #X " = " << (X) << ", " << flush; // 'P(X)' without '\n'
-#define T_ cout << "\t" << flush;             // Print tab w/o newline.
-#define L_ __LINE__                           // current Line number
+#define Q            BDLS_TESTUTIL_Q   // Quote identifier literally.
+#define P            BDLS_TESTUTIL_P   // Print identifier and value.
+#define P_           BDLS_TESTUTIL_P_  // P(X) without '\n'.
+#define T_           BDLS_TESTUTIL_T_  // Print a tab (w/o newline).
+#define L_           BDLS_TESTUTIL_L_  // current Line number
 
 csabbg_testdriver.t.cpp:283:1: warning: TP25: Cannot find definition of class 'bsl::basic_nonesuch' from @CLASSES section.
 //    bsl::basic_nonesuch : not there::more stuff
@@ -77,6 +79,9 @@ csabbg_testdriver.t.cpp:295:9: warning: TP27: Method not called in test driver
 csabbg_testdriver.t.cpp:296:9: warning: TP27: Method not called in test driver
         ~joe();
         ^
+csabbg_testdriver.t.cpp:298:31: warning: TP27: Method not called in test driver
+        template <int N> void H();
+                              ^
 csabbg_testdriver.t.cpp:24:4: warning: TP03: Missing test number
 // [  ] void setF();
    ^~~~
@@ -90,6 +95,7 @@ csabbg_testdriver.t.cpp:24:1: warning: TP26: Tested classes have 2 functions nam
 // [  ] void setF();
 ^
 csabbg_testdriver.t.cpp:24:1: warning: TP26: Tested classes have a function named 'G' but the test plan has none
+csabbg_testdriver.t.cpp:24:1: warning: TP26: Tested classes have a function named 'H' but the test plan has none
 csabbg_testdriver.t.cpp:24:1: warning: TP26: Tested classes have 2 functions named 'joe' but the test plan has none
 csabbg_testdriver.t.cpp:24:1: warning: TP26: Tested classes have a function named '~joe' but the test plan has none
 csabbg_testdriver.t.cpp:274:38: warning: TP23: Final statement of `main()` must be `return testStatus;`
@@ -181,18 +187,16 @@ csabbg_testdriver.t.cpp:29:6: note: TP08: Test plan item is
 // [  ] BREATHING TEST
      ^
 csabbg_testdriver.t.cpp:151:21: warning: TP18: Incorrect test banner format
-            cout << "'f' AND 'setf'" << endl
+            cout << endl << "'f' AND 'setf'" << endl << "==========" << '\n';
                     ^
 csabbg_testdriver.t.cpp:151:21: note: TP18: Correct format is
-            cout << endl
-                 << "'f' AND 'setf'" << endl
-                 << "==============" << endl;
-
+                    "\n" "'f' AND 'setf'" "\n"
+                         "==============" "\n"
 csabbg_testdriver.t.cpp:138:20: warning: TP22: Mismatch between title in comment and as printed
         // 'f' AND "setf"
                    ^
 csabbg_testdriver.t.cpp:151:21: note: TP22: Printed title is
-            cout << "'f' AND 'setf'" << endl
+            cout << endl << "'f' AND 'setf'" << endl << "==========" << '\n';
                     ^
 csabbg_testdriver.t.cpp:146:9: warning: TP08: Test plan does not have case number 2 for this item
         //   int F() const;
@@ -206,24 +210,22 @@ csabbg_testdriver.t.cpp:147:9: warning: TP09: Test plan should contain this item
 csabbg_testdriver.t.cpp:25:9: warning: TP06: 'Testing' section of case 2 should contain this item from test plan
 // [ 2] void setG();
         ^
-csabbg_testdriver.t.cpp:124:21: warning: TP18: Incorrect test banner format
-            cout << "Usage Example" << endl
-                    ^
-csabbg_testdriver.t.cpp:124:21: note: TP18: Correct format is
-            cout << endl
-                 << "USAGE EXAMPLE" << endl
-                 << "=============" << endl;
-
+csabbg_testdriver.t.cpp:124:20: warning: TP18: Incorrect test banner format (not ALL CAPS)
+            printf("Usage Example\n=============\n");
+                   ^
+csabbg_testdriver.t.cpp:124:20: note: TP18: Correct format is
+                   "USAGE EXAMPLE" "\n"
+                   "=============" "\n"
 csabbg_testdriver.t.cpp:107:13: warning: TP22: Mismatch between title in comment and as printed
         // USAGE EXAMPLE
             ^
-csabbg_testdriver.t.cpp:124:21: note: TP22: Printed title is
-            cout << "Usage Example" << endl
-                    ^
+csabbg_testdriver.t.cpp:124:20: note: TP22: Printed title is
+            printf("Usage Example\n=============\n");
+                   ^
 csabbg_testdriver.t.cpp:120:9: warning: TP08: Test plan does not have case number 3 for this item
         //   USAGE EXAMPLE
         ^
 csabbg_testdriver.t.cpp:30:6: note: TP08: Test plan item is
 // [  ] USAGE EXAMPLE
      ^
-56 warnings generated.
+57 warnings generated.

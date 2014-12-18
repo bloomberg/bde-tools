@@ -25,8 +25,8 @@ static std::string const check_name("char-vs-string");
 // -----------------------------------------------------------------------------
 
 static void check(Analyser& analyser,
-                  const Expr* expr,
-                  Expr** args,
+                  const Expr *expr,
+                  const Expr * const *args,
                   unsigned numArgs,
                   const FunctionDecl* decl)
 {

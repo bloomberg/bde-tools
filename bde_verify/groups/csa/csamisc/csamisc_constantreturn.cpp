@@ -60,7 +60,7 @@ static void check(Analyser& analyser, FunctionDecl const* decl)
                     analyser.report(*it, check_name, "CR01",
                                     "Declaration of '%0' (which always "
                                     "returns the constant %1)", false,
-                                    DiagnosticsEngine::Note)
+                                    DiagnosticIDs::Note)
                         << decl->getNameAsString()
                         << result.toString(10)
                         << decl->getNameInfo().getSourceRange();

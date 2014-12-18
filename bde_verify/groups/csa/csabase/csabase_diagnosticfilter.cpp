@@ -2,6 +2,7 @@
 
 #include <csabase_diagnosticfilter.h>
 #include <csabase_analyser.h>
+#include <csabase_debug.h>
 #include <csabase_registercheck.h>
 #include <clang/Basic/FileManager.h>
 #include <clang/Basic/SourceLocation.h>
@@ -25,37 +26,16 @@ static std::string const check_name("diagnostic-filter");
 
 // ----------------------------------------------------------------------------
 
-csabase::DiagnosticFilter::DiagnosticFilter(Analyser const& analyser,
-                                            bool toplevel_only,
+csabase::DiagnosticFilter::DiagnosticFilter(Analyser const&    analyser,
+                                            std::string        diagnose,
                                             DiagnosticOptions& options)
-    : d_options(&options)
-    , d_client(new TextDiagnosticPrinter(llvm::errs(), d_options))
-    , d_analyser(&analyser)
-    , d_toplevel_only(toplevel_only)
-{
-}
-
-csabase::DiagnosticFilter::~DiagnosticFilter()
+: TextDiagnosticPrinter(llvm::errs(), &options)
+, d_analyser(&analyser)
+, d_diagnose(diagnose)
 {
 }
 
 // ----------------------------------------------------------------------------
-
-void csabase::DiagnosticFilter::BeginSourceFile(LangOptions const& opts,
-                                                Preprocessor const* pp)
-{
-    d_client->BeginSourceFile(opts, pp);
-}
-
-void csabase::DiagnosticFilter::EndSourceFile()
-{
-    d_client->EndSourceFile();
-}
-
-bool csabase::DiagnosticFilter::IncludeInDiagnosticCount() const
-{
-    return true;
-}
 
 static std::string get_filename(Diagnostic const& d)
 {
@@ -70,29 +50,32 @@ static std::string get_filename(Diagnostic const& d)
 
 void
 csabase::DiagnosticFilter::HandleDiagnostic(DiagnosticsEngine::Level level,
-                                            Diagnostic const& info)
+                                            Diagnostic const&        info)
 {
-    if (   DiagnosticsEngine::Warning < level
-        || (   !info.getLocation().isFileID()
-            && info.getID() != diag::pp_pragma_once_in_main_file
-           )
-        || (   d_analyser->is_component(get_filename(info))
-            && !d_analyser->is_generated(info.getLocation())
-            && (   !d_toplevel_only
-                || d_analyser->manager().getMainFileID() ==
-                   d_analyser->manager().getFileID(info.getLocation())
-               )
-           )
-       )
-    {
-        DiagnosticConsumer::HandleDiagnostic(level, info);
-        d_client->HandleDiagnostic(level, info);
+    bool handle = false;
+    if (!handle) {
+        handle = !info.getLocation().isFileID() &&
+                 info.getID() != diag::pp_pragma_once_in_main_file;
     }
-}
-
-DiagnosticConsumer* csabase::DiagnosticFilter::clone(DiagnosticsEngine&) const
-{
-    return new DiagnosticFilter(*d_analyser, d_toplevel_only, *d_options);
+    if (!handle) {
+        handle = d_diagnose == "all";
+    }
+    if (!handle) {
+        handle = d_diagnose == "nogen" &&
+                 !d_analyser->is_generated(info.getLocation());
+    }
+    if (!handle) {
+        handle = d_diagnose == "component" &&
+                 d_analyser->is_component(info.getLocation());
+    }
+    if (!handle) {
+        handle = d_diagnose == "main" &&
+                 d_analyser->manager().getMainFileID() ==
+                 d_analyser->manager().getFileID(info.getLocation());
+    }
+    if (handle) {
+        TextDiagnosticPrinter::HandleDiagnostic(level, info);
+    }
 }
 
 // ----------------------------------------------------------------------------

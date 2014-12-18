@@ -7,7 +7,7 @@ csamisc_namespacetags.t.cpp:5:1: warning: NT01: End of csamisc namespace should 
 csamisc_namespacetags.t.cpp:4:1: warning: NT01: End of anonymous namespace should be marked with "}  // close unnamed namespace"
 } // end anonymous
 ^
-csamisc_namespacetags.t.cpp:9:1: warning: NT01: End of joe namespace should be marked with "}  // close ... namespace"
+csamisc_namespacetags.t.cpp:9:1: warning: NT01: End of joe namespace should be marked with "}  // close namespace joe"
 } // end joe
 ^
 4 warnings generated.

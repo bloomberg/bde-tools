@@ -137,9 +137,14 @@ void report::operator()()
             return;                                                   // RETURN
     }
     spell_checker = to_aspell_speller(possible_err);
-    llvm::SmallVector<llvm::StringRef, 10> good_words;
+    llvm::SmallVector<llvm::StringRef, 1000> raw_good_words;
+    std::vector<std::string> good_words;
     llvm::StringRef(d_analyser.config()->value("dictionary")).
-        split(good_words, " ", -1, false);
+        split(raw_good_words, " ", -1, false);
+    for (size_t i = 0; i < raw_good_words.size(); ++i) {
+        std::vector<std::string> e = Config::brace_expand(raw_good_words[i]);
+        good_words.insert(good_words.end(), e.begin(), e.end());
+    }
     for (size_t i = 0; i < good_words.size(); ++i) {
         aspell_speller_add_to_session(
             spell_checker, good_words[i].data(), good_words[i].size());
@@ -182,6 +187,9 @@ report::break_for_spelling(std::vector<SourceRange>* words, SourceRange range)
 {
     llvm::StringRef comment = d_analyser.get_source(range, true);
     words->clear();
+    if (comment.startswith("// close namespace ")) {
+        return;
+    }
     bool in_single_quotes = false;
     bool in_double_quotes = false;
     bool in_block = false;

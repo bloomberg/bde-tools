@@ -57,7 +57,7 @@ struct same_argument_names
                                           check_name, "AN01",
                                           "The other declaration uses %0",
                                           false,
-                                          DiagnosticsEngine::Note)
+                                          DiagnosticIDs::Note)
                             << pp;
                     }
                 }

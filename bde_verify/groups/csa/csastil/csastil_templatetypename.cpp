@@ -11,7 +11,6 @@
 #include <clang/ASTMatchers/ASTMatchers.h>
 #include <clang/ASTMatchers/ASTMatchersInternal.h>
 #include <clang/Basic/SourceLocation.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <csabase_analyser.h>
 #include <csabase_registercheck.h>
 #include <csabase_util.h>
@@ -156,8 +155,7 @@ void report::checkTemplateParameters(TemplateParameterList const* parms)
                  llvm::StringRef s = d_analyser.get_source(r);
                  size_t to = s.find("typename");
                  if (to != s.npos) {
-                     d_analyser.rewriter().ReplaceText(
-                         getOffsetRange(r, to, 8), "class");
+                     d_analyser.ReplaceText(getOffsetRange(r, to, 8), "class");
                  }
             }
             if (parm->getIdentifier()) {

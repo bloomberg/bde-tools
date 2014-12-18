@@ -1,22 +1,22 @@
 In file included from csatr_friendship.t.cpp:3:
-./csatr_friendship.t.hpp:36:13: warning: TR19: Friendship to a class can only be granted within a component
+./csatr_friendship.t.hpp:36:20: warning: TR19: Friendship to a class can only be granted within a component
             friend class bde_verify::csamisc::BadGroup;
-            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-./csatr_friendship.t.hpp:37:13: warning: TR19: Friendship to a class can only be granted within a component
+            ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./csatr_friendship.t.hpp:37:20: warning: TR19: Friendship to a class can only be granted within a component
             friend class bde_verify::csatr::BadPackage;
-            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-./csatr_friendship.t.hpp:38:13: warning: TR19: Friendship to a class can only be granted within a component
+            ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./csatr_friendship.t.hpp:38:20: warning: TR19: Friendship to a class can only be granted within a component
             friend class bde_verify::csatr::BadExtern;
-            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ./csatr_friendship.t.hpp:39:13: warning: TR19: Friendship to a method can only be granted within a component
             friend void bde_verify::csatr::BadExtern::f() const;
             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-./csatr_friendship.t.hpp:40:13: warning: TR19: Friendship to a class can only be granted within a component
+./csatr_friendship.t.hpp:40:20: warning: TR19: Friendship to a class can only be granted within a component
             friend class bde_verify::csatr::BadExtern::Nested;
-            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-./csatr_friendship.t.hpp:43:45: warning: TR19: Friendship to a class template can only be granted within a component
+            ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./csatr_friendship.t.hpp:43:32: warning: TR19: Friendship to a class template can only be granted within a component
             template <class T> friend class BadPackageTemplate;
-                                            ^~~~~~~~~~~~~~~~~~
+            ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ./csatr_friendship.t.hpp:45:13: warning: TR19: Friendship to a function can only be granted within a component
             friend void bde_verify::csatr::operator+ (BadExtern const&);
             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -38,6 +38,10 @@ namespace bde_verify
     }
 }
 
+#ifndef INCLUDED_BSL_CSTDIO
+#include <bsl_cstdio.h>
+#endif
+
 inline bde_verify::csatr::UsingDeclarationInHeader::UsingDeclarationInHeader()
 {
     using bde_verify::csamisc::foo;

@@ -260,7 +260,7 @@ void files::report_bubble(const Range &r, llvm::StringRef text)
             << SourceRange(r.from().location(), r.to().location());
         d_analyser.report(r.from().location(), check_name, "BADB01",
                           "Correct format is%0",
-                          false, DiagnosticsEngine::Note)
+                          false, DiagnosticIDs::Note)
             << bubble(text, r.from().column());
     }
 }
@@ -497,7 +497,7 @@ void files::check_purpose(SourceRange range)
                 range.getBegin().getLocWithOffset(matchpos + m.first),
                     check_name, "PRP01",
                     "Correct format is\n%0",
-                    false, DiagnosticsEngine::Note)
+                    false, DiagnosticIDs::Note)
                 << expected;
         }
     }
