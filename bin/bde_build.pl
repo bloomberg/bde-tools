@@ -3232,7 +3232,8 @@ sub makeGroupMakefile($$$$$) {
 
 STDOUT->autoflush(1);
 
-print <<_WARNING_END;
+if($UID != 31041 && `hostname` ne "nyphatfhqa5\n") {
+    print <<_WARNING_END;
 
 
 #     #   #####   #######        #     #     #     #######   ###
@@ -3251,7 +3252,8 @@ Pausing for 3 seconds for you to consider your decision...
 
 _WARNING_END
 
-sleep(3) unless $UID == 31041; # Don't sleep for bdebuild role account.
+    sleep(3);
+}
 
 
 Getopt::Long::Configure("bundling");
