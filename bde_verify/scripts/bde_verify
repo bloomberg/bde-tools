@@ -22,7 +22,7 @@ $hw = 'x86_64' unless grep(/$hw/, @known_hw);
 
 my $clangver = "3.6.0";
 my $gccver   = "4.8.1";
-my $home     = "/home/hrosen4/bde_verify";
+my $home     = "/home/hrosen4/mbig/src/bde-oss-tools/bde_verify";
 my $bb       = "/bb/build/$system-$hw-64" .
                "/release/robolibs/trunk/lib/dpkgroot/opt/bb";
 my $config   = "$home/bde_verify.cfg";

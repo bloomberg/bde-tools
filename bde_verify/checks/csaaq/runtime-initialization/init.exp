@@ -1,0 +1,55 @@
+init.cpp:7:5: warning: AQa01: Global variable with runtime initialization
+int extern_should_be_runtime_call = function();
+    ^
+init.cpp:8:3: warning: AQa01: Global variable with runtime initialization
+C extern_should_be_runtime_constructed;
+  ^
+init.cpp:9:5: warning: AQa01: Global variable with runtime initialization
+int extern_should_be_runtime_expression = *pointer;
+    ^
+init.cpp:15:5: warning: AQa01: Global variable with runtime initialization
+int extern_should_be_runtime_call = function();
+    ^
+init.cpp:16:3: warning: AQa01: Global variable with runtime initialization
+C extern_should_be_runtime_constructed;
+  ^
+init.cpp:17:5: warning: AQa01: Global variable with runtime initialization
+int extern_should_be_runtime_expression = *pointer;
+    ^
+init.cpp:24:5: warning: AQa01: Global variable with runtime initialization
+int extern_should_be_runtime_call = function();
+    ^
+init.cpp:25:3: warning: AQa01: Global variable with runtime initialization
+C extern_should_be_runtime_constructed;
+  ^
+init.cpp:26:5: warning: AQa01: Global variable with runtime initialization
+int extern_should_be_runtime_expression = *pointer;
+    ^
+init.cpp:32:12: warning: AQa01: Global variable with runtime initialization
+static int static_should_be_runtime_call = function();
+           ^
+init.cpp:33:10: warning: AQa01: Global variable with runtime initialization
+static C static_should_be_runtime_constructed;
+         ^
+init.cpp:34:12: warning: AQa01: Global variable with runtime initialization
+static int static_should_be_runtime_expression = *pointer;
+           ^
+init.cpp:59:8: warning: AQa01: Global variable with runtime initialization
+int D::should_be_runtime_call = function();
+       ^
+init.cpp:60:6: warning: AQa01: Global variable with runtime initialization
+C D::should_be_runtime_constructed;
+     ^
+init.cpp:61:8: warning: AQa01: Global variable with runtime initialization
+int D::should_be_runtime_expression = *pointer;
+       ^
+init.cpp:77:30: warning: AQa01: Global variable with runtime initialization
+template <class T> int E<T>::should_be_runtime_call = function();
+                             ^
+init.cpp:78:28: warning: AQa01: Global variable with runtime initialization
+template <class T> C E<T>::should_be_runtime_constructed;
+                           ^
+init.cpp:79:30: warning: AQa01: Global variable with runtime initialization
+template <class T> int E<T>::should_be_runtime_expression = *pointer;
+                             ^
+18 warnings generated.

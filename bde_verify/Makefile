@@ -65,6 +65,7 @@ CXXFILES =                                                                    \
         groups/csa/csaaq/csaaq_friendsinheaders.cpp                           \
         groups/csa/csaaq/csaaq_includeinexternc.cpp                           \
         groups/csa/csaaq/csaaq_inentns.cpp                                    \
+        groups/csa/csaaq/csaaq_runtimeinit.cpp                                \
         groups/csa/csaaq/csaaq_transitiveincludes.cpp                         \
         groups/csa/csabde/csabde_tool.cpp                                     \
         groups/csa/csabbg/csabbg_allocatorforward.cpp                         \
