@@ -1,6 +1,16 @@
-# This opt file contains rules that is needed by the legacy bde_build.pl.  It
-# will be deprecated once the waf build tool is mature.
+# This opt file contains rules that are needed by the legacy bde_build.pl or
+# rules used only internally at Bloomberg.  It will be deprecated once the waf
+# build tool is mature.
 
+#==============================================================================
+# Internal Rules
+#==============================================================================
+
+# Provide a way to selectively disable BSL_OVERRIDES_STD. The BSL_STD_FLAG is
+# used by bsl.defs, and the flag is disabled by bsl+bslhdrs.opts to compile the
+# pacakge's test drivers.
+
+!! *  _  BSL_STD_FLAG  =  $(SWITCHCHAR)DBSL_OVERRIDES_STD
 
 #==============================================================================
 # Rules for cygwin and FreeBSD
@@ -137,6 +147,8 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-AIX-*           _       ALLTEST_PREFIX  = $(XLC_LIBPATH)
 !! unix-SunOS-*-*-gcc-4     _   ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib:$(LD_LIBRARY_PATH)
 !! unix-SunOS-*-*-gcc-4     64  ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib/sparcv9:$(LD_LIBRARY_PATH)
+!! unix-SunOS-i386-*-gcc    _   ALLTEST_PREFIX  = LD_LIBRARY_PATH=/bb/shared/gcc-$(BDE_COMPILERVERSION_FLAG)/lib:$(LD_LIBRARY_PATH)
+!! unix-SunOS-i386-*-gcc    64  ALLTEST_PREFIX  = LD_LIBRARY_PATH=/bb/shared/gcc-$(BDE_COMPILERVERSION_FLAG)/lib:$(LD_LIBRARY_PATH)
 
 *                       _       ALLTEST = $(ALLTEST_PREFIX) $(RETRY_ALLTEST) $(BDE_BINDIR)all.pl $(ALLTEST_VERBOSE) -t $(TEST_TIMEOUT) $(ALLTEST_OPT)
 !! windows              _       ALLTEST = wrun.exe -A -a$@ $(ALLTEST_VERBOSE) -t 5 -m100 -M1024 -t $(TEST_TIMEOUT) $(ALLTEST_OPT)
@@ -165,6 +177,7 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-*-*-*-gcc-4.7.0     _   GCC_VER = 4.7.0
 !! unix-*-*-*-gcc-4.7.2     _   GCC_VER = 4.7.2
 !! unix-*-*-*-gcc-4.8.1     _   GCC_VER = 4.8.1
+!! unix-SunOS-i386-*-gcc-4.8 _  GCC_VER = 4.8
 
 #==============================================================================
 # Compiler Paths
@@ -206,7 +219,7 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-SunOS-*-*-cc-5.10    _  STUDIO_LOC = /bb/util/common/SS12U1-20120621
 !! unix-SunOS-*-*-cc-5.11    _  STUDIO_LOC = /bb/util/common/SS12U1-20130312
 !! unix-SunOS-*-*-cc-5.12    _  STUDIO_LOC = /bb/util/common/SS12_3-20131030
-!! unix-SunOS-*-*-cc-5.12.3  _  STUDIO_LOC = /bb/util/common/SS12_3-20131030
+!! unix-SunOS-*-*-cc-5.12.3  _  STUDIO_LOC = /bb/util/common/SS12_3-20141031
 
 
 unix-SunOS-*-*-cc-5.12       _  DEF_CXXFLAGS = -features=rvalueref
@@ -223,18 +236,33 @@ unix-SunOS-*-*-cc-5.12       _  DEF_CFLAGS   = -features=rvalueref
 !! unix-SunOS-*-*-gcc        _  SUN_GXX_PATH = /bbs/opt/bin/g++
 !! unix-SunOS-*-*-gcc-4.1.2  _  SUN_GCC_PATH = /opt/swt/install/gcc-$(GCC_VER)/bin/gcc
 !! unix-SunOS-*-*-gcc-4.1.2  _  SUN_GXX_PATH = /opt/swt/install/gcc-$(GCC_VER)/bin/g++
+!! unix-SunOS-i386-*-gcc-4.8  _  SUN_GCC_PATH = /bb/shared/gcc-$(GCC_VER)/bin/gcc-$(GCC_VER)-custom
+!! unix-SunOS-i386-*-gcc-4.8  _  SUN_GXX_PATH = /bb/shared/gcc-$(GCC_VER)/bin/g++-$(GCC_VER)-custom
 
 
 !! unix-Linux-*-*-gcc-3.4.6       _  COMPILERPATH = /usr/bin
 !! unix-Linux-*-2.6.18-gcc-4.1.2  _  COMPILERPATH = /usr/bin
 !! unix-Linux-*-*-gcc-4.2         _  COMPILERPATH = /opt/swt/install/gcc-$(GCC_VER)/bin
+# gcc 4.4 on RHEL5 is /usr/bin/gcc44 or /usr/bin/g++44
+!! unix-Linux-*-*-gcc-4.4         _  COMPILERPATH = /usr/bin
+# Restore gcc-4.2 settings for gcc 4.5 or above
+!! unix-Linux-*-*-gcc-4.5         _  COMPILERPATH = /opt/swt/install/gcc-$(GCC_VER)/bin
 !! unix-Linux-*-*-gcc-clang       _  COMPILERPATH = /opt/swt/install/llvm-3.1-64/bin
 !! unix-Linux-ppc64-*             _  COMPILERPATH = /opt/at7.0/bin/
 
 !! unix-Linux-*-*-gcc  _  LINUX_GCC_PREFIX = $(RETRY_ON_SIGNAL)
 
-!! unix-Linux-*-*-gcc  _  LINUX_GCC_PATH = $(COMPILERPATH)/gcc
-!! unix-Linux-*-*-gcc  _  LINUX_GXX_PATH = $(COMPILERPATH)/g++
+!! unix-Linux-*-*-gcc  _  LINUX_GCC_BINARY = gcc
+!! unix-Linux-*-*-gcc  _  LINUX_GXX_BINARY = g++
+# gcc 4.4 on RHEL5 is /usr/bin/gcc44 or /usr/bin/g++44
+!! unix-Linux-*-*-gcc-4.4  _  LINUX_GCC_BINARY = gcc44
+!! unix-Linux-*-*-gcc-4.4  _  LINUX_GXX_BINARY = g++44
+# Restore gcc-4.2 settings for gcc 4.5 or above
+!! unix-Linux-*-*-gcc-4.5  _  LINUX_GCC_BINARY = gcc
+!! unix-Linux-*-*-gcc-4.5  _  LINUX_GXX_BINARY = g++
+
+!! unix-Linux-*-*-gcc  _  LINUX_GCC_PATH = $(COMPILERPATH)/$(LINUX_GCC_BINARY)
+!! unix-Linux-*-*-gcc  _  LINUX_GXX_PATH = $(COMPILERPATH)/$(LINUX_GXX_BINARY)
 
 # tell Clang where GCC libraries are located
 
@@ -269,6 +297,7 @@ unix-                       _   AR      = $(RETRY_ON_EXIT) ar -ruv
 !! unix-SunOS-*-*-cc-5.9    _   AR      = $(CXX) -xar -o
 
 !! unix-SunOS-*-*-gcc       _   AR      = $(RETRY_ON_EXIT) ar -ruv
+!! unix-SunOS-i386-*-gcc    _   AR      = $(RETRY_ON_EXIT) /usr/ccs/bin/ar -ruv
 !! unix-AIX-*-*-gcc         _   AR      = $(RETRY_ON_EXIT) ar -ruv
 #old flags
 !! unix-AIX-*-*-CC64        _   AR      = $(RETRY_ON_EXIT) ar -X64 -ruv
@@ -480,7 +509,6 @@ unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/opt/bb/include
 *           _   BDE_LDFLAGS = $(SHR_LDFLAGS)
 *           _   BDE_ENDLDFLAGS  = $(SHR_ENDLDFLAGS)
 
-
 #==============================================================================
 # Misc Rules
 # Rules used by bde_build.pl that does not fit with any of the above
@@ -524,7 +552,11 @@ unix-Linux-*-*-gcc-4          _  RPATH_LIBDIR = lib
 
 # we don't want these options for the "built-in" gcc 4.1.2 on RHEL5,
 # so only enable RPATH starting from gcc-4.2
-unix-Linux-*-*-gcc-4.2        _  RPATH_FLAGS = -Wl,-rpath -Wl,/opt/swt/install/gcc-$(GCC_VER)/$(RPATH_LIBDIR)
+unix-Linux-*-*-gcc-4.2           _  RPATH_FLAGS = -Wl,-rpath -Wl,/opt/swt/install/gcc-$(GCC_VER)/$(RPATH_LIBDIR)
+# gcc-4.4 is built-in on RHEL5
+!! unix-Linux-*-*-gcc-4.4        _  RPATH_FLAGS =
+# Restore gcc-4.2 settings for gcc 4.5 or above
+!! unix-Linux-*-*-gcc-4.5        _  RPATH_FLAGS = -Wl,-rpath -Wl,/opt/swt/install/gcc-$(GCC_VER)/$(RPATH_LIBDIR)
 
 unix-Linux-*-*-*        _   DEF_ENDLDFLAGS = $(RPATH_FLAGS)
 
