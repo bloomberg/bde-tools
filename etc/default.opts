@@ -310,8 +310,8 @@
 #===
 
 !!  unix-                   opt  OPT_CFLAGS             =  -O -DNDEBUG
-!!  unix-*-*-*-gcc          opt  OPT_CFLAGS             =  -O2 -fno-strict-aliasing -DNDEBUG
-!!  unix-*-*-*-clang        opt  OPT_CFLAGS             =  -O2 -fno-strict-aliasing -DNDEBUG
+!!  unix-*-*-*-gcc          opt  OPT_CFLAGS             =  -O2 -DNDEBUG
+!!  unix-*-*-*-clang        opt  OPT_CFLAGS             =  -O2 -DNDEBUG
 
 !!  unix-*-*-*-gcc          opt  OPT_EXTRA_64_CXXFLAGS  =
 !!  unix-*-*-*-clang        opt  OPT_EXTRA_64_CXXFLAGS  =
@@ -319,8 +319,8 @@
 !!  unix-*-*-*-clang        64   OPT_EXTRA_64_CXXFLAGS  =
 
 !!  unix-                   opt  OPT_CXXFLAGS           =  -O -DNDEBUG
-!!  unix-*-*-*-gcc          opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
-!!  unix-*-*-*-clang        opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
+!!  unix-*-*-*-gcc          opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -DNDEBUG
+!!  unix-*-*-*-clang        opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -DNDEBUG
 # DRQS 57720228: Remove prefetch option
 !!  unix-SunOS-*-*-cc       opt  OPT_CXXFLAGS           =  -O -DNDEBUG -xbuiltin=%all
 !!  unix-AIX-*-*-xlc        opt  OPT_CXXFLAGS           =  -O -DNDEBUG -qalias=noansi
