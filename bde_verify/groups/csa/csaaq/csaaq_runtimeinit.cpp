@@ -35,7 +35,10 @@ struct report : Report<data>
 
 void report::operator()(const VarDecl *decl)
 {
-    if (decl->isFileVarDecl() && decl->hasInit() && !decl->checkInitIsICE()) {
+    if (decl->isFileVarDecl() &&
+        decl->hasInit() &&
+        !decl->getInit()->isValueDependent() &&
+        !decl->checkInitIsICE()) {
         a.report(decl, check_name, "AQa01",
                  "Global variable with runtime initialization");
     }
