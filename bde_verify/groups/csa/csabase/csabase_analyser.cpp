@@ -478,6 +478,11 @@ void csabase::Analyser::process_translation_unit_done()
 {
     config()->check_bv_stack(*this);
     onTranslationUnitDone();
+    FileID fid = d_source_manager.getMainFileID();
+    pp_observer().FileChanged(d_source_manager.getLocForEndOfFile(fid),
+                              PPCallbacks::ExitFile,
+                              SrcMgr::CharacteristicKind(),
+                              fid);
 }
 
 // -----------------------------------------------------------------------------

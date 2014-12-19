@@ -250,13 +250,6 @@ void csabase::PPObserver::EndOfMainFile()
     if (connected_)
     {
         onPPEndOfMainFile();
-
-        std::string file(files_.top());
-        files_.pop();
-        do_close_file(source_manager_->getLocForEndOfFile(
-                          source_manager_->getMainFileID()),
-                      files_.empty() ? std::string() : files_.top(),
-                      file);
     }
 }
 
