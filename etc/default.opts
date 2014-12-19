@@ -153,8 +153,11 @@
 !!  unix-AIX-*-*-xlc-*      _     AIX_UNLOCK_STREAMS  =  -D__NOLOCK_ON_INPUT -D__NOLOCK_ON_OUTPUT
 !!  unix-AIX-*-*-xlc-10.0   _     DEF_CXXFLAGS        =  $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 # inline rather than inline and optimize
-!!  unix-*-*-*-gcc          _     DEF_CXXFLAGS        =  -pipe --param gcc-min-expand=30
-!!  unix-SunOS-*-*-gcc      _     DEF_CXXFLAGS        =  -pipe --param ggc-min-expand=30 -mcpu=ultrasparc3
+!!  *                       _     CMP_TUNE            =
+!!  unix-*-*-*-gcc          _     CMP_TUNE            =  --param ggc-min-expand=30
+!!  unix-*-*-*-gcc-clang    _     CMP_TUNE            =
+!!  unix-*-*-*-gcc          _     DEF_CXXFLAGS        =  -pipe $(CMP_TUNE)
+!!  unix-SunOS-*-*-gcc      _     DEF_CXXFLAGS        =  -pipe $(CMP_TUNE) -mcpu=ultrasparc3
 
 # DRQS 29544311 - some .so's linking against BCE and BAE fail unless the sources are built
 ++  #                       with  -xthreadvar         =  dynamic
