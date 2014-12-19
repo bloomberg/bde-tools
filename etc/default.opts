@@ -323,7 +323,7 @@
 !!  unix-*-*-*-clang        opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
 # DRQS 57720228: Remove prefetch option
 !!  unix-SunOS-*-*-cc       opt  OPT_CXXFLAGS           =  -O -DNDEBUG -xbuiltin=%all
-!!  unix-AIX-*-*-xlc        opt  OPT_CXXFLAGS           =  -O -DNDEBUG -qalias=noansi
+!!  unix-AIX-*-*-xlc        opt  OPT_CXXFLAGS           =  -O -DNDEBUG
 
 # DRQS 16407776: Studio 12 switched the meaning of -O from -xO2 to -xO3 - we
 # want to use -xO3 explicitly to match plink.
@@ -533,9 +533,11 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 ++  unix-AIX-*-*-xlc-         _    DEF_CXXFLAGS       =  -qxflag=UnwindTypedefInClassDecl
 !!  unix-AIX-*-*-xlc-10.1     dbg  DBG_CXXFLAGS       =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 !!  unix-AIX-*-*-xlc-11.1     dbg  DBG_CXXFLAGS       =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
+!!  unix-AIX-*-*-xlc-13.1     dbg  DBG_CXXFLAGS       =  -qxflag=v6align -g -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 !!  unix-AIX-*-*-xlc-10.1     opt  OPT_CXXFLAGS       =  -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
 !!  unix-AIX-*-*-xlc-11.1     opt  OPT_CXXFLAGS       =  -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
 ++  unix-AIX-*-*-xlc-11.2     opt  OPT_CXXFLAGS       =  -qmaxmem=-1
+!!  unix-AIX-*-*-xlc-13.1     opt  OPT_CXXFLAGS       =  -O -DNDEBUG -qlanglvl=staticstoreoverlinkage
 
 !!  unix-AIX-*-*-xlc          _    XLC_PATH           =  xlc
 !!  unix-AIX-*-*-xlc          mt   XLC_PATH           =  xlc_r
