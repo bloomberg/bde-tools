@@ -761,7 +761,6 @@ void report::operator()(SourceLocation                now,
                         SrcMgr::CharacteristicKind    type,
                         FileID                        prev)
 {
-    std::string name = m.getPresumedLoc(now).getFilename();
     if (reason == PPCallbacks::EnterFile) {
         d_data.d_fileid_stack.emplace_back(m.getFileID(now));
     } else if (reason == PPCallbacks::ExitFile) {
