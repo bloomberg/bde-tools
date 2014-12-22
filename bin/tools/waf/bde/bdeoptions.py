@@ -1,9 +1,9 @@
+from __future__ import print_function
 import re
 import os
 
-
 class RawOptions(object):
-    class Option:
+    class Option(object):
         '''Empty class representing an option read directly from on disk.
            Attributes get dynamically added.'''
 
@@ -108,7 +108,7 @@ class Options(object):
     OPT_INLINE_COMMAND_RE = re.compile(r'\\"`([^`]+)`\\"')
     OPT_INLINE_COMMAND_RE2 = re.compile(r'\$\(shell([^\)]+)\)')
 
-    class Option:
+    class Option(object):
         '''Empty class representing the option value.
         Attributes get dynamically added.'''
         pass
@@ -179,10 +179,10 @@ class Options(object):
 
         if debug_opt_keys:
             if option.key in debug_opt_keys:
-                print "%s: %s" % (("Accept" if want_option else "Ignore"),
-                                  option)
+                print("%s: %s" % (("Accept" if want_option else "Ignore"),
+                                  option))
                 if want_option:
-                    print "*New value: %s\n" % self.options[option.key]
+                    print("*New value: %s\n" % self.options[option.key])
 
     def read(self, raw_options, ctx, debug_opt_keys=None):
         for raw_option in raw_options:
@@ -190,7 +190,7 @@ class Options(object):
 
     def evaluate(self):
         '''Evaluate stored options.'''
-        for opt in self.options.keys():
+        for opt in list(self.options.keys()):
             self.options[opt] = self.evaluate_option(opt)
 
     def evaluate_option(self, opt):

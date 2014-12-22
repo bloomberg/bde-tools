@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import copy
 import os
 import re
@@ -259,7 +260,7 @@ class BdeWafConfigure(object):
             level_map[level].add(group)
             return level
 
-        map(lambda x: _levelize_groups_impl(x), self.group_dep[group])
+        list(map(lambda x: _levelize_groups_impl(x), self.group_dep[group]))
 
         levels = []
         for level in sorted(level_map.keys()):
