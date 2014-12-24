@@ -12,12 +12,11 @@ from bdeoptions import Uplid, Ufid
 
 from waflib import Context, Utils, Logs
 
-
 def options(ctx):
     # check version numbers here because options() is called before any other
     # command-handling function
-    # if sys.hexversion < 0x2060000 or 0x3000000 <= sys.hexversion:
-    #     ctx.fatal('Pyhon 2.6 or 2.7 is required to build BDE using waf.')
+    if sys.hexversion < 0x2060000:
+        ctx.fatal('Pyhon 2.6 and above is required to build BDE using waf.')
 
     ctx.load('bdeunittest')
 
