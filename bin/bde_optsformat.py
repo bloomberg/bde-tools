@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import sys
 
@@ -45,7 +46,7 @@ padding. Comments and blank lines will be left in-place unmodified.
 """
 
     if len(sys.argv) > 1:
-        print >>sys.stderr, usage
+        print(usage, file=sys.stderr)
         sys.exit(1)
 
     raw_options = RawOptions()
@@ -71,9 +72,9 @@ padding. Comments and blank lines will be left in-place unmodified.
         option = line_rep[1]
 
         if option:
-            print _format_option(option, [w + 2 for w in max_field_widths])
+            print(_format_option(option, [w + 2 for w in max_field_widths]))
         else:
-            print line
+            print(line)
 
 # ----------------------------------------------------------------------------
 # Copyright (C) 2013-2014 Bloomberg Finance L.P.
