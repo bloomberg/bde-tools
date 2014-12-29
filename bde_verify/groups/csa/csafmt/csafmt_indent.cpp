@@ -497,7 +497,6 @@ void report::operator()(const Token &token,
         unsigned n;
         if (args && (n = args->getNumArguments()) > 0) {
             const Token *begin = args->getUnexpArgument(0);
-            const Token *end = begin + n;
             Location arg(d_analyser.manager(), begin->getLocation());
             std::vector<size_t> levels(1, 4);
             if (l.line() == arg.line()) {

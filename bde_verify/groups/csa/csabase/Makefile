@@ -8,7 +8,7 @@ LLVMVERSION = 3.6.0
 SYSTEM      = $(shell uname -s)
 LLVMDIR     = /home/hrosen4/mbig/llvm-$(LLVMVERSION)/install-$(SYSTEM)
 SHELL       = /opt/swt/bin/bash
-CXXFLAGS   += -std=c++11
+CXXFLAGS   += -std=c++11 -Wall -Wno-mismatched-tags
 
 default: $(CSABASE)
 

@@ -678,7 +678,6 @@ void report::check_not_forwarded(data::Ctors::const_iterator begin,
 {
     std::set<std::pair<bool, const CXXRecordDecl *> > records;
 
-    int count = 0;
     for (data::Ctors::const_iterator itr = begin; itr != end; ++itr) {
         const CXXConstructorDecl *decl = *itr;
         const CXXRecordDecl* record = decl->getParent()->getCanonicalDecl();

@@ -118,12 +118,6 @@ const LinkageSpecDecl *report::get_local_linkage(SourceLocation sl)
     return result;
 }
 
-llvm::StringRef ls(LinkageSpecDecl::LanguageIDs id)
-{
-    static const char *const langs[] = { "None", 0, "C", 0, "C++" };
-    return langs[id];
-}
-
 // InclusionDirective
 void report::operator()(SourceLocation   HashLoc,
                         const Token&     IncludeTok,
@@ -158,9 +152,8 @@ void report::operator()(SourceRange Range)
     SourceLocation sl = Range.getBegin();
     if (!special.count(llvm::sys::path::filename(m.getFilename(sl)))) {
         llvm::StringRef s = d_analyser.get_source(Range);
-        size_t pos = 0;
-        llvm::Regex r(" *ifn?def *INCLUDED_.*[[:space:]]+"
-                      "# *include +[<\"]([^\">]*)[\">]");
+        static llvm::Regex r(" *ifn?def *INCLUDED_.*[[:space:]]+"
+                             "# *include +[<\"]([^\">]*)[\">]");
         llvm::SmallVector<llvm::StringRef, 7> matches;
         if (r.match(s, &matches) && s.find(matches[0]) == 0) {
             d_data.d_includes.insert(

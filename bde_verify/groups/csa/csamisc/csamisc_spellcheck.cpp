@@ -151,7 +151,6 @@ void report::operator()()
     }
 
     for (const auto& file_comment : d_analyser.attachment<data>().d_comments) {
-        const std::string &file_name = file_comment.first;
         if (d_analyser.is_component(file_comment.first)) {
             for (const auto& comment : file_comment.second) {
                 check_spelling(comment);

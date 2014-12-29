@@ -818,7 +818,6 @@ void report::operator()(SourceLocation   where,
         ft == e_NIL &&
         !m.isInSystemHeader(where) &&
         classify(name, &pfvi) == e_STD) {
-        SourceRange nr = namerange.getAsRange();
         for (const file_info *fi : *pfvi) {
             if (d_data.d_guard == fi->std_guard) {
                 SourceRange r = d_analyser.get_line_range(d_data.d_guard_pos);
@@ -1293,7 +1292,6 @@ void report::add_include(FileID             fid,
         }
     }
     SourceLocation ip = sl;
-    SourceLocation last_ip = sl;
     for (const auto& p : d_data.d_includes[fid]) {
         const std::vector<const file_info *> *pfvi_inc;
         llvm::StringRef pn = std::get<0>(p);
@@ -1371,7 +1369,6 @@ void report::require_file(std::string     name,
                           llvm::StringRef symbol)
 {
     SourceManager& m = d_analyser.manager();
-    SourceLocation orig_sl = sl;
 
     if (classify(name) == e_SPC) {
         return;
@@ -1429,11 +1426,10 @@ void report::inc_for_std_decl(llvm::StringRef  r,
 {
     SourceManager& m = d_analyser.manager();
     sl = m.getExpansionLoc(sl);
-    FileID fid = m.getFileID(sl);
 
-    for (const Decl *d = ds; d; d = look_through_typedef(d)) {
+    for (const Decl *decl = ds; decl; decl = look_through_typedef(decl)) {
         bool skip = false;
-        for (const Decl *p = d; !skip && p; p = p->getPreviousDecl()) {
+        for (const Decl *p = decl; !skip && p; p = p->getPreviousDecl()) {
             Location loc(d_analyser.manager(), p->getLocation());
             FileName fn(loc.file());
             Decl::redecl_iterator rb = p->redecls_begin();
@@ -1443,7 +1439,6 @@ void report::inc_for_std_decl(llvm::StringRef  r,
                     d_analyser.manager().isBeforeInTranslationUnit(
                         rb->getLocation(), sl)) {
                     Location loc(d_analyser.manager(), rb->getLocation());
-                    FileType ft = classify(loc.file());
                     if (!skip && loc) {
                         require_file(loc.file(), sl, r);
                         skip = true;
@@ -1581,116 +1576,7 @@ bool report::VisitUnresolvedLookupExpr(UnresolvedLookupExpr *expr)
 // TranslationUnitDone
 void report::operator()()
 {
-#if 0
-    MatchFinder mf;
-
-    OnMatch<> m1([&](const BoundNodes &nodes) {
-        const DeclRefExpr *expr = nodes.getNodeAs<DeclRefExpr>("dr");
-        const NamedDecl *ds = expr->getFoundDecl();
-        SourceLocation sl = expr->getExprLoc();
-        if (sl.isValid() &&
-            !d_analyser.manager().isInSystemHeader(sl)) {
-            const DeclContext *dc = ds->getDeclContext();
-            std::string name = expr->getNameInfo().getName().getAsString();
-            while (dc->isRecord()) {
-                name = llvm::dyn_cast<NamedDecl>(dc)->getNameAsString();
-                dc = dc->getParent();
-            }
-            if (dc->isTranslationUnit() ||
-                dc->isExternCContext() ||
-                dc->isExternCXXContext()) {
-                d_data.d_std_names.insert(std::make_pair(name, sl));
-            }
-            else if (isNamespace(dc, "std")) {
-                d_data.d_std_names.insert(std::make_pair(name, sl));
-            }
-            else if (isNamespace(dc, "bsl")) {
-                inc_for_std_decl(name, sl, ds);
-            }
-        }
-    });
-    mf.addDynamicMatcher(
-        decl(forEachDescendant(declRefExpr().bind("dr"))), &m1);
-
-    OnMatch<> m2([&](const BoundNodes &nodes) {
-        const CXXConstructExpr *expr = nodes.getNodeAs<CXXConstructExpr>("ce");
-        SourceLocation sl = expr->getExprLoc();
-
-        if (sl.isValid() &&
-            !d_analyser.manager().isInSystemHeader(sl)) {
-            const NamedDecl *ds = expr->getConstructor()->getParent();
-            const DeclContext *dc = ds->getDeclContext();
-            std::string name =
-                expr->getConstructor()->getParent()->getNameAsString();
-            while (dc->isRecord()) {
-                name = llvm::dyn_cast<NamedDecl>(dc)->getNameAsString();
-                dc = dc->getParent();
-            }
-            if (isNamespace(dc, "std")) {
-                d_data.d_std_names.insert(std::make_pair(name, sl));
-            }
-            else if (isNamespace(dc, "bsl")) {
-                inc_for_std_decl(name, sl, ds);
-            }
-        }
-    });
-    mf.addDynamicMatcher(
-        decl(forEachDescendant(constructExpr().bind("ce"))), &m2);
-
-    OnMatch<> m3([&](const BoundNodes &nodes) {
-        TypeLoc tl = *nodes.getNodeAs<TypeLoc>("et");
-        const Type *type = tl.getTypePtr();
-        if (type->getAs<TypedefType>() || !type->isBuiltinType()) {
-            SourceLocation sl =
-                d_analyser.manager().getExpansionLoc(tl.getBeginLoc());
-            PrintingPolicy pp(d_analyser.context()->getLangOpts());
-            pp.SuppressTagKeyword = true;
-            pp.SuppressInitializers = true;
-            pp.TerseOutput = true;
-            std::string r = QualType(type, 0).getAsString(pp);
-            NamedDecl *ds = d_analyser.lookup_name(r);
-            if (!ds) {
-                if (const TypedefType *tt = type->getAs<TypedefType>()) {
-                    ds = tt->getDecl();
-                }
-                else {
-                    tl.getTypePtr()->isIncompleteType(&ds);
-                }
-            }
-            if (ds &&
-                sl.isValid() &&
-                !d_analyser.manager().isInSystemHeader(sl)) {
-                inc_for_std_decl(r, sl, ds);
-            }
-        }
-    });
-    mf.addDynamicMatcher(
-        decl(forEachDescendant(typeLoc(anything()).bind("et"))), &m3);
-
-    OnMatch<> m4([&](const BoundNodes &nodes) {
-        const UnresolvedLookupExpr *expr =
-            nodes.getNodeAs<UnresolvedLookupExpr>("ul");
-        SourceLocation sl = expr->getExprLoc();
-        NestedNameSpecifier *nns = expr->getQualifier();
-        if (sl.isValid() &&
-            !d_analyser.manager().isInSystemHeader(sl) &&
-            nns &&
-            nns->getKind() == NestedNameSpecifier::Namespace &&
-            nns->getAsNamespace()->getNameAsString() == "bsl") {
-            std::string r = "bsl::" + expr->getName().getAsString();
-            if (const Decl *ds = d_analyser.lookup_name(r)) {
-                inc_for_std_decl(r, sl, ds);
-            }
-        }
-    });
-    mf.addDynamicMatcher(
-        decl(forEachDescendant(unresolvedLookupExpr().bind("ul"))), &m4);
-
-    mf.match(*d_analyser.context()->getTranslationUnitDecl(),
-             *d_analyser.context());
-#else
     TraverseDecl(d_analyser.context()->getTranslationUnitDecl());
-#endif
 
     for (const auto& rp : d_data.d_std_names) {
         llvm::StringRef r = rp.first;

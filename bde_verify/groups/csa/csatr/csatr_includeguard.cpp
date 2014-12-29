@@ -4,9 +4,11 @@
 #include <clang/Basic/SourceLocation.h>
 #include <clang/Lex/Token.h>
 #include <csabase_analyser.h>
+#include <csabase_debug.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_ppobserver.h>
 #include <csabase_registercheck.h>
+#include <csabase_report.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/Regex.h>
 #include <utils/event.hpp>
@@ -44,11 +46,10 @@ data::data()
 {
 }
 
-struct report
+struct report : Report<data>
     // Detect incorrect guard use in headers.
 {
-    report(Analyser& analyser);
-        // Create an object of this type using the specified analyser.
+    using Report<data>::Report;
 
     std::string guard();
         // Return the expected include guard.
@@ -67,60 +68,51 @@ struct report
                     std::string const&,
                     std::string const& filename);
         // Process close of the specified 'file' at the specified 'location'.
-
-    Analyser& d_analyser;
-    data& d_data;
 };
-
-report::report(Analyser& analyser)
-: d_analyser(analyser)
-, d_data(analyser.attachment<data>())
-{
-}
 
 std::string report::guard()
 {
-    return "INCLUDED_" + llvm::StringRef(d_analyser.component()).upper();
+    return "INCLUDED_" + llvm::StringRef(a.component()).upper();
 }
 
 void report::operator()(SourceLocation, SourceRange range)
 {
-    if (d_analyser.is_component_header(range.getBegin()) && !d_data.d_test) {
-        llvm::StringRef value = d_analyser.get_source(range);
+    if (a.is_component_header(range.getBegin()) && !d.d_test) {
+        llvm::StringRef value = a.get_source(range);
         llvm::Regex re("^ *! *defined *[(]? *" + guard() + " *[)]? *$");
         if (!re.match(value)) {
-            d_analyser.report(range.getBegin(), check_name, "TR14",
+            a.report(range.getBegin(), check_name, "TR14",
                               "Wrong include guard (expected '!defined(%0)')")
                 << guard();
         }
-        d_data.d_test = true;
+        d.d_test = true;
     }
 }
 
 void report::operator()(SourceLocation where, Token const& token)
 {
-    if (d_analyser.is_component_header(token.getLocation()) &&
-        !d_data.d_test) {
+    if (a.is_component_header(token.getLocation()) &&
+        !d.d_test) {
         if (IdentifierInfo const* id = token.getIdentifierInfo()) {
             if (id->getNameStart() != guard()) {
-                d_analyser.report(token.getLocation(), check_name, "TR14",
+                a.report(token.getLocation(), check_name, "TR14",
                                   "Wrong name for include guard "
                                   "(expected '%0')")
                     << guard();
             }
-            d_data.d_test = true;
+            d.d_test = true;
         }
     }
 }
 
 void report::operator()(Token const& token, MacroDirective const*)
 {
-    if (d_analyser.is_component_header(token.getLocation())
-        && !d_data.d_define
+    if (a.is_component_header(token.getLocation())
+        && !d.d_define
         && token.getIdentifierInfo()
         && token.getIdentifierInfo()->getNameStart() == guard()
         ) {
-        d_data.d_define = true;
+        d.d_define = true;
     }
 }
 
@@ -128,14 +120,14 @@ void report::operator()(SourceLocation location,
                         std::string const&,
                         std::string const& filename)
 {
-    if (d_analyser.is_component_header(filename) &&
-        !(d_data.d_test && d_data.d_define)) {
-        d_analyser.report(location, check_name, "TR14",
-                           d_data.d_test
-                           ? "Missing define for include guard %0"
-                           : d_data.d_define
-                           ? "Missing test for include guard %0"
-                           : "Missing include guard %0")
+    if (a.is_component_header(filename) &&
+        !(d.d_test && d.d_define)) {
+        a.report(location, check_name, "TR14",
+                 d.d_test
+                 ? "Missing define for include guard %0"
+                 : d.d_define
+                 ? "Missing test for include guard %0"
+                 : "Missing include guard %0")
             << guard();
     }
 }

@@ -162,7 +162,6 @@ void report::operator()(SourceRange Range)
     llvm::SmallVector<llvm::StringRef, 7> matches;
     if (d_type == PPObserver::e_FileSkipped) {
         if (!special.count(f)) {
-            size_t pos = 0;
             static llvm::Regex r(" *ifn?def *INCLUDED_.*[[:space:]]+"
                                  "# *include +([<\"]([^\">]*)[\">])");
             llvm::SmallVector<llvm::StringRef, 7> matches;

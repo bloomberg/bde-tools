@@ -9,7 +9,7 @@ LLVMVERSION = 3.6.0
 SYSTEM      = $(shell uname -s)
 LLVMDIR     = /home/hrosen4/mbig/llvm-$(LLVMVERSION)/install-$(SYSTEM)
 SHELL       = /opt/swt/bin/bash
-CXXFLAGS   += -std=c++11
+CXXFLAGS   += -std=c++11 -Wall -Wno-mismatched-tags
 ASPELL      = /opt/swt/install/aspell-0.60.6.1-64
 CXXFLAGS   += -DSPELL_CHECK=1
 INCFLAGS   += -I$(ASPELL)/include
@@ -62,6 +62,7 @@ export VERBOSE ?= @
 
 CXXFILES =                                                                    \
         groups/csa/csaaq/csaaq_cppinexternc.cpp                               \
+        groups/csa/csaaq/csaaq_freefunctionsdepend.cpp                        \
         groups/csa/csaaq/csaaq_friendsinheaders.cpp                           \
         groups/csa/csaaq/csaaq_includeinexternc.cpp                           \
         groups/csa/csaaq/csaaq_inentns.cpp                                    \

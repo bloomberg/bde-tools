@@ -144,7 +144,6 @@ struct report
 
     bool isAllCasesReturn(const ReturnStmt *ret)
     {
-        const data& d = d_analyser.attachment<data>();
         const SwitchStmt *ss = d_analyser.get_parent<SwitchStmt>(ret);
         if (ss) {
             const SwitchCase *me = d_analyser.get_parent<SwitchCase>(ret);

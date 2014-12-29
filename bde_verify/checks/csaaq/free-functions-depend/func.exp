@@ -1,0 +1,1883 @@
+In file included from func.cpp:1:
+./func.h:3:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_F();
+     ^
+./func.h:4:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_F(int);
+     ^
+./func.h:6:25: warning: AQS01: Free function must have a parameter using a type defined by this file
+template <class T> void f1_1_T();
+                        ^
+./func.h:7:25: warning: AQS01: Free function must have a parameter using a type defined by this file
+template <class T> void f1_2_T(int);
+                        ^
+./func.h:9:51: warning: AQS01: Free function must have a parameter using a type defined by this file
+template <class T, template <class> class U> void f1_1_U(U<T>);
+                                                  ^
+./func.h:10:51: warning: AQS01: Free function must have a parameter using a type defined by this file
+template <class T, template <class> class U> void f1_2_U(U<T>, int);
+                                                  ^
+./func.h:45:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecHF(DecHF);
+     ^
+./func.h:46:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecHF(const DecHF *);
+     ^
+./func.h:47:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecHF(volatile DecHF &);
+     ^
+./func.h:48:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecHF(int, DecHF);
+     ^
+./func.h:49:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecHF(int, const DecHF *);
+     ^
+./func.h:50:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecHF(int, volatile DecHF &);
+     ^
+./func.h:63:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefHFIf(DefHF::IC);
+     ^
+./func.h:64:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefHFIf(const DefHF::IC *);
+     ^
+./func.h:65:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefHFIf(volatile DefHF::IC &);
+     ^
+./func.h:66:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefHFIf(int, DefHF::IC);
+     ^
+./func.h:67:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefHFIf(int, const DefHF::IC *);
+     ^
+./func.h:68:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefHFIf(int, volatile DefHF::IC &);
+     ^
+./func.h:69:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecOHF(DecOHF);
+     ^
+./func.h:70:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecOHF(const DecOHF *);
+     ^
+./func.h:71:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecOHF(volatile DecOHF &);
+     ^
+./func.h:72:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecOHF(int, DecOHF);
+     ^
+./func.h:73:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecOHF(int, const DecOHF *);
+     ^
+./func.h:74:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecOHF(int, volatile DecOHF &);
+     ^
+./func.h:75:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHF(DefOHF);
+     ^
+./func.h:76:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHF(const DefOHF *);
+     ^
+./func.h:77:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHF(volatile DefOHF &);
+     ^
+./func.h:78:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHF(int, DefOHF);
+     ^
+./func.h:79:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHF(int, const DefOHF *);
+     ^
+./func.h:80:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHF(int, volatile DefOHF &);
+     ^
+./func.h:81:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHFId(DefOHF::ID);
+     ^
+./func.h:82:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHFId(const DefOHF::ID *);
+     ^
+./func.h:83:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHFId(volatile DefOHF::ID &);
+     ^
+./func.h:84:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHFId(int, DefOHF::ID);
+     ^
+./func.h:85:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHFId(int, const DefOHF::ID *);
+     ^
+./func.h:86:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHFId(int, volatile DefOHF::ID &);
+     ^
+./func.h:87:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHFIf(DefOHF::IC);
+     ^
+./func.h:88:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHFIf(const DefOHF::IC *);
+     ^
+./func.h:89:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHFIf(volatile DefOHF::IC &);
+     ^
+./func.h:90:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHFIf(int, DefOHF::IC);
+     ^
+./func.h:91:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHFIf(int, const DefOHF::IC *);
+     ^
+./func.h:92:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHFIf(int, volatile DefOHF::IC &);
+     ^
+./func.h:93:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecHAN(DecHAN);
+     ^
+./func.h:94:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecHAN(const DecHAN *);
+     ^
+./func.h:95:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecHAN(volatile DecHAN &);
+     ^
+./func.h:96:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecHAN(int, DecHAN);
+     ^
+./func.h:97:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecHAN(int, const DecHAN *);
+     ^
+./func.h:98:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecHAN(int, volatile DecHAN &);
+     ^
+./func.h:111:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefHANIf(DefHAN::IC);
+     ^
+./func.h:112:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefHANIf(const DefHAN::IC *);
+     ^
+./func.h:113:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefHANIf(volatile DefHAN::IC &);
+     ^
+./func.h:114:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefHANIf(int, DefHAN::IC);
+     ^
+./func.h:115:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefHANIf(int, const DefHAN::IC *);
+     ^
+./func.h:116:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefHANIf(int, volatile DefHAN::IC &);
+     ^
+./func.h:117:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecOHAN(DecOHAN);
+     ^
+./func.h:118:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecOHAN(const DecOHAN *);
+     ^
+./func.h:119:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecOHAN(volatile DecOHAN &);
+     ^
+./func.h:120:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecOHAN(int, DecOHAN);
+     ^
+./func.h:121:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecOHAN(int, const DecOHAN *);
+     ^
+./func.h:122:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecOHAN(int, volatile DecOHAN &);
+     ^
+./func.h:123:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHAN(DefOHAN);
+     ^
+./func.h:124:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHAN(const DefOHAN *);
+     ^
+./func.h:125:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHAN(volatile DefOHAN &);
+     ^
+./func.h:126:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHAN(int, DefOHAN);
+     ^
+./func.h:127:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHAN(int, const DefOHAN *);
+     ^
+./func.h:128:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHAN(int, volatile DefOHAN &);
+     ^
+./func.h:129:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHANId(DefOHAN::ID);
+     ^
+./func.h:130:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHANId(const DefOHAN::ID *);
+     ^
+./func.h:131:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHANId(volatile DefOHAN::ID &);
+     ^
+./func.h:132:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHANId(int, DefOHAN::ID);
+     ^
+./func.h:133:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHANId(int, const DefOHAN::ID *);
+     ^
+./func.h:134:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHANId(int, volatile DefOHAN::ID &);
+     ^
+./func.h:135:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHANIf(DefOHAN::IC);
+     ^
+./func.h:136:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHANIf(const DefOHAN::IC *);
+     ^
+./func.h:137:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHANIf(volatile DefOHAN::IC &);
+     ^
+./func.h:138:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHANIf(int, DefOHAN::IC);
+     ^
+./func.h:139:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHANIf(int, const DefOHAN::IC *);
+     ^
+./func.h:140:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHANIf(int, volatile DefOHAN::IC &);
+     ^
+./func.h:147:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecYHF(DecYHF);
+     ^
+./func.h:148:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecYHF(const DecYHF *);
+     ^
+./func.h:149:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecYHF(volatile DecYHF &);
+     ^
+./func.h:150:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecYHF(int, DecYHF);
+     ^
+./func.h:151:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecYHF(int, const DecYHF *);
+     ^
+./func.h:152:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecYHF(int, volatile DecYHF &);
+     ^
+./func.h:154:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecHTF(DecHTF<T>);
+     ^
+./func.h:156:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecHTF(const DecHTF<T> *);
+     ^
+./func.h:158:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecHTF(volatile DecHTF<T> &);
+     ^
+./func.h:160:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecHTF(int, DecHTF<T>);
+     ^
+./func.h:162:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecHTF(int, const DecHTF<T> *);
+     ^
+./func.h:164:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecHTF(int, volatile DecHTF<T> &);
+     ^
+./func.h:202:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecOHTF(DecOHTF<T>);
+     ^
+./func.h:204:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecOHTF(const DecOHTF<T> *);
+     ^
+./func.h:206:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecOHTF(volatile DecOHTF<T> &);
+     ^
+./func.h:208:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecOHTF(int, DecOHTF<T>);
+     ^
+./func.h:210:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecOHTF(int, const DecOHTF<T> *);
+     ^
+./func.h:212:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecOHTF(int, volatile DecOHTF<T> &);
+     ^
+./func.h:214:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTF(DefOHTF<T>);
+     ^
+./func.h:216:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTF(const DefOHTF<T> *);
+     ^
+./func.h:218:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTF(volatile DefOHTF<T> &);
+     ^
+./func.h:220:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTF(int, DefOHTF<T>);
+     ^
+./func.h:222:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTF(int, const DefOHTF<T> *);
+     ^
+./func.h:224:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTF(int, volatile DefOHTF<T> &);
+     ^
+./func.h:226:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTFId(typename DefOHTF<T>::ID);
+     ^
+./func.h:228:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTFId(const typename DefOHTF<T>::ID *);
+     ^
+./func.h:230:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTFId(volatile typename DefOHTF<T>::ID &);
+     ^
+./func.h:232:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTFId(int, typename DefOHTF<T>::ID);
+     ^
+./func.h:234:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTFId(int, const typename DefOHTF<T>::ID *);
+     ^
+./func.h:236:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTFId(int, volatile typename DefOHTF<T>::ID &);
+     ^
+./func.h:238:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTFIf(typename DefOHTF<T>::IC);
+     ^
+./func.h:240:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTFIf(const typename DefOHTF<T>::IC *);
+     ^
+./func.h:242:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTFIf(volatile typename DefOHTF<T>::IC &);
+     ^
+./func.h:244:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTFIf(int, typename DefOHTF<T>::IC);
+     ^
+./func.h:246:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTFIf(int, const typename DefOHTF<T>::IC *);
+     ^
+./func.h:248:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTFIf(int, volatile typename DefOHTF<T>::IC &);
+     ^
+./func.h:250:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecHTAN(DecHTAN<T>);
+     ^
+./func.h:252:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecHTAN(const DecHTAN<T> *);
+     ^
+./func.h:254:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecHTAN(volatile DecHTAN<T> &);
+     ^
+./func.h:256:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecHTAN(int, DecHTAN<T>);
+     ^
+./func.h:258:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecHTAN(int, const DecHTAN<T> *);
+     ^
+./func.h:260:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecHTAN(int, volatile DecHTAN<T> &);
+     ^
+./func.h:298:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecOHTAN(DecOHTAN<T>);
+     ^
+./func.h:300:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecOHTAN(const DecOHTAN<T> *);
+     ^
+./func.h:302:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecOHTAN(volatile DecOHTAN<T> &);
+     ^
+./func.h:304:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecOHTAN(int, DecOHTAN<T>);
+     ^
+./func.h:306:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecOHTAN(int, const DecOHTAN<T> *);
+     ^
+./func.h:308:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecOHTAN(int, volatile DecOHTAN<T> &);
+     ^
+./func.h:310:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTAN(DefOHTAN<T>);
+     ^
+./func.h:312:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTAN(const DefOHTAN<T> *);
+     ^
+./func.h:314:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTAN(volatile DefOHTAN<T> &);
+     ^
+./func.h:316:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTAN(int, DefOHTAN<T>);
+     ^
+./func.h:318:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTAN(int, const DefOHTAN<T> *);
+     ^
+./func.h:320:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTAN(int, volatile DefOHTAN<T> &);
+     ^
+./func.h:322:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTANId(typename DefOHTAN<T>::ID);
+     ^
+./func.h:324:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTANId(const typename DefOHTAN<T>::ID *);
+     ^
+./func.h:326:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTANId(volatile typename DefOHTAN<T>::ID &);
+     ^
+./func.h:328:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTANId(int, typename DefOHTAN<T>::ID);
+     ^
+./func.h:330:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTANId(int, const typename DefOHTAN<T>::ID *);
+     ^
+./func.h:332:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTANId(int, volatile typename DefOHTAN<T>::ID &);
+     ^
+./func.h:334:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTANIf(typename DefOHTAN<T>::IC);
+     ^
+./func.h:336:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTANIf(const typename DefOHTAN<T>::IC *);
+     ^
+./func.h:338:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTANIf(volatile typename DefOHTAN<T>::IC &);
+     ^
+./func.h:340:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTANIf(int, typename DefOHTAN<T>::IC);
+     ^
+./func.h:342:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTANIf(int, const typename DefOHTAN<T>::IC *);
+     ^
+./func.h:344:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTANIf(int, volatile typename DefOHTAN<T>::IC &);
+     ^
+./func.h:346:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecHF(U<DecHF>);
+     ^
+./func.h:348:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecHF(U<const DecHF *>);
+     ^
+./func.h:350:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecHF(U<volatile DecHF &>);
+     ^
+./func.h:364:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefHFIf(U<DefHF::IC>);
+     ^
+./func.h:366:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefHFIf(U<const DefHF::IC *>);
+     ^
+./func.h:368:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefHFIf(U<volatile DefHF::IC &>);
+     ^
+./func.h:370:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecOHF(U<DecOHF>);
+     ^
+./func.h:372:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecOHF(U<const DecOHF *>);
+     ^
+./func.h:374:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecOHF(U<volatile DecOHF &>);
+     ^
+./func.h:376:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHF(U<DefOHF>);
+     ^
+./func.h:378:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHF(U<const DefOHF *>);
+     ^
+./func.h:380:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHF(U<volatile DefOHF &>);
+     ^
+./func.h:382:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHFId(U<DefOHF::ID>);
+     ^
+./func.h:384:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHFId(U<const DefOHF::ID *>);
+     ^
+./func.h:386:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHFId(U<volatile DefOHF::ID &>);
+     ^
+./func.h:388:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHFIf(U<DefOHF::IC>);
+     ^
+./func.h:390:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHFIf(U<const DefOHF::IC *>);
+     ^
+./func.h:392:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHFIf(U<volatile DefOHF::IC &>);
+     ^
+./func.h:394:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecHAN(U<DecHAN>);
+     ^
+./func.h:396:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecHAN(U<const DecHAN *>);
+     ^
+./func.h:398:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecHAN(U<volatile DecHAN &>);
+     ^
+./func.h:412:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefHANIf(U<DefHAN::IC>);
+     ^
+./func.h:414:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefHANIf(U<const DefHAN::IC *>);
+     ^
+./func.h:416:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefHANIf(U<volatile DefHAN::IC &>);
+     ^
+./func.h:418:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecOHAN(U<DecOHAN>);
+     ^
+./func.h:420:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecOHAN(U<const DecOHAN *>);
+     ^
+./func.h:422:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecOHAN(U<volatile DecOHAN &>);
+     ^
+./func.h:424:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHAN(U<DefOHAN>);
+     ^
+./func.h:426:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHAN(U<const DefOHAN *>);
+     ^
+./func.h:428:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHAN(U<volatile DefOHAN &>);
+     ^
+./func.h:430:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHANId(U<DefOHAN::ID>);
+     ^
+./func.h:432:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHANId(U<const DefOHAN::ID *>);
+     ^
+./func.h:434:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHANId(U<volatile DefOHAN::ID &>);
+     ^
+./func.h:436:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHANIf(U<DefOHAN::IC>);
+     ^
+./func.h:438:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHANIf(U<const DefOHAN::IC *>);
+     ^
+./func.h:440:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHANIf(U<volatile DefOHAN::IC &>);
+     ^
+./func.h:448:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecYHF(U<DecYHF>);
+     ^
+./func.h:450:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecYHF(U<const DecYHF *>);
+     ^
+./func.h:452:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecYHF(U<volatile DecYHF &>);
+     ^
+./func.h:454:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecHTF(U<DecHTF<T> >);
+     ^
+./func.h:456:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecHTF(U<const DecHTF<T> *>);
+     ^
+./func.h:458:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecHTF(U<volatile DecHTF<T> &>);
+     ^
+./func.h:478:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecOHTF(U<DecOHTF<T> >);
+     ^
+./func.h:480:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecOHTF(U<const DecOHTF<T> *>);
+     ^
+./func.h:482:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecOHTF(U<volatile DecOHTF<T> &>);
+     ^
+./func.h:484:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTF(U<DefOHTF<T> >);
+     ^
+./func.h:486:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTF(U<const DefOHTF<T> *>);
+     ^
+./func.h:488:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTF(U<volatile DefOHTF<T> &>);
+     ^
+./func.h:490:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTFId(U<typename DefOHTF<T>::ID>);
+     ^
+./func.h:492:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTFId(U<const typename DefOHTF<T>::ID *>);
+     ^
+./func.h:494:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTFId(U<volatile typename DefOHTF<T>::ID &>);
+     ^
+./func.h:496:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTFIf(U<typename DefOHTF<T>::IC>);
+     ^
+./func.h:498:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTFIf(U<const typename DefOHTF<T>::IC *>);
+     ^
+./func.h:500:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTFIf(U<volatile typename DefOHTF<T>::IC &>);
+     ^
+./func.h:502:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecHTAN(U<DecHTAN<T> >);
+     ^
+./func.h:504:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecHTAN(U<const DecHTAN<T> *>);
+     ^
+./func.h:506:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecHTAN(U<volatile DecHTAN<T> &>);
+     ^
+./func.h:526:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecOHTAN(U<DecOHTAN<T> >);
+     ^
+./func.h:528:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecOHTAN(U<const DecOHTAN<T> *>);
+     ^
+./func.h:530:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecOHTAN(U<volatile DecOHTAN<T> &>);
+     ^
+./func.h:532:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTAN(U<DefOHTAN<T> >);
+     ^
+./func.h:534:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTAN(U<const DefOHTAN<T> *>);
+     ^
+./func.h:536:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTAN(U<volatile DefOHTAN<T> &>);
+     ^
+./func.h:538:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTANId(U<typename DefOHTAN<T>::ID>);
+     ^
+./func.h:540:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTANId(U<const typename DefOHTAN<T>::ID *>);
+     ^
+./func.h:542:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTANId(U<volatile typename DefOHTAN<T>::ID &>);
+     ^
+./func.h:544:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTANIf(U<typename DefOHTAN<T>::IC>);
+     ^
+./func.h:546:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTANIf(U<const typename DefOHTAN<T>::IC *>);
+     ^
+./func.h:548:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTANIf(U<volatile typename DefOHTAN<T>::IC &>);
+     ^
+./func.h:552:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecHF(DecHF);
+     ^
+./func.h:553:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecHF(const DecHF *);
+     ^
+./func.h:554:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecHF(volatile DecHF &);
+     ^
+./func.h:555:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecHF(int, DecHF);
+     ^
+./func.h:556:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecHF(int, const DecHF *);
+     ^
+./func.h:557:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecHF(int, volatile DecHF &);
+     ^
+./func.h:570:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefHFIf(DefHF::IC);
+     ^
+./func.h:571:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefHFIf(const DefHF::IC *);
+     ^
+./func.h:572:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefHFIf(volatile DefHF::IC &);
+     ^
+./func.h:573:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefHFIf(int, DefHF::IC);
+     ^
+./func.h:574:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefHFIf(int, const DefHF::IC *);
+     ^
+./func.h:575:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefHFIf(int, volatile DefHF::IC &);
+     ^
+./func.h:576:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecOHF(DecOHF);
+     ^
+./func.h:577:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecOHF(const DecOHF *);
+     ^
+./func.h:578:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecOHF(volatile DecOHF &);
+     ^
+./func.h:579:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecOHF(int, DecOHF);
+     ^
+./func.h:580:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecOHF(int, const DecOHF *);
+     ^
+./func.h:581:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecOHF(int, volatile DecOHF &);
+     ^
+./func.h:582:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHF(DefOHF);
+     ^
+./func.h:583:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHF(const DefOHF *);
+     ^
+./func.h:584:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHF(volatile DefOHF &);
+     ^
+./func.h:585:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHF(int, DefOHF);
+     ^
+./func.h:586:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHF(int, const DefOHF *);
+     ^
+./func.h:587:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHF(int, volatile DefOHF &);
+     ^
+./func.h:588:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHFId(DefOHF::ID);
+     ^
+./func.h:589:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHFId(const DefOHF::ID *);
+     ^
+./func.h:590:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHFId(volatile DefOHF::ID &);
+     ^
+./func.h:591:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHFId(int, DefOHF::ID);
+     ^
+./func.h:592:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHFId(int, const DefOHF::ID *);
+     ^
+./func.h:593:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHFId(int, volatile DefOHF::ID &);
+     ^
+./func.h:594:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHFIf(DefOHF::IC);
+     ^
+./func.h:595:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHFIf(const DefOHF::IC *);
+     ^
+./func.h:596:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHFIf(volatile DefOHF::IC &);
+     ^
+./func.h:597:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHFIf(int, DefOHF::IC);
+     ^
+./func.h:598:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHFIf(int, const DefOHF::IC *);
+     ^
+./func.h:599:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHFIf(int, volatile DefOHF::IC &);
+     ^
+./func.h:600:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecHAN(DecHAN);
+     ^
+./func.h:601:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecHAN(const DecHAN *);
+     ^
+./func.h:602:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecHAN(volatile DecHAN &);
+     ^
+./func.h:603:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecHAN(int, DecHAN);
+     ^
+./func.h:604:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecHAN(int, const DecHAN *);
+     ^
+./func.h:605:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecHAN(int, volatile DecHAN &);
+     ^
+./func.h:618:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefHANIf(DefHAN::IC);
+     ^
+./func.h:619:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefHANIf(const DefHAN::IC *);
+     ^
+./func.h:620:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefHANIf(volatile DefHAN::IC &);
+     ^
+./func.h:621:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefHANIf(int, DefHAN::IC);
+     ^
+./func.h:622:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefHANIf(int, const DefHAN::IC *);
+     ^
+./func.h:623:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefHANIf(int, volatile DefHAN::IC &);
+     ^
+./func.h:624:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecOHAN(DecOHAN);
+     ^
+./func.h:625:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecOHAN(const DecOHAN *);
+     ^
+./func.h:626:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecOHAN(volatile DecOHAN &);
+     ^
+./func.h:627:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecOHAN(int, DecOHAN);
+     ^
+./func.h:628:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecOHAN(int, const DecOHAN *);
+     ^
+./func.h:629:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecOHAN(int, volatile DecOHAN &);
+     ^
+./func.h:630:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHAN(DefOHAN);
+     ^
+./func.h:631:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHAN(const DefOHAN *);
+     ^
+./func.h:632:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHAN(volatile DefOHAN &);
+     ^
+./func.h:633:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHAN(int, DefOHAN);
+     ^
+./func.h:634:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHAN(int, const DefOHAN *);
+     ^
+./func.h:635:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHAN(int, volatile DefOHAN &);
+     ^
+./func.h:636:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHANId(DefOHAN::ID);
+     ^
+./func.h:637:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHANId(const DefOHAN::ID *);
+     ^
+./func.h:638:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHANId(volatile DefOHAN::ID &);
+     ^
+./func.h:639:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHANId(int, DefOHAN::ID);
+     ^
+./func.h:640:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHANId(int, const DefOHAN::ID *);
+     ^
+./func.h:641:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHANId(int, volatile DefOHAN::ID &);
+     ^
+./func.h:642:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHANIf(DefOHAN::IC);
+     ^
+./func.h:643:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHANIf(const DefOHAN::IC *);
+     ^
+./func.h:644:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHANIf(volatile DefOHAN::IC &);
+     ^
+./func.h:645:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHANIf(int, DefOHAN::IC);
+     ^
+./func.h:646:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHANIf(int, const DefOHAN::IC *);
+     ^
+./func.h:647:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHANIf(int, volatile DefOHAN::IC &);
+     ^
+./func.h:654:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecYHF(DecYHF);
+     ^
+./func.h:655:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecYHF(const DecYHF *);
+     ^
+./func.h:656:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecYHF(volatile DecYHF &);
+     ^
+./func.h:657:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecYHF(int, DecYHF);
+     ^
+./func.h:658:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecYHF(int, const DecYHF *);
+     ^
+./func.h:659:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecYHF(int, volatile DecYHF &);
+     ^
+./func.h:661:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecHTF(DecHTF<T>);
+     ^
+./func.h:663:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecHTF(const DecHTF<T> *);
+     ^
+./func.h:665:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecHTF(volatile DecHTF<T> &);
+     ^
+./func.h:667:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecHTF(int, DecHTF<T>);
+     ^
+./func.h:669:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecHTF(int, const DecHTF<T> *);
+     ^
+./func.h:671:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecHTF(int, volatile DecHTF<T> &);
+     ^
+./func.h:709:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecOHTF(DecOHTF<T>);
+     ^
+./func.h:711:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecOHTF(const DecOHTF<T> *);
+     ^
+./func.h:713:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecOHTF(volatile DecOHTF<T> &);
+     ^
+./func.h:715:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecOHTF(int, DecOHTF<T>);
+     ^
+./func.h:717:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecOHTF(int, const DecOHTF<T> *);
+     ^
+./func.h:719:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecOHTF(int, volatile DecOHTF<T> &);
+     ^
+./func.h:721:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTF(DefOHTF<T>);
+     ^
+./func.h:723:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTF(const DefOHTF<T> *);
+     ^
+./func.h:725:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTF(volatile DefOHTF<T> &);
+     ^
+./func.h:727:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTF(int, DefOHTF<T>);
+     ^
+./func.h:729:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTF(int, const DefOHTF<T> *);
+     ^
+./func.h:731:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTF(int, volatile DefOHTF<T> &);
+     ^
+./func.h:733:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTFId(typename DefOHTF<T>::ID);
+     ^
+./func.h:735:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTFId(const typename DefOHTF<T>::ID *);
+     ^
+./func.h:737:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTFId(volatile typename DefOHTF<T>::ID &);
+     ^
+./func.h:739:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTFId(int, typename DefOHTF<T>::ID);
+     ^
+./func.h:741:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTFId(int, const typename DefOHTF<T>::ID *);
+     ^
+./func.h:743:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTFId(int, volatile typename DefOHTF<T>::ID &);
+     ^
+./func.h:745:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTFIf(typename DefOHTF<T>::IC);
+     ^
+./func.h:747:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTFIf(const typename DefOHTF<T>::IC *);
+     ^
+./func.h:749:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTFIf(volatile typename DefOHTF<T>::IC &);
+     ^
+./func.h:751:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTFIf(int, typename DefOHTF<T>::IC);
+     ^
+./func.h:753:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTFIf(int, const typename DefOHTF<T>::IC *);
+     ^
+./func.h:755:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTFIf(int, volatile typename DefOHTF<T>::IC &);
+     ^
+./func.h:757:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecHTAN(DecHTAN<T>);
+     ^
+./func.h:759:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecHTAN(const DecHTAN<T> *);
+     ^
+./func.h:761:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecHTAN(volatile DecHTAN<T> &);
+     ^
+./func.h:763:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecHTAN(int, DecHTAN<T>);
+     ^
+./func.h:765:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecHTAN(int, const DecHTAN<T> *);
+     ^
+./func.h:767:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecHTAN(int, volatile DecHTAN<T> &);
+     ^
+./func.h:805:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DecOHTAN(DecOHTAN<T>);
+     ^
+./func.h:807:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DecOHTAN(const DecOHTAN<T> *);
+     ^
+./func.h:809:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DecOHTAN(volatile DecOHTAN<T> &);
+     ^
+./func.h:811:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DecOHTAN(int, DecOHTAN<T>);
+     ^
+./func.h:813:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DecOHTAN(int, const DecOHTAN<T> *);
+     ^
+./func.h:815:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DecOHTAN(int, volatile DecOHTAN<T> &);
+     ^
+./func.h:817:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTAN(DefOHTAN<T>);
+     ^
+./func.h:819:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTAN(const DefOHTAN<T> *);
+     ^
+./func.h:821:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTAN(volatile DefOHTAN<T> &);
+     ^
+./func.h:823:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTAN(int, DefOHTAN<T>);
+     ^
+./func.h:825:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTAN(int, const DefOHTAN<T> *);
+     ^
+./func.h:827:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTAN(int, volatile DefOHTAN<T> &);
+     ^
+./func.h:829:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTANId(typename DefOHTAN<T>::ID);
+     ^
+./func.h:831:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTANId(const typename DefOHTAN<T>::ID *);
+     ^
+./func.h:833:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTANId(volatile typename DefOHTAN<T>::ID &);
+     ^
+./func.h:835:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTANId(int, typename DefOHTAN<T>::ID);
+     ^
+./func.h:837:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTANId(int, const typename DefOHTAN<T>::ID *);
+     ^
+./func.h:839:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTANId(int, volatile typename DefOHTAN<T>::ID &);
+     ^
+./func.h:841:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_1_DefOHTANIf(typename DefOHTAN<T>::IC);
+     ^
+./func.h:843:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_2_DefOHTANIf(const typename DefOHTAN<T>::IC *);
+     ^
+./func.h:845:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_3_DefOHTANIf(volatile typename DefOHTAN<T>::IC &);
+     ^
+./func.h:847:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_4_DefOHTANIf(int, typename DefOHTAN<T>::IC);
+     ^
+./func.h:849:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_5_DefOHTANIf(int, const typename DefOHTAN<T>::IC *);
+     ^
+./func.h:851:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_6_DefOHTANIf(int, volatile typename DefOHTAN<T>::IC &);
+     ^
+./func.h:853:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecHF(U<DecHF>);
+     ^
+./func.h:855:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecHF(U<const DecHF *>);
+     ^
+./func.h:857:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecHF(U<volatile DecHF &>);
+     ^
+./func.h:871:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefHFIf(U<DefHF::IC>);
+     ^
+./func.h:873:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefHFIf(U<const DefHF::IC *>);
+     ^
+./func.h:875:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefHFIf(U<volatile DefHF::IC &>);
+     ^
+./func.h:877:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecOHF(U<DecOHF>);
+     ^
+./func.h:879:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecOHF(U<const DecOHF *>);
+     ^
+./func.h:881:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecOHF(U<volatile DecOHF &>);
+     ^
+./func.h:883:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHF(U<DefOHF>);
+     ^
+./func.h:885:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHF(U<const DefOHF *>);
+     ^
+./func.h:887:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHF(U<volatile DefOHF &>);
+     ^
+./func.h:889:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHFId(U<DefOHF::ID>);
+     ^
+./func.h:891:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHFId(U<const DefOHF::ID *>);
+     ^
+./func.h:893:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHFId(U<volatile DefOHF::ID &>);
+     ^
+./func.h:895:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHFIf(U<DefOHF::IC>);
+     ^
+./func.h:897:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHFIf(U<const DefOHF::IC *>);
+     ^
+./func.h:899:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHFIf(U<volatile DefOHF::IC &>);
+     ^
+./func.h:901:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecHAN(U<DecHAN>);
+     ^
+./func.h:903:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecHAN(U<const DecHAN *>);
+     ^
+./func.h:905:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecHAN(U<volatile DecHAN &>);
+     ^
+./func.h:919:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefHANIf(U<DefHAN::IC>);
+     ^
+./func.h:921:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefHANIf(U<const DefHAN::IC *>);
+     ^
+./func.h:923:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefHANIf(U<volatile DefHAN::IC &>);
+     ^
+./func.h:925:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecOHAN(U<DecOHAN>);
+     ^
+./func.h:927:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecOHAN(U<const DecOHAN *>);
+     ^
+./func.h:929:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecOHAN(U<volatile DecOHAN &>);
+     ^
+./func.h:931:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHAN(U<DefOHAN>);
+     ^
+./func.h:933:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHAN(U<const DefOHAN *>);
+     ^
+./func.h:935:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHAN(U<volatile DefOHAN &>);
+     ^
+./func.h:937:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHANId(U<DefOHAN::ID>);
+     ^
+./func.h:939:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHANId(U<const DefOHAN::ID *>);
+     ^
+./func.h:941:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHANId(U<volatile DefOHAN::ID &>);
+     ^
+./func.h:943:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHANIf(U<DefOHAN::IC>);
+     ^
+./func.h:945:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHANIf(U<const DefOHAN::IC *>);
+     ^
+./func.h:947:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHANIf(U<volatile DefOHAN::IC &>);
+     ^
+./func.h:955:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecYHF(U<DecYHF>);
+     ^
+./func.h:957:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecYHF(U<const DecYHF *>);
+     ^
+./func.h:959:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecYHF(U<volatile DecYHF &>);
+     ^
+./func.h:961:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecHTF(U<DecHTF<T> >);
+     ^
+./func.h:963:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecHTF(U<const DecHTF<T> *>);
+     ^
+./func.h:965:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecHTF(U<volatile DecHTF<T> &>);
+     ^
+./func.h:985:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecOHTF(U<DecOHTF<T> >);
+     ^
+./func.h:987:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecOHTF(U<const DecOHTF<T> *>);
+     ^
+./func.h:989:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecOHTF(U<volatile DecOHTF<T> &>);
+     ^
+./func.h:991:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTF(U<DefOHTF<T> >);
+     ^
+./func.h:993:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTF(U<const DefOHTF<T> *>);
+     ^
+./func.h:995:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTF(U<volatile DefOHTF<T> &>);
+     ^
+./func.h:997:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTFId(U<typename DefOHTF<T>::ID>);
+     ^
+./func.h:999:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTFId(U<const typename DefOHTF<T>::ID *>);
+     ^
+./func.h:1001:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTFId(U<volatile typename DefOHTF<T>::ID &>);
+     ^
+./func.h:1003:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTFIf(U<typename DefOHTF<T>::IC>);
+     ^
+./func.h:1005:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTFIf(U<const typename DefOHTF<T>::IC *>);
+     ^
+./func.h:1007:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTFIf(U<volatile typename DefOHTF<T>::IC &>);
+     ^
+./func.h:1009:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecHTAN(U<DecHTAN<T> >);
+     ^
+./func.h:1011:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecHTAN(U<const DecHTAN<T> *>);
+     ^
+./func.h:1013:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecHTAN(U<volatile DecHTAN<T> &>);
+     ^
+./func.h:1033:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DecOHTAN(U<DecOHTAN<T> >);
+     ^
+./func.h:1035:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DecOHTAN(U<const DecOHTAN<T> *>);
+     ^
+./func.h:1037:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DecOHTAN(U<volatile DecOHTAN<T> &>);
+     ^
+./func.h:1039:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTAN(U<DefOHTAN<T> >);
+     ^
+./func.h:1041:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTAN(U<const DefOHTAN<T> *>);
+     ^
+./func.h:1043:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTAN(U<volatile DefOHTAN<T> &>);
+     ^
+./func.h:1045:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTANId(U<typename DefOHTAN<T>::ID>);
+     ^
+./func.h:1047:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTANId(U<const typename DefOHTAN<T>::ID *>);
+     ^
+./func.h:1049:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTANId(U<volatile typename DefOHTAN<T>::ID &>);
+     ^
+./func.h:1051:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_7_DefOHTANIf(U<typename DefOHTAN<T>::IC>);
+     ^
+./func.h:1053:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_8_DefOHTANIf(U<const typename DefOHTAN<T>::IC *>);
+     ^
+./func.h:1055:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f1_9_DefOHTANIf(U<volatile typename DefOHTAN<T>::IC &>);
+     ^
+./func.h:1566:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DecHF(DecHF);
+     ^
+./func.h:1567:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DecHF(const DecHF *);
+     ^
+./func.h:1568:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DecHF(volatile DecHF &);
+     ^
+./func.h:1569:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DecHF(int, DecHF);
+     ^
+./func.h:1570:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DecHF(int, const DecHF *);
+     ^
+./func.h:1571:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DecHF(int, volatile DecHF &);
+     ^
+./func.h:1584:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefHFIf(DefHF::IC);
+     ^
+./func.h:1585:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefHFIf(const DefHF::IC *);
+     ^
+./func.h:1586:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefHFIf(volatile DefHF::IC &);
+     ^
+./func.h:1587:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefHFIf(int, DefHF::IC);
+     ^
+./func.h:1588:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefHFIf(int, const DefHF::IC *);
+     ^
+./func.h:1589:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefHFIf(int, volatile DefHF::IC &);
+     ^
+./func.h:1590:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DecOHF(DecOHF);
+     ^
+./func.h:1591:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DecOHF(const DecOHF *);
+     ^
+./func.h:1592:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DecOHF(volatile DecOHF &);
+     ^
+./func.h:1593:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DecOHF(int, DecOHF);
+     ^
+./func.h:1594:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DecOHF(int, const DecOHF *);
+     ^
+./func.h:1595:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DecOHF(int, volatile DecOHF &);
+     ^
+./func.h:1596:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHF(DefOHF);
+     ^
+./func.h:1597:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHF(const DefOHF *);
+     ^
+./func.h:1598:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHF(volatile DefOHF &);
+     ^
+./func.h:1599:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHF(int, DefOHF);
+     ^
+./func.h:1600:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHF(int, const DefOHF *);
+     ^
+./func.h:1601:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHF(int, volatile DefOHF &);
+     ^
+./func.h:1602:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHFId(DefOHF::ID);
+     ^
+./func.h:1603:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHFId(const DefOHF::ID *);
+     ^
+./func.h:1604:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHFId(volatile DefOHF::ID &);
+     ^
+./func.h:1605:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHFId(int, DefOHF::ID);
+     ^
+./func.h:1606:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHFId(int, const DefOHF::ID *);
+     ^
+./func.h:1607:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHFId(int, volatile DefOHF::ID &);
+     ^
+./func.h:1608:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHFIf(DefOHF::IC);
+     ^
+./func.h:1609:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHFIf(const DefOHF::IC *);
+     ^
+./func.h:1610:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHFIf(volatile DefOHF::IC &);
+     ^
+./func.h:1611:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHFIf(int, DefOHF::IC);
+     ^
+./func.h:1612:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHFIf(int, const DefOHF::IC *);
+     ^
+./func.h:1613:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHFIf(int, volatile DefOHF::IC &);
+     ^
+./func.h:1614:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DecHAN(DecHAN);
+     ^
+./func.h:1615:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DecHAN(const DecHAN *);
+     ^
+./func.h:1616:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DecHAN(volatile DecHAN &);
+     ^
+./func.h:1617:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DecHAN(int, DecHAN);
+     ^
+./func.h:1618:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DecHAN(int, const DecHAN *);
+     ^
+./func.h:1619:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DecHAN(int, volatile DecHAN &);
+     ^
+./func.h:1632:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefHANIf(DefHAN::IC);
+     ^
+./func.h:1633:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefHANIf(const DefHAN::IC *);
+     ^
+./func.h:1634:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefHANIf(volatile DefHAN::IC &);
+     ^
+./func.h:1635:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefHANIf(int, DefHAN::IC);
+     ^
+./func.h:1636:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefHANIf(int, const DefHAN::IC *);
+     ^
+./func.h:1637:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefHANIf(int, volatile DefHAN::IC &);
+     ^
+./func.h:1638:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DecOHAN(DecOHAN);
+     ^
+./func.h:1639:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DecOHAN(const DecOHAN *);
+     ^
+./func.h:1640:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DecOHAN(volatile DecOHAN &);
+     ^
+./func.h:1641:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DecOHAN(int, DecOHAN);
+     ^
+./func.h:1642:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DecOHAN(int, const DecOHAN *);
+     ^
+./func.h:1643:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DecOHAN(int, volatile DecOHAN &);
+     ^
+./func.h:1644:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHAN(DefOHAN);
+     ^
+./func.h:1645:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHAN(const DefOHAN *);
+     ^
+./func.h:1646:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHAN(volatile DefOHAN &);
+     ^
+./func.h:1647:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHAN(int, DefOHAN);
+     ^
+./func.h:1648:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHAN(int, const DefOHAN *);
+     ^
+./func.h:1649:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHAN(int, volatile DefOHAN &);
+     ^
+./func.h:1650:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHANId(DefOHAN::ID);
+     ^
+./func.h:1651:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHANId(const DefOHAN::ID *);
+     ^
+./func.h:1652:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHANId(volatile DefOHAN::ID &);
+     ^
+./func.h:1653:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHANId(int, DefOHAN::ID);
+     ^
+./func.h:1654:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHANId(int, const DefOHAN::ID *);
+     ^
+./func.h:1655:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHANId(int, volatile DefOHAN::ID &);
+     ^
+./func.h:1656:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHANIf(DefOHAN::IC);
+     ^
+./func.h:1657:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHANIf(const DefOHAN::IC *);
+     ^
+./func.h:1658:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHANIf(volatile DefOHAN::IC &);
+     ^
+./func.h:1659:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHANIf(int, DefOHAN::IC);
+     ^
+./func.h:1660:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHANIf(int, const DefOHAN::IC *);
+     ^
+./func.h:1661:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHANIf(int, volatile DefOHAN::IC &);
+     ^
+./func.h:1668:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DecYHF(DecYHF);
+     ^
+./func.h:1669:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DecYHF(const DecYHF *);
+     ^
+./func.h:1670:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DecYHF(volatile DecYHF &);
+     ^
+./func.h:1671:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DecYHF(int, DecYHF);
+     ^
+./func.h:1672:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DecYHF(int, const DecYHF *);
+     ^
+./func.h:1673:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DecYHF(int, volatile DecYHF &);
+     ^
+./func.h:1675:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DecHTF(DecHTF<T>);
+     ^
+./func.h:1677:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DecHTF(const DecHTF<T> *);
+     ^
+./func.h:1679:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DecHTF(volatile DecHTF<T> &);
+     ^
+./func.h:1681:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DecHTF(int, DecHTF<T>);
+     ^
+./func.h:1683:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DecHTF(int, const DecHTF<T> *);
+     ^
+./func.h:1685:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DecHTF(int, volatile DecHTF<T> &);
+     ^
+./func.h:1723:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DecOHTF(DecOHTF<T>);
+     ^
+./func.h:1725:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DecOHTF(const DecOHTF<T> *);
+     ^
+./func.h:1727:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DecOHTF(volatile DecOHTF<T> &);
+     ^
+./func.h:1729:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DecOHTF(int, DecOHTF<T>);
+     ^
+./func.h:1731:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DecOHTF(int, const DecOHTF<T> *);
+     ^
+./func.h:1733:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DecOHTF(int, volatile DecOHTF<T> &);
+     ^
+./func.h:1735:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHTF(DefOHTF<T>);
+     ^
+./func.h:1737:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHTF(const DefOHTF<T> *);
+     ^
+./func.h:1739:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHTF(volatile DefOHTF<T> &);
+     ^
+./func.h:1741:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHTF(int, DefOHTF<T>);
+     ^
+./func.h:1743:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHTF(int, const DefOHTF<T> *);
+     ^
+./func.h:1745:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHTF(int, volatile DefOHTF<T> &);
+     ^
+./func.h:1747:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHTFId(typename DefOHTF<T>::ID);
+     ^
+./func.h:1749:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHTFId(const typename DefOHTF<T>::ID *);
+     ^
+./func.h:1751:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHTFId(volatile typename DefOHTF<T>::ID &);
+     ^
+./func.h:1753:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHTFId(int, typename DefOHTF<T>::ID);
+     ^
+./func.h:1755:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHTFId(int, const typename DefOHTF<T>::ID *);
+     ^
+./func.h:1757:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHTFId(int, volatile typename DefOHTF<T>::ID &);
+     ^
+./func.h:1759:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHTFIf(typename DefOHTF<T>::IC);
+     ^
+./func.h:1761:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHTFIf(const typename DefOHTF<T>::IC *);
+     ^
+./func.h:1763:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHTFIf(volatile typename DefOHTF<T>::IC &);
+     ^
+./func.h:1765:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHTFIf(int, typename DefOHTF<T>::IC);
+     ^
+./func.h:1767:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHTFIf(int, const typename DefOHTF<T>::IC *);
+     ^
+./func.h:1769:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHTFIf(int, volatile typename DefOHTF<T>::IC &);
+     ^
+./func.h:1771:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DecHTAN(DecHTAN<T>);
+     ^
+./func.h:1773:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DecHTAN(const DecHTAN<T> *);
+     ^
+./func.h:1775:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DecHTAN(volatile DecHTAN<T> &);
+     ^
+./func.h:1777:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DecHTAN(int, DecHTAN<T>);
+     ^
+./func.h:1779:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DecHTAN(int, const DecHTAN<T> *);
+     ^
+./func.h:1781:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DecHTAN(int, volatile DecHTAN<T> &);
+     ^
+./func.h:1819:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DecOHTAN(DecOHTAN<T>);
+     ^
+./func.h:1821:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DecOHTAN(const DecOHTAN<T> *);
+     ^
+./func.h:1823:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DecOHTAN(volatile DecOHTAN<T> &);
+     ^
+./func.h:1825:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DecOHTAN(int, DecOHTAN<T>);
+     ^
+./func.h:1827:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DecOHTAN(int, const DecOHTAN<T> *);
+     ^
+./func.h:1829:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DecOHTAN(int, volatile DecOHTAN<T> &);
+     ^
+./func.h:1831:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHTAN(DefOHTAN<T>);
+     ^
+./func.h:1833:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHTAN(const DefOHTAN<T> *);
+     ^
+./func.h:1835:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHTAN(volatile DefOHTAN<T> &);
+     ^
+./func.h:1837:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHTAN(int, DefOHTAN<T>);
+     ^
+./func.h:1839:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHTAN(int, const DefOHTAN<T> *);
+     ^
+./func.h:1841:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHTAN(int, volatile DefOHTAN<T> &);
+     ^
+./func.h:1843:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHTANId(typename DefOHTAN<T>::ID);
+     ^
+./func.h:1845:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHTANId(const typename DefOHTAN<T>::ID *);
+     ^
+./func.h:1847:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHTANId(volatile typename DefOHTAN<T>::ID &);
+     ^
+./func.h:1849:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHTANId(int, typename DefOHTAN<T>::ID);
+     ^
+./func.h:1851:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHTANId(int, const typename DefOHTAN<T>::ID *);
+     ^
+./func.h:1853:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHTANId(int, volatile typename DefOHTAN<T>::ID &);
+     ^
+./func.h:1855:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_1_DefOHTANIf(typename DefOHTAN<T>::IC);
+     ^
+./func.h:1857:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_2_DefOHTANIf(const typename DefOHTAN<T>::IC *);
+     ^
+./func.h:1859:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_3_DefOHTANIf(volatile typename DefOHTAN<T>::IC &);
+     ^
+./func.h:1861:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_4_DefOHTANIf(int, typename DefOHTAN<T>::IC);
+     ^
+./func.h:1863:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_5_DefOHTANIf(int, const typename DefOHTAN<T>::IC *);
+     ^
+./func.h:1865:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_6_DefOHTANIf(int, volatile typename DefOHTAN<T>::IC &);
+     ^
+./func.h:1867:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DecHF(U<DecHF>);
+     ^
+./func.h:1869:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DecHF(U<const DecHF *>);
+     ^
+./func.h:1871:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DecHF(U<volatile DecHF &>);
+     ^
+./func.h:1885:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefHFIf(U<DefHF::IC>);
+     ^
+./func.h:1887:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefHFIf(U<const DefHF::IC *>);
+     ^
+./func.h:1889:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefHFIf(U<volatile DefHF::IC &>);
+     ^
+./func.h:1891:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DecOHF(U<DecOHF>);
+     ^
+./func.h:1893:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DecOHF(U<const DecOHF *>);
+     ^
+./func.h:1895:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DecOHF(U<volatile DecOHF &>);
+     ^
+./func.h:1897:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHF(U<DefOHF>);
+     ^
+./func.h:1899:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHF(U<const DefOHF *>);
+     ^
+./func.h:1901:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHF(U<volatile DefOHF &>);
+     ^
+./func.h:1903:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHFId(U<DefOHF::ID>);
+     ^
+./func.h:1905:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHFId(U<const DefOHF::ID *>);
+     ^
+./func.h:1907:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHFId(U<volatile DefOHF::ID &>);
+     ^
+./func.h:1909:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHFIf(U<DefOHF::IC>);
+     ^
+./func.h:1911:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHFIf(U<const DefOHF::IC *>);
+     ^
+./func.h:1913:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHFIf(U<volatile DefOHF::IC &>);
+     ^
+./func.h:1915:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DecHAN(U<DecHAN>);
+     ^
+./func.h:1917:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DecHAN(U<const DecHAN *>);
+     ^
+./func.h:1919:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DecHAN(U<volatile DecHAN &>);
+     ^
+./func.h:1933:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefHANIf(U<DefHAN::IC>);
+     ^
+./func.h:1935:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefHANIf(U<const DefHAN::IC *>);
+     ^
+./func.h:1937:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefHANIf(U<volatile DefHAN::IC &>);
+     ^
+./func.h:1939:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DecOHAN(U<DecOHAN>);
+     ^
+./func.h:1941:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DecOHAN(U<const DecOHAN *>);
+     ^
+./func.h:1943:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DecOHAN(U<volatile DecOHAN &>);
+     ^
+./func.h:1945:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHAN(U<DefOHAN>);
+     ^
+./func.h:1947:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHAN(U<const DefOHAN *>);
+     ^
+./func.h:1949:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHAN(U<volatile DefOHAN &>);
+     ^
+./func.h:1951:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHANId(U<DefOHAN::ID>);
+     ^
+./func.h:1953:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHANId(U<const DefOHAN::ID *>);
+     ^
+./func.h:1955:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHANId(U<volatile DefOHAN::ID &>);
+     ^
+./func.h:1957:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHANIf(U<DefOHAN::IC>);
+     ^
+./func.h:1959:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHANIf(U<const DefOHAN::IC *>);
+     ^
+./func.h:1961:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHANIf(U<volatile DefOHAN::IC &>);
+     ^
+./func.h:1969:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DecYHF(U<DecYHF>);
+     ^
+./func.h:1971:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DecYHF(U<const DecYHF *>);
+     ^
+./func.h:1973:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DecYHF(U<volatile DecYHF &>);
+     ^
+./func.h:1975:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DecHTF(U<DecHTF<T> >);
+     ^
+./func.h:1977:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DecHTF(U<const DecHTF<T> *>);
+     ^
+./func.h:1979:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DecHTF(U<volatile DecHTF<T> &>);
+     ^
+./func.h:1999:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DecOHTF(U<DecOHTF<T> >);
+     ^
+./func.h:2001:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DecOHTF(U<const DecOHTF<T> *>);
+     ^
+./func.h:2003:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DecOHTF(U<volatile DecOHTF<T> &>);
+     ^
+./func.h:2005:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHTF(U<DefOHTF<T> >);
+     ^
+./func.h:2007:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHTF(U<const DefOHTF<T> *>);
+     ^
+./func.h:2009:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHTF(U<volatile DefOHTF<T> &>);
+     ^
+./func.h:2011:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHTFId(U<typename DefOHTF<T>::ID>);
+     ^
+./func.h:2013:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHTFId(U<const typename DefOHTF<T>::ID *>);
+     ^
+./func.h:2015:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHTFId(U<volatile typename DefOHTF<T>::ID &>);
+     ^
+./func.h:2017:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHTFIf(U<typename DefOHTF<T>::IC>);
+     ^
+./func.h:2019:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHTFIf(U<const typename DefOHTF<T>::IC *>);
+     ^
+./func.h:2021:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHTFIf(U<volatile typename DefOHTF<T>::IC &>);
+     ^
+./func.h:2023:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DecHTAN(U<DecHTAN<T> >);
+     ^
+./func.h:2025:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DecHTAN(U<const DecHTAN<T> *>);
+     ^
+./func.h:2027:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DecHTAN(U<volatile DecHTAN<T> &>);
+     ^
+./func.h:2047:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DecOHTAN(U<DecOHTAN<T> >);
+     ^
+./func.h:2049:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DecOHTAN(U<const DecOHTAN<T> *>);
+     ^
+./func.h:2051:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DecOHTAN(U<volatile DecOHTAN<T> &>);
+     ^
+./func.h:2053:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHTAN(U<DefOHTAN<T> >);
+     ^
+./func.h:2055:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHTAN(U<const DefOHTAN<T> *>);
+     ^
+./func.h:2057:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHTAN(U<volatile DefOHTAN<T> &>);
+     ^
+./func.h:2059:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHTANId(U<typename DefOHTAN<T>::ID>);
+     ^
+./func.h:2061:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHTANId(U<const typename DefOHTAN<T>::ID *>);
+     ^
+./func.h:2063:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHTANId(U<volatile typename DefOHTAN<T>::ID &>);
+     ^
+./func.h:2065:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_7_DefOHTANIf(U<typename DefOHTAN<T>::IC>);
+     ^
+./func.h:2067:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_8_DefOHTANIf(U<const typename DefOHTAN<T>::IC *>);
+     ^
+./func.h:2069:6: warning: AQS01: Free function must have a parameter using a type defined by this file
+void f2_9_DefOHTANIf(U<volatile typename DefOHTAN<T>::IC &>);
+     ^
+627 warnings generated.

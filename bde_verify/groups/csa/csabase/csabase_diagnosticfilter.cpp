@@ -37,17 +37,6 @@ csabase::DiagnosticFilter::DiagnosticFilter(Analyser const&    analyser,
 
 // ----------------------------------------------------------------------------
 
-static std::string get_filename(Diagnostic const& d)
-{
-    SourceManager& m = d.getSourceManager();
-    std::string name;
-    if (const FileEntry *f =
-            m.getFileEntryForID(m.getFileID(d.getLocation()))) {
-        name = f->getName();
-    }
-    return name;
-}
-
 void
 csabase::DiagnosticFilter::HandleDiagnostic(DiagnosticsEngine::Level level,
                                             Diagnostic const&        info)
