@@ -157,7 +157,7 @@
 !!  unix-SunOS-*-*-gcc      _     DEF_CXXFLAGS        =  -pipe -mcpu=ultrasparc3
 
 # DRQS 29544311 - some .so's linking against BCE and BAE fail unless the sources are built
-++  #                       with  -xthreadvar         =  dynamic
+# with -xthreadvar=dynamic
 ++  unix-SunOS-*-*-cc       mt    DEF_CXXFLAGS        =  -xthreadvar=dynamic
 
 # DRQS 40501760 - Studio 11 requires -xannotate=no
