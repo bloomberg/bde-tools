@@ -1,6 +1,7 @@
 // csabase_util.cpp                                                   -*-C++-*-
 
 #include <csabase_util.h>
+#include <csabase_debug.h>
 #include <clang/Basic/SourceManager.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/Regex.h>

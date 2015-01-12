@@ -5,6 +5,7 @@
 #include <clang/AST/DeclCXX.h>
 #include <clang/Lex/Token.h>
 #include <csabase_analyser.h>
+#include <csabase_debug.h>
 #include <csabase_location.h>
 #include <csabase_ppobserver.h>
 #include <csabase_registercheck.h>

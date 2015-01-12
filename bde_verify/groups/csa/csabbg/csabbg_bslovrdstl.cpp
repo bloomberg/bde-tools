@@ -688,6 +688,7 @@ llvm::StringRef report::filetype_tag(FileType ft)
       case e_STD: return "STD";                                       // RETURN
       case e_SPC: return "SPC";                                       // RETURN
       case e_NIL: return "   ";                                       // RETURN
+      default:    return "???";                                       // RETURN
     }
 }
 

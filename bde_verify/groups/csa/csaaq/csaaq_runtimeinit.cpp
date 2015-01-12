@@ -1,5 +1,6 @@
 // csaaq_runtimeinit.cpp                                              -*-C++-*-
 
+#include <clang/Basic/PartialDiagnostic.h>
 #include <csabase_analyser.h>
 #include <csabase_clang.h>
 #include <csabase_config.h>
@@ -35,10 +36,14 @@ struct report : Report<data>
 
 void report::operator()(const VarDecl *decl)
 {
-    if (decl->isFileVarDecl() &&
+    SmallVector<PartialDiagnosticAt, 7> n;
+    APValue v;
+    if (!a.is_test_driver(decl) &&
+        decl->isFileVarDecl() &&
         decl->hasInit() &&
         !decl->getInit()->isValueDependent() &&
-        !decl->checkInitIsICE()) {
+        !decl->checkInitIsICE() &&
+        !decl->getInit()->EvaluateAsInitializer(v, *a.context(), decl, n)) {
         a.report(decl, check_name, "AQa01",
                  "Global variable with runtime initialization");
     }
@@ -47,7 +52,7 @@ void report::operator()(const VarDecl *decl)
 void subscribe(Analyser& analyser, Visitor& visitor, PPObserver& observer)
     // Hook up the callback functions.
 {
-    visitor.onVarDecl              += report(analyser);
+    visitor.onVarDecl += report(analyser);
 }
 
 }  // close anonymous namespace

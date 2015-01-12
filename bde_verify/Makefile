@@ -3,20 +3,20 @@ TARGET      = bde_verify
 CSABASE     = csabase
 LIBCSABASE  = libcsabase.a
 CSABASEDIR  = groups/csa/csabase
-GCCVERSION  = 4.8.1
+GCCVERSION  = 4.9.2
 GCCDIR      = /opt/swt/install/gcc-$(GCCVERSION)
-LLVMVERSION = 3.6.0
+LLVMVERSION = svn
 SYSTEM      = $(shell uname -s)
 LLVMDIR     = /home/hrosen4/mbig/llvm-$(LLVMVERSION)/install-$(SYSTEM)
 SHELL       = /opt/swt/bin/bash
-CXXFLAGS   += -std=c++11 -Wall -Wno-mismatched-tags
+CXXFLAGS   += -std=c++11 -Wall
 ASPELL      = /opt/swt/install/aspell-0.60.6.1-64
 CXXFLAGS   += -DSPELL_CHECK=1
 INCFLAGS   += -I$(ASPELL)/include
 
 # Set up locations and flags for the compiler that will build bde_verify.
 ifeq ($(SYSTEM),Linux)
-    COMPILER ?= clang
+    COMPILER ?= gcc
     ifeq    ($(COMPILER),gcc)
 VERSION     = $(GCCVERSION)
 CXX         = $(GCCDIR)/bin/g++
@@ -30,6 +30,7 @@ VERSION     = $(LLVMVERSION)
 CXX         = $(LLVMDIR)/bin/clang++
 LINK        = $(CXX)
 LDFLAGS    += -Wl,-rpath,$(GCCDIR)/lib64
+CXXFLAGS   += -Wno-mismatched-tags
     endif
 LDFLAGS    += -L$(ASPELL)/lib64 -laspell
 endif
@@ -84,6 +85,7 @@ CXXFILES =                                                                    \
         groups/csa/csafmt/csafmt_nonascii.cpp                                 \
         groups/csa/csafmt/csafmt_whitespace.cpp                               \
         groups/csa/csamisc/csamisc_anonymousnamespaceinheader.cpp             \
+        groups/csa/csamisc/csamisc_arrayargument.cpp                          \
         groups/csa/csamisc/csamisc_arrayinitialization.cpp                    \
         groups/csa/csamisc/csamisc_boolcomparison.cpp                         \
         groups/csa/csamisc/csamisc_charvsstring.cpp                           \
@@ -97,6 +99,7 @@ CXXFILES =                                                                    \
         groups/csa/csamisc/csamisc_namespacetags.cpp                          \
         groups/csa/csamisc/csamisc_opvoidstar.cpp                             \
         groups/csa/csamisc/csamisc_spellcheck.cpp                             \
+        groups/csa/csamisc/csamisc_strictaliasing.cpp                         \
         groups/csa/csamisc/csamisc_stringadd.cpp                              \
         groups/csa/csamisc/csamisc_swapab.cpp                                 \
         groups/csa/csamisc/csamisc_thrownonstdexception.cpp                   \

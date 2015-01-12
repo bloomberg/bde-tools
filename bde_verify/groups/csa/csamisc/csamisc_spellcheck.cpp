@@ -10,6 +10,7 @@
 #include <clang/Basic/SourceManager.h>
 #include <csabase_analyser.h>
 #include <csabase_config.h>
+#include <csabase_debug.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_ppobserver.h>
 #include <csabase_registercheck.h>

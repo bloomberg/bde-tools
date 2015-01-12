@@ -337,11 +337,16 @@ bool csabase::Analyser::is_component(SourceLocation loc) const
     return is_component(get_location(loc).file());
 }
 
+bool csabase::Analyser::is_test_driver(std::string const &file) const
+{
+    //-dk:TODO this should be configurable, e.g. using regexp
+    return 6 < file.size() && file.substr(file.size() - 6) == ".t.cpp";
+}
+
 bool csabase::Analyser::is_test_driver() const
 {
     //-dk:TODO this should be configurable, e.g. using regexp
-    return 6 < toplevel().size()
-        && toplevel().substr(toplevel().size() - 6) == ".t.cpp";
+    return is_test_driver(toplevel());
 }
 
 bool csabase::Analyser::is_main() const

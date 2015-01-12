@@ -11,6 +11,7 @@
 #include <clang/Basic/Specifiers.h>
 #include <csabase_analyser.h>
 #include <csabase_config.h>
+#include <csabase_debug.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_location.h>
 #include <csabase_ppobserver.h>

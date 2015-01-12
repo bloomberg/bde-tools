@@ -28,12 +28,16 @@ static void check(Analyser& analyser, CastExpr const *expr)
         expr->getCastKind() == CK_IntegralToPointer) {
         CanQualType source(getType(expr->getSubExpr()->getType()));
         CanQualType target(getType(expr->getType()));
+        std::string tt = static_cast<QualType>(target).getAsString();
         if ((source != target &&
-             static_cast<QualType>(target).getAsString() != "char") ||
+             tt != "char" &&
+             tt != "unsigned char" &&
+             tt != "signed char" &&
+             tt != "void") ||
             (expr->getType()->isPointerType() !=
              expr->getSubExpr()->getType()->isPointerType())) {
             analyser.report(expr, check_name, "AL01",
-                            "Strict-aliasing violation")
+                            "Possible strict-aliasing violation")
                 << expr->getSourceRange();
         }
     }

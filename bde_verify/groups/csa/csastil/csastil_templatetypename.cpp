@@ -12,6 +12,7 @@
 #include <clang/ASTMatchers/ASTMatchersInternal.h>
 #include <clang/Basic/SourceLocation.h>
 #include <csabase_analyser.h>
+#include <csabase_debug.h>
 #include <csabase_registercheck.h>
 #include <csabase_util.h>
 #include <llvm/ADT/Optional.h>

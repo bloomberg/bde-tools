@@ -2,19 +2,19 @@
 
 CSABASE     = csabase
 LIBCSABASE  = libcsabase.a
-GCCVERSION  = 4.8.1
+GCCVERSION  = 4.9.2
 GCCDIR      = /opt/swt/install/gcc-$(GCCVERSION)
-LLVMVERSION = 3.6.0
+LLVMVERSION = svn
 SYSTEM      = $(shell uname -s)
 LLVMDIR     = /home/hrosen4/mbig/llvm-$(LLVMVERSION)/install-$(SYSTEM)
 SHELL       = /opt/swt/bin/bash
-CXXFLAGS   += -std=c++11 -Wall -Wno-mismatched-tags
+CXXFLAGS   += -std=c++11 -Wall
 
 default: $(CSABASE)
 
 # Set up locations and flags for the compiler that will build bde_verify.
 ifeq ($(SYSTEM),Linux)
-    COMPILER ?= clang
+    COMPILER ?= gcc
     ifeq    ($(COMPILER),gcc)
 VERSION     = $(GCCVERSION)
 CXX         = $(GCCDIR)/bin/g++
@@ -24,6 +24,7 @@ CXXFLAGS   += -Wno-unused-local-typedefs
     ifeq ($(COMPILER),clang)
 VERSION     = $(LLVMVERSION)
 CXX         = $(LLVMDIR)/bin/clang++
+CXXFLAGS   += -Wno-mismatched-tags
     endif
 endif
 ifeq ($(SYSTEM),SunOS)
