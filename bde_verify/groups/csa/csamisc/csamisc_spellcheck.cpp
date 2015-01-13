@@ -302,14 +302,10 @@ void report::check_spelling(SourceRange comment)
     }
 }
 
-const internal::DynTypedMatcher &
-parameter_matcher()
+internal::DynTypedMatcher parameter_matcher()
     // Return an AST matcher which looks for named parameters.
 {
-    static const internal::DynTypedMatcher matcher = decl(forEachDescendant(
-        parmVarDecl(matchesName(".")).bind("parm")
-    ));
-    return matcher;
+    return decl(forEachDescendant(parmVarDecl(matchesName(".")).bind("parm")));
 }
 
 void report::match_parameter(const BoundNodes &nodes)

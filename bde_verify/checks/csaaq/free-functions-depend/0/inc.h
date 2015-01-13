@@ -1,4 +1,12 @@
-#include <func.h>
+struct X { };
+typedef X Y;
+void f(X*);
+void g(Y*);
+
+template <typename T> struct W { };
+typedef W<char> V;
+void h(W<char>*);
+void i(V*);
 
 // ---------------------------------------------------------------------------- 
 // Copyright (C) 2015 Bloomberg Finance L.P.

@@ -1,9 +1,9 @@
 # Makefile                                                       -*-makefile-*-
 FILES := $(wildcard *.cpp)
-CHECKNAME := $(notdir $(realpath .))
+CHECKNAME := free-functions-depend
 BDE_VERIFY_ARGS := --diagnose=all
 
-BDE_VERIFY_DIR ?= ../../..
+BDE_VERIFY_DIR ?= ../../../..
 include $(BDE_VERIFY_DIR)/checks/Makefile.inc
 
 ## ----------------------------------------------------------------------------

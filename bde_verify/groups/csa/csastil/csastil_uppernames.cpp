@@ -71,13 +71,10 @@ report::report(Analyser& analyser)
 {
 }
 
-const internal::DynTypedMatcher &
-has_name_matcher()
+internal::DynTypedMatcher has_name_matcher()
     // Return an AST matcher which looks for named declarations.
 {
-    static const internal::DynTypedMatcher matcher =
-        decl(forEachDescendant(namedDecl().bind("decl")));
-    return matcher;
+    return decl(forEachDescendant(namedDecl().bind("decl")));
 }
 
 void report::match_has_name(const BoundNodes& nodes)

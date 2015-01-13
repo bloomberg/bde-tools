@@ -83,24 +83,22 @@ bool report::depends(SourceLocation sl, QualType type)
         return false;
     }
     auto rd = type->getAsCXXRecordDecl();
-    if (!rd) {
-        if (auto tspt = type->getAs<TemplateSpecializationType>()) {
-            if (auto td = tspt->getTemplateName().getAsTemplateDecl()) {
-                unsigned n = tspt->getNumArgs();
-                for (unsigned i = 0; i < n; ++i) {
-                    auto &ta = tspt->getArg(i);
-                    if (ta.getKind() == ta.Type &&
-                        depends(sl, ta.getAsType())) {
-                        return true;
-                    }
+    if (auto tspt = type->getAs<TemplateSpecializationType>()) {
+        if (auto td = tspt->getTemplateName().getAsTemplateDecl()) {
+            unsigned n = tspt->getNumArgs();
+            for (unsigned i = 0; i < n; ++i) {
+                auto &ta = tspt->getArg(i);
+                if (ta.getKind() == ta.Type &&
+                    depends(sl, ta.getAsType())) {
+                    return true;
                 }
-                if (auto ct = llvm::dyn_cast<ClassTemplateDecl>(td)) {
-                    rd = ct->getTemplatedDecl();
-                }
+            }
+            if (auto ct = llvm::dyn_cast<ClassTemplateDecl>(td)) {
+                rd = ct->getTemplatedDecl();
             }
         }
     }
-    if (rd) {
+    while (rd) {
         if (auto def = rd->getDefinition()) {
             if (m.getFileID(m.getExpansionLoc(def->getLocation())) ==
                 m.getFileID(sl)) {
@@ -116,6 +114,10 @@ bool report::depends(SourceLocation sl, QualType type)
                     return true;
                 }
             }
+            rd = tpl->getSpecializedTemplate()->getTemplatedDecl();
+        }
+        else {
+            rd = 0;
         }
     }
     return false;
@@ -124,7 +126,9 @@ bool report::depends(SourceLocation sl, QualType type)
 void report::operator()(const FunctionDecl *decl)
 {
     SourceLocation sl = m.getExpansionLoc(decl->getLocation());
-    if (a.is_header(m.getFilename(sl)) &&
+    if (!a.is_test_driver() &&
+        a.is_header(m.getFilename(sl)) &&
+        !a.is_system_header(m.getFilename(sl)) &&
         isFree(decl) &&
         !depends(sl, decl->getTypeSourceInfo()->getType())) {
         a.report(sl, check_name, "AQS01",

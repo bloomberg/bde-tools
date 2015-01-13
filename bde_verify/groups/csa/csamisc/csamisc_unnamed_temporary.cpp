@@ -68,21 +68,15 @@ report::report(Analyser& analyser)
 {
 }
 
-const internal::DynTypedMatcher &
-unnamed_temporary_matcher()
+internal::DynTypedMatcher unnamed_temporary_matcher()
     // Return an AST matcher which looks for expression statements which
     // construct temporary objects.
 {
-    static const internal::DynTypedMatcher matcher = decl(forEachDescendant(
-        cleanups(
-            hasParent(stmt(unless(expr()))),
-            anyOf(
-                has(functionalCastExpr()),
-                has(bindTemporaryExpr(has(temporaryObjectExpr())))
-            )
-        ).bind("ut")
-    ));
-    return matcher;
+    return decl(forEachDescendant(
+        cleanups(hasParent(stmt(unless(expr()))),
+                 anyOf(has(functionalCastExpr()),
+                       has(bindTemporaryExpr(has(temporaryObjectExpr())))))
+            .bind("ut")));
 }
 
 void report::match_unnamed_temporary(const BoundNodes &nodes)

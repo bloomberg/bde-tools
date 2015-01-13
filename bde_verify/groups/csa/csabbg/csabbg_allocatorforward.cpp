@@ -343,13 +343,11 @@ bool report::takes_allocator(CXXConstructorDecl const* constructor)
     return d.ctor_takes_allocator_[constructor] = takes_allocator(type);
 }
 
-static const DynTypedMatcher &
+static internal::DynTypedMatcher allocator_type_matcher()
     // Return an AST matcher for BloombergLP::bslma::Allocator.
-allocator_type_matcher()
 {
-    static const DynTypedMatcher matcher = decl(hasDescendant(recordDecl(
+    return decl(hasDescendant(recordDecl(
         hasName("::BloombergLP::bslma::Allocator")).bind("allocator")));
-    return matcher;
 }
 
 void report::match_allocator_type(const BoundNodes& nodes)
@@ -358,8 +356,7 @@ void report::match_allocator_type(const BoundNodes& nodes)
         nodes.getNodeAs<CXXRecordDecl>("allocator")->getTypeForDecl(), 0);
 }
 
-static const DynTypedMatcher &
-nested_allocator_trait_matcher()
+static internal::DynTypedMatcher nested_allocator_trait_matcher()
     // Return an AST matcher which looks for nested traits.  Expanded from
     // macros, allocator traits look like:
     //..
@@ -378,14 +375,13 @@ nested_allocator_trait_matcher()
     // out in the AST matcher; instead the matcher looks for a superset of
     // methods and the callback look sfor further structure.
 {
-    static const DynTypedMatcher matcher = decl(forEachDescendant(
+    return decl(forEachDescendant(
         methodDecl(
             matchesName("::operator NestedTraitDeclaration($|<)"),
             returns(qualType().bind("type")),
             ofClass(recordDecl().bind("class"))
         ).bind("trait")
     ));
-    return matcher;
 }
 
 void report::match_nested_allocator_trait(const BoundNodes& nodes)
@@ -416,13 +412,12 @@ void report::match_nested_allocator_trait(const BoundNodes& nodes)
     }
 }
 
-static const DynTypedMatcher &
-class_using_allocator_matcher()
+static internal::DynTypedMatcher class_using_allocator_matcher()
     // Matcher for classes that have constructors with a final parameter that
     // is a pointer to an allocator or a reference to a class that has such a
     // constructor.
 {
-    static const DynTypedMatcher matcher = decl(forEachDescendant(recordDecl(
+    return decl(forEachDescendant(recordDecl(
         has(constructorDecl(
             hasLastParameter(parmVarDecl(anyOf(
                 hasType(referenceType(
@@ -445,7 +440,6 @@ class_using_allocator_matcher()
             )))
         ))
     ).bind("class")));
-    return matcher;
 }
 
 void report::match_class_using_allocator(const BoundNodes& nodes)
@@ -456,21 +450,18 @@ void report::match_class_using_allocator(const BoundNodes& nodes)
                                 .getTypePtr()] = true;
 }
 
-static const DynTypedMatcher
-allocator_trait_matcher(int value)
+static internal::DynTypedMatcher allocator_trait_matcher(int value)
 {
-    const DynTypedMatcher matcher =
-        decl(forEachDescendant(classTemplateSpecializationDecl(
+    return decl(forEachDescendant(
+        classTemplateSpecializationDecl(
             hasName("::BloombergLP::bslma::UsesBslmaAllocator"),
             templateArgumentCountIs(1),
             isDerivedFrom(classTemplateSpecializationDecl(
                 hasName("::bsl::integral_constant"),
                 templateArgumentCountIs(2),
                 hasTemplateArgument(0, refersToType(asString("_Bool"))),
-                hasTemplateArgument(1, equalsIntegral(value))
-            ))
-        ).bind("class")));
-    return matcher;
+                hasTemplateArgument(1, equalsIntegral(value)))))
+            .bind("class")));
 }
 
 void report::match_allocator_trait(data::DeclsWithAllocatorTrait* set,
@@ -506,11 +497,10 @@ void report::match_positive_allocator_trait(const BoundNodes& nodes)
     match_allocator_trait(&d.decls_with_true_allocator_trait_, nodes);
 }
 
-static const DynTypedMatcher
-dependent_allocator_trait_matcher()
+static internal::DynTypedMatcher dependent_allocator_trait_matcher()
 {
-    const DynTypedMatcher matcher =
-        decl(forEachDescendant(classTemplateSpecializationDecl(
+    return decl(forEachDescendant(
+        classTemplateSpecializationDecl(
             hasName("::BloombergLP::bslma::UsesBslmaAllocator"),
             templateArgumentCountIs(1),
             unless(isDerivedFrom(classTemplateSpecializationDecl(
@@ -518,10 +508,8 @@ dependent_allocator_trait_matcher()
                 templateArgumentCountIs(2),
                 hasTemplateArgument(0, refersToType(asString("_Bool"))),
                 anyOf(hasTemplateArgument(1, equalsIntegral(0)),
-                      hasTemplateArgument(1, equalsIntegral(1)))
-            )))
-        ).bind("class")));
-    return matcher;
+                      hasTemplateArgument(1, equalsIntegral(1)))))))
+            .bind("class")));
 }
 
 void report::match_dependent_allocator_trait(const BoundNodes& nodes)
@@ -529,10 +517,9 @@ void report::match_dependent_allocator_trait(const BoundNodes& nodes)
     match_allocator_trait(&d.decls_with_dependent_allocator_trait_, nodes);
 }
 
-static const DynTypedMatcher
-should_return_by_value_matcher()
+static internal::DynTypedMatcher should_return_by_value_matcher()
 {
-    const DynTypedMatcher matcher = decl(forEachDescendant(
+    return decl(forEachDescendant(
         functionDecl(
             returns(asString("void")),
             hasParameter(0, hasType(pointerType(
@@ -555,7 +542,6 @@ should_return_by_value_matcher()
             )
         ).bind("func")
     ));
-    return matcher;
 }
 
 bool report::hasRVCognate(const FunctionDecl *func)

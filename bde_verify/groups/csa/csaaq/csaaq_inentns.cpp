@@ -37,6 +37,18 @@ struct report : Report<data>
 
 void report::operator()(const NamedDecl *decl)
 {
+    auto dn = decl->getDeclName();
+    if (dn.getNameKind() == DeclarationName::CXXOperatorName) {
+        switch (dn.getCXXOverloadedOperator()) {
+          case OO_New:
+          case OO_Array_New:
+          case OO_Delete:
+          case OO_Array_Delete:
+            return;                                                   // RETURN
+          default:
+            break;
+        }
+    }
     if (!a.is_test_driver() &&
         decl->getLinkageInternal() == Linkage::ExternalLinkage &&
         !decl->isInAnonymousNamespace() &&

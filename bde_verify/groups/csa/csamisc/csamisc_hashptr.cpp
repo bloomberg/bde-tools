@@ -55,24 +55,22 @@ report::report(Analyser& analyser)
 {
 }
 
-const internal::DynTypedMatcher &
-hash_char_ptr_matcher()
+internal::DynTypedMatcher hash_char_ptr_matcher()
     // Return an AST matcher which looks for calls to std::hash<Type *>.
 {
-    static const internal::DynTypedMatcher matcher = decl(forEachDescendant(
-        callExpr(callee(functionDecl(
-            hasName("operator()"),
-            parameterCountIs(1),
-            hasParent(recordDecl(hasName("std::hash"))),
-            hasParameter(0, hasType(pointerType(unless(anyOf(
-                pointee(asString("void")),
-                pointee(asString("const void")),
-                pointee(asString("volatile void")),
-                pointee(asString("const volatile void"))
-            )))))
-        ))).bind("hash")
-    ));
-    return matcher;
+    return decl(forEachDescendant(
+        callExpr(
+            callee(functionDecl(
+                hasName("operator()"),
+                parameterCountIs(1),
+                hasParent(recordDecl(hasName("std::hash"))),
+                hasParameter(
+                    0, hasType(pointerType(unless(anyOf(
+                           pointee(asString("void")),
+                           pointee(asString("const void")),
+                           pointee(asString("volatile void")),
+                           pointee(asString("const volatile void"))))))))))
+            .bind("hash")));
 }
 
 void report::match_hash_char_ptr(const BoundNodes &nodes)

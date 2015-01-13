@@ -253,114 +253,81 @@ llvm::Regex tested_method(
     ")" "[[:space:]]*[(]",
     llvm::Regex::Newline);  // Match a method name in a test item.
 
-const internal::DynTypedMatcher &
-print_matcher()
+internal::DynTypedMatcher print_matcher()
 {
-    static const internal::DynTypedMatcher matcher =
-        caseStmt(has(compoundStmt(has(ifStmt(
-            hasCondition(ignoringImpCasts(
-                declRefExpr(to(varDecl(hasName("verbose"))))
-            )),
-            forEachDescendant(expr(anyOf(
-                callExpr(argumentCountIs(1),
-                         callee(functionDecl(hasName("printf"))),
-                         hasArgument(0, ignoringImpCasts(stringLiteral()
-                                                         .bind("ps")
-                         ))
-                ),
-                callExpr(argumentCountIs(1),
-                         callee(functionDecl(hasName("printf"))),
-                         hasArgument(0, ignoringImpCasts(characterLiteral()
-                                                         .bind("pc")
-                         ))
-                ),
-                operatorCallExpr(
-                    hasOverloadedOperatorName("<<"),
-                    hasArgument(1, ignoringImpCasts(declRefExpr(to(
-                        functionDecl(hasName("endl"))
-                    )).bind("ce")))
-                ),
-                operatorCallExpr(
-                    hasOverloadedOperatorName("<<"),
-                    hasArgument(1, ignoringImpCasts(stringLiteral()
-                                                    .bind("cs")
-                    ))
-                ),
-                operatorCallExpr(
-                    hasOverloadedOperatorName("<<"),
-                    hasArgument(1, ignoringImpCasts(characterLiteral()
-                                                    .bind("cc")
-                    ))
-                )
-            )))
-        )))));
-
-    return matcher;
+    return caseStmt(has(compoundStmt(has(ifStmt(
+        hasCondition(
+            ignoringImpCasts(declRefExpr(to(varDecl(hasName("verbose")))))),
+        forEachDescendant(expr(anyOf(
+            callExpr(
+                argumentCountIs(1),
+                callee(functionDecl(hasName("printf"))),
+                hasArgument(0, ignoringImpCasts(stringLiteral().bind("ps")))),
+            callExpr(argumentCountIs(1),
+                     callee(functionDecl(hasName("printf"))),
+                     hasArgument(
+                         0, ignoringImpCasts(characterLiteral().bind("pc")))),
+            operatorCallExpr(
+                hasOverloadedOperatorName("<<"),
+                hasArgument(1, ignoringImpCasts(
+                                   declRefExpr(to(functionDecl(hasName(
+                                                   "endl")))).bind("ce")))),
+            operatorCallExpr(
+                hasOverloadedOperatorName("<<"),
+                hasArgument(1, ignoringImpCasts(stringLiteral().bind("cs")))),
+            operatorCallExpr(
+                hasOverloadedOperatorName("<<"),
+                hasArgument(1, ignoringImpCasts(
+                                   characterLiteral().bind("cc"))))))))))));
 }
 
-const internal::DynTypedMatcher &
-noisy_print_matcher()
+internal::DynTypedMatcher noisy_print_matcher()
     // Return an AST matcher which looks for (not very) verbose output inside
     // loops in a test case statement.
 {
-    static const internal::DynTypedMatcher matcher =
-        caseStmt(has(compoundStmt(forEachDescendant(
-            ifStmt(hasCondition(ignoringImpCasts(
-                       declRefExpr(to(varDecl(hasName("verbose")))))),
-                   anyOf(hasAncestor(doStmt(unless(anyOf(
-                            hasCondition(boolLiteral(equals(false))),
-                            hasCondition(characterLiteral(equals('\0'))),
-                            hasCondition(integerLiteral(equals(0))),
-                            hasCondition(nullPtrLiteralExpr())
-                         )))),
-                         hasAncestor(forStmt()),
-                         hasAncestor(whileStmt()))).bind("noisy")))));
-    return matcher;
+    return caseStmt(has(compoundStmt(forEachDescendant(
+        ifStmt(hasCondition(ignoringImpCasts(
+                   declRefExpr(to(varDecl(hasName("verbose")))))),
+               anyOf(hasAncestor(doStmt(unless(
+                         anyOf(hasCondition(boolLiteral(equals(false))),
+                               hasCondition(characterLiteral(equals('\0'))),
+                               hasCondition(integerLiteral(equals(0))),
+                               hasCondition(nullPtrLiteralExpr()))))),
+                     hasAncestor(forStmt()),
+                     hasAncestor(whileStmt()))).bind("noisy")))));
 }
 
-const internal::DynTypedMatcher &
-no_print_matcher()
+internal::DynTypedMatcher no_print_matcher()
     // Return an AST matcher which looks for missing verbose output inside
     // loops in a test statement.
 {
-    static const internal::DynTypedMatcher matcher =
-        caseStmt(has(compoundStmt(
-            eachOf(
-                forEachDescendant(doStmt().bind("try")),
-                forEachDescendant(forStmt().bind("try")),
-                forEachDescendant(whileStmt().bind("try"))),
-            forEachDescendant(stmt(
-                equalsBoundNode("try"),
-                unless(hasDescendant(ifStmt(
-                    hasCondition(ignoringImpCasts(declRefExpr(to(varDecl(anyOf(
-                        hasName("verbose"),
-                        hasName("veryVerbose"),
-                        hasName("veryVeryVerbose"),
-                        hasName("veryVeryVeryVerbose")
-                    ))))))
-                ))),
-                unless(hasAncestor(ifStmt(
-                    hasCondition(ignoringImpCasts(declRefExpr(to(varDecl(anyOf(
-                        hasName("verbose"),
-                        hasName("veryVerbose"),
-                        hasName("veryVeryVerbose"),
-                        hasName("veryVeryVeryVerbose")
-                    ))))))
-                )))
-            ).bind("loop"))
-        )));
-    return matcher;
+    return caseStmt(has(compoundStmt(
+        eachOf(forEachDescendant(doStmt().bind("try")),
+               forEachDescendant(forStmt().bind("try")),
+               forEachDescendant(whileStmt().bind("try"))),
+        forEachDescendant(
+            stmt(equalsBoundNode("try"),
+                 unless(hasDescendant(
+                     ifStmt(hasCondition(ignoringImpCasts(declRefExpr(to(
+                         varDecl(anyOf(hasName("verbose"),
+                                       hasName("veryVerbose"),
+                                       hasName("veryVeryVerbose"),
+                                       hasName("veryVeryVeryVerbose")))))))))),
+                 unless(hasAncestor(
+                     ifStmt(hasCondition(ignoringImpCasts(declRefExpr(to(
+                         varDecl(anyOf(hasName("verbose"),
+                                       hasName("veryVerbose"),
+                                       hasName("veryVeryVerbose"),
+                                       hasName("veryVeryVeryVerbose")))))))))))
+                .bind("loop")))));
 }
 
-const internal::DynTypedMatcher &
-return_status_matcher()
+internal::DynTypedMatcher return_status_matcher()
     // Return an AST matcher which looks for a 'return testStatus;' statement.
 {
-    static const internal::DynTypedMatcher matcher =
-        returnStmt(returnExpr(ignoringParenImpCasts(declRefExpr(hasDeclaration(
-            namedDecl(hasName("testStatus"))
-        ))))).bind("good");
-    return matcher;
+    return returnStmt(returnExpr(ignoringParenImpCasts(declRefExpr(
+                          hasDeclaration(namedDecl(hasName("testStatus")))))))
+        .bind("good");
 }
 
 void report::match_return_status(const BoundNodes& nodes)
@@ -368,25 +335,18 @@ void report::match_return_status(const BoundNodes& nodes)
     d.d_return = nodes.getNodeAs<Stmt>("good");
 }
 
-const internal::DynTypedMatcher &
-set_status_matcher()
+internal::DynTypedMatcher set_status_matcher()
     // Return an AST matcher which looks for 'testStatus = -1;'.
 {
-    static const internal::DynTypedMatcher matcher =
-        defaultStmt(anyOf(
-            defaultStmt(hasDescendant(binaryOperator(
-                hasOperatorName("="),
-                hasLHS(declRefExpr(hasDeclaration(namedDecl(
-                    hasName("testStatus"))))
-                ),
-                hasRHS(unaryOperator(
-                    hasOperatorName("-"),
-                    hasUnaryOperand(integerLiteral(equals(1)))
-                ))
-            ))).bind("good"),
-            defaultStmt().bind("bad")
-        ));
-    return matcher;
+    return defaultStmt(anyOf(
+        defaultStmt(hasDescendant(binaryOperator(
+                        hasOperatorName("="),
+                        hasLHS(declRefExpr(
+                            hasDeclaration(namedDecl(hasName("testStatus"))))),
+                        hasRHS(unaryOperator(hasOperatorName("-"),
+                                             hasUnaryOperand(integerLiteral(
+                                                 equals(1)))))))).bind("good"),
+        defaultStmt().bind("bad")));
 }
 
 void report::match_set_status(const BoundNodes& nodes)
