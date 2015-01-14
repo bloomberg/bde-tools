@@ -23,21 +23,10 @@ static std::string const check_name("entity-restrictions");
 
 // ----------------------------------------------------------------------------
 
-static bool is_global_name(Analyser& analyser, NamedDecl const *decl)
-{
-    llvm::Regex re("(^ *|[^[:alnum:]])" +
-                   decl->getNameAsString() +
-                   "([^[:alnum:]]| *$)");
-    return re.match(
-        analyser.config()->value("global_names", decl->getLocation()));
-}
-
-// ----------------------------------------------------------------------------
-
 static void enum_declaration(Analyser& analyser, EnumDecl const* decl)
 {
     if (   decl->getDeclContext()->isFileContext()
-        && !is_global_name(analyser, decl)
+        && !analyser.is_global_name(decl)
         && !decl->getLocation().isMacroID()
         && analyser.is_component_header(decl)
         && !analyser.is_standard_namespace(decl->getQualifiedNameAsString())) {
@@ -52,7 +41,7 @@ static void enum_declaration(Analyser& analyser, EnumDecl const* decl)
 static void var_declaration(Analyser& analyser, VarDecl const* decl)
 {
     if (   decl->getDeclContext()->isFileContext()
-        && !is_global_name(analyser, decl)
+        && !analyser.is_global_name(decl)
         && !decl->getLocation().isMacroID()
         && analyser.is_component_header(decl)
         && !analyser.is_standard_namespace(decl->getQualifiedNameAsString())) {
@@ -79,7 +68,7 @@ is_swap(FunctionDecl const* decl)
 static void function_declaration(Analyser& analyser, FunctionDecl const* decl)
 {
     if (   decl->getDeclContext()->isFileContext()
-        && !is_global_name(analyser, decl)
+        && !analyser.is_global_name(decl)
         && !decl->getLocation().isMacroID()
         && analyser.is_component_header(decl)
         && !decl->isOverloadedOperator()
@@ -107,7 +96,7 @@ static void typedef_declaration(Analyser& analyser, TypedefDecl const* decl)
         package = package.substr(7);
     }
     if (   decl->getDeclContext()->isFileContext()
-        && !is_global_name(analyser, decl)
+        && !analyser.is_global_name(decl)
         && !decl->getLocation().isMacroID()
         && analyser.is_component_header(decl)
         && decl->getNameAsString().find(package) != 0

@@ -86,6 +86,7 @@ class Analyser : public Attachments
     template <typename T> bool is_test_driver(T const*);
     bool               is_main() const;
     bool               is_standard_namespace(std::string const&) const;
+    bool               is_global_name(clang::NamedDecl const*);
     bool               is_global_package() const;
     bool               is_global_package(std::string const&) const;
     bool               is_ADL_candidate(clang::Decl const*);

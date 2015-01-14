@@ -128,7 +128,7 @@ std::string const& csabase::Analyser::rewrite_file() const
     return rewrite_file_;
 }
 
-clang::tooling::Replacements const& csabase::Analyser::replacements() const
+tooling::Replacements const& csabase::Analyser::replacements() const
 {
     return replacements_;
 }
@@ -250,6 +250,14 @@ bool csabase::Analyser::is_component_header(std::string const& name) const
 bool csabase::Analyser::is_component_header(SourceLocation loc) const
 {
     return is_component_header(get_location(loc).file());
+}
+
+bool csabase::Analyser::is_global_name(const NamedDecl *decl)
+{
+    llvm::Regex re("(^ *|[^[:alnum:]])" +
+                   decl->getNameAsString() +
+                   "([^[:alnum:]]| *$)");
+    return re.match(config()->value("global_names", decl->getLocation()));
 }
 
 bool csabase::Analyser::is_global_package(std::string const& pkg) const

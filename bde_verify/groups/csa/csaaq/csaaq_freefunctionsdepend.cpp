@@ -125,9 +125,19 @@ bool report::depends(SourceLocation sl, QualType type)
 
 void report::operator()(const FunctionDecl *decl)
 {
+    if (a.is_test_driver() ||
+        a.is_global_name(decl)) {
+        return;
+    }
+    if (auto ns = llvm::dyn_cast<NamespaceDecl>(
+            decl->getDeclContext()->getEnclosingNamespaceContext())) {
+        if (ns->isAnonymousNamespace() ||
+            a.is_standard_namespace(ns->getNameAsString())) {
+            return;
+        }
+    }
     SourceLocation sl = m.getExpansionLoc(decl->getLocation());
-    if (!a.is_test_driver() &&
-        a.is_header(m.getFilename(sl)) &&
+    if (a.is_header(m.getFilename(sl)) &&
         !a.is_system_header(m.getFilename(sl)) &&
         isFree(decl) &&
         !depends(sl, decl->getTypeSourceInfo()->getType())) {
