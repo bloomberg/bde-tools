@@ -131,7 +131,14 @@ class _JunitRecorder(object):
 
 
 class Log(object):
-    """This class represents a mechanism to the status of the test run.
+    """This class represents a mechanism to record the status of the test run.
+
+    An object of this type can be used to record when a test case started,
+    succeeded, or failed.  If the options passed into the initializer has the
+    ``junit_file_path`` attribute set, the object records the status to the
+    junit xml file pointed to by that attribute; otherwise, the object writes
+    the status messages directly to stdout.
+
     """
 
     def __init__(self, opts):
