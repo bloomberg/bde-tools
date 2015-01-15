@@ -9,9 +9,9 @@ class _Status(object):
     """Status of the test run.
 
     Attributes:
-        is_done: True when all the all test cases have been run or when test
-                 has been terminated
-        is_success: Whether all test cases have passed
+        is_done (bool): True when all the all test cases have been run or when
+                        test has been terminated.
+        is_success (bool): Whether all test cases have passed.
     """
     def __init__(self, ctx, status_cond):
         self._status_cond = status_cond
@@ -33,7 +33,7 @@ class _Status(object):
                 self._case_num = next_case_num
                 return self._case_num
 
-    def notify_failure(self):
+    def set_failure(self):
         self.is_success = False
 
     def notify_done(self):
@@ -47,7 +47,14 @@ class _Status(object):
 
 class _Worker(threading.Thread):
     """Worker thread to run test cases."""
+
     def __init__(self, ctx, status):
+        """Initialize a test runner object.
+
+        Args:
+            ctx (Context): Runner context.
+            status (Status): Runner status.
+        """
         threading.Thread.__init__(self)
         self._ctx = ctx
         self._status = status
@@ -106,7 +113,7 @@ class _Worker(threading.Thread):
                 self._ctx.log.record_success(self._case, rc, decode_text(out))
             else:
                 self._ctx.log.record_failure(self._case, rc, decode_text(out))
-                self._status.notify_failure()
+                self._status.set_failure()
 
 
 class Runner(object):
@@ -119,7 +126,7 @@ class Runner(object):
         """Initialize a test runner object.
 
         Args:
-            ctx: The runner context
+            ctx (Context): Runner context.
         """
         self._ctx = ctx
         self._status_cond = threading.Condition()
@@ -128,13 +135,17 @@ class Runner(object):
                          for j in range(self._ctx.options.num_jobs)]
 
     def _terminate(self, log_func):
-        """Terminate any subprocess spawn by worker threads."""
-        self._status.notify_failure()
+        """Terminate any subprocess spawned by worker threads.
+
+        Args:
+            log_func (func): Logging function.
+        """
+        self._status.set_failure()
         self._status.notify_done()
         for worker in self._workers:
             # The following technique to terminate processes is not thread
             # safe, but it is acceptable considering that a race condition will
-            # mean that the test process was already terminated.
+            # most like mean that the test process was already terminated.
             try:
                 if worker.is_alive() and worker._proc and worker._case > 0:
                     worker._proc.terminate()

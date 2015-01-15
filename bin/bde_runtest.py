@@ -12,8 +12,8 @@ def _get_tools_path():
 tools_path = _get_tools_path()
 sys.path = [tools_path] + sys.path
 
-import bdetest.core
+import bdetest.entry
 
 
 if __name__ == '__main__':
-    bdetest.core.main()
+    bdetest.entry.main()

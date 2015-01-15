@@ -17,11 +17,18 @@ class Policy(object):
       * ``test_filter.py`` should be separately associated with each project,
         instead of being centrally located in the test runner directory
 
-      * Think about some performance enhancement filters, such as ones that
+      * Think about some performance enhancement filters, such as separating
+        the test dirvers into different categories based on the their running
+        times.
 
     """
 
     def __init__(self, opts):
+        """Initialize the object with specified options.
+
+        Args:
+            opts (Options): Test runner options.
+        """
         self._opts = opts
         self._policy = self._determine_policy()
 

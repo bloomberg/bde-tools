@@ -8,9 +8,9 @@ class Context(object):
     the test runner.
 
     Attributes:
-        options: test runner options (type``Options``)
-        log: a logging mechanism (type ``Log``)
-        policy: test runner policy (type ``Policy``)
+        options (Options): Test runner options.
+        log (Log): Logging mechanism.
+        policy (Policy): Test runner policy mechanism.
 
     """
     def __init__(self, **kw):

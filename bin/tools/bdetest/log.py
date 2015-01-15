@@ -131,14 +131,14 @@ class _JunitRecorder(object):
 
 
 class Log(object):
-    """This class represents a mechanism to record test runner status.
+    """This class represents a mechanism to the status of the test run.
     """
 
     def __init__(self, opts):
         """Initialize the object with specified options.
 
         Args:
-            opts: test runner options
+            opts (Options): Test runner options.
         """
         self._opts = opts
         self._configure_logger()

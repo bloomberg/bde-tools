@@ -4,18 +4,19 @@ class Options(object):
     """This class represents a set of options for the test runner.
 
     Attributes:
-        test_path: path to the test driver
-        policy_path: path to ``test_filter.py``
-        component_name: name of the component for the test driver
-        is_debug: print additional debug options
-        junit_file_path: output junit xml file instead of stdout
-        is_verbose: whether to print all test case outputs (by default, only
-                    failed test cases are printed)
-        verbosity: verbosity level
-        num_jobs: number of threads to use to run test cases
-        timeout: time driver timeout
-        filter_abi_bits: override abi_bits filter for test policy
-        filter_host_type: override host_type filter for test policy
+        test_path (str): Path to the test driver.
+        policy_path (str): Path to ``test_filter.py``.
+        component_name (str): Name of the component for the test driver.
+        is_debug (bool): Whether to print additional debug options.
+        junit_file_path (str): If the vlaue is not None, output junit xml file
+            instead of stdout.
+        is_verbose (bool): Whether to print all test case outputs (by default,
+            only failed test cases are printed).
+        verbosity (int): Verbosity level, use 1 and higher for verbose.
+        num_jobs (int): Number of threads to use to run test cases.
+        timeout (int): Test driver timeout in seconds.
+        filter_abi_bits (str): Override abi_bits filter for test policy.
+        filter_host_type (str): Override host_type filter for test policy.
 
     """
     def __init__(self, **kw):
