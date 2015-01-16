@@ -117,7 +117,7 @@ do \
         rsync -av $path/etc/default*.opts etc/
     fi
 
-    for group in bst bde bdx
+    for group in bde bdx
     do \
         if [[ -e $path/groups/$group ]]
         then \
