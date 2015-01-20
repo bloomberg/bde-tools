@@ -2,7 +2,6 @@
 
 #include <clang/Basic/SourceLocation.h>
 #include <clang/Basic/SourceManager.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <csabase_analyser.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_ppobserver.h>
@@ -74,7 +73,7 @@ void files::operator()(SourceLocation loc,
                 d_analyser.report(sloc, check_name, "TAB01",
                         "Tab character%s0 in source")
                     << static_cast<long>(text.size());
-                d_analyser.rewriter().ReplaceText(
+                d_analyser.ReplaceText(
                     sloc, text.size(), std::string(text.size(), ' '));
             }
             else {
@@ -82,7 +81,7 @@ void files::operator()(SourceLocation loc,
                         check_name, "ESP01",
                         "Space%s0 at end of line")
                     << static_cast<long>(text.size() - 1);
-                d_analyser.rewriter().RemoveText(sloc, text.size() - 1);
+                d_analyser.RemoveText(sloc, text.size() - 1);
             }
         }
     }

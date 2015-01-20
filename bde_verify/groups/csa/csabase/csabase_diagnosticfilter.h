@@ -3,42 +3,30 @@
 #ifndef INCLUDED_CSABASE_DIAGNOSTICFILTER_H
 #define INCLUDED_CSABASE_DIAGNOSTICFILTER_H
 
-#include <clang/Basic/Diagnostic.h>
+#include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <memory>
+#include <string>
 
 // ----------------------------------------------------------------------------
 
 namespace clang { class DiagnosticOptions; }
-namespace clang { class LangOptions; }
-namespace clang { class Preprocessor; }
 
 namespace csabase { class Analyser; }
 namespace csabase
 {
-class DiagnosticFilter : public clang::DiagnosticConsumer
+class DiagnosticFilter : public clang::TextDiagnosticPrinter
 {
-public:
-    DiagnosticFilter(Analyser const& analyser,
-                     bool toplevel_only,
-                     clang::DiagnosticOptions & options);
-    ~DiagnosticFilter();
+  public:
+    DiagnosticFilter(Analyser const&           analyser,
+                     std::string               diagnose,
+                     clang::DiagnosticOptions& options);
 
-    void BeginSourceFile(clang::LangOptions const&  opts,
-                         clang::Preprocessor const* pp);
-    void EndSourceFile();
-    bool IncludeInDiagnosticCount() const;
-    clang::DiagnosticConsumer* clone(clang::DiagnosticsEngine&) const;
     void HandleDiagnostic(clang::DiagnosticsEngine::Level level,
-                          clang::Diagnostic const&        info);
+                          clang::Diagnostic const&        info) override;
 
 private:
-    DiagnosticFilter(DiagnosticFilter const&);
-    void operator=(DiagnosticFilter const&);
-
-    clang::DiagnosticOptions *               d_options;
-    std::auto_ptr<clang::DiagnosticConsumer> d_client;
     Analyser const*                          d_analyser;
-    bool                                     d_toplevel_only;
+    std::string                              d_diagnose;
 };
 }
 

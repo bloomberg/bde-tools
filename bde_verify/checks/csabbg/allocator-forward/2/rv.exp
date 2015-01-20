@@ -1,0 +1,28 @@
+rv.cpp:7:6: warning: RV01: Consider returning 'struct B' by value
+void f(B *);
+     ^
+rv.cpp:7:11: note: RV01: instead of through pointer parameter
+void f(B *);
+          ^
+rv.cpp:10:6: warning: RV01: Consider returning 'int' by value
+void f(int *);
+     ^
+rv.cpp:10:13: note: RV01: instead of through pointer parameter
+void f(int *);
+            ^
+rv.cpp:31:10: warning: RV01: Consider returning 'struct B' by value
+    void f(B *);
+         ^
+rv.cpp:31:15: note: RV01: instead of through pointer parameter
+    void f(B *);
+              ^
+rv.cpp:34:10: warning: RV01: Consider returning 'int' by value
+    void f(int *);
+         ^
+rv.cpp:34:17: note: RV01: instead of through pointer parameter
+    void f(int *);
+                ^
+rv.cpp:3:8: warning: AT02: Class 'A' uses allocators but does not have an allocator trait
+struct A { explicit A(BloombergLP::bslma::Allocator * = 0); };
+       ^
+5 warnings generated.

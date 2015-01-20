@@ -12,11 +12,18 @@
 #include <csabase_analyser.h>
 #include <csabase_debug.h>
 #include <csabase_diagnosticfilter.h>
+#include <csabase_filenames.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Path.h>
 #include <llvm/Support/raw_ostream.h>
+#include <limits.h>
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 600  // For 'realpath'
+#endif
+#include <stdlib.h>
 #include <stddef.h>
+#include <fstream>
 #include <map>
 #include <string>
 #include <utility>
@@ -27,6 +34,7 @@ namespace clang { class ASTContext; }
 // -----------------------------------------------------------------------------
 
 using namespace clang;
+using namespace clang::tooling;
 using namespace csabase;
 
 // -----------------------------------------------------------------------------
@@ -42,11 +50,14 @@ class AnalyseConsumer : public ASTConsumer
                     PluginAction const& plugin);
     void Initialize(ASTContext& context);
     bool HandleTopLevelDecl(DeclGroupRef DG);
+    llvm::StringRef Canon(llvm::StringRef path);
+    void ReadReplacements(std::string file);
     void HandleTranslationUnit(ASTContext&);
 
   private:
     Analyser analyser_;
     std::string const source_;
+    std::map<std::string, std::string> canon_;
 };
 }
 
@@ -59,13 +70,14 @@ AnalyseConsumer::AnalyseConsumer(CompilerInstance&   compiler,
             plugin.debug(),
             plugin.config(),
             plugin.tool_name(),
-            plugin.rewrite_dir())
+            plugin.rewrite_dir(),
+            plugin.rewrite_file())
 , source_(source)
 {
     analyser_.toplevel(source);
 
     compiler.getDiagnostics().setClient(new DiagnosticFilter(
-        analyser_, plugin.toplevel_only(), compiler.getDiagnosticOpts()));
+        analyser_, plugin.diagnose(), compiler.getDiagnosticOpts()));
     compiler.getDiagnostics().getClient()->BeginSourceFile(
         compiler.getLangOpts(),
         compiler.hasPreprocessor() ? &compiler.getPreprocessor() : 0);
@@ -90,33 +102,185 @@ AnalyseConsumer::HandleTopLevelDecl(DeclGroupRef DG)
 
 // -----------------------------------------------------------------------------
 
+llvm::StringRef
+AnalyseConsumer::Canon(llvm::StringRef path)
+{
+    std::string ps = path.str();
+    auto i = canon_.find(ps);
+    if (i != canon_.end()) {
+        return i->second;
+    }
+    char buf[PATH_MAX];
+    const char *pc = realpath(ps.c_str(), buf);
+    if (!pc) {
+        pc = ps.c_str();
+    }
+    return canon_[path] = std::string(pc);
+}
+
+void
+AnalyseConsumer::ReadReplacements(std::string file)
+{
+    if (!file.empty()) {
+        std::ifstream f(file);
+        if (!f) {
+            llvm::errs() << analyser_.toplevel()
+                         << ":1:1: error: cannot open " << file
+                         << " for reading\n";
+        }
+        else {
+            int length;
+            std::string mod_file;
+            int rep_offset;
+            int rep_length;
+            std::string data;
+            while (f >> length) {
+                mod_file.resize(length);
+                f.ignore(1).read(&mod_file[0], mod_file.size()).ignore(1);
+                f >> rep_offset >> rep_length >> length;
+                data.resize(length);
+                f.ignore(1).read(&data[0], data.size()).ignore(1);
+                mod_file = Canon(mod_file);
+                analyser_.ReplaceText(mod_file, rep_offset, rep_length, data);
+            }
+        }
+    }
+}
+
+struct CompareReplacements
+{
+    bool operator()(const Replacement &a, const Replacement &b)
+    {
+        if (a.getFilePath() < b.getFilePath()) {
+            return true;
+        }
+        if (b.getFilePath() < a.getFilePath()) {
+            return false;
+        }
+        if (a.getOffset() > b.getOffset()) {
+            return true;
+        }
+        if (b.getOffset() > a.getOffset()) {
+            return false;
+        }
+        if (a.getLength() < b.getLength()) {
+            return true;
+        }
+        if (b.getLength() < a.getLength()) {
+            return false;
+        }
+        return b.getReplacementText() < a.getReplacementText();
+    }
+};
+
 void
 AnalyseConsumer::HandleTranslationUnit(ASTContext&)
 {
     analyser_.process_translation_unit_done();
 
+    std::string rf = analyser_.rewrite_file();
+    if (!rf.empty()) {
+        int fd;
+        std::error_code file_error = llvm::sys::fs::openFileForWrite(
+            rf, fd, llvm::sys::fs::F_Append);
+        if (file_error) {
+            llvm::errs() << analyser_.toplevel()
+                         << ":1:1: error: " << file_error.message()
+                         << ": cannot open " << rf
+                         << " for writing\n";
+        }
+        else {
+            llvm::raw_fd_ostream rfdo(fd, true);
+            rfdo.SetUnbuffered();
+            rfdo.SetUseAtomicWrites(true);
+            for (const auto &r : analyser_.replacements()) {
+                std::string buf;
+                llvm::raw_string_ostream os(buf);
+                llvm::StringRef c = Canon(r.getFilePath());
+                os << c.size() << " "
+                   << c << " "
+                   << r.getOffset() << " "
+                   << r.getLength() << " "
+                   << r.getReplacementText().size() << " "
+                   << r.getReplacementText() << "\n";
+                rfdo << os.str();
+            }
+            rfdo.close();
+            if (rfdo.has_error()) {
+                rfdo.clear_error();
+                llvm::errs() << analyser_.toplevel() << ":1:1: error: "
+                             << "IO error closing " << rf << "\n";
+            }
+        }
+    }
+
     std::string rd = analyser_.rewrite_dir();
     if (!rd.empty()) {
-        for (Rewriter::buffer_iterator b = analyser_.rewriter().buffer_begin(),
-                                       e = analyser_.rewriter().buffer_end();
-             b != e;
-             b++) {
-            if (const FileEntry* fe =
-                    analyser_.manager().getFileEntryForID(b->first)) {
-                llvm::SmallVector<char, 512> path(rd.begin(), rd.end());
-                llvm::sys::path::append(
-                    path, llvm::sys::path::filename(fe->getName()));
-                std::string rewritten_file =
-                    std::string(path.begin(), path.end()) + "-rewritten";
-                std::string file_error;
-                llvm::raw_fd_ostream rfdo(
-                    rewritten_file.c_str(), file_error, llvm::sys::fs::F_None);
-                if (file_error.empty()) {
-                    b->second.write(rfdo);
-                } else {
-                    ERRS() << file_error << ": cannot open " << rewritten_file
-                           << " for rewriting\n";
+        if (!rf.empty()) {
+            ReadReplacements(rf);
+        }
+        Rewriter& rw = analyser_.rewriter();
+        SourceManager&m = analyser_.manager();
+        std::set<Replacement, CompareReplacements> sr(
+            analyser_.replacements().begin(), analyser_.replacements().end());
+        for (const auto &r : sr) {
+            r.apply(rw);
+        }
+        Rewriter::buffer_iterator b = rw.buffer_begin();
+        Rewriter::buffer_iterator e = rw.buffer_end();
+        for (; b != e; b++) {
+            const FileEntry *fe = m.getFileEntryForID(b->first);
+            if (!fe) {
+                continue;
+            }
+            std::string rewritten_file =
+                analyser_.get_rewrite_file(fe->getName());
+            const int MAX_TRIES = 10;
+            int tries;
+            llvm::SmallVector<char, 256> path;
+            for (tries = 0; ++tries <= MAX_TRIES;
+                 llvm::sys::fs::remove(path.data())) {
+                int fd;
+                std::error_code file_error =
+                    llvm::sys::fs::createUniqueFile(
+                        rewritten_file + "-%%%%%%%%", fd, path);
+                if (file_error) {
+                    llvm::errs() << analyser_.toplevel()
+                                 << ":1:1: error: " << file_error.message()
+                                 << ": cannot open " << path.data()
+                                 << " for writing -- attempt " << tries
+                                 << "\n";
+                    continue;
                 }
+                llvm::raw_fd_ostream rfdo(fd, true);
+                b->second.write(rfdo);
+                rfdo.close();
+                if (rfdo.has_error()) {
+                    rfdo.clear_error();
+                    llvm::errs() << analyser_.toplevel() << ":1:1: error: "
+                                 << "IO error closing " << path.data()
+                                 << " -- attempt " << tries << "\n";
+                    continue;
+                }
+                file_error =
+                    llvm::sys::fs::rename(path.data(), rewritten_file);
+                if (file_error) {
+                    llvm::errs() << analyser_.toplevel() << ":1:1: error: "
+                                 << "cannot rename " << path.data()
+                                 << " to " << rewritten_file
+                                 << " -- attempt " << tries << "\n";
+                    continue;
+                }
+                break;
+            }
+            if (tries == MAX_TRIES) {
+                llvm::errs() << analyser_.toplevel() << ":1:1: error: "
+                             << "utterly failed to produce "
+                             << rewritten_file << "\n";
+            }
+            else {
+                llvm::errs() << analyser_.toplevel() << ":1:1: note: "
+                << "wrote " << rewritten_file << "\n";
             }
         }
     }
@@ -128,16 +292,18 @@ PluginAction::PluginAction()
 : debug_()
 , config_(1, "load .bdeverify")
 , tool_name_()
-, toplevel_only_(false)
+, diagnose_("component")
 {
 }
 
 // -----------------------------------------------------------------------------
 
-ASTConsumer* PluginAction::CreateASTConsumer(CompilerInstance& compiler,
-                                             llvm::StringRef source)
+std::unique_ptr<ASTConsumer>
+PluginAction::CreateASTConsumer(CompilerInstance& compiler,
+                                llvm::StringRef source)
 {
-    return new AnalyseConsumer(compiler, source, *this);
+    return std::unique_ptr<ASTConsumer>(
+        new AnalyseConsumer(compiler, source, *this));
 }
 
 // -----------------------------------------------------------------------------
@@ -159,11 +325,10 @@ bool PluginAction::ParseArgs(CompilerInstance const& compiler,
         }
         else if (arg == "toplevel-only-on")
         {
-            toplevel_only_ = true;
+            diagnose_ = "main";
         }
-        else if (arg == "toplevel-only-off")
-        {
-            toplevel_only_ = false;
+        else if (arg.startswith("diagnose=")) {
+            diagnose_ = arg.substr(9).str();
         }
         else if (arg.startswith("config=")) {
             config_.push_back("load " + arg.substr(7).str());
@@ -176,6 +341,9 @@ bool PluginAction::ParseArgs(CompilerInstance const& compiler,
         }
         else if (arg.startswith("rewrite-dir=")) {
             rewrite_dir_ = arg.substr(12).str();
+        }
+        else if (arg.startswith("rewrite-file=")) {
+            rewrite_file_ = arg.substr(13).str();
         }
         else
         {
@@ -200,14 +368,19 @@ std::string PluginAction::tool_name() const
     return tool_name_;
 }
 
-bool PluginAction::toplevel_only() const
+std::string PluginAction::diagnose() const
 {
-    return toplevel_only_;
+    return diagnose_;
 }
 
 std::string PluginAction::rewrite_dir() const
 {
     return rewrite_dir_;
+}
+
+std::string PluginAction::rewrite_file() const
+{
+    return rewrite_file_;
 }
 
 // ----------------------------------------------------------------------------

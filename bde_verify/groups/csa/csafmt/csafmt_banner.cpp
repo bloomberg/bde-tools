@@ -3,7 +3,6 @@
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Basic/SourceLocation.h>
 #include <clang/Basic/SourceManager.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <csabase_analyser.h>
 #include <csabase_config.h>
 #include <csabase_debug.h>
@@ -157,7 +156,7 @@ void files::check_comment(SourceRange comment_range)
                 << static_cast<int>(matches[3].size());
             SourceRange line_range = d_analyser.get_line_range(separator_start);
             if (line_range.isValid()) {
-                d_analyser.rewriter().ReplaceText(line_range, expected_banner);
+                d_analyser.ReplaceText(line_range, expected_banner);
             }
         }
     }
@@ -208,11 +207,11 @@ void files::check_comment(SourceRange comment_range)
             d_analyser.report(sl, check_name, "BAN03", error);
             d_analyser.report(sl, check_name, "BAN03",
                               "Correct text is\n%0",
-                              false, DiagnosticsEngine::Note)
+                              false, DiagnosticIDs::Note)
                 << expected_text;
             SourceRange line_range = d_analyser.get_line_range(sl);
             if (line_range.isValid()) {
-                d_analyser.rewriter().ReplaceText(line_range, expected_text);
+                d_analyser.ReplaceText(line_range, expected_text);
             }
         }
 
@@ -232,11 +231,11 @@ void files::check_comment(SourceRange comment_range)
             d_analyser.report(bottom_loc,
                               check_name, "BAN04",
                               "Correct version is\n%0",
-                              false, DiagnosticsEngine::Note)
+                              false, DiagnosticIDs::Note)
                 << expected_text;
             SourceRange line_range = d_analyser.get_line_range(bottom_loc);
             if (line_range.isValid()) {
-                d_analyser.rewriter().ReplaceText(line_range, expected_text);
+                d_analyser.ReplaceText(line_range, expected_text);
             }
         }
     }
@@ -278,11 +277,13 @@ void files::operator()()
 void files::operator()(const FunctionDecl *func)
 {
     // Process only function definition.
+    const CXXMethodDecl *md = llvm::dyn_cast<CXXMethodDecl>(func);
     SourceLocation& id = d_analyser.attachment<comments>().d_inline_definition;
     if (!id.isValid() &&
         func->hasBody() &&
         func->getBody() &&
         func->isInlineSpecified() &&
+        (!md || md->isUserProvided()) &&
         d_analyser.is_component_header(func)) {
         id = func->getLocation();
     }

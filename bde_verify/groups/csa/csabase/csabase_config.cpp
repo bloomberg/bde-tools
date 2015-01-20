@@ -194,11 +194,9 @@ csabase::Config::process(std::string const& line)
                 FileName fn(file);
                 if (d_suppressions.insert(std::make_pair(tag, fn.name()))
                         .second &&
-                    d_groups.find(tag) != d_groups.end()) {
-                    const std::vector<std::string>& group_items =
-                        d_groups.find(tag)->second;
-                    for (size_t i = 0; i < group_items.size(); ++i) {
-                        process("suppress " + group_items[i] + " " + file);
+                    d_groups.count(tag)) {
+                    for (const auto& group_item : d_groups.find(tag)->second) {
+                        process("suppress " + group_item + " " + file);
                     }
                 }
             }
@@ -206,6 +204,26 @@ csabase::Config::process(std::string const& line)
         else {
             llvm::errs()
                 << "WARNING: suppress needs tag and files on line '"
+                << line << "'\n";
+        }
+    }
+    else if ("unsuppress" == command) {
+        std::string tag;
+        if (args >> tag) {
+            std::string file;
+            while (args >> file) {
+                FileName fn(file);
+                auto p = std::make_pair(tag, fn.name());
+                if (d_suppressions.erase(p) && d_groups.count(tag)) {
+                    for (const auto& group_item : d_groups.find(tag)->second) {
+                        process("unsuppress " + group_item + " " + file);
+                    }
+                }
+            }
+        }
+        else {
+            llvm::errs()
+                << "WARNING: unsuppress needs tag and files on line '"
                 << line << "'\n";
         }
     }
@@ -464,6 +482,89 @@ void csabase::Config::check_bv_stack(Analyser& analyser) const
             local_stack.pop_back();
         }
     }
+}
+
+namespace {
+
+typedef std::vector<std::string> VS_t;
+
+VS_t cross(const VS_t &vs1, const VS_t &vs2)
+    // Return the cross product of the specified 'vs1' and vs2' sets.
+{
+    VS_t rs;
+    for (const auto& s1 : vs1) {
+        for (const auto& s2 : vs2) {
+            rs.push_back(s1 + s2);
+        }
+    }
+    return rs;
+}
+
+void append(VS_t &vs1, const VS_t &vs2)
+    // Append the contents of the specified 'vs2' to the specified 'vs1'.
+{
+    vs1.insert(vs1.end(), vs2.begin(), vs2.end());
+}
+
+VS_t comma_split(const std::string &s, size_t &pos)
+    // Split the specified string 's' starting from the specified 'pos' at top-
+    // level commas into a set of strings and return them.  A top-level comma
+    // is not enclosed within balanced braces.  Processing stops at the end of
+    // the string or at the first unbalanced '}'.  The next position to be
+    // processed will be set in 'pos'.
+{
+    VS_t result;
+    std::string current;
+    size_t nesting = 0;
+    while (char c = s[pos++]) {
+        if (c == ',' && nesting == 0) {
+            result.push_back(current);
+            current.clear();
+        }
+        else if (c == '}' && nesting == 0) {
+            result.push_back(current);
+            break;
+        }
+        else {
+            current += c;
+            if (c == '{') {
+                ++nesting;
+            }
+            else if (c == '}') {
+                --nesting;
+            }
+        }
+    }
+    return result;
+}
+
+VS_t expand(const std::string &s, size_t &pos)
+    // Brace-expand the specified string 's' starting from the specified 'pos'
+    // and return the set of strings.
+{
+    size_t left = s.find('{', pos);
+    if (left == s.npos) {
+        VS_t result{s.substr(pos)};
+        pos = s.size();
+        return result;
+    }
+    VS_t result{s.substr(pos, left - pos)};
+    pos = left + 1;
+    VS_t x = comma_split(s, pos);
+    VS_t w;
+    for (const auto& sx : x) {
+        size_t xpos = 0;
+        append(w, expand(sx, xpos));
+    }
+    return cross(cross(result, w), expand(s, pos));
+}
+
+}
+
+std::vector<std::string> csabase::Config::brace_expand(const std::string &s)
+{
+    size_t p = 0;
+    return expand(s, p);
 }
 
 // ----------------------------------------------------------------------------

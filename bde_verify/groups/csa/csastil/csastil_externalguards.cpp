@@ -5,6 +5,7 @@
 #include <clang/Lex/Token.h>
 #include <csabase_analyser.h>
 #include <csabase_binder.h>
+#include <csabase_debug.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_filenames.h>
 #include <csabase_ppobserver.h>

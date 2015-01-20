@@ -2,6 +2,7 @@
 
 #include "csabbg_allocatorforward.t.hpp"
 #include <bdes_ident.h>
+#include <bslma_testallocator.h>
 
 // -----------------------------------------------------------------------------
 
@@ -313,6 +314,8 @@ bde_verify::csabbg::alloc_a a{};
 bde_verify::csabbg::alloc_a b{0};
 bde_verify::csabbg::alloc_a c[2];
 bde_verify::csabbg::alloc_a d[2][2];
+
+BloombergLP::bslma::TestAllocator ta;
 
 // ----------------------------------------------------------------------------
 // Copyright (C) 2014 Bloomberg Finance L.P.

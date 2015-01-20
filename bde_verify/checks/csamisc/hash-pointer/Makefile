@@ -4,6 +4,7 @@ CHECKNAME := $(notdir $(realpath .))
 
 BDE_VERIFY_DIR ?= ../../..
 include $(BDE_VERIFY_DIR)/checks/Makefile.inc
+BDE_VERIFY_ARGS += -Wno-writable-strings
 
 ## ----------------------------------------------------------------------------
 ## Copyright (C) 2014 Bloomberg Finance L.P.

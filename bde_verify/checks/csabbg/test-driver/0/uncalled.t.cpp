@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <bsl_iostream.h>
 
-using namespace BloombergLP;
+namespace bde_verify { }
+using namespace bde_verify;
 using namespace bsl;
 
 //=============================================================================
@@ -32,25 +33,33 @@ using namespace bsl;
 //-----------------------------------------------------------------------------
 
 // ============================================================================
-//                      STANDARD BDE ASSERT TEST MACROS
+//                     STANDARD BSL ASSERT TEST FUNCTION
 // ----------------------------------------------------------------------------
 
-static int testStatus = 0;
+namespace {
 
-static void aSsErT(int c, const char *s, int i)
+int testStatus = 0;
+
+void aSsErT(bool condition, const char *message, int line)
 {
-    if (c) {
-        cout << "Error " << __FILE__ << "(" << i << "): " << s
-             << "    (failed)" << endl;
-        if (testStatus >= 0 && testStatus <= 100) ++testStatus;
+    if (condition) {
+        printf("Error " __FILE__ "(%d): %s    (failed)\n", line, message);
+
+        if (0 <= testStatus && testStatus <= 100) {
+            ++testStatus;
+        }
     }
 }
 
+}  // close unnamed namespace
+
 // ============================================================================
-//                      STANDARD BDE TEST DRIVER MACROS
+//               STANDARD BDE TEST DRIVER MACRO ABBREVIATIONS
 // ----------------------------------------------------------------------------
 
 #define ASSERT       BDLS_TESTUTIL_ASSERT
+#define ASSERTV      BDLS_TESTUTIL_ASSERTV
+
 #define LOOP_ASSERT  BDLS_TESTUTIL_LOOP_ASSERT
 #define LOOP0_ASSERT BDLS_TESTUTIL_LOOP0_ASSERT
 #define LOOP1_ASSERT BDLS_TESTUTIL_LOOP1_ASSERT
@@ -59,18 +68,17 @@ static void aSsErT(int c, const char *s, int i)
 #define LOOP4_ASSERT BDLS_TESTUTIL_LOOP4_ASSERT
 #define LOOP5_ASSERT BDLS_TESTUTIL_LOOP5_ASSERT
 #define LOOP6_ASSERT BDLS_TESTUTIL_LOOP6_ASSERT
-#define ASSERTV      BDLS_TESTUTIL_ASSERTV
 
-#define Q   BDLS_TESTUTIL_Q   // Quote identifier literally.
-#define P   BDLS_TESTUTIL_P   // Print identifier and value.
-#define P_  BDLS_TESTUTIL_P_  // P(X) without '\n'.
-#define T_  BDLS_TESTUTIL_T_  // Print a tab (w/o newline).
-#define L_  BDLS_TESTUTIL_L_  // current Line number
+#define Q            BDLS_TESTUTIL_Q   // Quote identifier literally.
+#define P            BDLS_TESTUTIL_P   // Print identifier and value.
+#define P_           BDLS_TESTUTIL_P_  // P(X) without '\n'.
+#define T_           BDLS_TESTUTIL_T_  // Print a tab (w/o newline).
+#define L_           BDLS_TESTUTIL_L_  // current Line number
 
 //@CLASSES:
 //    joe : just a class
 
-namespace BloombergLP
+namespace bde_verify
 {
     struct joe {
         joe();

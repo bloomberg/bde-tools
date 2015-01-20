@@ -4,6 +4,7 @@ csamisc_constantreturn.t.cpp:8:12: warning: CR01: Function 'f' has only one stat
 csamisc_constantreturn.t.cpp:6:42: note: CR01: Declaration of 'f' (which always returns the constant 0)
 int bde_verify::csamisc::constantreturn::f()
                                          ^
+In file included from csamisc_constantreturn.t.cpp:3:
 ./csamisc_constantreturn.t.hpp:22:24: note: CR01: Declaration of 'f' (which always returns the constant 0)
             static int f();
                        ^
@@ -13,6 +14,7 @@ csamisc_constantreturn.t.cpp:13:12: warning: CR01: Function 'g' has only one sta
 csamisc_constantreturn.t.cpp:11:42: note: CR01: Declaration of 'g' (which always returns the constant 13)
 int bde_verify::csamisc::constantreturn::g()
                                          ^
+In file included from csamisc_constantreturn.t.cpp:3:
 ./csamisc_constantreturn.t.hpp:23:24: note: CR01: Declaration of 'g' (which always returns the constant 13)
             static int g();
                        ^

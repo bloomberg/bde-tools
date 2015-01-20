@@ -1,0 +1,13 @@
+array-argument.cpp:2:13: warning: AA01: Pointer parameter disguised as sized array
+void f2(int a[10]);
+            ^
+array-argument.cpp:4:13: warning: AA01: Pointer parameter disguised as sized array
+void f4(int [10]);
+            ^
+array-argument.cpp:11:33: warning: AA01: Pointer parameter disguised as sized array
+template <typename T> void t2(T a[10]);
+                                ^
+array-argument.cpp:13:33: warning: AA01: Pointer parameter disguised as sized array
+template <typename T> void t4(T [10]);
+                                ^
+4 warnings generated.

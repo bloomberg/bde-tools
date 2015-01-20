@@ -11,9 +11,8 @@ define CHECKARGS
     -cl='namespace bde_verify'                                                \
     -cl='all $(ALL)'                                                          \
     $(foreach N,$(CHECKNAME),-cl='check $(N) on')                             \
-    -fcxx-exceptions                                                          \
     -Wno-string-plus-int                                                      \
-    -std=c++0x                                                                \
+    -std=c++11                                                                \
     -D_X86INTRIN_H_INCLUDED                                                   \
     -I $(BDE_VERIFY_DIR)/groups/csa/csadep                                    \
     -I $(BDE_VERIFY_DIR)/checks/include                                       \

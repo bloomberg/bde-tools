@@ -2,8 +2,10 @@
 
 #include <csabase_format.h>
 #include <clang/AST/Type.h>
-#include <clang/AST/DeclBase.h>
+#include <clang/AST/Decl.h>
+#include <clang/AST/PrettyPrinter.h>
 #include <clang/Basic/Diagnostic.h>    // IWYU pragma: keep
+#include <clang/Basic/LangOptions.h>
 #include <llvm/Support/raw_ostream.h>  // IWYU pragma: keep
 
 using namespace csabase;
@@ -40,6 +42,32 @@ static void printer(Target& out, Decl::Kind value)
 
 // -----------------------------------------------------------------------------
 
+template <typename Target>
+static void printer(Target& out, const NamedDecl *decl)
+{
+    PrintingPolicy pp{LangOptions()};
+    pp.Indentation = 4;
+    pp.SuppressSpecifiers = false;
+    pp.SuppressTagKeyword = false;
+    pp.SuppressTag = false;
+    pp.SuppressScope = false;
+    pp.SuppressUnwrittenScope = false;
+    pp.SuppressInitializers = false;
+    pp.ConstantArraySizeAsWritten = true;
+    pp.AnonymousTagLocations = true;
+    pp.Bool = true;
+    pp.TerseOutput = false;
+    pp.PolishForDeclaration = true;
+    pp.IncludeNewlines = false;
+
+    std::string buf;
+    llvm::raw_string_ostream s(buf);
+    decl->print(s, pp, 0, true);
+    out << s.str();
+}
+
+// -----------------------------------------------------------------------------
+
 template <typename T>
 void csabase::Formatter<T>::print(llvm::raw_ostream& out) const
 {
@@ -56,6 +84,7 @@ void csabase::Formatter<T>::print(DiagnosticBuilder& out) const
 
 template class csabase::Formatter<Type::TypeClass>;
 template class csabase::Formatter<Decl::Kind>;
+template class csabase::Formatter<const NamedDecl *>;
 
 // ----------------------------------------------------------------------------
 // Copyright (C) 2014 Bloomberg Finance L.P.

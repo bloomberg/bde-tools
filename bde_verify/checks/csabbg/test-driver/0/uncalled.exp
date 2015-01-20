@@ -1,31 +1,31 @@
-uncalled.t.cpp:77:9: warning: TP27: Method not called in test driver
+uncalled.t.cpp:85:9: warning: TP27: Method not called in test driver
         joe(int uncalled);
         ^
-uncalled.t.cpp:79:14: warning: TP27: Method not called in test driver
+uncalled.t.cpp:87:14: warning: TP27: Method not called in test driver
         void f1(int uncalled);
              ^
-uncalled.t.cpp:81:14: warning: TP27: Method not called in test driver
+uncalled.t.cpp:89:14: warning: TP27: Method not called in test driver
         void f2(int uncalled);
              ^
-uncalled.t.cpp:83:14: warning: TP27: Method not called in test driver
+uncalled.t.cpp:91:14: warning: TP27: Method not called in test driver
         void f3(int uncalled);
              ^
-uncalled.t.cpp:85:21: warning: TP27: Method not called in test driver
+uncalled.t.cpp:93:21: warning: TP27: Method not called in test driver
         static void f4(int uncalled);
                     ^
-uncalled.t.cpp:87:21: warning: TP27: Method not called in test driver
+uncalled.t.cpp:95:21: warning: TP27: Method not called in test driver
         static void f5(int uncalled);
                     ^
-uncalled.t.cpp:89:21: warning: TP27: Method not called in test driver
+uncalled.t.cpp:97:21: warning: TP27: Method not called in test driver
         static void f6(int uncalled);
                     ^
-uncalled.t.cpp:91:21: warning: TP27: Method not called in test driver
+uncalled.t.cpp:99:21: warning: TP27: Method not called in test driver
         static void f7(int uncalled);
                     ^
-uncalled.t.cpp:92:14: warning: TP27: Method not called in test driver
+uncalled.t.cpp:100:14: warning: TP27: Method not called in test driver
         void f8(int uncalled);
              ^
-uncalled.t.cpp:93:21: warning: TP27: Method not called in test driver
+uncalled.t.cpp:101:21: warning: TP27: Method not called in test driver
         static void f9(int uncalled);
                     ^
 10 warnings generated.

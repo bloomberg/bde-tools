@@ -11,8 +11,8 @@
 #include <clang/ASTMatchers/ASTMatchers.h>
 #include <clang/ASTMatchers/ASTMatchersInternal.h>
 #include <clang/Basic/SourceLocation.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <csabase_analyser.h>
+#include <csabase_debug.h>
 #include <csabase_registercheck.h>
 #include <csabase_util.h>
 #include <llvm/ADT/Optional.h>
@@ -66,18 +66,13 @@ report::report(Analyser& analyser)
 {
 }
 
-const internal::DynTypedMatcher &
-has_template_parameters_matcher()
+internal::DynTypedMatcher has_template_parameters_matcher()
     // Return an AST matcher which looks for things that might have template
     // parameters.  We could be more restrictive than just accepting any 'decl'
     // but that would just push the same work we do in the callback elsewhere.
 {
-    static const internal::DynTypedMatcher matcher =
-        decl(eachOf(
-            forEachDescendant(decl().bind("decl")),
-            forEachDescendant(lambdaExpr().bind("lambda"))
-        ));
-    return matcher;
+    return decl(eachOf(forEachDescendant(decl().bind("decl")),
+                       forEachDescendant(lambdaExpr().bind("lambda"))));
 }
 
 void report::match_has_template_parameters(const BoundNodes& nodes)
@@ -156,8 +151,7 @@ void report::checkTemplateParameters(TemplateParameterList const* parms)
                  llvm::StringRef s = d_analyser.get_source(r);
                  size_t to = s.find("typename");
                  if (to != s.npos) {
-                     d_analyser.rewriter().ReplaceText(
-                         getOffsetRange(r, to, 8), "class");
+                     d_analyser.ReplaceText(getOffsetRange(r, to, 8), "class");
                  }
             }
             if (parm->getIdentifier()) {

@@ -64,11 +64,13 @@ static void check(Analyser& analyser, Decl const* decl)
     if (analyser.is_component(location.file()) && named) {
         if (llvm::dyn_cast<NamespaceDecl>(decl)
             || llvm::dyn_cast<UsingDirectiveDecl>(decl)) {
-            // namespace declarations are permissible e.g. for forward declarations.
+            // namespace declarations are permissible e.g. for forward
+            // declarations.
             return;                                                   // RETURN
         }
         else if (TagDecl const* tag = llvm::dyn_cast<TagDecl>(decl)) {
-            // Forward declarations are always permissible but definitions are not.
+            // Forward declarations are always permissible but definitions are
+            // not.
             if (!tag->isThisDeclarationADefinition()
                 && analyser.is_component_header(location.file())) {
                 return;                                               // RETURN
@@ -82,13 +84,15 @@ static void check(Analyser& analyser, Decl const* decl)
         DeclContext const* context(decl->getDeclContext());
         std::string name = named->getNameAsString();
         if (llvm::dyn_cast<TranslationUnitDecl>(context)) {
-            if (name != "main"
-                && name != "RCSId"
-                && !llvm::dyn_cast<ClassTemplateSpecializationDecl>(decl)
-                && !llvm::dyn_cast<ClassTemplatePartialSpecializationDecl>(decl)
-                && name.find("operator new") == std::string::npos
-                && name.find("operator delete") == std::string::npos
-                ) {
+            if (name != "main" &&
+                name != "RCSId" &&
+                !llvm::dyn_cast<ClassTemplateSpecializationDecl>(decl) &&
+                !llvm::dyn_cast<ClassTemplatePartialSpecializationDecl>(
+                    decl) &&
+                name.find("operator new") == std::string::npos &&
+                name.find("operator delete") == std::string::npos &&
+                (analyser.is_component_header(location.file()) ||
+                 named->isExternallyVisible/*hasLinkage*/())) {
                 analyser.report(decl, check_name, "TR04",
                                 "Declaration of '%0' at global scope", true)
                     << decl->getSourceRange()

@@ -1,74 +1,74 @@
 # Makefile                                                       -*-makefile-*-
-TARGET   = bde_verify
-CSABASE  = csabase
-LIBCSABASE = libcsabase.a
-CSABASEDIR = groups/csa/csabase
-
-SHELL    = /opt/swt/bin/bash
-
-SYSTEM   = $(shell uname -s)
+TARGET      = bde_verify
+CSABASE     = csabase
+LIBCSABASE  = libcsabase.a
+CSABASEDIR  = groups/csa/csabase
+GCCVERSION  = 4.9.2
+GCCDIR      = /opt/swt/install/gcc-$(GCCVERSION)
+LLVMVERSION = svn
+SYSTEM      = $(shell uname -s)
+LLVMDIR     = /home/hrosen4/mbig/llvm-$(LLVMVERSION)/install-$(SYSTEM)
+SHELL       = /opt/swt/bin/bash
+CXXFLAGS   += -std=c++11 -Wall
+ASPELL      = /opt/swt/install/aspell-0.60.6.1-64
+CXXFLAGS   += -DSPELL_CHECK=1
+INCFLAGS   += -I$(ASPELL)/include
 
 # Set up locations and flags for the compiler that will build bde_verify.
 ifeq ($(SYSTEM),Linux)
     COMPILER ?= gcc
     ifeq    ($(COMPILER),gcc)
-VERSION  = 4.8.1
-CCDIR    = /opt/swt/install/gcc-$(VERSION)
-CXX      = $(CCDIR)/bin/g++
-CXXFLAGS += -std=c++11
-LINK     = $(CXX)
-AR       = /usr/bin/ar
-LDFLAGS  += -Wl,-rpath,$(CCDIR)/lib64
-CXXFLAGS += -Wno-unused-local-typedefs
+VERSION     = $(GCCVERSION)
+CXX         = $(GCCDIR)/bin/g++
+LINK        = $(CXX)
+AR          = /usr/bin/ar
+LDFLAGS    += -Wl,-rpath,$(GCCDIR)/lib64
+CXXFLAGS   += -Wno-unused-local-typedefs
     endif
     ifeq ($(COMPILER),clang)
-VERSION  = 3.4.1
-CCDIR    = /home/hrosen4/mbig/llvm-$(VERSION)/install-$(SYSTEM)
-CXX      = $(CCDIR)/bin/clang++
-CXXFLAGS += -std=c++11
-LINK     = $(CXX)
-LDFLAGS += -Wl,-rpath,/opt/swt/install/gcc-4.8.1/lib64
+VERSION     = $(LLVMVERSION)
+CXX         = $(LLVMDIR)/bin/clang++
+LINK        = $(CXX)
+LDFLAGS    += -Wl,-rpath,$(GCCDIR)/lib64
+CXXFLAGS   += -Wno-mismatched-tags
     endif
-ASPELL   = /opt/swt/install/aspell-0.60.6.1-64
-CXXFLAGS += -DSPELL_CHECK=1
-INCFLAGS += -I$(ASPELL)/include
-LDFLAGS  += -L$(ASPELL)/lib64 -laspell
+LDFLAGS    += -L$(ASPELL)/lib64 -laspell
 endif
 ifeq ($(SYSTEM),SunOS)
     COMPILER ?= gcc
     ifeq    ($(COMPILER),gcc)
-VERSION  = 4.8.1
-CCDIR    = /opt/swt/install/gcc-$(VERSION)
-CXX      = $(CCDIR)/bin/g++
-CXXFLAGS += -m64 -pthreads -mno-faster-structs
-CFLAGS   += -m64 -pthreads -mno-faster-structs
-LDFLAGS  += -m64 -pthreads -mno-faster-structs
-CXXFLAGS += -std=c++11
-LINK     = $(CXX)
-AR       = /usr/ccs/bin/ar
-LDFLAGS  += -Wl,-L,$(CCDIR)/lib/sparcv9 -Wl,-R,$(CCDIR)/lib/sparcv9
-CXXFLAGS += -Wno-unused-local-typedefs
+VERSION     = $(GCCVERSION)
+CXX         = $(GCCDIR)/bin/g++
+CXXFLAGS   += -m64 -pthreads -mno-faster-structs -DBYTE_ORDER=BIG_ENDIAN
+CFLAGS     += -m64 -pthreads -mno-faster-structs -DBYTE_ORDER=BIG_ENDIAN
+LDFLAGS    += -m64 -pthreads -mno-faster-structs
+LINK        = $(CXX)
+AR          = /usr/ccs/bin/ar
+LDFLAGS    += -Wl,-L,$(GCCDIR)/lib/sparcv9 -Wl,-R,$(GCCDIR)/lib/sparcv9
+CXXFLAGS   += -Wno-unused-local-typedefs
     endif
-ASPELL   = /opt/swt/install/aspell-0.60.6.1-64
-CXXFLAGS += -DSPELL_CHECK=1
-INCFLAGS += -I$(ASPELL)/include
-LDFLAGS  += -Wl,-L,$(ASPELL)/lib64 -Wl,-R,$(ASPELL)/lib64 -laspell -L$(OBJ)
-EXTRALIBS += -lrt
-EXTRALIBS += -lmalloc
+LDFLAGS    += -Wl,-L,$(ASPELL)/lib64 -Wl,-R,$(ASPELL)/lib64 -laspell -L$(OBJ)
+EXTRALIBS  += -lrt -lmalloc
 endif
 
-OBJ      = $(SYSTEM)-$(COMPILER)-$(VERSION)
+OBJ         = $(SYSTEM)-$(COMPILER)-$(VERSION)
 
 # Set up location of clang headers and libraries needed by bde_verify.
-LLVM     = /home/hrosen4/mbig/llvm-3.4.1/install-$(SYSTEM)
-INCFLAGS += -I$(LLVM)/include
-LDFLAGS  += -L$(LLVM)/lib -L$(CSABASEDIR)/$(OBJ)
+INCFLAGS   += -I$(LLVMDIR)/include
+LDFLAGS    += -L$(LLVMDIR)/lib -L$(CSABASEDIR)/$(OBJ)
 
 export VERBOSE ?= @
 
 #  ----------------------------------------------------------------------------
 
-CXXFILES =                                                                 \
+CXXFILES =                                                                    \
+        groups/csa/csaaq/csaaq_cppinexternc.cpp                               \
+        groups/csa/csaaq/csaaq_freefunctionsdepend.cpp                        \
+        groups/csa/csaaq/csaaq_friendsinheaders.cpp                           \
+        groups/csa/csaaq/csaaq_includeinexternc.cpp                           \
+        groups/csa/csaaq/csaaq_inentns.cpp                                    \
+        groups/csa/csaaq/csaaq_runtimeinit.cpp                                \
+        groups/csa/csaaq/csaaq_transitiveincludes.cpp                         \
         groups/csa/csabde/csabde_tool.cpp                                     \
         groups/csa/csabbg/csabbg_allocatorforward.cpp                         \
         groups/csa/csabbg/csabbg_allocatornewwithpointer.cpp                  \
@@ -85,6 +85,7 @@ CXXFILES =                                                                 \
         groups/csa/csafmt/csafmt_nonascii.cpp                                 \
         groups/csa/csafmt/csafmt_whitespace.cpp                               \
         groups/csa/csamisc/csamisc_anonymousnamespaceinheader.cpp             \
+        groups/csa/csamisc/csamisc_arrayargument.cpp                          \
         groups/csa/csamisc/csamisc_arrayinitialization.cpp                    \
         groups/csa/csamisc/csamisc_boolcomparison.cpp                         \
         groups/csa/csamisc/csamisc_charvsstring.cpp                           \
@@ -98,6 +99,7 @@ CXXFILES =                                                                 \
         groups/csa/csamisc/csamisc_namespacetags.cpp                          \
         groups/csa/csamisc/csamisc_opvoidstar.cpp                             \
         groups/csa/csamisc/csamisc_spellcheck.cpp                             \
+        groups/csa/csamisc/csamisc_strictaliasing.cpp                         \
         groups/csa/csamisc/csamisc_stringadd.cpp                              \
         groups/csa/csamisc/csamisc_swapab.cpp                                 \
         groups/csa/csamisc/csamisc_thrownonstdexception.cpp                   \
@@ -139,12 +141,13 @@ INCFLAGS += -I.
 INCFLAGS += -I$(CSABASEDIR)
 INCFLAGS += -Igroups/csa/csadep
 CXXFLAGS += -g -fno-common -fno-strict-aliasing -fno-exceptions -fno-rtti
-LDFLAGS += -g
+LDFLAGS  += -g
 
 OFILES = $(CXXFILES:%.cpp=$(OBJ)/%.o)
 
 LIBS     =    -lcsabase                                                       \
               -lLLVMX86AsmParser                                              \
+              -lLLVMSparcAsmParser                                            \
               -lclangFrontendTool                                             \
               -lclangCodeGen                                                  \
               -lLLVMIRReader                                                  \
@@ -154,7 +157,6 @@ LIBS     =    -lcsabase                                                       \
               -lLLVMSparcCodeGen                                              \
               -lLLVMSelectionDAG                                              \
               -lLLVMAsmPrinter                                                \
-              -lLLVMJIT                                                       \
               -lLLVMInterpreter                                               \
               -lLLVMCodeGen                                                   \
               -lLLVMScalarOpts                                                \
@@ -162,11 +164,13 @@ LIBS     =    -lcsabase                                                       \
               -lLLVMInstCombine                                               \
               -lLLVMVectorize                                                 \
               -lclangRewriteFrontend                                          \
+              -lclangRewrite                                                  \
               -lclangARCMigrate                                               \
               -lclangStaticAnalyzerFrontend                                   \
               -lclangIndex                                                    \
               -lclangFormat                                                   \
               -lclangTooling                                                  \
+              -lclangToolingCore                                              \
               -lclangFrontend                                                 \
               -lclangDriver                                                   \
               -lLLVMObjCARCOpts                                               \
@@ -177,6 +181,7 @@ LIBS     =    -lcsabase                                                       \
               -lclangSerialization                                            \
               -lLLVMBitReader                                                 \
               -lLLVMBitWriter                                                 \
+              -lLLVMProfileData                                               \
               -lLLVMTarget                                                    \
               -lLLVMExecutionEngine                                           \
               -lLLVMCore                                                      \
@@ -188,7 +193,9 @@ LIBS     =    -lcsabase                                                       \
               -lLLVMX86Info                                                   \
               -lLLVMSparcInfo                                                 \
               -lLLVMX86AsmPrinter                                             \
+              -lLLVMSparcAsmPrinter                                           \
               -lLLVMX86Utils                                                  \
+              -lLLVMMCDisassembler                                            \
               -lclangSema                                                     \
               -lclangStaticAnalyzerCheckers                                   \
               -lclangStaticAnalyzerCore                                       \
@@ -196,7 +203,6 @@ LIBS     =    -lcsabase                                                       \
               -lclangASTMatchers                                              \
               -lclangEdit                                                     \
               -lclangAnalysis                                                 \
-              -lclangRewriteCore                                              \
               -lclangAST                                                      \
               -lclangLex                                                      \
               -lclangBasic                                                    \
@@ -208,6 +214,7 @@ LIBS     =    -lcsabase                                                       \
               -lpthread                                                       \
               -lcurses                                                        \
               -ldl                                                            \
+              -lz                                                             \
               $(EXTRALIBS)
 
 default: $(OBJ)/$(TARGET)
@@ -219,7 +226,8 @@ $(CSABASEDIR)/$(OBJ)/$(LIBCSABASE): csabase
 
 $(OBJ)/$(TARGET): $(CSABASEDIR)/$(OBJ)/$(LIBCSABASE) $(OFILES)
 	@echo linking executable
-	$(VERBOSE) $(LINK) $(LDFLAGS) -o $@ $(OFILES) $(LIBS)
+	$(VERBOSE) $(LINK) $(LDFLAGS) -o $@.$$ $(OFILES) $(LIBS)
+	mv $@.$$ $@
 
 $(OBJ)/%.o: %.cpp
 	@if [ ! -d $(@D) ]; then mkdir -p $(@D); fi
@@ -271,25 +279,6 @@ run-current: $(OBJ)/$(TARGET) $(RCURNAME)
 
 $(RNAMES):
 	$(VERBOSE) $(MAKE) -s -C $(@D) run
-
-# -----------------------------------------------------------------------------
-# run include-what-you-use on the bde_verify sources
-
-IWYUFILES = $(CXXFILES:%.cpp=%.iwyu)
-
-LCSYSTEM = $(shell echo $(SYSTEM) | tr '[A-Z]' '[a-z]')
-LLVMBUILDDIR = /home/hrosen4/mbig/llvm-3.4.1/build-$(LCSYSTEM)/Release+Asserts
-IWYU = $(LLVMBUILDDIR)/bin/include-what-you-use
-
-%.iwyu: %.cpp
-	-$(VERBOSE) $(IWYU) $(INCFLAGS) $(DEFFLAGS) \
-                       $(filter-out -Wno-unused-local-typedefs, $(CXXFLAGS)) \
-                       $(@:%.iwyu=%.cpp)
-
-.PHONY: iwyu
-
-iwyu: $(IWYUFILES)
-	$(VERBOSE) $(MAKE) -C $(CSABASEDIR) iwyu
 
 # -----------------------------------------------------------------------------
 

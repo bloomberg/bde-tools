@@ -4,11 +4,16 @@
 #define INCLUDED_CSABASE_DEBUG
 
 #include <llvm/Support/raw_ostream.h>
+#include <stdio.h>
 
 // -----------------------------------------------------------------------------
 
+#define ERRS() (llvm::errs() << __FUNCTION__ << " " << __LINE__ << " ")
+#define ERNL() (llvm::errs() << "\n")
+
 namespace csabase
 {
+
 class Debug
 {
 public:
@@ -36,13 +41,11 @@ llvm::raw_ostream& Debug::operator<<(T const& value) const
 {
     return indent() << value;
 }
-}
 
+}
 
 // -----------------------------------------------------------------------------
 
-#define ERRS() (llvm::errs() << __FUNCTION__ << " " << __LINE__ << " ")
-#define ERNL() (llvm::errs() << "\n")
 #endif
 
 // ----------------------------------------------------------------------------

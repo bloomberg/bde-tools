@@ -10,6 +10,7 @@
 #include <clang/Basic/SourceManager.h>
 #include <csabase_analyser.h>
 #include <csabase_config.h>
+#include <csabase_debug.h>
 #include <csabase_diagnostic_builder.h>
 #include <csabase_ppobserver.h>
 #include <csabase_registercheck.h>
@@ -137,16 +138,20 @@ void report::operator()()
             return;                                                   // RETURN
     }
     spell_checker = to_aspell_speller(possible_err);
-    llvm::SmallVector<llvm::StringRef, 10> good_words;
+    llvm::SmallVector<llvm::StringRef, 1000> raw_good_words;
+    std::vector<std::string> good_words;
     llvm::StringRef(d_analyser.config()->value("dictionary")).
-        split(good_words, " ", -1, false);
+        split(raw_good_words, " ", -1, false);
+    for (size_t i = 0; i < raw_good_words.size(); ++i) {
+        std::vector<std::string> e = Config::brace_expand(raw_good_words[i]);
+        good_words.insert(good_words.end(), e.begin(), e.end());
+    }
     for (size_t i = 0; i < good_words.size(); ++i) {
         aspell_speller_add_to_session(
             spell_checker, good_words[i].data(), good_words[i].size());
     }
 
     for (const auto& file_comment : d_analyser.attachment<data>().d_comments) {
-        const std::string &file_name = file_comment.first;
         if (d_analyser.is_component(file_comment.first)) {
             for (const auto& comment : file_comment.second) {
                 check_spelling(comment);
@@ -182,6 +187,9 @@ report::break_for_spelling(std::vector<SourceRange>* words, SourceRange range)
 {
     llvm::StringRef comment = d_analyser.get_source(range, true);
     words->clear();
+    if (comment.startswith("// close namespace ")) {
+        return;
+    }
     bool in_single_quotes = false;
     bool in_double_quotes = false;
     bool in_block = false;
@@ -294,14 +302,10 @@ void report::check_spelling(SourceRange comment)
     }
 }
 
-const internal::DynTypedMatcher &
-parameter_matcher()
+internal::DynTypedMatcher parameter_matcher()
     // Return an AST matcher which looks for named parameters.
 {
-    static const internal::DynTypedMatcher matcher = decl(forEachDescendant(
-        parmVarDecl(matchesName(".")).bind("parm")
-    ));
-    return matcher;
+    return decl(forEachDescendant(parmVarDecl(matchesName(".")).bind("parm")));
 }
 
 void report::match_parameter(const BoundNodes &nodes)

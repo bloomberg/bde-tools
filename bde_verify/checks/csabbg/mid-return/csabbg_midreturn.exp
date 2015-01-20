@@ -165,4 +165,24 @@ csabbg_midreturn.t.cpp:190:31: warning: MR02: '// RETURN' comment must end in co
                               ^
 csabbg_midreturn.t.cpp:190:31: note: MR01: Correct text is
                 return NULL;                                          // RETURN
-31 warnings generated.
+csabbg_midreturn.t.cpp:205:17: warning: MR01: Mid-function 'return' requires '// RETURN' comment
+                return n;
+                ^
+csabbg_midreturn.t.cpp:205:17: note: MR01: Correct text is
+                return n;                                             // RETURN
+csabbg_midreturn.t.cpp:227:17: warning: MR01: Mid-function 'return' requires '// RETURN' comment
+                return 7;
+                ^
+csabbg_midreturn.t.cpp:227:17: note: MR01: Correct text is
+                return 7;                                             // RETURN
+csabbg_midreturn.t.cpp:230:17: warning: MR01: Mid-function 'return' requires '// RETURN' comment
+                return n;
+                ^
+csabbg_midreturn.t.cpp:230:17: note: MR01: Correct text is
+                return n;                                             // RETURN
+csabbg_midreturn.t.cpp:245:17: warning: MR01: Mid-function 'return' requires '// RETURN' comment
+                return n;
+                ^
+csabbg_midreturn.t.cpp:245:17: note: MR01: Correct text is
+                return n;                                             // RETURN
+35 warnings generated.

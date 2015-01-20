@@ -250,13 +250,6 @@ void csabase::PPObserver::EndOfMainFile()
     if (connected_)
     {
         onPPEndOfMainFile();
-
-        std::string file(files_.top());
-        files_.pop();
-        do_close_file(source_manager_->getLocForEndOfFile(
-                          source_manager_->getMainFileID()),
-                      files_.empty() ? std::string() : files_.top(),
-                      file);
     }
 }
 
@@ -295,27 +288,23 @@ csabase::PPObserver::Ident(SourceLocation location, std::string const& ident)
 // -----------------------------------------------------------------------------
 
 static llvm::Regex pragma_bdeverify(
-    "^[[:blank:]]*" "#" "[[:blank:]]*" "pragma" "[[:blank:]]+"
-    "bde_?verify" "[[:blank:]]+" "("                        // 1
-        "(" "push"                                    ")|"  // 2
-        "(" "pop"                                     ")|"  // 3
-        "(" "[-]" "[[:blank:]]*" "([[:alnum:]]+|[*])" ")|"  // 4 5
-        "(" "[+]" "[[:blank:]]*" "([[:alnum:]]+|[*])" ")|"  // 6 7
-        "(" "set" "[[:blank:]]*" "([_[:alnum:]]+)"          // 8 9
-                  "[[:blank:]]*" "(.*[^[:blank:]])"   ")|"  // 10
+    "^ *# *pragma +bde_?verify +"             "("  // 1
+        "(" "push"                           ")|"  // 2
+        "(" "pop"                            ")|"  // 3
+        "(" "[-] *([[:alnum:]]+|[*])"        ")|"  // 4 5
+        "(" "[+] *([[:alnum:]]+|[*])"        ")|"  // 6 7
+        "(" "set *([_[:alnum:]]+) *(.*[^ ])" ")|"  // 8 9 10
         "$"
     ")",
     llvm::Regex::NoFlags);
 
 static llvm::Regex comment_bdeverify(
-    "^//[[:blank:]]*BDE_VERIFY[[:blank:]]+pragma[[:blank:]]*:[[:blank:]]*"
-    "("                                                     // 1
-        "(" "push"                                    ")|"  // 2
-        "(" "pop"                                     ")|"  // 3
-        "(" "[-]" "[[:blank:]]*" "([[:alnum:]]+|[*])" ")|"  // 4 5
-        "(" "[+]" "[[:blank:]]*" "([[:alnum:]]+|[*])" ")|"  // 6 7
-        "(" "set" "[[:blank:]]*" "([_[:alnum:]]+)"          // 8 9
-                  "[[:blank:]]*" "(.*[^[:blank:]])"   ")|"  // 10
+    "^ *// *BDE_VERIFY +pragma *: *"          "("  // 1
+        "(" "push"                           ")|"  // 2
+        "(" "pop"                            ")|"  // 3
+        "(" "[-] *([[:alnum:]]+|[*])" ")|"         // 4 5
+        "(" "[+] *([[:alnum:]]+|[*])" ")|"         // 6 7
+        "(" "set *([_[:alnum:]]+) *(.*[^ ])" ")|"  // 8 9 10
         "$"
     ")",
     llvm::Regex::NoFlags);
@@ -401,7 +390,7 @@ void csabase::PPObserver::PragmaDiagnosticPop(SourceLocation loc,
 
 void csabase::PPObserver::PragmaDiagnostic(SourceLocation loc,
                                            llvm::StringRef nmspc,
-                                           diag::Mapping mapping,
+                                           diag::Severity mapping,
                                            llvm::StringRef str)
 {
     onPPPragmaDiagnostic(loc, nmspc, mapping, str);
@@ -486,7 +475,7 @@ void csabase::PPObserver::SourceRangeSkipped(SourceRange range)
 
 void csabase::PPObserver::If(SourceLocation loc,
                              SourceRange range,
-                             bool conditionvalue)
+                             ConditionValueKind conditionvalue)
 {
     onPPIf(loc, range, conditionvalue);
 
@@ -495,7 +484,7 @@ void csabase::PPObserver::If(SourceLocation loc,
 
 void csabase::PPObserver::Elif(SourceLocation loc,
                                SourceRange range,
-                               bool conditionvalue,
+                               ConditionValueKind conditionvalue,
                                SourceLocation ifloc)
 {
     onPPElif(loc, range, conditionvalue, ifloc);

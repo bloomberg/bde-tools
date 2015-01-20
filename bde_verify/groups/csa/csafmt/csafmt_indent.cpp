@@ -204,15 +204,15 @@ bool report::WalkUpFromTagDecl(TagDecl *tag)
 
 bool report::WalkUpFromFunctionTypeLoc(FunctionTypeLoc func)
 {
-    unsigned n = func.getNumArgs();
+    unsigned n = func.getNumParams();
     if (n > 0 &&
         func.getLocalRangeBegin().isValid() &&
         !func.getLocalRangeBegin().isMacroID()) {
         Location f(d_analyser.manager(), func.getLocalRangeBegin());
         Location arg1(
-            d_analyser.manager(), func.getArg(0)->getLocStart());
+            d_analyser.manager(), func.getParam(0)->getLocStart());
         Location argn(
-            d_analyser.manager(), func.getArg(n - 1)->getLocStart());
+            d_analyser.manager(), func.getParam(n - 1)->getLocStart());
 
         if (n > 1) {
             bool one_per_line = true;
@@ -220,7 +220,7 @@ bool report::WalkUpFromFunctionTypeLoc(FunctionTypeLoc func)
             size_t line = arg1.line();
             SourceLocation bad = arg1.location();
             for (size_t i = 1; i < n; ++i) {
-                ParmVarDecl *parm = func.getArg(i);
+                ParmVarDecl *parm = func.getParam(i);
                 Location arg(d_analyser.manager(), parm->getLocStart());
                 if (arg.line() != line) {
                     all_on_one_line = false;
@@ -248,7 +248,7 @@ bool report::WalkUpFromFunctionTypeLoc(FunctionTypeLoc func)
             else if (one_per_line) {
                 Location an1;
                 for (size_t i = 0; i < n; ++i) {
-                    ParmVarDecl *parm = func.getArg(i);
+                    ParmVarDecl *parm = func.getParam(i);
                     if (parm->getIdentifier()) {
                         Location an(d_analyser.manager(), parm->getLocation());
                         if (!an1) {
@@ -262,7 +262,7 @@ bool report::WalkUpFromFunctionTypeLoc(FunctionTypeLoc func)
                             d_analyser.report(an1.location(), check_name,
                                               "IND03",
                                               "Starting alignment was here",
-                                              false, DiagnosticsEngine::Note);
+                                              false, DiagnosticIDs::Note);
                             break;
                         }
                     }
@@ -271,18 +271,21 @@ bool report::WalkUpFromFunctionTypeLoc(FunctionTypeLoc func)
         }
 
         size_t level;
+        SourceLocation lpe =
+            d_analyser.get_trim_line_range(func.getParam(n - 1)->getLocEnd())
+                .getEnd();
         if (f.line() == arg1.line()) {
             Range tr(d_analyser.manager(),
                      d_analyser.get_trim_line_range(f.location()));
             level = arg1.column() - tr.from().column();
             add_indent(arg1.location(), level);
-            add_indent(func.getArg(n - 1)->getLocEnd(), -level);
+            add_indent(lpe, -level);
         } else {
             size_t length = 0;
-            for (size_t i = f.line() == arg1.line() ? 1 : 0; i < n; ++i) {
+            for (size_t i = 0; i < n; ++i) {
                 size_t line_length =
                     llvm::StringRef(d_analyser.get_source_line(
-                                        func.getArg(i)->getLocStart()))
+                                              func.getParam(i)->getLocStart()))
                         .trim().size();
                 if (length < line_length) {
                     length = line_length;
@@ -294,7 +297,7 @@ bool report::WalkUpFromFunctionTypeLoc(FunctionTypeLoc func)
             add_indent(arg1.location(), in);
             in.d_right_justified = false;
             in.d_offset = -level;
-            add_indent(func.getArg(n - 1)->getLocEnd(), in);
+            add_indent(lpe, in);
         }
     }
     return Base::WalkUpFromFunctionTypeLoc(func);
@@ -427,7 +430,7 @@ void report::do_consecutive()
                                   "aligned");
                 d_analyser.report(sl, check_name, "IND04",
                                   "Rightmost declarator is here",
-                                  false, DiagnosticsEngine::Note);
+                                  false, DiagnosticIDs::Note);
             }
         }
     }
@@ -494,7 +497,6 @@ void report::operator()(const Token &token,
         unsigned n;
         if (args && (n = args->getNumArguments()) > 0) {
             const Token *begin = args->getUnexpArgument(0);
-            const Token *end = begin + n;
             Location arg(d_analyser.manager(), begin->getLocation());
             std::vector<size_t> levels(1, 4);
             if (l.line() == arg.line()) {
@@ -566,7 +568,7 @@ void report::process(Range r, bool greater)
                                   "Possibly mis-indented line");
                 d_analyser.report(r.from().location(), check_name, "IND01",
                                   "Correct version may be\n%0",
-                                  false, DiagnosticsEngine::Note)
+                                  false, DiagnosticIDs::Note)
                     << expect;
             }
         }

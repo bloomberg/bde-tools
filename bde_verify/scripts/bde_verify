@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/opt/bb/bin/perl -w
 # bde_verify                                                         -*-perl-*-
 
 # Bde_verify is a static analysis tool that verifies that source code adheres 
@@ -9,6 +9,8 @@
 use strict;
 use Getopt::Long qw(:config no_ignore_case);
 use Cwd;
+use DateTime;
+use Fcntl qw/ :flock /;
 
 my @known_systems = ('AIX', 'HP-UX', 'Linux', 'SunOS');
 chomp(my $system   = `uname -s`);
@@ -18,28 +20,34 @@ my @known_hw = ('powerpc', 'ia64', 'x86_64', 'sparc', 'i386');
 chomp (my $hw = `uname -p`);
 $hw = 'x86_64' unless grep(/$hw/, @known_hw);
 
-my $clangver = "3.4";
-my $gccver   = "4.8.1";
-my $home     = "/bb/mbigc/mbig816/src/bde-oss-tools/bde_verify";
+my $clangver = "svn";
+my $gccver   = "4.9.2";
+my $home     = "/home/hrosen4/mbig/src/bde-oss-tools/bde_verify";
 my $bb       = "/bb/build/$system-$hw-64" .
                "/release/robolibs/trunk/lib/dpkgroot/opt/bb";
 my $config   = "$home/bde_verify.cfg";
 my @cl;
-#my $exe      = "$home/$system-clang-$clangver/bde_verify";
-#my $cc       = "/bb/mbigc/mbig816/llvm-$clangver/install-$system/bin/clang++";
-my $exe      = "$home/$system-gcc-$gccver/bde_verify";
+my $exe;
+if ($system eq "SunOS") {
+    $exe      = "$home/$system-gcc-$gccver/bde_verify";
+} else {
+    $exe      = "$home/$system-gcc-$gccver/bde_verify";
+   #$exe      = "$home/$system-clang-$clangver/bde_verify";
+}
 my $cc       = "/opt/swt/install/gcc-$gccver/bin/g++";
 my $debug    = "";
 my $verbose  = "";
 my $help     = "";
 my $definc   = 1;
 my $defdef   = 1;
+my $nsa      = 1;
+my $log      = "/home/hrosen4/mbig/bde_verify.log";
 my @incs;
 my @defs;
 my @wflags;
 my @lflags = (
     "cxx-exceptions",
-    "diagnostics-show-name",
+    "diagnostics-show-note-include-stack",
     "diagnostics-show-option",
 );
 my $dummy;
@@ -47,8 +55,9 @@ my @dummy;
 my $std;
 my @std;
 my $warnoff;
-my $tlonly;
+my $diagnose = "component";
 my $rwd;
+my $rwf;
 my $tag;
 my $ovr = -1;
 
@@ -71,8 +80,10 @@ usage: $0 [options] [additional compiler options] file.cpp ...
     --[no]definc             [$definc]
     --[no]defdef             [$defdef]
     --[no]ovr                # whether to define BSL_OVERRIDES_STD
-    --rewrite=dir
-    --toplevel
+    --[no]nsa                [$nsa] (command logged for tracking purposes)
+    --rewrite-dir=dir
+    --rewrite-file=file
+    --diagnose={main,component,nogen,all}
     --std=type
     --tag=string
     --debug
@@ -91,36 +102,44 @@ $command
 @ARGV = map { /^(-+[DIOWf])(.+)/ ? ($1, $2) : $_ } @ARGV;
 
 GetOptions(
-    'bb=s'       => \$bb,
-    'config=s'   => \$config,
-    'cl=s'       => \@cl,
-    'debug'      => \$debug,
-    'help|?'     => \$help,
-    'cc=s'       => \$cc,
-    'exe=s'      => \$exe,
-    'verbose|v'  => \$verbose,
-    'definc!'    => \$definc,
-    'defdef!'    => \$defdef,
-    'ovr!'       => \$ovr,
-    'rewrite=s'  => \$rwd,
-    'w'          => \$warnoff,
-    "I=s"        => \@incs,
-    "D=s"        => \@defs,
-    "W=s"        => \@wflags,
-    "f=s"        => \@lflags,
-    "std=s"      => \$std,
-    "toplevel"   => \$tlonly,
-    'tag=s'      => \$tag,
-    'llvm=s'     => \$dummy,
+    'bb=s'                         => \$bb,
+    'config=s'                     => \$config,
+    'cl=s'                         => \@cl,
+    'debug'                        => \$debug,
+    'help|?'                       => \$help,
+    'cc=s'                         => \$cc,
+    'exe=s'                        => \$exe,
+    'verbose|v'                    => \$verbose,
+    'definc!'                      => \$definc,
+    'defdef!'                      => \$defdef,
+    'ovr!'                         => \$ovr,
+    'nsa!'                         => \$nsa,
+    'rewrite|rewrite-dir|rd=s'     => \$rwd,
+    'rewrite-file|rf=s'            => \$rwf,
+    'w'                            => \$warnoff,
+    "I=s"                          => \@incs,
+    "D=s"                          => \@defs,
+    "W=s"                          => \@wflags,
+    "f=s"                          => \@lflags,
+    "std=s"                        => \$std,
+    "toplevel"                     => sub { $diagnose = "main" },
+    "diagnose=s"                   => sub {
+        my %opts = ("main" => 1, "component" => 1, "nogen" => 1, "all" => 1);
+        die "Unknown value '$_[1]' for '-$_[0]='\n" unless $opts{$_[1]};
+        $diagnose = $_[1];
+    },
+    'tag=s'                        => \$tag,
+    'llvm=s'                       => \$dummy,
     "m32|m64|pipe|pthread|MMD|g|c" => \$dummy,
     "O|MF|o|march|mtune=s"         => \@dummy,
 ) and !$help and $#ARGV >= 0 or usage();
 
-my @config = ("-plugin-arg-bde_verify", "config=$config")   if $config ne "";
-my @debug  = ("-plugin-arg-bde_verify", "debug-on")         if $debug;
-my @tlo    = ("-plugin-arg-bde_verify", "toplevel-only-on") if $tlonly;
-my @rwd    = ("-plugin-arg-bde_verify", "rewrite-dir=$rwd") if $rwd;
+my @config = ("-plugin-arg-bde_verify", "config=$config")    if $config ne "";
+my @debug  = ("-plugin-arg-bde_verify", "debug-on")          if $debug;
+my @tlo    = ("-plugin-arg-bde_verify", "diagnose=$diagnose");
+my @rwd    = ("-plugin-arg-bde_verify", "rewrite-dir=$rwd")  if $rwd;
 print "No such directory $rwd\n" if $rwd and ! -d $rwd;
+my @rwf    = ("-plugin-arg-bde_verify", "rewrite-file=$rwf") if $rwf;
 my @tag    = ("-plugin-arg-bde_verify", "tool=$tag") if $tag;
 my %uf     = ( "no-strict-aliasing" => 1, "PIC" => 1 );
 @lflags = map { "-f$_" } grep { not exists $uf{$_} } @lflags;
@@ -183,6 +202,7 @@ my @command = (
     @config,
     @tlo,
     @rwd,
+    @rwf,
     @tag,
     @cl,
     @defs,
@@ -193,7 +213,15 @@ my @command = (
 
 print join(" \\\n ", map { join "\\ ", split(/ /, $_, -1) } @command), "\n"
                                                                    if $verbose;
+if ($nsa) {
+    my $now = DateTime->now()->format_cldr("yyyyMMddHHmmss");
+    open my $fh, ">>", $log;
+    flock $fh, LOCK_EX;
+    print $fh $ENV{USER}, " ", $now, map { " $_" } @command, "\n";
+    close $fh;
+}
 
+eval "use BSD::Resource; setrlimit(RLIMIT_CORE, 0, 0);";
 exec @command;
 
 ## ----------------------------------------------------------------------------

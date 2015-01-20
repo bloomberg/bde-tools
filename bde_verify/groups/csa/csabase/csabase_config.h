@@ -86,6 +86,14 @@ public:
     void check_bv_stack(Analyser& analyser) const;
         // Verify that the csabase pragmas form a proper stack.
 
+    static std::vector<std::string> brace_expand(const std::string& s);
+        // Brace-expand the specified string 's' (as done by ksh) and return
+        // the vector of expanded strings.  E.g.,
+        // 'bde_comp_{version,foo{,util}}.{h,{,t.}cpp}' becomes
+        // bde_comp_version.h bde_comp_version.cpp bde_comp_version.t.cpp
+        // bde_comp_foo.h     bde_comp_foo.cpp     bde_comp_foo.t.cpp
+        // bde_comp_fooutil.h bde_comp_fooutil.cpp bde_comp_fooutil.t.cpp
+
 private:
     std::string                                      d_toplevel_namespace;
     std::vector<std::string>                         d_loadpath;

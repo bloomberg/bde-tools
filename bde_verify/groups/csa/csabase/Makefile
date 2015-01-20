@@ -1,54 +1,48 @@
 # Makefile                                                       -*-makefile-*-
 
-CSABASE  = csabase
-LIBCSABASE = libcsabase.a
+CSABASE     = csabase
+LIBCSABASE  = libcsabase.a
+GCCVERSION  = 4.9.2
+GCCDIR      = /opt/swt/install/gcc-$(GCCVERSION)
+LLVMVERSION = svn
+SYSTEM      = $(shell uname -s)
+LLVMDIR     = /home/hrosen4/mbig/llvm-$(LLVMVERSION)/install-$(SYSTEM)
+SHELL       = /opt/swt/bin/bash
+CXXFLAGS   += -std=c++11 -Wall
 
 default: $(CSABASE)
-
-SHELL    = /opt/swt/bin/bash
-
-SYSTEM   = $(shell uname -s)
 
 # Set up locations and flags for the compiler that will build bde_verify.
 ifeq ($(SYSTEM),Linux)
     COMPILER ?= gcc
     ifeq    ($(COMPILER),gcc)
-VERSION  = 4.8.1
-CCDIR    = /opt/swt/install/gcc-$(VERSION)
-CXX      = $(CCDIR)/bin/g++
-CXXFLAGS += -std=c++11
-LINK     = $(CXX)
-AR       = /usr/bin/ar
-CXXFLAGS += -Wno-unused-local-typedefs
+VERSION     = $(GCCVERSION)
+CXX         = $(GCCDIR)/bin/g++
+AR          = /usr/bin/ar
+CXXFLAGS   += -Wno-unused-local-typedefs
     endif
     ifeq ($(COMPILER),clang)
-VERSION  = 3.4.1
-CCDIR    = /home/hrosen4/mbig/llvm-$(VERSION)/install-$(SYSTEM)
-CXX      = $(CCDIR)/bin/clang++
-CXXFLAGS += -std=c++11
-LINK     = $(CXX)
+VERSION     = $(LLVMVERSION)
+CXX         = $(LLVMDIR)/bin/clang++
+CXXFLAGS   += -Wno-mismatched-tags
     endif
 endif
 ifeq ($(SYSTEM),SunOS)
     COMPILER ?= gcc
     ifeq    ($(COMPILER),gcc)
-VERSION  = 4.8.1
-CCDIR    = /opt/swt/install/gcc-$(VERSION)
-CXX      = $(CCDIR)/bin/g++
-CXXFLAGS += -m64 -pthreads -mno-faster-structs
-CFLAGS   += -m64 -pthreads -mno-faster-structs
-CXXFLAGS += -std=c++11
-LINK     = $(CXX)
-AR       = /usr/ccs/bin/ar
-CXXFLAGS += -Wno-unused-local-typedefs
+VERSION     = $(GCCVERSION)
+CXX         = $(GCCDIR)/bin/g++
+CXXFLAGS   += -m64 -pthreads -mno-faster-structs -DBYTE_ORDER=BIG_ENDIAN
+CFLAGS     += -m64 -pthreads -mno-faster-structs -DBYTE_ORDER=BIG_ENDIAN
+AR          = /usr/ccs/bin/ar
+CXXFLAGS   += -Wno-unused-local-typedefs
     endif
 endif
 
-OBJ      = $(SYSTEM)-$(COMPILER)-$(VERSION)
+OBJ         = $(SYSTEM)-$(COMPILER)-$(VERSION)
 
 # Set up location of clang headers and libraries needed by bde_verify.
-LLVM     = /home/hrosen4/mbig/llvm-3.4.1/install-$(SYSTEM)
-INCFLAGS += -I$(LLVM)/include
+INCFLAGS   += -I$(LLVMDIR)/include
 
 export VERBOSE ?= @
 
@@ -60,6 +54,7 @@ CXXFILES =                                                 \
         csabase_analyser.cpp                               \
         csabase_attachments.cpp                            \
         csabase_checkregistry.cpp                          \
+        csabase_clang.cpp                                  \
         csabase_config.cpp                                 \
         csabase_debug.cpp                                  \
         csabase_diagnosticfilter.cpp                       \
@@ -68,6 +63,7 @@ CXXFILES =                                                 \
         csabase_location.cpp                               \
         csabase_ppobserver.cpp                             \
         csabase_registercheck.cpp                          \
+        csabase_report.cpp                                 \
         csabase_tool.cpp                                   \
         csabase_util.cpp                                   \
         csabase_visitor.cpp                                \
@@ -102,24 +98,6 @@ clean:
 	$(VERBOSE) $(RM) $(OBJ)/make.depend
 	$(VERBOSE) $(RM) -r $(OBJ)
 	$(VERBOSE) $(RM) mkerr olderr *~
-
-# -----------------------------------------------------------------------------
-# run include-what-you-use on the bde_verify sources
-
-IWYUFILES = $(CXXFILES:%.cpp=%.iwyu)
-
-LCSYSTEM = $(shell echo $(SYSTEM) | tr '[A-Z]' '[a-z]')
-LLVMBUILDDIR = /home/hrosen4/mbig/llvm-3.4.1/build-$(LCSYSTEM)/Release+Asserts
-IWYU = $(LLVMBUILDDIR)/bin/include-what-you-use
-
-%.iwyu: %.cpp
-	-$(VERBOSE) $(IWYU) $(INCFLAGS) $(DEFFLAGS) \
-                        $(filter-out -Wno-unused-local-typedefs, $(CXXFLAGS)) \
-                        $(@:%.iwyu=%.cpp)
-
-.PHONY: iwyu
-
-iwyu: $(IWYUFILES)
 
 # -----------------------------------------------------------------------------
 

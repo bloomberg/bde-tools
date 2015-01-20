@@ -60,6 +60,12 @@ inline void bde_verify::csatr::EntityRestrictions::legalFunction()
 {
 }
 
+// BDE_VERIFY pragma: set global_names x y z w
+int x;
+void y() { }
+typedef int z;
+enum w { v };
+
 #endif
 
 // ----------------------------------------------------------------------------

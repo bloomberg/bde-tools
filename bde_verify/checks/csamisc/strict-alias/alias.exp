@@ -1,0 +1,88 @@
+alias.cpp:6:7: warning: AL01: Possible strict-aliasing violation
+    g((float *)&long_val);
+      ^~~~~~~~~~~~~~~~~~
+alias.cpp:9:7: warning: AL01: Possible strict-aliasing violation
+    g((float &)long_val);
+      ^~~~~~~~~~~~~~~~~
+alias.cpp:15:7: warning: AL01: Possible strict-aliasing violation
+    g((const float *)&long_val);
+      ^~~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:17:7: warning: AL01: Possible strict-aliasing violation
+    g((long *)long_val);
+      ^~~~~~~~~~~~~~~~
+alias.cpp:18:7: warning: AL01: Possible strict-aliasing violation
+    g((float *)long_val);
+      ^~~~~~~~~~~~~~~~~
+alias.cpp:19:7: warning: AL01: Possible strict-aliasing violation
+    g((char *)long_val);
+      ^~~~~~~~~~~~~~~~
+alias.cpp:24:7: warning: AL01: Possible strict-aliasing violation
+    g((long *)&long_ptr);
+      ^~~~~~~~~~~~~~~~~
+alias.cpp:25:7: warning: AL01: Possible strict-aliasing violation
+    g((float *)&long_ptr);
+      ^~~~~~~~~~~~~~~~~~
+alias.cpp:27:7: warning: AL01: Possible strict-aliasing violation
+    g((long &)long_ptr);
+      ^~~~~~~~~~~~~~~~
+alias.cpp:28:7: warning: AL01: Possible strict-aliasing violation
+    g((float &)long_ptr);
+      ^~~~~~~~~~~~~~~~~
+alias.cpp:29:7: warning: AL01: Possible strict-aliasing violation
+    g((char &)long_ptr);
+      ^~~~~~~~~~~~~~~~
+alias.cpp:30:7: warning: AL01: Possible strict-aliasing violation
+    g((const long &)long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:31:7: warning: AL01: Possible strict-aliasing violation
+    g((const float &)long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:32:7: warning: AL01: Possible strict-aliasing violation
+    g((const char &)long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:33:7: warning: AL01: Possible strict-aliasing violation
+    g((const long *)&long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:34:7: warning: AL01: Possible strict-aliasing violation
+    g((const float *)&long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:37:7: warning: AL01: Possible strict-aliasing violation
+    g((float *)long_ptr);
+      ^~~~~~~~~~~~~~~~~
+alias.cpp:43:7: warning: AL01: Possible strict-aliasing violation
+    g((long *)&long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:44:7: warning: AL01: Possible strict-aliasing violation
+    g((float *)&long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:46:7: warning: AL01: Possible strict-aliasing violation
+    g((long &)long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~
+alias.cpp:47:7: warning: AL01: Possible strict-aliasing violation
+    g((float &)long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:48:7: warning: AL01: Possible strict-aliasing violation
+    g((char &)long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~
+alias.cpp:49:7: warning: AL01: Possible strict-aliasing violation
+    g((const long &)long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:50:7: warning: AL01: Possible strict-aliasing violation
+    g((const float &)long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:51:7: warning: AL01: Possible strict-aliasing violation
+    g((const char &)long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:52:7: warning: AL01: Possible strict-aliasing violation
+    g((const long *)&long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:53:7: warning: AL01: Possible strict-aliasing violation
+    g((const float *)&long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+alias.cpp:55:7: warning: AL01: Possible strict-aliasing violation
+    g((long *)long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~
+alias.cpp:56:7: warning: AL01: Possible strict-aliasing violation
+    g((float *)long_long_ptr);
+      ^~~~~~~~~~~~~~~~~~~~~~
+29 warnings generated.
