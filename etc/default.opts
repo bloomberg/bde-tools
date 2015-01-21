@@ -147,8 +147,9 @@
 ++  unix-*-*-*-gcc          _     DEF_CFLAGS          =  -pipe -std=gnu99
 ++  unix-*                  _     DEF_CFLAGS          =  -I$(DEPLOYED_INCLUDE)
 
-!!  unix-SunOS-*-*-cc-5.9   _     DEF_CXXFLAGS        =  -m32 -xarch=sparcvis -xchip=generic -xcache=generic
-!!  unix-SunOS-*-*-cc-5.9   64    DEF_CXXFLAGS        =  -m64 -xarch=sparcvis -xchip=generic -xcache=generic
+# DRQS 57720228: switch to target=generic.
+!!  unix-SunOS-*-*-cc-5.9   _     DEF_CXXFLAGS        =  -m32 -xtarget=generic
+!!  unix-SunOS-*-*-cc-5.9   64    DEF_CXXFLAGS        =  -m64 -xtarget=generic
 !!  unix-SunOS-*-*-CC64     _     DEF_CXXFLAGS        =
 !!  unix-AIX-*-*-xlc-*      _     AIX_UNLOCK_STREAMS  =  -D__NOLOCK_ON_INPUT -D__NOLOCK_ON_OUTPUT
 !!  unix-AIX-*-*-xlc-10.0   _     DEF_CXXFLAGS        =  $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
@@ -302,14 +303,16 @@
 
 !!  unix-                   opt  OPT_CXXFLAGS           =  -O -DNDEBUG
 !!  unix-*-*-*-gcc          opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
-!!  unix-SunOS-*-*-cc       opt  OPT_CXXFLAGS           =  -O -DNDEBUG -xbuiltin=%all -xprefetch=no%auto,explicit
+# DRQS 57720228: Remove prefetch option
+!!  unix-SunOS-*-*-cc       opt  OPT_CXXFLAGS           =  -O -DNDEBUG -xbuiltin=%all
 !!  unix-AIX-*-*-xlc        opt  OPT_CXXFLAGS           =  -O -DNDEBUG -qalias=noansi
 
 # DRQS 16407776: Studio 12 switched the meaning of -O from -xO2 to -xO3 - we
 # want to use -xO3 explicitly to match plink.
 
 !!  unix-SunOS-*-*-cc-5.9   opt  OPT_CFLAGS             =  -xO3 -DNDEBUG
-!!  unix-SunOS-*-*-cc-5.9   opt  OPT_CXXFLAGS           =  -xO3 -DNDEBUG -xbuiltin=%all -xprefetch=no%auto,explicit
+# DRQS 57720228: Remove prefetch option
+!!  unix-SunOS-*-*-cc-5.9   opt  OPT_CXXFLAGS           =  -xO3 -DNDEBUG -xbuiltin=%all
 
 #!! windows-        opt OPT_CXXFLAGS    = /Ogitb1 /Gs /D"NDEBUG"
 
@@ -450,11 +453,12 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 # old flags
 # TODO organize and document xtarget and xpath options
 
-++  unix-SunOS-*-*-CC64        _        CC64FLAGS                 =  -m32 -xarch=sparcvis -xchip=generic -xcache=generic
+# DRQS 57720228: switch to target=generic.
+++  unix-SunOS-*-*-CC64        _        CC64FLAGS                 =  -m32 -xtarget=generic
 #new flags for 64 bits - override the
 # ultra3 setting
 ++  unix-SunOS-sparc-*-cc      64       CC64FLAGS                 =  -xarch=v8plusa -xchip=generic -xcache=generic
-!!  unix-SunOS-sparc-*-cc-5.9  64       CC64FLAGS                 =  -m64 -xarch=sparcvis -xchip=generic -xcache=generic
+!!  unix-SunOS-sparc-*-cc-5.9  64       CC64FLAGS                 =  -m64 -xtarget=generic
 ++  unix-SunOS-i386-*-cc       64       CC64FLAGS                 =  -xtarget=ultra3 -xarch=amd64
 #done
 # DRQS 11679791 -- override ARCHTUNE so production 64-bit builds work
@@ -463,7 +467,8 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 
 # DRQS 16454001 -- remove use of ARCHTUNE_64 in default.opts
 # Changed 20110111 per gstrauss to match plink
-++  unix-SunOS-sparc-*-cc      64       BDE_CXXFLAGS              =  -m64 -xarch=sparcvis -xchip=generic -xcache=generic
+# DRQS 57720228: switch to target=generic.
+++  unix-SunOS-sparc-*-cc      64       BDE_CXXFLAGS              =  -m64 -xtarget=generic
 
 # DRQS 17197057 -- make -fPIC the default for 64-bit Linux builds
 ++  unix-Linux-*-*-gcc         64       CC64FLAGS                 =  -fPIC
