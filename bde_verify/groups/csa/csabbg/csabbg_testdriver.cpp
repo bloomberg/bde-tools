@@ -290,7 +290,7 @@ internal::DynTypedMatcher noisy_print_matcher()
                    declRefExpr(to(varDecl(hasName("verbose")))))),
                anyOf(hasAncestor(doStmt(unless(
                          anyOf(hasCondition(boolLiteral(equals(false))),
-                               hasCondition(characterLiteral(equals('\0'))),
+                               hasCondition(characterLiteral(equals(0u))),
                                hasCondition(integerLiteral(equals(0))),
                                hasCondition(nullPtrLiteralExpr()))))),
                      hasAncestor(forStmt()),
