@@ -197,6 +197,13 @@
 # some POSIX API is provided in librt on Linux
 ++  unix-Linux-*-*-*        _     DEF_ENDLDFLAGS      =  -lrt
 
+# gcc 4.8+ libatomic required for 8-byte atomics on Linux on POWER in 32-bit
+# (or compiling 32-bit with -m32 -mpowerpc64, but -m32 -mpowerpc64 has a bug:
+#  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64505)
+!!  unix-Linux-ppc64-*-gcc-4.8 _  LIBATOMIC           =  -latomic
+!!  unix-Linux-ppc64-*-gcc-4.8 64 LIBATOMIC           =
+++  unix-Linux-ppc64-*-gcc-4.8 _  DEF_ENDLDFLAGS      =  $(LIBATOMIC)
+
 #===
 
 ++  *                       _     BDE_INCLUDE         =  $(DEF_INCLUDE)
