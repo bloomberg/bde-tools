@@ -146,7 +146,7 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 *                       _       ALLTEST_PREFIX  =
 !! unix-AIX-*           _       ALLTEST_PREFIX  = $(XLC_LIBPATH)
 !! unix-SunOS-*-*-gcc-4     _   ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib:$(LD_LIBRARY_PATH)
-!! unix-SunOS-*-*-gcc-4     64  ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib/sparcv9:$(LD_LIBRARY_PATH)
+!! unix-SunOS-sparc-*-gcc-4     64  ALLTEST_PREFIX  = LD_LIBRARY_PATH=/opt/swt/install/gcc-$(GCC_VER)/lib/sparcv9:$(LD_LIBRARY_PATH)
 !! unix-SunOS-i386-*-gcc    _   ALLTEST_PREFIX  = LD_LIBRARY_PATH=/bb/shared/gcc-$(BDE_COMPILERVERSION_FLAG)/lib:$(LD_LIBRARY_PATH)
 !! unix-SunOS-i386-*-gcc    64  ALLTEST_PREFIX  = LD_LIBRARY_PATH=/bb/shared/gcc-$(BDE_COMPILERVERSION_FLAG)/lib/amd64:$(LD_LIBRARY_PATH)
 
@@ -497,7 +497,7 @@ unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/opt/bb/include
 !! unix-SunOS-*-*-gcc-4.1.1 _   SHR_ENDLDFLAGS  = $(BDE_DYNAMIC) -Wl,-R/bbs/swtlib/gcc-4.1.1/lib
 !! unix-SunOS-*-*-gcc-4.1.2 _   SHR_ENDLDFLAGS  = $(BDE_DYNAMIC) -Wl,-R/opt/swt/install/gcc-$(GCC_VER)/lib
 !! unix-SunOS-*-*-gcc-4.2   _   SHR_ENDLDFLAGS  = $(BDE_DYNAMIC) -Wl,-R/opt/swt/install/gcc-$(GCC_VER)/lib
-!! unix-SunOS-*-*-gcc-4.2  64   SHR_ENDLDFLAGS  = $(BDE_DYNAMIC) -Wl,-R/opt/swt/install/gcc-$(GCC_VER)/lib/sparcv9
+!! unix-SunOS-sparc-*-gcc-4.2  64   SHR_ENDLDFLAGS  = $(BDE_DYNAMIC) -Wl,-R/opt/swt/install/gcc-$(GCC_VER)/lib/sparcv9
 !! unix-                  shr   SHR_ENDLDFLAGS  =
 
 #===

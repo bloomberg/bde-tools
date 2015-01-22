@@ -167,7 +167,7 @@
 
 #===
 
-unix-*-*-*-gcc      _   DEF_CFLAGS      = -pipe -std=gnu99
+unix-*-*-*-gcc      _   DEF_CFLAGS      = -std=gnu99
 unix-*              _   DEF_CFLAGS      = -I$(DEPLOYED_INCLUDE)
 
 !! unix-SunOS-sparc-*-cc-5.9    _   DEF_CXXFLAGS    = -m32 -xarch=sparcvis -xchip=generic -xcache=generic
@@ -176,8 +176,8 @@ unix-*              _   DEF_CFLAGS      = -I$(DEPLOYED_INCLUDE)
 !! unix-AIX-*-*-xlc-*       _   AIX_UNLOCK_STREAMS = -D__NOLOCK_ON_INPUT -D__NOLOCK_ON_OUTPUT
 !! unix-AIX-*-*-xlc-10.0    _   DEF_CXXFLAGS    = $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 # inline rather than inline and optimize
-!! unix-*-*-*-gcc            _  DEF_CXXFLAGS    = -pipe
-!! unix-SunOS-sparc-*-gcc    _  DEF_CXXFLAGS    = -pipe -mcpu=ultrasparc3
+!! unix-*-*-*-gcc            _  DEF_CXXFLAGS    =
+!! unix-SunOS-sparc-*-gcc    _  DEF_CXXFLAGS    = -mcpu=ultrasparc3
 
 !! unix-SunOS       _   F77_HASFLAG = -xhasi=yes
 !! unix-SunOS       _   DEF_F77FLAGS    = -u -vax=bslash -vax=param -Nq2000 -Qoption f77pass1 $(F77_HASFLAG)
