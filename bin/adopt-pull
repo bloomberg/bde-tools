@@ -43,10 +43,22 @@ if ! [[ -f "${bindir}/arc-anon" ]]; then
     exit 5
 fi
 
-gh=$(git remote -v | grep -F 'https://github.com/bloomberg/bde.git' | grep fetch | cut -f 1)
+[[ "$PWD" =~ bde-oss-tools ]] && echo "Using bde-tools.git" && ghname=bde-tools.git
+[[ "$PWD" =~ bsl-oss ]]   && echo "using bde.git"       && ghname=bde.git
+
+if [[ -z "$ghname" ]]; then
+    echo "Unable to deduce github repo name from $PWD - exiting..."
+    exit 10
+fi
+
+export ghname
+
+exit
+
+gh=$(git remote -v | grep -F "https://github.com/bloomberg/$ghname" | grep fetch | cut -f 1)
 if [[ -z "$gh" ]]; then
     gh=github-adopt
-    git remote add "$gh" https://github.com/bloomberg/bde.git
+    git remote add "$gh" https://github.com/bloomberg/$ghname
     newremote="$gh"
 fi
 
