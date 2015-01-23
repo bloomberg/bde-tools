@@ -43,8 +43,13 @@ if ! [[ -f "${bindir}/arc-anon" ]]; then
     exit 5
 fi
 
-[[ "$PWD" =~ bde-oss-tools ]] && echo "Using bde-tools.git" && ghname=bde-tools.git
-[[ "$PWD" =~ bsl-oss ]]   && echo "using bde.git"       && ghname=bde.git
+devgit=$(git remote -v | perl -ane'print "$F[1]" if /\borigin\b/ && /\bfetch\b/')
+export devgit
+
+echo devgit remote is $devgit
+
+[[ "$devgit" =~ bde-oss-tools ]] && echo "Using bde-tools.git" && ghname=bde-tools.git
+[[ "$devgit" =~ bsl-oss ]]   && echo "using bde.git"       && ghname=bde.git
 
 if [[ -z "$ghname" ]]; then
     echo "Unable to deduce github repo name from $PWD - exiting..."
@@ -52,8 +57,6 @@ if [[ -z "$ghname" ]]; then
 fi
 
 export ghname
-
-exit
 
 gh=$(git remote -v | grep -F "https://github.com/bloomberg/$ghname" | grep fetch | cut -f 1)
 if [[ -z "$gh" ]]; then
