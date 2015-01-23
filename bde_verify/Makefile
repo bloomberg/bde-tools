@@ -102,6 +102,7 @@ CXXFILES =                                                                    \
         groups/csa/csamisc/csamisc_strictaliasing.cpp                         \
         groups/csa/csamisc/csamisc_stringadd.cpp                              \
         groups/csa/csamisc/csamisc_swapab.cpp                                 \
+        groups/csa/csamisc/csamisc_thatwhich.cpp                              \
         groups/csa/csamisc/csamisc_thrownonstdexception.cpp                   \
         groups/csa/csamisc/csamisc_unnamed_temporary.cpp                      \
         groups/csa/csamisc/csamisc_verifysameargumentnames.cpp                \
