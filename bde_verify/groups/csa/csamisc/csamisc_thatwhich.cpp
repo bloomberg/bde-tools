@@ -1,5 +1,6 @@
 // csafmt_thatwhich.cpp                                               -*-C++-*-
 
+#include <llvm/ADT/StringExtras.h>
 #include <clang/AST/Decl.h>
 #include <csabase_analyser.h>
 #include <csabase_debug.h>
@@ -7,12 +8,27 @@
 #include <csabase_report.h>
 #include <csabase_util.h>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 using namespace clang;
 using namespace csabase;
 
 static std::string const check_name("that-which");
+
+namespace std
+{
+
+template <>
+struct hash<llvm::StringRef>
+{
+    size_t operator()(llvm::StringRef s) const
+    {
+        return llvm::HashString(s);
+    }
+};
+
+}
 
 namespace
 {
@@ -53,9 +69,14 @@ Word::Word()
 
 void Word::set(llvm::StringRef s, size_t position)
 {
-    static const char* const prepositions[] = {
-        "above", "after", "at",   "below",   "by", "for",   "from",
-        "in",    "of",    "over", "through", "to", "under", "upon",
+    static std::unordered_set<llvm::StringRef> prepositions {
+        "about",   "above",      "across",  "after",   "against", "among",
+        "around",  "at",         "before",  "behind",  "below",   "beneath",
+        "beside",  "besides",    "between", "beyond",  "by",      "during",
+        "for",     "from",       "in",      "inside",  "into",    "near",
+        "of",      "on",         "out",     "outside", "over",    "since",
+        "through", "throughout", "till",    "to",      "toward",  "under",
+        "until",   "up",         "upon",    "with",    "without",
     };
 
     word             = s;
@@ -68,15 +89,7 @@ void Word::set(llvm::StringRef s, size_t position)
     is_copyright     = s.equals_lower("copyright");
     is_that          = s.equals_lower("that");
     is_which         = s.equals_lower("which");
-    is_preposition   = s.endswith("ing");
-    if (!is_preposition) {
-        for (auto p : prepositions) {
-            if (s.equals_lower(p)) {
-                is_preposition = true;
-                break;
-            }
-        }
-    }
+    is_preposition   = prepositions.count(s) || s.endswith("ing");
 }
 
 struct data
