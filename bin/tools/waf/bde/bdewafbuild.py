@@ -6,7 +6,8 @@ import tempfile
 import bdeunittest
 from waflib.TaskGen import feature, after_method, before_method
 from waflib import Errors, Utils, Options, Task, Logs
-from waflib.Build import BuildContext
+from waflib.Build import BuildContext, inst
+from waflib.Node import Node
 
 
 class BdeWafBuild(object):
@@ -107,14 +108,15 @@ class BdeWafBuild(object):
 
         for path in path_headers:
             if self.install_flat_include:
-                self.ctx.install_files(os.path.join('${PREFIX}',
-                                                    'include', path),
-                                       path_headers[path])
+                dest_path = os.path.join('${PREFIX}', 'include', path)
             else:
-                self.ctx.install_files(os.path.join('${PREFIX}',
-                                                    'include',
-                                                    group_node.name, path),
-                                       path_headers[path])
+                dest_path = os.path.join('${PREFIX}', 'include',
+                                         group_node.name, path)
+
+            install_files(self.ctx, package_name + '_inst',
+                          os.path.join('${PREFIX}',
+                                       'include', path),
+                          path_headers[path])
 
         dum_task_gens = []
         if package_name in self.package_dums:
@@ -257,7 +259,8 @@ class BdeWafBuild(object):
                  )
 
         self.ctx(name       = package_name,
-                 depends_on = [package_name + '_lib', package_name + '_tst']
+                 depends_on = [package_name + '_lib', package_name + '_tst',
+                               package_name + '_inst']
                  )
 
     def _build_sa_package(self, package_name):
@@ -346,6 +349,7 @@ class BdeWafBuild(object):
         depends_on = [group_name + '_lib'] + [p + '_tst' for p in packages]
         if group_name in self.export_groups:
             depends_on.append(group_name + '.pc')
+            depends_on.extend([p + '_inst' for p in packages])
 
         self.ctx(name       = group_name,
                  depends_on = depends_on)
@@ -359,7 +363,7 @@ class BdeWafBuild(object):
         else:
             install_include_dir = "include/%s" % group_name
 
-        self.ctx(name                  = group_name + '.pc',
+        self.ctx(name                  = group_name + '.pc_build',
                  features              = ['bdepc'],
                  path                  = vc_node,
                  version               = '.'.join(self.group_ver[group_name]),
@@ -373,11 +377,18 @@ class BdeWafBuild(object):
                  pc_extra_include_dirs = self.pc_extra_include_dirs
                  )
 
-        self.ctx.install_files(os.path.join('${PREFIX}', self.install_lib_dir,
-                                            'pkgconfig'),
-                               [os.path.join(vc_node.relpath(),
-                                             group_name +
-                                             self.lib_suffix + '.pc')])
+
+        install_files(self.ctx, group_name + '.pc_inst',
+                      os.path.join('${PREFIX}', self.install_lib_dir,
+                                   'pkgconfig'),
+                      [os.path.join(vc_node.relpath(),
+                                    group_name +
+                                    self.lib_suffix
+                                    + '.pc')])
+
+        self.ctx(name       = group_name + '.pc',
+                 depends_on = [group_name + '.pc_build',
+                               group_name + '.pc_inst'])
 
     def build(self):
         for class_name in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
@@ -528,6 +539,42 @@ def reuse_lib_objects(self):
 
     self.source = tmp_source
 
+
+def install_files(bld, gen_name, dest, files, chmod=Utils.O644):
+    """Create a task generator to install files.
+
+This function is very similar to the
+``waflib.Build.InstallContext.install_files``, with the main difference being
+that this function does not automatically post the task generator, which
+enables the use of the ``--target`` option for the install command.
+
+TODO: I believe not automatically post the generator is a feature that is
+generally useful, so I should create a patch to the upstream.
+
+    Args:
+        bld (BuildContext): the build context
+        gen_name (str): the task generator name to be created
+        dest (str): the destination path
+        files (list): list of files to be installed
+        chmod (int): chmod the installed files
+    """
+    if bld.cmd == 'install':
+        tsk = inst(env=bld.env)
+        tsk.bld = bld
+        tsk.path = bld.path
+        tsk.chmod = chmod
+        tsk.task = None
+        if isinstance(files, Node):
+            tsk.source = [files]
+        else:
+            tsk.source = Utils.to_list(files)
+        tsk.dest = dest
+        tsk.exec_task = tsk.exec_install_files
+        tsk.relative_trick = False
+        tsk.name = gen_name
+        bld.add_to_group(tsk)
+    else:
+        bld(name = gen_name)
 
 # Patch ccroot.propagate_uselib_vars so that libraries can be repeated.
 # This is required to support cyclic dependencies and bde-bb.
