@@ -175,6 +175,7 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-*-*-*-gcc-4.7.0     _   GCC_VER = 4.7.0
 !! unix-*-*-*-gcc-4.7.2     _   GCC_VER = 4.7.2
 !! unix-*-*-*-gcc-4.8.1     _   GCC_VER = 4.8.1
+!! unix-*-*-*-gcc-4.9.2     _   GCC_VER = 4.9.2
 
 #==============================================================================
 # Compiler Paths
@@ -192,7 +193,7 @@ unix-                   _       RETRY_ALLTEST   = $(RETRY) -t 0 -a 3 -s!ILL,TRAP
 !! unix-AIX-*-*-xlc-12.0  _  XLC_LIBPATH             = LIBPATH=$(XLC_LOCATION)/lib
 !! unix-AIX-*-*-xlc-12.0  _  XLC_LOCATION            = /bb/util/version12-032014/usr
 !! unix-AIX-*-*-xlc-12.0  _  XLC_QPATH               =
-!! unix-AIX-*-*-xlc-12.1  _  XLC_LOCATION            = /bb/util/version12-072014/usr
+!! unix-AIX-*-*-xlc-12.1  _  XLC_LOCATION            = /bb/util/version12-102014/usr
 !! unix-AIX-*-*-xlc-12.1  _  XLC_QPATH               =
 
 !! unix-AIX-*-*-xlc  _  XLC_INTERNAL_PREFIX1 = $(SET_TMPDIR) $(RETRY_ON_SIGNAL)
