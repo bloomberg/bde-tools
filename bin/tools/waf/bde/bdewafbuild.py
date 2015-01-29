@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 import os.path
 import sys
@@ -54,8 +55,8 @@ class BdeWafBuild(object):
 
         upd = os.path.dirname
         test_runner_path = os.path.join(
-            upd(upd(upd(os.path.realpath(__file__)))),
-            'run_unit_tests.py')
+            upd(upd(upd(upd(os.path.realpath(__file__))))),
+            'bde_runtest.py')
 
         self.ctx.options.testcmd = \
             '%s %s %%s --verbosity %s --timeout %s' % (
@@ -716,6 +717,8 @@ def bde_exec_command(task, cmd, **kw):
         raise Errors.WafError('Execution failure: %s' % str(e), ex=e)
 
     if out or err:
+        out = out.decode(sys.stdout.encoding or 'iso8859-1')
+        err = err.decode(sys.stdout.encoding or 'iso8859-1')
         msg = '' + out + err
 
         # The Visual Studio compiler always prints name of the input source
@@ -729,8 +732,8 @@ def bde_exec_command(task, cmd, **kw):
             src_str = task.inputs[0].name
 
         status_str = 'WARNING' if ret == 0 else 'ERROR'
-        sys.stdout.write('[%s (%s)] <<<<<<<<<<\n%s>>>>>>>>>>\n' %
-                         (src_str, status_str, msg))
+        Logs.info('[%s (%s)] <<<<<<<<<<\n%s>>>>>>>>>>' %
+                  (src_str, status_str, msg), extra={'stream': sys.stderr})
 
     return ret
 

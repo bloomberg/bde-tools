@@ -3,6 +3,8 @@
 # Thomas Nagy, 2005-2012
 
 import os
+import sys
+
 from waflib.TaskGen import feature, after_method
 from waflib import Utils, Task, Logs, Options
 testlock = Utils.threading.Lock()
@@ -98,6 +100,8 @@ class utest(Task.Task):
                                       stderr=Utils.subprocess.STDOUT,
                                       stdout=Utils.subprocess.PIPE)
         stdout = proc.communicate()[0]
+        if stdout:
+            stdout = stdout.decode(sys.stdout.encoding or 'iso8859-1')
 
         tup = (filename, proc.returncode, stdout)
         self.generator.utest_result = tup

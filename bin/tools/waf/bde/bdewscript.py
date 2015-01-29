@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import os
 import os.path
 import platform
@@ -10,12 +12,11 @@ from bdeoptions import Uplid, Ufid
 
 from waflib import Context, Utils, Logs
 
-
 def options(ctx):
     # check version numbers here because options() is called before any other
     # command-handling function
-    if sys.hexversion < 0x2060000 or 0x3000000 <= sys.hexversion:
-        ctx.fatal('Pyhon 2.6 or 2.7 is required to build BDE using waf.')
+    if sys.hexversion < 0x2060000:
+        ctx.fatal('Pyhon 2.6 and above is required to build BDE using waf.')
 
     ctx.load('bdeunittest')
 
@@ -92,7 +93,7 @@ def build(ctx):
         ctx.projects_dir.mkdir()
 
     if ctx.cmd == 'build':
-        print 'Waf: using %d jobs (change with -j)' % ctx.options.jobs
+        print('Waf: using %d jobs (change with -j)' % ctx.options.jobs)
 
     bde_build = BdeWafBuild(ctx)
     bde_build.build()
@@ -121,7 +122,7 @@ def _make_ufid_from_ctx(ctx):
         if not Ufid.is_valid(ufid):
             ctx.fatal('Invalid UFID, "%s", each part of a UFID must be in '
                       'the list (of valid flags): %s.' %
-                      (ufid_str, ", ".join(Ufid.VALID_FLAGS.keys())))
+                      (ufid_str, ", ".join(list(Ufid.VALID_FLAGS.keys()))))
         return Ufid(ufid)
 
     ufid_map = {
