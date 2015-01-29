@@ -113,9 +113,7 @@ class BdeWafBuild(object):
                 dest_path = os.path.join('${PREFIX}', 'include',
                                          group_node.name, path)
 
-            install_files(self.ctx, package_name + '_inst',
-                          os.path.join('${PREFIX}',
-                                       'include', path),
+            install_files(self.ctx, package_name + '_inst', dest_path,
                           path_headers[path])
 
         dum_task_gens = []
@@ -192,7 +190,7 @@ class BdeWafBuild(object):
                  linkflags       = linkflags,
                  includes        = [package_node],
                  export_includes = [package_node],
-                 use             = internal_deps,
+                 use             = [d + '_lib' for d in internal_deps],
                  uselib          = external_deps,
                  lib             = libs,
                  stlib           = stlibs,
@@ -258,11 +256,6 @@ class BdeWafBuild(object):
                  depends_on = [c + '.t' for c in components]
                  )
 
-        self.ctx(name       = package_name,
-                 depends_on = [package_name + '_lib', package_name + '_tst',
-                               package_name + '_inst']
-                 )
-
     def _build_sa_package(self, package_name):
 
         # Standard alone packages are architecturally at the same level as
@@ -276,7 +269,6 @@ class BdeWafBuild(object):
             self.sa_package_locs[package_name]).make_node(package_name)
         deps = set(self.group_dep[package_name])
         internal_deps = deps - self.external_libs
-        internal_deps = [g + '_lib' for g in internal_deps]
         external_deps = deps & self.external_libs
         # waf uses all uppercase words to identify pkgconfig based dependencies
         external_deps = [l.upper() for l in external_deps]
@@ -293,21 +285,40 @@ class BdeWafBuild(object):
                                  components, internal_deps, external_deps,
                                  install_path)
 
+        depends_on = [package_name + '_lib', package_name + '_tst']
+
+        if self.ctx.cmd == 'install':
+            depends_on = [package_name + '.pc_inst'] + \
+                         [package_name + '_inst'] + \
+                         [p + '_inst' for p in internal_deps]
+
+        self.ctx(name       = package_name,
+                 depends_on = depends_on)
+
     def _build_normal_package(self, package_name, group_node,
                               group_internal_deps, group_external_deps):
         package_node = group_node.make_node(package_name)
-        deps = [p + '_lib' for p in self.package_dep[package_name]]
-        deps.extend([g + '_lib' for g in group_internal_deps])
+        internal_deps = self.package_dep[package_name] + group_internal_deps
         components = self.package_mem[package_name]
 
         self._build_package_impl(package_name, package_node, group_node,
-                                 components, deps, group_external_deps, None)
+                                 components, internal_deps,
+                                 group_external_deps, None)
+
+        depends_on = [package_name + '_lib', package_name + '_tst']
+
+        if self.ctx.cmd == 'install':
+            depends_on = [package_name + '_inst'] + \
+                         [p + '_inst' for p in internal_deps]
+
+        self.ctx(name       = package_name,
+                 depends_on = depends_on)
 
     def _build_group(self, group_name):
         group_node = self.ctx.path.make_node(
             self.group_locs[group_name]).make_node(group_name)
         deps = set(self.group_dep[group_name])
-        internal_deps = deps - self.external_libs
+        internal_deps = list(deps - self.external_libs)
         external_deps = deps & self.external_libs
 
         # waf uses all uppercase words to identify pkgconfig based dependencies
@@ -346,13 +357,32 @@ class BdeWafBuild(object):
                  bdesoname       = self.soname_override[group_name] if group_name in self.soname_override else None
                  )
 
-        depends_on = [group_name + '_lib'] + [p + '_tst' for p in packages]
+        # The two task generators below are used when the ``--target`` option
+        # is used along with the ``--test`` option or the ``install`` command.
+        # When using a targeted test run, we only want to run the test cases
+        # for the specified package group, but not any of its dependencies.
+        # Inversely, when using a targeted ``install`` command, we want to
+        # install all of the depdencies of the specified package group..
+
+        group_depends_on = [group_name + '_lib'] + \
+                           [p + '_tst' for p in packages]
+        inst_depends_on = []
         if group_name in self.export_groups:
-            depends_on.append(group_name + '.pc')
-            depends_on.extend([p + '_inst' for p in packages])
+            group_depends_on.append(group_name + '.pc')
+            if self.ctx.cmd == 'install':
+                group_depends_on.append(group_name + '_inst')
+                inst_depends_on = [group_name + '.pc_inst'] + \
+                                  [p + '_inst' for p in packages] + \
+                                  [g + '_inst' for g in internal_deps]
 
         self.ctx(name       = group_name,
-                 depends_on = depends_on)
+                 depends_on = group_depends_on)
+
+        self.ctx(name = group_name + '_inst',
+                 depends_on = inst_depends_on)
+
+        depends_on = [group_name + '_lib'] + [p + '_tst' for p in packages]
+
 
     def _make_pc_group(self, group_name, internal_deps, external_deps):
 
@@ -363,7 +393,7 @@ class BdeWafBuild(object):
         else:
             install_include_dir = "include/%s" % group_name
 
-        self.ctx(name                  = group_name + '.pc_build',
+        self.ctx(name                  = group_name + '.pc',
                  features              = ['bdepc'],
                  path                  = vc_node,
                  version               = '.'.join(self.group_ver[group_name]),
@@ -377,7 +407,6 @@ class BdeWafBuild(object):
                  pc_extra_include_dirs = self.pc_extra_include_dirs
                  )
 
-
         install_files(self.ctx, group_name + '.pc_inst',
                       os.path.join('${PREFIX}', self.install_lib_dir,
                                    'pkgconfig'),
@@ -385,10 +414,6 @@ class BdeWafBuild(object):
                                     group_name +
                                     self.lib_suffix
                                     + '.pc')])
-
-        self.ctx(name       = group_name + '.pc',
-                 depends_on = [group_name + '.pc_build',
-                               group_name + '.pc_inst'])
 
     def build(self):
         for class_name in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
@@ -573,8 +598,6 @@ generally useful, so I should create a patch to the upstream.
         tsk.relative_trick = False
         tsk.name = gen_name
         bld.add_to_group(tsk)
-    else:
-        bld(name = gen_name)
 
 # Patch ccroot.propagate_uselib_vars so that libraries can be repeated.
 # This is required to support cyclic dependencies and bde-bb.
