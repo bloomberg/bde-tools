@@ -131,7 +131,9 @@ void report::operator()(SourceLocation   HashLoc,
                         StringRef        RelativePath,
                         const Module    *Imported)
 {
-    d.d_includes.insert({FilenameRange.getBegin(), File->getName()});
+    if (File) {
+        d.d_includes.insert({FilenameRange.getBegin(), File->getName()});
+    }
 }
 
 // FileSkipped

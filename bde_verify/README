@@ -17,19 +17,20 @@ Supported Platforms:
    o SunOS sparc
 
 Prerequesites: 
-   o llvm/clang 3.4.1 (see below for instructions)
+   o llvm/clang (see below for instructions)
    o gnu make
    o aspell 0.60.6.1
 
-Currently, bde_verify is built with llvm/clang 3.4.1.  Source and binaries are
-available for download at <http://llvm.org/releases/download.html#3.4.1>.
-(But I have not tried using the pre-built binaries.)  To build from source,
-download only LLVM and Clang sources and Clang extra tools:
-    <http://llvm.org/releases/3.4.1/llvm-3.4.1.src.tar.gz>
-    <http://llvm.org/releases/3.4.1/cfe-3.4.1.src.tar.gz>
-    <http://llvm.org/releases/3.4/clang-tools-extra-3.4.src.tar.gz>
+Bde_verify is built with current llvm/clang, available by git as described in
+<http://llvm.org/docs/GettingStarted.html#git-mirror>.  It, and clang, use
+c++11 constructs, so you will need to build with a sufficiently recent gcc. It
+is known to build with gcc-4.8.1 and gcc-4.9.2.
 
-Follow build instructions here: <http://clang.llvm.org/get_started.html>
+To build from llvm/clang using git, download only LLVM and Clang:
+    git clone http://llvm.org/git/llvm.git
+    cd llvm/tools
+    git clone http://llvm.org/git/clang.git
+or follow these instructions: <http://clang.llvm.org/get_started.html>
 until you are asked to run "../llvm/configure".  A configuration for
 clang sufficient to build bde_verify on Linux can be specifed with the
 following arguments to configure:
@@ -38,18 +39,17 @@ following arguments to configure:
     --enable-cxx11
     --prefix=<path to where you want clang installed>
     --with-gcc-toolchain=<$GCCDIR>
-    LDFLAGS=-Wl,-z,muldefs -Wl,-rpath,$GCCDIR/lib64
-    CXXFLAGS=-Wno-unused-local-typedefs
+    --with-extra-options=--std=gnu++11
+    LDFLAGS=-Wl,-rpath,$GCCDIR/lib64
     CC=$GCCDIR/bin/gcc
     CXX=$GCCDIR/bin/g++
-    CPP=$GCCDIR/bin/cpp
 
 For bde_verify itself, there is no autoconf support to create a Makefile.
 Set up the following variables in the Makefiles in the top-level and in the
 csabase directories to hand-configure.
 
-    COMPILER  = gcc or clang
-    VERSION   = compiler version, e.g., 4.8.1
+    COMPILER  = gcc
+    VERSION   = compiler version, e.g., 4.9.2
     CCDIR     = path to compiler installation directory
     LLVM      = path to LLVM installation
     ASPELL    = path to aspell installation

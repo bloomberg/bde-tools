@@ -556,7 +556,7 @@ void report::process(Range r, bool greater)
         if (!dotdot &&
             line.substr(0, r.from().column() - 1)
                                .find_first_not_of(' ') == line.npos &&
-            (!greater || line.size() - line.ltrim().size() < exact_offset)) {
+            (!greater || line.size() < exact_offset + line.ltrim().size())) {
             std::string expect =
                 std::string(std::max(0,
                                      std::min(79 - int(line.trim().size()),

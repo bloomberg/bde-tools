@@ -23,23 +23,28 @@ CanQualType getType(QualType type)
 
 static void check(Analyser& analyser, CastExpr const *expr)
 {
-    if (expr->getCastKind() == CK_BitCast ||
-        expr->getCastKind() == CK_LValueBitCast ||
-        expr->getCastKind() == CK_IntegralToPointer) {
-        CanQualType source(getType(expr->getSubExpr()->getType()));
-        CanQualType target(getType(expr->getType()));
-        std::string tt = static_cast<QualType>(target).getAsString();
-        if ((source != target &&
-             tt != "char" &&
-             tt != "unsigned char" &&
-             tt != "signed char" &&
-             tt != "void") ||
-            (expr->getType()->isPointerType() !=
-             expr->getSubExpr()->getType()->isPointerType())) {
-            analyser.report(expr, check_name, "AL01",
-                            "Possible strict-aliasing violation")
-                << expr->getSourceRange();
-        }
+    if (expr->getSubExpr()->isNullPointerConstant(
+            *analyser.context(), Expr::NPC_ValueDependentIsNotNull)) {
+        return;                                                       // RETURN
+    }
+    if (expr->getCastKind() != CK_BitCast &&
+        expr->getCastKind() != CK_LValueBitCast &&
+        expr->getCastKind() != CK_IntegralToPointer) {
+        return;                                                       // RETURN
+    }
+    CanQualType source(getType(expr->getSubExpr()->getType()));
+    CanQualType target(getType(expr->getType()));
+    std::string tt = static_cast<QualType>(target).getAsString();
+    if ((source != target &&
+         tt != "char" &&
+         tt != "unsigned char" &&
+         tt != "signed char" &&
+         tt != "void") ||
+        (expr->getType()->isPointerType() !=
+         expr->getSubExpr()->getType()->isPointerType())) {
+        analyser.report(expr, check_name, "AL01",
+                        "Possible strict-aliasing violation")
+            << expr->getSourceRange();
     }
 }
 

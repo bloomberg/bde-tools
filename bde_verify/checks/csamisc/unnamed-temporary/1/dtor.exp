@@ -1,0 +1,10 @@
+dtor.cpp:11:5: warning: UT01: Unnamed object will be immediately destroyed
+    Dtor();
+    ^
+dtor.cpp:13:5: warning: UT01: Unnamed object will be immediately destroyed
+    ContainsDtor();
+    ^
+dtor.cpp:15:5: warning: UT01: Unnamed object will be immediately destroyed
+    InheritsDtor();
+    ^
+3 warnings generated.

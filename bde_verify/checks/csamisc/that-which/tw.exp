@@ -1,0 +1,5 @@
+In file included from tw.cpp:1:
+./tw.h:2:12: warning: TW01: Possibly prefer 'that' over 'which'
+// Objects which go here also go there.
+           ^
+1 warning generated.
