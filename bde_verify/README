@@ -22,7 +22,10 @@ Prerequesites:
    o aspell 0.60.6.1
 
 Bde_verify is built with current llvm/clang, available by git as described in
-<http://llvm.org/docs/GettingStarted.html#git-mirror>.
+<http://llvm.org/docs/GettingStarted.html#git-mirror>.  It, and clang, use
+c++11 constructs, so you will need to build with a sufficiently recent gcc. It
+is known to build with gcc-4.8.1 and gcc-4.9.2.
+
 To build from llvm/clang using git, download only LLVM and Clang:
     git clone http://llvm.org/git/llvm.git
     cd llvm/tools
@@ -45,7 +48,7 @@ For bde_verify itself, there is no autoconf support to create a Makefile.
 Set up the following variables in the Makefiles in the top-level and in the
 csabase directories to hand-configure.
 
-    COMPILER  = gcc or clang
+    COMPILER  = gcc
     VERSION   = compiler version, e.g., 4.9.2
     CCDIR     = path to compiler installation directory
     LLVM      = path to LLVM installation
