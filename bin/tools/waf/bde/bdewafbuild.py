@@ -27,6 +27,7 @@ class BdeWafBuild(object):
         self.export_groups = self.ctx.env['export_groups']
 
         self.sa_package_locs = self.ctx.env['sa_package_locs']
+        self.third_party_locs = self.ctx.env['third_party_locs']
         self.soname_override = self.ctx.env['soname_override']
         self.group_locs = self.ctx.env['group_locs']
 
@@ -257,6 +258,13 @@ class BdeWafBuild(object):
                  depends_on = [c + '.t' for c in components]
                  )
 
+        self.ctx(name       = package_name,
+                 depends_on = [package_name + '_lib', package_name + '_tst']
+                 )
+
+    def _build_third_party(self, package_name):
+        self.ctx.recurse(self.third_party_locs[package_name])
+
     def _build_sa_package(self, package_name):
 
         # Standard alone packages are architecturally at the same level as
@@ -425,10 +433,12 @@ class BdeWafBuild(object):
         self.ctx.env['env'].update(self.custom_envs)
 
         for g in self.group_dep:
-            if g not in self.sa_package_locs:
-                self._build_group(g)
-            else:
+            if g in self.sa_package_locs:
                 self._build_sa_package(g)
+            elif g in self.third_party_locs:
+                self._build_third_party(g)
+            else:
+                self._build_group(g)
 
         if self.run_tests:
             self.ctx.add_post_fun(bdeunittest.summary)
@@ -736,6 +746,7 @@ def bde_exec_command(task, cmd, **kw):
                   (src_str, status_str, msg), extra={'stream': sys.stderr})
 
     return ret
+
 
 class ListContext(BuildContext):
     """
