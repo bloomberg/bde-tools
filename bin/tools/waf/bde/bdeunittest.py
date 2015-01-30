@@ -137,10 +137,12 @@ def summary(bld):
     Logs.pprint('CYAN', '  tests that pass %d/%d' % (total-tfail, total))
     for (f, code, out) in lst:
         if not code:
-            Logs.pprint('CYAN', '[%s (TEST)] <<<<<<<<<<' % f)
             if bld.options.show_test_out:
-                    Logs.pprint('CYAN', out)
-            Logs.pprint('CYAN', '>>>>>>>>>>')
+                Logs.pprint('CYAN', '[%s (TEST)] <<<<<<<<<<' % f)
+                Logs.pprint('CYAN', out)
+                Logs.pprint('CYAN', '>>>>>>>>>>')
+            else:
+                Logs.pprint('CYAN', '[%s (TEST)]' % f)
 
     Logs.pprint('CYAN', '  tests that fail %d/%d' % (tfail, total))
     for (f, code, out) in lst:
