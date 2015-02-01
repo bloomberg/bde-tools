@@ -297,7 +297,7 @@ if (!find_waf()) {
         $ENV{BDE_PATH}.=":/home/bdebuild/bde-oss-tools";
     }
     else {
-        $ENV{PATH} = "c:\\python27\\bin\\;$ENV{PATH};e:\\git\\bde-oss-tools";
+        $ENV{PATH} = "c:\\python27\\bin\\;$ENV{PATH};e:\\git\\bde-oss-tools\\bin";
         $ENV{BDE_PATH}.=":e:/git/bde-oss-tools";
     }
 
