@@ -65,6 +65,12 @@ STDOUT->autoflush(1);
 my $iamwindows = ($^O eq 'MSWin32' || $^O eq 'cygwin');
     # TODO: review the 'cygwin' case
 
+my $pythonprefix="";
+
+if ($iamwindows) {
+    $pythonprefix = "python ";
+}
+
 my $prog       = basename($0);
 my $bindir     = $iamwindows ? $FindBin::Bin : dirname($0);
 $bindir =~ s|/|\\|sg if $iamwindows;
@@ -127,6 +133,7 @@ Getopt::Long::Configure("bundling");
 unless (GetOptions(\%opts,qw[
     after|A=s
     before|B=s
+    build|b=s
     compiler|c=s
     check|C
     debug|d+
@@ -160,6 +167,11 @@ usage(),exit 0 if $opts{help};
 
 my $after    = $opts{after}    || '';
 my $before   = $opts{before}   || '';
+
+my $build    = $opts{build}    || $opts{where};
+
+die "Need a build location or a root location - specify at least one of -b or -w" unless defined $build;
+
 my $compiler = $opts{compiler} || '';
 my $check    = $opts{check}    || '';
 my $defines  = $opts{define} ? join(' ', map { "-D$_" } @{$opts{define}}) : '';
@@ -173,7 +185,7 @@ my $uptodate = $opts{uptodate} || 0;
 my $debug    = $opts{debug}    || 0;
 my $group    = $opts{group}    || '';
 my $flags    = $opts{flags}    || '';
-my $verbose  = $opts{verbose}  || 0;
+my $verbose  = $opts{verbose}  || 1;
 my $where    = $opts{where}    || $ENV{BDE_ROOT};
 
 my $tag      = $opts{tag}      || "";
@@ -183,6 +195,8 @@ if ($opts{uplid}) {
     fatal "--uplid and --compiler are mutually exclusive"
       if $opts{compiler};
     $uplid = BDE::Build::Uplid->unexpanded($opts{uplid});
+    $compiler=$uplid->compiler()."-".$uplid->compilerversion();
+
 } elsif ($opts{compiler}) {
     $uplid = BDE::Build::Uplid->new({ compiler => $opts{compiler},
                                       where    => $opts{where}
@@ -244,6 +258,8 @@ if ($group) {
 
         $logOpened = 1;
 
+        write_logandverbose("=========== Logfile is $logfile");
+
         return $logfile;
     }
 
@@ -256,13 +272,38 @@ if ($group) {
     }
 }
 
+open_slavelog($opts{logdir});
+
 sub write_logandverbose (@) {
     write_slavelog @_,"\n";
     print @_,"\n" if $verbose;
 }
 
+sub find_waf {
+    foreach my $dir (split /:/,$ENV{PATH}) {
+        if (-x "$dir/waf") {
+            return 1;
+        }
+    }
+}
+
+if (!find_waf()) {
+    write_logandverbose "Expanding PATH to find waf and python";
+    $ENV{PATH} = "/opt/bb/bin:$ENV{PATH}:/home/bdebuild/bde-oss-tools/bin";
+    $ENV{BDE_PATH}.=":/home/bdebuild/bde-oss-tools";
+}
+else {
+    write_logandverbose "NOT expanding path, waf is ".`which waf`;
+}
+
+if (!find_waf()) {
+    write_logandverbose("!! Unable to find waf");
+    exit 1;
+}
+
+
+
 if ($opts{envbat}) {
-    open_slavelog($opts{logdir});
     write_logandverbose "Got --envbat $opts{envbat}";
     open ENVBAT,
            "$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
@@ -305,8 +346,7 @@ usage("No target build type supplied"), exit EXIT_FAILURE
   unless $opts{target};
 
 unless ($opts{logdir}) {
-    $opts{logdir}=$bindir;
-    $opts{logdir} =~ s{[/\\][^/\\]+[/\\]?$}{/logs};
+    $opts{logdir}="$build/logs";
 }
 
 my @targets=split /\W+/,$opts{target};
@@ -336,6 +376,7 @@ Local options:
 Passed to build:
   --after    | -A <target>   make explicit target(s) after regular build
   --before   | -B <target>   make explicit target(s) before regular build
+  --build    | -b <path>     directory to build in (wscript location)
   --compiler | -c <comp>     compiler definition for system (default: 'def')
   --check    | -C            perform 'checkin' code verification
   --define   | -D <macro>    define one or more makefile macro overrides:
@@ -367,11 +408,7 @@ _USAGE_END
 #------------------------------------------------------------------------------
 
 MAIN: {
-    # on windows, go to view specified by root
-    if ($iamwindows) {
-        retry_chdir($where);
-        #retry_system("cleartool update")
-    }
+    retry_chdir($build);
 
     # if NOT on windows, renice process if --nice option is in effect
     if (!$iamwindows) {
@@ -383,16 +420,22 @@ MAIN: {
 
     # preamble
     write_logandverbose "** $prog started";
-    write_logandverbose "-- build root is $where" if $where;
-    write_logandverbose "** building targets: @targets";
-    write_logandverbose "-- verbosity level $verbose";
-    write_logandverbose "-- express mode ".($express?"enabled":"disabled");
+    write_logandverbose "-- build root is      $where" if $where;
+    write_logandverbose "-- build location is  $build" if $build;
+    write_logandverbose "** building targets:  @targets";
+    write_logandverbose "** building group:    $group";
+    write_logandverbose "** building compiler: $compiler";
+    write_logandverbose "** building uplid:    $uplid";
+    write_logandverbose "-- verbosity level    $verbose";
+    write_logandverbose "-- express mode       "
+                                              .($express?"enabled":"disabled");
+    write_logandverbose "-- build tag          $tag";
 
     # construct common command arguments
-    my @basecmd=("$bindir${FS}bde_build.pl");
+    my @basecmd=("waf");
     if ($iamwindows) {
-        unshift @basecmd,qq["$^X"]; # prefix with Perl itself (in quotes) for
-                                    # Windows
+        unshift @basecmd,qq["python"]; # prefix with python itself (in quotes)
+                                       # for Windows
     }
 
     $ENV{BDE_ROOT}=$where;
@@ -444,15 +487,44 @@ MAIN: {
     }
 
     # -t : invoke for each target specified
-    for my $target (@targets) {
+    TARGET: for my $target (@targets) {
+        write_logandverbose("=============== BUILDING $target for $group");
+
+        my $setwafenv = "$pythonprefix $bindir${FS}bde_setwafenv.py -c $compiler -t $target";
+
+        write_logandverbose("Setting up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tsetwafenv=\"$setwafenv\"\n\tPATH=$ENV{PATH}");
+
+        print `which bde_setwafenv.py`;
+
+        open(SETWAFENV,"$setwafenv|") or die "Unable to run $setwafenv, error $!";
+
+        while(<SETWAFENV>) {
+            if (/export\s+(\w+)="(.*)"/) {
+                write_logandverbose "Adding to env: $1=$2";
+                $ENV{$1}=$2;
+            }
+        }
+
+        close(SETWAFENV);
+
+        write_logandverbose("Done setting up waf env");
+
         # construct target-specific command arguments
-        my @cmd = @basecmd;
-        push @cmd,"-t",$target,$group;
+        write_logandverbose(`$pythonprefix waf configure 2>&1`);
+
+        my @cmd = qw(waf build);
+        unshift @cmd, $pythonprefix if $pythonprefix;
+        push @cmd, "--target=$group";
+        push @cmd, "--test=build" if $tag=~/TEST-COMPILE/;
+        push @cmd, "--test=run" if $tag=~/TEST-RUN/;
+        push @cmd, "-kk";
+
         print "-- running command: @cmd\n" if $verbose>=2;
+        write_logandverbose("======== running command: @cmd");
 
         # invoke command
         my ($rdh, $wrh)=(new IO::Handle,new IO::Handle);
-        my $pid=retry_open3($rdh,$wrh,$rdh,@cmd);
+        my $pid=retry_open3($rdh,$wrh,$rdh,@cmd) or die "open3 failed, error $!";
         my $output="";
 
         my $prefixString="<< $tag";
@@ -463,7 +535,7 @@ MAIN: {
         }
 
         while (my $line=<$rdh>) {
-            print $prefixString,$line if $verbose>=3;
+            print $prefixString,$line;
             write_slavelog($logPrefix.strftime(" %H%M%S:",localtime).$line);
             $output.=$logPrefix.$line;
         }
