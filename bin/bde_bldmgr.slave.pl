@@ -240,8 +240,11 @@ if ($group) {
         my $logdir=shift;
 
         my @lt = localtime();
-        my $dtag = sprintf "%04d%02d%02d-%02d%02d%02d",
-            ($lt[5]+1900),($lt[4]+1),$lt[3],$lt[2],$lt[1],$lt[0];
+        my $ymdtag = strftime("%Y%m%d", @lt);
+
+        $logdir.="${FS}$ymdtag";
+
+        my $dtag = strftime("%Y%m%d-%H%M%S", @lt);
 
         unless (retry_dir $logdir) {
             mkpath($logdir, 0, 0777) or die "cannot make '$logdir': $!\n";
@@ -249,7 +252,7 @@ if ($group) {
         my $logarch = (uname)[0];
         $logarch =~ s/\s+/_/g;
         my $hostname = hostname();
-        $logfile = "$logdir/slave.$dtag.$group.$uplid.$hostname.$$.log";
+        $logfile = "$logdir${FS}slave.$dtag.$group.$uplid.$hostname.$$.log";
 
         $SLAVELOG=new IO::Handle;
         retry_open($SLAVELOG,">$logfile")
