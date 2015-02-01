@@ -314,7 +314,7 @@
 !!  unix-*-*-*-gcc          opt  OPT_EXTRA_64_CXXFLAGS  =
 !!  unix-*-*-*-clang        opt  OPT_EXTRA_64_CXXFLAGS  =
 !!  unix-*-*-*-gcc          64   OPT_EXTRA_64_CXXFLAGS  =  -fno-gcse
-!!  unix-*-*-*-clang        64   OPT_EXTRA_64_CXXFLAGS  =  -fno-gcse
+!!  unix-*-*-*-clang        64   OPT_EXTRA_64_CXXFLAGS  =
 
 !!  unix-                   opt  OPT_CXXFLAGS           =  -O -DNDEBUG
 !!  unix-*-*-*-gcc          opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
