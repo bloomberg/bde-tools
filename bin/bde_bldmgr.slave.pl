@@ -300,6 +300,9 @@ if (!find_waf()) {
         $ENV{PATH} = "c:\\python27\\bin\\;$ENV{PATH};e:\\git\\bde-oss-tools";
         $ENV{BDE_PATH}.=":e:/git/bde-oss-tools";
     }
+
+    write_logandverbose "PATH is now $ENV{PATH}";
+    write_logandverbose "BDE_PATH is now $ENV{BDE_PATH}";
 }
 else {
     write_logandverbose "NOT expanding path, waf is ".`which waf`;
