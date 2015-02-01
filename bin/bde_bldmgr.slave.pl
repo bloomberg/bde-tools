@@ -292,8 +292,14 @@ sub find_waf {
 
 if (!find_waf()) {
     write_logandverbose "Expanding PATH to find waf and python";
-    $ENV{PATH} = "/opt/bb/bin:$ENV{PATH}:/home/bdebuild/bde-oss-tools/bin";
-    $ENV{BDE_PATH}.=":/home/bdebuild/bde-oss-tools";
+    if (!$iamwindows) {
+        $ENV{PATH} = "/opt/bb/bin:$ENV{PATH}:/home/bdebuild/bde-oss-tools/bin";
+        $ENV{BDE_PATH}.=":/home/bdebuild/bde-oss-tools";
+    }
+    else {
+        $ENV{PATH} = "c:\\python27\\bin\\;$ENV{PATH};e:\\git\\bde-oss-tools";
+        $ENV{BDE_PATH}.=":e:/git/bde-oss-tools";
+    }
 }
 else {
     write_logandverbose "NOT expanding path, waf is ".`which waf`;
