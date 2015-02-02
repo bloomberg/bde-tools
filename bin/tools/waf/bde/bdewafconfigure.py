@@ -82,6 +82,10 @@ class BdeWafConfigure(object):
         entries = []
         txt = metafile.read()
         for line in txt.splitlines():
+            # Lines after "#LEGACY" are ignored and used for compatibility with
+            # other internal legacy tools.
+            if line == '#LEGACY':
+                break
             entries.extend(
                 BdeWafConfigure.REMOVE_COMMENT_RE.match(line).group(1).split())
 
