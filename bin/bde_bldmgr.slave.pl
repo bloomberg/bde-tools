@@ -284,8 +284,9 @@ sub write_logandverbose (@) {
 
 sub find_waf {
     foreach my $dir (split /:/,$ENV{PATH}) {
-        if (-x "$dir/waf") {
-            return 1;
+        # Can't use -x here, since waf isn't executable on windows
+        if (-e "$dir/waf") {
+            return "$dir/waf";
         }
     }
 }
@@ -297,7 +298,7 @@ if (!find_waf()) {
         $ENV{BDE_PATH}.=":/home/bdebuild/bde-oss-tools";
     }
     else {
-        $ENV{PATH} = "c:\\python27\\bin\\;$ENV{PATH};e:\\git\\bde-oss-tools\\bin";
+        $ENV{PATH} = "c:\\python27\\;$ENV{PATH};e:\\git\\bde-oss-tools\\bin";
         $ENV{BDE_PATH}.=":e:/git/bde-oss-tools";
     }
 
