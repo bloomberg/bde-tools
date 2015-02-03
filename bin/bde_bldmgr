@@ -213,7 +213,7 @@ if (exists $opts{deadline}) {
 
 message "Deadline is $deadline - will kill processes once that time is reached";
 
-unless (defined %configured_builds) {
+unless (%configured_builds) {
     error("No valid build configurations found");
     usage();
     exit(EXIT_BAD_CFG);
@@ -625,6 +625,8 @@ sub assemble_command ($$) {
     $temp = $build->{rmtroot} || $buildroot;
     $command .= $temp;
 
+    $command .= " -b $temp" if $temp;
+
     # build output directory
     $command .= " -l $build->{log_destdir}" if $build->{log_destdir};
 
@@ -646,19 +648,6 @@ sub assemble_command ($$) {
         $command .= " -j$opts{jobs}";
     }
 
-    # flags (passed through to bde_build itself)
-    my @flags = ();
-    push @flags,@{$opts{flags}} if $opts{flags};
-    push @flags,$build->{buildflags} if $build->{buildflags};
-    foreach my $flagset (@flags) {
-        $command .= " -f$flagset";
-    }
-
-    # -A, -B, -C
-    $command .= " -A$opts{after}" if defined $opts{after};
-    $command .= " -B$opts{before}" if defined $opts{before};
-    $command .= " -C$opts{check}" if defined $opts{check};
-
     # -u and then -c
     if (defined $opts{uplid}) {
         $command .= " -u".$opts{uplid};
@@ -669,18 +658,6 @@ sub assemble_command ($$) {
     } elsif (defined $build->{compiler}) {
         $command .= " -c".$build->{compiler};
     }
-
-    # -D : defines
-    if ($opts{define}) {
-        $command .= " ".join('', map { "-D$_" } @{$opts{define}});
-    }
-
-    # -n, -M, -o
-    $command .= " -n" if defined $opts{nodepend} or
-        ($build->{nodepend} and $build->{nodepend} =~ /^Y/i);
-    $command .= " -M$opts{make}" if defined $opts{make};
-    $command .= " -M$build->{make}" if defined $build->{make};
-    $command .= " -o$opts{options}" if defined $opts{options};
 
     # -d, -v : verbosity and debug
     if (defined $opts{debug}) {
@@ -889,160 +866,107 @@ foreach my $platform (@platforms) {
 
             alert("local build detected") if $newBuild->{local};
 
-            if ($view and not $newBuild->{local}) {
-                # TBD: these platform checks should probably be removed
-                if ($platform =~ /^win/i) {
-                } elsif ($platform =~ /^dg/i) {
-                } elsif ($platform =~ /^linux/i) {
-                } elsif (exists $newBuild->{no_clearcase}) {
-                    message("no clearcase; no view to verify");
-                    if (exists $newBuild->{prebuild_cmd}) {
-                        message("running prebuild command");
-                        my($cmd_status, $cmd_out) = invoke($host, $newBuild->{prebuild_cmd}, $newBuild);
-                        if ($cmd_status) {
-                            error("prebuild command failed");
-                            for my $l (@$cmd_out) { error($l); }
-                            push @badCmdOutput, @$cmd_out;
-# TBD: two parallel cleartool update runs fail on windows all the time
-#                            $results{unreachable_hosts} .= " $host (prebuild failed)";
-#                            unshift @$cmd_out,"prebld";
-#                            $badCmdOutput = $cmd_out;
-#                            next;
-                        }
-                    }
-                } else {
-                    #ensure clearcase view exists on remote platform under Unix
-                    message("verifying view");
-                    my $startview_cmd="/usr/atria/bin/cleartool startview $view && echo 'OK'";
-                    my ($cmd_status, $cmd_out) = invoke($host,$startview_cmd,$newBuild);
-                    unless ($cmd_status == 0 && join(' ',@$cmd_out) =~ /OK/) {
-                        error("failed - ".
-                              "trying next machine");
-                        $results{unreachable_hosts} .=
-                          " $host (view verification failed)";
-                        push @badCmdOutput, @$cmd_out;
-                        next;
-                    }
-                }
-            }
-
             message("executing ".
                     ($newBuild->{local}?"local":"remote")." build");
 
             # Run an express build before building test drivers.
-            my %express_build = %$newBuild;
-            $express_build{express} = "Yes";
-            $express_build{tag} = "COMPILE ";
-            $command = assemble_command(\%express_build, $group);
-            unless ($opts{express}) {
-                # The test command does not rebuild makefiles or dependencies.
-                if(exists $newBuild->{do_not_test}
-                   and $newBuild->{do_not_test}=~ /\b$group\b/) {
-                    alert("$group in do_not_test list on '$platform'"
-                          . " - skipping tests");
-                }
-                else {
-                    my %test_build = %$newBuild;
-                    $test_build{rebuild} = "No";
-                    $test_build{nodepend} = "Yes";
-                    $test_build{tag} = "TEST-COMPILE ";
-
-                    # Append test command to express command.
-                    # if test_host exists, then build test drivers on build
-                    # farm before running them on the test_host
-                    $command .= " ; ";
-                    $command .= assemble_command({
-                                                    %test_build,
-                                                    make=>"build_test",
-                                                 }, $group);
-                }
-            }
-
-            # execute rsh - if rsh itself fails, try next host.
-            alert("Invoking '$command' on $host");
-            my ($cmd_status, $cmd_out) = invoke($host,$command,$newBuild);
-            if ($cmd_status) {
-                error(($newBuild->{local}?"local":"remote")." build failed to run '$command'");
-                for my $l (@$cmd_out) { error($l); }
-                error("trying next machine");
-                $results{unreachable_hosts} .= " $host (build run failed)";
-                push @badCmdOutput, @$cmd_out;
-                next;
-            }
-
+#            my %express_build = %$newBuild;
+#            $express_build{express} = "Yes";
+#            $express_build{tag} = "COMPILE ";
+#            $command = assemble_command(\%express_build, $group);
+#            unless ($opts{express}) {
+#                # The test command does not rebuild makefiles or dependencies.
+#                if(exists $newBuild->{do_not_test}
+#                   and $newBuild->{do_not_test}=~ /\b$group\b/) {
+#                    alert("$group in do_not_test list on '$platform'"
+#                          . " - skipping tests");
+#                }
+#                else {
+#                    my %test_build = %$newBuild;
+#                    $test_build{rebuild} = "No";
+#                    $test_build{nodepend} = "Yes";
+#                    $test_build{tag} = "TEST-COMPILE ";
+#
+#                    # Append test command to express command.
+#                    # if test_host exists, then build test drivers on build
+#                    # farm before running them on the test_host
+#                    $command .= " ; ";
+#                    $command .= assemble_command({
+#                                                    %test_build,
+#                                                    make=>"build_test",
+#                                                 }, $group);
+#                }
+#            }
+#
+#            # execute rsh - if rsh itself fails, try next host.
+#            alert("Invoking '$command' on $host");
+#            my ($cmd_status, $cmd_out) = invoke($host,$command,$newBuild);
+#            if ($cmd_status) {
+#                error(($newBuild->{local}?"local":"remote")." build failed to run '$command'");
+#                for my $l (@$cmd_out) { error($l); }
+#                error("trying next machine");
+#                $results{unreachable_hosts} .= " $host (build run failed)";
+#                push @badCmdOutput, @$cmd_out;
+#                next;
+#            }
+#
             $results{host} = $host;
-            my @cmd_out = @$cmd_out;
+            my @cmd_out;
 
             # in the test_host case, invoke the test run
             unless ($opts{express}) {
                 my %test_build = %$newBuild;
-                $test_build{rebuild} = "No";
-                $test_build{nodepend} = "Yes";
                 $test_build{tag} = "TEST-RUN ";
                 if ($newBuild->{serial_tests_groups}=~ /\b$group\b/) {
                     $test_build{force_serial} = "Yes";
                 }
                 my $test_host = $host;
 
-                # The test command does not rebuild makefiles or dependencies.
-                unless((exists $newBuild->{do_not_test}
-                        and $newBuild->{do_not_test}=~ /\b$group\b/)
-                       or (exists $newBuild->{do_not_run_tests}
-                        and $newBuild->{do_not_run_tests}=~ /\b$group\b/)
-                        ) {
+                if(exists $test_build{test_host}
+                    && exists $test_build{test_host}{$group}) {
+                    $test_host = $test_build{test_host}{$group};
+                }
 
-                    if(exists $test_build{test_host}
-                            && exists $test_build{test_host}{$group}) {
-                        $test_host = $test_build{test_host}{$group};
-
-                        if (!exists $test_build{no_clearcase}) {
-                            my $startview_cmd="/usr/atria/bin/cleartool startview $view";
-                            my ($cmd_status, $cmd_out) = invoke($test_build{test_host}{$group},
-                                    $startview_cmd,$newBuild);
-                        }
-                    }
-
-                    $command = assemble_command(\%test_build, $group);
-                    my ($test_status, $test_out) = invoke($test_host,$command,$newBuild);
-                    if ($test_status) {
-                        error(($newBuild->{local}?"local":"remote")." test run failed");
-                        for my $l (@$test_out) { error($l); }
-                    }
-                    else {
-                        push @cmd_out, @$test_out;
-                    }
+                $command = assemble_command(\%test_build, $group);
+                my ($test_status, $test_out) = invoke($test_host,$command,$newBuild);
+                if ($test_status) {
+                    error(($newBuild->{local}?"local":"remote")." test run failed");
+                    for my $l (@$test_out) { error($l); }
+                }
+                else {
+                    push @cmd_out, @$test_out;
                 }
             }
-
-            if (exists $build->{postbuild_cmd}) {
-                message("running postbuild command");
-                my ($cmd_status, $cmd_out) = invoke($host, $build->{postbuild_cmd}, $build);
-                if ($cmd_status) {
-                    error("Postbuild command failed");
-                    for my $l (@$cmd_out) { error($l); }
-                    $results{unreachable_hosts} .= " $host (postbuild failed)";
-                    $results{host} = undef;
-                    push @badCmdOutput, @$cmd_out;
-                    next;
-                }
-            }
-
-            # Like postbuild_cmd, except that this command is run locally.
-            if (exists $build->{postbuild_pull_cmd}) {
-                message("running postbuild pull command");
-                my $cmd_out = system($build->{postbuild_pull_cmd});
-                my $cmd_status = $?;
-
-                if ($cmd_status) {
-                    error("Postbuild pull command failed");
-                    for my $l (split /\n/,$cmd_out) { error($l); }
-                    $results{unreachable_hosts} .= " $host (postbuild pull failed)";
-                    $results{host} = undef;
-                    push @badCmdOutput, $cmd_out;
-                    next;
-                }
-            }
-
+#
+#            if (exists $build->{postbuild_cmd}) {
+#                message("running postbuild command");
+#                my ($cmd_status, $cmd_out) = invoke($host, $build->{postbuild_cmd}, $build);
+#                if ($cmd_status) {
+#                    error("Postbuild command failed");
+#                    for my $l (@$cmd_out) { error($l); }
+#                    $results{unreachable_hosts} .= " $host (postbuild failed)";
+#                    $results{host} = undef;
+#                    push @badCmdOutput, @$cmd_out;
+#                    next;
+#                }
+#            }
+#
+#            # Like postbuild_cmd, except that this command is run locally.
+#            if (exists $build->{postbuild_pull_cmd}) {
+#                message("running postbuild pull command");
+#                my $cmd_out = system($build->{postbuild_pull_cmd});
+#                my $cmd_status = $?;
+#
+#                if ($cmd_status) {
+#                    error("Postbuild pull command failed");
+#                    for my $l (split /\n/,$cmd_out) { error($l); }
+#                    $results{unreachable_hosts} .= " $host (postbuild pull failed)";
+#                    $results{host} = undef;
+#                    push @badCmdOutput, $cmd_out;
+#                    next;
+#                }
+#            }
+#
             my (@successes,@failures,@notsupported,%fail_msgs,@targetCombos);
 
             foreach (@cmd_out) {
