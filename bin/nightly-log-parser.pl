@@ -33,7 +33,7 @@ my %options=(
 
   , 'date|d=s'       => "Dates to scan for issues."
 
-  , 'component|c=s'  => "Component to filter for, e.g. 'list' for any component whose name contains 'list'."
+  , 'component|c=s'  => "Component regex to filter for, e.g. 'list' for any component whose name contains 'list'."
 
   , 'errors|e'       => "Output only ERRORs."
 
@@ -43,7 +43,7 @@ my %options=(
 
   , 'help|h'         => "Print this help text."
 
-  , 'match|m=s'      => "Output only those diagnostics whose text contains this regex, e.g. 'bslstl_sharedptr' to see any SharedPtr-related diagnostics in any package."
+  , 'match|m=s'      => "Output only those diagnostics whose text matches this regex, e.g. 'bslstl_sharedptr' to see any SharedPtr-related diagnostics in any package."
 
   , 'nowarnings|n'   => "Do not output WARNINGs."
 
