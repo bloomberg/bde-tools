@@ -29,7 +29,9 @@ my %groupLevels = (
 my %opts;
 
 my %options=(
-    'date|d=s'       => "Dates to scan for issues."
+    'build|b=s'      => "Build to scan for issues (nextrel|dev|bslintdev, default nextrel)"
+
+  , 'date|d=s'       => "Dates to scan for issues."
 
   , 'component|c=s'  => "Component to filter for, e.g. 'list' for any component whose name contains 'list'."
 
@@ -104,6 +106,18 @@ unless (GetOptions(\%opts, sort keys %options)) {
     exit 1;
 }
 
+if ($opts{build} && $opts{build}!~/^(nextrel|dev|bslintdev)$/) {
+    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    print "!!! The --build option must be one of nextrel, dev, or bslintdev\n";
+    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    print "\n";
+
+    usage();
+    exit 1;
+}
+
+$opts{build}||="nextrel";
+
 foreach (sort keys %opts) {
     # Suppress undef warnings by setting any undefined options to "", which
     # is still 'false'.
@@ -139,9 +153,9 @@ my $verbose = 0;
 if (!@ARGV) {
     if ($opts{date}) {
         foreach my $date(split /,/, $opts{date}) {
-            my @files = glob("/home/bdebuild/bs/nightly-logs/nextrel/$date/*");
+            my @files = glob("/home/bdebuild/bs/nightly-logs/$opts{build}/$date/*");
             if (!@files) {
-                die "Couldn't find any files for date $date";
+                die "Couldn't find any files for date $date and build $opts{build}";
             }
             push @ARGV, @files;
         }
