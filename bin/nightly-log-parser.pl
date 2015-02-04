@@ -64,7 +64,6 @@ sub usage {
         chomp $ttySize;
         my $cols=(split /\s+/,$ttySize)[1];
         ${Text::Wrap::columns}  = $cols;
-        print "Set columns to $cols\n";
     }
     else {
         ${Text::Wrap::columns}  = $72;
