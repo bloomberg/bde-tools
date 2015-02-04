@@ -284,7 +284,7 @@ class BdeWafBuild(object):
 
         components = self.group_mem[package_name]
 
-        if package_name in self.export_groups:
+        if package_name in self.install_targets:
             install_path = os.path.join('${PREFIX}', self.install_lib_dir)
             self._make_pc_group(package_name, internal_deps, external_deps)
         else:
@@ -298,8 +298,7 @@ class BdeWafBuild(object):
 
         if self.ctx.cmd == 'install':
             depends_on = [package_name + '.pc_inst'] + \
-                         [package_name + '_inst'] + \
-                         [p + '_inst' for p in internal_deps]
+                         [package_name + '_inst']
 
         self.ctx(name       = package_name,
                  depends_on = depends_on)
@@ -317,8 +316,7 @@ class BdeWafBuild(object):
         depends_on = [package_name + '_lib', package_name + '_tst']
 
         if self.ctx.cmd == 'install':
-            depends_on = [package_name + '_inst'] + \
-                         [p + '_inst' for p in internal_deps]
+            depends_on = [package_name + '_inst']
 
         self.ctx(name       = package_name,
                  depends_on = depends_on)
@@ -343,7 +341,7 @@ class BdeWafBuild(object):
             self._build_normal_package(p, group_node, internal_deps,
                                        external_deps)
 
-        if group_name in self.export_groups:
+        if group_name in self.install_targets:
             install_path = os.path.join('${PREFIX}', self.install_lib_dir)
             self._make_pc_group(group_name, internal_deps, external_deps)
         else:
@@ -376,13 +374,12 @@ class BdeWafBuild(object):
         group_depends_on = [group_name + '_lib'] + \
                            [p + '_tst' for p in packages]
         inst_depends_on = []
-        if group_name in self.export_groups:
+        if group_name in self.install_targets:
             group_depends_on.append(group_name + '.pc')
             if self.ctx.cmd == 'install':
                 group_depends_on.append(group_name + '_inst')
                 inst_depends_on = [group_name + '.pc_inst'] + \
-                                  [p + '_inst' for p in packages] + \
-                                  [g + '_inst' for g in internal_deps]
+                                  [p + '_inst' for p in packages]
 
         self.ctx(name       = group_name,
                  depends_on = group_depends_on)
@@ -431,6 +428,11 @@ class BdeWafBuild(object):
 
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.custom_envs)
+
+        if self.ctx.targets:
+            self.install_targets = self.ctx.targets.split(',')
+        else:
+            self.install_targets = self.export_groups
 
         for g in self.group_dep:
             if g in self.sa_package_locs:
