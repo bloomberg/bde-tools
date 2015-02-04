@@ -59,35 +59,37 @@ my %options=(
 );
 
 sub usage {
-    print <<"USAGE";
-
-Usage: $0 [options] [log files...]
-
-    This script parses the nightly logs for diagnostics, and presents them
-    grouped by UOR and platform.
-
-    By default, all categories (WARNINGS, ERRORS, and test FAILS) are displayed
-    for the current date.
-
-    If log files are passed on the command line, the --date option is ignored,
-    but the passed-in log files are still filtered by the --uplid and --group
-    options, if any.
-
-    Options:
-
-USAGE
-
     my $ttySize = `stty size`;
     if (!$? && $ttySize) {
         chomp $ttySize;
         my $cols=(split /\s+/,$ttySize)[1];
         ${Text::Wrap::columns}  = $cols;
+        print "Set columns to $cols\n";
     }
     else {
         ${Text::Wrap::columns}  = $72;
     }
 
     $Text::Wrap::unexpand = 0;
+
+    my $usage = Text::Wrap::fill("       ", "       ", <<"USAGE");
+
+Usage: $0 [options] [log files...]
+
+This script parses the nightly logs for diagnostics, and presents them grouped by UOR and platform.
+
+By default, all categories (WARNINGS, ERRORS, and test FAILS) are displayed for the current date.
+
+If log files are passed on the command line, the --date option is ignored, but the passed-in log files are still filtered by the --uplid and --group options, if any.
+
+Options:
+
+USAGE
+
+    $usage=~s/^\s+//g;
+
+    print $usage,"\n";
+
     my $prefixString = " "x28;
     foreach (sort keys %options) {
         printf "\t%-20s",$_;
