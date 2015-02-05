@@ -286,7 +286,6 @@ class BdeWafBuild(object):
 
         if package_name in self.install_targets:
             install_path = os.path.join('${PREFIX}', self.install_lib_dir)
-            self._make_pc_group(package_name, internal_deps, external_deps)
         else:
             install_path = None
 
@@ -294,11 +293,12 @@ class BdeWafBuild(object):
                                  components, internal_deps, external_deps,
                                  install_path)
 
-        depends_on = [package_name + '_lib', package_name + '_tst']
+        self._make_pc_group(package_name, internal_deps, external_deps)
+        depends_on = [package_name + '_lib', package_name + '_tst',
+                      package_name + '.pc']
 
-        if self.ctx.cmd == 'install':
-            depends_on = [package_name + '.pc_inst'] + \
-                         [package_name + '_inst']
+        if package_name in self.install_targets and self.ctx.cmd == 'install':
+            depends_on += [package_name + '_inst']
 
         self.ctx(name       = package_name,
                  depends_on = depends_on)
@@ -343,7 +343,6 @@ class BdeWafBuild(object):
 
         if group_name in self.install_targets:
             install_path = os.path.join('${PREFIX}', self.install_lib_dir)
-            self._make_pc_group(group_name, internal_deps, external_deps)
         else:
             install_path = None
 
@@ -364,30 +363,17 @@ class BdeWafBuild(object):
                  bdesoname       = self.soname_override[group_name] if group_name in self.soname_override else None
                  )
 
-        # The two task generators below are used when the ``--target`` option
-        # is used along with the ``--test`` option or the ``install`` command.
-        # When using a targeted test run, we only want to run the test cases
-        # for the specified package group, but not any of its dependencies.
-        # Inversely, when using a targeted ``install`` command, we want to
-        # install all of the depdencies of the specified package group..
+        self._make_pc_group(group_name, internal_deps, external_deps)
 
-        group_depends_on = [group_name + '_lib'] + \
-                           [p + '_tst' for p in packages]
-        inst_depends_on = []
-        if group_name in self.install_targets:
-            group_depends_on.append(group_name + '.pc')
-            if self.ctx.cmd == 'install':
-                group_depends_on.append(group_name + '_inst')
-                inst_depends_on = [group_name + '.pc_inst'] + \
-                                  [p + '_inst' for p in packages]
+        depends_on = [group_name + '_lib'] + \
+                     [p + '_tst' for p in packages] + \
+                     [group_name + '.pc']
+
+        if group_name in self.install_targets and self.ctx.cmd == 'install':
+            depends_on += [p + '_inst' for p in packages]
 
         self.ctx(name       = group_name,
-                 depends_on = group_depends_on)
-
-        self.ctx(name = group_name + '_inst',
-                 depends_on = inst_depends_on)
-
-        depends_on = [group_name + '_lib'] + [p + '_tst' for p in packages]
+                 depends_on = depends_on)
 
 
     def _make_pc_group(self, group_name, internal_deps, external_deps):
@@ -398,6 +384,12 @@ class BdeWafBuild(object):
             install_include_dir = "include"
         else:
             install_include_dir = "include/%s" % group_name
+
+        if group_name in self.install_targets:
+            install_path = os.path.join('${PREFIX}', self.install_lib_dir,
+                                        'pkgconfig')
+        else:
+            install_path = None
 
         self.ctx(name                  = group_name + '.pc',
                  features              = ['bdepc'],
@@ -410,16 +402,9 @@ class BdeWafBuild(object):
                  lib_suffix            = self.lib_suffix,
                  install_lib_dir       = self.install_lib_dir,
                  install_include_dir   = install_include_dir,
-                 pc_extra_include_dirs = self.pc_extra_include_dirs
+                 pc_extra_include_dirs = self.pc_extra_include_dirs,
+                 install_path          = install_path
                  )
-
-        install_files(self.ctx, group_name + '.pc_inst',
-                      os.path.join('${PREFIX}', self.install_lib_dir,
-                                   'pkgconfig'),
-                      [os.path.join(vc_node.relpath(),
-                                    group_name +
-                                    self.lib_suffix
-                                    + '.pc')])
 
     def build(self):
         for class_name in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
@@ -800,7 +785,11 @@ class ListContext(BuildContext):
 @before_method('process_rule')
 def make_pc(self):
     """Create a task to generate the pkg-config file."""
-    self.create_task('bdepc', None, self.path.find_or_declare(self.target))
+    tsk = self.create_task('bdepc', None,
+                           self.path.find_or_declare(self.target))
+
+    if getattr(self, 'install_path', None):
+        self.bld.install_files(self.install_path, tsk.outputs)
 
 
 class bdepc(Task.Task):
@@ -860,8 +849,8 @@ Cflags: -I${includedir} %s %s
             extra_include_dirs_str,
             ' '.join(bld.env[group_name + '_export_cxxflags'])
         )
-        self.outputs[0].write(pc_source)
 
+        self.outputs[0].write(pc_source)
 
 # ----------------------------------------------------------------------------
 # Copyright (C) 2013-2014 Bloomberg Finance L.P.
