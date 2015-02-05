@@ -363,11 +363,12 @@ class BdeWafBuild(object):
                  bdesoname       = self.soname_override[group_name] if group_name in self.soname_override else None
                  )
 
-        self._make_pc_group(group_name, internal_deps, external_deps)
-
         depends_on = [group_name + '_lib'] + \
-                     [p + '_tst' for p in packages] + \
-                     [group_name + '.pc']
+                     [p + '_tst' for p in packages]
+
+        if group_name in self.export_groups:
+            self._make_pc_group(group_name, internal_deps, external_deps)
+            depends_on += [group_name + '.pc']
 
         if group_name in self.install_targets and self.ctx.cmd == 'install':
             depends_on += [p + '_inst' for p in packages]
