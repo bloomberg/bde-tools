@@ -41,8 +41,8 @@ PREAMBLE_UPDATE = """
 
 PREAMBLE_REMOVE = """
 // Updated by 'bde-replace-bdet-forward-declares.py -m include': {0}
-// New includes tagged with '// bdet -> #include'.
-
+// New includes and commented out BDE 2.23 compatible declarations tagged with
+// '// bdet -> #include'.
 """.format(datetime.datetime.now().strftime("%Y-%m-%d"))
 
 
@@ -67,39 +67,59 @@ class InputError(Exception):
     """
     def __init__(self, msg):        
         self.msg = msg
-
         return
-    
-def get_replacement_text(opensource_namespace, typename):
-    """
-    Return the replacement forward declaration for the specified 'typename'.
-    Note that the identifying comments are right justified to 79 characters.
 
+
+def add_right_justified_comment(text, comment):
+    """
+    Append the specified 'comment', right justified, to each line in the
+    specified 'text'
+
+    Parameters:
+        text(string) - text to which to append 'comment'
+
+        commnt(string) - the comment to append
+   """
+
+    text_lines = text.splitlines(False)
+
+    for index, line in enumerate(text_lines):
+        text_lines[index] = line + comment.rjust(79-len(line)) + "\n"
+
+    return "".join(text_lines)
+
+def get_replacement_text(namespace, typename, comment):
+    """
+    Return the replacement forward declaration for the specified 'typename' in
+    the specified 'namespace'.  Append and right-justify the
+    specified 'comment' to the lines of text. 
+    
     Parameters:         
-        opensource_namespace(string) - the opensource namespace 'typename'
+        namespace(string) - the opensource namespace 'typename'
           belongs in
           
         typename(string) - the type name to replace with a bdlt type name (no
           namespace
-          
+
+        comment(string) - a comment to append to each line (right-justified)
+
     Returns:
         string - the forward delcaration text for 'typename'
     """
 
     forward_declare = "namespace {0} {{ class {1}; }}".format(
-        opensource_namespace,
+        namespace,
         typename)
 
     alias_declare = "typedef ::BloombergLP::{0}::{1} {2};".format(
-        opensource_namespace,
+        namespace,
         typename,
         "bdet_" + typename)
 
     # Right justify comment tags
     
-    postfix = "// bdet -> bdlt"
-    forward_declare = forward_declare + postfix.rjust(79-len(forward_declare))
-    alias_declare   = alias_declare + postfix.rjust(79-len(alias_declare))
+    forward_declare = forward_declare + comment.rjust(79-len(forward_declare))
+    alias_declare   = alias_declare + comment.rjust(79-len(alias_declare))
 
     return "\n".join(["", forward_declare, alias_declare, ""])
 
@@ -116,7 +136,7 @@ def get_include_text(header):
         string - the text for including 'header'
     """
 
-    postfix = "// bdet -> #include"
+    postfix = "// bdet->#include"
     
     # Right justify comment tags
 
@@ -131,7 +151,7 @@ def get_include_text(header):
     return "\n" + "\n".join(lines) + "\n"
 
                               
-def update_forward_declarations(text, verbose = False):
+def convert_bdet_to_bdlt(text, verbose = False):
     """
     Return a string having the specified 'text' but with forward declarations
     to 'bdet' vocabulary types replaced with forward declarations to 'bdlt'
@@ -140,14 +160,15 @@ def update_forward_declarations(text, verbose = False):
 
     count = 0
     for key, value in FORWARD_DECLARATIONS.iteritems():
-        (text, num) = re.subn("(class\s*{0}\s*;)\n".format("bdet_" + key),
-                              get_replacement_text(value, key),
+        replacement = get_replacement_text(value, key, "// bdet->bdlt")
+        (text, num) = re.subn("(class\s*{0}\s*;).*\n".format("bdet_" + key),
+                              replacement,
                               text)
         count = count + num
         
     # Find the first updated forward declare and prepend the preamable text.
     if (count > 0):
-        match = re.search("^namespace.*// bdet -> bdlt$",
+        match = re.search("^namespace.*// bdet->bdlt$",
                           text,
                           re.MULTILINE)
         start = match.start()
@@ -155,19 +176,42 @@ def update_forward_declarations(text, verbose = False):
     
     return text
 
-def remove_forward_declarations(text, verbose = False):
+def undo_convert_bdet_to_include(text):
+
+    (text, num) = re.subn("^// *(class .*;) *// bdet->#include$\n",
+                          "\\1 \n",
+                          text,
+                          flags=re.MULTILINE)
+
+    (text, num) = re.subn("^.*// bdet->#include$\n",
+                          "",
+                          text,
+                          flags=re.MULTILINE)
+    (text, num) = re.subn("\n// Updated.*\n.*\n.*bdet -> #include'\..*\n",
+                          "",
+                          text)
+    return text
+
+    
+def convert_bdet_to_include(text, verbose = False):
     """
     Return a string having the specified 'text' but with forward declarations
     to 'bdet' vocabulary types replaced with #include to headers for those
     types.
     """
+
     new_includes         = []
     for key, value in FORWARD_DECLARATIONS.iteritems():
         bdet_typename = "bdet_" + key
         bdet_header   = "bdet_" + key.lower()
-        
+
+        replacement = "// class {0};".format(bdet_typename)
+        replacement = add_right_justified_comment(replacement,
+                                                  "// bdet->#include")
+
         (text, num) = re.subn("(class\s*{0}\s*;)\n".format(bdet_typename),
-                              "", text)
+                              replacement,
+                              text)
         if (num > 0):
             if (not re.search("^\s*#include\s*<{0}\\.h>".format(bdet_header),
                               text,
@@ -266,9 +310,10 @@ def main():
             print("Processing {0}".format(args[0]))
 
         if (options.mode == "bdlt"):
-            text = update_forward_declarations(text, options.verbose)
+            text = undo_convert_bdet_to_include(text)
+            text = convert_bdet_to_bdlt(text, options.verbose)
         else:
-            text = remove_forward_declarations(text, options.verbose)
+            text = convert_bdet_to_include(text, options.verbose)
 
         if (options.check):
           if(text != original_text):
