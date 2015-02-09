@@ -92,7 +92,8 @@ export BDE_PATH="$TOOLSPATH:$PATHS:$BDE_PATH"
 # the -e option makes bde_snapshot.pl snapshot the "etc" directory as well
 $SNAPSHOT -dvvv -e -w $ROOTPATH -t . -c -j 12 $UORLIST
 
-# bde_snapshot.pl doesn't get the subdirs correct for any of the "+" non-compliant packages
+# bde_snapshot.pl doesn't get the subdirs correct for any of the "+" non-compliant packages,
+# or for "thirdparty".
 echo "Doing NON-COMPLIANT-SNAPSHOT for all entries in $ROOTPATH and PATHS:$PATHS"
 for path in $ROOTPATH
 do \
@@ -104,6 +105,12 @@ do \
             rsync -av $path/groups/$group/*+* ./groups/$group/
         fi
     done
+
+    if [[ -e $path/thirdparty ]]
+    then \
+        echo "Snapshotting '$path/thirdparty'"
+        rsync -av $path/thirdparty/ ./thirdparty/
+    fi
 
     rsync -av $path/wscript ./
 done
