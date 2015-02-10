@@ -106,10 +106,10 @@ do \
         fi
     done
 
-    if [[ -e $path/thirdparty ]]
+    if [[ -e $path/third-party ]]
     then \
-        echo "Snapshotting '$path/thirdparty'"
-        rsync -av $path/thirdparty/ ./thirdparty/
+        echo "Snapshotting '$path/third-party'"
+        rsync -av $path/third-party/ ./third-party/
     fi
 
     rsync -av $path/wscript ./
