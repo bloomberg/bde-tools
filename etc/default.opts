@@ -153,8 +153,6 @@
 !!  unix-AIX-*-*-xlc-10.0   _     DEF_CXXFLAGS        =  $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 # inline rather than inline and optimize
 !!  unix-*-*-*-gcc          _     DEF_CXXFLAGS        =
-!!  unix-SunOS-i386-*-gcc       _     DEF_CXXFLAGS        =
-!!  unix-SunOS-sparc-*-gcc      _     DEF_CXXFLAGS        =
 
 # DRQS 29544311 - some .so's linking against BCE and BAE fail unless the sources are built
 ++  #                       with  -xthreadvar         =  dynamic
@@ -373,7 +371,6 @@
 !!  unix-SunOS-*-*-*    mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -mt
 !!  unix-AIX-*-*-*      mt       MT_CXXFLAGS  =  -D_THREAD_SAFE -qthreaded -D_REENTRANT
 !!  unix-*-*-*-gcc      mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT
-!!  unix-SunOS-*-*-gcc  mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT
 
 # On SUN, we need to add -D_PTHREADS to compile in safe mode (don't know why).
 !!  unix-SunOS-*-*-*    mt_safe  MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -mt -D_PTHREADS
