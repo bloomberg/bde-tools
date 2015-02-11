@@ -144,7 +144,7 @@
 
 #===
 
-++  unix-*-*-*-gcc          _     DEF_CFLAGS          =  -pipe -std=gnu99
+++  unix-*-*-*-gcc          _     DEF_CFLAGS          =  -std=gnu99
 ++  unix-*                  _     DEF_CFLAGS          =  -I$(DEPLOYED_INCLUDE)
 
 # DRQS 57720228: switch to target=generic.
@@ -154,8 +154,7 @@
 !!  unix-AIX-*-*-xlc-*      _     AIX_UNLOCK_STREAMS  =  -D__NOLOCK_ON_INPUT -D__NOLOCK_ON_OUTPUT
 !!  unix-AIX-*-*-xlc-10.0   _     DEF_CXXFLAGS        =  $(ARCH_TUNE) -qnotempinc -qfuncsect -qtbtable=small -qrtti=all -qsuppress=1500-029 -qsuppress=1540-2910 -qsuppress=1501-201 -qxflag=tocrel -qxflag=dircache:71,100 $(ENABLE_TLS) $(AIX_UNLOCK_STREAMS)
 # inline rather than inline and optimize
-!!  unix-*-*-*-gcc          _     DEF_CXXFLAGS        =  -pipe
-!!  unix-SunOS-*-*-gcc      _     DEF_CXXFLAGS        =  -pipe -mcpu=ultrasparc3
+!!  unix-*-*-*-gcc          _     DEF_CXXFLAGS        =
 
 # DRQS 29544311 - some .so's linking against BCE and BAE fail unless the sources are built
 # with -xthreadvar=dynamic
@@ -383,11 +382,10 @@
 !!  unix-SunOS-*-*-*    mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -mt
 !!  unix-AIX-*-*-*      mt       MT_CXXFLAGS  =  -D_THREAD_SAFE -qthreaded -D_REENTRANT
 !!  unix-*-*-*-gcc      mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT
-!!  unix-SunOS-*-*-gcc  mt       MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT -pthreads
 
 # On SUN, we need to add -D_PTHREADS to compile in safe mode (don't know why).
 !!  unix-SunOS-*-*-*    mt_safe  MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -mt -D_PTHREADS
-!!  unix-SunOS-*-*-gcc  mt_safe  MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT -D_PTHREADS -pthreads
+!!  unix-SunOS-sparc-*-gcc  mt_safe  MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT -D_PTHREADS -pthreads
 !!  unix-AIX-*-*-gcc    mt_safe  MT_CXXFLAGS  =  -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT -D_PTHREADS
 
 # see SHR_CXXFLAGS and DBG_LIBSUFFIX; forced to T in bce.opts and bte.opts
