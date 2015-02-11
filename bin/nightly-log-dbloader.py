@@ -16,18 +16,31 @@ builds = {}
 # Mapping component/build names to rowids in the "components" table.
 components = {}
 
-def updateBuildDictionary(uplid, ufid, rowid):
-    """Add an uplid/ufid combo to the 'builds' dictionary.
+def getBuildKey(uplid, ufid):
+    """Build up a dictionary key from the specified 'uplid/ufid'.
     """
 
-    builds["%s/%s"%(uplid, ufid)] = rowid
+    return "%s/%s" % (uplid, ufid)
+
+def getComponentKey(uplid, ufid, component):
+    """Build up a component key from the specified 'uplid/ufid/component'.
+    """
+
+    return "%s/%s/%s" % (uplid, ufid, component)
+
+
+def updateBuildDictionary(uplid, ufid, rowid):
+    """Add an existing uplid/ufid combo to the 'builds' dictionary.
+    """
+
+    builds[getBuildKey(uplid, ufid)] = rowid
 
 
 def updateComponentDictionary(uplid, ufid, component, rowid):
-    """Add an uplid/ufid/component combo to the 'components' dictionary.
+    """Add an existing uplid/ufid/component combo to the 'components' dictionary.
     """
 
-    components["%s/%s/%s" % (uplid, ufid, component)] = rowid
+    components[getComponentKey(uplid, ufid, component)] = rowid
 
 
 def getBuildRowid(uplid, ufid):
@@ -35,7 +48,7 @@ def getBuildRowid(uplid, ufid):
        adding it to the 'builds' and database dictionary if necessary.
     """
 
-    key="%s/%s" % (uplid, ufid)
+    key=getBuildKey(uplid, ufid)
 
     if key in builds:
         return builds[key]
@@ -53,6 +66,35 @@ def getBuildRowid(uplid, ufid):
     rowid = cursor.execute(select_command, (uplid, ufid))
 
     updateBuildDictionary(uplid, ufid, rowid)
+
+    return rowid
+
+def getComponentRowid(uplid, ufid, component):
+    """Return the 'rowid' associtate with the specified 'uplid/ufid/component'
+       combo, adding it to the 'components' and 'builds' dictionaries and
+       databases if necessary.
+    """
+
+    key=getComponentKey(uplid, ufid, component);
+
+    if key in components:
+        return components[key]
+
+    buildRowid = getBuildRowid(uplid, ufid)
+
+    insert_command="""
+        INSERT INTO components VALUES (?, ?)
+    """
+
+    cursor.execute(insert_command, (component, buildRowid));
+
+    select_command="""
+        SELECT rowid FROM components WHERE component=? AND build=?
+    """
+
+    rowid = cursor.execute(select_command, (component, buildRowid))
+
+    updateComponentDictionary(uplid, ufid, component, rowid)
 
     return rowid
 
