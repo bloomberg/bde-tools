@@ -3,6 +3,7 @@
 import sys      # argv
 import os       # path.getsize
 import sqlite3
+import re
 
 db = sys.argv[1]
 connection = sqlite3.connect(db)
@@ -22,11 +23,11 @@ def getBuildKey(uplid, ufid):
 
     return "%s/%s" % (uplid, ufid)
 
-def getComponentKey(uplid, ufid, component):
-    """Build up a component key from the specified 'uplid/ufid/component'.
+def getComponentKey(uplid, ufid, component_name):
+    """Build up a component key from the specified 'uplid/ufid/component_name'.
     """
 
-    return "%s/%s/%s" % (uplid, ufid, component)
+    return "%s/%s/%s" % (uplid, ufid, component_name)
 
 
 def updateBuildDictionary(uplid, ufid, rowid):
@@ -36,11 +37,11 @@ def updateBuildDictionary(uplid, ufid, rowid):
     builds[getBuildKey(uplid, ufid)] = rowid
 
 
-def updateComponentDictionary(uplid, ufid, component, rowid):
-    """Add an existing uplid/ufid/component combo to the 'components' dictionary.
+def updateComponentDictionary(uplid, ufid, component_name, component):
+    """Add an existing uplid/ufid/component_name combo to the 'components' dictionary.
     """
 
-    components[getComponentKey(uplid, ufid, component)] = rowid
+    components[getComponentKey(uplid, ufid, component_name)] = component
 
 
 def getBuildRowid(uplid, ufid):
@@ -54,28 +55,22 @@ def getBuildRowid(uplid, ufid):
         return builds[key]
 
     insert_command="""
-        INSERT INTO builds VALUES (?, ?)
+        INSERT INTO builds VALUES (NULL, ?, ?)
     """
 
     cursor.execute(insert_command, (uplid, ufid));
 
-    select_command="""
-        SELECT rowid FROM builds WHERE uplid=? AND ufid=?
-    """
-
-    rowid = cursor.execute(select_command, (uplid, ufid))
-
-    updateBuildDictionary(uplid, ufid, rowid)
+    updateBuildDictionary(uplid, ufid, cursor.lastrowid)
 
     return rowid
 
-def getComponentRowid(uplid, ufid, component):
-    """Return the 'rowid' associtate with the specified 'uplid/ufid/component'
+def getComponentRowid(uplid, ufid, component_name):
+    """Return the 'rowid' associtate with the specified 'uplid/ufid/component_name'
        combo, adding it to the 'components' and 'builds' dictionaries and
        databases if necessary.
     """
 
-    key=getComponentKey(uplid, ufid, component);
+    key=getComponentKey(uplid, ufid, component_name);
 
     if key in components:
         return components[key]
@@ -83,18 +78,12 @@ def getComponentRowid(uplid, ufid, component):
     buildRowid = getBuildRowid(uplid, ufid)
 
     insert_command="""
-        INSERT INTO components VALUES (?, ?)
+        INSERT INTO components VALUES (NULL, ?, ?)
     """
 
-    cursor.execute(insert_command, (component, buildRowid));
+    cursor.execute(insert_command, (component_name, buildRowid));
 
-    select_command="""
-        SELECT rowid FROM components WHERE component=? AND build=?
-    """
-
-    rowid = cursor.execute(select_command, (component, buildRowid))
-
-    updateComponentDictionary(uplid, ufid, component, rowid)
+    updateComponentDictionary(uplid, ufid, component_name, cursor.lastrowid)
 
     return rowid
 
@@ -105,43 +94,58 @@ def dbsetup(cursor):
 
     tables = [
             [ "builds",
+                [ "build",      "INTEGER PRIMARY KEY" ],
                 [ "uplid",      "TEXT" ],
                 [ "ufid",       "TEXT" ],
-                [ "PRIMARY KEY( uplid, ufid )" ],
             ],
 
             [ "uors",
-                [ "uor_name",   "TEXT" ],
-                [ "component",  "TEXT" ],
+                [ "uor",             "INTEGER PRIMARY KEY" ],
+                [ "uor_name",        "TEXT" ],
+                [ "component_name",  "TEXT" ],
             ],
 
             [ "components",
-                [ "component",  "TEXT" ],
-                [ "build",      "INTEGER",  "REFERENCES builds(rowid)" ],
-                [ "PRIMARY KEY( component, build )" ],
+                [ "component",       "INTEGER PRIMARY KEY" ],
+                [ "component_name",  "TEXT" ],
+                [ "build",           "INTEGER",  "REFERENCES builds(build)" ],
             ],
 
             [ "build_errors",
-                [ "component_id", "INTEGER", "REFERENCES components(rowid)" ],
+                [ "component",    "INTEGER", "REFERENCES components(component)" ],
                 [ "diagnostics",  "TEXT" ],
             ],
 
             [ "build_warnings",
-                [ "component_id", "INTEGER", "REFERENCES components(rowid)" ],
+                [ "component",    "INTEGER", "REFERENCES components(component)" ],
                 [ "diagnostics",  "TEXT" ],
             ],
 
-            [ "test_failures",
-                [ "component_id", "INTEGER", "REFERENCES components(rowid)" ],
+            [ "test_build_errors",
+                [ "component",    "INTEGER", "REFERENCES components(component)" ],
+                [ "diagnostics",  "TEXT" ],
+            ],
+
+            [ "test_build_warnings",
+                [ "component",    "INTEGER", "REFERENCES components(component)" ],
+                [ "diagnostics",  "TEXT" ],
+            ],
+
+            [ "test_run_failures",
+                [ "component",   "INTEGER", "REFERENCES components(component)" ],
                 [ "diagnostics", "TEXT" ],
             ],
 
             [ "components_built_ok",
-                [ "component_id", "INTEGER", "REFERENCES components(rowid)" ],
+                [ "component", "INTEGER", "REFERENCES components(component)" ],
+            ],
+
+            [ "components_test_built_ok",
+                [ "component", "INTEGER", "REFERENCES components(component)" ],
             ],
 
             [ "components_tested_ok",
-                [ "component_id", "INTEGER", "REFERENCES components(rowid)" ],
+                [ "component", "INTEGER", "REFERENCES components(component)" ],
                 [ "diagnostics", "TEXT" ],
             ],
     ]
@@ -158,46 +162,75 @@ def dbsetup(cursor):
         #print(create_statement)
         cursor.execute(create_statement);
 
-        builds_query="""
-            SELECT rowid, uplid, ufid FROM builds
-        """
+    builds_query="""
+        SELECT build, uplid, ufid FROM builds
+    """
 
-        for rowid, uplid, ufid in cursor.execute(builds_query):
-            updateBuildDictionary(uplid, ufid, rowid)
+    for build, uplid, ufid in cursor.execute(builds_query):
+        updateBuildDictionary(uplid, ufid, build)
 
-        components_query="""
-            SELECT     a.rowid, b.updlid, b.ufid, a.component
-            FROM       components AS a,
-                       builds     AS b
-            WHERE      a.build = b.rowid
-        """
+    components_query="""
+        SELECT     a.component, b.uplid, b.ufid, a.component_name
+        FROM       components AS a
+        INNER JOIN builds     AS b
+        ON         a.build = b.build
+    """
 
-        for rowid, uplid, ufid, component in cursor.execute(""):
-            updateComponentDictionary(uplid, ufid, component, rowid)
+    for component, uplid, ufid, component_name in cursor.execute(""):
+        updateComponentDictionary(uplid, ufid, component_name, component)
 
 
+def namesplit(name):
+    """Split the specified 'name' into its date, group, uplid, and host
+    components.
+    """
 
-def process(text):
+    pattern = re.compile("slave(?:\.TEST-RUN)?\.(\d{8})-\d{6}\.([^.]+)\.(.*?)\.(\w+)\.\d+\.log");
+
+    match = pattern.search(name)
+
+    if match is None:
+        print "Badly formed filename '%s'"%(name)
+        exit(1)
+
+    return { 'date'  : match.group(1),
+             'group' : match.group(2),
+             'uplid' : match.group(3),
+             'host'  : match.group(4),
+             }
+
+
+def process(filename, text):
     """Load the specified 'text' into the current database context.
     """
 
+    fileInfo = nameSplit(filename)
+
+    uplid = fileInfo["uplid"]
+    group = fileInfo["group"]
+    date  = fileInfo["date"]
+    host  = fileInfo["host"]
+
+    diagnostics_by_category  = {}
+    diagnostics_by_component = {}
 
 
 
 
-def load(file):
-    """Load the specified 'file' into the current database context.
+
+def load(filename):
+    """Load the specified 'filename' into the current database context.
     """
 
     text=""
 
-    size = os.path.getsize(file)
+    size = os.path.getsize(filename)
 
-    with open(file, "rb") as fh:
+    with open(filename, "rb") as fh:
         text = fh.read(size)
-        print("Read %s bytes from %s"%(size, file))
+        print("Read %s bytes from %s"%(size, filename))
 
-    process(text)
+    process(filename, text)
 
 dbsetup(cursor)
 
