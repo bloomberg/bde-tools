@@ -143,13 +143,13 @@ class Runner(object):
         self._status.set_failure()
         self._status.notify_done()
         for worker in self._workers:
-            # The following technique to terminate processes is not thread
+            # The following technique to kill processes is not thread
             # safe, but it is acceptable considering that a race condition will
             # most like mean that the test process was already terminated.
             try:
                 if worker.is_alive() and worker._proc and worker._case > 0:
-                    worker._proc.terminate()
-                    log_func(worker._case)
+                    worker._proc.kill()
+                    log_func(worker._case, worker._proc.pid)
             except:
                 pass
 

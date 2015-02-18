@@ -29,9 +29,10 @@ class _TextRecorder(object):
     def skip(self, case):
         self._logger.info('CASE %2d: SKIP' % case)
 
-    def timeout(self, case):
-        self._logger.info('CASE %2d: TIMEOUT (timeout was set to %ds)' %
-                          (case, self._opts.timeout))
+    def timeout(self, case, pid):
+        self._logger.info('CASE %2d: TIMEOUT '
+                          '(after %ds, pid: %d)' %
+                          (case, self._opts.timeout, pid))
 
     def flush(self):
         pass
@@ -73,7 +74,7 @@ class _JunitRecorder(object):
                                    'rc': rc,
                                    'out': out}
 
-    def timeout(self, case):
+    def timeout(self, case, pid):
         with self._lock:
             self._timedout.append(case)
 
@@ -176,8 +177,8 @@ class Log(object):
     def record_skip(self, case):
         self._recorder.skip(case)
 
-    def record_timeout(self, case):
-        self._recorder.timeout(case)
+    def record_timeout(self, case, pid):
+        self._recorder.timeout(case, pid)
 
     def record_success(self, case, rc, out):
         self._recorder.success(case, rc, out)
