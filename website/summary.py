@@ -56,6 +56,36 @@ styles = {
                             ],
     }
 
+uor_ordering = {
+        "bsl"        :    0,
+        "bdl"        :    1,
+        "bde"        :    2,
+        "bce"        :    3,
+        "bae"        :    4,
+        "bte"        :    5,
+        "bbe"        :    6,
+        "bsi"        :    7,
+        "e_ipc"      :    8,
+        "a_cdrdb"    :    9,
+        "bap"        :    10,
+        "a_comdb2"   :    11,
+        "a_bdema"    :    12,
+        "a_bteso"    :    13,
+        "a_xercesc"  :    14,
+        "bdx"        :    15,
+        "zde"        :    16,
+    }
+
+def uor_key(uor):
+    """Return the sorting key for the specified 'uor', in order to allow uors
+       to be sorted in a reasonable order.
+    """
+
+    if not uor in uor_ordering:
+        return 99
+
+    return uor_ordering[uor]
+
 print "Content-Type: text/html"
 print
 print "<HTML>"
@@ -104,6 +134,8 @@ for result in cursor.fetchall():
     for index in range(0, 4):
         axis_values[index][result[index]]=1
 
+sorted_uors = sorted(uors, key=uor_key)
+
 print "<H1 align=\"center\">Results from %s</H1>"%db
 print "<P>"
 for category in sorted(category_names):
@@ -114,7 +146,7 @@ print "<TABLE>"
 
 print "<THEAD>"
 print "<TR><TD COLSPAN=2>"
-for uor in sorted(uors):
+for uor in sorted_uors:
     print "<TH>%s</TH>"%(uor)
 print "</TR>"
 print "</THEAD>"
@@ -128,7 +160,7 @@ for uplid in sorted(uplids):
         print tr_prefix
         tr_prefix="<TR><TD></TD>"
         print "<TD>%s</TD>"%(ufid)
-        for uor in sorted(uors):
+        for uor in sorted_uors:
             inner_result=results[uor][uplid][ufid]
             print "<TD>"
             category_results={}
@@ -146,7 +178,7 @@ print "</TBODY>"
 
 print "<TFOOT>"
 print "<TR><TD COLSPAN=2>"
-for uor in sorted(uors):
+for uor in sorted_uors:
     print "<TH>%s</TH>"%(uor)
 print "</TR>"
 print "</TFOOT>"
