@@ -1,4 +1,4 @@
-#!/opt/bb/bin/python
+#!/opt/bb/bin/python -u
 
 import sys      # argv
 import os       # path.getsize
@@ -9,13 +9,16 @@ db = sys.argv[1]
 connection = sqlite3.connect(db)
 cursor  = connection.cursor()
 
-sys.argv = sys.argv[2:]
+sys.argv = sys.argv[0:1] + sys.argv[2:]
 
-# Mapping build uplid/ufid pairs to rowis in the "builds" table.
+# Mapping build uplid/ufid pairs to build ids in the "builds" table.
 builds = {}
 
-# Mapping component/build names to rowids in the "components" table.
+# Mapping component/build names to component ids in the "components" table.
 components = {}
+
+# Mapping uor_name/component_names to uor ids in the "uors" table
+uors = {}
 
 def getBuildKey(uplid, ufid):
     """Build up a dictionary key from the specified 'uplid/ufid'.
@@ -29,6 +32,11 @@ def getComponentKey(uplid, ufid, component_name):
 
     return "%s/%s/%s" % (uplid, ufid, component_name)
 
+def getUorKey(uor_name, component_name):
+    """Build up a UOR key from the specified "uor_name/component_name".
+    """
+
+    return "%s/%s" % (uor_name, component_name)
 
 def updateBuildDictionary(uplid, ufid, rowid):
     """Add an existing uplid/ufid combo to the 'builds' dictionary.
@@ -44,7 +52,14 @@ def updateComponentDictionary(uplid, ufid, component_name, component):
     components[getComponentKey(uplid, ufid, component_name)] = component
 
 
-def getBuildRowid(uplid, ufid):
+def updateUorDictionary(uor_name, component_name, uor):
+    """Add an existing uor to the uors dictionary.
+    """
+
+    uors[getUorKey(uor_name, component_name)] = uor
+
+
+def getBuildIdentifier(uplid, ufid):
     """Return the 'rowid' associated with the specified 'uplid/ufid' combo,
        adding it to the 'builds' and database dictionary if necessary.
     """
@@ -60,14 +75,17 @@ def getBuildRowid(uplid, ufid):
 
     cursor.execute(insert_command, (uplid, ufid));
 
-    updateBuildDictionary(uplid, ufid, cursor.lastrowid)
+    rowid = cursor.lastrowid
+
+    updateBuildDictionary(uplid, ufid, rowid)
 
     return rowid
 
-def getComponentRowid(uplid, ufid, component_name):
-    """Return the 'rowid' associtate with the specified 'uplid/ufid/component_name'
-       combo, adding it to the 'components' and 'builds' dictionaries and
-       databases if necessary.
+
+def getComponentIdentifier(uplid, ufid, component_name):
+    """Return the 'rowid' associated with the specified
+       'uplid/ufid/component_name' combo, adding it to the 'components' and
+       'builds' dictionaries and databases if necessary.
     """
 
     key=getComponentKey(uplid, ufid, component_name);
@@ -75,7 +93,7 @@ def getComponentRowid(uplid, ufid, component_name):
     if key in components:
         return components[key]
 
-    buildRowid = getBuildRowid(uplid, ufid)
+    buildRowid = getBuildIdentifier(uplid, ufid)
 
     insert_command="""
         INSERT INTO components VALUES (NULL, ?, ?)
@@ -83,9 +101,48 @@ def getComponentRowid(uplid, ufid, component_name):
 
     cursor.execute(insert_command, (component_name, buildRowid));
 
-    updateComponentDictionary(uplid, ufid, component_name, cursor.lastrowid)
+    rowid = cursor.lastrowid
+
+    updateComponentDictionary(uplid, ufid, component_name, rowid)
 
     return rowid
+
+
+def getUorIdentifier(uor_name, component_name):
+    """Return the 'uor' identifier associated with the specified
+       'uor_name/component_name' combo, adding it to the 'uors' dictionary and
+       database if necessary.
+    """
+
+    key=getUorKey(uor_name, component_name);
+
+    if key in uors:
+        return uors[key]
+
+    insert_command="""
+        INSERT INTO uors VALUES (NULL, ?, ?)
+    """
+
+    cursor.execute(insert_command, (uor_name, component_name));
+
+    rowid = cursor.lastrowid
+
+    updateUorDictionary(uor_name, component_name, rowid)
+
+    return rowid
+
+
+def addDiagnosticsEvent(component_name, uplid, ufid, category_name, diagnostics):
+    """Add an entry to the 'build_diagnostic_events' diagnostics table.
+    """
+
+    component = getComponentIdentifier(uplid, ufid, component_name)
+
+    insert_command="""
+        INSERT INTO build_diagnostic_events VALUES (?, ?, ?)
+    """
+
+    cursor.execute(insert_command, (component, category_name, diagnostics))
 
 
 def dbsetup(cursor):
@@ -111,29 +168,10 @@ def dbsetup(cursor):
                 [ "build",           "INTEGER",  "REFERENCES builds(build)" ],
             ],
 
-            [ "build_errors",
-                [ "component",    "INTEGER", "REFERENCES components(component)" ],
-                [ "diagnostics",  "TEXT" ],
-            ],
-
-            [ "build_warnings",
-                [ "component",    "INTEGER", "REFERENCES components(component)" ],
-                [ "diagnostics",  "TEXT" ],
-            ],
-
-            [ "test_build_errors",
-                [ "component",    "INTEGER", "REFERENCES components(component)" ],
-                [ "diagnostics",  "TEXT" ],
-            ],
-
-            [ "test_build_warnings",
-                [ "component",    "INTEGER", "REFERENCES components(component)" ],
-                [ "diagnostics",  "TEXT" ],
-            ],
-
-            [ "test_run_failures",
-                [ "component",   "INTEGER", "REFERENCES components(component)" ],
-                [ "diagnostics", "TEXT" ],
+            [ "build_diagnostic_events",
+                [ "component",     "INTEGER", "REFERENCES components(component)" ],
+                [ "category_name", "TEXT" ],
+                [ "diagnostics",   "TEXT" ],
             ],
 
             [ "components_built_ok",
@@ -148,11 +186,20 @@ def dbsetup(cursor):
                 [ "component", "INTEGER", "REFERENCES components(component)" ],
                 [ "diagnostics", "TEXT" ],
             ],
+
+            [ "aggregated_results_at_uor_name_level",
+                [ "uor_name",             "TEXT" ],
+                [ "uplid",                "TEXT" ],
+                [ "ufid",                 "TEXT" ],
+                [ "category_name",        "TEXT" ],
+                [ "count",                "TEXT" ],
+            ],
     ]
 
     for table in tables:
         column_text="\n"
-        comma=""
+        comma      =""
+
         for column in table[1:]:
             column_text+="  %1s  %-20s\n"%(comma, "\t".join(column))
             comma=","
@@ -160,6 +207,74 @@ def dbsetup(cursor):
         create_statement="CREATE TABLE IF NOT EXISTS %s (%s)"%(table[0], column_text)
 
         #print(create_statement)
+        cursor.execute(create_statement);
+
+    cursor.execute("""
+            CREATE VIEW IF NOT EXISTS build_results AS
+                SELECT uor_name,
+                       components.component_name AS component_name,
+                       uplid,
+                       ufid,
+                       category_name,
+                       diagnostics
+                FROM         builds
+                NATURAL JOIN components
+                NATURAL JOIN build_diagnostic_events
+                INNER JOIN   uors
+                ON           components.component_name = uors.component_name
+        """)
+
+    indices = [
+            [ "build_diagnostics_events_component_idx",
+              "build_diagnostic_events",
+                [ "component",
+                ],
+            ],
+
+            [ "components_uor_name_index",
+              "components",
+                [ "component_name",
+                ],
+            ],
+
+            [ "uors_uor_name_index",
+              "uors",
+                [ "uor_name",
+                ],
+            ],
+
+            [ "uors_component_name_index",
+              "uors",
+                [ "component_name",
+                ],
+            ],
+
+            [ "build_diagnostics_events_category_name_idx",
+              "build_diagnostic_events",
+                [ "category_name",
+                ],
+            ],
+
+            [ "components_build_index",
+              "components",
+                [ "build",
+                ],
+            ],
+    ]
+
+    for index in indices:
+        column_text="\n"
+        comma      =""
+
+        for column in index[2:]:
+            column_text+="  %1s  %-20s\n"%(comma, "\t".join(column))
+            comma=","
+
+        create_statement="CREATE INDEX IF NOT EXISTS %s ON %s (%s)"% \
+                                              (index[0], index[1], column_text)
+
+        #print(create_statement)
+
         cursor.execute(create_statement);
 
     builds_query="""
@@ -180,7 +295,7 @@ def dbsetup(cursor):
         updateComponentDictionary(uplid, ufid, component_name, component)
 
 
-def namesplit(name):
+def nameSplit(name):
     """Split the specified 'name' into its date, group, uplid, and host
     components.
     """
@@ -211,12 +326,51 @@ def process(filename, text):
     date  = fileInfo["date"]
     host  = fileInfo["host"]
 
-    diagnostics_by_category  = {}
-    diagnostics_by_component = {}
+    text = re.sub("TEST-RUN:\s*\d{6}:", "", text)
 
+    pattern = re.compile(
+           "\\[(\\S+) \\((WARNING|ERROR|TEST)\\)\\] <<<<<<<<<<(.*?)>>>>>>>>>>",
+           re.S) # re.S is aka re.DOTALL, so "." matches newlines as well.
 
+    categoryNamer    = { True:  {   "WARNING": "TEST_WARNING",
+                                    "ERROR"  : "TEST_ERROR",
+                                    "TEST"   : "TEST_RUN_FAILURE",
+                                },
+                        False:  {   "WARNING" : "BUILD_WARNING",
+                                    "ERROR"   : "BUILD_ERROR",
+                                    "TEST"    : None  # should never happen!
+                                }
+                       }
 
+    for match in pattern.finditer(text):
+        isTest    = True if re.search("\.t", match.group(1)) else False
 
+        component_name = re.sub(".*/",  "", match.group(1))
+        component_name = re.sub("\..*", "", component_name)
+
+        # Skip any diagnostics for previous UOR components that
+        # failed.
+        if not re.match("^%s"%(group), component_name):
+            continue
+
+        getUorIdentifier(group, component_name)
+
+        category       = match.group(2)
+        diagnostics    = match.group(3)
+
+        substr = text[:match.start()]
+        ufid   = (re.findall("BDE_WAF_UFID=(\\w+)", substr))[-1]
+
+        #print("Component: %s, isTest: %s, category: %s, ufid: %s, message: %s"
+        #         % (component_name, isTest, category, ufid, message[0:100]))
+
+        addDiagnosticsEvent(component_name,
+                            uplid,
+                            ufid,
+                            categoryNamer[isTest][category],
+                            diagnostics)
+
+    connection.commit()
 
 def load(filename):
     """Load the specified 'filename' into the current database context.
@@ -228,12 +382,27 @@ def load(filename):
 
     with open(filename, "rb") as fh:
         text = fh.read(size)
-        print("Read %s bytes from %s"%(size, filename))
+        print("Read %s (%d bytes)"%(filename, size))
 
     process(filename, text)
 
 dbsetup(cursor)
 
-for file in sys.argv[1:]:
-    load(file)
+for filename in sys.argv[1:]:
+    load(filename)
 
+print "Building aggregates"
+
+cursor.execute("""
+        DELETE FROM aggregated_results_at_uor_name_level
+        """)
+
+cursor.execute("""
+        INSERT INTO aggregated_results_at_uor_name_level
+            (uplid, ufid, uor_name, category_name, count)
+            SELECT uplid, ufid, uor_name, category_name, COUNT(*) AS count
+            FROM build_results
+            GROUP BY uplid, ufid, uor_name, category_name
+        """)
+
+print "Done"
