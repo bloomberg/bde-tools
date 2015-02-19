@@ -5,6 +5,7 @@ import glob
 import os
 import pprint
 import sqlite3
+import re
 import sys
 
 # Enable CGI debugging output
@@ -42,17 +43,17 @@ styles = {
         "build_warn":       ["background-color:black;",
                              "color:yellow;"
                             ],
-        "build_err" :       ["background-color:black;",
-                             "color:red;"
+        "build_err" :       ["background-color:white;",
+                             "color:blue;"
                             ],
         "test_warn":        ["background-color:brown;",
                              "color:yellow;"
                             ],
         "test_err"  :       ["background-color:brown;",
-                             "color:red;"
+                             "color:yellow;"
                             ],
-        "test_fail" :       ["background-color:brown;",
-                             "color:orange;"
+        "test_fail" :       ["background-color:yellow;",
+                             "color:black;"
                             ],
     }
 
@@ -99,6 +100,36 @@ print """
     color:            white;
 }
 
+table {
+    border-collapse: collapse;
+}
+
+tr {
+    border: none
+}
+
+td, th {
+    border-left:  solid 1px #777;
+    border-right: solid 1px #777;
+    padding-left:  5px;
+}
+
+#.fixed thead {
+#}
+#.fixed thead tr {
+#  display: block;
+#  position: relative;
+#}
+#.fixed tbody {
+#  display: block;
+#  overflow: auto;
+#  width: 100%;
+#  height: 1000px;
+#  overflow-y: scroll;
+#    overflow-x: hidden;
+#}
+
+
 """
 
 for style in styles:
@@ -137,39 +168,70 @@ for result in cursor.fetchall():
 sorted_uors = sorted(uors, key=uor_key)
 
 print "<H1 align=\"center\">Results from %s</H1>"%db
-print "<P>"
-for category in sorted(category_names):
-    print "<span class=\"%s\">%s</span>"%(short_category_names[category],
+key = "<P>"
+
+for category in ("BUILD_ERROR","TEST_ERROR","TEST_RUN_FAILURE"):
+    key += "<SPAN class=\"%s\">%s</SPAN>\n"%(short_category_names[category],
                                           category)
-print "</P>"
-print "<TABLE>"
+key += "</P>"
+
+
+table_text=""
+
+print key
+print "<TABLE class=\"fixed\">"
 
 print "<THEAD>"
-print "<TR><TD COLSPAN=2>"
+print "<TR><TH></TH>"
 for uor in sorted_uors:
     print "<TH>%s</TH>"%(uor)
 print "</TR>"
 print "</THEAD>"
 
-print "<TBODY style=\"overflow-y: scroll;\">"
+print "<TBODY>"
 for uplid in sorted(uplids):
-    tr_prefix="<TR><TH>%s</TH>"%(uplid)
+    print "<TR><TH>%s</TH><TR>"%(uplid)
     for ufid in sorted(ufids):
         if not ((uplid in uplid_ufid_combos) and (ufid in uplid_ufid_combos[uplid])):
             next
-        print tr_prefix
-        tr_prefix="<TR><TD></TD>"
+        print "<TR>"
         print "<TD>%s</TD>"%(ufid)
         for uor in sorted_uors:
             inner_result=results[uor][uplid][ufid]
             print "<TD>"
             category_results={}
-            for category in ("BUILD_WARNING","BUILD_ERROR","TEST_WARNING","TEST_ERROR","TEST_RUN_FAILURE"):
+            #for category in ("BUILD_WARNING","BUILD_ERROR","TEST_WARNING","TEST_ERROR","TEST_RUN_FAILURE"):
+            for category in ("BUILD_ERROR","TEST_ERROR","TEST_RUN_FAILURE"):
                 if category in inner_result:
-                    print "<SPAN class=%s>%d</SPAN>"%(
+                    cursor.execute("""
+                        SELECT component_name,
+                               SUBSTR(diagnostics, 1, 500)
+                        FROM build_results
+                        WHERE uor_name=?
+                              AND ufid=?
+                              AND uplid=?
+                              AND category_name=?
+                        LIMIT 10
+                    """,(uor, ufid, uplid, category))
+                    diagnostics_text=""
+                    for entry in cursor.fetchall():
+                        diagnostics_text+="".join(entry)
+                        diagnostics_text+="\n======\n"
+
+                    url = "results.py?db=%s;uor=%s;uplid=%s;ufid=%s;category=%s"%(
+                                db,
+                                uor,
+                                uplid,
+                                ufid,
+                                category
+                            )
+                    print "<A HREF=\"%s\">" % url
+                    print "<SPAN title=\"%s\" class=%s>%d</SPAN>\n"%(
+                            cgi.escape(diagnostics_text, quote=True),
                             short_category_names[category],
                             int(inner_result[category]),
                             )
+                    print "</A>"
             print "</TD>"
         print "</TR>"
 
@@ -177,7 +239,7 @@ print "</TBODY>"
 
 
 print "<TFOOT>"
-print "<TR><TD COLSPAN=2>"
+print "<TR><TH></TH>"
 for uor in sorted_uors:
     print "<TH>%s</TH>"%(uor)
 print "</TR>"
@@ -185,12 +247,13 @@ print "</TFOOT>"
 
 print "</TABLE>"
 
-print "<P>"
-for category in sorted(category_names):
-    print "<span class=\"%s\">%s</span>"%(short_category_names[category],
-                                          category)
-print "</P>"
+print key
 
+
+#table2_text=table_text
+#table2_text=re.sub("THEAD-STYLE", "visibility: hidden;",   table1_text)
+#table2_text=re.sub("TBODY-STYLE", "visibility: visible;",  table1_text)
+#print table2_text
 
 print "</BODY>"
 print "</HTML>"
