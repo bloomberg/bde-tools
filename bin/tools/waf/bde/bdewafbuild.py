@@ -38,6 +38,7 @@ class BdeWafBuild(object):
 
         self.package_type = self.ctx.env['package_type']
         self.component_type = self.ctx.env['component_type']
+        self.app_packages = self.ctx.env['app_packages']
 
         self.libtype_features = self.ctx.env['libtype_features']
         self.custom_envs = self.ctx.env['custom_envs']
@@ -200,6 +201,26 @@ class BdeWafBuild(object):
                  install_path    = install_path,
                  )
 
+        if package_name in self.app_packages:
+            self.ctx(
+                    name          = package_name + '_app',
+                    path          = package_node,
+                    source        = package_name + '.m' + lib_src_ext,
+                    target        = package_name,
+                    features      = ptp[package_type]['features'] + ['cxxprogram'],
+                    cflags        = cflags,
+                    cincludes     = cincludes,
+                    cxxflags      = cxxflags,
+                    cxxincludes   = cxxincludes,
+                    linkflags     = linkflags,
+                    lib           = libs,
+                    stlib         = stlibs,
+                    cust_libpaths = libpaths,
+                    includes      = [package_node],
+                    use           = [package_name + '_lib'] + dum_task_gens,
+                    uselib        = external_deps
+            )
+
         if self.build_tests:
             test_features = ['cxxprogram']
             if self.run_tests:
@@ -258,8 +279,12 @@ class BdeWafBuild(object):
                  depends_on = [c + '.t' for c in components]
                  )
 
+        package_depends = [package_name + '_lib', package_name + '_tst']
+        if package_name in self.app_packages:
+            package_depends.append(package_name + '_app');
+
         self.ctx(name       = package_name,
-                 depends_on = [package_name + '_lib', package_name + '_tst']
+                 depends_on = package_depends
                  )
 
     def _build_third_party(self, package_name):

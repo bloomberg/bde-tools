@@ -46,6 +46,9 @@ class BdeWafConfigure(object):
 
         self.component_type = {}  # c or cpp
         self.package_type = {}  # c or cpp
+        # List of application packages, i.e. packages containing a file named
+        # <package name>.m.cpp.
+        self.app_packages = []
 
         self.unsupported_groups = set()
         self.unsupported_packages = set()
@@ -152,14 +155,16 @@ class BdeWafConfigure(object):
 
             self.group_locs[g.name] = g.parent.name
 
-        # Stand-alone packages behaves like package groups with a single
-        # package.
+        # stand-alone packages behaves like package groups with a single
+        # package
         adapter_nodes = [x.parent.parent for x in
                          self.ctx.path.ant_glob('adapters/*/package/*.mem')]
         wrapper_package_nodes = [x.parent.parent for x in
                                  self.ctx.path.ant_glob(
                                      'wrappers/*/package/*.mem')]
-        sa_package_nodes = adapter_nodes + wrapper_package_nodes
+        app_nodes = [x.parent.parent for x in
+                     self.ctx.path.ant_glob('applications/*/package/*.mem')]
+        sa_package_nodes = adapter_nodes + wrapper_package_nodes + app_nodes
 
         for s in sa_package_nodes:
             # Assume that std-alone packages are not headers only and do not
@@ -228,6 +233,10 @@ class BdeWafConfigure(object):
     def _load_package_and_component_types(self):
 
         def load_package_types(package_name, component_names, package_node):
+            app_file = package_node.find_node(package_node.name + '.m.cpp')
+            if app_file:
+                self.app_packages.append(package_name)
+
             if 0 == len(component_names):
                 cpp_nodes = package_node.ant_glob('*.cpp')
                 self.package_type[package_name] = ('cpp' if 0 < len(cpp_nodes)
@@ -245,8 +254,9 @@ class BdeWafConfigure(object):
                     self.component_type[c] = 'c'
                     c_count += 1
 
-            self.package_type[package_name] = ('cpp' if
-                                               c_count <= cpp_count else 'c')
+            package_type = ('cpp' if c_count <= cpp_count else 'c')
+
+            self.package_type[package_name] = package_type
 
         for g in self.group_mem:
             if g not in self.sa_package_locs:
@@ -936,6 +946,7 @@ class BdeWafConfigure(object):
 
         self.ctx.env['package_type'] = self.package_type
         self.ctx.env['component_type'] = self.component_type
+        self.ctx.env['app_packages'] = self.app_packages
 
         self.ctx.env['lib_suffix'] = self.lib_suffix
         self.ctx.env['install_flat_include'] = \
