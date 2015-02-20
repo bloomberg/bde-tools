@@ -36,19 +36,20 @@ short_category_names = {
 
 styles = {
         "build_warn":       ["background-color:black;",
-                             "color:yellow;"
+                             "color:orange;"
                             ],
         "build_err" :       ["background-color:white;",
                              "color:blue;"
                             ],
-        "test_warn":        ["background-color:brown;",
-                             "color:yellow;"
+        "test_warn":        ["background-color:black;",
+                             "color:brown;"
                             ],
-        "test_err"  :       ["background-color:brown;",
-                             "color:yellow;"
+        "test_err"  :       ["background-color:white;",
+                             "color:orange;"
+                             "font-weight:bold;",
                             ],
-        "test_fail" :       ["background-color:yellow;",
-                             "color:black;"
+        "test_fail" :       ["background-color:white;",
+                             "color:red;"
                             ],
     }
 
@@ -89,8 +90,8 @@ print "<TITLE>Results from %s</TITLE>"%(db())
 print "<STYLE>"
 print """
 .default {
-    background-color: black;
-    color:            white;
+    background-color: white;
+    color:            black;
 }
 
 table {
@@ -102,9 +103,18 @@ tr {
 }
 
 td, th {
-    border-left:  solid 1px #777;
-    border-right: solid 1px #777;
+    border-left:  solid 1px #999;
+    border-right: solid 1px #999;
     padding-left:  5px;
+}
+
+.noborders td, th {
+    border-left: none;
+    border-right: none;
+}
+
+.noborders table {
+    width: 100%;
 }
 
 #.fixed thead {
@@ -160,7 +170,9 @@ for result in cursor.fetchall():
 
 sorted_uors = sorted(uors, key=uor_key)
 
-print "<H1 align=\"center\">Results from %s</H1>"%db()
+printTitleRow("<H1 align=\"center\">Results from %s</H1>"%db(), "summary.py")
+
+#print "<H1 align=\"center\">Results from %s</H1>"%db()
 key = "<P>"
 
 for category in ("BUILD_ERROR","TEST_ERROR","TEST_RUN_FAILURE"):
