@@ -396,6 +396,7 @@ print "Building aggregates"
 cursor.execute("""
         DELETE FROM aggregated_results_at_uor_name_level
         """)
+connection.commit()
 
 cursor.execute("""
         INSERT INTO aggregated_results_at_uor_name_level
@@ -404,5 +405,6 @@ cursor.execute("""
             FROM build_results
             GROUP BY uplid, ufid, uor_name, category_name
         """)
+connection.commit()
 
 print "Done"
