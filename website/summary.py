@@ -202,21 +202,6 @@ for uplid in sorted(uplids):
             #for category in ("BUILD_WARNING","BUILD_ERROR","TEST_WARNING","TEST_ERROR","TEST_RUN_FAILURE"):
             for category in ("BUILD_ERROR","TEST_ERROR","TEST_RUN_FAILURE"):
                 if category in inner_result:
-                    cursor.execute("""
-                        SELECT component_name,
-                               SUBSTR(diagnostics, 1, 500)
-                        FROM build_results
-                        WHERE uor_name=?
-                              AND ufid=?
-                              AND uplid=?
-                              AND category_name=?
-                        LIMIT 10
-                    """,(uor, ufid, uplid, category))
-                    diagnostics_text=""
-                    for entry in cursor.fetchall():
-                        diagnostics_text+="".join(entry)
-                        diagnostics_text+="\n======\n"
-
                     url = "results.py?db=%s;uor=%s;uplid=%s;ufid=%s;category=%s"%(
                                 db(),
                                 uor,
@@ -225,8 +210,7 @@ for uplid in sorted(uplids):
                                 category
                             )
                     print "<A HREF=\"%s\" TARGET=\"_blank\">" % url
-                    print "<SPAN TITLE=\"%s\" CLASS=%s>%d</SPAN>\n"%(
-                            cgi.escape(diagnostics_text, quote=True),
+                    print "<SPAN CLASS=%s>%d</SPAN>\n"%(
                             category_class_names[category],
                             int(inner_result[category]),
                             )

@@ -41,7 +41,7 @@ if _date is None:
     result=re.search("-(\d+)\.db", _db)
     if result is None:
         print "Unable to extract date from db %s"%_db
-        sys.exit(1)
+        sys.exit(0)
 
     _date = result.group(1)
 
@@ -49,17 +49,17 @@ if _branch is None:
     result=re.search("(\w+)-(\d+)\.db", _db)
     if result is None:
         print "Unable to extract branch from db %s"%_db
-        sys.exit(1)
+        sys.exit(0)
 
     _branch = result.group(1)
 
 if not (re.match("^/web_data/db/[^/]+\.db$", _db) or os.getuid()==(os.stat(_db).st_uid)):
     print "db value %s is invalid"%_db
-    sys.exit(1)
+    sys.exit(0)
 
 if not (os.path.isfile(_db) and os.access(_db, os.R_OK)):
-    print "Either file %s is missing or is not readable" % db
-    sys.exit(1)
+    print "Either file %s is missing or is not readable" % _db
+    sys.exit(0)
 
 def db():
     """Return the name of the current database file
