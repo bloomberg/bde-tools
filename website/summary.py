@@ -26,7 +26,7 @@ class Vividict(dict):
         value = self[key] = type(self)()
         return value
 
-short_category_names = {
+category_class_names = {
         "BUILD_WARNING":     "build_warn",
         "BUILD_ERROR":       "build_err",
         "TEST_WARNING":      "test_warn",
@@ -34,18 +34,27 @@ short_category_names = {
         "TEST_RUN_FAILURE":  "test_fail"
 }
 
+category_display_names = {
+        "BUILD_WARNING":     "BUILD_WARNING",
+        "BUILD_ERROR":       "BUILD_ERROR",
+        "TEST_WARNING":      "TEST_WARNING",
+        "TEST_ERROR":        "TEST_BUILD_ERROR",
+        "TEST_RUN_FAILURE":  "TEST_RUN_ERROR"
+}
+
 styles = {
         "build_warn":       ["background-color:black;",
                              "color:orange;"
                             ],
         "build_err" :       ["background-color:white;",
-                             "color:blue;"
+                             "color:#%02x%02x%02x;"%(49, 168, 0), # Per abeels email
+                             "font-style: italic",
                             ],
         "test_warn":        ["background-color:black;",
                              "color:brown;"
                             ],
         "test_err"  :       ["background-color:white;",
-                             "color:orange;"
+                             "color:#%02x%02x%02x;"%(0,175,182), # Per abeels email
                              "font-weight:bold;",
                             ],
         "test_fail" :       ["background-color:white;",
@@ -117,21 +126,6 @@ td, th {
     width: 100%;
 }
 
-#.fixed thead {
-#}
-#.fixed thead tr {
-#  display: block;
-#  position: relative;
-#}
-#.fixed tbody {
-#  display: block;
-#  overflow: auto;
-#  width: 100%;
-#  height: 1000px;
-#  overflow-y: scroll;
-#    overflow-x: hidden;
-#}
-
 
 """
 
@@ -176,8 +170,8 @@ printTitleRow("<H1 align=\"center\">Results from %s</H1>"%db(), "summary.py")
 key = "<P>"
 
 for category in ("BUILD_ERROR","TEST_ERROR","TEST_RUN_FAILURE"):
-    key += "<SPAN class=\"%s\">%s</SPAN>\n"%(short_category_names[category],
-                                          category)
+    key += "<SPAN class=\"%s\">%s</SPAN>\n"%(category_class_names[category],
+                                          category_display_names[category])
 key += "</P>"
 
 
@@ -233,7 +227,7 @@ for uplid in sorted(uplids):
                     print "<A HREF=\"%s\" TARGET=\"_blank\">" % url
                     print "<SPAN TITLE=\"%s\" CLASS=%s>%d</SPAN>\n"%(
                             cgi.escape(diagnostics_text, quote=True),
-                            short_category_names[category],
+                            category_class_names[category],
                             int(inner_result[category]),
                             )
                     print "</A>"
