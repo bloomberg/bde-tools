@@ -192,7 +192,7 @@ for uplid in sorted(uplids):
     print "<TR><TH>%s</TH><TR>"%(uplid)
     for ufid in sorted(ufids):
         if not ((uplid in uplid_ufid_combos) and (ufid in uplid_ufid_combos[uplid])):
-            next
+            continue
         print "<TR>"
         print "<TD>%s</TD>"%(ufid)
         for uor in sorted_uors:
