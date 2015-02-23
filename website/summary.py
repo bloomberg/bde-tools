@@ -120,12 +120,8 @@ td, th {
 .noborders td, th {
     border-left: none;
     border-right: none;
+    padding-left:  5px;
 }
-
-.noborders table {
-    width: 100%;
-}
-
 
 """
 
@@ -180,16 +176,18 @@ table_text=""
 print key
 print "<TABLE class=\"fixed\">"
 
-print "<THEAD>"
-print "<TR><TH></TH>"
+#print "<THEAD>"
+#print "<TR><TH></TH>"
+uor_headers = ""
 for uor in sorted_uors:
-    print "<TH>%s</TH>"%(uor)
-print "</TR>"
-print "</THEAD>"
+    uor_headers += "<TH COLSPAN=3>%s</TH>"%(uor)
+#print uor_headers
+#print "</TR>"
+#print "</THEAD>"
 
 print "<TBODY>"
 for uplid in sorted(uplids):
-    print "<TR><TH>%s</TH><TR>"%(uplid)
+    print "<TR><TH>%s</TH>%s<TR>"%(uplid,uor_headers)
     for ufid in sorted(ufids):
         if not ((uplid in uplid_ufid_combos) and (ufid in uplid_ufid_combos[uplid])):
             continue
@@ -197,10 +195,11 @@ for uplid in sorted(uplids):
         print "<TD>%s</TD>"%(ufid)
         for uor in sorted_uors:
             inner_result=results[uor][uplid][ufid]
-            print "<TD>"
             category_results={}
+
             #for category in ("BUILD_WARNING","BUILD_ERROR","TEST_WARNING","TEST_ERROR","TEST_RUN_FAILURE"):
             for category in ("BUILD_ERROR","TEST_ERROR","TEST_RUN_FAILURE"):
+                print "<TD class=\"noborders\">"
                 if category in inner_result:
                     url = "results.py?db=%s;uor=%s;uplid=%s;ufid=%s;category=%s"%(
                                 db(),
@@ -215,7 +214,8 @@ for uplid in sorted(uplids):
                             int(inner_result[category]),
                             )
                     print "</A>"
-            print "</TD>"
+
+                print "</TD>"
         print "</TR>"
 
 print "</TBODY>"
@@ -223,8 +223,7 @@ print "</TBODY>"
 
 print "<TFOOT>"
 print "<TR><TH></TH>"
-for uor in sorted_uors:
-    print "<TH>%s</TH>"%(uor)
+print uor_headers
 print "</TR>"
 print "</TFOOT>"
 
