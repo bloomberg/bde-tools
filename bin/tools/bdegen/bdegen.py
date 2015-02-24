@@ -152,11 +152,12 @@ def create_component(name, type_):
         authorinfo += " (" + email + ")"
     else:
         authorinfo = '<<full name>> (<<email>>)'
-        metaoptions = {"GROUP_NAME": groupname,
-                       "PACKAGE_NAME": packagename,
-                       "COMPONENT_NAME": componentname,
-                       "CLASS_NAME": name,
-                       "AUTHOR_INFO": authorinfo}
+
+    metaoptions = {"GROUP_NAME": groupname,
+                   "PACKAGE_NAME": packagename,
+                   "COMPONENT_NAME": componentname,
+                   "CLASS_NAME": name,
+                   "AUTHOR_INFO": authorinfo}
 
     apply_component_template(type_, "h", componentname, metaoptions, bsl)
     apply_component_template(type_, "cpp", componentname, metaoptions, bsl)

@@ -36,6 +36,7 @@ Stay tuned next week for more!'''
 __all__ = ["processfile", "processtext"]
 
 import re
+import datetime
 
 def processfile(filepath, symbols = None):
     """ Processes the text in 'filepath' and uses 'symbols' as name/value variables to
