@@ -13,9 +13,6 @@ from bdetools_website_startup import *
 #>>> datetime.strptime("20150219", "%Y%m%d")
 #datetime.datetime(2015, 2, 19, 0, 0)
 
-connection = sqlite3.connect(db())
-cursor     = connection.cursor()
-
 class Vividict(dict):
     """This class creates a dictionary with perl-like nested hash
        auto-vivification, meaning that attempts to access a non-existent
@@ -48,7 +45,9 @@ styles = {
                             ],
         "build_err" :       ["background-color:white;",
                              "color:#%02x%02x%02x;"%(49, 168, 0), # Per abeels email
-                             "font-style: italic",
+                            ],
+        "TD-build_err" :    [
+                             "border-left:  solid 1px #999;",
                             ],
         "test_warn":        ["background-color:black;",
                              "color:brown;"
@@ -58,7 +57,12 @@ styles = {
                              "font-weight:bold;",
                             ],
         "test_fail" :       ["background-color:white;",
-                             "color:red;"
+                             "color:red;",
+                             "font-style: italic;",
+                            ],
+        "TD-test_fail" :    [
+                             "padding-right:  5px;",
+                             "border-right: solid 1px #999;"
                             ],
     }
 
@@ -94,7 +98,7 @@ def uor_key(uor):
 
 print "<HTML>"
 print "<HEAD>"
-print "<TITLE>Results from %s</TITLE>"%(db())
+print "<TITLE>Results from %s - %s</TITLE>"%(date(), branch())
 
 print "<STYLE>"
 print """
@@ -112,9 +116,12 @@ tr {
 }
 
 td, th {
+    /*
     border-left:  solid 1px #999;
     border-right: solid 1px #999;
+    */
     padding-left:  5px;
+    width:         1em;
 }
 
 .noborders td, th {
@@ -135,6 +142,16 @@ print "</STYLE>"
 
 print "</HEAD>"
 print "<BODY class=\"default\">"
+
+printTitleRow("<H1 align=\"center\">Results from %s - %s </H1>"%(date(), branch()), "summary.py")
+
+if db() is None:
+    print "<H2>Error initializing summary for %s - %s : %s</H2>"%(date(), branch(), error())
+    print "</BODY></HTML>"
+    sys.exit(0)
+
+connection = sqlite3.connect(db())
+cursor     = connection.cursor()
 
 cursor.execute("SELECT * FROM aggregated_results_at_uor_name_level")
 
@@ -159,8 +176,6 @@ for result in cursor.fetchall():
         axis_values[index][result[index]]=1
 
 sorted_uors = sorted(uors, key=uor_key)
-
-printTitleRow("<H1 align=\"center\">Results from %s</H1>"%db(), "summary.py")
 
 #print "<H1 align=\"center\">Results from %s</H1>"%db()
 key = "<P>"
@@ -199,7 +214,7 @@ for uplid in sorted(uplids):
 
             #for category in ("BUILD_WARNING","BUILD_ERROR","TEST_WARNING","TEST_ERROR","TEST_RUN_FAILURE"):
             for category in ("BUILD_ERROR","TEST_ERROR","TEST_RUN_FAILURE"):
-                print "<TD class=\"noborders\">"
+                print "<TD class=\"TD-%s\">"%category_class_names[category]
                 if category in inner_result:
                     url = "results.py?db=%s;uor=%s;uplid=%s;ufid=%s;category=%s"%(
                                 db(),
