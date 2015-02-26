@@ -209,7 +209,7 @@ def convert_bdet_to_include(text, verbose = False):
         replacement = add_right_justified_comment(replacement,
                                                   "// bdet->#include")
 
-        (text, num) = re.subn("(class\s*{0}\s*;)\n".format(bdet_typename),
+        (text, num) = re.subn("(class\s*{0}\s*;).*\n".format(bdet_typename),
                               replacement,
                               text)
         if (num > 0):
