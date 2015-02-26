@@ -473,6 +473,10 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !!  *-*-*-*-clang              64       CC64FLAGS                 =  -m64
 !!  *-*-x86_64-*-clang         _        CC64FLAGS                 =  -m32 -march=pentium2 -mtune=opteron
 !!  *-*-x86_64-*-clang         64       CC64FLAGS                 =  -m64 -mtune=opteron
+++  unix-SunOS-*-*-gcc         _        CC64FLAGS                 =  -m32
+!!  unix-SunOS-*-*-gcc         64       CC64FLAGS                 =  -m64
+++  unix-AIX-*-*-gcc           _        CC64FLAGS                 =  -maix32
+!!  unix-AIX-*-*-gcc           64       CC64FLAGS                 =  -maix64
 
 # DRQS 10505346 -- switch to -xtarget=ultra3 for Sun, -qarch=pwr4 -qtune=pwr5 for AIX
 # old flags
