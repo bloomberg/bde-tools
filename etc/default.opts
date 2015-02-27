@@ -204,6 +204,7 @@
 # gcc 4.8+ libatomic required for 8-byte atomics on Linux on POWER in 32-bit
 # (or compiling 32-bit with -m32 -mpowerpc64, but -m32 -mpowerpc64 has a bug:
 #  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64505)
+# libatomic in gcc 4.8, not gcc 4.7  (https://gcc.gnu.org/wiki/Atomic/GCCMM)
 !!  unix-Linux-ppc64-*-gcc-4.8 _  LIBATOMIC           =  -latomic
 !!  unix-Linux-ppc64-*-gcc-4.8 64 LIBATOMIC           =
 ++  unix-Linux-ppc64-*-gcc-4.8 _  DEF_ENDLDFLAGS      =  $(LIBATOMIC)
@@ -312,6 +313,7 @@
 !!  unix-                   opt  OPT_CFLAGS             =  -O -DNDEBUG
 !!  unix-*-*-*-gcc          opt  OPT_CFLAGS             =  -O2 -fno-strict-aliasing -DNDEBUG
 !!  unix-*-*-*-clang        opt  OPT_CFLAGS             =  -O2 -fno-strict-aliasing -DNDEBUG
+!!  unix-*-ppc64-*-gcc      opt  OPT_CFLAGS             =  -O2 -DNDEBUG
 
 !!  unix-*-*-*-gcc          opt  OPT_EXTRA_64_CXXFLAGS  =
 !!  unix-*-*-*-clang        opt  OPT_EXTRA_64_CXXFLAGS  =
@@ -321,6 +323,7 @@
 !!  unix-                   opt  OPT_CXXFLAGS           =  -O -DNDEBUG
 !!  unix-*-*-*-gcc          opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
 !!  unix-*-*-*-clang        opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -fno-strict-aliasing -DNDEBUG
+!!  unix-*-ppc64-*-gcc      opt  OPT_CXXFLAGS           =  -O2 $(OPT_EXTRA_64_CXXFLAGS) -DNDEBUG
 # DRQS 57720228: Remove prefetch option
 !!  unix-SunOS-*-*-cc       opt  OPT_CXXFLAGS           =  -O -DNDEBUG -xbuiltin=%all
 !!  unix-AIX-*-*-xlc        opt  OPT_CXXFLAGS           =  -O -DNDEBUG
@@ -469,6 +472,8 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !!  *-*-*-*-gcc                64       CC64FLAGS                 =  -m64
 !!  *-*-x86_64-*-gcc           _        CC64FLAGS                 =  -m32 -march=pentium2 -mtune=opteron
 !!  *-*-x86_64-*-gcc           64       CC64FLAGS                 =  -m64 -mtune=opteron
+!!  *-*-ppc64-*-gcc            _        CC64FLAGS                 =  -m32 -mcpu=power7 -mhard-dfp
+!!  *-*-ppc64-*-gcc            64       CC64FLAGS                 =  -m64 -mcpu=power7 -mhard-dfp
 ++  *-*-*-*-clang              _        CC64FLAGS                 =  -m32
 !!  *-*-*-*-clang              64       CC64FLAGS                 =  -m64
 !!  *-*-x86_64-*-clang         _        CC64FLAGS                 =  -m32 -march=pentium2 -mtune=opteron
@@ -495,9 +500,9 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 # DRQS 57720228: switch to target=generic.
 ++  unix-SunOS-sparc-*-cc      64       BDE_CXXFLAGS              =  -m64 -xtarget=generic
 
-# DRQS 17197057 -- make -fPIC the default for 64-bit Linux builds
-++  unix-Linux-*-*-gcc         64       CC64FLAGS                 =  -fPIC
-++  unix-Linux-*-*-clang       64       CC64FLAGS                 =  -fPIC
+# DRQS 17197057 -- make -fPIC the default for 64-bit Linux builds on x86_64
+++  unix-Linux-x86_64-*-gcc    64       CC64FLAGS                 =  -fPIC
+++  unix-Linux-x86_64-*-clang  64       CC64FLAGS                 =  -fPIC
 
 # DRQS 22147649 -- allow PIC builds for static libs under SunOS
 ++  unix-SunOS-sparc-*-cc      pic      BDE_CXXFLAGS              =  -xcode=pic32
