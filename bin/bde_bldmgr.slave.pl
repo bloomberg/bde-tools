@@ -68,7 +68,7 @@ my $iamwindows = ($^O eq 'MSWin32' || $^O eq 'cygwin');
 my $pythonprefix="";
 
 if ($iamwindows) {
-    $pythonprefix = "python ";
+    $pythonprefix = "python";
 }
 
 my $prog       = basename($0);
@@ -291,15 +291,16 @@ sub find_waf {
     }
 }
 
+if ($iamwindows) {
+    $ENV{PATH} = "c:\\python27\\;$ENV{PATH};c:\\wafsupport;e:\\git\\bde-oss-tools\\bin";
+    $ENV{BDE_PATH}.=":e:/git/bde-oss-tools";
+}
+
 if (!find_waf()) {
     write_logandverbose "Expanding PATH to find waf and python";
     if (!$iamwindows) {
         $ENV{PATH} = "/opt/bb/bin:$ENV{PATH}:/bbshr/bde/bde-oss-tools/bin";
         $ENV{BDE_PATH}.=":/bbshr/bde/bde-oss-tools";
-    }
-    else {
-        $ENV{PATH} = "c:\\python27\\;$ENV{PATH};c:\\wafsupport;e:\\git\\bde-oss-tools\\bin";
-        $ENV{BDE_PATH}.=":e:/git/bde-oss-tools";
     }
 
     write_logandverbose "PATH is now $ENV{PATH}";
