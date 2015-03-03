@@ -66,9 +66,11 @@ my $iamwindows = ($^O eq 'MSWin32' || $^O eq 'cygwin');
     # TODO: review the 'cygwin' case
 
 my $pythonprefix="";
+my $waf = "waf";
 
 if ($iamwindows) {
     $pythonprefix = "python";
+    $waf          = "e:\\git\\bde-oss-tools\\bin\\waf";
 }
 
 my $prog       = basename($0);
@@ -292,8 +294,11 @@ sub find_waf {
 }
 
 if ($iamwindows) {
-    $ENV{PATH} = "c:\\python27\\;$ENV{PATH};c:\\wafsupport;e:\\git\\bde-oss-tools\\bin";
+    $ENV{PATH} = "c:\\python27\\;$ENV{PATH};c:\\wafsupport;e:\\git\\bde-oss-tools\\bin;";
     $ENV{BDE_PATH}.=":e:/git/bde-oss-tools";
+
+    write_logandverbose "PATH is now $ENV{PATH}";
+    write_logandverbose "BDE_PATH is now $ENV{BDE_PATH}";
 }
 
 if (!find_waf()) {
@@ -301,10 +306,11 @@ if (!find_waf()) {
     if (!$iamwindows) {
         $ENV{PATH} = "/opt/bb/bin:$ENV{PATH}:/bbshr/bde/bde-oss-tools/bin";
         $ENV{BDE_PATH}.=":/bbshr/bde/bde-oss-tools";
+
+        write_logandverbose "PATH is now $ENV{PATH}";
+        write_logandverbose "BDE_PATH is now $ENV{BDE_PATH}";
     }
 
-    write_logandverbose "PATH is now $ENV{PATH}";
-    write_logandverbose "BDE_PATH is now $ENV{BDE_PATH}";
 }
 else {
     write_logandverbose "NOT expanding path, waf is ".`which waf`;
@@ -446,10 +452,11 @@ MAIN: {
     write_logandverbose "-- build tag          $tag";
 
     # construct common command arguments
-    my @basecmd=("waf");
+    my @basecmd=($waf);
     if ($iamwindows) {
-        unshift @basecmd,qq["python"]; # prefix with python itself (in quotes)
-                                       # for Windows
+        @basecmd = ($pythonprefix
+                  , $waf
+                    ); # for Windows
     }
 
     $ENV{BDE_ROOT}=$where;
@@ -524,9 +531,9 @@ MAIN: {
         write_logandverbose("Done setting up waf env");
 
         # construct target-specific command arguments
-        write_logandverbose(`$pythonprefix waf configure 2>&1`);
+        write_logandverbose(`$pythonprefix $waf configure 2>&1`);
 
-        my @cmd = qw(waf build);
+        my @cmd = qw($waf build);
         unshift @cmd, $pythonprefix if $pythonprefix;
         push @cmd, "--target=$group";
         push @cmd, "--test=build" if $tag=~/TEST-COMPILE/;
