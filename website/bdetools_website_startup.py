@@ -159,19 +159,43 @@ def printTitleRow(title, page):
        links to the specified 'page' for the previous and next dates.
     """
 
-    print "<TABLE class=\"noborders\" ALIGN=\"center\" STYLE=\"width:75em;\"><TR>"
-    print "<TD ALIGN=\"LEFT\"><A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Previous Date</A><TD>"%(
+    print "<TABLE class=\"noborders\" ALIGN=\"center\" STYLE=\"width:75em;\">"
+
+    print "<TR>"
+
+    print "<TD ALIGN=\"LEFT\"><A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Previous Date</A></TD>"%(
         page,
         getBranchDateParamString(dateParm=getPrevDate()),
         getParamsString()
         )
+
+    print "<TD>"
+    print "<A ALIGN=\"LEFT\" HREF=\"%s?%s;%s\" TARGET=\"_blank\">Nextrel</A>"%(
+        page,
+        getBranchDateParamString(branchParm="nextrel"),
+        getParamsString()
+        )
+    print "</TD>"
+
     print  "<TD ALIGN=\"CENTER\">%s</TD>"%title
-    print "<TD ALIGN=\"RIGHT\"><A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Next Date</A><TD>"%(
+
+    print "<TD>"
+    print "<A ALIGN=\"RIGHT\" HREF=\"%s?%s;%s\" TARGET=\"_blank\">Dev</A>"%(
+        page,
+        getBranchDateParamString(branchParm="dev"),
+        getParamsString()
+        )
+    print "</TD>"
+
+    print "<TD ALIGN=\"RIGHT\"><A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Next Date</A></TD>"%(
         page,
         getBranchDateParamString(dateParm=getNextDate()),
         getParamsString()
         )
-    print "</TR></TABLE>"
+
+    print "</TR>"
+
+    print "</TABLE>"
 
 
 
