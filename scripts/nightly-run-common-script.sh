@@ -86,10 +86,6 @@ pushd $BDE_CORE_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
 /opt/swt/bin/git reset --hard
 /opt/swt/bin/git checkout $BDE_CORE_BRANCH
-
-# TBD: Remove me!
-rm -rf $BDE_CORE_GIT_REPO/groups/bsl
-
 popd
 
 REPO_LIST="$REPO_LIST $BDE_CORE_GIT_REPO"
