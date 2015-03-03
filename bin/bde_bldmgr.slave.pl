@@ -78,6 +78,7 @@ my $bindir     = $iamwindows ? $FindBin::Bin : dirname($0);
 $bindir =~ s|/|\\|sg if $iamwindows;
 my $FS         = $iamwindows ? "\\" : "/";
     # TODO: this is a hack - use File::Spec for portable file path manipulation
+my $pathsep    = $iamwindows ? ";" : ":";
 
 unless ($iamwindows) {
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
@@ -285,7 +286,7 @@ sub write_logandverbose (@) {
 }
 
 sub find_waf {
-    foreach my $dir (split /:/,$ENV{PATH}) {
+    foreach my $dir (split /$pathsep/, $ENV{PATH}) {
         # Can't use -x here, since waf isn't executable on windows
         if (-e "$dir/waf") {
             return "$dir/waf";
@@ -302,7 +303,6 @@ if ($iamwindows) {
 }
 
 if (!find_waf()) {
-    write_logandverbose "Expanding PATH to find waf and python";
     if (!$iamwindows) {
         $ENV{PATH} = "/opt/bb/bin:$ENV{PATH}:/bbshr/bde/bde-oss-tools/bin";
         $ENV{BDE_PATH}.=":/bbshr/bde/bde-oss-tools";
