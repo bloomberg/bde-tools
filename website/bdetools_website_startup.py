@@ -41,6 +41,12 @@ try:
         _date   = _fs["date"].value
         _branch = _fs["branch"].value
         _db = search_dir+"%s-%s.db"%(_branch, _date)
+    elif "date" in _fs.keys():
+        _date   = _fs["date"].value
+        _db = search_dir+"%s-%s.db"%(_branch, _date)
+    elif "branch" in _fs.keys():
+        _branch = _fs["branch"].value
+        _db = search_dir+"%s-%s.db"%(_branch, _date)
     elif "db" in _fs.keys():
         _db = _fs["db"].value;
     else:
