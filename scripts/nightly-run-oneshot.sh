@@ -21,7 +21,7 @@ exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
 TOOLSPATH=/home/bdebuild/bde-tools-oneshot
 
-TARGET_OPTION=-pw32
+export TARGET_OPTION=-pw32
 
 cd $TOOLSPATH
 /opt/swt/bin/git pull
