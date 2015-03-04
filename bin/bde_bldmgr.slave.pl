@@ -277,13 +277,18 @@ if ($group) {
     }
 
     sub close_slavelog () {
-        close $SLAVELOG;
-
         if ($masterlogdir) {
             write_logandverbose("Running scp $logfile $masterlogdir");
-            system("scp $logfile $masterlogdir");
-            write_logandverbose("scp completed");
+            my $scp = "scp";
+
+            if ($iamwindows) {
+                $scp = 'E:\cygwin\bin\scp'
+            }
+
+            system("$scp $logfile $masterlogdir");
         }
+
+        close $SLAVELOG;
     }
 }
 
