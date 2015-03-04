@@ -9,6 +9,7 @@ use lib "$FindBin::Bin/../lib/perl/site-perl";
 
 use Getopt::Long;
 use File::Copy;
+use File::Path;
 use File::Temp qw(tempfile);
 use IO::Handle;
 use IO::Socket;
