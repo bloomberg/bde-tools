@@ -359,16 +359,21 @@ def process(filename, text):
         diagnostics    = match.group(3)
 
         substr = text[:match.start()]
-        ufid   = (re.findall("BDE_WAF_UFID=(\\w+)", substr))[-1]
 
-        #print("Component: %s, isTest: %s, category: %s, ufid: %s, message: %s"
-        #         % (component_name, isTest, category, ufid, message[0:100]))
+        regex_results = re.findall("BDE_WAF_UFID=(\\w+)", substr)
 
-        addDiagnosticsEvent(component_name,
-                            uplid,
-                            ufid,
-                            categoryNamer[isTest][category],
-                            diagnostics)
+        if regex_results:
+            ufid   = regex_results[-1]
+
+
+            addDiagnosticsEvent(component_name,
+                                uplid,
+                                ufid,
+                                categoryNamer[isTest][category],
+                                diagnostics)
+        else:
+            print "No match for ufid string in %s"%substr
+
 
     connection.commit()
 
