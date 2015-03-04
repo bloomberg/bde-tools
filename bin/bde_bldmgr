@@ -639,7 +639,7 @@ sub assemble_command ($$) {
         my $target_dir = $build->{master_logdir} . "/$ymdtag";
         my $hostname = hostname();
 
-        File::Path::make_path($target_dir);
+        File::Path::mkpath($target_dir);
 
         $command .= " -m $hostname:$target_dir";
     }
