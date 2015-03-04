@@ -14,6 +14,7 @@ use IO::Handle;
 use IO::Socket;
 use POSIX qw(:sys_wait_h :errno_h uname strftime);
 use Storable qw(store retrieve);
+use Sys::Hostname;
 
 use Util::Retry qw(retry_open3 retry_output3);
 use Util::Message qw(
@@ -629,6 +630,18 @@ sub assemble_command ($$) {
 
     # build output directory
     $command .= " -l $build->{log_destdir}" if $build->{log_destdir};
+
+    # Remote output directory
+    if ($build->{master_logdir}) {
+        my @lt = localtime();
+        my $ymdtag = strftime("%Y%m%d", @lt);
+        my $target_dir = $build->{master_logdir} . "/$ymdtag";
+        my $hostname = hostname();
+
+        File::Path::make_path($target_dir);
+
+        $command .= " -m $hostname:$target_dir";
+    }
 
     # parallel/serial
     if ($opts{jobs} and $opts{jobs}<0) {

@@ -10,7 +10,7 @@ BDE_BB_BRANCH=remotes/origin/master
 
 BSL_TYPE=internal
 
-CORE_UORS="bsl bdl bde"
+CORE_UORS="bdl"
 BB_UORS=""
 
 ALL_UORS="$CORE_UORS $BB_UORS"

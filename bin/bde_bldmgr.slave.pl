@@ -162,6 +162,7 @@ unless (GetOptions(\%opts,qw[
     flags|f=s@
     verbose|v+
     logdir|l=s
+    masterlogdir|m=s
 ])) {
     usage(), exit 0;
 }
@@ -192,6 +193,8 @@ my $verbose  = $opts{verbose}  || 1;
 my $where    = $opts{where}    || $ENV{BDE_ROOT};
 
 my $tag      = $opts{tag}      || "";
+
+my $masterlogdir = $opts{masterlogdir}  || "";
 
 my $uplid;
 if ($opts{uplid}) {
@@ -275,6 +278,12 @@ if ($group) {
 
     sub close_slavelog () {
         close $SLAVELOG;
+
+        if ($masterlogdir) {
+            write_logandverbose("Running scp $logfile $masterlogdir");
+            system("scp $logfile $masterlogdir");
+            write_logandverbose("scp completed");
+        }
     }
 }
 
