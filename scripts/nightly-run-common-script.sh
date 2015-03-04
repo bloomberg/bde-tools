@@ -145,7 +145,7 @@ rsync -av --rsync-path=/usr/bin/rsync \
 
 rsync -av --rsync-path=/usr/bin/rsync \
       --timeout=600                   \
-    /bbshr/bde/bde-oss-tools/ bdenydev02:dev/bde-oss-tools/ 2>&1 | perl -pe's/^/MAC-OSS-TOOLS: /'
+    /bbshr/bde/bde-oss-tools/ $MAC_BASE_DIR/bde-oss-tools/ 2>&1 | perl -pe's/^/MAC-OSS-TOOLS: /'
 
 rsync -av --rsync-path=/usr/bin/rsync \
     $TOOLSPATH/ $W32_TOOLS_DIR/ 2>&1 | perl -pe's/^/W32-TOOLS: /'
