@@ -282,7 +282,7 @@ if ($group) {
             my $scp = "scp";
 
             if ($iamwindows) {
-                $scp = 'E:\cygwin\bin\scp'
+                $scp = 'E:\cygwin\bin\scp';
             }
 
             system("$scp $logfile $masterlogdir");
