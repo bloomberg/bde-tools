@@ -136,11 +136,11 @@ rsync -av --rsync-path=/usr/bin/rsync \
     $SNAPSHOT_DIR/ $W96_BUILD_DIR/ 2>&1 | perl -pe's/^/W96-CP: /'
 
 rsync -av --rsync-path=/usr/bin/rsync \
-      --timeout=600 --contimeout=600  \
+      --timeout=600                   \
     $SNAPSHOT_DIR/ $MAC_BUILD_DIR/ 2>&1 | perl -pe's/^/MAC-CP: /'
 
 rsync -av --rsync-path=/usr/bin/rsync \
-      --timeout=600 --contimeout=600  \
+      --timeout=600                   \
     $TOOLSPATH/ $MAC_TOOLS_DIR/ 2>&1 | perl -pe's/^/MAC-TOOLS: /'
 
 rsync -av --rsync-path=/usr/bin/rsync \
