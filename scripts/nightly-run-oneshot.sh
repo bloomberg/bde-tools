@@ -10,7 +10,7 @@ BDE_BB_BRANCH=remotes/origin/master
 
 BSL_TYPE=internal
 
-CORE_UORS="bdl"
+CORE_UORS="bsl bdl"
 BB_UORS=""
 
 ALL_UORS="$CORE_UORS $BB_UORS"
@@ -21,7 +21,7 @@ exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
 TOOLSPATH=/home/bdebuild/bde-tools-oneshot
 
-export TARGET_OPTION=-pw32
+export TARGET_OPTION=-pw32,mac
 
 cd $TOOLSPATH
 /opt/swt/bin/git pull
