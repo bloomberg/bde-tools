@@ -289,9 +289,9 @@ if ($group) {
             }
 
 
-            write_logandverbose("Running $scp $sourcefile $targetdir");
+            write_logandverbose("Running $scp $sourcefile $masterlogdir");
 
-            system("$scp $sourcefile $targetdir");
+            system("$scp $sourcefile $masterlogdir");
         }
 
         close $SLAVELOG;
