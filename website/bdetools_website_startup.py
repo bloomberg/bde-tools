@@ -27,8 +27,6 @@ print
 _fs = cgi.FieldStorage()
 
 search_dir = "/web_data/db/"
-files = filter(os.path.isfile, glob.glob(search_dir + "*"))
-files.sort() #key=lambda x: os.path.getmtime(x))
 
 _db     = None
 
@@ -50,6 +48,10 @@ try:
     elif "db" in _fs.keys():
         _db = _fs["db"].value;
     else:
+        # Limit default file search to nextrel
+        files = filter(os.path.isfile, glob.glob(search_dir + "*nextrel*"))
+        files.sort() #key=lambda x: os.path.getmtime(x))
+
         _db = files[-1]
 
     if _date is None:
