@@ -536,6 +536,7 @@ MAIN: {
                                   "$ENV{BDE_ROOT}\\install\\$compiler-$target";
             $ENV{PKG_CONFIG_PATH} = "$ENV{PREFIX}\\lib\\pkgconfig";
 
+            write_logandverbose("Creating $ENV{PKG_CONFIG_PATH} if not present");
             File::Path::make_path($ENV{PKG_CONFIG_PATH});
 
             write_logandverbose("Set up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tPATH=$ENV{PATH}\n\tPREFIX=$ENV{PREFIX}\n\tPKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}");
@@ -544,7 +545,7 @@ MAIN: {
         # construct target-specific command arguments
         write_logandverbose(`$pythonprefix $waf configure 2>&1`);
 
-        my @cmd = qw($waf build);
+        my @cmd = ($waf, 'build');
         unshift @cmd, $pythonprefix if $pythonprefix;
         push @cmd, "--target=$group";
         push @cmd, "--test=build" if $tag=~/TEST-COMPILE/;
