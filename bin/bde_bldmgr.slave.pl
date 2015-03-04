@@ -511,24 +511,35 @@ MAIN: {
     TARGET: for my $target (@targets) {
         write_logandverbose("=============== BUILDING $target for $group");
 
-        my $setwafenv = "$pythonprefix $bindir${FS}bde_setwafenv.py -c $compiler -t $target";
+        if (!$iamwindows) {
+            my $setwafenv = "$pythonprefix $bindir${FS}bde_setwafenv.py -c $compiler -t $target";
 
-        write_logandverbose("Setting up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tsetwafenv=\"$setwafenv\"\n\tPATH=$ENV{PATH}");
+            write_logandverbose("Setting up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tsetwafenv=\"$setwafenv\"\n\tPATH=$ENV{PATH}");
 
-        print `which bde_setwafenv.py`;
+            print `which bde_setwafenv.py`;
 
-        open(SETWAFENV,"$setwafenv|") or die "Unable to run $setwafenv, error $!";
+            open(SETWAFENV,"$setwafenv|") or die "Unable to run $setwafenv, error $!";
 
-        while(<SETWAFENV>) {
-            if (/export\s+(\w+)="(.*)"/) {
-                write_logandverbose "Adding to env: $1=$2";
-                $ENV{$1}=$2;
+            while(<SETWAFENV>) {
+                if (/export\s+(\w+)="(.*)"/) {
+                    write_logandverbose "Adding to env: $1=$2";
+                    $ENV{$1}=$2;
+                }
             }
+
+            close(SETWAFENV);
+
+            write_logandverbose("Done setting up waf env");
         }
+        else { # windows
+            $ENV{PREFIX}          =
+                                  "$ENV{BDE_ROOT}\\install\\$compiler-$target";
+            $ENV{PKG_CONFIG_PATH} = "$ENV{PREFIX}\\lib\\pkgconfig";
 
-        close(SETWAFENV);
+            File::Path::make_path($ENV{PKG_CONFIG_PATH});
 
-        write_logandverbose("Done setting up waf env");
+            write_logandverbose("Set up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tPATH=$ENV{PATH}\n\tPREFIX=$ENV{PREFIX}\n\tPKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}");
+        }
 
         # construct target-specific command arguments
         write_logandverbose(`$pythonprefix $waf configure 2>&1`);
