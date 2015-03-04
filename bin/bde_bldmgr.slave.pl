@@ -278,22 +278,20 @@ if ($group) {
 
     sub close_slavelog () {
         if ($masterlogdir) {
-            my $targetdir = $masterlogdir;
+            my $sourcefile = $logfile;
 
             my $scp = "scp";
 
             if ($iamwindows) {
                 $scp = 'E:\cygwin\bin\scp';
-                $targetdir =~ s{\\}{/}g;
-                $targetdir =~ s{^(\w):}{/$1/};
-
-                chomp $targetdir;
+                $sourcefile =~ s{\\}{/}g;
+                $sourcefile =~ s{^(\w):}{/$1/};
             }
 
 
-            write_logandverbose("Running $scp $logfile $targetdir");
+            write_logandverbose("Running $scp $sourcefile $targetdir");
 
-            system("$scp $logfile $targetdir");
+            system("$scp $sourcefile $targetdir");
         }
 
         close $SLAVELOG;
