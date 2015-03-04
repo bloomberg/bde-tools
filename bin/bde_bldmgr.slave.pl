@@ -66,9 +66,11 @@ my $iamwindows = ($^O eq 'MSWin32' || $^O eq 'cygwin');
     # TODO: review the 'cygwin' case
 
 my $pythonprefix="";
+my $waf = "waf";
 
 if ($iamwindows) {
-    $pythonprefix = "python ";
+    $pythonprefix = "python";
+    $waf          = "e:\\git\\bde-oss-tools\\bin\\waf";
 }
 
 my $prog       = basename($0);
@@ -76,6 +78,7 @@ my $bindir     = $iamwindows ? $FindBin::Bin : dirname($0);
 $bindir =~ s|/|\\|sg if $iamwindows;
 my $FS         = $iamwindows ? "\\" : "/";
     # TODO: this is a hack - use File::Spec for portable file path manipulation
+my $pathsep    = $iamwindows ? ";" : ":";
 
 unless ($iamwindows) {
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
@@ -159,6 +162,7 @@ unless (GetOptions(\%opts,qw[
     flags|f=s@
     verbose|v+
     logdir|l=s
+    masterlogdir|m=s
 ])) {
     usage(), exit 0;
 }
@@ -189,6 +193,8 @@ my $verbose  = $opts{verbose}  || 1;
 my $where    = $opts{where}    || $ENV{BDE_ROOT};
 
 my $tag      = $opts{tag}      || "";
+
+my $masterlogdir = $opts{masterlogdir}  || "";
 
 my $uplid;
 if ($opts{uplid}) {
@@ -271,6 +277,23 @@ if ($group) {
     }
 
     sub close_slavelog () {
+        if ($masterlogdir) {
+            my $sourcefile = $logfile;
+
+            my $scp = "scp";
+
+            if ($iamwindows) {
+                $scp = 'E:\cygwin\bin\scp';
+                $sourcefile =~ s{\\}{/}g;
+                $sourcefile =~ s{^(\w):}{/$1/};
+            }
+
+
+            write_logandverbose("Running $scp $sourcefile $masterlogdir");
+
+            system("$scp $sourcefile $masterlogdir");
+        }
+
         close $SLAVELOG;
     }
 }
@@ -283,7 +306,7 @@ sub write_logandverbose (@) {
 }
 
 sub find_waf {
-    foreach my $dir (split /:/,$ENV{PATH}) {
+    foreach my $dir (split /$pathsep/, $ENV{PATH}) {
         # Can't use -x here, since waf isn't executable on windows
         if (-e "$dir/waf") {
             return "$dir/waf";
@@ -291,19 +314,23 @@ sub find_waf {
     }
 }
 
-if (!find_waf()) {
-    write_logandverbose "Expanding PATH to find waf and python";
-    if (!$iamwindows) {
-        $ENV{PATH} = "/opt/bb/bin:$ENV{PATH}:/bbshr/bde/bde-oss-tools/bin";
-        $ENV{BDE_PATH}.=":/bbshr/bde/bde-oss-tools";
-    }
-    else {
-        $ENV{PATH} = "c:\\python27\\;$ENV{PATH};e:\\git\\bde-oss-tools\\bin";
-        $ENV{BDE_PATH}.=":e:/git/bde-oss-tools";
-    }
+if ($iamwindows) {
+    $ENV{PATH} = "c:\\python27\\;$ENV{PATH};c:\\wafsupport;e:\\git\\bde-oss-tools\\bin;";
+    $ENV{BDE_PATH}.=":e:/git/bde-oss-tools";
 
     write_logandverbose "PATH is now $ENV{PATH}";
     write_logandverbose "BDE_PATH is now $ENV{BDE_PATH}";
+}
+
+if (!find_waf()) {
+    if (!$iamwindows) {
+        $ENV{PATH} = "/opt/bb/bin:$ENV{PATH}:/bbshr/bde/bde-oss-tools/bin:$FindBin::Bin/../../bde-oss-tools/bin:$FindBin::Bin";
+        $ENV{BDE_PATH}.=":/bbshr/bde/bde-oss-tools:$FindBin::Bin/../../bde-oss-tools";
+
+        write_logandverbose "PATH is now $ENV{PATH}";
+        write_logandverbose "BDE_PATH is now $ENV{BDE_PATH}";
+    }
+
 }
 else {
     write_logandverbose "NOT expanding path, waf is ".`which waf`;
@@ -445,10 +472,11 @@ MAIN: {
     write_logandverbose "-- build tag          $tag";
 
     # construct common command arguments
-    my @basecmd=("waf");
+    my @basecmd=($waf);
     if ($iamwindows) {
-        unshift @basecmd,qq["python"]; # prefix with python itself (in quotes)
-                                       # for Windows
+        @basecmd = ($pythonprefix
+                  , $waf
+                    ); # for Windows
     }
 
     $ENV{BDE_ROOT}=$where;
@@ -503,29 +531,41 @@ MAIN: {
     TARGET: for my $target (@targets) {
         write_logandverbose("=============== BUILDING $target for $group");
 
-        my $setwafenv = "$pythonprefix $bindir${FS}bde_setwafenv.py -c $compiler -t $target";
+        if (!$iamwindows) {
+            my $setwafenv = "$pythonprefix $bindir${FS}bde_setwafenv.py -c $compiler -t $target";
 
-        write_logandverbose("Setting up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tsetwafenv=\"$setwafenv\"\n\tPATH=$ENV{PATH}");
+            write_logandverbose("Setting up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tsetwafenv=\"$setwafenv\"\n\tPATH=$ENV{PATH}");
 
-        print `which bde_setwafenv.py`;
+            print `which bde_setwafenv.py`;
 
-        open(SETWAFENV,"$setwafenv|") or die "Unable to run $setwafenv, error $!";
+            open(SETWAFENV,"$setwafenv|") or die "Unable to run $setwafenv, error $!";
 
-        while(<SETWAFENV>) {
-            if (/export\s+(\w+)="(.*)"/) {
-                write_logandverbose "Adding to env: $1=$2";
-                $ENV{$1}=$2;
+            while(<SETWAFENV>) {
+                if (/export\s+(\w+)="(.*)"/) {
+                    write_logandverbose "Adding to env: $1=$2";
+                    $ENV{$1}=$2;
+                }
             }
+
+            close(SETWAFENV);
+
+            write_logandverbose("Done setting up waf env");
+        }
+        else { # windows
+            $ENV{PREFIX}          =
+                                  "$ENV{BDE_ROOT}\\install\\$compiler-$target";
+            $ENV{PKG_CONFIG_PATH} = "$ENV{PREFIX}\\lib\\pkgconfig";
+
+            write_logandverbose("Creating $ENV{PKG_CONFIG_PATH} if not present");
+            File::Path::mkpath($ENV{PKG_CONFIG_PATH});
+
+            write_logandverbose("Set up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tPATH=$ENV{PATH}\n\tPREFIX=$ENV{PREFIX}\n\tPKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}\n\tBDE_WAF_UFID=$target");
         }
 
-        close(SETWAFENV);
-
-        write_logandverbose("Done setting up waf env");
-
         # construct target-specific command arguments
-        write_logandverbose(`$pythonprefix waf configure 2>&1`);
+        write_logandverbose(`$pythonprefix $waf configure 2>&1`);
 
-        my @cmd = qw(waf build);
+        my @cmd = ($waf, 'build');
         unshift @cmd, $pythonprefix if $pythonprefix;
         push @cmd, "--target=$group";
         push @cmd, "--test=build" if $tag=~/TEST-COMPILE/;

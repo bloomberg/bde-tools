@@ -9,11 +9,13 @@ use lib "$FindBin::Bin/../lib/perl/site-perl";
 
 use Getopt::Long;
 use File::Copy;
+use File::Path;
 use File::Temp qw(tempfile);
 use IO::Handle;
 use IO::Socket;
 use POSIX qw(:sys_wait_h :errno_h uname strftime);
 use Storable qw(store retrieve);
+use Sys::Hostname;
 
 use Util::Retry qw(retry_open3 retry_output3);
 use Util::Message qw(
@@ -630,6 +632,18 @@ sub assemble_command ($$) {
     # build output directory
     $command .= " -l $build->{log_destdir}" if $build->{log_destdir};
 
+    # Remote output directory
+    if ($build->{master_logdir}) {
+        my @lt = localtime();
+        my $ymdtag = strftime("%Y%m%d", @lt);
+        my $target_dir = $build->{master_logdir} . "/$ymdtag";
+        my $hostname = hostname();
+
+        File::Path::mkpath($target_dir);
+
+        $command .= " -m $hostname:$target_dir";
+    }
+
     # parallel/serial
     if ($opts{jobs} and $opts{jobs}<0) {
         # negative job number forces a parallel build even if serial is configured
@@ -838,7 +852,7 @@ foreach my $platform (@platforms) {
             my $command;
             my $log_prefix;
 
-            $newBuild->{local} = ($host eq $localhostname)?1:0;
+            #$newBuild->{local} = ($host eq $localhostname)?1:0;
 
             # ping machine, and 'next' if unreachable
             unless ($newBuild->{local}) {
@@ -869,47 +883,6 @@ foreach my $platform (@platforms) {
             message("executing ".
                     ($newBuild->{local}?"local":"remote")." build");
 
-            # Run an express build before building test drivers.
-#            my %express_build = %$newBuild;
-#            $express_build{express} = "Yes";
-#            $express_build{tag} = "COMPILE ";
-#            $command = assemble_command(\%express_build, $group);
-#            unless ($opts{express}) {
-#                # The test command does not rebuild makefiles or dependencies.
-#                if(exists $newBuild->{do_not_test}
-#                   and $newBuild->{do_not_test}=~ /\b$group\b/) {
-#                    alert("$group in do_not_test list on '$platform'"
-#                          . " - skipping tests");
-#                }
-#                else {
-#                    my %test_build = %$newBuild;
-#                    $test_build{rebuild} = "No";
-#                    $test_build{nodepend} = "Yes";
-#                    $test_build{tag} = "TEST-COMPILE ";
-#
-#                    # Append test command to express command.
-#                    # if test_host exists, then build test drivers on build
-#                    # farm before running them on the test_host
-#                    $command .= " ; ";
-#                    $command .= assemble_command({
-#                                                    %test_build,
-#                                                    make=>"build_test",
-#                                                 }, $group);
-#                }
-#            }
-#
-#            # execute rsh - if rsh itself fails, try next host.
-#            alert("Invoking '$command' on $host");
-#            my ($cmd_status, $cmd_out) = invoke($host,$command,$newBuild);
-#            if ($cmd_status) {
-#                error(($newBuild->{local}?"local":"remote")." build failed to run '$command'");
-#                for my $l (@$cmd_out) { error($l); }
-#                error("trying next machine");
-#                $results{unreachable_hosts} .= " $host (build run failed)";
-#                push @badCmdOutput, @$cmd_out;
-#                next;
-#            }
-#
             $results{host} = $host;
             my @cmd_out;
 
@@ -937,36 +910,37 @@ foreach my $platform (@platforms) {
                     push @cmd_out, @$test_out;
                 }
             }
-#
-#            if (exists $build->{postbuild_cmd}) {
-#                message("running postbuild command");
-#                my ($cmd_status, $cmd_out) = invoke($host, $build->{postbuild_cmd}, $build);
-#                if ($cmd_status) {
-#                    error("Postbuild command failed");
-#                    for my $l (@$cmd_out) { error($l); }
-#                    $results{unreachable_hosts} .= " $host (postbuild failed)";
-#                    $results{host} = undef;
-#                    push @badCmdOutput, @$cmd_out;
-#                    next;
-#                }
-#            }
-#
-#            # Like postbuild_cmd, except that this command is run locally.
-#            if (exists $build->{postbuild_pull_cmd}) {
-#                message("running postbuild pull command");
-#                my $cmd_out = system($build->{postbuild_pull_cmd});
-#                my $cmd_status = $?;
-#
-#                if ($cmd_status) {
-#                    error("Postbuild pull command failed");
-#                    for my $l (split /\n/,$cmd_out) { error($l); }
-#                    $results{unreachable_hosts} .= " $host (postbuild pull failed)";
-#                    $results{host} = undef;
-#                    push @badCmdOutput, $cmd_out;
-#                    next;
-#                }
-#            }
-#
+
+            if (exists $build->{postbuild_cmd}) {
+                message("running postbuild command");
+                my ($cmd_status, $cmd_out) = invoke($host, $build->{postbuild_cmd}, $build);
+                if ($cmd_status) {
+                    error("Postbuild command failed");
+                    for my $l (@$cmd_out) { error($l); }
+                    $results{unreachable_hosts} .= " $host (postbuild failed)";
+                    $results{host} = undef;
+                    push @badCmdOutput, @$cmd_out;
+                    next;
+                }
+            }
+
+            # Like postbuild_cmd, except that this command is run locally.
+            if (exists $build->{postbuild_pull_cmd}) {
+                message("running postbuild pull command");
+                my $cmd_out = system($build->{postbuild_pull_cmd});
+                my $cmd_status = $?;
+
+                if ($cmd_status) {
+                    error("Postbuild pull command failed");
+                    for my $l (split /\n/,$cmd_out) { error($l); }
+                    $results{unreachable_hosts} .= " $host (postbuild pull failed)";
+                    $results{host} = undef;
+                    push @badCmdOutput, $cmd_out;
+                    next;
+                }
+            }
+
+
             my (@successes,@failures,@notsupported,%fail_msgs,@targetCombos);
 
             foreach (@cmd_out) {

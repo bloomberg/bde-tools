@@ -86,10 +86,6 @@ pushd $BDE_CORE_GIT_REPO 2> /dev/null
 /opt/swt/bin/git fetch
 /opt/swt/bin/git reset --hard
 /opt/swt/bin/git checkout $BDE_CORE_BRANCH
-
-# TBD: Remove me!
-rm -rf $BDE_CORE_GIT_REPO/groups/bsl
-
 popd
 
 REPO_LIST="$REPO_LIST $BDE_CORE_GIT_REPO"
@@ -139,13 +135,17 @@ rsync -av --rsync-path=/usr/bin/rsync \
 rsync -av --rsync-path=/usr/bin/rsync \
     $SNAPSHOT_DIR/ $W96_BUILD_DIR/ 2>&1 | perl -pe's/^/W96-CP: /'
 
-# Mac transfers suspended due to firewall issues
-#
-#rsync -av --rsync-path=/usr/bin/rsync \
-#    $SNAPSHOT_DIR/ $MAC_BUILD_DIR/ 2>&1 | perl -pe's/^/MAC-CP: /'
-#
-#rsync -av --rsync-path=/usr/bin/rsync \
-#    $TOOLSPATH/ $MAC_TOOLS_DIR/ 2>&1 | perl -pe's/^/MAC-TOOLS: /'
+rsync -av --rsync-path=/usr/bin/rsync \
+      --timeout=600                   \
+    $SNAPSHOT_DIR/ $MAC_BUILD_DIR/ 2>&1 | perl -pe's/^/MAC-CP: /'
+
+rsync -av --rsync-path=/usr/bin/rsync \
+      --timeout=600                   \
+    $TOOLSPATH/ $MAC_TOOLS_DIR/ 2>&1 | perl -pe's/^/MAC-TOOLS: /'
+
+rsync -av --rsync-path=/usr/bin/rsync \
+      --timeout=600                   \
+    /bbshr/bde/bde-oss-tools/ $MAC_BASE_DIR/bde-oss-tools/ 2>&1 | perl -pe's/^/MAC-OSS-TOOLS: /'
 
 rsync -av --rsync-path=/usr/bin/rsync \
     $TOOLSPATH/ $W32_TOOLS_DIR/ 2>&1 | perl -pe's/^/W32-TOOLS: /'

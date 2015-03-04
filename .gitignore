@@ -1,4 +1,5 @@
-# ignore objects, archives, tasks, and backups anywhere in the tree
+# ignore objects, archives, tasks, python compiled files, and backups anywhere
+# in the tree
 *.[oa]
 *.lib
 *.obj
