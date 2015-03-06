@@ -19,9 +19,9 @@ ALL_UORS="$CORE_UORS $BB_UORS"
 # not mail cron job results
 exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
-TOOLSPATH=/home/bdebuild/bde-tools-oneshot
+TOOLSPATH=/home/mgiroux/bde-tools
 
-export TARGET_OPTION=-pw32,mac
+export TARGET_OPTION=-pmac
 
 cd $TOOLSPATH
 /opt/swt/bin/git pull
