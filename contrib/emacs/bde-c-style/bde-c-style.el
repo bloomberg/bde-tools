@@ -59,10 +59,10 @@ Example:
 
 switch(val) {
   case 100: {
-      return 1;
+    return 1;
   } break;
   default: {
-      return 0;
+    return 0;
   } break;
 }
 "
