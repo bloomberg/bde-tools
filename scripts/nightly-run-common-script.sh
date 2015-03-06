@@ -157,6 +157,18 @@ rsync -av --rsync-path=/usr/bin/rsync \
     $TOOLSPATH/ $W96_TOOLS_DIR/ 2>&1 | perl -pe's/^/W96-TOOLS: /'
 
 # run ${BUILD_TYPE}-core build
+
+echo Invoking bde_bldmgr for core build
+
+echo Invoking: \
+$TOOLSPATH/bin/bde_bldmgr -v                \
+       -k $TOOLSPATH/etc/bde_bldmgr.config  \
+       -f -k -m -i${BUILD_TYPE}-core        \
+       $TARGET_OPTION                       \
+       $CORE_UORS                           \
+       -vvv
+
+
 $TOOLSPATH/bin/bde_bldmgr -v                \
        -k $TOOLSPATH/etc/bde_bldmgr.config  \
        -f -k -m -i${BUILD_TYPE}-core        \
@@ -169,6 +181,8 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
 
 if [[ ! -z "$BB_UORS" ]]
 then
+    echo Invoking bde_bldmgr for bb build
+
     # run ${BUILD_TYPE}-bb build
     $TOOLSPATH/bin/bde_bldmgr -v                \
            -k $TOOLSPATH/etc/bde_bldmgr.config  \

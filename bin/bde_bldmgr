@@ -482,11 +482,14 @@ sub postprocess_configuration ($@) {
 
     # assign default values
     if (my $default = $config->{default}) {
+        message "Processing default config values";
         foreach my $plid (@platforms) {
+            message "... for platform $plid";
             foreach my $key (keys %$default) {
+                message "... ... checking key $key";
                   unless (exists $config->{$plid}{$key}) {
                       $config->{$plid}{$key}=$config->{default}{$key};
-                      debug("Platform $plid assigned default value ".
+                      message("... ... ... Platform $plid assigned default value ".
                               $key."='".$config->{default}{$key}."'");
                   }
             }
@@ -503,7 +506,7 @@ sub postprocess_configuration ($@) {
         verbose("Platform $plid assigning values from $id");
         foreach my $key (keys %{$platform->{$id}}) {
             $platform->{$key}=$platform->{$id}{$key};
-            debug("Platform $plid assigned value ".
+            verbose("Platform $plid assigned value ".
                     $key."='".$platform->{$key}."'");
         }
     }
