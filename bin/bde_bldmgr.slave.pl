@@ -100,6 +100,11 @@ if ($^O =~ /solaris/) {
     $ENV{PATH} = "/bbs/opt/bin:$ENV{PATH}";
 }
 
+if ($^O =~ /darwin/) {
+    # pkg-config may be in /opt/local/bin on darwin
+    $ENV{PATH} = "$ENV{PATH}:/opt/local/bin";
+}
+
 # Need /opt/swt/bin to find gmake - DRQS 46663127
 $ENV{PATH} .= ":".join(':',qw[
     /opt/swt/bin
