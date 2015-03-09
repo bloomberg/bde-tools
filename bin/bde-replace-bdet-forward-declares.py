@@ -161,10 +161,9 @@ def convert_bdet_to_bdlt(text, verbose = False):
     count = 0
     for key, value in FORWARD_DECLARATIONS.iteritems():
         replacement = get_replacement_text(value, key, "// bdet->bdlt")
-        (text, num) = re.subn(
-                             "^\s*(class\s*{0}\s*;).*\n".format("bdet_" + key),
-                             replacement,
-                             text)
+        (text, num) = re.subn("(class\s*{0}\s*;).*\n".format("bdet_" + key),
+                              replacement,
+                              text)
         count = count + num
         
     # Find the first updated forward declare and prepend the preamable text.
@@ -210,10 +209,9 @@ def convert_bdet_to_include(text, verbose = False):
         replacement = add_right_justified_comment(replacement,
                                                   "// bdet->#include")
 
-        (text, num) = re.subn(
-                             "^\s*(class\s*{0}\s*;).*\n".format(bdet_typename),
-                             replacement,
-                             text)
+        (text, num) = re.subn("(class\s*{0}\s*;).*\n".format(bdet_typename),
+                              replacement,
+                              text)
         if (num > 0):
             if (not re.search("^\s*#include\s*<{0}\\.h>".format(bdet_header),
                               text,
@@ -330,7 +328,6 @@ def main():
                 with open(args[0], "w") as output_file:
                     output_file.write(text)
         else:
-            (text, num) = re.subn("\n$", "", text);
             print text
         
     except InputError as e:
