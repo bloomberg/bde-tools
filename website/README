@@ -1,0 +1,21 @@
+Steps to set up webserver instance
+
+Go to https://openstack.dnj1.bcpc.bloomberg.com/horizon/project/instances/
+
+1) Create a VM with the interface, based on the "configured-webserver" snapshot.
+
+2) Make sure its name is "results", and it's associated with an IP address (the
+   rest of this assumes you used the same one, 100.127.4.161).
+
+3) Copy over any missing databases as bdebuild:
+    scp -i ~bdebuild/.ssh/bdebuild.pem ~bdebuild/bs/nightly-logs/*/db/*.db \
+           ubuntu@100.127.4.161:/web_data/db
+
+4) Make sure the "bde-tools" checkout is up-to-date in the vm (again, as
+   bdebuild):
+    ssh -i ~bdebuild/.ssh/bdebuild.pem ubuntu@100.127.4.161
+    cd /web_data/git/bde-tools
+    git pull
+
+5) If CGI scripts aren't loading correctly, make sure the apache configuration
+   and root files match the contents of system-setup.tar.gz.
