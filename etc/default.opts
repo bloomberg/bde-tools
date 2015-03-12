@@ -207,8 +207,8 @@ unix-SunOS-*-*-cc-5.11 _  DEF_CXXFLAGS    = -xannotate=no
 !! windows-*-*-*-cl-15.00           _    DEF_CXXFLAGS    = /nologo /Oi /bigobj /we4715 /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE /DNOMINMAX $(NOGDI) /GR /wd4661 /we4150 /wd4510 /wd4610 $(WIN_VERSION_FLAGS)
 !! windows-*-*-*-cl-16.00           _    DEF_CFLAGS      = /nologo /Oi /bigobj /we4715 /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE /DNOMINMAX $(NOGDI) $(WIN_VERSION_FLAGS)
 !! windows-*-*-*-cl-16.00           _    DEF_CXXFLAGS    = /nologo /Oi /bigobj /we4715 /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE /DNOMINMAX $(NOGDI) /GR /wd4661 /we4150 /wd4510 /wd4610 $(WIN_VERSION_FLAGS)
-++ windows-*-*-*-cl-18.00           _    DEF_CFLAGS      = /FS
-++ windows-*-*-*-cl-18.00           _    DEF_CXXFLAGS    = /FS
+++ windows-*-*-*-cl-14.00           _    DEF_CFLAGS      = /FS
+++ windows-*-*-*-cl-14.00           _    DEF_CXXFLAGS    = /FS
 
 # DRQS 13597546 - add -bmaxdata:0x5000000 to work around new exception issues
 # and match our production setup
