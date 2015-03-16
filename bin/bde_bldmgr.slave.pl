@@ -576,6 +576,7 @@ MAIN: {
         push @cmd, "--test=build" if $tag=~/TEST-COMPILE/;
         push @cmd, "--test=run" if $tag=~/TEST-RUN/;
         push @cmd, "-kk";
+        push @cmd, "-v" if $verbose;
 
         print "-- running command: @cmd\n" if $verbose>=2;
         write_logandverbose("======== running command: @cmd");

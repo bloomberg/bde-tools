@@ -21,7 +21,7 @@ exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
 TOOLSPATH=/home/mgiroux/bde-tools
 
-export TARGET_OPTION=-pmac
+export TARGET_OPTION=-pw32 -vvv
 
 cd $TOOLSPATH
 /opt/swt/bin/git pull
