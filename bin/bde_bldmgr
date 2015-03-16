@@ -683,8 +683,12 @@ sub assemble_command ($$) {
     verbose("passing debug=$opts{debug}");
     if (defined $opts{verbose}) {
         $command .= " -v" x $opts{verbose};
+        verbose("passing verbosity=$opts{verbose}");
     }
-    verbose("passing verbosity=$opts{verbose}");
+    elsif (defined $build->{verbose}) {
+        $command .= " -v" x $build->{verbose};
+        message("passing verbosity=$build->{verbose}");
+    }
 
     # -e : express build
     if (defined $opts{express} or
