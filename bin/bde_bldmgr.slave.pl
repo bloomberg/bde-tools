@@ -560,6 +560,7 @@ MAIN: {
             $ENV{PREFIX}          =
                                   "$ENV{BDE_ROOT}\\install\\$compiler-$target";
             $ENV{PKG_CONFIG_PATH} = "$ENV{PREFIX}\\lib\\pkgconfig";
+            $ENV{BDE_WAF_BUILD_DIR} = "$compiler-$target";
 
             write_logandverbose("Creating $ENV{PKG_CONFIG_PATH} if not present");
             File::Path::mkpath($ENV{PKG_CONFIG_PATH});
