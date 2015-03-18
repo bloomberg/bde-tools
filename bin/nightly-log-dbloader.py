@@ -364,11 +364,11 @@ def process(filename, text):
 
         if regex_results:
 
-            if len(regex_results[0][0]):
-                ufid   = regex_results[0][0]
+            # Use $1 of the LAST match if populated, otherwise use $2
+            if len(regex_results[-1][0]):
+                ufid   = regex_results[-1][0]
             else:
-                ufid   = regex_results[0][1]
-
+                ufid   = regex_results[-1][1]
 
             addDiagnosticsEvent(component_name,
                                 uplid,
