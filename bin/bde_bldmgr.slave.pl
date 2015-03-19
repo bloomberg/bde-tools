@@ -537,7 +537,7 @@ MAIN: {
         write_logandverbose("=============== BUILDING $target for $group");
 
         if (!$iamwindows) {
-            my $setwafenv = "$pythonprefix $bindir${FS}bde_setwafenv.py -c $compiler -t $target";
+            my $setwafenv = "$pythonprefix $bindir${FS}bde_setwafenv.py -c $compiler -t $target --force_uplid=$uplid";
 
             write_logandverbose("Setting up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tsetwafenv=\"$setwafenv\"\n\tPATH=$ENV{PATH}");
 
