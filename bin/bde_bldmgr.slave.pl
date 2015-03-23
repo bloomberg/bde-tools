@@ -64,6 +64,7 @@ STDOUT->autoflush(1);
 
 my $iamwindows = ($^O eq 'MSWin32' || $^O eq 'cygwin');
     # TODO: review the 'cygwin' case
+my $iammac = ($^O eq 'darwin');
 
 my $pythonprefix="";
 my $waf = "waf";
@@ -566,6 +567,14 @@ MAIN: {
             File::Path::mkpath($ENV{PKG_CONFIG_PATH});
 
             write_logandverbose("Set up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tPATH=$ENV{PATH}\n\tPREFIX=$ENV{PREFIX}\n\tPKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}\n\tBDE_WAF_UFID=$target");
+        }
+
+        if ($iammac) {
+            # In the mac case, we need to force CC and CXX to clang
+            $ENV{CC}="clang";
+            $ENV{CXX}="clang++";
+
+            write_logandverbose("On mac, forcing CC=$ENV{CC} and CXX=$ENV{CXX}");
         }
 
         # construct target-specific command arguments
