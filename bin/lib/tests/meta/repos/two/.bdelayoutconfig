@@ -1,0 +1,7 @@
+{
+    "group_dirs": ["groups1"],
+    "app_package_dirs": ["apps1"],
+    "stand_alone_package_dirs": ["sap1", "sap2"],
+    "third_party_package_dirs": [],
+    "group_abs_dirs": ["groupabs1"]
+}

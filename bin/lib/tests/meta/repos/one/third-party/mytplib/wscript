@@ -1,0 +1,70 @@
+from waflib import Logs, Utils
+from waflib.Configure import ConfigurationContext
+
+import os
+import sys
+
+top = '.'
+out = 'build'
+
+def options(opt):
+    opt.load('compiler_cxx')
+
+def configure(conf):
+    conf.load('compiler_cxx')
+
+def build(bld):
+    source_files = [
+        'mytplib.cpp'
+    ]
+
+    if 'BDE_THIRD_PARTY_CFLAGS' in bld.env:
+        bde_cxxflags = bld.env['BDE_THIRD_PARTY_CXXFLAGS']
+        is_bde = True
+    else:
+        bde_cxxflags = []
+        is_bde = False
+
+    prefix  = bld.env['PREFIX']
+    if 'install_lib_dir' in bld.env:
+        lib_dir = bld.env['install_lib_dir']
+        lib_suffix = bld.env['lib_suffix']
+    else:
+        lib_dir = 'lib'
+        lib_suffix = ''
+
+    lib_install_path = os.path.join(prefix, lib_dir)
+    pc_install_path = os.path.join(prefix, lib_dir, 'pkgconfig')
+
+    bld(name = 'mytplib_lib',
+        target = 'mytplib' + lib_suffix,
+        source = source_files,
+        export_includes = '.',
+        features = ['cxx', 'cxxstlib'],
+        cxxflags = bde_cxxflags,
+        includes = '.',
+        install_path = lib_install_path
+    )
+
+    bld(name = 'mytplib_pc',
+        target = 'mytplib' + lib_suffix + '.pc',
+        source = 'mytplib.pc.in',
+        features = ['subst'],
+        prefix = prefix,
+        lib_dir = lib_dir,
+        libs = '-lmytplib' + lib_suffix,
+        cflags = ' '.join(bde_cxxflags),
+        install_path = pc_install_path
+    )
+
+    if is_bde:
+        from bdewafbuild import install_files
+        bld.install_files(os.path.join(prefix, 'include', 'mytplib'),
+                          bld.path.ant_glob('*.h'))
+
+        depends_on = ['mytplib_lib', 'mytplib_pc']
+        bld(name       = 'inteldfp',
+            depends_on = depends_on)
+    else:
+        bld.install_files(os.path.join(prefix, 'include', 'mytplib'),
+                          bld.path.ant_glob('*.h'))

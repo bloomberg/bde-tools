@@ -1,0 +1,12 @@
+
+!! unix-  _  CC   =  cc -DCC_PREF
+!! unix-  _  CXX  =  CC -DCXX_PREF
+!! unix-  _  CXXLINK  =  CC -DCXXLINK_PREF
+
+!! *       _   COMPONENT_BDEBUILD_CFLAGS      = -DDEF_C
+!! *       _   COMPONENT_BDEBUILD_CXXFLAGS    = -DDEF_CXX
+!! *       _   COMPONENT_BDEBUILD_LDFLAGS     = -DDEF_LD
+
+!! *       _   TESTDRIVER_BDEBUILD_CFLAGS     = -DTEST_DEF_C
+!! *       _   TESTDRIVER_BDEBUILD_CXXFLAGS   = -DTEST_DEF_CXX
+!! *       _   TESTDRIVER_BDEBUILD_LDFLAGS    = -DTEST_DEF_LD

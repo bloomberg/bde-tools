@@ -1,0 +1,6 @@
+
+namespace my {
+
+int myFunc();
+
+}

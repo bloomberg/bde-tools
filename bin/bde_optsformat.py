@@ -6,17 +6,17 @@ import sys
 
 
 def _get_tools_path():
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                        'tools', 'waf', 'bde')
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib')
     return path
 
 tools_path = _get_tools_path()
 sys.path = [tools_path] + sys.path
 
-from bdeoptions import RawOptions
+import bdemeta.optionsparser
+import bdemeta.options
 
 
-def _format_option(option, fill_widths):
+def _format_rule(option, fill_widths):
     template = ""
     index = 0
     while index < len(fill_widths):
@@ -25,13 +25,12 @@ def _format_option(option, fill_widths):
 
     template += "=  {%s}" % index
 
-    modifier = option.modifier if option.modifier else "++"
-
-    return template.format(modifier,
-                           option.platform,
-                           option.config,
-                           option.key,
-                           option.value)
+    return template.format(
+        bdemeta.options.OptionCommand.to_str(option.command),
+        option.uplid,
+        option.ufid,
+        option.key,
+        option.value)
 
 if __name__ == "__main__":
     usage = \
@@ -49,51 +48,46 @@ padding. Comments and blank lines will be left in-place unmodified.
         print(usage, file=sys.stderr)
         sys.exit(1)
 
-    raw_options = RawOptions()
-    raw_options.read_handle(sys.stdin)
+    parser = bdemeta.optionsparser.OptionsParser(sys.stdin)
+    parser.parse()
 
     max_field_widths = [2, 0, 0, 0]
     option_field_index = {
-        'modifier': 0,
-        'platform': 1,
-        'config': 2,
-        'key': 3,
+        'command': (0, bdemeta.options.OptionCommand.to_str),
+        'uplid': (1, str),
+        'ufid': (2, str),
+        'key': (3, str),
     }
 
-    for option in raw_options.options:
+    for rule in parser.option_rules:
         for name in option_field_index:
-            attr = getattr(option, name)
-            attr = attr if attr else ''
-            index = option_field_index[name]
-            max_field_widths[index] = max(max_field_widths[index], len(attr))
+            attr = getattr(rule, name)
+            index = option_field_index[name][0]
+            func = option_field_index[name][1]
+            max_field_widths[index] = max(max_field_widths[index],
+                                          len(func(attr)))
 
-    for line_rep in raw_options.all_lines:
+    for line_rep in parser.all_lines:
         line = line_rep[0]
-        option = line_rep[1]
+        rule = line_rep[1]
 
-        if option:
-            print(_format_option(option, [w + 2 for w in max_field_widths]))
+        if rule:
+            print(_format_rule(rule, [w + 2 for w in max_field_widths]))
         else:
             print(line)
 
-# ----------------------------------------------------------------------------
-# Copyright (C) 2013-2014 Bloomberg Finance L.P.
+# -----------------------------------------------------------------------------
+# Copyright 2015 Bloomberg Finance L.P.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to
-# deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-# sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-# ----------------------------- END-OF-FILE ----------------------------------
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ----------------------------- END-OF-FILE -----------------------------------

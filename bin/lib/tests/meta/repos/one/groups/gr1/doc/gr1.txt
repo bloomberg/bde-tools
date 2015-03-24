@@ -1,0 +1,8 @@
+ gr1.txt
+
+@PURPOSE: Provide a test package group.
+
+@MNEMONIC: GRoup 1 (gr1)
+
+@DESCRIPTION: This package group is created to test the waf based build tool.
+This package group contains only one package.

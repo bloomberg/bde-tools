@@ -1,0 +1,9 @@
+*                   _   OPTS_FILE       = gr3.defs
+
+*       _   COMPONENT_BDEBUILD_CFLAGS      = -DGR3_C
+*       _   COMPONENT_BDEBUILD_CXXFLAGS    = -DGR3_CXX
+*       _   COMPONENT_BDEBUILD_LDFLAGS     = -DGR3_LD
+
+*       _   TESTDRIVER_BDEBUILD_CFLAGS     = -DTEST_GR3_C
+*       _   TESTDRIVER_BDEBUILD_CXXFLAGS   = -DTEST_GR3_CXX
+*       _   TESTDRIVER_BDEBUILD_LDFLAGS    = -DTEST_GR3_LD

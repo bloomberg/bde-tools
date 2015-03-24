@@ -1,0 +1,10 @@
+// gr1p1_comp1.t.cpp                                                  -*-C++-*-
+
+#include <gr1p1_comp1.h>
+#include <iostream>
+
+int main(int argc, char *argv[])
+{
+    std::cout << "TEST " << std::endl;
+    return 0;
+}
