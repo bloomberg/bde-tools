@@ -20,7 +20,7 @@ def _get_tools_path(ctx):
 
     base = os.path.dirname(waf_path)
 
-    if os.path.isdir(os.path.join(base, 'lib', 'bdewaf')):
+    if os.path.isdir(os.path.join(base, 'lib', 'bdebld')):
         return [os.path.join(base, 'lib'),
                 os.path.join(base, 'lib', 'legacy')]
 
