@@ -1,16 +1,17 @@
 #!/usr/bin/env python
+from __future__ import division, absolute_import, print_function
 
 import os
 import re
 import sys
-import subprocess
-from optparse import OptionParser
-
-
+import optparse
 import platform
+
+
 if platform.system() == 'Windows':
-    print >> sys.stderr, 'This tool is currently not supported on windows.'
+    print('This tool is currently not supported on windows.', file=sys.stderr)
     sys.exit(1)
+
 
 def _where(program):
     def is_exe(fpath):
@@ -24,124 +25,80 @@ def _where(program):
 
     return None
 
-def _get_tools_path():
-    # Uses the local BDE waf customziations if they exist
 
+def _get_lib_path():
+    # Uses the local BDE waf customziations if they exist
     path = _where('waf')
 
     def err():
-        print >>sys.stderr, ('Cannot find the BDE customizations for waf in the waflib directory. '
-                             'Make sure that the bde-oss-tools version of waf can be found in PATH.')
+        print('Cannot find the BDE customizations for waf in '
+              'the waflib directory. Make sure that the '
+              'bde-oss-tools version of waf can be found in '
+              'PATH.', file=sys.stderr)
         sys.exit(1)
 
     if not path:
         err()
-
-    path = os.path.join(path, 'tools', 'waf', 'bde')
-
+    path = os.path.join(path, 'lib')
     if not os.path.isdir(path):
         err()
 
     return path
 
-tools_path = _get_tools_path()
+
+tools_path = _get_lib_path()
 sys.path = [tools_path] + sys.path
 
-from bdeoptions import Options, OptionMask, Uplid, Ufid, RawOptions
-
-def _unversioned_sys_platform():
-    s = sys.platform
-
-    # powerpc == darwin for our purposes
-    if s == 'powerpc':
-        return 'darwin'
-    if s == 'win32' or s.endswith('os2') and s != 'sunos2': return s
-    return re.split('\d+$', s)[0]
+from bdebld.meta import sysutil
+import bdebld.meta.options
+from bdebld.meta import optionsutil
+from bdebld.meta import optionsevaluator
 
 
-class ctx():
-    @staticmethod
-    def cmd_and_log(cmd):
-        try:
-            kw = {}
-            kw['shell'] = isinstance(cmd, str)
-            kw['stdout'] = kw['stderr'] = subprocess.PIPE
-            (out, err) = subprocess.Popen(cmd, **kw).communicate()
-        except Exception as e:
-            print >>sys.stderr, "*Error: failed to execute command: %s" % cmd
-            raise
-        return out
+def _get_cpu_type():
+    platform_str = sysutil.unversioned_platform()
 
-    @staticmethod
-    def fatal(str):
-        print >>sys.stderr, str
-        sys.exit(1)
-
-def _determine_os_info():
-    """
-    Return a tuple containing the (OS type, OS name, CPU type, OS version).
-    """
-    platform = _unversioned_sys_platform()
-
-    from bdeoptions import get_linux_osinfo, get_aix_osinfo, get_sunos_osinfo, get_darwin_osinfo, get_windows_osinfo
-    osinfo_getters = {
-        'linux': get_linux_osinfo,
-        'aix': get_aix_osinfo,
-        'sunos': get_sunos_osinfo,
-        'darwin': get_darwin_osinfo,
-        }
-
-    if platform not in osinfo_getters:
-        ctx.fatal('Unsupported platform: %s' % platform)
-
-    (os_type, os_name, os_ver) = osinfo_getters[platform](ctx)
-
-    if platform == 'linux':
+    if platform_str == 'linux':
         cpu_type = os.uname()[4]
-    elif platform == 'aix':
-        cpu_type = ctx.cmd_and_log(['/bin/uname', '-p']).rstrip()
-    elif platform == 'sunos':
-        cpu_type = ctx.cmd_and_log(['/bin/uname', '-p']).rstrip()
-    elif platform == 'darwin':
+    elif platform_str == 'aix':
+        cpu_type = sysutil.shell_command(['/bin/uname', '-p']).rstrip()
+    elif platform_str == 'sunos':
+        cpu_type = sysutil.shell_command(['/bin/uname', '-p']).rstrip()
+    elif platform_str == 'darwin':
         cpu_type = os.uname()[4]
+    else:
+        raise ValueError('Unsupported platform %s' % platform_str)
 
-    return (os_type, os_name, cpu_type, os_ver)
+    return cpu_type
 
 
-def _make_uplid_from_context(compiler_name, compiler_version):
-    (os_type, os_name, cpu_type, os_ver) = _determine_os_info()
+def _make_uplid(comp_type, comp_ver):
 
-    uplid = Uplid(os_type,
-                  os_name,
-                  cpu_type,
-                  os_ver,
-                  compiler_name,
-                  compiler_version)
-    return uplid
+    os_type, os_name, os_ver = sysutil.get_os_info()
+    cpu_type = _get_cpu_type()
+
+    return bdebld.meta.options.Uplid(os_type, os_name, cpu_type, os_ver,
+                                     comp_type, comp_ver)
+
 
 def _determine_installation_location(prefix, uplid):
-    """
-    Return the installation location for BDE that has been encoded in the
-    specified 'prefix' for the specified 'uplid', or None if a location cannot
-    be determined.  If 'prefix' matches the pattern of a PREFIX environment
-    variable emitted by 'bde_setwafenv.py' -- i.e., it contains this
-    cpu-architectures portions of 'uplid' as part of the last element of a
-    directory location -- return the installation directory previously used
-    by 'bde_setwafenv.py'.
+    """ Return the installation location for BDE was previously encoded.
+
+    Return the installation location encoded in the specified 'prefix' for the
+    specified 'uplid', or None if a location cannot be determined.  If 'prefix'
+    matches the pattern of a PREFIX environment variable emitted by
+    'bde_setwafenv.py' -- i.e., it contains this cpu-architectures portions of
+    'uplid' as part of the last element of a directory location -- return the
+    installation directory previously used by 'bde_setwafenv.py'.
 
     Args:
-        prefix: a string that contains a PREFIX environment variable
+        prefix (str): prefix
     """
     if (prefix is None):
         return None
 
-    (os_type, os_name, cpu_type, os_ver) = (uplid.uplid['os_type'],
-                                            uplid.uplid['os_name'],
-                                            uplid.uplid['cpu_type'],
-                                            uplid.uplid['os_ver'])
-
-
-    partialUplid = os_type + '-' + os_name + '-' + cpu_type + '-' + os_ver
+    partialUplid = uplid.os_type + '-' + uplid.os_name + '-' + \
+        uplid.cpu_type + '-' + uplid.os_ver
 
     pattern = "(.*/){0}(?:\-[\w\.]*)*".format(partialUplid)
     match = re.match(pattern, prefix)
@@ -149,44 +106,43 @@ def _determine_installation_location(prefix, uplid):
         return match.group(1)
     return None
 
-def _print_setenvs(uplid, ufid, raw_options, options):
-    option_mask = OptionMask(uplid, ufid)
 
-    default_opts = Options(option_mask)
-
+def _print_setenvs(uplid, ufid, option_rules, options):
     debug_opt_keys = options.debug_opt_keys
     if debug_opt_keys:
         debug_opt_keys = debug_opt_keys.split(',')
+    else:
+        debug_opt_keys = []
 
-    default_opts.read(raw_options.options, ctx, debug_opt_keys=debug_opt_keys)
-    default_opts.evaluate()
+    oe = optionsevaluator.OptionsEvaluator(uplid, ufid)
+    oe.store_option_rules(option_rules, debug_opt_keys)
+    oe.evaluate(debug_opt_keys)
 
-    cxx_line = default_opts.options['CXX'].split()
+    cxx_line = oe.results['CXX'].split()
     cxx_index = 0
     if cxx_line[0].strip().startswith('LIBPATH'):
         cxx_index = 1
 
     CXX = cxx_line[cxx_index]
 
-    print 'export CXX="%s"' % CXX
-
-    print 'export BDE_WAF_UFID="%s"' % ufid
-    print 'export BDE_WAF_UPLID="%s"' % uplid
+    print('export CXX="%s"' % CXX)
+    print('export BDE_WAF_UFID="%s"' % ufid)
+    print('export BDE_WAF_UPLID="%s"' % uplid)
     id_str = str(uplid) + '-' + str(ufid)
-    print 'export BDE_WAF_BUILD_DIR="%s"' % id_str
-    print 'export WAFLOCK=".lock-waf-%s"' % id_str
-
+    print('export BDE_WAF_BUILD_DIR="%s"' % id_str)
+    print('export WAFLOCK=".lock-waf-%s"' % id_str)
 
     if options.install_dir:
         install_dir = options.install_dir
     else:
-        install_dir = _determine_installation_location(os.environ.get("PREFIX"), uplid)
+        install_dir = _determine_installation_location(
+            os.environ.get("PREFIX"), uplid)
 
     if install_dir:
-        print >>sys.stderr, "using install directory: %s" % install_dir
+        print("using install directory: %s" % install_dir, file=sys.stderr)
         PREFIX = os.path.join(install_dir, id_str)
-        print 'export PREFIX="%s"' % PREFIX
-        print 'export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX
+        print('export PREFIX="%s"' % PREFIX)
+        print('export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX)
 
 
 if __name__ == "__main__":
@@ -289,8 +245,7 @@ the default installation prefix, which typically will be /usr/local -- this is
 not recommended, because the default prefix is typically not writable by a
 regular user.
 """
-
-    parser = OptionParser(usage = usage)
+    parser = optparse.OptionParser(usage=usage)
 
     parser.add_option("-c", "--compiler", help="compiler")
     parser.add_option("-i", "--install-dir", help="install directory")
@@ -301,85 +256,54 @@ regular user.
     (options, args) = parser.parse_args()
 
     if 'unset' in sys.argv:
-        print 'unset CXX'
-        print 'unset BDE_WAF_UFID'
-        print 'unset BDE_WAF_UPLID'
-        print 'unset BDE_WAF_BUILD_DIR'
-        print 'unset WAFLOCK'
-        print 'unset PREFIX'
-        print 'unset PKG_CONFIG_PATH'
+        print('unset CXX')
+        print('unset BDE_WAF_UFID')
+        print('unset BDE_WAF_UPLID')
+        print('unset BDE_WAF_BUILD_DIR')
+        print('unset WAFLOCK')
+        print('unset PREFIX')
+        print('unset PKG_CONFIG_PATH')
         sys.exit(0)
 
     CXX = None
     PREFIX = None
 
-    # default.opts is expected to be under either:
-    #   1 <repo_root>/etc, assuming the tools directory is <repo_root>/bin/tools/waf/bde and default.opts is located in
-    #     the directory <repo_root>/etc.
-    #   2 $BDE_ROOT/etc
-    bde_root = os.environ.get('BDE_ROOT')
-    upd = os.path.dirname
-    repo_root = upd(upd(upd(upd(tools_path))))
+    default_rules = optionsutil.get_default_option_rules()
 
-    default_opts_path = os.path.join(repo_root, 'etc', 'default.opts')
-    default_opts_flag = os.path.isfile(default_opts_path)
-    if not default_opts_flag and bde_root:
-        default_opts_path = os.path.join(bde_root, 'etc', 'default.opts')
-        default_opts_flag = os.path.isfile(default_opts_path)
-
-    if not default_opts_flag:
-        ctx.fatal("Can not find default.opts from the /etc directory of the parent directory of the waf executable "
-                  ", nor the path pointed to by the BDE_ROOT environment variable.")
-    raw_options = RawOptions()
-    raw_options.read(default_opts_path)
-
-    # default_internal.opts is expected to be under:
-    #   1 $BDE_ROOT/etc
-    default_internal_opts_flag = False
-    if bde_root:
-        default_internal_opts_path = os.path.join(bde_root, 'etc', 'default_internal.opts')
-        default_internal_opts_flag = os.path.isfile(default_internal_opts_path)
-
-    if not default_internal_opts_flag:
-        ctx.fatal("Can not find default_internal.opts from the /etc directory from the path pointed to by the"
-                  " BDE_ROOT environment variable.")
-
-    raw_options.read(default_internal_opts_path)
-
-    ufid_raw = options.ufid
-    if not ufid_raw:
-        ufid_raw = 'dbg_mt_exc'
+    ufid_str = options.ufid
+    if not ufid_str:
+        ufid_str = 'dbg_mt_exc'
     else:
-        if not Ufid.is_valid(ufid_raw.split('_')):
-            print >>sys.stderr, \
-                ('"%s" is an invalid ufid. Valid flags are: %s.' %
-                 (ufid_raw, ', '.join(Ufid.VALID_FLAGS.keys())))
+        if not bdebld.meta.options.Ufid.is_valid(ufid_str.split('_')):
+            print('"%s" is an invalid ufid. Valid flags are: %s.' %
+                  (ufid_str, ','.join(
+                      bdebld.meta.options.Ufid.VALID_FLAGS.keys())),
+                  file=sys.stderr)
             sys.exit(1)
 
-    # Put ufid_raw into canonical form
-    ufid = Ufid.from_config_str(ufid_raw)
+    ufid = bdebld.meta.options.Ufid.from_str(ufid_str)
 
     if options.force_uplid:
-        uplid = Uplid.from_platform_str(options.force_uplid)
-        _print_setenvs(uplid, ufid, raw_options, options)
+        uplid = bdebld.meta.options.Uplid.from_str(options.force_uplid)
+        _print_setenvs(uplid, ufid, default_rules, options)
         sys.exit(0)
 
     comps = set()
 
     DEFAULT_COMPILER = None
     DEFAULT_COMPILER_VERSION = None
-    uplid = _make_uplid_from_context("*", "*")
-    for opt in raw_options.options:
-        match_uplid = Uplid.from_platform_str(opt.platform)
-        if match_uplid.match(uplid):
-            comp_type = match_uplid.uplid['comp_type']
-            comp_ver = match_uplid.uplid['comp_ver']
+    uplid = _make_uplid("*", "*")
+    for rule in default_rules:
+        match_uplid = rule.uplid
+        if optionsutil.match_uplid(uplid, match_uplid):
+            comp_type = match_uplid.comp_type
+            comp_ver = match_uplid.comp_ver
 
-            if opt.key == 'BDE_COMPILER_FLAG':
-                DEFAULT_COMPILER = opt.value
-            elif opt.key == 'BDE_COMPILERVERSION_FLAG':
-                if not comp_type or comp_type == DEFAULT_COMPILER:
-                    DEFAULT_COMPILER_VERSION = opt.value
+            if rule.key == 'BDE_COMPILER_FLAG':
+                DEFAULT_COMPILER = rule.value
+            elif rule.key == 'BDE_COMPILERVERSION_FLAG':
+                if comp_type == '*' or comp_type == DEFAULT_COMPILER:
+                    DEFAULT_COMPILER_VERSION = rule.value
 
             if comp_type and comp_type != '*' and comp_type != 'def' and \
                     comp_ver and comp_ver != '*' and comp_ver != 'def':
@@ -388,9 +312,9 @@ regular user.
     def_compiler = DEFAULT_COMPILER + '-' + DEFAULT_COMPILER_VERSION
 
     if 'list' in args:
-        print 'default: %s' % def_compiler
+        print('default: %s' % def_compiler)
         for c in sorted(comps):
-            print c
+            print(c)
         sys.exit(1)
 
     compiler = options.compiler
@@ -398,13 +322,14 @@ regular user.
         compiler = def_compiler
 
     if compiler not in comps:
-        print '%s is not valid, choose from the following: ' % options.compiler
+        print('%s is not valid, choose from the following: ' %
+              options.compiler)
         for c in sorted(comps):
-            print c
+            print(c)
         sys.exit(1)
 
-    print >>sys.stderr, "using compiler: %s" % compiler
-    print >>sys.stderr, "using ufid: %s" % ufid
+    print("using compiler: %s" % compiler, file=sys.stderr)
+    print("using ufid: %s" % ufid, file=sys.stderr)
 
     if compiler:
         compiler = compiler.split('-')
@@ -415,5 +340,5 @@ regular user.
         else:
             comp_ver = '*'
 
-        uplid = _make_uplid_from_context(comp_type, comp_ver)
-        _print_setenvs(uplid, ufid, raw_options, options)
+        uplid = _make_uplid(comp_type, comp_ver)
+        _print_setenvs(uplid, ufid, default_rules, options)
