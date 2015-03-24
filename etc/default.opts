@@ -260,17 +260,10 @@
 !!  unix-*-*-*-gcc          dbg  DBG_CXXFLAGS  =  -g
 !!  unix-*-*-*-clang        dbg  DBG_CXXFLAGS  =  -g
 
-!!  windows-*-*-*-cl-15.00  dbg  DBG_CXXFLAGS  =  /Zi /RTC1
-!!  windows-*-*-*-cl-15.00  dbg  DBG_CFLAGS    =  /Zi /RTC1
-!!  windows-*-*-*-cl-16.00  dbg  DBG_CXXFLAGS  =  /Zi /RTC1
-!!  windows-*-*-*-cl-16.00  dbg  DBG_CFLAGS    =  /Zi /RTC1
-!!  windows-                dbg  DBG_LDFLAGS   =  /debug
+!! windows-*-*-*-cl-15.00   *    DBG_CXXFLAGS  = /Zi
+!! windows-*-*-*-cl-15.00   *    DBG_CFLAGS    = /Zi
 
-# /RTC1 will disable optimization completely so we need to turn it off for opt_dbg builds
-!!  windows-*-*-*-cl-15.00  opt  DBG_CXXFLAGS  =  /Zi
-!!  windows-*-*-*-cl-15.00  opt  DBG_CFLAGS    =  /Zi
-!!  windows-*-*-*-cl-16.00  opt  DBG_CXXFLAGS  =  /Zi
-!!  windows-*-*-*-cl-16.00  opt  DBG_CFLAGS    =  /Zi
+!! windows-                 dbg  DBG_LDFLAGS   =  /debug
 
 # This is only required by bde_build, for MDd/MD and MTd/MT builds.
 # TODO: move the 2 rules below into default_interal.opts
