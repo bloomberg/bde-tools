@@ -277,15 +277,10 @@ unix-          _   BDE_LDFLAGS =  $(INTERNAL_LDFLAGS)
 
 !! unix-*-*-*-gcc        dbg     DBG_CXXFLAGS    = -g
 #!! unix-*-*-*-gcc       dbg     DBG_CXXFLAGS    = -g -O #correct but problematic
-!! windows-*-*-*-cl-15.00                  dbg     DBG_CXXFLAGS    = /Zi /RTC1
-!! windows-*-*-*-cl-15.00                  dbg     DBG_CFLAGS      = /Zi /RTC1
-!! windows-*-*-*-cl-16.00                  dbg     DBG_CXXFLAGS    = /Zi /RTC1
-!! windows-*-*-*-cl-16.00                  dbg     DBG_CFLAGS      = /Zi /RTC1
-# /RTC1 will disable optimization completely so we need to turn it off for opt_dbg builds
-!! windows-*-*-*-cl-15.00                  opt     DBG_CXXFLAGS    = /Zi
-!! windows-*-*-*-cl-15.00                  opt     DBG_CFLAGS      = /Zi
-!! windows-*-*-*-cl-16.00                  opt     DBG_CXXFLAGS    = /Zi
-!! windows-*-*-*-cl-16.00                  opt     DBG_CFLAGS      = /Zi
+
+!! windows-*-*-*-cl-15.00                  *     DBG_CXXFLAGS    = /Zi
+!! windows-*-*-*-cl-15.00                  *     DBG_CFLAGS      = /Zi
+
 !! unix         dbg DBG_F77FLAGS    = -g
 
 
