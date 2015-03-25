@@ -6,6 +6,9 @@ import glob
 import os
 import re
 
+# Needed transitively by client code
+import sqlite3
+
 # Enable CGI debugging output
 import cgitb
 

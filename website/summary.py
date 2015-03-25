@@ -161,15 +161,15 @@ category_names = {}
 
 for result in cursor.fetchall():
     # print result
-    results[bdetools_website_startup.result[0]][bdetools_website_startup.result[1]][bdetools_website_startup.result[2]][
-        bdetools_website_startup.result[3]] = bdetools_website_startup.result[4]
-    uors[bdetools_website_startup.result[0]] = 1
-    uplids[bdetools_website_startup.result[1]] = 1
-    ufids[bdetools_website_startup.result[2]] = 1
-    uplid_ufid_combos[bdetools_website_startup.result[1]][bdetools_website_startup.result[2]] = 1
-    category_names[bdetools_website_startup.result[3]] = 1
+    results[result[0]][result[1]][result[2]][
+        result[3]] = result[4]
+    uors[result[0]] = 1
+    uplids[result[1]] = 1
+    ufids[result[2]] = 1
+    uplid_ufid_combos[result[1]][result[2]] = 1
+    category_names[result[3]] = 1
     for index in range(0, 4):
-        axis_values[index][bdetools_website_startup.result[index]] = 1
+        axis_values[index][result[index]] = 1
 
 sorted_uors = sorted(uors, key=uor_key)
 
