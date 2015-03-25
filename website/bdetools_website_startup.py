@@ -24,7 +24,7 @@ _error  = ""
 print "Content-Type: text/html"
 print
 
-_fs = cgi.FieldStorage()
+_fieldStore = cgi.FieldStorage()
 
 search_dir = "/web_data/db/"
 
@@ -35,18 +35,18 @@ _db     = None
 """
 
 try:
-    if "date" in _fs.keys() and "branch" in _fs.keys():
-        _date   = _fs["date"].value
-        _branch = _fs["branch"].value
+    if "date" in _fieldStore.keys() and "branch" in _fieldStore.keys():
+        _date   = _fieldStore["date"].value
+        _branch = _fieldStore["branch"].value
         _db = search_dir+"%s-%s.db"%(_branch, _date)
-    elif "date" in _fs.keys():
-        _date   = _fs["date"].value
+    elif "date" in _fieldStore.keys():
+        _date   = _fieldStore["date"].value
         _db = search_dir+"%s-%s.db"%(_branch, _date)
-    elif "branch" in _fs.keys():
-        _branch = _fs["branch"].value
+    elif "branch" in _fieldStore.keys():
+        _branch = _fieldStore["branch"].value
         _db = search_dir+"%s-%s.db"%(_branch, _date)
-    elif "db" in _fs.keys():
-        _db = _fs["db"].value;
+    elif "db" in _fieldStore.keys():
+        _db = _fieldStore["db"].value;
     else:
         # Limit default file search to nextrel
         files = filter(os.path.isfile, glob.glob(search_dir + "*nextrel*"))
@@ -96,11 +96,11 @@ def error():
 
     return _error
 
-def fs():
+def fieldstore():
     """Return the current CGI fieldstore.
     """
 
-    return _fs
+    return _fieldStore
 
 def date():
     """Return the current database's date.
@@ -138,7 +138,7 @@ def getParamsString():
     paramString=""
     separator=""
 
-    for key in fs():
+    for key in fieldstore():
         if key == 'db':
             continue
 
@@ -148,7 +148,7 @@ def getParamsString():
         if key == 'date':
             continue
 
-        paramString+=separator+key+"="+fs()[key].value
+        paramString+=separator+key+"="+fieldstore()[key].value
         separator=";"
 
     return paramString

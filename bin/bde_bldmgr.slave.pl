@@ -81,6 +81,13 @@ my $FS         = $iamwindows ? "\\" : "/";
     # TODO: this is a hack - use File::Spec for portable file path manipulation
 my $pathsep    = $iamwindows ? ";" : ":";
 
+my %msvc_version_map = {
+    "cl-14.00" => "msvc 8.0"
+  , "cl-15.00" => "msvc 9.0"
+  , "cl-16.00" => "msvc 10.0"
+  , "cl-18.00" => "msvc 12.0"
+};
+
 unless ($iamwindows) {
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
 }
@@ -349,7 +356,8 @@ if (!find_waf()) {
 
 
 
-if ($opts{envbat}) {
+# Disabling envbat feature for 'waf' - using Visual Studio env breaks waf.
+if (0 && $opts{envbat}) {
     write_logandverbose "Got --envbat $opts{envbat}";
     open ENVBAT,
            "$FindBin::Bin/run_batch_file_and_dump_env.bat \"$opts{envbat}\" |";
@@ -537,6 +545,8 @@ MAIN: {
     TARGET: for my $target (@targets) {
         write_logandverbose("=============== BUILDING $target for $group");
 
+        my $extraConfigureOptions = "";
+
         if (!$iamwindows) {
             my $setwafenv = "$pythonprefix $bindir${FS}bde_setwafenv.py -c $compiler -t $target --force_uplid=$uplid";
 
@@ -566,6 +576,8 @@ MAIN: {
             write_logandverbose("Creating $ENV{PKG_CONFIG_PATH} if not present");
             File::Path::mkpath($ENV{PKG_CONFIG_PATH});
 
+            $extraConfigureOptions="--msvc_version=\"$msvc_version_map{$compiler}\"";
+
             write_logandverbose("Set up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tPATH=$ENV{PATH}\n\tPREFIX=$ENV{PREFIX}\n\tPKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}\n\tBDE_WAF_UFID=$target");
         }
 
@@ -578,7 +590,7 @@ MAIN: {
         }
 
         # construct target-specific command arguments
-        write_logandverbose(`$pythonprefix $waf configure 2>&1`);
+        write_logandverbose(`$pythonprefix $waf configure $extraConfigureOptions 2>&1`);
 
         my @cmd = ($waf, 'build');
         unshift @cmd, $pythonprefix if $pythonprefix;
