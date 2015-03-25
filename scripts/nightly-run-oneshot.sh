@@ -10,7 +10,7 @@ BDE_BB_BRANCH=remotes/origin/master
 
 BSL_TYPE=internal
 
-if false
+if true
 then
     # just bsl
     CORE_UORS="bsl"
@@ -31,7 +31,7 @@ exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
 TOOLSPATH=/home/mgiroux/bde-tools
 
-export TARGET_OPTION=-pmac -vvv
+export TARGET_OPTION="-pw32,w32_2010,w32_2008_dbg,w32_2013_dbg -vvv"
 
 cd $TOOLSPATH
 /opt/swt/bin/git pull
