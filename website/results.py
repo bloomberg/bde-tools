@@ -14,10 +14,10 @@ connection = sqlite3.connect(db())
 cursor     = connection.cursor()
 
 printTitleRow("<H1 align=\"center\">Results from %s</H1>"%db(), "results.py")
-print "<H2 align=\"center\">for (%s, %s, %s, %s)</H2>"%(fs()["uor"].value,
-     fs()["ufid"].value,
-     fs()["uplid"].value,
-     fs()["category"].value)
+print "<H2 align=\"center\">for (%s, %s, %s, %s)</H2>"%(fieldstore()["uor"].value,
+     fieldstore()["ufid"].value,
+     fieldstore()["uplid"].value,
+     fieldstore()["category"].value)
 
 cursor.execute("""
     SELECT component_name,
@@ -27,10 +27,10 @@ cursor.execute("""
           AND ufid=?
           AND uplid=?
           AND category_name=?
-""",(fs()["uor"].value,
-     fs()["ufid"].value,
-     fs()["uplid"].value,
-     fs()["category"].value))
+""",(fieldstore()["uor"].value,
+     fieldstore()["ufid"].value,
+     fieldstore()["uplid"].value,
+     fieldstore()["category"].value))
 
 print "<PRE>"
 
