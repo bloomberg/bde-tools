@@ -572,13 +572,14 @@ MAIN: {
                                   "$ENV{BDE_ROOT}\\install\\$compiler-$target";
             $ENV{PKG_CONFIG_PATH} = "$ENV{PREFIX}\\lib\\pkgconfig";
             $ENV{BDE_WAF_BUILD_DIR} = "$compiler-$target";
+            $ENV{BDE_WAF_UFID}      = $target;
 
             write_logandverbose("Creating $ENV{PKG_CONFIG_PATH} if not present");
             File::Path::mkpath($ENV{PKG_CONFIG_PATH});
 
             $extraConfigureOptions="--msvc_version=\"$msvc_version_map{$compiler}\"";
 
-            write_logandverbose("Set up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tPATH=$ENV{PATH}\n\tPREFIX=$ENV{PREFIX}\n\tPKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}\n\tBDE_WAF_UFID=$target");
+            write_logandverbose("Set up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tPATH=$ENV{PATH}\n\tPREFIX=$ENV{PREFIX}\n\tPKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}\n\tBDE_WAF_UFID=$ENV{BDE_WAF_UFID}");
         }
 
         if ($iammac) {
