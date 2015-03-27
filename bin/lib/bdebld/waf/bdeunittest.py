@@ -96,7 +96,10 @@ class utest(Task.Task):
             ut_exec = self.ut_exec[0]
             self.ut_exec = (testcmd % ut_exec).split(' ')
             if Options.options.test_junit:
-                self.ut_exec += ('--junit=%s-junit.xml' % ut_exec).split(' ')
+                self.ut_exec += ['--junit=%s-junit.xml' % ut_exec]
+            if Options.options.valgrind:
+                self.ut_exec += ['--valgrind', '--valgrind-tool=%s' %
+                                 Options.options.valgrind_tool]
 
         proc = Utils.subprocess.Popen(self.ut_exec, cwd=cwd, env=fu,
                                       stderr=Utils.subprocess.STDOUT,
@@ -189,6 +192,16 @@ def options(opt):
                    help='create jUnit-style test results files for '
                         'test drivers that are executed',
                    dest='test_junit')
+
+    grp.add_option('--valgrind', action='store_true', default=False,
+                   help='enable valgrind when running the test driver',
+                   dest='valgrind')
+
+    grp.add_option('--valgrind-tool', type='choice', default='memcheck',
+                   choices=('memcheck', 'helgrind', 'drd'),
+                   help='use valgrind tool: memchk, helgrind, or drd '
+                   '[default: %default]',
+                   dest='valgrind_tool')
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

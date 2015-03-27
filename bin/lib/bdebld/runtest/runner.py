@@ -61,10 +61,19 @@ class _Worker(threading.Thread):
         self._case = 0
 
     def _get_test_run_cmd(self):
-        cmd = [self._ctx.options.test_path, str(self._case)]
+        options = self._ctx.options
+
+        cmd = []
+        if options.valgrind_tool:
+            cmd += ['valgrind', '--error-exitcode=1',
+                    '--tool=%s' % options.valgrind_tool]
+            if options.valgrind_tool == 'memcheck':
+                cmd += ['--leak-check=full']
+
+        cmd += [options.test_path, str(self._case)]
 
         if self._ctx.options.verbosity > 0:
-            cmd.extend(['v' for n in range(self._ctx.options.verbosity)])
+            cmd.extend(['v' for n in range(options.verbosity)])
 
         return cmd
 

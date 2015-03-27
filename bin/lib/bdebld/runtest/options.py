@@ -16,6 +16,8 @@ class Options(object):
         verbosity (int): Verbosity level, use 1 and higher for verbose.
         num_jobs (int): Number of threads to use to run test cases.
         timeout (int): Test driver timeout in seconds.
+        valgrind_tool (str): The valgrind tool to use. Don't use valgrind if
+            None.
         filter_abi_bits (str): Override abi_bits filter for test policy.
         filter_host_type (str): Override host_type filter for test policy.
 
@@ -31,6 +33,7 @@ class Options(object):
         self.is_verbose = self.verbosity > 0
         self.num_jobs = kw['num_jobs']
         self.timeout = kw['timeout']
+        self.valgrind_tool = kw['valgrind_tool']
         self.filter_abi_bits = kw['filter_abi_bits']
         self.filter_host_type = kw['filter_host_type']
 
