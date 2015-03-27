@@ -31,7 +31,7 @@ exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
 TOOLSPATH=/home/mgiroux/bde-tools
 
-export TARGET_OPTION="-pw32,w32_2010,w32_2008_dbg,w32_2013_dbg -vvv"
+export TARGET_OPTION="-pw32_2010,w32_2008_dbg,w32_2013_dbg -vvv"
 
 cd $TOOLSPATH
 /opt/swt/bin/git pull
