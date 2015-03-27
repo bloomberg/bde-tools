@@ -473,7 +473,7 @@ MAIN: {
     my $logfile=open_slavelog($opts{logdir});
 
     # preamble
-    write_logandverbose "** $prog started";
+    write_logandverbose "** $prog ($0) started";
     write_logandverbose "-- build root is      $where" if $where;
     write_logandverbose "-- build location is  $build" if $build;
     write_logandverbose "** building targets:  @targets";
