@@ -5,8 +5,8 @@ echo SCRIPT-TRACE - running $0 -- $*
 SCRIPT_NAME=nightly-run-oneshot
 BUILD_TYPE=oneshot
 
-BDE_CORE_BRANCH=remotes/origin/dev-integration
-BDE_BB_BRANCH=remotes/origin/dev-integration
+BDE_CORE_BRANCH=remotes/origin/review/guidutil-win_drqs-63818360
+BDE_BB_BRANCH=remotes/origin/master
 
 BSL_TYPE=internal
 
