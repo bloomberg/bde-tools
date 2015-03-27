@@ -81,12 +81,12 @@ my $FS         = $iamwindows ? "\\" : "/";
     # TODO: this is a hack - use File::Spec for portable file path manipulation
 my $pathsep    = $iamwindows ? ";" : ":";
 
-my %msvc_version_map = {
+my %msvc_version_map = (
     "cl-14.00" => "msvc 8.0"
   , "cl-15.00" => "msvc 9.0"
   , "cl-16.00" => "msvc 10.0"
   , "cl-18.00" => "msvc 12.0"
-};
+);
 
 unless ($iamwindows) {
     $ENV{RSU_LICENSE_MAP} = "/opt/rational/config/PurifyPlus_License_Map";
