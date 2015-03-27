@@ -5,15 +5,15 @@ echo SCRIPT-TRACE - running $0 -- $*
 SCRIPT_NAME=nightly-run-oneshot
 BUILD_TYPE=oneshot
 
-BDE_CORE_BRANCH=remotes/origin/master
+BDE_CORE_BRANCH=remotes/origin/review/guidutil-win_drqs-63818360
 BDE_BB_BRANCH=remotes/origin/master
 
 BSL_TYPE=internal
 
 if true
 then
-    # just bsl
-    CORE_UORS="bsl"
+    # just bsl and bdl
+    CORE_UORS="bsl bdl"
     BB_UORS=""
 else
     # full set

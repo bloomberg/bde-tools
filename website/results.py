@@ -1,23 +1,16 @@
 #!/usr/bin/python
 
-import cgi
-import glob
-import os
-import os.path
-import pprint
-import sqlite3
-import re
-import sys
-from bdetools_website_startup import *
+import bdetools_website_startup
 
-connection = sqlite3.connect(db())
-cursor     = connection.cursor()
+connection = bdetools_website_startup.sqlite3.connect(bdetools_website_startup.db())
+cursor = connection.cursor()
 
-printTitleRow("<H1 align=\"center\">Results from %s</H1>"%db(), "results.py")
-print "<H2 align=\"center\">for (%s, %s, %s, %s)</H2>"%(fieldstore()["uor"].value,
-     fieldstore()["ufid"].value,
-     fieldstore()["uplid"].value,
-     fieldstore()["category"].value)
+bdetools_website_startup.print_title_row("<H1 align=\"center\">Results from %s</H1>" % bdetools_website_startup.db(),
+                                       "results.py")
+print "<H2 align=\"center\">for (%s, %s, %s, %s)</H2>" % (bdetools_website_startup.fieldstore()["uor"].value,
+                                                          bdetools_website_startup.fieldstore()["ufid"].value,
+                                                          bdetools_website_startup.fieldstore()["uplid"].value,
+                                                          bdetools_website_startup.fieldstore()["category"].value)
 
 cursor.execute("""
     SELECT component_name,
@@ -27,10 +20,10 @@ cursor.execute("""
           AND ufid=?
           AND uplid=?
           AND category_name=?
-""",(fieldstore()["uor"].value,
-     fieldstore()["ufid"].value,
-     fieldstore()["uplid"].value,
-     fieldstore()["category"].value))
+""", (bdetools_website_startup.fieldstore()["uor"].value,
+      bdetools_website_startup.fieldstore()["ufid"].value,
+      bdetools_website_startup.fieldstore()["uplid"].value,
+      bdetools_website_startup.fieldstore()["category"].value))
 
 print "<PRE>"
 
@@ -39,4 +32,3 @@ for entry in cursor.fetchall():
     print "\n======\n"
 
 print "</PRE>"
-
