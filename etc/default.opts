@@ -276,8 +276,8 @@ unix-          _   BDE_LDFLAGS =  $(INTERNAL_LDFLAGS)
 !! unix-*-*-*-gcc        dbg     DBG_CXXFLAGS    = -g
 #!! unix-*-*-*-gcc       dbg     DBG_CXXFLAGS    = -g -O #correct but problematic
 
-!! windows-*-*-*-cl-15.00                  *     DBG_CXXFLAGS    = /Zi
-!! windows-*-*-*-cl-15.00                  *     DBG_CFLAGS      = /Zi
+!! windows-*-*-*-cl-15.00                  _     DBG_CXXFLAGS    = /Zi
+!! windows-*-*-*-cl-15.00                  _     DBG_CFLAGS      = /Zi
 
 !! unix         dbg DBG_F77FLAGS    = -g
 
