@@ -582,8 +582,8 @@ MAIN: {
             write_logandverbose("Set up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tPATH=$ENV{PATH}\n\tPREFIX=$ENV{PREFIX}\n\tPKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}\n\tBDE_WAF_UFID=$ENV{BDE_WAF_UFID}");
             write_logandverbose("******\n\tcompiler is \"$compiler\"\n\textraConfigureOptions = \"$extraConfigureOptions\"");
 
-            $pythonprefix = "";
-            $waf          = "/c/wafsupport/wf.sh"
+            $pythonprefix = "e:\\cygwin\\bin\\bash";
+            $waf          = "c:\\wafsupport\\wf.sh"
         }
 
         if ($iammac) {
