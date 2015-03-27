@@ -260,8 +260,8 @@
 !!  unix-*-*-*-gcc          dbg  DBG_CXXFLAGS  =  -g
 !!  unix-*-*-*-clang        dbg  DBG_CXXFLAGS  =  -g
 
-!! windows-*-*-*-cl-15.00   *    DBG_CXXFLAGS  = /Zi
-!! windows-*-*-*-cl-15.00   *    DBG_CFLAGS    = /Zi
+!! windows-*-*-*-cl-15.00   _    DBG_CXXFLAGS  = /Zi
+!! windows-*-*-*-cl-15.00   _    DBG_CFLAGS    = /Zi
 
 !! windows-                 dbg  DBG_LDFLAGS   =  /debug
 
