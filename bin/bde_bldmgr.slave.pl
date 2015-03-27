@@ -583,7 +583,7 @@ MAIN: {
             write_logandverbose("******\n\tcompiler is \"$compiler\"\n\textraConfigureOptions = \"$extraConfigureOptions\"");
 
             $pythonprefix = "e:\\cygwin\\bin\\bash";
-            $waf          = "c:\\wafsupport\\wf.sh"
+            $waf          = "/c/wafsupport/wf.sh"
         }
 
         if ($iammac) {
