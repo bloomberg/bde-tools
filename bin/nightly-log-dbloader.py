@@ -9,6 +9,8 @@ db = sys.argv[1]
 connection = sqlite3.connect(db)
 cursor = connection.cursor()
 
+connection.text_factory = str
+
 sys.argv = sys.argv[0:1] + sys.argv[2:]
 
 # Mapping build uplid/ufid pairs to build ids in the "builds" table.
