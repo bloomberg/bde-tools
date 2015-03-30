@@ -90,7 +90,8 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         oe = copy.deepcopy(def_oe)
         # We load options in levelized order instead of any topological order
         # to preserve the behavior with bde_build (older version of the build
-        # tool).
+        # tool).  Note that we cannot cache intermediate results because later
+        # option rules may change the results from the preivous rule due.
         for level in dep_levels:
             for dep_name in sorted(level):
                 if dep_name not in build_config.external_dep and \
@@ -111,32 +112,39 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         uor_bc.dep = uor.dep - build_config.external_dep
         uor_bc.external_dep = uor.dep & build_config.external_dep
 
+        # Store options from dependencies, options for exports, and internal
+        # options separately
+
+        dep_oe = copy.deepcopy(oe)
+        dep_oe.evaluate()
         oe.store_option_rules(uor.cap)
         oe.store_option_rules(uor.defs)
         set_unit_loc(oe, uor)
-
-        # Evaluate export options.
         export_oe = copy.deepcopy(oe)
+        int_oe = copy.deepcopy(oe)
         export_oe.evaluate()
-
         if export_oe.results.get('CAPABILITY') == 'NEVER':
             logutil.info('skipped %s' % uor_name)
             return
 
-        # Evaluate internal options.
-        int_oe = copy.deepcopy(oe)
         int_oe.store_option_rules(uor.opts)
 
         # Copy unevaluted internal options to be used by packages within
         # package groups.
         int_oe_copy = copy.deepcopy(int_oe)
-
         if debug_keys:
             logutil.info('--Evaluating %s' % uor_name)
         int_oe.evaluate(debug_keys)
 
+        # Remove export flags of an uor's dependencies from its own export
+        # flags.  This implementation is not very optimal, but it's gets the
+        # job done.
+        dep_flags = get_build_flags_from_opts(build_flags_parser,
+                                              dep_oe.results, dep_oe.results)
+
         uor_bc.flags = get_build_flags_from_opts(
-            build_flags_parser, int_oe.results, export_oe.results)
+            build_flags_parser, int_oe.results, export_oe.results,
+            dep_flags.export_flags, dep_flags.export_libs)
 
         if uor_name in repo_context.package_groups:
             load_package_group(uor, uor_bc, int_oe_copy)
@@ -205,7 +213,9 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
     return build_config
 
 
-def get_build_flags_from_opts(parser, options, export_options=None):
+def get_build_flags_from_opts(parser, options, export_options=None,
+                              exclude_exportflags=None,
+                              exclude_exportlibs=None):
     cxx = options['CXX'].split()[1:]
     cc = options['CC'].split()[1:]
     cxxlink = options['CXXLINK'].split()[1:]
@@ -225,8 +235,17 @@ def get_build_flags_from_opts(parser, options, export_options=None):
         _, flags.test_cxxflags = parser.partition_cflags(cxx + test_cxxflags)
 
     def load_export_flags(flags, cxxflags, ldflags):
+
         flags.export_flags = parser.get_export_cflags(cxxflags)
         flags.export_libs = parser.partition_linkflags(cxxlink + ldflags)[1]
+
+        if exclude_exportflags:
+            flags.export_flags = [f for f in flags.export_flags if f not in
+                                  exclude_exportflags]
+
+        if exclude_exportlibs:
+            flags.export_libs = [l for l in flags.export_libs if l not in
+                                 exclude_exportlibs]
 
     flags = buildconfig.BuildFlags()
 
