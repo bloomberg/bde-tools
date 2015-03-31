@@ -1,7 +1,0 @@
-parms.cpp:3:43: warning: SP03: Parameter name contains misspelled word 'wol'
-void f(int a, int b, int wolfRamHart, int wolRamHar);
-                                          ^
-parms.cpp:3:49: warning: SP03: Parameter name contains misspelled word 'Har'
-void f(int a, int b, int wolfRamHart, int wolRamHar);
-                                                ^
-2 warnings generated.

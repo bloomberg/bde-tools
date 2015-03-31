@@ -1,6 +1,0 @@
-fdmo_objectheader.h:1:71: warning: HL01: File headline incorrect
-// fdmo_objectheader.h                                                 -*-C++-*-
-                                                                      ^
-fdmo_objectheader.h:1:71: note: HL01: Correct format is
-// fdmo_objectheader.h                                                -*-C++-*-
-1 warning generated.

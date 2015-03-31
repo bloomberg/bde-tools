@@ -1,8 +1,0 @@
-In file included from csamisc_memberdefinitioninclassdefinition.v.cpp:3:
-./csamisc_memberdefinitioninclassdefinition.v.hpp:19:18: warning: CD01: Member function 'bde_verify::csamisc::memberdefinitioninclassdefinition_foo::f' is defined in the class definition.
-            void f() {}
-                 ^
-./csamisc_memberdefinitioninclassdefinition.v.hpp:27:18: warning: CD01: Member function 'bde_verify::csamisc::memberdefinitioninclassdefinition_bar::g' is defined in the class definition.
-            void g() {}
-                 ^
-2 warnings generated.

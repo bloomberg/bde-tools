@@ -1,4 +1,0 @@
-csbtx_groupname.v.cpp:1:1: warning: GN02: Component 'csbtx_groupname' doesn't seem to be in package group 'csb'
-// csbtx_groupname.v.cpp                                              -*-C++-*-
-^
-1 warning generated.

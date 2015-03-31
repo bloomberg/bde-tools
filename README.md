@@ -5,7 +5,6 @@ development of [BDE libraries](https://github.com/bloomberg/bde),
 including:
 
 * [Waf-Based Build System](http://github.com/bloomberg/bde-tools/wiki/Waf-Build)
-* [bde_verify](http://github.com/bloomberg/bde-tools/wiki/bde_verify)
 
 ##Waf-Based Build System
 
@@ -24,16 +23,12 @@ For detail documentation, please see the
 `bde_verify` is a static analysis tool that verifies that source code adheres
 to the
 [BDE coding standards](https://github.com/bloomberg/bde/wiki/Introduction-to-BDE-Coding-Standards).
-It is built within the clang C++ compiler tool system, and therefore has
-access to proper syntax and type information about the program it is
-examining, unlike text-based scanning tools.
-
-For detailed usage information, please see the [bde_verify wiki](http://github.com/bloomberg/bde-tools/wiki/bde_verify).
+`bde_verify` has been moved to its [own repository](https://github.com/bloomberg/bde_verify).
 
 #License
 
-The BDE tools repository is distributed under a simple MIT-style license; see the
-LICENSE file at the top of the source tree for more information.
+The BDE tools repository is distributed under the Apache License (version 2.0);
+see the LICENSE file at the top of the source tree for more information.
 
 #Question, Comments and Feedback
 

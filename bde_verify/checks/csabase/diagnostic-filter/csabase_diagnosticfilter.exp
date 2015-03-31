@@ -1,8 +1,0 @@
-In file included from csabase_diagnosticfilter.t.cpp:3:
-./csabase_diagnosticfilter.t.hpp:28:13: warning: address of stack memory associated with local variable 'value' returned [-Wreturn-stack-address]
-    return &value;
-            ^~~~~
-csabase_diagnosticfilter.t.cpp:11:13: warning: address of stack memory associated with local variable 'value' returned [-Wreturn-stack-address]
-    return &value;
-            ^~~~~
-2 warnings generated.

@@ -1,8 +1,0 @@
-In file included from csastil_leakingmacro.t.cpp:3:
-./csastil_leakingmacro.t.h:15:9: warning: SLM01: Macro definition 'BAD' leaks from header
-#define BAD
-        ^
-./csastil_leakingmacro.t.h:14:9: warning: SLM01: Macro definition 'CSASTIL_LEAKINGMARCO_BAD' leaks from header
-#define CSASTIL_LEAKINGMARCO_BAD
-        ^
-2 warnings generated.

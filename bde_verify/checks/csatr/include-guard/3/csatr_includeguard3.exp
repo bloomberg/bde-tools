@@ -1,4 +1,0 @@
-In file included from csatr_includeguard3.t.cpp:3:
-./csatr_includeguard3.t.h:26:1: warning: TR14: Missing test for include guard INCLUDED_CSATR_INCLUDEGUARD3
-^
-1 warning generated.

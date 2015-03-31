@@ -1,4 +1,0 @@
-inline.h:1:13: warning: FB01: Inline functions in header must be preceded by an INLINE DEFINITIONS banner
-inline void foo() { }
-            ^
-1 warning generated.

@@ -1,4 +1,0 @@
-csatr_componentheaderinclude.v.cpp:10:20: warning: TR09: Declarations precede component header
-        static int local(0);
-                   ^
-1 warning generated.
