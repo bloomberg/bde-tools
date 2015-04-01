@@ -3,7 +3,7 @@ import unittest
 
 from bdebld.meta import buildconfigfactory
 from bdebld.meta import buildflagsparser
-from bdebld.meta import options
+from bdebld.meta import optiontypes
 from bdebld.meta import optionsparser
 from bdebld.meta import repocontextloader
 
@@ -34,8 +34,8 @@ class TestBuildConfig(unittest.TestCase):
         build_config = buildconfigfactory.make_build_config(
             repo_context,
             self.flags_parser,
-            options.Uplid.from_str('unix-linux-x86_64-3.2.0-gcc-4.7.2'),
-            options.Ufid.from_str('dbg_mt_exc'), self.default_rules)
+            optiontypes.Uplid.from_str('unix-linux-x86_64-3.2.0-gcc-4.7.2'),
+            optiontypes.Ufid.from_str('dbg_mt_exc'), self.default_rules)
 
         self.assertEqual(set(p for p in build_config.normal_packages),
                          set(['gr1p1']))
@@ -51,8 +51,8 @@ class TestBuildConfig(unittest.TestCase):
         buildconfigfactory.make_build_config(
             repo_context,
             self.flags_parser,
-            options.Uplid.from_str('unix-linux-x86_64-3.2.0-gcc-4.7.2'),
-            options.Ufid.from_str('dbg_mt_exc'), self.default_rules)
+            optiontypes.Uplid.from_str('unix-linux-x86_64-3.2.0-gcc-4.7.2'),
+            optiontypes.Ufid.from_str('dbg_mt_exc'), self.default_rules)
 
 
 if __name__ == '__main__':

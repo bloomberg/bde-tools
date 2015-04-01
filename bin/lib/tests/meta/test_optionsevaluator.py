@@ -7,30 +7,31 @@ except:
 
 from bdebld.meta import optionsevaluator
 from bdebld.meta import optionsparser
-from bdebld.meta import options
-from bdebld.meta import sysutil
+from bdebld.meta import optiontypes
+from bdebld.common import sysutil
 
 
 class TestOptionsEvaluator(unittest.TestCase):
 
     def test_match_rule(self):
-        rule = options.OptionRule(options.OptionCommand.ADD,
-                                  options.Uplid.from_str('unix-linux-'),
-                                  options.Ufid.from_str('dbg'), 'KEY', 'VAL')
+        rule = optiontypes.OptionRule(
+            optiontypes.OptionCommand.ADD,
+            optiontypes.Uplid.from_str('unix-linux-'),
+            optiontypes.Ufid.from_str('dbg'), 'KEY', 'VAL')
 
         evaluator1 = optionsevaluator.OptionsEvaluator(
-            options.Uplid.from_str('unix-linux-x86-3.2.0-gcc-4.7.2'),
-            options.Ufid.from_str('dbg_mt_exc'))
+            optiontypes.Uplid.from_str('unix-linux-x86-3.2.0-gcc-4.7.2'),
+            optiontypes.Ufid.from_str('dbg_mt_exc'))
         self.assertTrue(evaluator1._match_rule(rule))
 
         evaluator2 = optionsevaluator.OptionsEvaluator(
-            options.Uplid.from_str('unix-linux-x86-3.2.0-gcc-4.7.2'),
-            options.Ufid.from_str('opt_mt_exc'))
+            optiontypes.Uplid.from_str('unix-linux-x86-3.2.0-gcc-4.7.2'),
+            optiontypes.Ufid.from_str('opt_mt_exc'))
         self.assertFalse(evaluator2._match_rule(rule))
 
         evaluator3 = optionsevaluator.OptionsEvaluator(
-            options.Uplid.from_str('unix-aix-ppc-5.10-gcc-4.7.2'),
-            options.Ufid.from_str('dbg_mt_exc'))
+            optiontypes.Uplid.from_str('unix-aix-ppc-5.10-gcc-4.7.2'),
+            optiontypes.Ufid.from_str('dbg_mt_exc'))
         self.assertFalse(evaluator3._match_rule(rule))
 
     def test_evaluate(self):
@@ -56,8 +57,8 @@ unix- dbg K2 = V3
         parser.parse()
 
         ev = optionsevaluator.OptionsEvaluator(
-            options.Uplid.from_str('unix-linux-x86-3.2.0-gcc-4.7.2'),
-            options.Ufid.from_str('dbg_mt_exc'))
+            optiontypes.Uplid.from_str('unix-linux-x86-3.2.0-gcc-4.7.2'),
+            optiontypes.Ufid.from_str('dbg_mt_exc'))
 
         # ev.store_option_rules(parser.option_rules, ['K1', 'K2'])
         # ev.evaluate(['K1', 'K2'])
@@ -87,8 +88,8 @@ unix- dbg K2 = V3
         parser.parse()
 
         ev = optionsevaluator.OptionsEvaluator(
-            options.Uplid.from_str('unix-linux-x86-3.2.0-gcc-4.7.2'),
-            options.Ufid.from_str('dbg_mt_exc'))
+            optiontypes.Uplid.from_str('unix-linux-x86-3.2.0-gcc-4.7.2'),
+            optiontypes.Ufid.from_str('dbg_mt_exc'))
 
         # ev.store_option_rules(parser.option_rules, ['K1', 'K2'])
         # ev.evaluate(['K1', 'K2'])

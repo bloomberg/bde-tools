@@ -1,6 +1,6 @@
 import unittest
 
-from bdebld.meta import options
+from bdebld.meta import optiontypes
 from bdebld.meta import optionsutil
 
 
@@ -35,14 +35,14 @@ class TestOptionsUtil(unittest.TestCase):
             matched_masks = masks[0]
             unmatched_masks = masks[1]
 
-            ufid = options.Ufid.from_str(ufid_str)
+            ufid = optiontypes.Ufid.from_str(ufid_str)
             for mask_str in matched_masks:
-                mask = options.Ufid.from_str(mask_str)
+                mask = optiontypes.Ufid.from_str(mask_str)
                 self.assertTrue(optionsutil.match_ufid(ufid, mask),
                                 'ufid: %s mask: %s' % (ufid, mask))
 
             for mask_str in unmatched_masks:
-                mask = options.Ufid.from_str(mask_str)
+                mask = optiontypes.Ufid.from_str(mask_str)
                 self.assertFalse(optionsutil.match_ufid(ufid, mask),
                                  'ufid: %s mask: %s' % (ufid, mask))
 
@@ -87,14 +87,14 @@ class TestOptionsUtil(unittest.TestCase):
             matched_masks = masks[0]
             unmatched_masks = masks[1]
 
-            uplid = options.Uplid.from_str(uplid_str)
+            uplid = optiontypes.Uplid.from_str(uplid_str)
             for mask_str in matched_masks:
-                mask = options.Uplid.from_str(mask_str)
+                mask = optiontypes.Uplid.from_str(mask_str)
                 self.assertTrue(optionsutil.match_uplid(uplid, mask),
                                 'uplid: %s mask: %s' % (uplid, mask))
 
             for mask_str in unmatched_masks:
-                mask = options.Uplid.from_str(mask_str)
+                mask = optiontypes.Uplid.from_str(mask_str)
                 self.assertFalse(optionsutil.match_uplid(uplid, mask),
                                  'uplid: %s mask: %s' % (uplid, mask))
 

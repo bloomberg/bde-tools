@@ -7,7 +7,7 @@ try:
 except ImportError:
     import pickle
 
-from bdebld.meta import mixins
+from bdebld.common import mixins
 
 
 class BuildConfig(mixins.BasicEqualityMixin):

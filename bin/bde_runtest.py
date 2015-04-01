@@ -12,11 +12,11 @@ def _get_tools_path():
 tools_path = _get_tools_path()
 sys.path = [tools_path] + sys.path
 
-from bdebld.runtest import entry
+from bdebld.runtest import main
 
 
 if __name__ == '__main__':
-    entry.main()
+    main.main()
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

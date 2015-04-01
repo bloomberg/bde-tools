@@ -9,10 +9,10 @@ from waflib import Logs
 from waflib import Utils
 from waflib import Context
 
-from bdebld.meta import options
-from bdebld.meta import sysutil
-
-from bdebld.waf import cmdlineutil
+from bdebld.common import sysutil
+from bdebld.common import msvcversions
+from bdebld.meta import optiontypes
+from bdebld.meta import optionsutil
 
 
 def make_ufid(ctx):
@@ -32,28 +32,41 @@ def make_ufid(ctx):
     if env_ufid:
         if opts.ufid:
             Logs.warn(
-                'WARN: The specified UFID, "%s", is different from '
+                'The specified UFID, "%s", is different from '
                 'the value of the environment variable BDE_WAF_UFID '
                 ', "%s", which will take precedence. ' %
                 (opts.ufid, env_ufid))
         else:
             Logs.warn(
-                'WARN: Using the value of the environment variable '
+                'Using the value of the environment variable '
                 'BDE_WAF_UFID, "%s", as the UFID.' % env_ufid)
         ufid_str = env_ufid
     elif opts.ufid:
         ufid_str = opts.ufid
 
     if ufid_str:
-        ufid = options.Ufid.from_str(ufid_str)
-        if not options.Ufid.is_valid(ufid.flags):
+        ufid = optiontypes.Ufid.from_str(ufid_str)
+        if not optiontypes.Ufid.is_valid(ufid.flags):
             ctx.fatal(
                 'The UFID, "%s", is invalid.  Each part of a UFID must be '
                 'in the following list of valid flags: %s.' %
-                (ufid_str, ", ".join(sorted(options.Ufid.VALID_FLAGS.keys()))))
+                (ufid_str, ", ".join(sorted(
+                    optiontypes.Ufid.VALID_FLAGS.keys()))))
         return ufid
 
-    return cmdlineutil.make_ufid_from_cmdline_options(opts)
+    return optionsutil.make_ufid_from_cmdline_options(opts)
+
+
+def get_msvc_version_from_env():
+    env_uplid_str = os.getenv('BDE_WAF_UPLID')
+    if env_uplid_str:
+        env_uplid = optiontypes.Uplid.from_str(env_uplid_str)
+
+        if env_uplid.comp_type == 'cl':
+            for v in msvcversions.versions:
+                if v.cl_version == env_uplid.comp_ver:
+                    return v.vs_version
+    return None
 
 
 def make_uplid(ctx):
@@ -65,20 +78,17 @@ def make_uplid(ctx):
     Returns:
         An Uplid object.
     """
-    os_type, os_name, os_ver = sysutil.get_os_info()
-    cpu_type, comp_type, comp_ver = get_comp_info(ctx)
+    os_type, os_name, cpu_type, os_ver = sysutil.get_os_info()
+    comp_type, comp_ver = get_comp_info(ctx)
 
-    uplid = options.Uplid(os_type, os_name, cpu_type, os_ver,
-                          comp_type, comp_ver)
-
-    env_uplid_str = os.getenv('BDE_WAF_UPLID')
-
+    uplid = optiontypes.Uplid(os_type, os_name, cpu_type, os_ver,
+                              comp_type, comp_ver)
     env_uplid_str = os.getenv('BDE_WAF_UPLID')
     if env_uplid_str:
-        env_uplid = options.Uplid.from_str(env_uplid_str)
+        env_uplid = optiontypes.Uplid.from_str(env_uplid_str)
 
         if uplid != env_uplid:
-            Logs.warn(('WARN: The identified UPLID, "%s", is different '
+            Logs.warn(('The identified UPLID, "%s", is different '
                        'from the environment variable BDE_WAF_UPLID. '
                        'The the value of BDE_WAF_UPLID, "%s", '
                        'is used.') % (uplid, env_uplid))
@@ -94,9 +104,9 @@ def get_comp_info(ctx):
         ctx (ConfigurationContext): The waf configuration context.
 
     Returns:
-        cpu_type, comp_type, compiler_version
+        comp_type, compiler_version
     """
-    def sanitize_comp_info(cpu_type, comp_type, comp_ver):
+    def sanitize_comp_info(comp_type, comp_ver):
         """Correct problematic compiler information.
 
         waf sets `CXX` to `gcc` for both `clang` and `gcc`. This function
@@ -107,7 +117,7 @@ def get_comp_info(ctx):
         """
 
         if comp_type != 'gcc':
-            return cpu_type, comp_type, comp_ver
+            return comp_type, comp_ver
 
         cmd = ctx.env.CXX + ['-dM', '-E', '-']
         env = ctx.env.env or None
@@ -128,34 +138,29 @@ def get_comp_info(ctx):
             out = out.decode(sys.stdout.encoding or 'iso8859-1')
 
         if out.find("__clang__ 1") < 0:
-            return cpu_type, comp_type, comp_ver
+            return comp_type, comp_ver
 
-        return cpu_type, 'clang', '.'.join(ctx.env.CC_VERSION)
+        return 'clang', '.'.join(ctx.env.CC_VERSION)
 
     def get_linux_comp_info(ctx):
-        cpu_type = os.uname()[4]
-        return cpu_type, ctx.env.CXX_NAME, '.'.join(ctx.env.CC_VERSION)
+        return ctx.env.CXX_NAME, '.'.join(ctx.env.CC_VERSION)
 
     def get_aix_comp_info(ctx):
-        cpu_type = ctx.cmd_and_log(['/bin/uname', '-p']).rstrip()
         cxx_name = ctx.env.CXX_NAME
         if cxx_name == 'xlc++':
             cxx_name = 'xlc'
 
-        return cpu_type, cxx_name, '.'.join(ctx.env.CC_VERSION)
+        return cxx_name, '.'.join(ctx.env.CC_VERSION)
 
     def get_sunos_comp_info(ctx):
-        cpu_type = ctx.cmd_and_log(['/bin/uname', '-p']).rstrip()
         cxx_name = ctx.env.CXX_NAME
         if cxx_name == 'sun':
             cxx_name = 'cc'
 
-        return cpu_type, cxx_name, '.'.join(ctx.env.CC_VERSION)
+        return cxx_name, '.'.join(ctx.env.CC_VERSION)
 
     def get_darwin_comp_info(ctx):
-        cpu_type = os.uname()[4]
-
-        return cpu_type, ctx.env.CXX_NAME, '.'.join(ctx.env.CC_VERSION)
+        return ctx.env.CXX_NAME, '.'.join(ctx.env.CC_VERSION)
 
     def get_windows_comp_info(ctx):
         env = dict(ctx.environ)
@@ -166,15 +171,8 @@ def get_comp_info(ctx):
         if m:
             compiler = 'cl'
             compilerversion = m.group(1)
-            model = m.group(2)
-            if model == '80x86':
-                cpu_type = 'x86'
-            elif model == 'x64':
-                cpu_type = 'amd64'
-            else:
-                cpu_type = model
 
-        return cpu_type, compiler, compilerversion
+        return compiler, compilerversion
 
     platform_str = sysutil.unversioned_platform()
     comp_info_getters = {

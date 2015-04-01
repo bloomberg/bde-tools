@@ -3,8 +3,11 @@
 
 import os
 
+from bdebld.common import logutil
+from bdebld.common import sysutil
+
 from bdebld.meta import optionsparser
-from bdebld.meta import logutil
+from bdebld.meta import optiontypes
 
 
 def get_default_option_rules():
@@ -13,9 +16,8 @@ def get_default_option_rules():
     Returns:
        list of OptionRule.
     """
-    upd = os.path.dirname
-    tools_repo_root = upd(upd(upd(upd(upd(os.path.realpath(__file__))))))
-    default_opts_path = os.path.join(tools_repo_root, 'etc', 'default.opts')
+    default_opts_path = os.path.join(sysutil.repo_root_path(), 'etc',
+                                     'default.opts')
     bde_root = os.environ.get('BDE_ROOT')
 
     found_default_opts = False
@@ -63,6 +65,89 @@ def get_default_option_rules():
     logutil.warn('Using default option rules from: ' + default_paths)
 
     return option_rules
+
+
+def get_ufid_cmdline_options():
+    """Return a list of command line options to specify the ufid.
+    """
+
+    return [
+        (('abi-bits',),
+         {'type': 'choice',
+          'default': '64' if sysutil.is_64bit_system() else '32',
+          'choices': ('32', '64'),
+          'help': '32 or 64 [default: %default]'}),
+        (('build-type',),
+         {'type': 'choice',
+          'default': 'debug',
+          'choices': ('release', 'debug'),
+          'help': "the type of build to produce: 'debug' or 'release' "
+          "[default: %default]"}),
+        (('library-type',),
+         {'type': 'choice',
+          'default': 'static',
+          'choices': ('static', 'shared'),
+          'help': "the type of libraries to build: 'shared' or 'static' "
+          "[default: %default]"}),
+        (('assert-level',),
+         {'type': 'choice',
+          'default': 'none',
+          'choices': ('none', 'safe', 'safe2'),
+          'help': "bsls_assert level: 'none', 'safe' or 'safe2' "
+          "[default: %default]"}),
+        (('noexception',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'disable exception support'}),
+        (('cpp11',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'enable C++11 support'}),
+        (('t', 'ufid'),
+         {'type': 'string',
+          'default': None,
+          'help': 'the Unified Platform ID (UFID) identifying the build '
+          'configuration (e.g., dbg_mt_exc). '
+          'See https://github.com/bloomberg/bde-tools/wiki/'
+          'BDE-Style-Repository#ufid for a list of valid ufids. '
+          'Note that specifying a UFID will overwrite other build '
+          'configuration options such as --library_type.'})
+    ]
+
+
+def make_ufid_from_cmdline_options(opts):
+    """Create an Ufid from the specified command-line options.
+
+    Args:
+        opts (dict): The specified command-line options.
+
+    Returns:
+        An Ufid object.
+    """
+
+    if opts.ufid:
+        return optiontypes.Ufid.from_str(opts.ufid)
+
+    ufid_map = {
+        'abi_bits': {'64': '64'},
+        'build_type': {'debug': 'dbg', 'release': 'opt'},
+        'assert_level': {'safe': 'safe', 'safe2': 'safe2'},
+        'cpp11': {True: 'cpp11'},
+        'noexception': {False: 'exc'},
+        'library_type': {'shared': 'shr'}
+        }
+
+    flags = []
+    for opt in ufid_map:
+        attr = getattr(opts, opt, None)
+        if attr is not None:
+            if attr in ufid_map[opt]:
+                flags.append(ufid_map[opt][attr])
+
+    # always use mt
+    flags.append('mt')
+
+    return optiontypes.Ufid(flags)
 
 
 def match_ufid(ufid, mask):

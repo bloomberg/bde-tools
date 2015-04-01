@@ -11,9 +11,10 @@ import sys
 
 from waflib import Utils
 
-from bdebld.meta import sysutil
+from bdebld.meta import optionsutil
+from bdebld.common import cmdlineutil
+from bdebld.common import sysutil
 
-from bdebld.waf import cmdlineutil
 from bdebld.waf import configurehelper
 from bdebld.waf import configureutil
 from bdebld.waf import buildhelper
@@ -43,7 +44,7 @@ def options(ctx):
     ctx.load('msvs')
     ctx.load('xcode')
 
-    cmdlineutil.add_cmdline_options(ctx)
+    add_cmdline_options(ctx)
     graphhelper.add_cmdline_options(ctx)
 
 
@@ -58,13 +59,16 @@ def configure(ctx):
             ctx.options.msvc_targets = 'x64'
         else:
             ctx.options.msvc_targets = 'x86'
-
-    if 'CXX' in ctx.environ and 'CC' not in ctx.environ:
-        ctx.environ['CC'] = sysutil.get_other_compiler(
-            ctx.environ['CXX'], sysutil.CompilerType.CXX)
-    elif 'CC' in ctx.environ and 'CXX' not in ctx.environ:
-        ctx.environ['CXX'] = sysutil.get_other_compiler(
-            ctx.environ['CC'], sysutil.CompilerType.C)
+        msvc_version = configureutil.get_msvc_version_from_env()
+        if msvc_version:
+            ctx.options.msvc_version = 'msvc %s' % msvc_version
+    else:
+        if 'CXX' in ctx.environ and 'CC' not in ctx.environ:
+            ctx.environ['CC'] = sysutil.get_other_compiler(
+                ctx.environ['CXX'], sysutil.CompilerType.CXX)
+        elif 'CC' in ctx.environ and 'CXX' not in ctx.environ:
+            ctx.environ['CXX'] = sysutil.get_other_compiler(
+                ctx.environ['CC'], sysutil.CompilerType.C)
 
     ctx.load('compiler_c')
     ctx.load('compiler_cxx')
@@ -107,6 +111,60 @@ def build(ctx):
 
     helper = buildhelper.BuildHelper(ctx)
     helper.build()
+
+
+def add_cmdline_options(ctx):
+    """Add custom command-line options to an option context.
+
+    Args:
+        ctx (OptionContext): The option context.
+
+    Returns:
+        None
+    """
+
+    configure_opts = [
+        (('debug-opt-keys',),
+         {'type': 'string',
+          'default': None,
+          'help': 'debug rules in the opts files for the specified '
+                  '(comma separated) list of opts keys'}),
+        (('lib-suffix',),
+         {'type': 'string',
+          'default': '',
+          'help': 'add a suffix to the names of the package group library '
+                  'files being built'}),
+        (('install-flat-include',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'install all headers into $PREFIX/include instead of '
+                  '$PREFIX/include/<package_group>'}),
+        (('install-lib-dir',),
+         {'type': 'string',
+          'default': 'lib',
+          'help': 'the name of the directory under $PREFIX where '
+                  'library files are installed [default: %default]'}),
+        (('verify',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'Perform additional checks to verify '
+                  'repository structure.'}),
+    ]
+    configure_opts = optionsutil.get_ufid_cmdline_options() + configure_opts
+    configure_group = ctx.get_option_group('configure options')
+
+    cmdlineutil.add_options(configure_group, configure_opts)
+
+    # Set the upper bound of the default number of jobs to 24
+    jobs = ctx.parser.get_option('-j').default
+    if jobs > 24:
+        jobs = 24
+        ctx.parser.remove_option('-j')
+        ctx.parser.add_option('-j', '--jobs',
+                              dest='jobs',
+                              default=jobs,
+                              type='int',
+                              help='amount of parallel jobs (%r)' % jobs)
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

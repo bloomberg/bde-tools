@@ -7,7 +7,7 @@ their associated meta data that compose a BDE-style respository.
 import os
 import collections
 
-from bdebld.meta import mixins
+from bdebld.common import mixins
 
 UorDoc = collections.namedtuple('UorDoc', ['mnemonic', 'description'])
 

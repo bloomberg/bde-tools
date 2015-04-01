@@ -7,7 +7,7 @@ from waflib import Logs
 from bdebld.meta import buildconfig
 from bdebld.meta import buildconfigutil
 from bdebld.meta import dotutil
-from bdebld.meta import sysutil
+from bdebld.common import sysutil
 from bdebld.meta import cpreproc
 from bdebld.meta import repounits
 

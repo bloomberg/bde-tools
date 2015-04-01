@@ -12,8 +12,9 @@ def _get_tools_path():
 tools_path = _get_tools_path()
 sys.path = [tools_path] + sys.path
 
-import bdemeta.optionsparser
-import bdemeta.options
+
+from bdebld.meta import optionsparser
+from bdebld.meta import optiontypes
 
 
 def _format_rule(option, fill_widths):
@@ -26,7 +27,7 @@ def _format_rule(option, fill_widths):
     template += "=  {%s}" % index
 
     return template.format(
-        bdemeta.options.OptionCommand.to_str(option.command),
+        optiontypes.OptionCommand.to_str(option.command),
         option.uplid,
         option.ufid,
         option.key,
@@ -41,19 +42,18 @@ and defs meta-data files, and print the result to stdout.
 
 The formatter aligns each section of the option rules using two spaces as
 padding. Comments and blank lines will be left in-place unmodified.
-
 """
 
     if len(sys.argv) > 1:
         print(usage, file=sys.stderr)
         sys.exit(1)
 
-    parser = bdemeta.optionsparser.OptionsParser(sys.stdin)
+    parser = optionsparser.OptionsParser(sys.stdin)
     parser.parse()
 
     max_field_widths = [2, 0, 0, 0]
     option_field_index = {
-        'command': (0, bdemeta.options.OptionCommand.to_str),
+        'command': (0, optiontypes.OptionCommand.to_str),
         'uplid': (1, str),
         'ufid': (2, str),
         'key': (3, str),

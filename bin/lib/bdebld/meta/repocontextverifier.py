@@ -2,7 +2,7 @@
 """
 
 from bdebld.meta import graphutil
-from bdebld.meta import logutil
+from bdebld.common import logutil
 from bdebld.meta import repocontextutil
 from bdebld.meta import cpreproc
 

@@ -4,7 +4,7 @@
 import collections
 import copy
 
-from bdebld.meta import logutil
+from bdebld.common import logutil
 from bdebld.meta import graphutil
 
 

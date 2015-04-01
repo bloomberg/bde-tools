@@ -68,40 +68,6 @@
 !!  unix-Linux-*  _  BDE_DYNAMIC  =
 !!  windows-*     _  BDE_DYNAMIC  =
 
-
-# If "def" is used as the compiler name (5th) part of the wild card UPLID, then
-# it's value will be substituted with the value of the 'BDE_COMPILER_FLAG'
-# variable.  The value of 'BDE_COMPILER_FLAG' can be though of as the default
-# compiler on a platform.
-
-++  *             _  BDE_COMPILER_FLAG  =  def
-!!  windows       _  BDE_COMPILER_FLAG  =  cl
-!!  unix-SunOS    _  BDE_COMPILER_FLAG  =  cc
-!!  unix-AIX      _  BDE_COMPILER_FLAG  =  xlc
-!!  unix-Linux    _  BDE_COMPILER_FLAG  =  gcc
-!!  unix-Darwin   _  BDE_COMPILER_FLAG  =  gcc
-!!  unix-NONSUCH  _  BDE_COMPILER_FLAG  =  <Uncollapsed!>
-
-
-# The 'BDE_COMPILERVERSION_FLAG' is used by bde_build and indicates the version
-# of the default compiler on each platform.
-# TODO: Move this section to default_internal.opts
-
-++  *                         _   BDE_COMPILERVERSION_FLAG  =  0
-# For Windows, Uplid.pm deduces compiler version from availble cl.exe.
-# Let's set this to a bogus value here.
-!!  windows                   _   BDE_COMPILERVERSION_FLAG  =  999.999
-!!  unix-SunOS-*-*-cc         _   BDE_COMPILERVERSION_FLAG  =  5.11
-!!  unix-SunOS-i386-*-cc      _   BDE_COMPILERVERSION_FLAG  =  5.11
-!!  unix-SunOS-i386-*-cc      64  BDE_COMPILERVERSION_FLAG  =  5.11
-!!  unix-SunOS-*-*-gcc        _   BDE_COMPILERVERSION_FLAG  =  4.3.2
-!!  unix-AIX-*-*-gcc          _   BDE_COMPILERVERSION_FLAG  =  3.4.3
-!!  unix-AIX-*-*-xlc          _   BDE_COMPILERVERSION_FLAG  =  11.2
-!!  unix-Linux                _   BDE_COMPILERVERSION_FLAG  =  3.4.6
-!!  unix-Linux-x86_64-2.6.18  _   BDE_COMPILERVERSION_FLAG  =  4.1.2
-!!  unix-Darwin               _   BDE_COMPILERVERSION_FLAG  =  4.2.1
-!!  unix-NONSUCH              _   BDE_COMPILERVERSION_FLAG  =  <Uncollapsed!>
-
 # The default command line option separator.  It's '-' on most platforms,
 # and '/' on windows.
 
@@ -138,7 +104,6 @@
 # (not Fortran)
 
 ++  *                       _     DEF_INCLUDE         =
-# Language specific
 ++  *                       _     DEF_CINCLUDE        =
 ++  *                       _     DEF_CXXINCLUDE      =
 
@@ -171,11 +136,11 @@
 # For MSVC compiler, disable warning 4661 which warns of functions with no
 # bodies (e.g. private copy constructors) in explicitly instantiated class
 # templates.
-!!  windows-*-*-*-def       _     DEF_CXXFLAGS        =  /wd4661 /GR
+!!  windows-*-*-*-cl        _     DEF_CXXFLAGS        =  /wd4661 /GR
 
 # DRQS 17611641: Enforce that win2k is the minumum required OS version supported.
-!!  windows-*-*-*-def       _     WIN_VERSION_FLAGS   =  /D_WIN32_WINNT=0x0500 /DWINVER=0x0500
-!!  windows-*-amd64-*-def   _     WIN_VERSION_FLAGS   =  /D_WIN32_WINNT=0x0502 /DWINVER=0x0502
+!!  windows-*-*-*-cl        _     WIN_VERSION_FLAGS   =  /D_WIN32_WINNT=0x0500 /DWINVER=0x0500
+!!  windows-*-amd64-*-cl    _     WIN_VERSION_FLAGS   =  /D_WIN32_WINNT=0x0502 /DWINVER=0x0502
 
 # The cleaned up set of default flags below can be used with any VC++ version
 # since at least VS2003, but we're limiting the impact of changes to VS2008
@@ -520,10 +485,10 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 
 ++  *                          _        CXX64FLAGS                =  $(CC64FLAGS)
 
-++  unix-                      _        CC                        =  $(RETRY_ON_SIGNAL) cc -DUSE_REAL_MALLOC $(CC64FLAGS)
-++  unix-                      _        CXX                       =  $(RETRY_ON_SIGNAL) CC $(CXX64FLAGS)
-!!  unix-Linux-*-*-def         _        CC                        =  $(RETRY_ON_SIGNAL) $(COMPILERPATH)/gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)
-!!  unix-Darwin-*-*-def        _        CC                        =  $(RETRY_ON_SIGNAL) clang -DUSE_REAL_MALLOC -D__unix $(CC64FLAGS)
+++  unix-                      _        CC                        =  cc -DUSE_REAL_MALLOC $(CC64FLAGS)
+++  unix-                      _        CXX                       =  CC $(CXX64FLAGS)
+!!  unix-Linux-*-*-gcc         _        CC                        =  gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS)
+!!  unix-Darwin-*-*-clang      _        CC                        =  clang -DUSE_REAL_MALLOC -D__unix $(CC64FLAGS)
 
 # The section below should probably be moved to another section for CXXFLAGS
 # xlc 10 August PTF - All settings are identical to xlc-10.0 except for XLC_LOCATION
@@ -546,36 +511,36 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !!  unix-AIX-*-*-xlc          _    XLCXX_PATH         =  xlC
 !!  unix-AIX-*-*-xlc          mt   XLCXX_PATH         =  xlC_r
 
-!!  unix-AIX-*-*-xlc          _    CC                 =  $(XLC_INTERNAL_PREFIX1) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!!  unix-AIX-*-*-xlc          _    CXX                =  $(XLC_INTERNAL_PREFIX1) $(XLCXX_PATH) $(CXX64FLAGS)
+!!  unix-AIX-*-*-xlc          _    CC                 =  $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!!  unix-AIX-*-*-xlc          _    CXX                =  $(XLCXX_PATH) $(CXX64FLAGS)
 
-!!  unix-AIX-*-*-xlc-10.0     _    CC                 =  $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!!  unix-AIX-*-*-xlc-10.0     _    CXX                =  $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS)
+!!  unix-AIX-*-*-xlc-10.0     _    CC                 =  $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!!  unix-AIX-*-*-xlc-10.0     _    CXX                =  $(XLCXX_PATH) $(CC64FLAGS)
 
-!!  unix-AIX-*-*-xlc-10.1     _    CC                 =  $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
-!!  unix-AIX-*-*-xlc-10.1     _    CXX                =  $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
+!!  unix-AIX-*-*-xlc-10.1     _    CC                 =  $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
+!!  unix-AIX-*-*-xlc-10.1     _    CXX                =  $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType $(XLC_QPATH)
 
-!!  unix-AIX-*-*-xlc-11.1     _    CC                 =  $(XLC_INTERNAL_PREFIX2) $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
-!!  unix-AIX-*-*-xlc-11.1     _    CXX                =  $(XLC_INTERNAL_PREFIX2) $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!!  unix-AIX-*-*-xlc-11.1     _    CC                 =  $(XLC_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
+!!  unix-AIX-*-*-xlc-11.1     _    CXX                =  $(XLCXX_PATH) $(CC64FLAGS) -qxflag=NoKeepDebugMetaTemplateType
 
 !!  unix-AIX-*-*-gcc          _    AIX_GCC_PATH       =  gcc
 !!  unix-AIX-*-*-gcc          _    AIX_GXX_PATH       =  g++
 
-!!  unix-AIX-*-*-gcc          _    CC                 =  $(AIX_GCC_PREFIX) $(AIX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!!  unix-AIX-*-*-gcc          _    CXX                =  $(AIX_GCC_PREFIX) $(AIX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+!!  unix-AIX-*-*-gcc          _    CC                 =  $(AIX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!!  unix-AIX-*-*-gcc          _    CXX                =  $(AIX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 ++  unix-AIX-*-*-gcc          _    CXX                =  -ftemplate-depth-150
 
 !!  unix-SunOS-*-*-cc         _    SUN_CC_PATH        =  cc
 !!  unix-SunOS-*-*-cc         _    SUN_CXX_PATH       =  CC
 
-!!  unix-SunOS-*-*-cc-5.9     _    CC                 =  $(SUN_CC_INTERNAL_PREFIX) $(SUN_CC_PATH) $(CC64FLAGS)
-!!  unix-SunOS-*-*-cc-5.9     _    CXX                =  $(SUN_CC_INTERNAL_PREFIX) $(SUN_CXX_PATH) $(CXX64FLAGS)
+!!  unix-SunOS-*-*-cc-5.9     _    CC                 =  $(SUN_CC_PATH) $(CC64FLAGS)
+!!  unix-SunOS-*-*-cc-5.9     _    CXX                =  $(SUN_CXX_PATH) $(CXX64FLAGS)
 
 !!  unix-SunOS-*-*-gcc        _    SUN_GCC_PATH       =  gcc
 !!  unix-SunOS-*-*-gcc        _    SUN_GXX_PATH       =  g++
 
-!!  unix-SunOS-*-*-gcc        _    CC                 =  $(SUN_GCC_INTERNAL_PREFIX) $(SUN_GCC_PATH)  -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!!  unix-SunOS-*-*-gcc        _    CXX                =  $(SUN_GCC_INTERNAL_PREFIX) $(SUN_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+!!  unix-SunOS-*-*-gcc        _    CC                 =  $(SUN_GCC_PATH)  -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!!  unix-SunOS-*-*-gcc        _    CXX                =  $(SUN_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 ++  unix-SunOS-*-*-gcc        _    CXX                =  -ftemplate-depth-150
 
 
@@ -584,15 +549,15 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !!  unix-Linux-*-*-gcc        _    LINUX_GXX_PATH     =  g++
 !!  unix-Linux-*-*-clang      _    LINUX_GXX_PATH     =  g++
 
-!!  unix-Linux-*-*-gcc        _    CC                 =  $(LINUX_GCC_PREFIX) $(LINUX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!!  unix-Linux-*-*-clang      _    CC                 =  $(LINUX_GCC_PREFIX) $(LINUX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!!  unix-Linux-*-*-gcc        _    CXX                =  $(LINUX_GCC_PREFIX) $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-!!  unix-Linux-*-*-clang      _    CXX                =  $(LINUX_GCC_PREFIX) $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+!!  unix-Linux-*-*-gcc        _    CC                 =  $(LINUX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!!  unix-Linux-*-*-clang      _    CC                 =  $(LINUX_GCC_PATH) -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
+!!  unix-Linux-*-*-gcc        _    CXX                =  $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
+!!  unix-Linux-*-*-clang      _    CXX                =  $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 
-!!  windows-*-*-*-cl-15.00    _    CC                 =  $(WINDOWS_CC_PREFIX) cl /TC /W4 $(CC64FLAGS)
-!!  windows-*-*-*-cl-16.00    _    CC                 =  $(WINDOWS_CC_PREFIX) cl /TC /W4 $(CC64FLAGS)
-!!  windows-*-*-*-cl-15.00    _    CXX                =  $(WINDOWS_CC_PREFIX) cl /TP /W4 $(CXX64FLAGS)
-!!  windows-*-*-*-cl-16.00    _    CXX                =  $(WINDOWS_CC_PREFIX) cl /TP /W4 $(CXX64FLAGS)
+!!  windows-*-*-*-cl-15.00    _    CC                 =  cl /TC /W4 $(CC64FLAGS)
+!!  windows-*-*-*-cl-16.00    _    CC                 =  cl /TC /W4 $(CC64FLAGS)
+!!  windows-*-*-*-cl-15.00    _    CXX                =  cl /TP /W4 $(CXX64FLAGS)
+!!  windows-*-*-*-cl-16.00    _    CXX                =  cl /TP /W4 $(CXX64FLAGS)
 
 # for development only; use Clang instead of gcc
 !!  unix-Linux-*-*-clang      _    CLANG_GCC_VER_CPP  =  -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=7 -D__CLANG_GNUC_PATCHLEVEL__=0
@@ -605,13 +570,7 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !!  unix-Linux-*-*-clang      _    CXX                =  $(CLANGXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC)
 !!  unix-Linux-*-*-clang      64   CXX                =  $(CLANGXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS) $(CLANG_GCC_VER_CPP) $(CLANG_INTERNAL_INC_64)
 
-!!  unix-Darwin-*-*-def       _    CXX                =  $(RETRY_ON_SIGNAL) clang++ -D__unix $(CXX64FLAGS) $(CLANG_GCC_VER_CPP)
-
-++  unix-                     _    CXXLINK            =  $(CXX)
-++  unix-                     _    CLINK              =  $(CXXLINK)
-++  windows-                  _    CXXLINK            =  $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:ix86 ws2_32.lib
-!!  windows-*-amd64-*-*       _    CXXLINK            =  $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:X64 ws2_32.lib
-++  windows-                  _    CLINK              =  $(CXXLINK)
+!!  unix-Darwin-*-*-clang     _    CXX                =  clang++ -D__unix $(CXX64FLAGS) $(CLANG_GCC_VER_CPP)
 
 #==============================================================================
 # User Customisation

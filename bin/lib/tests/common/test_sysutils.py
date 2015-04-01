@@ -1,6 +1,7 @@
 import unittest
+import os
 
-from bdebld.meta import sysutil
+from bdebld.common import sysutil
 
 
 class TestSysutil(unittest.TestCase):
@@ -26,6 +27,11 @@ class TestSysutil(unittest.TestCase):
             exp_other_path = row[2]
             other_path = sysutil.get_other_compiler(comp_path, comp_type)
             self.assertEqual(other_path, exp_other_path)
+
+    def test_repo_root_path(self):
+        root_path = sysutil.repo_root_path()
+
+        self.assertTrue(os.path.isdir(os.path.join(root_path, 'etc')))
 
 
 if __name__ == '__main__':

@@ -4,10 +4,10 @@
 import re
 import copy
 
-from bdebld.meta import options
+from bdebld.meta import optiontypes
 from bdebld.meta import optionsutil
-from bdebld.meta import sysutil
-from bdebld.meta import logutil
+from bdebld.common import sysutil
+from bdebld.common import logutil
 
 # The default compiler is set by an option with the key 'BDE_COMPILER_FLAG'. If
 # this option exist any uplid having the value 'def' in its compiler field is
@@ -102,21 +102,21 @@ class OptionsEvaluator(object):
             self.results[key] = value
         else:
             orig = self.results[key]
-            if rule.command == options.OptionCommand.ADD:
+            if rule.command == optiontypes.OptionCommand.ADD:
                 if orig:
                     self.results[key] = orig + ' ' + value
                 else:
                     self.results[key] = value
-            elif rule.command == options.OptionCommand.INSERT:
+            elif rule.command == optiontypes.OptionCommand.INSERT:
                 if orig:
                     self.results[key] = value + ' ' + orig
                 else:
                     self.results[key] = value
-            elif rule.command == options.OptionCommand.APPEND:
+            elif rule.command == optiontypes.OptionCommand.APPEND:
                 self.results[key] = orig + value
-            elif rule.command == options.OptionCommand.PREPEND:
+            elif rule.command == optiontypes.OptionCommand.PREPEND:
                 self.results[key] = value + orig
-            elif rule.command == options.OptionCommand.OVERRIDE:
+            elif rule.command == optiontypes.OptionCommand.OVERRIDE:
                 self.results[key] = value
 
         if rule.key in debug_keys:

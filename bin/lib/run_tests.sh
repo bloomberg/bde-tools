@@ -8,7 +8,7 @@ fi
 
 if [[ $1 == "-c" ]]; then
     # We care only about the coverage of the meta sub-package for now.
-    test_runner="coverage run --source=bdebld/meta -a"
+    test_runner="coverage run --source=bdebld/meta,bdebld/setenv,bdebld/common -a"
     coverage erase
 else
     test_runner="python"
@@ -26,7 +26,8 @@ tests=(
     tests.meta.test_repocontextloader
     tests.meta.test_repolayoututil
     tests.meta.test_repoloadutil
-    tests.meta.test_sysutils
+    tests.setenv.test_compilerinfo
+    tests.common.test_sysutils
 )
 
 for t in "${tests[@]}"; do

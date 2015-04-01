@@ -1,8 +1,7 @@
 import json
-import logutil
 import os
 
-from bdebld.meta import logutil
+from bdebld.common import logutil
 from bdebld.meta import repolayout
 from bdebld.meta import repoloadutil
 
@@ -74,7 +73,7 @@ def parse_repo_layout_from_json(file_):
     """
     def ascii_encode_dict(data):
         new_data = {}
-        for key,value in data.items():
+        for key, value in data.items():
             new_data[key] = [i.encode('ascii') for i in value]
 
         return new_data

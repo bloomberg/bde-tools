@@ -6,7 +6,7 @@ except:
     from io import StringIO
 
 from bdebld.meta import optionsparser
-from bdebld.meta import options
+from bdebld.meta import optiontypes
 
 
 class TestOptionsParser(unittest.TestCase):
@@ -23,30 +23,30 @@ VAL4_2
         """
         self.opts_file = StringIO(self.opts_string)
         self.expected_vals = (
-            (1, (options.OptionCommand.ADD,
-                 options.Uplid('unix', 'linux', 'x86_64', '3.2.0',
-                               'gcc', '4.7.2'),
-                 options.Ufid(),
+            (1, (optiontypes.OptionCommand.ADD,
+                 optiontypes.Uplid('unix', 'linux', 'x86_64', '3.2.0',
+                                   'gcc', '4.7.2'),
+                 optiontypes.Ufid(),
                  'KEY1',
                  'VAL1')),
-            (2, (options.OptionCommand.INSERT,
-                 options.Uplid('unix', 'linux', '*', '3.2.0', 'gcc'),
-                 options.Ufid(['dbg']),
+            (2, (optiontypes.OptionCommand.INSERT,
+                 optiontypes.Uplid('unix', 'linux', '*', '3.2.0', 'gcc'),
+                 optiontypes.Ufid(['dbg']),
                  'KEY2',
                  'VAL2')),
-            (5, (options.OptionCommand.INSERT,
-                 options.Uplid('unix', 'linux', '*', '3.2.0', 'gcc'),
-                 options.Ufid(['dbg']),
+            (5, (optiontypes.OptionCommand.INSERT,
+                 optiontypes.Uplid('unix', 'linux', '*', '3.2.0', 'gcc'),
+                 optiontypes.Ufid(['dbg']),
                  'KEY2',
                  'VAL2')),
-            (6, (options.OptionCommand.OVERRIDE,
-                 options.Uplid(),
-                 options.Ufid(['dbg', 'mt', 'exc']),
+            (6, (optiontypes.OptionCommand.OVERRIDE,
+                 optiontypes.Uplid(),
+                 optiontypes.Ufid(['dbg', 'mt', 'exc']),
                  'KEY3',
                  'VAL3')),
-            (7, (options.OptionCommand.APPEND,
-                 options.Uplid('unix'),
-                 options.Ufid(['opt', 'mt']),
+            (7, (optiontypes.OptionCommand.APPEND,
+                 optiontypes.Uplid('unix'),
+                 optiontypes.Ufid(['opt', 'mt']),
                  'KEY4',
                  'VAL4_1 VAL4_2'))
         )
@@ -60,7 +60,7 @@ VAL4_2
         exp_all_lines = []
         for val in self.expected_vals:
             pos = val[0]
-            rule = options.OptionRule(*val[1])
+            rule = optiontypes.OptionRule(*val[1])
             exp_option_rules.append(rule)
             while len(exp_all_lines) < pos:
                 exp_all_lines.append((lines[len(exp_all_lines)], None))

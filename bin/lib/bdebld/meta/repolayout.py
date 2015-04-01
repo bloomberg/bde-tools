@@ -1,7 +1,7 @@
 """Repository layout.
 """
 
-from bdebld.meta import mixins
+from bdebld.common import mixins
 
 
 class RepoLayout(mixins.BasicEqualityMixin, mixins.BasicReprMixin):

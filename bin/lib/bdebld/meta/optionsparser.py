@@ -3,7 +3,7 @@
 
 import re
 
-from bdebld.meta import options
+from bdebld.meta import optiontypes
 
 
 class OptionsParser(object):
@@ -48,7 +48,7 @@ class OptionsParser(object):
         for line in self.opts_file:
             line = line.rstrip('\n')
             if not continuation:
-                rule = options.OptionRule()
+                rule = optiontypes.OptionRule()
                 if self._OPT_COMMENT_OR_EMTPY_RE.match(line):
                     self.all_lines.append((line.rstrip(), None))
                     got_line = False
@@ -57,12 +57,13 @@ class OptionsParser(object):
                     if m:
                         got_line = True
                         if m.group('command'):
-                            rule.command = options.OptionCommand.from_str(
+                            rule.command = optiontypes.OptionCommand.from_str(
                                 m.group('command'))
                         else:
-                            rule.command = options.OptionCommand.ADD
-                        rule.uplid = options.Uplid.from_str(m.group('uplid'))
-                        rule.ufid = options.Ufid.from_str(m.group('ufid'))
+                            rule.command = optiontypes.OptionCommand.ADD
+                        rule.uplid = optiontypes.Uplid.from_str(
+                            m.group('uplid'))
+                        rule.ufid = optiontypes.Ufid.from_str(m.group('ufid'))
                         rule.key = m.group('key')
                         rule.value = m.group('value')
                         continuation = not m.group('cont') is None

@@ -2,12 +2,17 @@
 """
 
 import os
+import sys
+
+from waflib import Logs
 
 from bdebld.meta import buildconfigfactory
 from bdebld.meta import buildflagsparser
 from bdebld.meta import optionsutil
 from bdebld.meta import repocontextloader
 from bdebld.meta import repocontextverifier
+
+from bdebld.common import sysutil
 
 
 class ConfigureHelper(object):
@@ -82,6 +87,20 @@ class ConfigureHelper(object):
             self.ctx.fatal('Repo verification failed.')
 
     def _configure_external_libs(self):
+
+        if len(self.build_config.external_dep) == 0:
+            return
+
+        try:
+            self.ctx.find_program('pkg-config', var='PKGCONFIG')
+        except self.ctx.errors.ConfigurationError:
+            self.ctx.env['PKGCONFIG'] = [sys.executable, os.path.join(
+                sysutil.repo_root_path(), 'bin', 'tools', 'pykg-config',
+                'pykg-config.py')]
+            Logs.warn('Could not find pkg-config on the PATH, using the '
+                      'built-in python based pkg-config instead.')
+            self.ctx.find_program('pkg-config', var='PKGCONFIG')
+
         pkgconfig_args = ['--libs', '--cflags']
 
         if 'shr' not in self.ufid.flags:
@@ -189,6 +208,20 @@ class ConfigureHelper(object):
     def _save_custom_waf_internals(self):
         """Modify and save modifications to waf's internal variables.
         """
+
+        # bde_setwafenv.py sometimes adds additional compiler flags for a
+        # particular compular via the 'BDE_WAF_COMP_FLAGS' environment
+        # variable.  This is mostly done to support special compiler flags such
+        # as '-qpath' for the IBM Xlc compiler that can be partially patched.
+        additional_flags = os.environ.get('BDE_WAF_COMP_FLAGS')
+        if additional_flags:
+            flag_vars = ('CFLAGS', 'CXXFLAGS')
+            for var in flag_vars:
+                if var in self.ctx.env:
+                    self.ctx.env[var] = additional_flags.split() + \
+                        self.ctx.env[var]
+                else:
+                    self.ctx.env[var] = additional_flags.split()
 
         # For visual studio, waf explicitly includes the system header files by
         # setting the 'INCLUDES' variable. BSL_OVERRIDE_STD mode requires that

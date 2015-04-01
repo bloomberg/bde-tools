@@ -2,6 +2,7 @@
 """
 
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -20,6 +21,8 @@ def shell_command(cmd):
 
 
 def find_program(program):
+    """Return the path to a executable file on the PATH.
+    """
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -30,6 +33,30 @@ def find_program(program):
             return path
 
     return None
+
+
+def is_64bit_system():
+    """Return whether the system is 64-bit capable.
+
+    We approximate the return value by first checking whether we are
+    running the 64-bit python interpreter.  If so, then we are done.
+    Otherwise, we match the current machine type with a set of known 64-bit
+    machine types.
+    """
+
+    if sys.maxsize > 2**32:
+        return True
+
+    return platform.machine().lower()  \
+        in ('amd64', 'x86_64', 'sun4v', 'ppc64')
+
+
+def repo_root_path():
+    """Return the root path of this tools repository.
+    """
+    upd = os.path.dirname
+    tools_repo_root = upd(upd(upd(upd(upd(os.path.realpath(__file__))))))
+    return tools_repo_root
 
 
 def unversioned_platform():
@@ -98,46 +125,80 @@ def get_other_compiler(comp_path, comp_type):
     return os.path.join(dirname, comp_map[name] + tail)
 
 
+def get_win32_os_info_from_cygwin():
+    """Get operating system information for windows from cygwin.
+    """
+
+    platform_str = unversioned_platform()
+    if platform_str != 'cygwin':
+        raise ValueError(
+            'Function can only be called in a cygwin environment.')
+
+    os_type = 'windows'
+    os_name = 'windows_nt'
+    out = shell_command('echo $(cmd /c ver)')
+
+    m = re.match(r'\s*Microsoft\s+Windows\s+\[Version\s+(\d+\.\d+)[^\]]+\]',
+                 out)
+    if not m:
+        raise ValueError('Invalid version windows string "%s".' % out)
+    os_ver = m.group(1)
+
+    # Make the assumption that we are on a X86 system.
+    if is_64bit_system():
+        cpu_type = 'amd64'
+    else:
+        cpu_type = 'x86'
+
+    return os_type, os_name, cpu_type, os_ver
+
+
 def get_os_info():
     """Return the operating system information part of the UPLID.
 
     Returns:
-        os_type, os_name, os_ver
+        os_type, os_name, cpu_type, os_ver
     """
 
     def get_linux_os_info():
         os_type = 'unix'
         os_name = 'linux'
-        os_ver = os.uname()[2]
+        uname = os.uname()
+        cpu_type = uname[4]
+        os_ver = uname[2]
         # os_ver can contain a '-flavor' part, strip it
         os_ver = os_ver.split('-', 1)[0]
 
-        return os_type, os_name, os_ver
+        return os_type, os_name, cpu_type, os_ver
 
     def get_aix_os_info():
         os_type = 'unix'
         os_name = 'aix'
+        cpu_type = shell_command(['/bin/uname', '-p']).rstrip()
         uname = os.uname()
         os_ver = '%s.%s' % (uname[3], uname[2])
 
-        return os_type, os_name, os_ver
+        return os_type, os_name, cpu_type, os_ver
 
     def get_sunos_os_info():
         os_type = 'unix'
         os_name = 'sunos'
+        cpu_type = shell_command(['/bin/uname', '-p']).rstrip()
         uname = os.uname()
         os_ver = uname[2]
 
-        return os_type, os_name, os_ver
+        return os_type, os_name, cpu_type, os_ver
 
     def get_darwin_os_info():
         os_type = 'unix'
         os_name = 'darwin'
-        os_ver = os.uname()[2]
+        uname = os.uname()
+        cpu_type = uname[4]
+        os_ver = uname[2]
         # os_ver can contain a '-flavor' part, strip it
         os_ver = os_ver.split('-', 1)[0]
 
-        return os_type, os_name, os_ver
+        return os_type, os_name, cpu_type, os_ver
 
     def get_windows_os_info():
         os_type = 'windows'
@@ -146,7 +207,13 @@ def get_os_info():
         uname = platform.uname()
         os_ver = '.'.join(uname[3].split('.')[0:2])
 
-        return os_type, os_name, os_ver
+        # Make the assumption that we are on a X86 system.
+        if is_64bit_system():
+            cpu_type = 'amd64'
+        else:
+            cpu_type = 'x86'
+
+        return os_type, os_name, cpu_type, os_ver
 
     platform_str = unversioned_platform()
     os_info_getters = {

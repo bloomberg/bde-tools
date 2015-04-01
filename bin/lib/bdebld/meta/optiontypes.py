@@ -8,7 +8,7 @@ https://github.com/bloomberg/bde-tools/wiki/BDE-Style-Repository
 
 """
 
-from bdebld.meta import mixins
+from bdebld.common import mixins
 
 
 class OptionCommand(object):

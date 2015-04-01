@@ -9,6 +9,8 @@ from bdebld.meta import buildconfigutil
 from bdebld.meta import graphutil
 from bdebld.meta import repounits
 
+from bdebld.common import sysutil
+
 from bdebld.waf import waftweaks  # NOQA
 from bdebld.waf import bdeunittest
 
@@ -42,9 +44,8 @@ class BuildHelper(object):
         # this script is <repo_root>/bin/lib/bdebld/waf and bde_runtest.py is
         # located in the directory <repo_root>/bin/
 
-        upd = os.path.dirname
         test_runner_path = os.path.join(
-            upd(upd(upd(upd(os.path.realpath(__file__))))), 'bde_runtest.py')
+            sysutil.repo_root_path(), 'bin', 'bde_runtest.py')
 
         self.ctx.options.testcmd = \
             '%s %s %%s --verbosity %s --timeout %s' % (
@@ -57,6 +58,12 @@ class BuildHelper(object):
 
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.build_config.custom_envs)
+
+        if self.build_config.uplid.os_type == 'windows':
+            # Use forward slash for paths on windows to be compatible with
+            # pykg-config.py.
+            prefix = self.ctx.env['PREFIX']
+            self.ctx.env['PREFIX'] = prefix.replace('\\', '/')
 
     def build(self):
         # Create task generators in topological order so that the actual task
