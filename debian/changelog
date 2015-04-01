@@ -1,5 +1,74 @@
-bde-tools (2.21.0.6) unstable; urgency=low
+bde-tools (2.23.0.0.icbeta) unstable; urgency=low
 
+  * 7e8be5b [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * b1c081c [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 9071c2d [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * b5e0737 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 0bab0da [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 22621eb [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * f723ca2 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 6497218 fix msvc_version_map in slave
+  * 7678674 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * a1bab71 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 8d5f7fa [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * e488144 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 62faf96 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 93c5a41 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * f9a5dbd [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 4891be7 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * e6e9a44 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 41e7d66 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 320d41e [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * da84034 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * ed1fdcd [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * d187766 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * db41e3c [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * cd73ad5 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 140e9ba [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 78ba405 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * ea042a9 Don't replace commented forward declares (version 2)
+  * 7ce437a [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * e6f8344 [APPROVAL] origin/review/replace-once_drqs-62756050 to master
+  * 61a9638 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 090e978 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * c5b81b7 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 5b971ea [APPROVAL] pending/master/update-suncc-dpkg-version-drqs-53510269 to master
+  * 5a74bb8 Update the Sun CC version used in dpkg
+  * dd2519b [APPROVAL] origin/review/solaris-x86-port-drqs-39471364 to master
+  * 31ab455 [APPROVAL] move-to-waf-nightly-builds to master
+  * be8818f [APPROVAL] move-to-waf-nightly-builds to master
+  * 6b59492 [APPROVAL] move-to-waf-nightly-builds to master
+  * 07761b1 [APPROVAL] origin/review/update_xlc12_1_path_drqs61664704 to master
+  * b296b04 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 0d7b2b8 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 97d894d [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 9b554a4 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * a2bf2a9 [APPROVAL] origin/review/move-to-waf-nightly-builds to master
+  * 7b6d883 [APPROVAL] add-script-for-bdet-forward-declares-drqs59150779 to master
+  * 9c559ab [APPROVAL] origin/review/drqs-57720228-sparc-opts to master
+  * 709862a [APPROVAL] origin/review/delete-bst-drqs-61212092 to master
+  * 02f9fdb [APPROVAL] delete-mac-xfers to master
+  * 341feae [APPROVAL] jenkins-robo-on-top-of-git to master
+  * 9a4b7ef [APPROVAL] jenkins-robo-on-top-of-git to master
+  * 7a3703f [APPROVAL] jenkins-robo-on-top-of-git to master
+  * b56c6fb [APPROVAL] jenkins-robo-on-top-of-git to master
+  * 12de800 [APPROVAL] jenkins-robo-on-top-of-git to master
+  * 26ff0dc [APPROVAL] jenkins-robo-on-top-of-git to master
+  * ff9653a [APPROVAL] jenkins-robo-on-top-of-git to master
+  * 71c2cd1 [APPROVAL] origin/review/remove-bsl-overrides-std-from-oss-drqs-56739751 to master
+  * b6e0d48 [APPROVAL] pow-maintenance-scripts to master
+  * d575b32 [APPROVAL] update-cc-12.3-path-to-20141031 to master
+  * f9bd479 [APPROVAL] add-gcc-4.4-build-on-linux to master
+  * 3a05967 [APPROVAL] add-nowhitespace-option-drqs-57928586 to master
+  * 65520d2 [APPROVAL] shared_ptr_conversion_nildeleter_fix to master
+  * 595762f [APPROVAL] origin/review/add-xlc-12.1-support-drqs-56270209 to master
+  * abe9c65 [APPROVAL] enable-brmwnydgenap05-builds to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 28 Mar 2015 11:00:42 -0400
+
+bde-tools (2.21.0.6) git; urgency=low
+
+  * 4fd9397 bump changelog to 2.21.0.6
   * 2ac5d8c bump Sun uplid to 5.12.3
   * 892e84f [APPROVAL] origin/review/use-absolute-uname-path-drqs-53743523 to master
   * 30c6b11 [APPROVAL] origin/review/sort-ufid-flags-drqs-52775437 to master
@@ -7,11 +76,16 @@ bde-tools (2.21.0.6) unstable; urgency=low
   * 0736efb [APPROVAL] origin/review/fix-bde_setwafenv-error-reporting-drqs-52770558 to master
   * d646426 [APPROVAL] pending/master/bde-tools-bde-bb-building-with-gcc-4.8.1-drqs-52016418 to master
   * d4a2f68 [APPROVAL] origin/review/break-bde_build-drqs52233823 to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 25 Jun 2014 13:48:26 -0400
+
+bde-tools (2.21.0.5) git; urgency=low
+
   * 4c924b7 bump changelog
   * 899556b [APPROVAL] origin/review/remove-waf-drqs-51904148 to master
   * 09ad096 [APPROVAL] origin/review/bde_setwafenv-error-handling-and-use-shell-drqs-52316856 to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 25 Jun 2014 13:47:30 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 8 May 2014 11:53:18 -0400
 
 bde-tools (2.21.0.4) git; urgency=low
 
