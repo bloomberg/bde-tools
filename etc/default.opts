@@ -255,7 +255,7 @@
 !!  unix-SunOS-*-*-cc-5.9   dbg  DBG_CXXFLAGS  =  -g0 -xdebugformat=stabs
 
 !!  unix-AIX-*-*-*          dbg  DBG_CXXFLAGS  =  -g
-!!  unix-AIX-*-*-xlc-10.0   dbg  DBG_CXXFLAGS  =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
+!!  unix-AIX-*-*-xlc-10.0   dbg  DBG_CXXFLAGS  =  -qxflag=v6align -g -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 
 !!  unix-*-*-*-gcc          dbg  DBG_CXXFLAGS  =  -g
 !!  unix-*-*-*-clang        dbg  DBG_CXXFLAGS  =  -g
@@ -533,11 +533,11 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 # Note: must be the very last option for AIX/xlC/DEF_CXXFLAGS, to avoid
 # overriding it with other options
 ++  unix-AIX-*-*-xlc-         _    DEF_CXXFLAGS       =  -qxflag=UnwindTypedefInClassDecl
-!!  unix-AIX-*-*-xlc-10.1     dbg  DBG_CXXFLAGS       =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
-!!  unix-AIX-*-*-xlc-11.1     dbg  DBG_CXXFLAGS       =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
+!!  unix-AIX-*-*-xlc-10.1     dbg  DBG_CXXFLAGS       =  -qxflag=v6align -g -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
+!!  unix-AIX-*-*-xlc-11.1     dbg  DBG_CXXFLAGS       =  -qxflag=v6align -g -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 !!  unix-AIX-*-*-xlc-13.1     dbg  DBG_CXXFLAGS       =  -qxflag=v6align -g -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
-!!  unix-AIX-*-*-xlc-10.1     opt  OPT_CXXFLAGS       =  -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
-!!  unix-AIX-*-*-xlc-11.1     opt  OPT_CXXFLAGS       =  -O -DNDEBUG -qalias=noansi -qlanglvl=staticstoreoverlinkage
+!!  unix-AIX-*-*-xlc-10.1     opt  OPT_CXXFLAGS       =  -O -DNDEBUG -qlanglvl=staticstoreoverlinkage
+!!  unix-AIX-*-*-xlc-11.1     opt  OPT_CXXFLAGS       =  -O -DNDEBUG -qlanglvl=staticstoreoverlinkage
 ++  unix-AIX-*-*-xlc-11.2     opt  OPT_CXXFLAGS       =  -qmaxmem=-1
 !!  unix-AIX-*-*-xlc-13.1     opt  OPT_CXXFLAGS       =  -O -DNDEBUG -qlanglvl=staticstoreoverlinkage
 
