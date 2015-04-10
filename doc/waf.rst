@@ -44,8 +44,8 @@ For a source-code repository to be built with waf:
    The repository layout can be customized. Please see
    :ref:`bde_repo-layout_customize` for more details.
 
-- A copy of ``bde-tools/extras/wscript`` must be located at the root directory
-  of the repository.
+- A copy of ``bde-tools/etc/wscript`` must be located at the root directory of
+  the repository.
 
 You can either run ``bde-tools/bin/waf`` directly or add ``bde-tools/bin`` to
 the ``PATH`` environment variable.  The rest of the document assumes that you
