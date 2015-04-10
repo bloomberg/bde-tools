@@ -64,8 +64,8 @@ def get_msvc_version_from_env():
 
         if env_uplid.comp_type == 'cl':
             for v in msvcversions.versions:
-                if v.cl_version == env_uplid.comp_ver:
-                    return v.vs_version
+                if v.compiler_version == env_uplid.comp_ver:
+                    return v.product_version
     return None
 
 

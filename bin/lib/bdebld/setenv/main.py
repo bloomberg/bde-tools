@@ -78,9 +78,9 @@ def get_compilerinfos():
         compiler_infos = []
         for v in msvcversions.versions:
             info = compilerinfo.CompilerInfo(
-                'cl', v.cl_version, None, None, None,
-                'cl-%s -- Visual Studio %s (Version %s)' %
-                (v.cl_version, v.vs_year, v.vs_version))
+                'cl', v.compiler_version, None, None, None,
+                'cl-%s -- %s (Version %s)' %
+                (v.compiler_version, v.product_name, v.product_version))
             compiler_infos.append(info)
 
         return compiler_infos
