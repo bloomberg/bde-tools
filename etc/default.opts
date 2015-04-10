@@ -574,8 +574,8 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 
 ++  unix-                     _    CXXLINK            =  $(CXX)
 ++  unix-                     _    CLINK              =  $(CXXLINK)
-++  windows-                  _    CXXLINK            =  $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:ix86 ws2_32.lib
-!!  windows-*-amd64-*-*       _    CXXLINK            =  $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:X64 ws2_32.lib
+++  windows-                  _    CXXLINK            =  link /nologo /incremental:no /subsystem:console /machine:ix86 ws2_32.lib
+!!  windows-                 64    CXXLINK            =  link /nologo /incremental:no /subsystem:console /machine:X64 ws2_32.lib
 ++  windows-                  _    CLINK              =  $(CXXLINK)
 
 #==============================================================================
