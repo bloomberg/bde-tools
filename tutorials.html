@@ -1,0 +1,357 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tutorials &mdash; BDE Tools 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="BDE Tools 1.0 documentation" href="index.html" />
+    <link rel="next" title="Help" href="help.html" />
+    <link rel="prev" title="Provided Tools" href="intro.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="help.html" title="Help"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Provided Tools"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BDE Tools 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="use-waf-to-build-bde">
+<span id="tutorials-build-bde"></span><h2>Use waf to Build BDE<a class="headerlink" href="#use-waf-to-build-bde" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The following instruction assumes that you are running a unix
+platform. Building on windows is almost equivalent, except you must use the
+equivalent commands in windows command prompt and call <code class="docutils literal"><span class="pre">waf.bat</span></code> instead
+<code class="docutils literal"><span class="pre">waf</span></code>. For more details, please see <a class="reference internal" href="waf.html#waf-windows"><span>Building on Windows</span></a>.</p>
+</div>
+<p>First, clone the bde and bde-tools repositores from <a class="reference external" href="https://github.com/bloomberg/bde">github</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/bloomberg/bde.git
+$ git clone https://github.com/bloomberg/bde-tools.git
+</pre></div>
+</div>
+<p>Then, add the <code class="docutils literal"><span class="pre">&lt;bde-tools&gt;/bin</span></code> to the <code class="docutils literal"><span class="pre">PATH</span></code> environment variable:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ export PATH=&lt;bde-tools&gt;/bin:$PATH
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Instead of adding <code class="docutils literal"><span class="pre">bde-tools/bin</span></code> to your <code class="docutils literal"><span class="pre">PATH</span></code>, you can also execute
+the scripts in <code class="docutils literal"><span class="pre">bde-tools/bin</span></code> directly.</p>
+</div>
+<p>Now, go to the root of the bde repository and build the libraries in it:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd &lt;bde&gt;
+$ waf configure
+$ waf build --target bslstl  # build just the bslstl package
+$ waf build  # build all libraries
+$ waf build --test build  # build all test drivers
+$ waf build --test run  # run all test drivers
+</pre></div>
+</div>
+<p>The linked libraries, test drivers, and other build artifacts should be in the
+build output directory, which by default is just &#8220;build&#8221;.</p>
+<p>See <a class="reference internal" href="waf.html#waf-top"><span>Waf Based Build System</span></a> for detailed reference.</p>
+</div>
+<div class="section" id="use-bde-setwafenv-py-to-build-bde">
+<span id="tutorials-setwafenv-bde"></span><h2>Use bde_setwafenv.py to Build BDE<a class="headerlink" href="#use-bde-setwafenv-py-to-build-bde" title="Permalink to this headline">¶</a></h2>
+<p>First, specify the compilers available on your system in a
+<code class="docutils literal"><span class="pre">~/bdecompilerconfig</span></code>.  Here is an example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+     <span class="p">{</span>
+         <span class="s">&quot;hostname&quot;</span><span class="p">:</span> <span class="s">&quot;.*&quot;</span><span class="p">,</span>
+         <span class="s">&quot;uplid&quot;</span><span class="p">:</span> <span class="s">&quot;unix-linux-&quot;</span><span class="p">,</span>
+         <span class="s">&quot;compilers&quot;</span><span class="p">:</span> <span class="p">[</span>
+             <span class="p">{</span>
+                 <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;gcc&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;c_path&quot;</span><span class="p">:</span> <span class="s">&quot;/opt/swt/install/gcc-4.7.2/bin/gcc&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;cxx_path&quot;</span><span class="p">:</span> <span class="s">&quot;/opt/swt/install/gcc-4.7.2/bin/g++&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;4.7.2&quot;</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;gcc&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;c_path&quot;</span><span class="p">:</span> <span class="s">&quot;/opt/swt/install/gcc-4.3.5/bin/gcc&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;cxx_path&quot;</span><span class="p">:</span> <span class="s">&quot;/opt/swt/install/gcc-4.3.5/bin/g++&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;4.3.5&quot;</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;gcc&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;c_path&quot;</span><span class="p">:</span> <span class="s">&quot;/usr/bin/gcc&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;cxx_path&quot;</span><span class="p">:</span> <span class="s">&quot;/usr/bin/g++&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;version&quot;</span><span class="p">:</span> <span class="s">&quot;4.1.2&quot;</span>
+             <span class="p">}</span>
+         <span class="p">]</span>
+     <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="setwafenv.html#setwafenv-compiler-config"><span>Configuring the Available Compilers</span></a> for more details.</p>
+<p>Then, follow the instructions from <a class="reference internal" href="#tutorials-build-bde"><span>Use waf to Build BDE</span></a> to checkout bde
+and bde-tools and add bde-tools/bin to your PATH.</p>
+<p>Next, use <code class="docutils literal"><span class="pre">bde_setwafenv.py</span></code> to set up the environment variables:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ eval $(bde_setwafenv.py -i /tmp/bde-install -t dbg_mt_exc_64 -c gcc-4.7.2)
+
+using configuration: /home/che2/.bdecompilerconfig
+using compiler: gcc-4.7.2
+using ufid: dbg_exc_mt_64
+using install directory: /tmp/bde-install
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Here we choose to use <a class="reference internal" href="bde_repo.html#ufid"><span>UFID</span></a> to specify the build configuration.  You
+can also use the <a class="reference internal" href="waf.html#waf-qualified-build-config"><span>qualified configuration options</span></a>.</p>
+</div>
+<p>The actual environment variables being set will depend on your machine&#8217;s
+platform <a class="reference internal" href="bde_repo.html#uplid"><span>UPLID</span></a>. On my machine, the following Bourne shell commands are
+evaluated to set the environment variables:</p>
+<div class="highlight-python"><div class="highlight"><pre>export BDE_WAF_UPLID=unix-linux-x86_64-3.2.0-gcc-4.7.2
+export BDE_WAF_UFID=dbg_exc_mt_64
+export BDE_WAF_BUILD_DIR=&quot;unix-linux-x86_64-3.2.0-gcc-4.7.2-dbg_exc_mt_64&quot;
+export WAFLOCK=&quot;.lock-waf-unix-linux-x86_64-3.2.0-gcc-4.7.2-dbg_exc_mt_64&quot;
+export CXX=/usr/bin/g++
+export CC=/usr/bin/gcc
+export PREFIX=&quot;/tmp/bde-install/unix-linux-x86_64-3.2.0-gcc-4.7.2-dbg_exc_mt_64&quot;
+export PKG_CONFIG_PATH=&quot;/tmp/bde-install/unix-linux-x86_64-3.2.0-gcc-4.7.2-dbg_exc_mt_64/lib/pkgconfig&quot;
+unset BDE_WAF_COMP_FLAGS
+</pre></div>
+</div>
+<p>Then, build bde using waf:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd &lt;bde&gt;
+$ waf configure build
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="setwafenv.html#setwafenv-top"><span>bde_setwafenv.py</span></a> for detailed reference.</p>
+</div>
+<div class="section" id="use-bde-setwafenv-py-to-build-an-application-on-top-of-bde">
+<span id="tutorials-setwafenv-bde-app"></span><h2>Use bde_setwafenv.py to Build an Application on Top of BDE<a class="headerlink" href="#use-bde-setwafenv-py-to-build-an-application-on-top-of-bde" title="Permalink to this headline">¶</a></h2>
+<p>First, follow <a class="reference internal" href="#tutorials-setwafenv-bde"><span>Use bde_setwafenv.py to Build BDE</span></a> to create <code class="docutils literal"><span class="pre">~/bdecompilerconfig</span></code>,
+set up the environment variables using bde_setwafenv.py, and build BDE.</p>
+<p>Then, install bde:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd &lt;bde&gt;
+$ waf install
+</pre></div>
+</div>
+<p>On my machine, the headers, libraries, and pkg-config files are installed to
+<code class="docutils literal"><span class="pre">/tmp/bde-install/unix-linux-x86_64-3.2.0-gcc-4.7.2-dbg_exc_mt_64</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>/tmp/bde-install/unix-linux-x86_64-3.2.0-gcc-4.7.2-dbg_exc_mt_64
+|
+|-- include
+|   |
+|   `-- ...  &lt;-- header files
+|
+`-- lib
+ |
+ |-- libbdl.a
+ |-- libbsl.a
+ |-- libdecnumber.a
+ |-- libinteldfp.a
+ `-- pkgconfig
+     |
+     |-- bdl.pc
+     |-- bsl.pc
+     |-- decnumber.pc
+     `-- inteldfp.pc
+</pre></div>
+</div>
+<p>Next, create a new repository containing the application that we are going to
+be building.</p>
+<div class="highlight-python"><div class="highlight"><pre>$ mkdir testrepo
+$ cd testrepo
+$ cp &lt;bde-tools&gt;/etc/wscript .  # wscript is required for using waf
+</pre></div>
+</div>
+<p>Then, create the following directory and file structure in the repo
+(see <a class="reference internal" href="bde_repo.html#bde-repo-physical-layout"><span>BDE Physical Code Organization</span></a> for more details):</p>
+<div class="highlight-python"><div class="highlight"><pre>testrepo
+|
+|-- wscript
+`-- applications
+   |
+   `-- myapp
+       |
+       |-- myapp.m.cpp
+       `-- package
+           |
+           |-- myapp.dep
+           `-- myapp.mem
+</pre></div>
+</div>
+<p>Contents of myapp.m.cpp:</p>
+<div class="highlight-python"><div class="highlight"><pre>#include &lt;bsl_vector.h&gt;
+#include &lt;bsl_iostream.h&gt;
+
+int main(int, char *[])
+{
+    bsl::vector&lt;int&gt; v;
+
+    v.push_back(3);
+    v.push_back(2);
+    v.push_back(5);
+
+    for (bsl::vector&lt;int&gt;::const_iterator iter = v.begin();
+        iter != v.end();
+        ++iter) {
+        bsl::cout &lt;&lt; *iter &lt;&lt; bsl::endl;
+    }
+
+    return 0;
+}
+</pre></div>
+</div>
+<p>Contents of myapp.dep:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">bsl</span> <span class="c"># we depend on bsl</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">myapp.mem</span></code> should be empty because myapp doesn&#8217;t contain any components
+except the <code class="docutils literal"><span class="pre">.m.cpp</span></code>, which is implicitly included in an application package.</p>
+<p>Now, we can build this application using waf:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd &lt;testrepo&gt;
+$ waf configure
+$ waf build
+</pre></div>
+</div>
+</div>
+<div class="section" id="use-bde-setwafenv-py-to-build-bde-on-windows">
+<span id="tutorials-setwafenv-bde-windows"></span><h2>Use bde_setwafenv.py to Build BDE on Windows<a class="headerlink" href="#use-bde-setwafenv-py-to-build-bde-on-windows" title="Permalink to this headline">¶</a></h2>
+<p>bde_setwafenv.py can be used on Windows through cygwin.</p>
+<p><strong>Prerequisites</strong>:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.cygwin.com/">cygwin</a></li>
+<li>Windows version of Python 2.6, 2.7, or 3.3+</li>
+</ul>
+<p>First, make sure you have cloned the bde and bde-tools repositories, and that
+you have added <code class="docutils literal"><span class="pre">bde-tools/bin</span></code> to your system&#8217;s PATH.</p>
+<p>Next, in cygwin, run the following command to set the environment variables for waf:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ bde_setwafenv.py list  # list available compilers on windows
+$ eval $(bde_setwafenv.py -i ~/tmp/bde-install -c cl-18.00) # use visual studio 2013
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">On Windows, bde_setwafenv.py does not use <code class="docutils literal"><span class="pre">~/.bdecompilerconfig</span></code>. Instead
+it uses a list of hard coded available compilers on windows and do not check
+those compilers are available. It is your job to make sure that you are
+using a installed Visual Studio compiler.</p>
+</div>
+<p>Now, you can build bde using <code class="docutils literal"><span class="pre">waf.bat</span></code> in cygwin:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd &lt;bde&gt;
+$ waf.bat configure
+$ waf.bat build
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">Even though bde_setwafenv.py must be invoked on cygwin on Windows, cygwin
+itself is not a supported build platform by <a class="reference internal" href="waf.html#waf-top"><span>Waf Based Build System</span></a>.  Once
+bde_setwafenv.py is call in cygwin, <code class="docutils literal"><span class="pre">bde-tools/bin/waf.bat</span></code> must be used
+instead of calling <code class="docutils literal"><span class="pre">waf</span></code> directly. <code class="docutils literal"><span class="pre">waf.bat</span></code> will invoke <code class="docutils literal"><span class="pre">waf</span></code> using
+the windows version of Python and build using the Visual Studio C/C++
+compiler.  You can download a free version of Visual Studio Express from
+<a class="reference external" href="https://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx">Microsoft</a>.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tutorials</a><ul>
+<li><a class="reference internal" href="#use-waf-to-build-bde">Use waf to Build BDE</a></li>
+<li><a class="reference internal" href="#use-bde-setwafenv-py-to-build-bde">Use bde_setwafenv.py to Build BDE</a></li>
+<li><a class="reference internal" href="#use-bde-setwafenv-py-to-build-an-application-on-top-of-bde">Use bde_setwafenv.py to Build an Application on Top of BDE</a></li>
+<li><a class="reference internal" href="#use-bde-setwafenv-py-to-build-bde-on-windows">Use bde_setwafenv.py to Build BDE on Windows</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Provided Tools</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="help.html"
+                        title="next chapter">Help</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/tutorials.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="help.html" title="Help"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Provided Tools"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BDE Tools 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Bloomberg Finance L.P..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

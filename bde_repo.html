@@ -1,0 +1,643 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>BDE-Style Repository &mdash; BDE Tools 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="BDE Tools 1.0 documentation" href="index.html" />
+    <link rel="next" title="bde_setwafenv.py" href="setwafenv.html" />
+    <link rel="prev" title="Waf Based Build System" href="waf.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="setwafenv.html" title="bde_setwafenv.py"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="waf.html" title="Waf Based Build System"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BDE Tools 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="bde-style-repository">
+<span id="bde-repo-top"></span><h1>BDE-Style Repository<a class="headerlink" href="#bde-style-repository" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>For a repository to be buildable with the <a class="reference external" href="http://github.com/bloomberg/bde-tools/wiki/Waf-Build">Waf-Based Build
+System</a>, it must
+have the following characteristics:</p>
+<ul class="simple">
+<li>Must follow <a class="reference internal" href="#bde-repo-physical-layout"><span>BDE Physical Code Organization</span></a>.</li>
+<li>Must provide <a class="reference internal" href="#bde-repo-metadata"><span>BDE Metadata</span></a>.</li>
+</ul>
+</div>
+<div class="section" id="terminology">
+<h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
+<dl class="glossary docutils">
+<dt id="term-component">component</dt>
+<dd>A component comprises a .h and .cpp pair, along with an associated test
+driver (.t.cpp file).  E.g., the component bslstl_map comprises
+<code class="docutils literal"><span class="pre">bslstl_map.h</span></code> and <code class="docutils literal"><span class="pre">bslstl_map.cpp</span></code>, and is associated with the test
+driver file <code class="docutils literal"><span class="pre">bslstl_map.t.cpp</span></code>.</dd>
+<dt id="term-package">package</dt>
+<dd>A physical unit that comprises a collection of related components.</dd>
+<dt id="term-package-group">package group</dt>
+<dd>A physically cohesive unit that comprises a collection of packages.</dd>
+<dt id="term-stand-alone-package">stand-alone package</dt>
+<dd>A package that does not belong to a package group.</dd>
+</dl>
+<dl class="glossary docutils">
+<dt id="term-uor-unit-of-release">UOR (Unit of Release)</dt>
+<dd>A stand-alone package or a package group. Generally, UORs are the
+libraries (.a files or applications) that gets deployed on a system.</dd>
+</dl>
+</div>
+<div class="section" id="bde-physical-code-organization">
+<span id="bde-repo-physical-layout"></span><h2>BDE Physical Code Organization<a class="headerlink" href="#bde-physical-code-organization" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="normal-components-packages-and-package-groups">
+<h3>Normal Components, Packages, and Package Groups<a class="headerlink" href="#normal-components-packages-and-package-groups" title="Permalink to this headline">¶</a></h3>
+<p>The source code must be organized into 3 hierarchical levels of aggregation (in
+order from smallest to largest): components, packages, and package groups. A
+package comprises a set of components; a package group comprises a set of
+packages.</p>
+<p>By default, packages groups should be located in <code class="docutils literal"><span class="pre">&lt;repo_root&gt;/groups</span></code>, and a
+package belonging to a package group should be a sub-directory that of that
+package group.</p>
+<p>For example, in BDE, the <code class="docutils literal"><span class="pre">bsl</span></code> package group contains the packages <code class="docutils literal"><span class="pre">bsls</span></code>
+and <code class="docutils literal"><span class="pre">bslma</span></code> (in addition to many other pacakges).  The <code class="docutils literal"><span class="pre">bsls</span></code> package
+contains the components <code class="docutils literal"><span class="pre">bsls_util</span></code> and <code class="docutils literal"><span class="pre">bsls_ident</span></code>; The <code class="docutils literal"><span class="pre">bslma</span></code> package
+contains the components <code class="docutils literal"><span class="pre">bslma_allocator</span></code> and <code class="docutils literal"><span class="pre">bslma_testallocator</span></code>.  These
+physical units should have the following structure on the file system:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;repo_root&gt;
+ |-- groups
+ |-- bsl
+ |   |-- bsls
+ |   |   |-- bsls_ident.h
+ |   |   |-- bsls_ident.cpp
+ |   |   |-- bsls_ident.t.cpp
+ |   |   |-- bsls_util.h
+ |   |   |-- bsls_util.cpp
+ |   |   |-- bsls_util.t.cpp
+ |   |-- bslma
+ |   |   |-- bslma_allocator.h
+ |   |   |-- bslma_allocator.cpp
+ |   |   |-- bslma_allocator.t.cpp
+ |   |   |-- bslma_testallocator.h
+ |   |   |-- bslma_testallocator.cpp
+ |   |   `-- bslma_testallocator.t.cpp
+ `-- bdl
+     |
+     `-- ...
+</pre></div>
+</div>
+<p>By convention, the name of a package group should be a mnemonic exactly three
+characters long. The name of a package should be prefixed with the name of the
+package group and should also be a mnemonic no longer than six characters. The
+name of the component should be prefixed by the name of the package followed an
+<code class="docutils literal"><span class="pre">_</span></code>. All of the names should be in lower case. For example,
+<code class="docutils literal"><span class="pre">bslma_allocator</span></code> is the name of a component in the <code class="docutils literal"><span class="pre">bslma</span></code> package, which
+is part of the <code class="docutils literal"><span class="pre">bsl</span></code> package group.</p>
+<p>For more details on naming conventions and design rules of components,
+packages, and package groups, please see <a class="reference external" href="https://github.com/bloomberg/bde/wiki/physical-code-organization#physical-code-organization">BDE Physical Code Organization
+Guidelines</a>.</p>
+</div>
+<div class="section" id="stand-alone-and-application-packages">
+<h3>Stand-Alone and Application Packages<a class="headerlink" href="#stand-alone-and-application-packages" title="Permalink to this headline">¶</a></h3>
+<p>Stand-alone packages are packages that do not belong to a package group.
+Applications are a special kinds of stand-alone packages, with the main
+difference being that an application package contains a <code class="docutils literal"><span class="pre">&lt;package&gt;.m.cpp</span></code>
+file in which the <code class="docutils literal"><span class="pre">main</span></code> function is defined.</p>
+<p>By default, application packages should be located in the <code class="docutils literal"><span class="pre">applications</span></code>
+directory, and other types of stand-alone packages can be located in the
+<code class="docutils literal"><span class="pre">adapters</span></code> directory.</p>
+</div>
+<div class="section" id="non-conforming-package-types">
+<h3>Non-Conforming Package Types<a class="headerlink" href="#non-conforming-package-types" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes, we may want to include source files that don&#8217;t conform to a standard
+BDE-style package.  Often, the reason is to to bundle an existing third-party
+package inside of a repository.</p>
+<p>There are two types of non-conforming packages: plus Package, and third-party
+packages.</p>
+<div class="section" id="plus-packages">
+<h4>Plus Packages<a class="headerlink" href="#plus-packages" title="Permalink to this headline">¶</a></h4>
+<p>Plus packages are packages having a name containing a &#8216;+&#8217;, e.g.,
+<code class="docutils literal"><span class="pre">bsl+bslhdrs</span></code>. These packages do not behave like regular BDE packages in that
+they do not contain BDE components. Therefore, they do not need mem
+files. (Having an empty mem file is also ok.)</p>
+<p>The test drivers for these packages are located in the <code class="docutils literal"><span class="pre">test</span></code> sub-directory.
+These tests are a run only one time unlike BDE-style test drivers, which gets
+run repeatedly with incrementing case numbers as arguments.</p>
+<p>The build behavior for these packages is that all source files in the root
+directory of the package are built into a library.</p>
+</div>
+<div class="section" id="third-party-packages">
+<h4>Third-Party Packages<a class="headerlink" href="#third-party-packages" title="Permalink to this headline">¶</a></h4>
+<p>Third-party packages are directories that are built in a complete custom way.
+By default, these packages can be located in the <code class="docutils literal"><span class="pre">third-party</span></code> directory.
+These packages do not have <a class="reference internal" href="#bde-repo-metadata"><span>BDE Metadata</span></a>, and can not depend on any
+other UORs in the repository.</p>
+<p>With the <a class="reference internal" href="waf.html#waf-top"><span>Waf Based Build System</span></a>, the way a third-party package is built is defined by a
+package-local <code class="docutils literal"><span class="pre">wscript</span></code>.  For an example, see the <a class="reference external" href="https://github.com/bloomberg/bde/blob/master/third-party/inteldfp/wscript">wscript</a>
+of the decnumber third-party pacakge in BDE.</p>
+</div>
+</div>
+<div class="section" id="customizing-the-repository-layout">
+<span id="bde-repo-layout-customize"></span><h3>Customizing The Repository Layout<a class="headerlink" href="#customizing-the-repository-layout" title="Permalink to this headline">¶</a></h3>
+<p>The layout of the repository can be customized using a JSON configuration file
+<code class="docutils literal"><span class="pre">.bdelayoutconfig</span></code> located in the root of the root of the repository.</p>
+<p>Here is the default layout configuration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;group_dirs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;groups&quot;</span><span class="p">,</span> <span class="s">&quot;enterprise&quot;</span><span class="p">,</span> <span class="s">&quot;wrappers&quot;</span><span class="p">],</span>
+    <span class="s">&quot;app_package_dirs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;applications&quot;</span><span class="p">],</span>
+    <span class="s">&quot;stand_alone_package_dirs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;adapters&quot;</span><span class="p">],</span>
+    <span class="s">&quot;third_party_package_dirs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;third-party&quot;</span><span class="p">],</span>
+    <span class="s">&quot;group_abs_dirs&quot;</span><span class="p">:</span> <span class="p">[]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Description of Fields:</p>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">group_dirs</span></code></p>
+<p>Relative path to directories each containing multiple package groups.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">app_package_dirs</span></code></p>
+<p>Relative path to directories each containing multiple application packages.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">third_party_package_dirs</span></code></p>
+<p>Relative path to directories each containing multiple third party directories.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">stand_alone_package_dirs</span></code></p>
+<p>Relative path to directories each containing multiple stand-alone packages.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">group_abs_dirs</span></code></p>
+<p>Relative path to directories each pointing to the root of a package group.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="bde-metadata">
+<span id="bde-repo-metadata"></span><h2>BDE Metadata<a class="headerlink" href="#bde-metadata" title="Permalink to this headline">¶</a></h2>
+<p>There are 6 types of metadata that can be applied to either package or
+package group in a BDE-style repository. Two types of metadata are
+required:</p>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">mem</span></code></p>
+<p>Define the members of a package or package group.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">dep</span></code></p>
+<p>Define the dependencies of a package or package group.</p>
+</li>
+</ul>
+<p>And four types of metadata are optional:</p>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">opts</span></code></p>
+<p>Define the build options used internally.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">defs</span></code></p>
+<p>Define the build options visible externally.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">caps</span></code></p>
+<p>Define the supported platform and build types (capability).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">pub</span></code></p>
+<p>Define the header files to be installed from the package (public).</p>
+</li>
+</ul>
+<p>Each type of metadata should be stored as a file in either the
+<code class="docutils literal"><span class="pre">package</span></code> sub-directory in a package or the <code class="docutils literal"><span class="pre">group</span></code> sub-directory in
+a package group. A metadata file&#8217;s name should begin with the package or
+package group to which it applies, followed by a <code class="docutils literal"><span class="pre">.</span></code>, and finally
+followed by the type of the metadata. For example, in the BDE libraries,
+the <code class="docutils literal"><span class="pre">mem</span></code> file of the package group <code class="docutils literal"><span class="pre">bsl</span></code> is named <code class="docutils literal"><span class="pre">bsl.mem</span></code> and
+located at the path <code class="docutils literal"><span class="pre">&lt;repo_root&gt;/groups/bsl/group/bsl.mem</span></code>; the
+<code class="docutils literal"><span class="pre">dep</span></code> file of the package <code class="docutils literal"><span class="pre">bslstl</span></code> is named <code class="docutils literal"><span class="pre">bslstl.dep</span></code> and
+located at the path <code class="docutils literal"><span class="pre">&lt;repo_root&gt;/groups/bsl/group/bslstl.dep</span></code>.</p>
+<div class="section" id="mem-file">
+<span id="bde-repo-mem"></span><span id="index-0"></span><h3>Mem File<a class="headerlink" href="#mem-file" title="Permalink to this headline">¶</a></h3>
+<p>A package <code class="docutils literal"><span class="pre">mem</span></code> file defines the list of member components in the
+package. A package group <code class="docutils literal"><span class="pre">mem</span></code> file defines the list of member
+packages in the package group.</p>
+<p>The <code class="docutils literal"><span class="pre">mem</span></code> file format is a line separated text file. Each line
+contains a single entry (a component or a package), blank lines are
+ignored, and portions of a line can be commented out using the prefix
+<code class="docutils literal"><span class="pre">#</span></code>.</p>
+<p>For example:</p>
+<ul class="simple">
+<li>the .mem file for the bsl library: <a class="reference external" href="https://github.com/bloomberg/bde/blob/master/groups/bsl/group/bsl.mem">bsl.mem</a></li>
+<li>the .mem file for the bslma library: <a class="reference external" href="https://github.com/bloomberg/bde/blob/master/groups/bsl/bslma/package/bslma.mem">bslma.mem</a></li>
+</ul>
+</div>
+<div class="section" id="dep-file">
+<span id="index-1"></span><h3>Dep File<a class="headerlink" href="#dep-file" title="Permalink to this headline">¶</a></h3>
+<p>A <code class="docutils literal"><span class="pre">.dep</span></code> file describes the allowed dependencies for either a package
+or package-group. A package-group&#8217;s <code class="docutils literal"><span class="pre">.dep</span></code> file describes the other
+package-groups that components within that package-group may depend.
+Similarly, a package&#8217;s <code class="docutils literal"><span class="pre">.dep</span></code> file describes the other packages within
+the <em>same</em> package-group which components within that package may
+depend. Note that a package&#8217;s .dep file should <em>not</em> refer to other
+package-groups, since the dependencies on other package-groups are
+inherited from the package-group level .dep file.</p>
+<p>The <code class="docutils literal"><span class="pre">dep</span></code> file format is a line separated text file. Each line
+contains a single entry (a package or a package group), blank lines are
+ignored, and portions of a line can be commented out using the prefix
+<code class="docutils literal"><span class="pre">#</span></code>.</p>
+<p>For example:</p>
+<ul>
+<li><p class="first">The .dep file for the bdl library:</p>
+<p><a class="reference external" href="https://github.com/bloomberg/bde/blob/master/groups/bdl/group/bdl.dep">bdl.dep</a></p>
+</li>
+<li><p class="first">The .dep file for the bslma library:</p>
+<p><a class="reference external" href="https://github.com/bloomberg/bde/blob/master/groups/bsl/bslma/package/bslma.dep">bslma.dep</a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="options-file-format">
+<span id="bde-repo-options-format"></span><h3>Options File Format<a class="headerlink" href="#options-file-format" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal"><span class="pre">opts</span></code>, <code class="docutils literal"><span class="pre">defs</span></code>, and <code class="docutils literal"><span class="pre">cap</span></code> files are all written in the options
+file format.</p>
+<p>The options file format comprises a set of option rules, processed from
+top to bottom. Each rule contains a condition to match based on the
+platform and configuration and modifies a variable (representing an
+option) if that condition is met.</p>
+<p>More accurately, a rule consists of five fields, which together provide
+the criteria under which it applies, and the variable name and value it
+contributes. In order, the five fields are:</p>
+<ol class="arabic simple">
+<li>An optional command that describes how to combine the value with the
+accumulated value of the variable produced by the rules that preceded
+this rule.</li>
+<li>A wildcard UPLID that defines what range of platforms the option
+applies to. The wildcard UPLID can be as vague or precise as
+necessary, and may wildcard (<code class="docutils literal"><span class="pre">*</span></code>) any of the six UPLID elements
+that do not constrain it. An option rule may match all UPLIDS, in
+which case its wildcard UPLID is just <code class="docutils literal"><span class="pre">*</span></code>.</li>
+<li>A UFID flag combination that defines the build type flags that apply
+to it. An option may apply to all build types, in which case the flag
+combination is <code class="docutils literal"><span class="pre">_</span></code>.</li>
+<li>The name of the variable to which the rule contributes.</li>
+<li>The value contributed by the rule. This may be empty.</li>
+</ol>
+<p>For example, here is a rule that sets the variable <code class="docutils literal"><span class="pre">EXC_CXXFLAGS</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>!! unix-SunOS-*-*-cc  exc  EXC_CXXFLAGS = -features=except
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">!!</span></code> command states that the value should completely override any
+existing values for the <code class="docutils literal"><span class="pre">EXC_CXXFLAGS</span></code>, but only if the OS type is
+<code class="docutils literal"><span class="pre">unix</span></code>, the platform is <code class="docutils literal"><span class="pre">SunOS</span></code>, the compiler is cc, and if an
+exception-enabled build was requested with the <code class="docutils literal"><span class="pre">exc</span></code> ufid.</p>
+<p>The first three fields of an option rule are described in more detail in
+the three sections below.</p>
+<p>Each of <code class="docutils literal"><span class="pre">opts</span></code>, <code class="docutils literal"><span class="pre">defs</span></code>, and <code class="docutils literal"><span class="pre">cap</span></code> files uses a predefined set of
+variables, which are are described in their respective sections below.
+For example, <code class="docutils literal"><span class="pre">opts</span></code> and <code class="docutils literal"><span class="pre">defs</span></code> uses the value of the variable
+<code class="docutils literal"><span class="pre">BDEBUILD_CFLAGS</span></code> as the options to pass to the C compiler.</p>
+<div class="section" id="rule-commands">
+<h4>Rule Commands<a class="headerlink" href="#rule-commands" title="Permalink to this headline">¶</a></h4>
+<p>The first field of an option rule is an <em>optional</em> command that
+describes how to combine the value of the current rule with the value
+accumulated by previous rules. The following commands are supported:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="14%" />
+<col width="74%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Command</th>
+<th class="head">Meaning</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>++</td>
+<td>Add</td>
+<td>Add to end of value, with a leading space. (default)</td>
+</tr>
+<tr class="row-odd"><td>&#8211;</td>
+<td>Insert</td>
+<td>Add to start of value, with a following space.</td>
+</tr>
+<tr class="row-even"><td>&lt;&lt;</td>
+<td>Append</td>
+<td>Add to end of value directly, no leading space.</td>
+</tr>
+<tr class="row-odd"><td>&gt;&gt;</td>
+<td>Prepend</td>
+<td>Add to start of value directly, no following space.</td>
+</tr>
+<tr class="row-even"><td>!!</td>
+<td>Override</td>
+<td>Completely replace the prior value.</td>
+</tr>
+</tbody>
+</table>
+<p>The default command if none is supplied is to append with a leading
+space (<code class="docutils literal"><span class="pre">++</span></code>).</p>
+</div>
+<div class="section" id="uplid">
+<span id="index-2"></span><span id="id1"></span><h4>UPLID<a class="headerlink" href="#uplid" title="Permalink to this headline">¶</a></h4>
+<p>The second field of an option rule is a wildcard UPLID. UPLID stands for
+Universal Platform ID. It is used to identify the platform and
+tool-chain used to build the repo. This identifier comprises the
+following parts (in order) joined together with the delimiter <code class="docutils literal"><span class="pre">-</span></code>:</p>
+<ol class="arabic simple">
+<li>OS Type</li>
+<li>OS Name</li>
+<li>CPU type</li>
+<li>OS Version</li>
+<li>Compiler Type</li>
+<li>Compiler Version</li>
+</ol>
+<p>For example, <code class="docutils literal"><span class="pre">unix-linux-x86_64-2.6.18-gcc-4.3.2</span></code> is an UPLID whose OS
+type is <code class="docutils literal"><span class="pre">unix</span></code>, OS Name is <code class="docutils literal"><span class="pre">linux</span></code>, CPU type is <code class="docutils literal"><span class="pre">x86_64</span></code>, OS
+version is <code class="docutils literal"><span class="pre">2.6.18</span></code>, compiler type is <code class="docutils literal"><span class="pre">gcc</span></code>, and compiler version is
+<code class="docutils literal"><span class="pre">4.3.2</span></code>. This UPLID identifies a platform running Linux (kernel)
+version 2.6.18, with an X86_64 CPU, using gcc version 4.3.2.</p>
+<p>If you are unsure of the UPLID for a particular platform, a good way to
+determine it is to run <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code> on that platform.</p>
+<p>A wildcard UPLID allows the use of the wildcard symbol, <code class="docutils literal"><span class="pre">*</span></code>, as one or
+more parts of the UPLID. When <code class="docutils literal"><span class="pre">*</span></code> is used for a part, any value for
+that part will be matched.</p>
+</div>
+<div class="section" id="ufid">
+<span id="index-3"></span><span id="id2"></span><h4>UFID<a class="headerlink" href="#ufid" title="Permalink to this headline">¶</a></h4>
+<p>The third field of an option rule is a UFID. UFID stands for Unified
+Flag ID. It is used to identify the configuration used to build the
+repo. It comprises one or more flags. The following flags are
+permissible:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="89%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Flag</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>dbg</td>
+<td>Build with debugging information</td>
+</tr>
+<tr class="row-odd"><td>opt</td>
+<td>Build optimized</td>
+</tr>
+<tr class="row-even"><td>exc</td>
+<td>Build with support for exceptions (default no support)</td>
+</tr>
+<tr class="row-odd"><td>mt</td>
+<td>Build with support for multi-threading (default no support)</td>
+</tr>
+<tr class="row-even"><td>ndebug</td>
+<td>Build with NDEBUG defined</td>
+</tr>
+<tr class="row-odd"><td>64</td>
+<td>Build for 64-bit architecture (default is 32-bit)</td>
+</tr>
+<tr class="row-even"><td>safe</td>
+<td>Build safe (paranoid) libraries</td>
+</tr>
+<tr class="row-odd"><td>safe2</td>
+<td>Build safe2 (paranoid and binary-incompatible) libraries</td>
+</tr>
+<tr class="row-even"><td>shr</td>
+<td>Build dynamic libraries</td>
+</tr>
+<tr class="row-odd"><td>pic</td>
+<td>Build static PIC libraries</td>
+</tr>
+<tr class="row-even"><td>cpp11</td>
+<td>Build with support for C++11 features</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In waf, <code class="docutils literal"><span class="pre">mt</span></code> is always enabled. It is still a valid ufid for historical
+reasons.</p>
+</div>
+<p>For example, the UFID <code class="docutils literal"><span class="pre">dbg_mt_exc_shr</span></code> represents a build
+configuration that enables debugging symbols, supports multi-threading
+and exceptions, and builds libraries as dynamic libraries.</p>
+<p>The UFID specified in an option rule will be matched only if the current
+build configuration contains all of the UFID of that rule.</p>
+<p>For example, suppose that the current build configuration is
+<code class="docutils literal"><span class="pre">dbg_mt_exc</span></code>. A rule whose UFID is <code class="docutils literal"><span class="pre">dbg_mt</span></code> will be matched
+(assuming that the rule&#8217;s UPLID also matches), but a rule whose UFID is
+<code class="docutils literal"><span class="pre">opt_mt</span></code> will not be matched.</p>
+</div>
+<div class="section" id="variable-expansion">
+<h4>Variable Expansion<a class="headerlink" href="#variable-expansion" title="Permalink to this headline">¶</a></h4>
+<p>The values of a variable can reference other variables. After all of the
+option files have been read, variables are evaluated by recursive
+expansion, in a manner similar to Make variables. Thus, a variable can
+not refer to itself, or it will result in an infinite recursion during
+expansion.</p>
+<p>For example: <code class="docutils literal"><span class="pre">*</span> <span class="pre">_</span> <span class="pre">FOO</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">_</span> <span class="pre">BAR</span> <span class="pre">=</span> <span class="pre">$(FOO)</span> <span class="pre">b</span></code> After variables are
+evaluated, BAR will have a value &#8220;a b&#8221;.</p>
+</div>
+<div class="section" id="processing-order">
+<h4>Processing Order<a class="headerlink" href="#processing-order" title="Permalink to this headline">¶</a></h4>
+<p>There are three levels at which build options can be defined, depending
+on their intended scope of influence:</p>
+<ul class="simple">
+<li>Universally. Option rules defined in the default options file are
+used as the basis for deriving all build options for any package or
+package group. The value of variables defined here can be further
+augmented or overridden by group- or package-level rules. The default
+options file, default.opts, is stored in the &#8216;etc&#8217; directory of the
+open source repo &#8216;bde-tools&#8217; hosted on github.</li>
+<li>At the package-group level. Option rules defined at this level apply
+to the whole package group. These rules are processed after those in
+the default options file.</li>
+<li>At the package level. Options defined at this level apply only to the
+package in which they reside and not to other packages in the same
+package group. These rules are processed after those for package
+groups.</li>
+</ul>
+<p>Each level is processed in order, thereby giving lower levels the
+ability to augment or override the values established by higher ones:
+Groups can override the default value of an option, and packages can
+override the value established by their containing group.</p>
+</div>
+</div>
+<div class="section" id="opts-and-defs-files">
+<span id="index-4"></span><h3>Opts and Defs Files<a class="headerlink" href="#opts-and-defs-files" title="Permalink to this headline">¶</a></h3>
+<p>An <code class="docutils literal"><span class="pre">opts</span></code> file defines internal build options, while a <code class="docutils literal"><span class="pre">defs</span></code> file
+defines exported (externally visible) build options. Both of these file
+types use the options file format, which allows the specification of the
+flags passed to the compilers and linkers depending on the current
+platform and configuration used.</p>
+<p><code class="docutils literal"><span class="pre">opts</span></code> files are valid for all packages and package groups, while <code class="docutils literal"><span class="pre">defs</span></code>
+file are only valid for <a class="reference internal" href="#bde-repo-uor"><span>UORs</span></a> (stand-alone packages and package
+groups).</p>
+<p>The following table shows the variables that contribute to the build
+flags used by the build tool:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Variable Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BDEBUILD_CFLAGS</td>
+<td>Options passed to the C compiler</td>
+</tr>
+<tr class="row-odd"><td>BDEBUILD_CXXFLAGS</td>
+<td>Options passed to the C++ compiler</td>
+</tr>
+<tr class="row-even"><td>BDEBUILD_LDFLAGS</td>
+<td>Options passed to the linker</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="cap-file">
+<span id="index-5"></span><h3>Cap File<a class="headerlink" href="#cap-file" title="Permalink to this headline">¶</a></h3>
+<p>A <code class="docutils literal"><span class="pre">cap</span></code> file defines the combinations of platform and build
+configuration supported by a package or a package group. This file type
+also uses the opts file format. The capability of a package or package
+group is determined by the value of the variable <code class="docutils literal"><span class="pre">CAPABILITY</span></code>. If the
+value of <code class="docutils literal"><span class="pre">CAPABILITY</span></code> is unset or is <code class="docutils literal"><span class="pre">ALWAYS</span></code>, then the package or
+package group is supported on the matched platform and build
+configuration. If the value of <code class="docutils literal"><span class="pre">CAPABILITY</span></code> is <code class="docutils literal"><span class="pre">NEVER</span></code>, then the
+package or package group is not supported.</p>
+</div>
+<div class="section" id="pub-file">
+<span id="index-6"></span><h3>Pub File<a class="headerlink" href="#pub-file" title="Permalink to this headline">¶</a></h3>
+<p>A <code class="docutils literal"><span class="pre">pub</span></code> file defines the list of header file names, <em>not component names</em>,
+that should be installed for a package.  In a way, this is a method to provide
+a public interface and hide internal-only implementation details from clients
+of a library.</p>
+<p><code class="docutils literal"><span class="pre">pub</span></code> files are valid for only packages, not package groups.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">BDE-Style Repository</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#terminology">Terminology</a></li>
+<li><a class="reference internal" href="#bde-physical-code-organization">BDE Physical Code Organization</a><ul>
+<li><a class="reference internal" href="#normal-components-packages-and-package-groups">Normal Components, Packages, and Package Groups</a></li>
+<li><a class="reference internal" href="#stand-alone-and-application-packages">Stand-Alone and Application Packages</a></li>
+<li><a class="reference internal" href="#non-conforming-package-types">Non-Conforming Package Types</a><ul>
+<li><a class="reference internal" href="#plus-packages">Plus Packages</a></li>
+<li><a class="reference internal" href="#third-party-packages">Third-Party Packages</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#customizing-the-repository-layout">Customizing The Repository Layout</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bde-metadata">BDE Metadata</a><ul>
+<li><a class="reference internal" href="#mem-file">Mem File</a></li>
+<li><a class="reference internal" href="#dep-file">Dep File</a></li>
+<li><a class="reference internal" href="#options-file-format">Options File Format</a><ul>
+<li><a class="reference internal" href="#rule-commands">Rule Commands</a></li>
+<li><a class="reference internal" href="#uplid">UPLID</a></li>
+<li><a class="reference internal" href="#ufid">UFID</a></li>
+<li><a class="reference internal" href="#variable-expansion">Variable Expansion</a></li>
+<li><a class="reference internal" href="#processing-order">Processing Order</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#opts-and-defs-files">Opts and Defs Files</a></li>
+<li><a class="reference internal" href="#cap-file">Cap File</a></li>
+<li><a class="reference internal" href="#pub-file">Pub File</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="waf.html"
+                        title="previous chapter">Waf Based Build System</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="setwafenv.html"
+                        title="next chapter">bde_setwafenv.py</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bde_repo.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="setwafenv.html" title="bde_setwafenv.py"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="waf.html" title="Waf Based Build System"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BDE Tools 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Bloomberg Finance L.P..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
