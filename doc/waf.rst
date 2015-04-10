@@ -480,12 +480,24 @@ different from the one supported by the that command prompt.
 
 Building using cygwin's gcc compiler is not supported. However, you can work in
 the cygwin environment, but still use the Visual Studio compiler by invoking
-``waf.bat`` instead of ``waf``.
+using the provided shell script ``bin/cygwaf.sh``.
 
-Waf can be used to generate a Visual Studio solution by running the waf
-commands 'msvs' or 'msvs2008'. The 'msvs' command generates a Visual
-Studio 2010 solution named project.sln, and 'msvs2008' generates a
-Visual Studio solution named project\_2008.sln.
+To use ``cygwaf.sh``, you must export the WIN_PATH environment variable to
+point to the *cygwin* path of the *Windows* version of Python.
+
+For example, if the Windows version of CPython is installed to #
+C:\Python27\python, then you can use the following command to set up the
+required environment variable:
+
+::
+
+   $ export WIN_PYTHON=/cygdrive/c/Python27/python
+   $ cygwaf.sh <waf command>
+
+Waf also can be used to generate a Visual Studio solution by running the waf
+commands 'msvs' or 'msvs2008'. The 'msvs' command generates a Visual Studio
+2010 solution named project.sln, and 'msvs2008' generates a Visual Studio
+solution named project\_2008.sln.
 
 The generated Visual Studio solution still uses waf as the back-end for
 compiling and linking, so it simply serves as an alternate interface

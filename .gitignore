@@ -1,3 +1,4 @@
 *.pyc
 .coverage
-.waf*
+bin/.waf*
+bin/waf-*
