@@ -123,10 +123,19 @@ def make_ufid_from_cmdline_options(opts):
 
     Returns:
         An Ufid object.
+
+    Raises:
+        ValueError on invalid UFID.
     """
 
     if opts.ufid:
-        return optiontypes.Ufid.from_str(opts.ufid)
+        ufid = optiontypes.Ufid.from_str(opts.ufid)
+        if not optiontypes.Ufid.is_valid(ufid.flags):
+            raise ValueError (
+                'Invalid UFID specified, each part of a UFID must be '
+                'in the following list of valid flags: %s.' % (ufid_str, ",
+                ".join(sorted( optiontypes.Ufid.VALID_FLAGS.keys()))))
+
 
     ufid_map = {
         'abi_bits': {'64': '64'},

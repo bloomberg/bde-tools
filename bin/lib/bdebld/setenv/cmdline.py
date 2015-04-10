@@ -1,3 +1,6 @@
+"""Handle command line options.
+"""
+
 import optparse
 import os
 
@@ -6,6 +9,11 @@ from bdebld.common import cmdlineutil
 
 
 def get_options():
+    """Return options and arguments passed to the program.
+
+    Returns:
+        options (dict), arguments (list)
+    """
 
     usage = """eval `bde_setwafenv.py [list|unset] -i <root_install_dir> [-c <compiler> -t <ufid>]
 

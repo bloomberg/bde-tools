@@ -1,3 +1,6 @@
+"""Configure the available compilers.
+"""
+
 import json
 import re
 import os
@@ -10,6 +13,17 @@ from bdebld.meta import optionsutil
 
 
 class CompilerInfo(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
+    """Information pertaining to a compiler.
+
+    Attributes:
+        type_ (str): Type of the compiler.
+        version (str): Version number of the compiler.
+        c_path (str): Path to the C compiler executable.
+        cxx_path (str): Path to the C++ compiler executable.
+        flags (str, optional): Arguments to pass to the compiler.
+        desc (str, optional): Custom description, by default, the description()
+            method returns type_ + '-' + version.
+    """
     def __init__(self, type_, version, c_path, cxx_path, flags=None,
                  desc=None):
         self.type_ = type_
@@ -30,6 +44,17 @@ class CompilerInfo(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
 
 
 def get_config_path():
+    """Return the path to the compiler configuration file.
+
+    This is either ~/.bdecompilerconfig if it exists, or
+    $BDE_ROOT/bdecompilerconfig.
+
+    Returns:
+       Path to the config file.
+
+    Raises:
+       ValueError if no valid configuration file is found.
+    """
     localconfig_path = os.path.join(os.path.expanduser('~'),
                                     '.bdecompilerconfig')
 
@@ -40,22 +65,35 @@ def get_config_path():
         path = localconfig_path
     bde_root = os.environ.get('BDE_ROOT')
 
-    if bde_root:
+    if not path and bde_root:
         defaultconfig_path = os.path.join(bde_root,
                                           'etc', 'bdecompilerconfig')
         if (os.path.isfile(defaultconfig_path) and
                 os.access(defaultconfig_path, os.R_OK)):
             path = defaultconfig_path
 
+    if not path:
+        raise ValueError('Cannot find a compiler configuration file at %s '
+                         'or $BDE_ROOT/etc/bdecompilerconfig' %
+                         localconfig_path)
+
     if path:
         logutil.warn('using configuration: %s' % path)
         return path
 
-    raise ValueError('Cannot find a compiler configuration file at %s '
-                     'or $BDE_ROOT/etc/bdecompilerconfig' % localconfig_path)
-
 
 def get_compilerinfos(hostname, uplid, file_):
+    """Get the list of applicable compilers from a compiler config file.
+
+    Args:
+        hostname (str): Hostname of the machine to be matched.
+        uplid (str): UPLID of the machine to be matched.
+        file_ (File): The compiler configuration file.
+
+    Returns:
+        list of matched CompilerInfo objects.
+    """
+
     loaded_value = json.load(file_)
     matched_obj = None
     for obj in loaded_value:
