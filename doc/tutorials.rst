@@ -124,7 +124,7 @@ evaluated to set the environment variables:
    export PKG_CONFIG_PATH="/tmp/bde-install/unix-linux-x86_64-3.2.0-gcc-4.7.2-dbg_exc_mt_64/lib/pkgconfig"
    unset BDE_WAF_COMP_FLAGS
 
-Then, build bde using waf:
+Then, build BDE using waf:
 
 ::
 
@@ -265,10 +265,9 @@ Next, in cygwin, run the following command to set the environment variables for 
 .. note::
 
    On Windows, bde_setwafenv.py does not use ``~/.bdecompilerconfig``. Instead
-   it uses a list of hard coded available compilers on windows and do not check
+   it uses a list of hard-coded available compilers on windows and do not check
    those compilers are available. It is your job to make sure that you are
-   using a installed Visual Studio compiler.
-
+   using an already installed Visual Studio compiler.
 
 Now, you can build bde using ``waf.bat`` in cygwin:
 
@@ -280,13 +279,13 @@ Now, you can build bde using ``waf.bat`` in cygwin:
 
 .. important::
 
-   Even though bde_setwafenv.py must be invoked on cygwin on Windows, cygwin
+   Even though bde_setwafenv.py is supported on only Cygwin in Windows, Cygwin
    itself is not a supported build platform by :ref:`waf-top`.  Once
-   bde_setwafenv.py is call in cygwin, ``bde-tools/bin/waf.bat`` must be used
-   instead of calling ``waf`` directly. ``waf.bat`` will invoke ``waf`` using
-   the windows version of Python and build using the Visual Studio C/C++
-   compiler.  You can download a free version of Visual Studio Express from
-   `Microsoft
+   bde_setwafenv.py is executed in cygwin, ``bde-tools/bin/waf.bat`` must be
+   used instead of executing ``waf`` directly. ``waf.bat`` will invoke ``waf``
+   using the windows version of Python and build using the Visual Studio C/C++
+   compiler selected.  You can download a free version of Visual Studio Express
+   from `Microsoft
    <https://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx>`_.
 
 .. TODO: Building an Library That Does Not Depend on BDE
