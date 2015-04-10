@@ -10,6 +10,6 @@ MsvcVersion = collections.namedtuple(
 versions = [
     MsvcVersion('18.00', 'Visual Studio 2013', '12.0'),
     MsvcVersion('17.00', 'Visual Studio 2012', '11.0'),
-    MsvcVersion('16.00', 'Visual Studio 2010', '10.0')
+    MsvcVersion('16.00', 'Visual Studio 2010', '10.0'),
     MsvcVersion('15.00', 'Visual Studio 2009', '9.0')
 ]
