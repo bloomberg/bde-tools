@@ -572,6 +572,12 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 
 !!  unix-Darwin-*-*-clang     _    CXX                =  clang++ -D__unix $(CXX64FLAGS) $(CLANG_GCC_VER_CPP)
 
+++  unix-                     _    CXXLINK            =  $(CXX)
+++  unix-                     _    CLINK              =  $(CXXLINK)
+++  windows-                  _    CXXLINK            =  $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:ix86 ws2_32.lib
+!!  windows-*-amd64-*-*       _    CXXLINK            =  $(RETRY_ON_SIGNAL) link /nologo /incremental:no /subsystem:console /machine:X64 ws2_32.lib
+++  windows-                  _    CLINK              =  $(CXXLINK)
+
 #==============================================================================
 # User Customisation
 #==============================================================================

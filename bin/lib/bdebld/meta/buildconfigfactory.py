@@ -218,6 +218,7 @@ def get_build_flags_from_opts(parser, options, export_options=None,
                               exclude_exportlibs=None):
     cxx = options['CXX'].split()[1:]
     cc = options['CC'].split()[1:]
+    cxxlink = options['CXXLINK'].split()[1:]
 
     def load_flags(flags, cxxflags, cflags, ldflags, test_cxxflags):
         # test_flags = buildconfig.BuildFlags()
@@ -229,14 +230,14 @@ def get_build_flags_from_opts(parser, options, export_options=None,
             cc + cflags)
 
         flags.stlibs, flags.libs, flags.libpaths, flags.linkflags = \
-            parser.partition_linkflags(ldflags)
+            parser.partition_linkflags(cxxlink + ldflags)
 
         _, flags.test_cxxflags = parser.partition_cflags(cxx + test_cxxflags)
 
     def load_export_flags(flags, cxxflags, ldflags):
 
         flags.export_flags = parser.get_export_cflags(cxxflags)
-        flags.export_libs = parser.partition_linkflags(ldflags)[1]
+        flags.export_libs = parser.partition_linkflags(cxxlink + ldflags)[1]
 
         if exclude_exportflags:
             flags.export_flags = [f for f in flags.export_flags if f not in
