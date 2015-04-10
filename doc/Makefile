@@ -195,6 +195,7 @@ gh-pages:
 	make clean
 	make html
 	git checkout gh-pages
+	cd .. && rm -rf _static && rm -rf _sources
 	mv _build/html/* ../
 	cd .. && git add -A
 	git commit -m "Generate gh-pages"
