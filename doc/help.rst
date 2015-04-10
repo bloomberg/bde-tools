@@ -62,24 +62,25 @@ How do I build using a specific version of Visual Studio?
 The ``CXX`` environment variable isn't used on Windows. Instead, you must use
 the ``--msvc_version`` configuration option in waf.
 
-The following table shows the relationship between the CL.exe (compiler)
-version, Visual Studio year, and Visual Studio version.
+The following table shows the relationship between the Compiler (CL.exe)
+version version, Visual Studio product name, and Visual Studio internal product
+version.
 
-+------------+--------------------+-----------------------+
-| CL version | Visual Studio Year | Visual Studio Version |
-+============+====================+=======================+
-|      18.00 |               2013 |                  12.0 |
-+------------+--------------------+-----------------------+
-|      17.00 |               2012 |                  11.0 |
-+------------+--------------------+-----------------------+
-|      16.00 |               2010 |                  10.0 |
-+------------+--------------------+-----------------------+
-|      15.00 |               2008 |                   9.0 |
-+------------+--------------------+-----------------------+
++------------------+--------------------+--------------------------+
+| Compiler version | Product Name       | Internal Product Version |
++==================+====================+==========================+
+|            18.00 | Visual Studio 2013 |                     12.0 |
++------------------+--------------------+--------------------------+
+|            17.00 | Visual Studio 2012 |                     11.0 |
++------------------+--------------------+--------------------------+
+|            16.00 | Visual Studio 2010 |                     10.0 |
++------------------+--------------------+--------------------------+
+|            15.00 | Visual Studio 2008 |                      9.0 |
++------------------+--------------------+--------------------------+
 
 The ``--msvc_version`` accepts the string "msvc" followed by a space, followed
-by the Visual Studio version number. For example, to select Visual Studio 2013,
-you can pass the following option to ``waf configure``
+by the Visual Studio internal product version number. For example, to select
+Visual Studio 2013, you can pass the following option to ``waf configure``
 
 ::
 
