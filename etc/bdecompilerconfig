@@ -1,0 +1,109 @@
+[
+    {
+        "uplid": "unix-linux-",
+        "compilers": [
+            {
+                "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.8.1/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.8.1/bin/g++",
+                "version": "4.8.1"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/usr/bin/gcc",
+                "cxx_path": "/usr/bin/g++",
+                "version": "4.1.2"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.3.5/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.3.5/bin/g++",
+                "version": "4.3.5"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.7.2/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.7.2/bin/g++",
+                "version": "4.7.2"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.9.2/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.9.2/bin/g++",
+                "version": "4.9.2"
+            }
+        ]
+    },
+    {
+        "hostname": ".*",
+        "uplid": "unix-sunos-",
+        "compilers": [
+            {
+                "type": "cc",
+                "c_path": "/bb/util/common/SS12_3-20131030/SUNWspro/bin/cc",
+                "cxx_path": "/bb/util/common/SS12_3-20131030/SUNWspro/bin/CC",
+                "version": "5.12"
+            },
+            {
+                "type": "cc",
+                "c_path": "/bb/util/common/SS12U1-20130312/SUNWspro/bin/cc",
+                "cxx_path": "/bb/util/common/SS12U1-20130312/SUNWspro/bin/CC",
+                "version": "5.11"
+            },
+            {
+                "type": "cc",
+                "c_path": "/bb/util/common/SS12U1-20120621/SUNWspro/bin/cc",
+                "cxx_path": "/bb/util/common/SS12U1-20120621/SUNWspro/bin/CC",
+                "version": "5.10"
+            },
+            {
+                "type": "cc",
+                "c_path": "/bb/util/common/SS12_3-20141031/SUNWspro/bin/cc",
+                "cxx_path": "/bb/util/common/SS12_3-20141031/SUNWspro/bin/CC",
+                "version": "5.12.3"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.3.2/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.3.2/bin/g++",
+                "version": "4.3.5"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.6.1/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.6.1/bin/g++",
+                "version": "4.6.1"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.7.2/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.7.2/bin/g++",
+                "version": "4.7.2"
+            }
+        ]
+    },
+    {
+        "hostname": ".*",
+        "uplid": "unix-aix-",
+        "compilers": [
+            {
+                "type": "xlc",
+                "c_path": "/bb/util/version11-042012/usr/vacpp/bin/xlc_r",
+                "cxx_path": "/bb/util/version11-042012/usr/vacpp/bin/xlC_r",
+                "version": "11.2"
+            },
+            {
+                "type": "xlc",
+                "c_path": "/bb/util/version12-032014/usr/vacpp/bin/xlc_r",
+                "cxx_path": "/bb/util/version12-032014/usr/vacpp/bin/xlC_r",
+                "version": "12.0"
+            },
+            {
+                "type": "xlc",
+                "c_path": "/bb/util/version12-072014/usr/vacpp/bin/xlc_r",
+                "cxx_path": "/bb/util/version12-072014/usr/vacpp/bin/xlC_r",
+                "version": "12.1"
+            }
+        ]
+    }
+]
