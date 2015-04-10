@@ -3,10 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to BDE Tools's documentation!
-=====================================
-The BDE tools repository contains a collection of tools to help with developing
-and building BDE-style libraries and applications.
+BDE Tools Documentation
+=======================
+The `BDE tools repository <https://github.com/bloomberg/bde-tools>`_ contains a
+collection of tools to help with developing and building BDE-style libraries
+and applications.
 
 
 .. toctree::
