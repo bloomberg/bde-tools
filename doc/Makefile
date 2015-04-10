@@ -196,5 +196,5 @@ gh-pages:
 	make html
 	git checkout gh-pages
 	mv _build/html/* ../
-	cd .. && && git add -A
+	cd .. && git add -A
 	git commit -m "Generate gh-pages"
