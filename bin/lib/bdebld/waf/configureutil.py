@@ -22,7 +22,8 @@ def make_ufid(ctx):
         ctx (ConfigurationContext): The waf configuration context.
 
     Returns:
-        An Ufid object.
+        Ufid
+
     """
 
     opts = ctx.options
@@ -30,16 +31,12 @@ def make_ufid(ctx):
     ufid_str = None
 
     if env_ufid:
-        if opts.ufid:
+        if opts.ufid and opts.ufid != env_ufid:
             Logs.warn(
                 'The specified UFID, "%s", is different from '
                 'the value of the environment variable BDE_WAF_UFID '
                 ', "%s", which will take precedence. ' %
                 (opts.ufid, env_ufid))
-        else:
-            Logs.warn(
-                'Using the value of the environment variable '
-                'BDE_WAF_UFID, "%s", as the UFID.' % env_ufid)
         ufid_str = env_ufid
     elif opts.ufid:
         ufid_str = opts.ufid
@@ -57,18 +54,6 @@ def make_ufid(ctx):
     return optionsutil.make_ufid_from_cmdline_options(opts)
 
 
-def get_msvc_version_from_env():
-    env_uplid_str = os.getenv('BDE_WAF_UPLID')
-    if env_uplid_str:
-        env_uplid = optiontypes.Uplid.from_str(env_uplid_str)
-
-        if env_uplid.comp_type == 'cl':
-            for v in msvcversions.versions:
-                if v.compiler_version == env_uplid.comp_ver:
-                    return v.product_version
-    return None
-
-
 def make_uplid(ctx):
     """Create the Uplid representing the current build platform.
 
@@ -83,7 +68,9 @@ def make_uplid(ctx):
 
     uplid = optiontypes.Uplid(os_type, os_name, cpu_type, os_ver,
                               comp_type, comp_ver)
+
     env_uplid_str = os.getenv('BDE_WAF_UPLID')
+
     if env_uplid_str:
         env_uplid = optiontypes.Uplid.from_str(env_uplid_str)
 
@@ -95,6 +82,20 @@ def make_uplid(ctx):
             uplid = env_uplid
 
     return uplid
+
+
+def get_msvc_version_from_env():
+    """Return the desired Visual Studio version from the environment.
+    """
+    env_uplid_str = os.getenv('BDE_WAF_UPLID')
+    if env_uplid_str:
+        env_uplid = optiontypes.Uplid.from_str(env_uplid_str)
+
+        if env_uplid.comp_type == 'cl':
+            for v in msvcversions.versions:
+                if v.compiler_version == env_uplid.comp_ver:
+                    return v.product_version
+    return None
 
 
 def get_comp_info(ctx):

@@ -7,8 +7,7 @@ BDE-Style Repository
 Introduction
 ============
 
-For a repository to be buildable with the `Waf-Based Build
-System <http://github.com/bloomberg/bde-tools/wiki/Waf-Build>`_, it must
+For a repository to be buildable with the :ref:`waf-top`, it must
 have the following characteristics:
 
 -  Must follow :ref:`bde_repo-physical_layout`.
@@ -120,7 +119,7 @@ Sometimes, we may want to include source files that don't conform to a standard
 BDE-style package.  Often, the reason is to to bundle an existing third-party
 package inside of a repository.
 
-There are two types of non-conforming packages: plus Package, and third-party
+There are two types of non-conforming packages: plus packages, and third-party
 packages.
 
 Plus Packages
@@ -261,6 +260,8 @@ For example:
 .. index::
    single: dep file
 
+.. _bde_repo-dep:
+
 Dep File
 --------
 
@@ -332,7 +333,7 @@ For example, here is a rule that sets the variable ``EXC_CXXFLAGS``:
 The ``!!`` command states that the value should completely override any
 existing values for the ``EXC_CXXFLAGS``, but only if the OS type is
 ``unix``, the platform is ``SunOS``, the compiler is cc, and if an
-exception-enabled build was requested with the ``exc`` ufid.
+exception-enabled build was requested with the ``exc`` UFID.
 
 The first three fields of an option rule are described in more detail in
 the three sections below.
@@ -352,15 +353,15 @@ accumulated by previous rules. The following commands are supported:
 +---------+----------+------------------------------------------------------+
 | Command | Meaning  | Description                                          |
 +=========+==========+======================================================+
-| ++      | Add      | Add to end of value, with a leading space. (default) |
+| ``++``  | Add      | Add to end of value, with a leading space. (default) |
 +---------+----------+------------------------------------------------------+
-| --      | Insert   | Add to start of value, with a following space.       |
+| ``--``  | Insert   | Add to start of value, with a following space.       |
 +---------+----------+------------------------------------------------------+
-| <<      | Append   | Add to end of value directly, no leading space.      |
+| ``>>``  | Append   | Add to end of value directly, no leading space.      |
 +---------+----------+------------------------------------------------------+
-| >>      | Prepend  | Add to start of value directly, no following space.  |
+| ``<<``  | Prepend  | Add to start of value directly, no following space.  |
 +---------+----------+------------------------------------------------------+
-| !!      | Override | Completely replace the prior value.                  |
+| ``!!``  | Override | Completely replace the prior value.                  |
 +---------+----------+------------------------------------------------------+
 
 The default command if none is supplied is to append with a leading
@@ -370,7 +371,7 @@ space (``++``).
 .. index::
    single: UPLID
 
-.. _uplid:
+.. _bde_repo-uplid:
 
 UPLID
 `````
@@ -403,7 +404,7 @@ that part will be matched.
 .. index::
    single: UFID
 
-.. _ufid:
+.. _bde_repo-ufid:
 
 UFID
 ````

@@ -40,10 +40,6 @@ class BuildHelper(object):
         self.is_build_tests = self.is_run_tests or \
             self.ctx.options.test == 'build'
 
-        # Get the path of run_unit_tests.py. Assume the directory containing
-        # this script is <repo_root>/bin/lib/bdebld/waf and bde_runtest.py is
-        # located in the directory <repo_root>/bin/
-
         test_runner_path = os.path.join(
             sysutil.repo_root_path(), 'bin', 'bde_runtest.py')
 

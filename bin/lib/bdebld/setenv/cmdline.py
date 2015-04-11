@@ -15,7 +15,7 @@ def get_options():
         options (dict), arguments (list)
     """
 
-    usage = """eval `bde_setwafenv.py [list|unset] -i <root_install_dir> [-c <compiler> -t <ufid>]
+    usage = """eval $(bde_setwafenv.py [list|unset] -i <root_install_dir> [-c <compiler> -t <ufid>])
 
 list: list available compilers
 unset: unset environment variables"""

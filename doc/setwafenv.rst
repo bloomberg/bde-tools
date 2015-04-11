@@ -40,7 +40,7 @@ bde_setwafenv.py requires:
 bde_setwafenv.py is supported on all platform where the :ref:`waf based build
 system is supported <waf-supported_platforms>`.
 
-On windows, bde_setwafenv.py is *not supported* by the windows command
+On Windows, bde_setwafenv.py is *not supported* by the windows command
 prompt. Instead, you must use the tool through cygwin.  See the tutorial
 :ref:`tutorials-setwafenv-bde-windows` for more details.
 
@@ -67,7 +67,7 @@ bde_setwafenv.py:
 
 - ``CXX``
 
-  The path to the C++ compiler
+  The path to the C++ compiler.
 
 - ``BDE_WAF_COMP_FLAGS``
 
@@ -75,21 +75,20 @@ bde_setwafenv.py:
 
 - ``BDE_WAF_UFID``
 
-  The :ref:`ufid` to use.
+  The :ref:`bde_repo-ufid` to use.
 
 - ``BDE_WAF_UPLID``
 
-  The uplid determined by bde_setewafenv. Note that waf will still generate a
+  The UPLID determined by bde_setewafenv. Note that waf will still generate a
   uplid based on the current platform and the compiler being used. If the
   generated uplid does not match BDE_WAF_UPLID, then waf will print a warning
   message and proceed to use 'BDE_WAF_UPLID' as the uplid.
 
 - ``BDE_WAF_BUILD_DIR``
 
-  The subdirectory under the source root in which build artifacts will be
-  generated.  This will be set to the expanded value of
-  ``"$BDE_WAF_UPLID-$BDE_WAF_UFID``, so that build directory is unique for each
-  build configuration.
+  The path in which build artifacts will be generated.  This will be set to the
+  expanded value of ``"$BDE_WAF_UPLID-$BDE_WAF_UFID``, so that build directory
+  is unique for each build configuration.
 
 - ``WAFLOCK``
 
@@ -97,12 +96,15 @@ bde_setwafenv.py:
 
 - ``PREFIX``
 
-  The installation prefix.
+  The installation prefix, which will be set to
+  ``<root-installation-directory>/$BDE_WAF_UPLID-$BDE_WAF_UFID``.  See the
+  description for the ``-i`` option in the :ref:`Options section
+  <setwafenv-options>` for more details.
 
 - ``PKG_CONFIG_PATH``
 
-  The path containing the .pc files for the installed libraries
-
+  The path containing the .pc files for the installed libraries.  This will be
+  set to ``$PREFIX/lib/pkgconfig``.
 
 .. _setwafenv-compiler_config:
 
@@ -153,12 +155,12 @@ A machine context is matched by the following 2 fields:
 
 - ``uplid``
 
-  A partial :ref:`uplid` mask that matches the platform of the machine.  The
-  first machine context that matches in the list will be chosen.
+  A partial :ref:`bde_repo-uplid` mask that matches the platform of the
+  machine.  The first machine context that matches in the list will be chosen.
 
 .. note::
-   Tip: if you are using bde_setwafenv.py on one machine.  Don't define ``hostname``
-   and use ``-`` (a dash) as ``uplid``.
+   Tip: if you are using bde_setwafenv.py on one machine.  Don't define
+   ``hostname`` and just use ``-`` (a dash) as ``uplid``.
 
 The ``compilers`` field that contains a list of compilers on the machine.  The
 first compiler in the list will be treated as the default. A compiler is
@@ -206,6 +208,7 @@ It also provides 2 other optional commands:
 
   List the available compilers on this machine.
 
+.. _setwafenv-options:
 
 Options
 -------
@@ -216,7 +219,7 @@ Options
 
 - ``-t``
 
-  Specify the build configuration using a :ref:`ufid`.
+  Specify the build configuration using a :ref:`bde_repo-ufid`.
 
 - ``-i``
 

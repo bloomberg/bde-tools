@@ -104,13 +104,13 @@ Next, use ``bde_setwafenv.py`` to set up the environment variables:
 
 .. note::
 
-   Here we choose to use :ref:`ufid` to specify the build configuration.  You
-   can also use the :ref:`qualified configuration options
+   Here we choose to use :ref:`bde_repo-ufid` to specify the build
+   configuration.  You can also use the :ref:`qualified configuration options
    <waf-qualified_build_config>`.
 
 The actual environment variables being set will depend on your machine's
-platform :ref:`uplid`. On my machine, the following Bourne shell commands are
-evaluated to set the environment variables:
+platform :ref:`bde_repo-uplid`. On my machine, the following Bourne shell
+commands are evaluated to set the environment variables:
 
 ::
 
@@ -250,7 +250,7 @@ bde_setwafenv.py can be used on Windows through cygwin.
 **Prerequisites**:
 
 - `cygwin <https://www.cygwin.com/>`_
-- Windows version of Python 2.6, 2.7, or 3.3+
+- Windows and Cygwin versions of Python 2.6, 2.7, or 3.3+
 
 First, make sure you have cloned the bde and bde-tools repositories, and that
 you have added ``bde-tools/bin`` to your system's PATH.
@@ -281,7 +281,7 @@ Now, you can build bde using ``cygwaf.sh`` in cygwin:
 
    Even though bde_setwafenv.py is supported on only Cygwin in Windows, Cygwin
    itself is not a supported build platform by :ref:`waf-top`.  Once
-   bde_setwafenv.py is executed in cygwin, ``bde-tools/bin/cygwaf.sh``
+   bde_setwafenv.py is executed in Cygwin, ``bde-tools/bin/cygwaf.sh``
    (preferred) or ``bde-tools/bin/waf.bat`` must be used instead of executing
    ``waf`` directly. ``cygwaf.sh`` will invoke ``waf`` using the windows
    version of Python and build using the Visual Studio C/C++ compiler selected.

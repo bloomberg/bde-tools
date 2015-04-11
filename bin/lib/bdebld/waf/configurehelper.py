@@ -25,7 +25,12 @@ class ConfigureHelper(object):
     def configure(self):
         self.ctx.msg('Prefix', self.ctx.env['PREFIX'])
         self.ctx.msg('Uplid', self.uplid)
-        self.ctx.msg('Ufid', self.ufid)
+
+        if os.getenv('BDE_WAF_UFID'):
+            ufid_origin_str = ' (from BDE_WAF_UFID)'
+        else:
+            ufid_origin_str = ''
+        self.ctx.msg('Ufid', str(self.ufid) + ufid_origin_str)
         if self.ctx.options.verbose >= 1:
             self.ctx.msg('OS type', self.uplid.os_type)
             self.ctx.msg('OS name', self.uplid.os_name)
@@ -51,7 +56,7 @@ class ConfigureHelper(object):
             self.ctx.env['CPPPATH_ST'].replace('%s', r'([^ =]+)'),
             '/D' if self.uplid.comp_type == 'cl' else '-D')
 
-        default_rules = optionsutil.get_default_option_rules()
+        default_rules = optionsutil.get_default_option_rules(self.ctx.msg)
         debug_opt_keys = self.ctx.options.debug_opt_keys.split(',') if \
             self.ctx.options.debug_opt_keys is not None else []
         self.build_config = buildconfigfactory.make_build_config(
@@ -120,12 +125,17 @@ class ConfigureHelper(object):
         lib_suffix = self.ctx.options.lib_suffix
         for lib in self.build_config.external_dep:
             actual_lib = lib + str(lib_suffix or '')
+
+            help_str = """failed to configure the library using pkg-config
+
+"%s.pc" maybe missing from "PKG_CONFIG_PATH"; otherwise, please see config.log
+in the build output directory for details.""" % \
+                actual_lib
             self.ctx.check_cfg(
                 package=actual_lib,
                 args=pkgconfig_args,
-                errmsg='Make sure the path indicated by environment variable '
-                '"PKG_CONFIG_PATH" contains "%s.pc".  See config.log in '
-                'the build output directory for more details.' % actual_lib)
+                errmsg=help_str)
+
             if lib_suffix:
                 for k in rename_keys:
                     key_old = (k + '_' + actual_lib).upper()

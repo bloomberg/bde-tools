@@ -40,14 +40,14 @@ doing any deep customization. CMake is perhaps the most mature, but CMake's
 domain specific language places certain limitations on what can be integrated
 into the tool and leaves a lot to be desired.
 
-What made us choose waf over scons is that waf, which began as a fork of Scons,
+What made us choose waf over Scons is that waf, which began as a fork of Scons,
 is `designed to be much faster than scons
 <http://www.freehackers.org/~tnagy/bench.txt>`_.
 
 Why is there a copy of waf in this repository?
 ----------------------------------------------
 
-The ``bde-tools`` repository contains customziations that may apply to only the
+The BDE Tools repository contains customziations that may apply to only the
 version of waf bundled in the repo.  Furthermore, waf is also relatively
 lightweight, being only about 100KB in size.
 
@@ -80,7 +80,7 @@ version.
 
 The ``--msvc_version`` accepts the string "msvc" followed by a space, followed
 by the Visual Studio internal product version number. For example, to select
-Visual Studio 2013, you can pass the following option to ``waf configure``
+Visual Studio 2013, you can pass the following option to ``waf configure``:
 
 ::
 

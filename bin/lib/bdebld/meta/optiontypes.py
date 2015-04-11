@@ -3,9 +3,6 @@
 This module defines types that represent various aspects of options in a
 BDE-style repository.
 
-https://github.com/bloomberg/bde-tools/wiki/BDE-Style-Repository
-#options-file-format
-
 """
 
 from bdebld.common import mixins
@@ -61,13 +58,9 @@ class OptionCommand(object):
 class OptionRule(mixins.BasicEqualityMixin):
     """This class represents an option rule.
 
-    The option file format consists of a set of option rules
-    described in
-    https://github.com/bloomberg/bde-tools/wiki/BDE-Style-Repository
-    #options-file-format.
-    The option rules can be evaluated to get a set of key and value pairs that
-    are typically used to determine the compiler and linker flags used to build
-    a package.
+    The option file format consists of a set of option rules.  The option rules
+    can be evaluated to get a set of key and value pairs that are typically
+    used to determine the compiler and linker flags used to build a package.
 
     Attributes:
         command (OptionCommand): Command of the rule.

@@ -91,7 +91,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         # We load options in levelized order instead of any topological order
         # to preserve the behavior with bde_build (older version of the build
         # tool).  Note that we cannot cache intermediate results because later
-        # option rules may change the results from the preivous rule due.
+        # option rules may change the results from the preivous rule.
         for level in dep_levels:
             for dep_name in sorted(level):
                 if dep_name not in build_config.external_dep and \

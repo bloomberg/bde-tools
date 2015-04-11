@@ -10,11 +10,14 @@ from bdebld.meta import optionsparser
 from bdebld.meta import optiontypes
 
 
-def get_default_option_rules():
+def get_default_option_rules(msg_func=logutil.msg):
     """Return the default option rules.
 
+    Args:
+        msg_func (func, optional): function to print status messages
+
     Returns:
-       list of OptionRule.
+        list of OptionRule.
     """
     default_opts_path = os.path.join(sysutil.repo_root_path(), 'etc',
                                      'default.opts')
@@ -58,11 +61,9 @@ def get_default_option_rules():
                          'but $BDE_ROOT/etc/default_internal.opts does '
                          'not exist.')
 
-    default_paths = default_opts_path
+    msg_func("Using default option rules from", default_opts_path)
     if found_default_internal_opts:
-        default_paths += ',' + default_internal_opts_path
-
-    logutil.warn('Using default option rules from: ' + default_paths)
+        msg_func("Using default option rules from", default_internal_opts_path)
 
     return option_rules
 
@@ -131,7 +132,7 @@ def make_ufid_from_cmdline_options(opts):
     if opts.ufid:
         ufid = optiontypes.Ufid.from_str(opts.ufid)
         if not optiontypes.Ufid.is_valid(ufid.flags):
-            raise ValueError (
+            raise ValueError(
                 'Invalid UFID specified, each part of a UFID must be '
                 'in the following list of valid flags: %s.' %
                 ", ".join(

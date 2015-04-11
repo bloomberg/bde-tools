@@ -10,6 +10,7 @@ build() - waf build
 import sys
 
 from waflib import Utils
+from waflib import Logs
 
 from bdebld.meta import optionsutil
 from bdebld.common import cmdlineutil
@@ -107,7 +108,7 @@ def build(ctx):
         return
 
     if ctx.cmd == 'build':
-        print('Waf: using %d jobs (change with -j)' % ctx.options.jobs)
+        Logs.info('Waf: Using %d jobs (change with -j)' % ctx.options.jobs)
 
     helper = buildhelper.BuildHelper(ctx)
     helper.build()

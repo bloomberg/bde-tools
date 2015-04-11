@@ -149,9 +149,11 @@ def bde_exec_command(task, cmd, **kw):
             src_str = task.inputs[0].name
 
         status_str = 'WARNING' if ret == 0 else 'ERROR'
+        color = Logs.colors.YELLOW if ret == 0 else Logs.colors.RED
+
         Logs.info('[%s (%s)] <<<<<<<<<<\n%s>>>>>>>>>>' %
                   (src_str, status_str, msg),
-                  extra={'stream': sys.stderr})
+                  extra={'stream': sys.stderr, 'c1': color})
 
     return ret
 

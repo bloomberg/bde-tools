@@ -13,7 +13,7 @@ from bdebld.common import mixins
 class BuildConfig(mixins.BasicEqualityMixin):
     """Repo configuration to be persisted.
 
-    This differs from BuildContext by storing only the evaluated build flags
+    This differs from RepoContext by storing only the evaluated build flags
     instead of all of the option rules.
 
     Attributes:
