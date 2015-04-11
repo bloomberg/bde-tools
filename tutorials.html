@@ -57,8 +57,8 @@
 <p class="first admonition-title">Note</p>
 <p class="last">The following instruction assumes that you are running a unix
 platform. Building on windows is almost equivalent, except you must use the
-equivalent commands in windows command prompt and call <code class="docutils literal"><span class="pre">waf.bat</span></code> instead
-<code class="docutils literal"><span class="pre">waf</span></code>. For more details, please see <a class="reference internal" href="waf.html#waf-windows"><span>Building on Windows</span></a>.</p>
+equivalent commands in windows command prompt. For more details, please see
+<a class="reference internal" href="waf.html#waf-windows"><span>Building on Windows</span></a>.</p>
 </div>
 <p>First, clone the bde and bde-tools repositores from <a class="reference external" href="https://github.com/bloomberg/bde">github</a>:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/bloomberg/bde.git
@@ -150,7 +150,7 @@ export PKG_CONFIG_PATH=&quot;/tmp/bde-install/unix-linux-x86_64-3.2.0-gcc-4.7.2-
 unset BDE_WAF_COMP_FLAGS
 </pre></div>
 </div>
-<p>Then, build bde using waf:</p>
+<p>Then, build BDE using waf:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ cd &lt;bde&gt;
 $ waf configure build
 </pre></div>
@@ -264,25 +264,25 @@ $ eval $(bde_setwafenv.py -i ~/tmp/bde-install -c cl-18.00) # use visual studio 
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">On Windows, bde_setwafenv.py does not use <code class="docutils literal"><span class="pre">~/.bdecompilerconfig</span></code>. Instead
-it uses a list of hard coded available compilers on windows and do not check
+it uses a list of hard-coded available compilers on windows and do not check
 those compilers are available. It is your job to make sure that you are
-using a installed Visual Studio compiler.</p>
+using an already installed Visual Studio compiler.</p>
 </div>
-<p>Now, you can build bde using <code class="docutils literal"><span class="pre">waf.bat</span></code> in cygwin:</p>
+<p>Now, you can build bde using <code class="docutils literal"><span class="pre">cygwaf.sh</span></code> in cygwin:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ cd &lt;bde&gt;
-$ waf.bat configure
-$ waf.bat build
+$ cygwaf.sh configure
+$ cygwaf.sh build
 </pre></div>
 </div>
 <div class="admonition important">
 <p class="first admonition-title">Important</p>
-<p class="last">Even though bde_setwafenv.py must be invoked on cygwin on Windows, cygwin
+<p class="last">Even though bde_setwafenv.py is supported on only Cygwin in Windows, Cygwin
 itself is not a supported build platform by <a class="reference internal" href="waf.html#waf-top"><span>Waf Based Build System</span></a>.  Once
-bde_setwafenv.py is call in cygwin, <code class="docutils literal"><span class="pre">bde-tools/bin/waf.bat</span></code> must be used
-instead of calling <code class="docutils literal"><span class="pre">waf</span></code> directly. <code class="docutils literal"><span class="pre">waf.bat</span></code> will invoke <code class="docutils literal"><span class="pre">waf</span></code> using
-the windows version of Python and build using the Visual Studio C/C++
-compiler.  You can download a free version of Visual Studio Express from
-<a class="reference external" href="https://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx">Microsoft</a>.</p>
+bde_setwafenv.py is executed in cygwin, <code class="docutils literal"><span class="pre">bde-tools/bin/cygwaf.sh</span></code>
+(preferred) or <code class="docutils literal"><span class="pre">bde-tools/bin/waf.bat</span></code> must be used instead of executing
+<code class="docutils literal"><span class="pre">waf</span></code> directly. <code class="docutils literal"><span class="pre">cygwaf.sh</span></code> will invoke <code class="docutils literal"><span class="pre">waf</span></code> using the windows
+version of Python and build using the Visual Studio C/C++ compiler selected.
+You can download a free version of Visual Studio Express from <a class="reference external" href="https://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx">Microsoft</a>.</p>
 </div>
 </div>
 </div>

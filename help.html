@@ -97,42 +97,43 @@ lightweight, being only about 100KB in size.</p>
 <h3>How do I build using a specific version of Visual Studio?<a class="headerlink" href="#how-do-i-build-using-a-specific-version-of-visual-studio" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal"><span class="pre">CXX</span></code> environment variable isn&#8217;t used on Windows. Instead, you must use
 the <code class="docutils literal"><span class="pre">--msvc_version</span></code> configuration option in waf.</p>
-<p>The following table shows the relationship between the CL.exe (compiler)
-version, Visual Studio year, and Visual Studio version.</p>
+<p>The following table shows the relationship between the Compiler (CL.exe)
+version version, Visual Studio product name, and Visual Studio internal product
+version.</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="22%" />
-<col width="36%" />
-<col width="42%" />
+<col width="28%" />
+<col width="31%" />
+<col width="41%" />
 </colgroup>
 <thead valign="bottom">
-<tr class="row-odd"><th class="head">CL version</th>
-<th class="head">Visual Studio Year</th>
-<th class="head">Visual Studio Version</th>
+<tr class="row-odd"><th class="head">Compiler version</th>
+<th class="head">Product Name</th>
+<th class="head">Internal Product Version</th>
 </tr>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>18.00</td>
-<td>2013</td>
+<td>Visual Studio 2013</td>
 <td>12.0</td>
 </tr>
 <tr class="row-odd"><td>17.00</td>
-<td>2012</td>
+<td>Visual Studio 2012</td>
 <td>11.0</td>
 </tr>
 <tr class="row-even"><td>16.00</td>
-<td>2010</td>
+<td>Visual Studio 2010</td>
 <td>10.0</td>
 </tr>
 <tr class="row-odd"><td>15.00</td>
-<td>2008</td>
+<td>Visual Studio 2008</td>
 <td>9.0</td>
 </tr>
 </tbody>
 </table>
 <p>The <code class="docutils literal"><span class="pre">--msvc_version</span></code> accepts the string &#8220;msvc&#8221; followed by a space, followed
-by the Visual Studio version number. For example, to select Visual Studio 2013,
-you can pass the following option to <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code></p>
+by the Visual Studio internal product version number. For example, to select
+Visual Studio 2013, you can pass the following option to <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code></p>
 <div class="highlight-python"><div class="highlight"><pre>$ waf configure --msvc_version &quot;msvc 12.0&quot;
 </pre></div>
 </div>

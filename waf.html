@@ -87,8 +87,8 @@ replacement tool will be used.</li>
 <a class="reference internal" href="bde_repo.html#bde-repo-layout-customize"><span>Customizing The Repository Layout</span></a> for more details.</p>
 </div>
 <ul class="simple">
-<li>A copy of <code class="docutils literal"><span class="pre">bde-tools/extras/wscript</span></code> must be located at the root directory
-of the repository.</li>
+<li>A copy of <code class="docutils literal"><span class="pre">bde-tools/etc/wscript</span></code> must be located at the root directory of
+the repository.</li>
 </ul>
 <p>You can either run <code class="docutils literal"><span class="pre">bde-tools/bin/waf</span></code> directly or add <code class="docutils literal"><span class="pre">bde-tools/bin</span></code> to
 the <code class="docutils literal"><span class="pre">PATH</span></code> environment variable.  The rest of the document assumes that you
@@ -472,11 +472,20 @@ because waf can be configured to use a version of Visual Studio
 different from the one supported by the that command prompt.</p>
 <p>Building using cygwin&#8217;s gcc compiler is not supported. However, you can work in
 the cygwin environment, but still use the Visual Studio compiler by invoking
-<code class="docutils literal"><span class="pre">waf.bat</span></code> instead of <code class="docutils literal"><span class="pre">waf</span></code>.</p>
-<p>Waf can be used to generate a Visual Studio solution by running the waf
-commands &#8216;msvs&#8217; or &#8216;msvs2008&#8217;. The &#8216;msvs&#8217; command generates a Visual
-Studio 2010 solution named project.sln, and &#8216;msvs2008&#8217; generates a
-Visual Studio solution named project_2008.sln.</p>
+using the provided shell script <code class="docutils literal"><span class="pre">bin/cygwaf.sh</span></code>.</p>
+<p>To use <code class="docutils literal"><span class="pre">cygwaf.sh</span></code>, you must export the WIN_PATH environment variable to
+point to the <em>cygwin</em> path of the <em>Windows</em> version of Python.</p>
+<p>For example, if the Windows version of CPython is installed to #
+C:Python27python, then you can use the following command to set up the
+required environment variable:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ export WIN_PYTHON=/cygdrive/c/Python27/python
+$ cygwaf.sh &lt;waf command&gt;
+</pre></div>
+</div>
+<p>Waf also can be used to generate a Visual Studio solution by running the waf
+commands &#8216;msvs&#8217; or &#8216;msvs2008&#8217;. The &#8216;msvs&#8217; command generates a Visual Studio
+2010 solution named project.sln, and &#8216;msvs2008&#8217; generates a Visual Studio
+solution named project_2008.sln.</p>
 <p>The generated Visual Studio solution still uses waf as the back-end for
 compiling and linking, so it simply serves as an alternate interface
 from running waf directly on the command line.</p>
