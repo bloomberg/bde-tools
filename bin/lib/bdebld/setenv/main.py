@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import platform
 import re
+import subprocess
 import sys
 import os
 
@@ -12,14 +13,17 @@ from bdebld.common import msvcversions
 from bdebld.setenv import compilerinfo
 from bdebld.setenv import cmdline
 
-
 def main():
     platform_str = sysutil.unversioned_platform()
-    if platform_str not in ('cygwin', 'linux', 'aix', 'sunos', 'darwin'):
-        print('Unsupported platform: %s', file=sys.stderr)
-        if platform_str == 'win32':
-            print('Windows support is provided through cygwin.',
-                  file=sys.stderr)
+
+    if platform_str not in ('win32', 'cygwin', 'linux', 'aix', 'sunos', 'darwin'):
+        print('Unsupported platform: {0}'.format(platform_str), file=sys.stderr)
+        sys.exit(1)
+
+    if platform_str == 'win32' and not sysutil.is_mingw_environment():
+        print('This tool is used to configure unix-style environment variables.  On '
+              'Windows platforms it must be run from a unix shell environment, either '
+              'cygwin, or mingw/msys/msysgit')
         sys.exit(1)
 
     options, args = cmdline.get_options()
@@ -128,12 +132,11 @@ def print_envs(options, info):
     if install_dir:
         print('using install directory: %s' % install_dir, file=sys.stderr)
         PREFIX = os.path.join(install_dir, id_str)
-        if os_type == 'windows':
+        if sysutil.unversioned_platform() == 'cygwin':
             PREFIX = sysutil.shell_command('cygpath -m "%s"' % PREFIX).rstrip()
 
         print('export PREFIX="%s"' % PREFIX)
         print('export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX)
-
 
 def list_compilers(compiler_infos):
     print('Avaliable compilers:', file=sys.stderr)

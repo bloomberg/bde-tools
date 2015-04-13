@@ -63,7 +63,7 @@ def unversioned_platform():
     """Return the unversioned platform string.
 
     Possible return values:
-        linux, aix, sunos, darwin, win32
+        linux, aix, sunos, darwin, win32, cygwin
     """
     s = sys.platform
 
@@ -75,6 +75,17 @@ def unversioned_platform():
 
     return re.split('\d+$', s)[0]
 
+def is_mingw_environment():
+    """Return 'true' if the current platform is win32 mingw and 'false' otherwise.
+    Note that mingw returns "win32" as the platform in other context (e.g.
+    ' unversioned_platform')
+    """
+    try:
+        uname = subprocess.check_output('uname')
+    except subprocess.CalledProcessError as e:
+        uname = ""
+
+    return -1 != uname.find('MINGW')
 
 class CompilerType:
     C = 0,
