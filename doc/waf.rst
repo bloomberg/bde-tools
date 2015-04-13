@@ -417,6 +417,8 @@ directory:
             |-- bsl.pc
             `-- ...                <-- pkg-config files for each lib
 
+.. _waf-pkgconfig:
+
 Handling External Dependencies Using Pkg-config
 ===============================================
 
@@ -447,6 +449,26 @@ point ``PKG_CONFIG_PATH`` to the path containing ``openssl.pc``. Finally, you
 need to add ``openssl`` as a dependency to ``foo.dep``. After these three
 steps, waf will automatically determine the build flags required to use Open
 SSL at configuration time.
+
+.. _waf-workspace:
+
+Building Multiple Repos Using Workspaces
+========================================
+
+You have 2 options to work with multiple BDE-style repositories:
+
+1. Install the lower-level libraries first, and build higher level libraries by
+   resolving their dependencies using pkg-config (see :ref:`waf-pkgconfig`).
+
+2. The simpler option is to use workspaces, which allows you to build multiple
+   BDE-style repositories in the same way as a single repository by using the
+   workspace feature.
+
+To use the workspace feature, first, create a workspace directory and check out
+the repositories that you want to store in the workspace. Then, simply add an
+(empty) file named ``.bdeworkspaceconfig`` and copy ``bde-tools/etc/wscript``.
+
+See :ref:`tutorials-workspace` for an example.
 
 .. _waf-windows:
 

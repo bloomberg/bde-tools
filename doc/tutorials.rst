@@ -133,6 +133,82 @@ Then, build BDE using waf:
 
 See :ref:`setwafenv-top` for detailed reference.
 
+.. _tutorials-workspace:
+
+Use waf Workspace to Build Multiple BDE-Style Repositories
+==========================================================
+
+You can you the workspace feature to build multiple BDE-style repositories in
+the same way as a single repository (see :ref:`waf-workspace`)
+
+For example, suppose that you have the following BDE-style repositories that
+that you want to build together: ``bsl-internal``, ``bde-core``, and
+``bde-bb``.
+
+First, create a directory to serve as the root of the workspace, say
+``myworkspace``:
+
+::
+
+   $ mkdir workspace.
+
+Then, check out the repositories that will be part of the workspace:
+
+::
+
+   $ cd myworkspace
+   $ git clone <bsl-internal-url>
+   $ git clone <bde-core-url>
+   $ git clone <bde-bb-url>
+
+Next, add a empty file named ``.bdeworkspaceconfig`` and copy
+``bde-tools/etc/wscript`` to the root of the workspace:
+
+::
+
+   $ touch .bdeworkspaceconfig
+   $ cp <bde-tools>/etc/wscript .
+
+The workspace should now have the following layout:
+
+::
+
+   myworkspace
+   |
+   |-- .bdeworkspaceconfig
+   |-- wscript
+   |-- bsl-internal
+   |   |
+   |   |-- wscript
+   |   `-- ...      <-- other files in bsl-internal
+   |
+   |-- bde-core
+   |   |
+   |   |-- wscript
+   |    `-- ...     <-- other files in bde-core
+   |
+   `-- bde-bb
+       |
+       |-- wscript
+       `-- ...      <-- other files in bde-bb
+
+
+Now, you can build every repository in the workspace together:
+
+::
+
+   $ waf configure
+   $ waf build
+
+bde_setwafenv.py works the same way for a workspace as a regular repository.
+
+
+.. note::
+
+   You must be in the root directory of the workspace to build the workspace.
+   If you go into a repository contained in the workspace, any waf commands
+   will apply to that repository directly.
+
 .. _tutorials-setwafenv-bde-app:
 
 Use bde_setwafenv.py to Build an Application on Top of BDE
