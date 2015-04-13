@@ -362,8 +362,8 @@ Now, you can build bde using ``waf`` in msysgit or ``cygwaf.sh`` in cygwin:
    $ cd <bde>
 
    # in msysgit
-   $ python configure
-   $ python build
+   $ waf configure
+   $ waf build
 
    # in Cygwin
    $ cygwaf.sh configure

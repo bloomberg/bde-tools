@@ -13,17 +13,19 @@ from bdebld.common import msvcversions
 from bdebld.setenv import compilerinfo
 from bdebld.setenv import cmdline
 
+
 def main():
     platform_str = sysutil.unversioned_platform()
 
-    if platform_str not in ('win32', 'cygwin', 'linux', 'aix', 'sunos', 'darwin'):
-        print('Unsupported platform: {0}'.format(platform_str), file=sys.stderr)
+    if platform_str not in ('win32', 'cygwin', 'linux', 'aix', 'sunos',
+                            'darwin'):
+        print('Unsupported platform: %s' % platform_str, file=sys.stderr)
         sys.exit(1)
 
     if platform_str == 'win32' and not sysutil.is_mingw_environment():
-        print('This tool is used to configure unix-style environment variables.  On '
-              'Windows platforms it must be run from a unix shell environment, either '
-              'cygwin, or mingw/msys/msysgit')
+        print('This tool is used to configure unix-style environment '
+              'variables. On Windows platforms it must be run from a unix '
+              'shell environment, either cygwin, or mingw/msys/msysgit')
         sys.exit(1)
 
     options, args = cmdline.get_options()
@@ -138,6 +140,7 @@ def print_envs(options, info):
         print('export PREFIX="%s"' % PREFIX)
         print('export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX)
 
+
 def list_compilers(compiler_infos):
     print('Avaliable compilers:', file=sys.stderr)
     print(compiler_infos[0].description(), '(default)', file=sys.stderr)
@@ -146,7 +149,7 @@ def list_compilers(compiler_infos):
 
 
 def _determine_installation_location(prefix, uplid):
-    """ Return the installation location for BDE was previously encoded.
+    """Return the installation location for BDE was previously encoded.
 
     Return the installation location encoded in the specified 'prefix' for the
     specified 'uplid', or None if a location cannot be determined.  If 'prefix'

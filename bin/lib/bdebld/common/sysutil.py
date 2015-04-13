@@ -75,17 +75,20 @@ def unversioned_platform():
 
     return re.split('\d+$', s)[0]
 
+
 def is_mingw_environment():
-    """Return 'true' if the current platform is win32 mingw and 'false' otherwise.
+    """Return whether the current platform is win32 mingw.
+
     Note that mingw returns "win32" as the platform in other context (e.g.
-    ' unversioned_platform')
+    'unversioned_platform')
     """
     try:
         uname = subprocess.check_output('uname')
-    except subprocess.CalledProcessError as e:
-        uname = ""
+    except subprocess.CalledProcessError:
+        return False
 
     return -1 != uname.find('MINGW')
+
 
 class CompilerType:
     C = 0,
@@ -152,7 +155,7 @@ def get_win32_os_info_from_cygwin():
     m = re.match(r'\s*Microsoft\s+Windows\s+\[Version\s+(\d+\.\d+)[^\]]+\]',
                  out)
     if not m:
-        raise ValueError('Invalid version windows string "%s".' % out)
+        raise ValueError('Invalid Windows version string "%s".' % out)
     os_ver = m.group(1)
 
     # Make the assumption that we are on a X86 system.
