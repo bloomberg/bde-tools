@@ -321,17 +321,27 @@ Now, we can build this application using waf:
 Use bde_setwafenv.py to Build BDE on Windows
 ============================================
 
-bde_setwafenv.py can be used on Windows through cygwin.
+bde_setwafenv.py can be used on Windows through Cygwin or Git for Windows (msysgit).
 
 **Prerequisites**:
 
-- `cygwin <https://www.cygwin.com/>`_
+- `Cygwin <https://www.cygwin.com/>`_ or `Git for Windows (msysgit) <https://msysgit.github.io/>`_
 - Windows and Cygwin versions of Python 2.6, 2.7, or 3.3+
 
 First, make sure you have cloned the bde and bde-tools repositories, and that
 you have added ``bde-tools/bin`` to your system's PATH.
 
-Next, in cygwin, run the following command to set the environment variables for waf:
+Then, For Cygwin, export the WIN_PATH environment variable to point to the
+*Cygwin* path of the *Windows* version of Python.  For example, if the Windows
+version of Python is installed to ``C:\Python27\python``, then you can use the
+following command to set up the required WIN_PATH environment variable: ::
+
+   $ export WIN_PYTHON=/cygdrive/c/Python27/python
+
+For msysgit, add Windows version of Python to the system PATH.
+
+Next, in the Cygwin or msysgit bash shell, run the following command to set the
+environment variables for waf:
 
 ::
 
@@ -345,11 +355,17 @@ Next, in cygwin, run the following command to set the environment variables for 
    those compilers are available. It is your job to make sure that you are
    using an already installed Visual Studio compiler.
 
-Now, you can build bde using ``cygwaf.sh`` in cygwin:
+Now, you can build bde using ``waf`` in msysgit or ``cygwaf.sh`` in cygwin:
 
 ::
 
    $ cd <bde>
+
+   # in msysgit
+   $ python configure
+   $ python build
+
+   # in Cygwin
    $ cygwaf.sh configure
    $ cygwaf.sh build
 

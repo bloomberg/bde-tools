@@ -307,15 +307,24 @@ $ waf build
 </div>
 <div class="section" id="use-bde-setwafenv-py-to-build-bde-on-windows">
 <span id="tutorials-setwafenv-bde-windows"></span><h2>Use bde_setwafenv.py to Build BDE on Windows<a class="headerlink" href="#use-bde-setwafenv-py-to-build-bde-on-windows" title="Permalink to this headline">¶</a></h2>
-<p>bde_setwafenv.py can be used on Windows through cygwin.</p>
+<p>bde_setwafenv.py can be used on Windows through Cygwin or Git for Windows (msysgit).</p>
 <p><strong>Prerequisites</strong>:</p>
 <ul class="simple">
-<li><a class="reference external" href="https://www.cygwin.com/">cygwin</a></li>
+<li><a class="reference external" href="https://www.cygwin.com/">Cygwin</a> or <a class="reference external" href="https://msysgit.github.io/">Git for Windows (msysgit)</a></li>
 <li>Windows and Cygwin versions of Python 2.6, 2.7, or 3.3+</li>
 </ul>
 <p>First, make sure you have cloned the bde and bde-tools repositories, and that
 you have added <code class="docutils literal"><span class="pre">bde-tools/bin</span></code> to your system&#8217;s PATH.</p>
-<p>Next, in cygwin, run the following command to set the environment variables for waf:</p>
+<p>Then, For Cygwin, export the WIN_PATH environment variable to point to the
+<em>Cygwin</em> path of the <em>Windows</em> version of Python.  For example, if the Windows
+version of Python is installed to <code class="docutils literal"><span class="pre">C:\Python27\python</span></code>, then you can use the
+following command to set up the required WIN_PATH environment variable:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ export WIN_PYTHON=/cygdrive/c/Python27/python
+</pre></div>
+</div>
+<p>For msysgit, add Windows version of Python to the system PATH.</p>
+<p>Next, in the Cygwin or msysgit bash shell, run the following command to set the
+environment variables for waf:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ bde_setwafenv.py list  # list available compilers on windows
 $ eval $(bde_setwafenv.py -i ~/tmp/bde-install -c cl-18.00) # use visual studio 2013
 </pre></div>
@@ -327,8 +336,14 @@ it uses a list of hard-coded available compilers on windows and do not check
 those compilers are available. It is your job to make sure that you are
 using an already installed Visual Studio compiler.</p>
 </div>
-<p>Now, you can build bde using <code class="docutils literal"><span class="pre">cygwaf.sh</span></code> in cygwin:</p>
+<p>Now, you can build bde using <code class="docutils literal"><span class="pre">waf</span></code> in msysgit or <code class="docutils literal"><span class="pre">cygwaf.sh</span></code> in cygwin:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ cd &lt;bde&gt;
+
+# in msysgit
+$ python configure
+$ python build
+
+# in Cygwin
 $ cygwaf.sh configure
 $ cygwaf.sh build
 </pre></div>
