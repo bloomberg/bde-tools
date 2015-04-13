@@ -28,45 +28,57 @@ class RepoContextLoader(object):
         """
         self.repo_context = repocontext.RepoContext()
         self.repo_context.root_path = root_path
-
-        self.repo_layout = repolayoututil.get_repo_layout(root_path)
         self.log_start = log_start
         self.log_end = log_end
 
     def load(self):
         """Load the repo context.
         """
-        for gd in self.repo_layout.group_dirs:
-            gd_path = os.path.join(self.repo_context.root_path, gd)
+        root_path = self.repo_context.root_path
+        if os.path.isfile(os.path.join(root_path,
+                                       '.bdeworkspaceconfig')):
+            dirs = next(os.walk(root_path))[1]
+            for d in dirs:
+                dir_path = os.path.join(root_path, d)
+                if repoloadutil.is_bde_repo_path(dir_path):
+                    self.log_start('Entering repo')
+                    self.log_end(os.path.basename(dir_path), color='YELLOW')
+                    self.load_repo(dir_path)
+        else:
+            self.load_repo(root_path)
+        self._load_uor_doc_and_versions()
+
+    def load_repo(self, repo_path):
+        repo_layout = repolayoututil.get_repo_layout(repo_path)
+        for gd in repo_layout.group_dirs:
+            gd_path = os.path.join(repo_path, gd)
             if os.path.isdir(gd_path):
                 self._load_repo_package_groups(gd_path)
 
-        for sad in self.repo_layout.stand_alone_package_dirs:
-            sad_path = os.path.join(self.repo_context.root_path, sad)
+        for sad in repo_layout.stand_alone_package_dirs:
+            sad_path = os.path.join(repo_path, sad)
             if os.path.isdir(sad_path):
                 self._load_repo_stdalone_packages(
                     sad_path, repounits.PackageType.PACKAGE_STAND_ALONE)
 
-        for sad in self.repo_layout.app_package_dirs:
-            sad_path = os.path.join(self.repo_context.root_path, sad)
+        for sad in repo_layout.app_package_dirs:
+            sad_path = os.path.join(repo_path, sad)
             if os.path.isdir(sad_path):
                 self._load_repo_stdalone_packages(
                     sad_path, repounits.PackageType.PACKAGE_APPLICATION)
 
-        for sad in self.repo_layout.third_party_package_dirs:
-            sad_path = os.path.join(self.repo_context.root_path, sad)
+        for sad in repo_layout.third_party_package_dirs:
+            sad_path = os.path.join(repo_path, sad)
             if os.path.isdir(sad_path):
-                self._load_repo_tp_packages(sad_path)
+                self._load_repo_thirdparty_dirs(sad_path)
 
-        for pg in self.repo_layout.group_abs_dirs:
+        for pg in repo_layout.group_abs_dirs:
             if pg == '.':
-                pg_path = self.repo_context.root_path
+                pg_path = repo_path
             else:
-                pg_path = os.path.join(self.repo_context.root_path, pg)
+                pg_path = os.path.join(repo_path, pg)
             if repoloadutil.is_package_group_path(pg_path):
                 self._load_repo_one_package_group(pg_path)
-
-        self._load_uor_doc_and_versions()
 
     def _load_repo_package_groups(self, path):
         dirs = next(os.walk(path))[1]
@@ -109,7 +121,7 @@ class RepoContextLoader(object):
             self.repo_context.add_unit(package)
             self.log_end('ok')
 
-    def _load_repo_tp_packages(self, path):
+    def _load_repo_thirdparty_dirs(self, path):
         dirs = next(os.walk(path))[1]
         tp_paths = []
         for d in dirs:

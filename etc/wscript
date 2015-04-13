@@ -32,21 +32,6 @@ def options(ctx):
     ctx.load('bdebld.waf.wscript', tooldir=_get_tools_path(ctx))
 
 
-class PreConfigure(Configure.ConfigurationContext):
-    cmd = 'configure'
-
-    def __init__(self, **kw):
-        global out
-
-        build_dir = os.getenv('BDE_WAF_BUILD_DIR')
-        if build_dir:
-            out = build_dir
-
-        Logs.debug('config: build dir: ' + out)
-
-        super(PreConfigure, self).__init__(**kw)
-
-
 def configure(ctx):
     ctx.load('bdebld.waf.wscript', tooldir=_get_tools_path(ctx))
 

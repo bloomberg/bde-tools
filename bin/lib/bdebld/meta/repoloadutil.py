@@ -162,6 +162,13 @@ def is_third_party_path(path):
     return os.path.isfile(os.path.join(path, 'wscript'))
 
 
+def is_bde_repo_path(path):
+    """Determine whether a path is the root of a BDE-style repo.
+    """
+    basename = os.path.basename(path)
+    return basename not in ('build', '_build')
+
+
 def _load_opts(path):
     """Load option rules from a file.
     """

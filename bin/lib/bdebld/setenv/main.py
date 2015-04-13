@@ -107,7 +107,7 @@ def print_envs(options, info):
     print('export BDE_WAF_UPLID=%s' % uplid)
     print('export BDE_WAF_UFID=%s' % ufid)
     id_str = '%s-%s' % (uplid, ufid)
-    print('export BDE_WAF_BUILD_DIR="%s"' % id_str)
+    print('export BDE_WAF_BUILD_DIR="_build/%s"' % id_str)
     print('export WAFLOCK=".lock-waf-%s"' % id_str)
 
     if os_type != 'windows':

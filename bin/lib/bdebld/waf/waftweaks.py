@@ -9,11 +9,27 @@ import sys
 import tempfile
 
 from waflib import Build
+from waflib import Configure
 from waflib import Errors
 from waflib import Logs
+from waflib import Options
 from waflib import Task
 from waflib import TaskGen
 from waflib import Utils
+
+
+class PreConfigure(Configure.ConfigurationContext):
+    cmd = 'configure'
+
+    def __init__(self, **kw):
+        build_dir = os.getenv('BDE_WAF_BUILD_DIR')
+        print build_dir
+        if build_dir:
+            Options.options.out = build_dir
+            self.fout_dir = build_dir
+            Logs.debug('config: build dir: ' + build_dir)
+
+        super(PreConfigure, self).__init__(**kw)
 
 
 @TaskGen.feature('c')

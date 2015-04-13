@@ -77,24 +77,24 @@ def get_ufid_cmdline_options():
          {'type': 'choice',
           'default': '64' if sysutil.is_64bit_system() else '32',
           'choices': ('32', '64'),
-          'help': '32 or 64 [default: %default]'}),
+          'help': 'ABI bits (32/64) [default: %default]'}),
         (('build-type',),
          {'type': 'choice',
           'default': 'debug',
           'choices': ('release', 'debug'),
-          'help': "the type of build to produce: 'debug' or 'release' "
+          'help': "the type of build to produce (debug/release) "
           "[default: %default]"}),
         (('library-type',),
          {'type': 'choice',
           'default': 'static',
           'choices': ('static', 'shared'),
-          'help': "the type of libraries to build: 'shared' or 'static' "
+          'help': "the type of libraries to build (shared/static) "
           "[default: %default]"}),
         (('assert-level',),
          {'type': 'choice',
           'default': 'none',
           'choices': ('none', 'safe', 'safe2'),
-          'help': "bsls_assert level: 'none', 'safe' or 'safe2' "
+          'help': "bsls_assert level (none/safe/safe2) "
           "[default: %default]"}),
         (('noexception',),
          {'action': 'store_true',

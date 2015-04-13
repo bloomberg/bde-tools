@@ -170,9 +170,10 @@ def options(opt):
     grp.add_option('--test', type='choice',
                    choices=('none', 'build', 'run'),
                    default='none',
-                   help="'none': don't build or run tests" +
-                   ", 'build': build tests but don't run them" +
-                   ", 'run': build and run tests [default: %default]",
+                   help="Whether to build and run test drivers "
+                   "(none/build/run). none: don't build or run tests" +
+                   ", build: build tests but don't run them" +
+                   ", run: build and run tests [default: %default]",
                    dest='test')
 
     grp.add_option('--test-v', type='int', default=0,
@@ -199,7 +200,7 @@ def options(opt):
 
     grp.add_option('--valgrind-tool', type='choice', default='memcheck',
                    choices=('memcheck', 'helgrind', 'drd'),
-                   help='use valgrind tool: memchk, helgrind, or drd '
+                   help='use valgrind tool (memchk/helgrind/drd) '
                    '[default: %default]',
                    dest='valgrind_tool')
 
