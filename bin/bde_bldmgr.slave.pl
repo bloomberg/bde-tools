@@ -67,10 +67,12 @@ my $iamwindows = ($^O eq 'MSWin32' || $^O eq 'cygwin');
 my $iammac = ($^O eq 'darwin');
 
 my $pythonprefix="";
+my $pythonprefixsep="";
 my $waf = "waf";
 
 if ($iamwindows) {
     $pythonprefix = "python";
+    $pythonprefixsep = " ";
     $waf          = "e:\\git\\bde-oss-tools\\bin\\waf";
 }
 
@@ -548,7 +550,7 @@ MAIN: {
         my $extraConfigureOptions = "";
 
         if (!$iamwindows) {
-            my $setwafenv = "$pythonprefix $bindir${FS}bde_setwafenv.py -c $compiler -t $target --force_uplid=$uplid";
+            my $setwafenv = "${pythonprefix}${pythonprefixsep}bde_setwafenv.py -c $compiler -t $target --force_uplid=$uplid";
 
             write_logandverbose("Setting up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tsetwafenv=\"$setwafenv\"\n\tPATH=$ENV{PATH}");
 
@@ -583,6 +585,7 @@ MAIN: {
             write_logandverbose("******\n\tcompiler is \"$compiler\"\n\textraConfigureOptions = \"$extraConfigureOptions\"");
 
             $pythonprefix = "e:\\cygwin\\bin\\bash";
+            $pythonprefixsep = " ";
             $waf          = "/c/wafsupport/wf.sh"
         }
 
@@ -595,7 +598,7 @@ MAIN: {
         }
 
         # construct target-specific command arguments
-        write_logandverbose(`$pythonprefix $waf configure $extraConfigureOptions 2>&1`);
+        write_logandverbose(`${pythonprefix}${pythonprefixsep}$waf configure $extraConfigureOptions 2>&1`);
 
         my @cmd = ($waf, 'build');
         unshift @cmd, $pythonprefix if $pythonprefix;
