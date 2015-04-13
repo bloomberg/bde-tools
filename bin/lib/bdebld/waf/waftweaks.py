@@ -23,7 +23,6 @@ class PreConfigure(Configure.ConfigurationContext):
 
     def __init__(self, **kw):
         build_dir = os.getenv('BDE_WAF_BUILD_DIR')
-        print build_dir
         if build_dir:
             Options.options.out = build_dir
             self.fout_dir = build_dir
