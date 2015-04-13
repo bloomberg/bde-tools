@@ -420,7 +420,7 @@ directory:</p>
 </div>
 </div>
 <div class="section" id="handling-external-dependencies-using-pkg-config">
-<h2>Handling External Dependencies Using Pkg-config<a class="headerlink" href="#handling-external-dependencies-using-pkg-config" title="Permalink to this headline">¶</a></h2>
+<span id="waf-pkgconfig"></span><h2>Handling External Dependencies Using Pkg-config<a class="headerlink" href="#handling-external-dependencies-using-pkg-config" title="Permalink to this headline">¶</a></h2>
 <p>The dependencies of a package group are specified in the
 <a class="reference internal" href="bde_repo.html#bde-repo-dep"><span>Dep File</span></a>. By default, waf will look for the dependencies of a
 <a class="reference internal" href="bde_repo.html#bde-repo-uor"><span>UOR</span></a> as other UORs within the repository. Failing that,
@@ -444,6 +444,21 @@ point <code class="docutils literal"><span class="pre">PKG_CONFIG_PATH</span></c
 need to add <code class="docutils literal"><span class="pre">openssl</span></code> as a dependency to <code class="docutils literal"><span class="pre">foo.dep</span></code>. After these three
 steps, waf will automatically determine the build flags required to use Open
 SSL at configuration time.</p>
+</div>
+<div class="section" id="building-multiple-repos-using-workspaces">
+<span id="waf-workspace"></span><h2>Building Multiple Repos Using Workspaces<a class="headerlink" href="#building-multiple-repos-using-workspaces" title="Permalink to this headline">¶</a></h2>
+<p>You have 2 options to work with multiple BDE-style repositories:</p>
+<ol class="arabic simple">
+<li>Install the lower-level libraries first, and build higher level libraries by
+resolving their dependencies using pkg-config (see <a class="reference internal" href="#waf-pkgconfig"><span>Handling External Dependencies Using Pkg-config</span></a>).</li>
+<li>The simpler option is to use workspaces, which allows you to build multiple
+BDE-style repositories in the same way as a single repository by using the
+workspace feature.</li>
+</ol>
+<p>To use the workspace feature, first, create a workspace directory and check out
+the repositories that you want to store in the workspace. Then, simply add an
+(empty) file named <code class="docutils literal"><span class="pre">.bdeworkspaceconfig</span></code> and copy <code class="docutils literal"><span class="pre">bde-tools/etc/wscript</span></code>.</p>
+<p>See <a class="reference internal" href="tutorials.html#tutorials-workspace"><span>Use waf Workspace to Build Multiple BDE-Style Repositories</span></a> for an example.</p>
 </div>
 <div class="section" id="building-on-windows">
 <span id="waf-windows"></span><h2>Building on Windows<a class="headerlink" href="#building-on-windows" title="Permalink to this headline">¶</a></h2>
@@ -558,6 +573,7 @@ $ waf step --files=&#39;groups/bsl/bslstl/.*\.cpp&#39;
 </ul>
 </li>
 <li><a class="reference internal" href="#handling-external-dependencies-using-pkg-config">Handling External Dependencies Using Pkg-config</a></li>
+<li><a class="reference internal" href="#building-multiple-repos-using-workspaces">Building Multiple Repos Using Workspaces</a></li>
 <li><a class="reference internal" href="#building-on-windows">Building on Windows</a></li>
 <li><a class="reference internal" href="#building-on-osx">Building on OSX</a></li>
 <li><a class="reference internal" href="#quick-reference">Quick Reference</a></li>

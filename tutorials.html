@@ -157,6 +157,65 @@ $ waf configure build
 </div>
 <p>See <a class="reference internal" href="setwafenv.html#setwafenv-top"><span>bde_setwafenv.py</span></a> for detailed reference.</p>
 </div>
+<div class="section" id="use-waf-workspace-to-build-multiple-bde-style-repositories">
+<span id="tutorials-workspace"></span><h2>Use waf Workspace to Build Multiple BDE-Style Repositories<a class="headerlink" href="#use-waf-workspace-to-build-multiple-bde-style-repositories" title="Permalink to this headline">¶</a></h2>
+<p>You can you the workspace feature to build multiple BDE-style repositories in
+the same way as a single repository (see <a class="reference internal" href="waf.html#waf-workspace"><span>Building Multiple Repos Using Workspaces</span></a>)</p>
+<p>For example, suppose that you have the following BDE-style repositories that
+that you want to build together: <code class="docutils literal"><span class="pre">bsl-internal</span></code>, <code class="docutils literal"><span class="pre">bde-core</span></code>, and
+<code class="docutils literal"><span class="pre">bde-bb</span></code>.</p>
+<p>First, create a directory to serve as the root of the workspace, say
+<code class="docutils literal"><span class="pre">myworkspace</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ mkdir workspace.
+</pre></div>
+</div>
+<p>Then, check out the repositories that will be part of the workspace:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd myworkspace
+$ git clone &lt;bsl-internal-url&gt;
+$ git clone &lt;bde-core-url&gt;
+$ git clone &lt;bde-bb-url&gt;
+</pre></div>
+</div>
+<p>Next, add a empty file named <code class="docutils literal"><span class="pre">.bdeworkspaceconfig</span></code> and copy
+<code class="docutils literal"><span class="pre">bde-tools/etc/wscript</span></code> to the root of the workspace:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ touch .bdeworkspaceconfig
+$ cp &lt;bde-tools&gt;/etc/wscript .
+</pre></div>
+</div>
+<p>The workspace should now have the following layout:</p>
+<div class="highlight-python"><div class="highlight"><pre>myworkspace
+|
+|-- .bdeworkspaceconfig
+|-- wscript
+|-- bsl-internal
+|   |
+|   |-- wscript
+|   `-- ...      &lt;-- other files in bsl-internal
+|
+|-- bde-core
+|   |
+|   |-- wscript
+|    `-- ...     &lt;-- other files in bde-core
+|
+`-- bde-bb
+    |
+    |-- wscript
+    `-- ...      &lt;-- other files in bde-bb
+</pre></div>
+</div>
+<p>Now, you can build every repository in the workspace together:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ waf configure
+$ waf build
+</pre></div>
+</div>
+<p>bde_setwafenv.py works the same way for a workspace as a regular repository.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must be in the root directory of the workspace to build the workspace.
+If you go into a repository contained in the workspace, any waf commands
+will apply to that repository directly.</p>
+</div>
+</div>
 <div class="section" id="use-bde-setwafenv-py-to-build-an-application-on-top-of-bde">
 <span id="tutorials-setwafenv-bde-app"></span><h2>Use bde_setwafenv.py to Build an Application on Top of BDE<a class="headerlink" href="#use-bde-setwafenv-py-to-build-an-application-on-top-of-bde" title="Permalink to this headline">¶</a></h2>
 <p>First, follow <a class="reference internal" href="#tutorials-setwafenv-bde"><span>Use bde_setwafenv.py to Build BDE</span></a> to create <code class="docutils literal"><span class="pre">~/bdecompilerconfig</span></code>,
@@ -298,6 +357,7 @@ You can download a free version of Visual Studio Express from <a class="referenc
 <li><a class="reference internal" href="#">Tutorials</a><ul>
 <li><a class="reference internal" href="#use-waf-to-build-bde">Use waf to Build BDE</a></li>
 <li><a class="reference internal" href="#use-bde-setwafenv-py-to-build-bde">Use bde_setwafenv.py to Build BDE</a></li>
+<li><a class="reference internal" href="#use-waf-workspace-to-build-multiple-bde-style-repositories">Use waf Workspace to Build Multiple BDE-Style Repositories</a></li>
 <li><a class="reference internal" href="#use-bde-setwafenv-py-to-build-an-application-on-top-of-bde">Use bde_setwafenv.py to Build an Application on Top of BDE</a></li>
 <li><a class="reference internal" href="#use-bde-setwafenv-py-to-build-bde-on-windows">Use bde_setwafenv.py to Build BDE on Windows</a></li>
 </ul>
