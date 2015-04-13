@@ -34,10 +34,11 @@ class Component(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
         has_test_driver (bool): Whether this component has a test driver.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, comp_type=ComponentType.CXX,
+                 has_test_driver=True):
         self.name = name
-        self.type_ = ComponentType.CXX
-        self.has_test_driver = True
+        self.type_ = comp_type
+        self.has_test_driver = has_test_driver
 
     def header(self):
         return self.name + '.h'
@@ -58,27 +59,70 @@ class Component(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
 
 
 class PackageType(object):
-    """This class enumerates over the types of packages.
+    """This class enumerates over the types of BDE Units.
 
     Enumerators:
-        NORMAL: A regular package.
-        PLUS: A special package that doesn't contain BDE-Style components.
-        STAND_ALONE: A package that does not belong to a package group.
-        APPLICATION: A stand-alone package that contains an application.
+        PACKAGE_NORMAL: A regular package.
+        PACKAGE_PLUS: A special package that doesn't contain BDE-Style
+            components.
+        PACKAGE_STAND_ALONE: A package that does not belong to a package group.
+        PACKAGE_APPLICATION: A stand-alone package that contains an
+            application.
     """
-    NORMAL = 0
-    PLUS = 1
-    STAND_ALONE = 2
-    APPLICATION = 3
+    PACKAGE_NORMAL = 0
+    PACKAGE_PLUS = 1
+    PACKAGE_STAND_ALONE = 2
+    PACKAGE_APPLICATION = 3
 
 
-class Package(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
+class UnitType(PackageType):
+    """This class enumerates over the BDE unit types.
+
+    Enumerators:
+        GROUP: A package group.
+        THIRD_PARTY_DIR:  A third-party directory.
+    """
+    GROUP = 4
+    THIRD_PARTY_DIR = 5
+
+
+class UnitTypeCategory(object):
+    """This class defines categories of unit types.
+
+    Class Attributes:
+        UOR_CAT: Types that are considered Units of Release.
+        PACKAGE_STAND_ALONE_CAT: Package types that are stand alone.
+        PACKAGE_INNER_CAT: Package types that must belong to a package group.
+    """
+    UOR_CAT = (UnitType.GROUP, UnitType.PACKAGE_STAND_ALONE,
+               UnitType.PACKAGE_APPLICATION, UnitType.THIRD_PARTY_DIR)
+    PACKAGE_STAND_ALONE_CAT = (UnitType.PACKAGE_APPLICATION,
+                               UnitType.PACKAGE_STAND_ALONE)
+    PACKAGE_INNER_CAT = (UnitType.PACKAGE_NORMAL, UnitType.PACKAGE_PLUS)
+    PACKAGE_CAT = (UnitType.PACKAGE_APPLICATION, UnitType.PACKAGE_STAND_ALONE,
+                   UnitType.PACKAGE_NORMAL, UnitType.PACKAGE_PLUS)
+
+
+class RepoUnit(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
+    """This class represents a BDE Unit.
+
+    A unit is either a package group or a package.
+
+    Attributes:
+        name (str): Name of the unit.
+        path (str): Path to the root of the unit.
+        type_ (UnitType): Type of the unit.
+    """
+    def __init__(self, path, unit_type):
+        self.name = os.path.basename(path)
+        self.path = path
+        self.type_ = unit_type
+
+
+class Package(RepoUnit):
     """This class represents a BDE-style package.
 
     Attributes:
-        name (str): Name of the package.
-        path (str): Path to the root of the package.
-        type_ (PackageType): Type of the package.
         doc (UorDoc): Relevant documentation.
         version (UorVersion): Version of the package.
         mem (set of str): Members of this package.
@@ -89,15 +133,13 @@ class Package(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
             capabilities.
         has_dums (bool): Whether a dums file (containing symbols to dummy out)
             exists.
-        components (set of Component): Components in this Package.
+        components (list of Component): Components in this Package.
         pt_extras (PlusPackageExtras): Extra information for \
             "+" packages.
     """
 
-    def __init__(self, path, type_):
-        self.name = os.path.basename(path)
-        self.path = path
-        self.type_ = type_
+    def __init__(self, path, package_type):
+        super(Package, self).__init__(path, package_type)
         self.doc = None
         self.version = None
         self.mem = set()
@@ -109,10 +151,6 @@ class Package(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
         self.has_dums = False
         self.components = []
         self.pt_extras = None
-
-    def is_stand_alone(self):
-        return (self.type_ == PackageType.APPLICATION or
-                self.type_ == PackageType.STAND_ALONE)
 
 
 class PlusPackageExtras(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
@@ -144,15 +182,14 @@ class PlusPackageExtras(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
         self.c_tests = set()
 
 
-class ThirdPartyPackage(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
-    """This class represents a third-party package.
+class ThirdPartyDir(RepoUnit):
+    """This class represents a third-party directory.
     """
     def __init__(self, path):
-        self.name = os.path.basename(path)
-        self.path = path
+        super(ThirdPartyDir, self).__init__(path, UnitType.THIRD_PARTY_DIR)
 
 
-class PackageGroup(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
+class PackageGroup(RepoUnit):
     """This class represents a BDE-style package group.
 
     Attributes:
@@ -171,8 +208,7 @@ class PackageGroup(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
     """
 
     def __init__(self, path):
-        self.name = os.path.basename(path)
-        self.path = path
+        super(PackageGroup, self).__init__(path, UnitType.GROUP)
         self.doc = None
         self.version = None
         self.mem = set()

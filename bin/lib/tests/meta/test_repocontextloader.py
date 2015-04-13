@@ -1,8 +1,10 @@
 import os
 import unittest
 
+from collections import defaultdict
+
 from bdebld.meta import repocontextloader
-from bdebld.meta import repocontext
+from bdebld.meta import repounits
 
 
 class TestLoader(unittest.TestCase):
@@ -16,19 +18,21 @@ class TestLoader(unittest.TestCase):
         loader.load()
         repo_context = loader.repo_context
 
-        exp_package_groups = set(['gr1', 'gr2', 'gr3', 'eg1'])
-        exp_sa_packages = set(['a_adp1', 'app1'])
-        exp_tp_packages = set(['mytplib'])
-        exp_normal_packages = set(['gr1p1', 'gr3p1', 'gr3p2', 'gr2a+b',
-                                   'gr2b+c'])
+        units = defaultdict(set)
+        for unit in repo_context.units.values():
+            units[unit.type_].add(unit.name)
 
-        self.assertEqual(repo_context.root_path, self.repo_root)
-        self.assertEqual(set(repo_context.package_groups.keys()),
-                         exp_package_groups)
-        self.assertEqual(set(repo_context.packages.keys()),
-                         exp_sa_packages | exp_normal_packages)
-        self.assertEqual(set(repo_context.third_party_packages.keys()),
-                         exp_tp_packages)
+        exp_units = {
+            repounits.UnitType.PACKAGE_NORMAL: set(
+                ['gr1p1', 'gr3p1', 'gr3p2']),
+            repounits.UnitType.PACKAGE_PLUS: set(['gr2a+b', 'gr2b+c']),
+            repounits.UnitType.PACKAGE_APPLICATION: set(['app1']),
+            repounits.UnitType.PACKAGE_STAND_ALONE: set(['a_adp1']),
+            repounits.UnitType.THIRD_PARTY_DIR: set(['mytplib']),
+            repounits.UnitType.GROUP: set(['gr1', 'gr2', 'gr3', 'eg1'])
+        }
+
+        self.assertEqual(dict(units), exp_units)
 
 
 if __name__ == '__main__':

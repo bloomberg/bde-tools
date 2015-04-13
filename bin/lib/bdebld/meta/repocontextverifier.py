@@ -1,10 +1,12 @@
 """Verify the structure of a repository.
 """
 
-from bdebld.meta import graphutil
 from bdebld.common import logutil
-from bdebld.meta import repocontextutil
+
 from bdebld.meta import cpreproc
+from bdebld.meta import graphutil
+from bdebld.meta import repocontextutil
+from bdebld.meta import repounits
 
 
 class RepoContextVerifier(object):
@@ -43,17 +45,18 @@ class RepoContextVerifier(object):
         self._verify_cycles_impl(digraph)
 
     def verify_groups(self):
-        for group_name in self.repo_context.package_groups:
-            self.log_start('Verifying %s' % group_name)
+        for group in (u for u in self.repo_context.units.values() if
+                      u.type_ == repounits.UnitType.GROUP):
+            self.log_start('Verifying %s' % group.name)
             digraph = repocontextutil.get_package_digraph(self.repo_context,
-                                                          group_name)
+                                                          group)
             self._verify_cycles_impl(digraph)
 
     def verify_packages(self):
-        for package_name in self.repo_context.packages:
-            self.log_start('Verifying %s' % package_name)
-            digraph = cpreproc.get_component_digraph(
-                self.repo_context.packages[package_name])
+        for package in (u for u in self.repo_context.units.values() if
+                        u.type_ in repounits.UnitTypeCategory.PACKAGE_CAT):
+            self.log_start('Verifying %s' % package.name)
+            digraph = cpreproc.get_component_digraph(package)
             self._verify_cycles_impl(digraph)
 
     def _verify_cycles_impl(self, digraph):
@@ -61,7 +64,7 @@ class RepoContextVerifier(object):
         if len(cycles) == 0:
             self.log_end('ok')
         else:
-            self.log_end('found cycle(s)')
+            self.log_end('found cycle(s)', color='RED')
             for cycle in cycles:
                 logutil.info('CYCLE: ' + ','.join(cycle))
             self.is_success = False

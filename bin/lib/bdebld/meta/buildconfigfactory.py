@@ -29,9 +29,13 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
 
     build_config = buildconfig.BuildConfig(repo_context.root_path, uplid,
                                            ufid)
+
+    for unit in repo_context.units.values():
+        if unit.type_ == repounits.UnitType.THIRD_PARTY_DIR:
+            build_config.third_party_dirs[unit.name] = unit
+
     uor_dep_graph = repocontextutil.get_uor_digraph(repo_context)
     uor_map = repocontextutil.get_uor_map(repo_context)
-    build_config.third_party_packages = repo_context.third_party_packages
 
     build_config.external_dep = graphutil.find_external_nodes(uor_dep_graph)
 
@@ -71,7 +75,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         oe.results['%s_LOCN' %
                    unit.name.upper().replace('+', '_')] = unit.path
 
-    def load_uor(uor_name):
+    def load_uor(uor):
         # Preserve the existing behavior of loading defs, opts and cap files as
         # bde_build:
         #
@@ -85,7 +89,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         #   followed by its own opts file.
 
         dep_levels = graphutil.levelize(uor_dep_graph,
-                                        uor_dep_graph[uor_name])
+                                        uor_dep_graph[uor.name])
 
         oe = copy.deepcopy(def_oe)
         # We load options in levelized order instead of any topological order
@@ -95,16 +99,18 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         for level in dep_levels:
             for dep_name in sorted(level):
                 if dep_name not in build_config.external_dep and \
-                   dep_name not in build_config.third_party_packages:
+                   dep_name not in build_config.third_party_dirs:
                     dep_uor = uor_map[dep_name]
                     oe.store_option_rules(dep_uor.cap)
                     oe.store_option_rules(dep_uor.defs)
 
-        uor = uor_map[uor_name]
-        if uor_name in repo_context.package_groups:
+        if uor.type_ == repounits.UnitType.GROUP:
             uor_bc = buildconfig.PackageGroupBuildConfig()
+        elif uor.type_ in repounits.UnitTypeCategory.PACKAGE_STAND_ALONE_CAT:
+            uor_bc = buildconfig.StdalonePackageBuildConfig()
         else:
-            uor_bc = buildconfig.SaPackageBuildConfig()
+            assert(False)
+
         uor_bc.name = uor.name
         uor_bc.path = uor.path
         uor_bc.doc = uor.doc
@@ -124,7 +130,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         int_oe = copy.deepcopy(oe)
         export_oe.evaluate()
         if export_oe.results.get('CAPABILITY') == 'NEVER':
-            logutil.info('skipped %s' % uor_name)
+            logutil.info('Skipped non-supported UOR %s' % uor.name)
             return
 
         int_oe.store_option_rules(uor.opts)
@@ -133,7 +139,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         # package groups.
         int_oe_copy = copy.deepcopy(int_oe)
         if debug_keys:
-            logutil.info('--Evaluating %s' % uor_name)
+            logutil.info('--Evaluating %s' % uor.name)
         int_oe.evaluate(debug_keys)
 
         # Remove export flags of an uor's dependencies from its own export
@@ -146,16 +152,18 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
             build_flags_parser, int_oe.results, export_oe.results,
             dep_flags.export_flags, dep_flags.export_libs)
 
-        if uor_name in repo_context.package_groups:
+        if uor.type_ == repounits.UnitType.GROUP:
             load_package_group(uor, uor_bc, int_oe_copy)
-        elif uor_name in repo_context.packages:
+        elif uor.type_ in repounits.UnitTypeCategory.PACKAGE_STAND_ALONE_CAT:
             load_sa_package(uor, uor_bc)
+        else:
+            assert(False)
 
     def load_sa_package(package, package_bc):
         package_bc.components = package.components
         package_bc.type_ = package.type_
         package_bc.has_dums = package.has_dums
-        build_config.sa_packages[package_bc.name] = package_bc
+        build_config.stdalone_packages[package_bc.name] = package_bc
 
     def load_package_group(group, group_bc, oe):
         skipped_packages = set()
@@ -168,7 +176,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         build_config.package_groups[group_bc.name] = group_bc
 
     def load_normal_package(package_name, oe):
-        package = repo_context.packages[package_name]
+        package = repo_context.units[package_name]
         int_oe = copy.deepcopy(oe)
         int_oe.store_option_rules(package.opts)
         int_oe.store_option_rules(package.cap)
@@ -179,13 +187,13 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         int_oe.evaluate(debug_keys)
 
         if int_oe.results.get('CAPABILITY') == 'NEVER':
-            logutil.info('skipped %s' % package_name)
+            logutil.info('Skipped non-supported package %s' % package_name)
             return False
 
-        if package.type_ == repounits.PackageType.PLUS:
+        if package.type_ == repounits.PackageType.PACKAGE_PLUS:
             package_bc = buildconfig.PlusPackageBuildConfig()
         else:
-            package_bc = buildconfig.NormalPackageBuildConfig()
+            package_bc = buildconfig.InnerPackageBuildConfig()
 
         package_bc.name = package.name
         package_bc.path = package.path
@@ -195,7 +203,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
                                                      int_oe.results)
         package_bc.has_dums = package.has_dums
 
-        if package.type_ == repounits.PackageType.PLUS:
+        if package.type_ == repounits.PackageType.PACKAGE_PLUS:
             package_bc.headers = package.pt_extras.headers
             package_bc.cpp_sources = package.pt_extras.cpp_sources
             package_bc.cpp_tests = package.pt_extras.cpp_tests
@@ -203,12 +211,13 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         else:
             package_bc.components = package.components
 
-        build_config.normal_packages[package_name] = package_bc
+        build_config.inner_packages[package_name] = package_bc
         return True
 
-    for uor_name in uor_map:
-        if uor_name not in repo_context.third_party_packages:
-            load_uor(uor_name)
+    for unit in repo_context.units.values():
+        if (unit.type_ in repounits.UnitTypeCategory.UOR_CAT and
+                unit.type_ != repounits.UnitType.THIRD_PARTY_DIR):
+            load_uor(unit)
 
     return build_config
 

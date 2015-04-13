@@ -37,7 +37,7 @@ def load_package_group(path):
     return package_group
 
 
-def load_package(path, type_):
+def load_package(path, package_type):
     """Load a package.
 
     Args:
@@ -47,7 +47,8 @@ def load_package(path, type_):
     Returns:
         A type derived from PackageBase
     """
-    package = repounits.Package(path, type_)
+
+    package = repounits.Package(path, package_type)
     package.mem = set(_load_lsv(
         os.path.join(package.path, 'package',
                      package.name + '.mem')))
@@ -68,7 +69,7 @@ def load_package(path, type_):
     dums_path = os.path.join(package.path, 'package', package.name + '.dums')
     package.has_dums = os.path.isfile(dums_path)
 
-    if package.type_ == repounits.PackageType.PLUS:
+    if package.type_ == repounits.PackageType.PACKAGE_PLUS:
         package.pt_extras = _load_plus_package_extras(package)
     else:
         for component_name in sorted(package.mem):
@@ -89,7 +90,7 @@ def _load_plus_package_extras(package):
     """
 
     def rps(l):
-        return [os.path.relpath(path, package.path) for path in l]
+        return set([os.path.relpath(path, package.path) for path in l])
 
     extras = repounits.PlusPackageExtras()
     if len(package.pub) > 0:
@@ -155,8 +156,8 @@ def is_package_path(path):
     return os.path.isfile(os.path.join(path, 'package', package_name + '.mem'))
 
 
-def is_third_party_package_path(path):
-    """Determine whether a path is the root of a package.
+def is_third_party_path(path):
+    """Determine whether a path is the root of a third party directory.
     """
     return os.path.isfile(os.path.join(path, 'wscript'))
 

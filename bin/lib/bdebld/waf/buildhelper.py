@@ -4,6 +4,8 @@
 import os
 import sys
 
+from waflib import Logs
+
 from bdebld.meta import buildconfig
 from bdebld.meta import buildconfigutil
 from bdebld.meta import graphutil
@@ -61,6 +63,18 @@ class BuildHelper(object):
             prefix = self.ctx.env['PREFIX']
             self.ctx.env['PREFIX'] = prefix.replace('\\', '/')
 
+        self.targets = self.ctx.targets.split(',')
+
+        if (any(t.endswith('.t') for t in self.targets) and
+                not self.is_build_tests):
+            msg = """Did you forget to use the option '--test build'?
+You must use the option '--test build' to build test drivers and the option
+'--test run' to run test drivers.  For example, to build the test driver for
+the bdlt_date component:
+
+  $ waf build --target bdlt_date.t --test build"""
+            Logs.warn(msg)
+
     def build(self):
         # Create task generators in topological order so that the actual task
         # build order would appear to be meaningful.  Note that ordering this
@@ -75,13 +89,13 @@ class BuildHelper(object):
                 group = self.build_config.package_groups[uor_name]
                 self.build_package_group(group)
 
-            if uor_name in self.build_config.sa_packages:
-                package = self.build_config.sa_packages[uor_name]
-                self.build_sa_package(package)
+            if uor_name in self.build_config.stdalone_packages:
+                package = self.build_config.stdalone_packages[uor_name]
+                self.build_stdalone_package(package)
 
-            if uor_name in self.build_config.third_party_packages:
-                tp = self.build_config.third_party_packages[uor_name]
-                self.build_tp_package(tp)
+            if uor_name in self.build_config.third_party_dirs:
+                tp = self.build_config.third_party_dirs[uor_name]
+                self.build_thirdparty_dirs(tp)
 
         if self.is_run_tests:
             self.ctx.add_post_fun(bdeunittest.summary)
@@ -101,8 +115,8 @@ class BuildHelper(object):
             buildconfigutil.get_package_digraph(self.build_config, group.name))
 
         for package_name in ordered_package_names:
-            package = self.build_config.normal_packages[package_name]
-            self.build_normal_package(package, group)
+            package = self.build_config.inner_packages[package_name]
+            self.build_inner_package(package, group)
 
         if group.name in self.soname_overrides:
             custom_soname = self.soname_overrides[group.name]
@@ -133,6 +147,81 @@ class BuildHelper(object):
             name=group.name,
             depends_on=[group.name + '_lib', group.name + '.pc'] +
             [p + '_tst' for p in ordered_package_names]
+        )
+
+    def build_stdalone_package(self, package):
+        internal_dep = [d + '_lib' for d in sorted(package.dep)]
+        external_dep = [l.upper() for l in sorted(package.external_dep)]
+        lib_install_path = os.path.join('${PREFIX}', self.install_lib_dir)
+
+        if self.install_flat_include:
+            h_install_path = os.path.join('${PREFIX}', 'include')
+        else:
+            h_install_path = os.path.join('${PREFIX}', 'include', package.name)
+
+        self.build_package_impl(package, internal_dep, external_dep,
+                                lib_install_path, h_install_path)
+
+        depends_on = [
+            package.name + '_lib',
+            package.name + '_tst'
+        ]
+        if package.type_ == repounits.PackageType.PACKAGE_APPLICATION:
+            relpath = os.path.relpath(package.path,
+                                      self.build_config.root_path)
+            package_node = self.ctx.path.make_node(relpath)
+            flags = package.flags
+            if package.has_dums:
+                dums_tg_dep = [package.name + '_dums_build']
+            else:
+                dums_tg_dep = []
+
+            self.ctx(
+                name=package.name + '_app',
+                path=package_node,
+                target=package.name,
+                source=[package.name + '.m.cpp'],
+                features=['cxx', 'cxxprogram'],
+                cflags=flags.cflags,
+                cincludes=flags.cincludes,
+                cxxflags=flags.cxxflags,
+                cxxincludes=flags.cxxincludes,
+                linkflags=flags.linkflags,
+                includes=[package_node],
+                lib=flags.libs,
+                stlib=flags.stlibs,
+                use=[package.name + '_lib'] + dums_tg_dep,
+                uselib=external_dep
+            )
+            depends_on.append(package.name + '_app')
+
+        self.ctx(
+            name=package.name,
+            depends_on=depends_on
+        )
+
+    def build_inner_package(self, package, group):
+        internal_dep = [d + '_lib' for d in sorted(package.dep | group.dep)]
+        external_dep = [l.upper() for l in sorted(group.external_dep)]
+
+        if self.install_flat_include:
+            h_install_path = os.path.join('${PREFIX}', 'include')
+        else:
+            h_install_path = os.path.join('${PREFIX}', 'include', group.name)
+
+        if package.type_ == repounits.PackageType.PACKAGE_PLUS:
+            self.build_plus_package_impl(package, internal_dep, external_dep,
+                                         None, h_install_path)
+        else:
+            self.build_package_impl(package, internal_dep, external_dep,
+                                    None, h_install_path)
+
+        self.ctx(
+            name=package.name,
+            depends_on=[
+                package.name + '_lib',
+                package.name + '_tst'
+            ]
         )
 
     def build_plus_package_impl(self, package, internal_dep, external_dep,
@@ -193,7 +282,6 @@ class BuildHelper(object):
         if any(comp.type_ == repounits.ComponentType.CXX for comp in
                package.components):
             package_features.append('cxx')
-        package_features += self.libtype_features
 
         dums_tg_dep = []
         if package.has_dums:
@@ -264,7 +352,8 @@ class BuildHelper(object):
                         lib=flags.libs,
                         stlib=flags.stlibs,
                         cust_libpaths=flags.libpaths,
-                        use=[package.name + '_lib'] + dums_tg_dep,
+                        use=[package.name + '_lib'] + internal_dep + \
+                            dums_tg_dep,
                         uselib=external_dep
                     )
                 else:
@@ -290,85 +379,10 @@ class BuildHelper(object):
             h_install_path,
             [os.path.join(relpath, c.name + '.h') for c in package.components])
 
-    def build_normal_package(self, package, group):
-        internal_dep = [d + '_lib' for d in sorted(package.dep | group.dep)]
-        external_dep = [l.upper() for l in sorted(group.external_dep)]
-
-        if self.install_flat_include:
-            h_install_path = os.path.join('${PREFIX}', 'include')
-        else:
-            h_install_path = os.path.join('${PREFIX}', 'include', group.name)
-
-        if package.type_ == repounits.PackageType.PLUS:
-            self.build_plus_package_impl(package, internal_dep, external_dep,
-                                         None, h_install_path)
-        else:
-            self.build_package_impl(package, internal_dep, external_dep,
-                                    None, h_install_path)
-
-        self.ctx(
-            name=package.name,
-            depends_on=[
-                package.name + '_lib',
-                package.name + '_tst'
-            ]
-        )
-
-    def build_tp_package(self, third_party):
+    def build_thirdparty_dirs(self, third_party):
         relpath = os.path.relpath(third_party.path,
                                   self.build_config.root_path)
         self.ctx.recurse(relpath)
-
-    def build_sa_package(self, package):
-        internal_dep = [d + '_lib' for d in sorted(package.dep)]
-        external_dep = [l.upper() for l in sorted(package.external_dep)]
-        lib_install_path = os.path.join('${PREFIX}', self.install_lib_dir)
-
-        if self.install_flat_include:
-            h_install_path = os.path.join('${PREFIX}', 'include')
-        else:
-            h_install_path = os.path.join('${PREFIX}', 'include', package.name)
-
-        self.build_package_impl(package, internal_dep, external_dep,
-                                lib_install_path, h_install_path)
-
-        depends_on = [
-            package.name + '_lib',
-            package.name + '_tst'
-        ]
-        if package.type_ == repounits.PackageType.APPLICATION:
-            relpath = os.path.relpath(package.path,
-                                      self.build_config.root_path)
-            package_node = self.ctx.path.make_node(relpath)
-            flags = package.flags
-            if package.has_dums:
-                dums_tg_dep = [package.name + '_dums_build']
-            else:
-                dums_tg_dep = []
-
-            self.ctx(
-                name=package.name + '_app',
-                path=package_node,
-                target=package.name,
-                source=[package.name + '.m.cpp'],
-                features=['cxx', 'cxxprogram'],
-                cflags=flags.cflags,
-                cincludes=flags.cincludes,
-                cxxflags=flags.cxxflags,
-                cxxincludes=flags.cxxincludes,
-                linkflags=flags.linkflags,
-                includes=[package_node],
-                lib=flags.libs,
-                stlib=flags.stlibs,
-                use=[package.name + '_lib'] + dums_tg_dep,
-                uselib=external_dep
-            )
-            depends_on.append(package.name + '_app')
-
-        self.ctx(
-            name=package.name,
-            depends_on=depends_on
-        )
 
     def gen_pc_file(self, uor):
         # The reason for using "vc" as the output directory storing .pc files
@@ -406,6 +420,18 @@ class BuildHelper(object):
         )
 
     def export_third_party_flags(self):
+        """Export build flags that may be used by third-party directories.
+
+        Third-party directories should be built using the same build
+        configuration as BDE units.
+
+        This function exports the following variables to the build context
+        environment that should be used by the wscript inside of third-party
+        directories:
+
+        - ``BDE_THIRD_PARTY_CFLAGS``
+        - ``BDE_THIRD_PARTY_CXXFLAGS``
+        """
 
         def filter_cflags(cflags):
             # Since we don't own the source code from third-party packages, do

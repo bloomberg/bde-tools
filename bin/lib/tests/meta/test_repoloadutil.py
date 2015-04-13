@@ -37,7 +37,8 @@ class TestRepoContextLoaderUtil(unittest.TestCase):
 
     def test_load_package(self):
         path = os.path.join(self.repo_root, 'groups', 'gr3', 'gr3p1')
-        package = repoloadutil.load_package(path, repounits.PackageType.NORMAL)
+        package = repoloadutil.load_package(
+            path, repounits.PackageType.PACKAGE_NORMAL)
 
         opts_str = """*                   _   OPTS_FILE       = gr3p1.opts
 
@@ -52,56 +53,53 @@ class TestRepoContextLoaderUtil(unittest.TestCase):
         cap_str = """ !! unix  _  CAPABILITY = ALWAYS
 """
 
-        expected_opts = self._parse_opts_str(opts_str)
-        expected_cap = self._parse_opts_str(cap_str)
+        exp_package = repounits.Package(path,
+                                        repounits.PackageType.PACKAGE_NORMAL)
+        exp_package.mem = set(['gr3p1_comp1', 'gr3p1_comp2'])
+        exp_package.dep = set(['gr3p2'])
+        exp_package.opts = self._parse_opts_str(opts_str)
+        exp_package.cap = self._parse_opts_str(cap_str)
+        exp_package.has_dums = True
+        exp_package.components = [
+            repounits.Component("gr3p1_comp1"),
+            repounits.Component("gr3p1_comp2")
+        ]
 
-        self.assertEqual(package.name, 'gr3p1')
-        self.assertEqual(package.path, path)
-        self.assertEqual(package.type_, repounits.PackageType.NORMAL)
-        self.assertEqual(package.mem, set(['gr3p1_comp1', 'gr3p1_comp2']))
-        self.assertEqual(package.dep, set(['gr3p2']))
-        self.assertEqual(package.opts, expected_opts)
-        self.assertEqual(package.defs, [])
-        self.assertEqual(package.cap, expected_cap)
-        self.assertEqual(package.has_dums, True)
-        self.assertEqual([c.name for c in package.components],
-                         sorted(package.mem))
+        self.assertEqual(package, exp_package)
 
     def test_load_plus_package(self):
         path = os.path.join(self.repo_root, 'groups', 'gr2', 'gr2a+b')
-        package = repoloadutil.load_package(path,
-                                            repounits.PackageType.PLUS)
+        package = repoloadutil.load_package(
+            path, repounits.PackageType.PACKAGE_PLUS)
 
-        self.assertEqual(set(package.pt_extras.headers),
-                         set(['h1.h', 'h2.h', 'subh/h3.h']))
-        self.assertEqual(set(package.pt_extras.cpp_sources),
-                         set(['h1.cpp', 'h2.cpp']))
-        self.assertEqual(set(package.pt_extras.cpp_tests),
-                         set(['test/test1.cpp', 'test/test2.cpp']))
-        self.assertEqual(set(package.pt_extras.c_tests),
-                         set(['test/test3.c']))
+        exp_package = repounits.Package(path,
+                                        repounits.PackageType.PACKAGE_PLUS)
+        exp_package.pt_extras = repounits.PlusPackageExtras()
+        exp_package.pt_extras.headers = set(['h1.h', 'h2.h', 'subh/h3.h'])
+        exp_package.pt_extras.cpp_sources = set(['h1.cpp', 'h2.cpp'])
+        exp_package.pt_extras.cpp_tests = set(['test/test1.cpp',
+                                               'test/test2.cpp'])
+        exp_package.pt_extras.c_tests = set(['test/test3.c'])
+        self.assertEqual(package, exp_package)
 
         path = os.path.join(self.repo_root, 'groups', 'gr2', 'gr2b+c')
-        package = repoloadutil.load_package(path,
-                                            repounits.PackageType.PLUS)
-
-        self.assertEqual(set(package.pt_extras.headers),
-                         set(['h1.h', 'h2.h']))
-        self.assertEqual(set(package.pt_extras.cpp_sources),
-                         set([]))
-        self.assertEqual(set(package.pt_extras.cpp_tests),
-                         set([]))
-        self.assertEqual(set(package.pt_extras.c_tests),
-                         set([]))
-        self.assertEqual(package.has_dums, False)
+        package = repoloadutil.load_package(
+            path, repounits.PackageType.PACKAGE_PLUS)
+        exp_package = repounits.Package(path,
+                                        repounits.PackageType.PACKAGE_PLUS)
+        exp_package.pub = set(['h1.h', 'h2.h'])
+        exp_package.pt_extras = repounits.PlusPackageExtras()
+        exp_package.pt_extras.headers = set(['h1.h', 'h2.h'])
+        self.assertEqual(package, exp_package)
 
     def test_load_component(self):
         path = os.path.join(self.repo_root, 'groups', 'gr3', 'gr3p1')
         component = repoloadutil.load_component('gr3p1_comp1', path)
 
-        self.assertEqual(component.name, 'gr3p1_comp1')
-        self.assertEqual(component.type_, repounits.ComponentType.CXX)
-        self.assertEqual(component.has_test_driver, True)
+        exp_component = repounits.Component('gr3p1_comp1',
+                                            repounits.ComponentType.CXX,
+                                            True)
+        self.assertEqual(component, exp_component)
 
     def test_load_package_group(self):
         opts_str = """*                   _   OPTS_FILE       = gr3.opts
@@ -127,20 +125,16 @@ class TestRepoContextLoaderUtil(unittest.TestCase):
         cap_str = """ !! unix  _  CAPABILITY = ALWAYS
 """
 
-        expected_opts = self._parse_opts_str(opts_str)
-        expected_defs = self._parse_opts_str(defs_str)
-        expected_cap = self._parse_opts_str(cap_str)
-
         path = os.path.join(self.repo_root, 'groups', 'gr3')
         group = repoloadutil.load_package_group(path)
 
-        self.assertEqual(group.name, 'gr3')
-        self.assertEqual(group.path, path)
-        self.assertEqual(group.mem, set(['gr3p1', 'gr3p2']))
-        self.assertEqual(group.dep, set(['gr1', 'gr2', 'extlib1']))
-        self.assertEqual(group.opts, expected_opts)
-        self.assertEqual(group.defs, expected_defs)
-        self.assertEqual(group.cap, expected_cap)
+        exp_group = repounits.PackageGroup(path)
+        exp_group.mem = set(['gr3p1', 'gr3p2'])
+        exp_group.dep = set(['extlib1', 'gr2', 'gr1'])
+        exp_group.opts = self._parse_opts_str(opts_str)
+        exp_group.defs = self._parse_opts_str(defs_str)
+        exp_group.cap = self._parse_opts_str(cap_str)
+        self.assertEqual(group, exp_group)
 
     def _parse_opts_str(self, str_):
         opts_file = StringIO(str_)

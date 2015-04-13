@@ -21,7 +21,7 @@ def add_cmdline_options(opt):
                    dest='extract_nodes')
 
     grp.add_option('--no-trans-reduce', action='store_false', default=True,
-                   help='perform transitive reduction on graph',
+                   help='do not perform transitive reduction on graph',
                    dest='trans_reduce')
 
     grp.add_option('--open-graph-with', type='string',
@@ -69,12 +69,12 @@ class GraphHelper(object):
             return
 
         package = None
-        if self.ctx.targets in self.build_config.sa_packages:
-            package = self.build_config.sa_packages[self.ctx.targets]
-        elif self.ctx.targets in self.build_config.normal_packages:
-            package = self.build_config.normal_packages[self.ctx.targets]
+        if self.ctx.targets in self.build_config.stdalone_packages:
+            package = self.build_config.stdalone_packages[self.ctx.targets]
+        elif self.ctx.targets in self.build_config.inner_packages:
+            package = self.build_config.inner_packages[self.ctx.targets]
 
-        if not package or package.type_ == repounits.PackageType.PLUS:
+        if not package or package.type_ == repounits.PackageType.PACKAGE_PLUS:
             Logs.warn('Graph target must be either empty, '
                       'a package group, or a package that is not '
                       'a + package.')

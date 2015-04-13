@@ -1,23 +1,27 @@
 """Aggregate Repository structure and metadata
 """
 
+from bdebld.meta import repoerror
+
 
 class RepoContext(object):
     """This class represents the structure of a repository.
 
     Attributes:
-        package_groups (dict of str to PackageGroup): Map of names to package
-            groups.
-        packages (dict of str to Package): Map of names to packages.
-        third_party_packages (dict of str to ThirdPartyPackage): Map of names
-            to third party packages.
+        units (dict of str to Unit): Map of names to unit.
     """
 
     def __init__(self):
         self.root_path = None
-        self.package_groups = {}
-        self.packages = {}
-        self.third_party_packages = {}
+        self.units = {}
+
+    def add_unit(self, unit):
+        if unit.name in self.units:
+            msg = '"%s" is redefined at %s. Previously defined at %s' % (
+                unit.name, unit.path, self.units[unit.name].path)
+            raise repoerror.DuplicateUnitError(msg)
+
+        self.units[unit.name] = unit
 
 
 # -----------------------------------------------------------------------------

@@ -6,31 +6,39 @@ import sys
 
 from waflib import Logs
 
+from bdebld.common import sysutil
 from bdebld.meta import buildconfigfactory
 from bdebld.meta import buildflagsparser
 from bdebld.meta import optionsutil
 from bdebld.meta import repocontextloader
 from bdebld.meta import repocontextverifier
 
-from bdebld.common import sysutil
-
 
 class ConfigureHelper(object):
 
-    def __init__(self, ctx, ufid, uplid):
+    def __init__(self, ctx, ufid, effective_uplid, actual_uplid):
         self.ctx = ctx
         self.ufid = ufid
-        self.uplid = uplid
+        self.uplid = effective_uplid
+        self.actual_uplid = actual_uplid
 
     def configure(self):
         self.ctx.msg('Prefix', self.ctx.env['PREFIX'])
-        self.ctx.msg('Uplid', self.uplid)
+        if self.uplid == self.actual_uplid:
+            self.ctx.msg('Uplid', self.uplid)
+        else:
+            self.ctx.msg('Uplid - effective (this is *used*):',
+                         str(self.uplid) + ' (from BDE_WAF_UPLID)',
+                         color='YELLOW')
+            self.ctx.msg('Uplid - actual (this is *not* used):',
+                         self.actual_uplid, color='YELLOW')
 
         if os.getenv('BDE_WAF_UFID'):
-            ufid_origin_str = ' (from BDE_WAF_UFID)'
+            self.ctx.msg('Ufid',
+                         str(self.ufid) + ' (from BDE_WAF_UFID)')
         else:
-            ufid_origin_str = ''
-        self.ctx.msg('Ufid', str(self.ufid) + ufid_origin_str)
+            self.ctx.msg('Ufid', self.ufid)
+
         if self.ctx.options.verbose >= 1:
             self.ctx.msg('OS type', self.uplid.os_type)
             self.ctx.msg('OS name', self.uplid.os_name)
@@ -70,9 +78,9 @@ class ConfigureHelper(object):
         print_list('Configured package groups',
                    self.build_config.package_groups)
         print_list('Configured stand-alone packages',
-                   self.build_config.sa_packages)
+                   self.build_config.stdalone_packages)
         print_list('Configured third-party packages',
-                   self.build_config.third_party_packages)
+                   self.build_config.third_party_dirs)
         print_list('Loading external dependencies',
                    self.build_config.external_dep)
 
@@ -125,11 +133,9 @@ class ConfigureHelper(object):
         lib_suffix = self.ctx.options.lib_suffix
         for lib in self.build_config.external_dep:
             actual_lib = lib + str(lib_suffix or '')
-
-            help_str = """failed to configure the library using pkg-config
-
-"%s.pc" maybe missing from "PKG_CONFIG_PATH"; otherwise, please see config.log
-in the build output directory for details.""" % \
+            help_str = """failed to find the library using pkg-config
+Maybe "%s.pc" is missing from "PKG_CONFIG_PATH"? Inspect config.log in the
+build output directory for details.""" % \
                 actual_lib
             self.ctx.check_cfg(
                 package=actual_lib,
@@ -204,7 +210,7 @@ in the build output directory for details.""" % \
         E.g., we can set 'BDE_BSL_SONAME' to 'robo20150101bsl' to set the
         SONAME of the shared object built for the package group 'bsl'.
         """
-        uor_names = list(self.build_config.sa_packages.keys()) + \
+        uor_names = list(self.build_config.stdalone_packages.keys()) + \
             list(self.build_config.package_groups.keys())
 
         soname_overrides = {}

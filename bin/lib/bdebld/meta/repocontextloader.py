@@ -44,14 +44,14 @@ class RepoContextLoader(object):
         for sad in self.repo_layout.stand_alone_package_dirs:
             sad_path = os.path.join(self.repo_context.root_path, sad)
             if os.path.isdir(sad_path):
-                self._load_repo_sa_packages(
-                    sad_path, repounits.PackageType.STAND_ALONE)
+                self._load_repo_stdalone_packages(
+                    sad_path, repounits.PackageType.PACKAGE_STAND_ALONE)
 
         for sad in self.repo_layout.app_package_dirs:
             sad_path = os.path.join(self.repo_context.root_path, sad)
             if os.path.isdir(sad_path):
-                self._load_repo_sa_packages(
-                    sad_path, repounits.PackageType.APPLICATION)
+                self._load_repo_stdalone_packages(
+                    sad_path, repounits.PackageType.PACKAGE_APPLICATION)
 
         for sad in self.repo_layout.third_party_package_dirs:
             sad_path = os.path.join(self.repo_context.root_path, sad)
@@ -82,21 +82,20 @@ class RepoContextLoader(object):
     def _load_repo_one_package_group(self, path):
         self.log_start('Loading %s' % os.path.basename(path))
         package_group = repoloadutil.load_package_group(path)
-        self.repo_context.package_groups[package_group.name] = \
-            package_group
+        self.repo_context.add_unit(package_group)
 
         for package_name in package_group.mem:
             package_path = os.path.join(package_group.path, package_name)
             if os.path.basename(package_path).find('+') >= 0:
                 package = repoloadutil.load_package(
-                    package_path, repounits.PackageType.PLUS)
+                    package_path, repounits.PackageType.PACKAGE_PLUS)
             else:
                 package = repoloadutil.load_package(
-                    package_path, repounits.PackageType.NORMAL)
-            self.repo_context.packages[package.name] = package
+                    package_path, repounits.PackageType.PACKAGE_NORMAL)
+            self.repo_context.add_unit(package)
         self.log_end('ok')
 
-    def _load_repo_sa_packages(self, path, type_):
+    def _load_repo_stdalone_packages(self, path, type_):
         dirs = next(os.walk(path))[1]
         package_paths = []
         for d in dirs:
@@ -107,7 +106,7 @@ class RepoContextLoader(object):
         for path in package_paths:
             self.log_start('Loading %s' % os.path.basename(path))
             package = repoloadutil.load_package(path, type_)
-            self.repo_context.packages[package.name] = package
+            self.repo_context.add_unit(package)
             self.log_end('ok')
 
     def _load_repo_tp_packages(self, path):
@@ -115,14 +114,13 @@ class RepoContextLoader(object):
         tp_paths = []
         for d in dirs:
             dir_path = os.path.join(path, d)
-            if repoloadutil.is_third_party_package_path(dir_path):
+            if repoloadutil.is_third_party_path(dir_path):
                 tp_paths.append(dir_path)
 
         for path in tp_paths:
-            third_party = repounits.ThirdPartyPackage(path)
+            third_party = repounits.ThirdPartyDir(path)
             self.log_start('Loading %s' % third_party.name)
-            self.repo_context.third_party_packages[third_party.name] = \
-                third_party
+            self.repo_context.add_unit(third_party)
             self.log_end('ok')
 
     def _load_uor_doc_and_versions(self):
@@ -131,6 +129,7 @@ class RepoContextLoader(object):
         Loading version numbers is done after loading other metadata because
         the version of one uor may refer to that of another.
         """
+
         uor_map = repocontextutil.get_uor_map(self.repo_context)
 
         for uor in uor_map.values():

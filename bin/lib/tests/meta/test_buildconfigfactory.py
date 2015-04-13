@@ -37,7 +37,7 @@ class TestBuildConfig(unittest.TestCase):
             optiontypes.Uplid.from_str('unix-linux-x86_64-3.2.0-gcc-4.7.2'),
             optiontypes.Ufid.from_str('dbg_mt_exc'), self.default_rules)
 
-        self.assertEqual(set(p for p in build_config.normal_packages),
+        self.assertEqual(set(p for p in build_config.inner_packages),
                          set(['gr1p1']))
 
         self.assertEqual(set(g for g in build_config.package_groups),

@@ -4,9 +4,9 @@
 
 def get_uor_dict(build_config):
     uors = {}
-    uors.update(build_config.sa_packages)
+    uors.update(build_config.stdalone_packages)
     uors.update(build_config.package_groups)
-    uors.update(build_config.third_party_packages)
+    uors.update(build_config.third_party_dirs)
     return uors
 
 
@@ -31,7 +31,7 @@ def get_package_digraph(build_config, package_group_name):
     group = build_config.package_groups[package_group_name]
     package_dgraph = {}
     for name in group.mem:
-        package = build_config.normal_packages[name]
+        package = build_config.inner_packages[name]
         package_dgraph[name] = package.dep & group.mem
 
     return package_dgraph

@@ -17,34 +17,35 @@ class BuildConfig(mixins.BasicEqualityMixin):
     instead of all of the option rules.
 
     Attributes:
+        root_path (str): Path to the root of the repository.
         uplid (Uplid): Platform ID.
         ufid (Ufid): Configuration flag ID.
-        external_deps (set of str): External dependencies.
-        third_party_packages (dict of str to ThirdPartyPackage): Third-party
-            packages.
-        sa_packages (dict of str to SaPackageBuildConfig): Stand-alone
-            packages build configuration.
-        package_groups (dict of str to PackageGroupBuildConfig): Package
-            groups build configuration.
-        normal_packages (dict of str to NormalPackageBuildConfig): Package
-            build configuration.
         default_flags (BuildFlags): Build flags used by default, which can be
             passed to third_party packages.
         custom_envs (dict of str to str): Environment variables that should be
             set when running build commands.
+        external_deps (set of str): External dependencies.
+        package_groups (dict of str to PackageGroupBuildConfig): Package
+            groups build configuration.
+        stdalone_packages (dict of str to StdalonePackageBuildConfig):
+            Stand-alone packages build configuration.
+        inner_packages (dict of str to InnerPackageBuildConfig): Package
+            build configuration.
+        third_party_dirs (dict of str to ThirdPartyDir): Third-party
+            directories.
     """
 
     def __init__(self, root_path, uplid, ufid):
         self.root_path = root_path
         self.uplid = uplid
         self.ufid = ufid
-        self.external_dep = None
         self.default_flags = None
         self.custom_envs = {}
-        self.third_party_packages = {}
-        self.sa_packages = {}
+        self.external_dep = None
         self.package_groups = {}
-        self.normal_packages = {}
+        self.stdalone_packages = {}
+        self.inner_packages = {}
+        self.third_party_dirs = {}
 
     def to_pickle_str(self):
         return pickle.dumps(self)
@@ -108,12 +109,12 @@ class PlusPackageBuildConfig(PackageBase):
         self.c_tests = set()
 
 
-class NormalPackageBuildConfig(PackageBase):
+class InnerPackageBuildConfig(PackageBase):
     def __init__(self):
         self.components = set()
 
 
-class SaPackageBuildConfig(PackageBase):
+class StdalonePackageBuildConfig(PackageBase):
     def __init__(self):
         self.doc = None
         self.version = None

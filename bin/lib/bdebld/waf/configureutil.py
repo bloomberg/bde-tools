@@ -35,7 +35,7 @@ def make_ufid(ctx):
             Logs.warn(
                 'The specified UFID, "%s", is different from '
                 'the value of the environment variable BDE_WAF_UFID '
-                ', "%s", which will take precedence. ' %
+                ', "%s". The value of BDE_WAF_UFID will take precedence.' %
                 (opts.ufid, env_ufid))
         ufid_str = env_ufid
     elif opts.ufid:
@@ -61,27 +61,36 @@ def make_uplid(ctx):
         ctx (ConfigurationContext): The waf configuration context.
 
     Returns:
-        An Uplid object.
+        effective_ufid, actual_ufid
     """
     os_type, os_name, cpu_type, os_ver = sysutil.get_os_info()
     comp_type, comp_ver = get_comp_info(ctx)
 
-    uplid = optiontypes.Uplid(os_type, os_name, cpu_type, os_ver,
-                              comp_type, comp_ver)
+    actual_uplid = optiontypes.Uplid(os_type, os_name, cpu_type, os_ver,
+                                     comp_type, comp_ver)
 
     env_uplid_str = os.getenv('BDE_WAF_UPLID')
 
     if env_uplid_str:
+        effective_ufid = optiontypes.Uplid.from_str(env_uplid_str)
+    else:
+        effective_ufid = actual_uplid
+
+    return effective_ufid, actual_uplid
+
+
+def get_msvc_version_from_env():
+    """Return the desired Visual Studio version from the environment.
+    """
+    env_uplid_str = os.getenv('BDE_WAF_UPLID')
+    if env_uplid_str:
         env_uplid = optiontypes.Uplid.from_str(env_uplid_str)
 
-        if uplid != env_uplid:
-            Logs.warn(('The identified UPLID, "%s", is different '
-                       'from the environment variable BDE_WAF_UPLID. '
-                       'The the value of BDE_WAF_UPLID, "%s", '
-                       'is used.') % (uplid, env_uplid))
-            uplid = env_uplid
-
-    return uplid
+        if env_uplid.comp_type == 'cl':
+            for v in msvcversions.versions:
+                if v.compiler_version == env_uplid.comp_ver:
+                    return v.product_version
+    return None
 
 
 def get_msvc_version_from_env():

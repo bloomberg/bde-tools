@@ -20,7 +20,7 @@ class OptionsEvaluator(object):
     """Evaluates a list of option rules.
 
     Attributes:
-        results (map): evaluated key value pairs
+        results (dict of str to str): Evaluated key value map.
     """
 
     _OPT_INLINE_COMMAND_RE = re.compile(r'\\"`([^`]+)`\\"')

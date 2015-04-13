@@ -21,6 +21,8 @@ class MemError(RepoError):
     # missing or extra in mem files
     pass
 
+class DuplicateUnitError(RepoError):
+    pass
 
 class PackageDepError(RepoError):
     # Missing package referenced in dep

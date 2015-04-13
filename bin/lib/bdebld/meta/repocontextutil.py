@@ -1,15 +1,16 @@
 """Utilties that operate on RepoContext objects.
 """
 
+from bdebld.meta import repounits
+
 
 def get_uor_map(repo_context):
     uors = {}
-    for p in repo_context.packages.values():
-        if p.is_stand_alone():
-            uors[p.name] = p
 
-    uors.update(repo_context.package_groups)
-    uors.update(repo_context.third_party_packages)
+    for uor in (u for u in repo_context.units.values() if u.type_ in
+                repounits.UnitTypeCategory.UOR_CAT):
+        uors[uor.name] = uor
+
     return uors
 
 
@@ -28,14 +29,15 @@ def get_uor_digraph(repo_context):
     return uor_digraph
 
 
-def get_package_digraph(repo_context, package_group_name):
+def get_package_digraph(repo_context, package_group):
     """Return a directed graph of the packages in a package group.
     """
-    group = repo_context.package_groups[package_group_name]
+    assert(package_group.type_ == repounits.UnitType.GROUP)
     package_dgraph = {}
-    for name in group.mem:
-        package = repo_context.packages[name]
-        package_dgraph[name] = package.dep & group.mem
+    for name in package_group.mem:
+        package = repo_context.units[name]
+        assert(package.type_ in repounits.UnitTypeCategory.PACKAGE_INNER_CAT)
+        package_dgraph[name] = package.dep
 
     return package_dgraph
 

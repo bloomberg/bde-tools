@@ -88,9 +88,9 @@ def configure(ctx):
                       'C compiler version: %s, '
                       'C++ compiler version: %s' % (cc_ver, cxx_ver))
 
-    uplid = configureutil.make_uplid(ctx)
-
-    helper = configurehelper.ConfigureHelper(ctx, ufid, uplid)
+    effective_uplid, actual_uplid = configureutil.make_uplid(ctx)
+    helper = configurehelper.ConfigureHelper(ctx, ufid,
+                                             effective_uplid, actual_uplid)
     helper.configure()
 
 
