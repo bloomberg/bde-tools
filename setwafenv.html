@@ -78,7 +78,7 @@ configuration is a hassle in a way similar to problem 1.</li>
 </ul>
 <p>bde_setwafenv.py is supported on all platform where the <a class="reference internal" href="waf.html#waf-supported-platforms"><span>waf based build
 system is supported</span></a>.</p>
-<p>On windows, bde_setwafenv.py is <em>not supported</em> by the windows command
+<p>On Windows, bde_setwafenv.py is <em>not supported</em> by the windows command
 prompt. Instead, you must use the tool through cygwin.  See the tutorial
 <a class="reference internal" href="tutorials.html#tutorials-setwafenv-bde-windows"><span>Use bde_setwafenv.py to Build BDE on Windows</span></a> for more details.</p>
 </div>
@@ -101,34 +101,36 @@ command.</p>
 bde_setwafenv.py:</p>
 <ul>
 <li><p class="first"><code class="docutils literal"><span class="pre">CXX</span></code></p>
-<p>The path to the C++ compiler</p>
+<p>The path to the C++ compiler.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">BDE_WAF_COMP_FLAGS</span></code></p>
 <p>Extra flags that should be passed to the compiler.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">BDE_WAF_UFID</span></code></p>
-<p>The <a class="reference internal" href="bde_repo.html#ufid"><span>UFID</span></a> to use.</p>
+<p>The <a class="reference internal" href="bde_repo.html#bde-repo-ufid"><span>UFID</span></a> to use.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">BDE_WAF_UPLID</span></code></p>
-<p>The uplid determined by bde_setewafenv. Note that waf will still generate a
+<p>The UPLID determined by bde_setewafenv. Note that waf will still generate a
 uplid based on the current platform and the compiler being used. If the
 generated uplid does not match BDE_WAF_UPLID, then waf will print a warning
 message and proceed to use &#8216;BDE_WAF_UPLID&#8217; as the uplid.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">BDE_WAF_BUILD_DIR</span></code></p>
-<p>The subdirectory under the source root in which build artifacts will be
-generated.  This will be set to the expanded value of
-<code class="docutils literal"><span class="pre">&quot;$BDE_WAF_UPLID-$BDE_WAF_UFID</span></code>, so that build directory is unique for each
-build configuration.</p>
+<p>The path in which build artifacts will be generated.  This will be set to the
+expanded value of <code class="docutils literal"><span class="pre">&quot;$BDE_WAF_UPLID-$BDE_WAF_UFID</span></code>, so that build directory
+is unique for each build configuration.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">WAFLOCK</span></code></p>
 <p>The name of lock file to use, this be unique for each build configuration.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">PREFIX</span></code></p>
-<p>The installation prefix.</p>
+<p>The installation prefix, which will be set to
+<code class="docutils literal"><span class="pre">&lt;root-installation-directory&gt;/$BDE_WAF_UPLID-$BDE_WAF_UFID</span></code>.  See the
+description for the <code class="docutils literal"><span class="pre">-i</span></code> option in the <a class="reference internal" href="#setwafenv-options"><span>Options section</span></a> for more details.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">PKG_CONFIG_PATH</span></code></p>
-<p>The path containing the .pc files for the installed libraries</p>
+<p>The path containing the .pc files for the installed libraries.  This will be
+set to <code class="docutils literal"><span class="pre">$PREFIX/lib/pkgconfig</span></code>.</p>
 </li>
 </ul>
 </div>
@@ -171,14 +173,14 @@ machine.</p>
 of the machine.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">uplid</span></code></p>
-<p>A partial <a class="reference internal" href="bde_repo.html#uplid"><span>UPLID</span></a> mask that matches the platform of the machine.  The
-first machine context that matches in the list will be chosen.</p>
+<p>A partial <a class="reference internal" href="bde_repo.html#bde-repo-uplid"><span>UPLID</span></a> mask that matches the platform of the
+machine.  The first machine context that matches in the list will be chosen.</p>
 </li>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Tip: if you are using bde_setwafenv.py on one machine.  Don&#8217;t define <code class="docutils literal"><span class="pre">hostname</span></code>
-and use <code class="docutils literal"><span class="pre">-</span></code> (a dash) as <code class="docutils literal"><span class="pre">uplid</span></code>.</p>
+<p class="last">Tip: if you are using bde_setwafenv.py on one machine.  Don&#8217;t define
+<code class="docutils literal"><span class="pre">hostname</span></code> and just use <code class="docutils literal"><span class="pre">-</span></code> (a dash) as <code class="docutils literal"><span class="pre">uplid</span></code>.</p>
 </div>
 <p>The <code class="docutils literal"><span class="pre">compilers</span></code> field that contains a list of compilers on the machine.  The
 first compiler in the list will be treated as the default. A compiler is
@@ -221,13 +223,13 @@ set previous by bde_setwafenv.py.</p>
 </ul>
 </div>
 <div class="section" id="options">
-<h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
+<span id="setwafenv-options"></span><h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
 <ul>
 <li><p class="first"><code class="docutils literal"><span class="pre">-c</span></code></p>
 <p>Specify the compiler to use. If not specified, then the default will be used.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">-t</span></code></p>
-<p>Specify the build configuration using a <a class="reference internal" href="bde_repo.html#ufid"><span>UFID</span></a>.</p>
+<p>Specify the build configuration using a <a class="reference internal" href="bde_repo.html#bde-repo-ufid"><span>UFID</span></a>.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">-i</span></code></p>
 <p>Specify the &#8220;root installation directory&#8221;.  This directory is not the same as

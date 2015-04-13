@@ -165,7 +165,7 @@ Configure Options
 
 - ``-t``
 
-  Specify the build configuration using a :ref:`UFID`.
+  Specify the build configuration using a :ref:`bde_repo-ufid`.
 
 - ``--abi-bits`` or ``-a``
 
@@ -420,35 +420,33 @@ directory:
 Handling External Dependencies Using Pkg-config
 ===============================================
 
-The dependencies of a package group are specified in the ``dep``
-metadata file (see `BDE-Style Repository <BDE-Style-Repository>`_ for
-more information on the different types of BDE metadata). By default,
-waf will look for the dependencies of package groups as other packages
-groups with in the repository. Failing that, waf will attempt to resolve
-the dependency using
-`pkg-config <http://www.freedesktop.org/wiki/Software/pkg-config>`_.
-This process has the following benefits:
+The dependencies of a package group are specified in the
+:ref:`bde_repo-dep`. By default, waf will look for the dependencies of a
+:ref:`UOR <bde_repo-uor>` as other UORs within the repository. Failing that,
+waf will attempt to resolve the dependency using `pkg-config
+<http://www.freedesktop.org/wiki/Software/pkg-config>`_.  This process has the
+following benefits:
 
 1. Allow third party dependencies to be specified in the same way as
    internal dependencies.
 
-2. Allow a single source repo to be easily split into multiple repos,
-   without requiring any change to the BDE metadata, by installing
-   libraries in the lower level repos first.
+2. Allow a single source repo to be easily split into multiple repos, without
+   requiring any change to the BDE metadata.  Once a repo is split into two,
+   building the high-level repo requires the lower-level repo be first
+   installed.
 
-The freedesktop site has a
-`guide <http://people.freedesktop.org/~dbn/pkg-config-guide.html>`_ to
-explain how pkg-config works. For pkg-config to find out an explicit
-dependencies, a ``pc`` file must be located in the path pointed to by
-the ``PKG_CONFIG_PATH`` environment variable.
+The freedesktop site has a `guide
+<http://people.freedesktop.org/~dbn/pkg-config-guide.html>`_ to explain how
+pkg-config works. For pkg-config to find an explicit dependency, a ``pc`` file
+of that dependency must be located in the path pointed to by the
+``PKG_CONFIG_PATH`` environment variable.
 
-For example, suppose you want the package group ``foo`` to depend on to
-depend on Open SSL. First, you need to install Open SSL on the system.
-Then, you need to point ``PKG_CONFIG_PATH`` to the path containing
-``openssl.pc``. Finally, you need to add ``openssl`` as a dependency to
-``foo.dep``. After these three simple steps, waf will automatically load
-the compiler and linker flags required to use Open SSL at configuration
-time.
+For example, suppose you want the package group ``foo`` to depend on Open
+SSL. First, you need to install Open SSL on the system.  Then, you need to
+point ``PKG_CONFIG_PATH`` to the path containing ``openssl.pc``. Finally, you
+need to add ``openssl`` as a dependency to ``foo.dep``. After these three
+steps, waf will automatically determine the build flags required to use Open
+SSL at configuration time.
 
 .. _waf-windows:
 

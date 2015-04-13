@@ -80,12 +80,12 @@ is fast, but gyp&#8217;s declarative JSON configuration requires preprocessors f
 doing any deep customization. CMake is perhaps the most mature, but CMake&#8217;s
 domain specific language places certain limitations on what can be integrated
 into the tool and leaves a lot to be desired.</p>
-<p>What made us choose waf over scons is that waf, which began as a fork of Scons,
+<p>What made us choose waf over Scons is that waf, which began as a fork of Scons,
 is <a class="reference external" href="http://www.freehackers.org/~tnagy/bench.txt">designed to be much faster than scons</a>.</p>
 </div>
 <div class="section" id="why-is-there-a-copy-of-waf-in-this-repository">
 <h3>Why is there a copy of waf in this repository?<a class="headerlink" href="#why-is-there-a-copy-of-waf-in-this-repository" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal"><span class="pre">bde-tools</span></code> repository contains customziations that may apply to only the
+<p>The BDE Tools repository contains customziations that may apply to only the
 version of waf bundled in the repo.  Furthermore, waf is also relatively
 lightweight, being only about 100KB in size.</p>
 </div>
@@ -133,7 +133,7 @@ version.</p>
 </table>
 <p>The <code class="docutils literal"><span class="pre">--msvc_version</span></code> accepts the string &#8220;msvc&#8221; followed by a space, followed
 by the Visual Studio internal product version number. For example, to select
-Visual Studio 2013, you can pass the following option to <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code></p>
+Visual Studio 2013, you can pass the following option to <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code>:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ waf configure --msvc_version &quot;msvc 12.0&quot;
 </pre></div>
 </div>

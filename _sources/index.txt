@@ -5,10 +5,11 @@
 
 BDE Tools Documentation
 =======================
-The `BDE tools repository <https://github.com/bloomberg/bde-tools>`_ contains a
-collection of tools to help with developing and building BDE-style libraries
-and applications.
 
+The `BDE Tools repository <https://github.com/bloomberg/bde-tools>`_ contains a
+collection of tools to help with developing and building BDE-style libraries
+and applications, including the `BDE libraries
+<https://github.com/bloomberg/bde>`_.
 
 .. toctree::
    :hidden:

@@ -53,8 +53,7 @@
 <span id="bde-repo-top"></span><h1>BDE-Style Repository<a class="headerlink" href="#bde-style-repository" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>For a repository to be buildable with the <a class="reference external" href="http://github.com/bloomberg/bde-tools/wiki/Waf-Build">Waf-Based Build
-System</a>, it must
+<p>For a repository to be buildable with the <a class="reference internal" href="waf.html#waf-top"><span>Waf Based Build System</span></a>, it must
 have the following characteristics:</p>
 <ul class="simple">
 <li>Must follow <a class="reference internal" href="#bde-repo-physical-layout"><span>BDE Physical Code Organization</span></a>.</li>
@@ -146,7 +145,7 @@ directory, and other types of stand-alone packages can be located in the
 <p>Sometimes, we may want to include source files that don&#8217;t conform to a standard
 BDE-style package.  Often, the reason is to to bundle an existing third-party
 package inside of a repository.</p>
-<p>There are two types of non-conforming packages: plus Package, and third-party
+<p>There are two types of non-conforming packages: plus packages, and third-party
 packages.</p>
 <div class="section" id="plus-packages">
 <h4>Plus Packages<a class="headerlink" href="#plus-packages" title="Permalink to this headline">¶</a></h4>
@@ -258,7 +257,7 @@ ignored, and portions of a line can be commented out using the prefix
 </ul>
 </div>
 <div class="section" id="dep-file">
-<span id="index-1"></span><h3>Dep File<a class="headerlink" href="#dep-file" title="Permalink to this headline">¶</a></h3>
+<span id="bde-repo-dep"></span><span id="index-1"></span><h3>Dep File<a class="headerlink" href="#dep-file" title="Permalink to this headline">¶</a></h3>
 <p>A <code class="docutils literal"><span class="pre">.dep</span></code> file describes the allowed dependencies for either a package
 or package-group. A package-group&#8217;s <code class="docutils literal"><span class="pre">.dep</span></code> file describes the other
 package-groups that components within that package-group may depend.
@@ -314,7 +313,7 @@ combination is <code class="docutils literal"><span class="pre">_</span></code>.
 <p>The <code class="docutils literal"><span class="pre">!!</span></code> command states that the value should completely override any
 existing values for the <code class="docutils literal"><span class="pre">EXC_CXXFLAGS</span></code>, but only if the OS type is
 <code class="docutils literal"><span class="pre">unix</span></code>, the platform is <code class="docutils literal"><span class="pre">SunOS</span></code>, the compiler is cc, and if an
-exception-enabled build was requested with the <code class="docutils literal"><span class="pre">exc</span></code> ufid.</p>
+exception-enabled build was requested with the <code class="docutils literal"><span class="pre">exc</span></code> UFID.</p>
 <p>The first three fields of an option rule are described in more detail in
 the three sections below.</p>
 <p>Each of <code class="docutils literal"><span class="pre">opts</span></code>, <code class="docutils literal"><span class="pre">defs</span></code>, and <code class="docutils literal"><span class="pre">cap</span></code> files uses a predefined set of
@@ -339,23 +338,23 @@ accumulated by previous rules. The following commands are supported:</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>++</td>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">++</span></code></td>
 <td>Add</td>
 <td>Add to end of value, with a leading space. (default)</td>
 </tr>
-<tr class="row-odd"><td>&#8211;</td>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">--</span></code></td>
 <td>Insert</td>
 <td>Add to start of value, with a following space.</td>
 </tr>
-<tr class="row-even"><td>&lt;&lt;</td>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">&gt;&gt;</span></code></td>
 <td>Append</td>
 <td>Add to end of value directly, no leading space.</td>
 </tr>
-<tr class="row-odd"><td>&gt;&gt;</td>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">&lt;&lt;</span></code></td>
 <td>Prepend</td>
 <td>Add to start of value directly, no following space.</td>
 </tr>
-<tr class="row-even"><td>!!</td>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">!!</span></code></td>
 <td>Override</td>
 <td>Completely replace the prior value.</td>
 </tr>
@@ -365,7 +364,7 @@ accumulated by previous rules. The following commands are supported:</p>
 space (<code class="docutils literal"><span class="pre">++</span></code>).</p>
 </div>
 <div class="section" id="uplid">
-<span id="index-2"></span><span id="id1"></span><h4>UPLID<a class="headerlink" href="#uplid" title="Permalink to this headline">¶</a></h4>
+<span id="bde-repo-uplid"></span><span id="index-2"></span><h4>UPLID<a class="headerlink" href="#uplid" title="Permalink to this headline">¶</a></h4>
 <p>The second field of an option rule is a wildcard UPLID. UPLID stands for
 Universal Platform ID. It is used to identify the platform and
 tool-chain used to build the repo. This identifier comprises the
@@ -390,7 +389,7 @@ more parts of the UPLID. When <code class="docutils literal"><span class="pre">*
 that part will be matched.</p>
 </div>
 <div class="section" id="ufid">
-<span id="index-3"></span><span id="id2"></span><h4>UFID<a class="headerlink" href="#ufid" title="Permalink to this headline">¶</a></h4>
+<span id="bde-repo-ufid"></span><span id="index-3"></span><h4>UFID<a class="headerlink" href="#ufid" title="Permalink to this headline">¶</a></h4>
 <p>The third field of an option rule is a UFID. UFID stands for Unified
 Flag ID. It is used to identify the configuration used to build the
 repo. It comprises one or more flags. The following flags are
