@@ -185,7 +185,7 @@ The workspace should now have the following layout:
    |-- bde-core
    |   |
    |   |-- wscript
-   |    `-- ...     <-- other files in bde-core
+   |   `-- ...      <-- other files in bde-core
    |
    `-- bde-bb
        |

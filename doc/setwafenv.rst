@@ -150,7 +150,7 @@ A machine context is matched by the following 2 fields:
 
 - ``hostname``
 
-  An *optional* field that matches regular expression that matches the host name
+  An *optional* field that is a regular expression that matches the host name
   of the machine.
 
 - ``uplid``
@@ -168,7 +168,7 @@ represented by a dictionary having the following fields:
 
 - ``cxx_path``
 
-  The path to the C++ compiler. If this is specified then "path" should not be.
+  The path to the C++ compiler.
 
 - ``c_path``
 
