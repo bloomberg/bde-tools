@@ -41,8 +41,8 @@ bde_setwafenv.py is supported on all platform where the :ref:`waf based build
 system is supported <waf-supported_platforms>`.
 
 On Windows, bde_setwafenv.py is *not supported* by the windows command
-prompt. Instead, you must use the tool through cygwin.  See the tutorial
-:ref:`tutorials-setwafenv-bde-windows` for more details.
+prompt. Instead, you must use the tool through Cygwin or msysgit.  See the
+tutorial :ref:`tutorials-setwafenv-bde-windows` for more details.
 
 How It Works
 ============
