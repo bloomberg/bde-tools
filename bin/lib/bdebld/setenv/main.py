@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import platform
 import re
-import subprocess
 import sys
 import os
 
