@@ -147,7 +147,7 @@ waf build
 </pre></div>
 </div>
 <p>To build and run the test drivers, use:</p>
-<div class="highlight-python"><div class="highlight"><pre>``shell waf build --test run``
+<div class="highlight-python"><div class="highlight"><pre>shell waf build --test run
 </pre></div>
 </div>
 <p>For additional examples, see <a class="reference internal" href="#quick-reference">Quick Reference</a>.</p>
@@ -158,7 +158,7 @@ waf build
 <div class="highlight-python"><div class="highlight"><pre>waf command [options]
 </pre></div>
 </div>
-<p>Waf provides the following commands, which correspond to popular
+<p>Waf provides the following commands, some of which correspond to popular
 Makefile targets in open source projects:</p>
 <ul>
 <li><p class="first"><code class="docutils literal"><span class="pre">configure</span></code></p>
@@ -178,6 +178,10 @@ pkg-config files into the installation destination directory.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">distclean</span></code></p>
 <p>Remove build artifacts and the configuration cache.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">graph</span></code></p>
+<p>Generate a dot dependency diagram for the components in a package, packages
+in a package group, or UORs in a repository.</p>
 </li>
 </ul>
 <p>You can view the list of options available for each command by running:
@@ -199,10 +203,10 @@ location of the wscript file).</p>
 <div class="section" id="configure-options">
 <h4>Configure Options<a class="headerlink" href="#configure-options" title="Permalink to this headline">¶</a></h4>
 <ul>
-<li><p class="first"><code class="docutils literal"><span class="pre">-t</span></code></p>
+<li><p class="first"><code class="docutils literal"><span class="pre">--ufid</span></code> or <code class="docutils literal"><span class="pre">-t</span></code></p>
 <p>Specify the build configuration using a <a class="reference internal" href="bde_repo.html#bde-repo-ufid"><span>UFID</span></a>.</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">--abi-bits</span></code> or <code class="docutils literal"><span class="pre">-a</span></code></p>
+<li><p class="first"><code class="docutils literal"><span class="pre">--abi-bits</span></code> or</p>
 <p>choices: <code class="docutils literal"><span class="pre">32</span></code> (default), <code class="docutils literal"><span class="pre">64</span></code></p>
 <p>Control whether the build system produces 32-bit x86 (<code class="docutils literal"><span class="pre">32</span></code>) or 64-bit
 x86_64 (<code class="docutils literal"><span class="pre">64</span></code>) object files and libraries.</p>

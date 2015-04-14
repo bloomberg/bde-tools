@@ -195,7 +195,7 @@ $ cp &lt;bde-tools&gt;/etc/wscript .
 |-- bde-core
 |   |
 |   |-- wscript
-|    `-- ...     &lt;-- other files in bde-core
+|   `-- ...      &lt;-- other files in bde-core
 |
 `-- bde-bb
     |
@@ -340,8 +340,8 @@ using an already installed Visual Studio compiler.</p>
 <div class="highlight-python"><div class="highlight"><pre>$ cd &lt;bde&gt;
 
 # in msysgit
-$ python configure
-$ python build
+$ waf configure
+$ waf build
 
 # in Cygwin
 $ cygwaf.sh configure

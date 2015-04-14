@@ -185,7 +185,7 @@ The workspace should now have the following layout:
    |-- bde-core
    |   |
    |   |-- wscript
-   |    `-- ...     <-- other files in bde-core
+   |   `-- ...      <-- other files in bde-core
    |
    `-- bde-bb
        |
@@ -362,8 +362,8 @@ Now, you can build bde using ``waf`` in msysgit or ``cygwaf.sh`` in cygwin:
    $ cd <bde>
 
    # in msysgit
-   $ python configure
-   $ python build
+   $ waf configure
+   $ waf build
 
    # in Cygwin
    $ cygwaf.sh configure
