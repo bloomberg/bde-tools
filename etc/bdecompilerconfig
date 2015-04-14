@@ -4,12 +4,6 @@
         "compilers": [
             {
                 "type": "gcc",
-                "c_path": "/opt/swt/install/gcc-4.8.1/bin/gcc",
-                "cxx_path": "/opt/swt/install/gcc-4.8.1/bin/g++",
-                "version": "4.8.1"
-            },
-            {
-                "type": "gcc",
                 "c_path": "/usr/bin/gcc",
                 "cxx_path": "/usr/bin/g++",
                 "version": "4.1.2"
@@ -25,6 +19,12 @@
                 "c_path": "/opt/swt/install/gcc-4.7.2/bin/gcc",
                 "cxx_path": "/opt/swt/install/gcc-4.7.2/bin/g++",
                 "version": "4.7.2"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.8.1/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.8.1/bin/g++",
+                "version": "4.8.1"
             },
             {
                 "type": "gcc",
