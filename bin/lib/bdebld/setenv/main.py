@@ -28,8 +28,25 @@ def main():
               'shell environment, either cygwin, or mingw/msys/msysgit')
         sys.exit(1)
 
-    options, args = cmdline.get_options()
-    if 'unset' in args:
+    parser = cmdline.get_option_parser()
+
+    options, args = parser.parse_args()
+
+    if len(args) > 1:
+        parser.print_help()
+        sys.exit(1)
+
+    if len(args) == 0:
+        command = 'set'
+    else:
+        command = args[0]
+
+    if command not in ('set', 'unset', 'list'):
+        print('Invalid command: %s' % command)
+        parser.print_help()
+        sys.exit(1)
+
+    if command == 'unset':
         unset_command()
         sys.exit(0)
 
@@ -39,9 +56,11 @@ def main():
         print('No valid compilers on this machine.', file=sys.stderr)
         sys.exit(1)
 
-    if 'list' in args:
+    if command == 'list':
         list_compilers(compiler_infos)
         sys.exit(0)
+
+    # command == 'set'
 
     if options.compiler is None:
         info = compiler_infos[0]

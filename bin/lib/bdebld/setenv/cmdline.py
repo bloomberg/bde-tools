@@ -2,21 +2,21 @@
 """
 
 import optparse
-import os
 
 from bdebld.meta import optionsutil
 from bdebld.common import cmdlineutil
 
 
-def get_options():
-    """Return options and arguments passed to the program.
+def get_option_parser():
+    """Return option parser for command line options and arguments.
 
     Returns:
-        options (dict), arguments (list)
+        OptionParser
     """
 
-    usage = """eval $(bde_setwafenv.py [list|unset] -i <root_install_dir> [-c <compiler> -t <ufid>])
+    usage = """eval $(bde_setwafenv.py [set|list|unset] -i <root_install_dir> [-c <compiler> -t <ufid>])
 
+set: set environment variables (default)
 list: list available compilers
 unset: unset environment variables"""
     parser = optparse.OptionParser(usage=usage)
@@ -38,6 +38,5 @@ unset: unset environment variables"""
     ]
     options += optionsutil.get_ufid_cmdline_options()
     cmdlineutil.add_options(parser, options)
-    options, args = parser.parse_args()
 
-    return options, args
+    return parser

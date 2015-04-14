@@ -208,10 +208,17 @@ It also provides 2 other optional commands:
 
   List the available compilers on this machine.
 
+- ``set``
+
+  Print Bourne shell commands to set environment variables.  This is the
+  default command if none is specified. The section :ref:`setwafenv-options`
+  documents the options available for this command.
+
+
 .. _setwafenv-options:
 
-Options
--------
+Set Command Options
+-------------------
 
 - ``-c``
 

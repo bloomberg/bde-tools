@@ -100,7 +100,7 @@ To build and run the test drivers, use:
 
 ::
 
-``shell waf build --test run``
+   shell waf build --test run
 
 For additional examples, see `Quick Reference`_.
 
@@ -113,7 +113,7 @@ Waf commands can be invoked by running:
 
     waf command [options]
 
-Waf provides the following commands, which correspond to popular
+Waf provides the following commands, some of which correspond to popular
 Makefile targets in open source projects:
 
 -  ``configure``
@@ -139,6 +139,11 @@ Makefile targets in open source projects:
 
    Remove build artifacts and the configuration cache.
 
+-  ``graph``
+
+   Generate a dot dependency diagram for the components in a package, packages
+   in a package group, or UORs in a repository.
+
 You can view the list of options available for each command by running:
 ``shell waf --help`` ##Configure Command
 
@@ -163,11 +168,11 @@ location of the wscript file).
 Configure Options
 `````````````````
 
-- ``-t``
+- ``--ufid`` or ``-t``
 
   Specify the build configuration using a :ref:`bde_repo-ufid`.
 
-- ``--abi-bits`` or ``-a``
+- ``--abi-bits`` or
 
   choices: ``32`` (default), ``64``
 
