@@ -32,6 +32,8 @@ class BuildHelper(object):
         self.lib_suffix = self.ctx.env['lib_suffix']
         self.pc_extra_include_dirs = self.ctx.env['pc_extra_include_dirs']
         self.soname_overrides = self.ctx.env['soname_overrides']
+        self.third_party_lib_targets = set(
+            [d + '_lib' for d in self.build_config.third_party_dirs.keys()])
 
         if 'shr' in self.build_config.ufid.flags:
             self.libtype_features = ['cxxshlib']
@@ -330,6 +332,21 @@ the bdlt_date component:
             if self.is_run_tests:
                 test_features = ['test']
 
+            test_dep = [package.name + '_lib'] + dums_tg_dep
+
+            if 'shr' in self.build_config.ufid.flags:
+                # We need to include third-party dependencies manually for test
+                # drivers because some third-party libraries are always built
+                # as static libraries, even if the shared library build
+                # configuration is being used.  Sometimes, a test driver
+                # depends on more symbols from the third-party packages than
+                # the component of the test driver, such as
+                # 'bdldfp_decimalimputil_inteldfp'.
+
+                third_party_dep = sorted(set(internal_dep) &
+                                         self.third_party_lib_targets)
+                test_dep += third_party_dep
+
             for c in package.components:
                 if c.type_ == repounits.ComponentType.CXX:
                     comp_test_features = ['cxx', 'cxxprogram'] + test_features
@@ -352,8 +369,7 @@ the bdlt_date component:
                         lib=flags.libs,
                         stlib=flags.stlibs,
                         cust_libpaths=flags.libpaths,
-                        use=[package.name + '_lib'] + internal_dep + \
-                            dums_tg_dep,
+                        use=test_dep,
                         uselib=external_dep
                     )
                 else:
