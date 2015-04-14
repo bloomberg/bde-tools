@@ -144,8 +144,7 @@ Makefile targets in open source projects:
    Generate a dot dependency diagram for the components in a package, packages
    in a package group, or UORs in a repository.
 
-You can view the list of options available for each command by running:
-``shell waf --help`` ##Configure Command
+You can view the list of options available for each command by running ``waf --help``.
 
 Configure Command
 -----------------
