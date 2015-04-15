@@ -556,9 +556,11 @@ MAIN: {
 
             print `which bde_setwafenv.py`;
 
-            open(SETWAFENV,"$setwafenv|") or die "Unable to run $setwafenv, error $!";
+            open(SETWAFENV,"$setwafenv 2>&1 |") or die "Unable to run $setwafenv, error $!";
 
             while(<SETWAFENV>) {
+                chomp;
+                write_logandverbose("bde_setwafenv.py output: $_");
                 if (/export\s+(\w+)="(.*)"/) {
                     write_logandverbose "Adding to env: $1=$2";
                     $ENV{$1}=$2;
