@@ -1,5 +1,16 @@
 [
     {
+        "uplid": "unix-darwin-",
+        "compilers": [
+            {
+                "type": "clang",
+                "c_path": "/usr/bin/clang",
+                "cxx_path": "/usr/bin/clang++",
+                "version": "5.1.0"
+            }
+        ]
+    },
+    {
         "uplid": "unix-linux-",
         "compilers": [
             {
