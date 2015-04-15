@@ -561,7 +561,7 @@ MAIN: {
             while(<SETWAFENV>) {
                 chomp;
                 write_logandverbose("bde_setwafenv.py output: $_");
-                if (/export\s+(\w+)="(.*)"/) {
+                if (/export\s+(\w+)="?([^"]*)/) {
                     write_logandverbose "Adding to env: $1=$2";
                     $ENV{$1}=$2;
                 }
