@@ -32,14 +32,19 @@ def options(ctx):
 
     from waflib.Tools.compiler_c import c_compiler
     c_compiler['win32'] = ['msvc']
-    c_compiler['linux'] = ['gcc']
-    c_compiler['darwin'] = ['gcc']
+    c_compiler['linux'] = ['gcc', 'clang']
+    c_compiler['darwin'] = ['gcc', 'clang']
+    c_compiler['aix'] = ['xlc', 'gcc']
+    c_compiler['sunos'] = ['suncc', 'gcc']
+
     ctx.load('compiler_c')
 
     from waflib.Tools.compiler_cxx import cxx_compiler
     cxx_compiler['win32'] = ['msvc']
-    cxx_compiler['linux'] = ['g++']
-    cxx_compiler['darwin'] = ['g++']
+    cxx_compiler['linux'] = ['g++', 'clang++']
+    cxx_compiler['darwin'] = ['g++', 'clang++']
+    cxx_compiler['aix'] = ['xlc++', 'g++']
+    cxx_compiler['sunos'] = ['sunc++', 'g++']
     ctx.load('compiler_cxx')
 
     ctx.load('msvs')
