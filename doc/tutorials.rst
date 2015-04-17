@@ -55,7 +55,7 @@ Use bde_setwafenv.py to Build BDE
 =================================
 
 First, specify the compilers available on your system in a
-``~/bdecompilerconfig``.  Here is an example:
+``~/.bdecompilerconfig``.  Here is an example:
 
 ::
 
@@ -214,8 +214,9 @@ bde_setwafenv.py works the same way for a workspace as a regular repository.
 Use bde_setwafenv.py to Build an Application on Top of BDE
 ==========================================================
 
-First, follow :ref:`tutorials-setwafenv-bde` to create ``~/bdecompilerconfig``,
-set up the environment variables using bde_setwafenv.py, and build BDE.
+First, follow :ref:`tutorials-setwafenv-bde` to create
+``~/.bdecompilerconfig``, set up the environment variables using
+bde_setwafenv.py, and build BDE.
 
 Then, install bde:
 
@@ -331,7 +332,7 @@ bde_setwafenv.py can be used on Windows through Cygwin or Git for Windows (msysg
 First, make sure you have cloned the bde and bde-tools repositories, and that
 you have added ``bde-tools/bin`` to your system's PATH.
 
-Then, For Cygwin, export the WIN_PATH environment variable to point to the
+Then, for Cygwin, export the PYTHON_PATH environment variable to point to the
 *Cygwin* path of the *Windows* version of Python.  For example, if the Windows
 version of Python is installed to ``C:\Python27\python``, then you can use the
 following command to set up the required WIN_PATH environment variable: ::

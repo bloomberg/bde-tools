@@ -3,12 +3,15 @@
 
 import os
 import sys
+import copy
 
 from waflib import Logs
 
 from bdebld.common import sysutil
 from bdebld.meta import buildconfigfactory
+from bdebld.meta import buildconfigutil
 from bdebld.meta import buildflagsparser
+from bdebld.meta import installconfig
 from bdebld.meta import optionsutil
 from bdebld.meta import repocontextloader
 from bdebld.meta import repocontextverifier
@@ -73,21 +76,53 @@ class ConfigureHelper(object):
 
         def print_list(label, l):
             if len(l):
-                self.ctx.msg(label, ','.join(sorted(l)))
+                self.ctx.msg(label, ' '.join([str(i) for i in l]))
 
         print_list('Configured package groups',
-                   self.build_config.package_groups)
+                   sorted(self.build_config.package_groups))
         print_list('Configured stand-alone packages',
-                   self.build_config.stdalone_packages)
+                   sorted(self.build_config.stdalone_packages))
         print_list('Configured third-party packages',
-                   self.build_config.third_party_dirs)
+                   sorted(self.build_config.third_party_dirs))
         print_list('Loading external dependencies',
-                   self.build_config.external_dep)
+                   sorted(self.build_config.external_dep))
+        self._configure_external_libs()
+
+        if self.build_config.soname_overrides:
+            for uor_name in self.build_config.soname_overrides:
+                self.ctx.msg('Override SONAME for %s' % uor_name,
+                             self.build_config.soname_overrides[uor_name])
+
+        self.install_config = installconfig.InstallConfig(
+            self.ufid,
+            self.ctx.options.use_dpkg_install == 'yes',
+            self.ctx.options.install_flat_include,
+            self.ctx.options.install_lib_dir,
+            self.ctx.options.lib_suffix)
+
+        self.ctx.msg('Install flat includes?',
+                     'yes' if self.install_config.is_flat_include else 'no')
+        self.ctx.msg('Lib install directory', self.install_config.lib_dir)
+        self.ctx.msg('Pkg-config install path', self.install_config.pc_dir)
+        if self.install_config.lib_suffix:
+            self.ctx.msg('Use library suffix', self.install_config.lib_suffix)
+
+        num_uors = len(self.build_config.package_groups) + \
+            len(self.build_config.stdalone_packages) + \
+            len(self.build_config.third_party_dirs)
+        num_inner_packages = len(self.build_config.inner_packages)
+        num_components = reduce(
+            lambda x, y: x + y,
+            map(buildconfigutil.count_components_in_package,
+                self.build_config.inner_packages.values() +
+                self.build_config.stdalone_packages.values()))
+
+        print_list('Num of UORs, inner packages, components',
+                   (num_uors, num_inner_packages, num_components))
 
         if self.ctx.options.verbose >= 2:
-            self.ctx.msg('Configuration details', self.build_config)
+            self.ctx.msg('Build configuration details', self.build_config)
 
-        self._configure_external_libs()
         self._save()
 
     def _verify(self):
@@ -183,43 +218,10 @@ build output directory for details.""" % \
 
             self.ctx.env['DEFINES'] = defines_new
 
-    def _get_pc_extra_include_dirs(self):
-        include_dirs = os.environ.get('PC_EXTRA_INCLUDE_DIRS')
-        if include_dirs:
-            return include_dirs.split(':')
-        return None
-
     def _save(self):
         self.ctx.env['build_config'] = self.build_config.to_pickle_str()
-        self.ctx.env['install_flat_include'] = \
-            self.ctx.options.install_flat_include
-        self.ctx.env['install_lib_dir'] = self.ctx.options.install_lib_dir
-        self.ctx.env['lib_suffix'] = self.ctx.options.lib_suffix
-        self.ctx.env['pc_extra_include_dirs'] = \
-            self._get_pc_extra_include_dirs()
-        self.ctx.env['soname_overrides'] = self._get_soname_overrides()
-
+        self.ctx.env['install_config'] = self.install_config.to_pickle_str()
         self._save_custom_waf_internals()
-
-    def _get_soname_overrides(self):
-        """Load custom SONAMEs from the envrionment.
-
-        Sometimes we want to override the default SONAME used for a shared
-        objects.  This can be done by setting a environment variable.
-
-        E.g., we can set 'BDE_BSL_SONAME' to 'robo20150101bsl' to set the
-        SONAME of the shared object built for the package group 'bsl'.
-        """
-        uor_names = list(self.build_config.stdalone_packages.keys()) + \
-            list(self.build_config.package_groups.keys())
-
-        soname_overrides = {}
-        for name in uor_names:
-            soname = os.environ.get('BDE_%s_SONAME' % name.upper())
-            if soname:
-                soname_overrides[name] = soname
-
-        return soname_overrides
 
     def _save_custom_waf_internals(self):
         """Modify and save modifications to waf's internal variables.

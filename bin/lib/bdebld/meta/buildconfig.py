@@ -2,15 +2,11 @@
 """
 
 import pprint
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 from bdebld.common import mixins
 
 
-class BuildConfig(mixins.BasicEqualityMixin):
+class BuildConfig(mixins.BasicEqualityMixin, mixins.BasicSerializeMixin):
     """Repo configuration to be persisted.
 
     This differs from RepoContext by storing only the evaluated build flags
@@ -24,6 +20,8 @@ class BuildConfig(mixins.BasicEqualityMixin):
             passed to third_party packages.
         custom_envs (dict of str to str): Environment variables that should be
             set when running build commands.
+        soname_overrides (dict of str to str): Override the soname for
+            certain UORs.
         external_deps (set of str): External dependencies.
         package_groups (dict of str to PackageGroupBuildConfig): Package
             groups build configuration.
@@ -41,18 +39,12 @@ class BuildConfig(mixins.BasicEqualityMixin):
         self.ufid = ufid
         self.default_flags = None
         self.custom_envs = {}
+        self.soname_overrides = {}
         self.external_dep = None
         self.package_groups = {}
         self.stdalone_packages = {}
         self.inner_packages = {}
         self.third_party_dirs = {}
-
-    def to_pickle_str(self):
-        return pickle.dumps(self)
-
-    @classmethod
-    def from_pickle_str(cls, s):
-        return pickle.loads(s)
 
     def __repr__(self):
         return pprint.pformat(vars(self))

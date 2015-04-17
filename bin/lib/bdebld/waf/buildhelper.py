@@ -7,9 +7,11 @@ import sys
 from waflib import Logs
 
 from bdebld.meta import buildconfig
+from bdebld.meta import installconfig
 from bdebld.meta import buildconfigutil
 from bdebld.meta import graphutil
 from bdebld.meta import repounits
+from bdebld.meta import repoerror
 
 from bdebld.common import sysutil
 
@@ -26,11 +28,25 @@ class BuildHelper(object):
         self.ctx = ctx
         self.build_config = buildconfig.BuildConfig.from_pickle_str(
             self.ctx.env['build_config'])
+        self.install_config = installconfig.InstallConfig.from_pickle_str(
+            self.ctx.env['install_config'])
 
-        self.install_flat_include = self.ctx.env['install_flat_include']
-        self.install_lib_dir = self.ctx.env['install_lib_dir']
-        self.lib_suffix = self.ctx.env['lib_suffix']
-        self.pc_extra_include_dirs = self.ctx.env['pc_extra_include_dirs']
+        self.uor_digraph = buildconfigutil.get_uor_digraph(self.build_config)
+
+        if self.ctx.cmd == 'install':
+            try:
+                self.install_config.setup_install_uors(
+                    self.ctx.targets, self.ctx.options.install_dep == 'yes',
+                    self.uor_digraph)
+            except repoerror.InvalidInstallTargetError as e:
+                self.ctx.fatal(e.message)
+            self.install_config.is_install_h = \
+                self.ctx.options.install_h == 'yes'
+            self.install_config.is_install_pc = \
+                self.ctx.options.install_pc == 'yes'
+            Logs.info('Waf: Installing UORs: %s' %
+                      ','.join(sorted(self.install_config.install_uors)))
+
         self.soname_overrides = self.ctx.env['soname_overrides']
         self.third_party_lib_targets = set(
             [d + '_lib' for d in self.build_config.third_party_dirs.keys()])
@@ -54,37 +70,34 @@ class BuildHelper(object):
                 self.ctx.options.test_verbosity,
                 self.ctx.options.test_timeout)
 
-        self.export_third_party_flags()
-
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.build_config.custom_envs)
 
         if self.build_config.uplid.os_type == 'windows':
             # Use forward slash for paths on windows to be compatible with
             # pykg-config.py.
-            prefix = self.ctx.env['PREFIX']
-            self.ctx.env['PREFIX'] = prefix.replace('\\', '/')
+            self.ctx.env['PREFIX'] = self.ctx.env['PREFIX'].replace('\\', '/')
 
-        self.targets = self.ctx.targets.split(',')
-
-        if (any(t.endswith('.t') for t in self.targets) and
+        if (any(t.endswith('.t') for t in self.ctx.targets.split(',')) and
                 not self.is_build_tests):
             msg = """Did you forget to use the option '--test build'?
 You must use the option '--test build' to build test drivers and the option
 '--test run' to run test drivers.  For example, to build the test driver for
 the bdlt_date component:
 
-  $ waf build --target bdlt_date.t --test build"""
+$ waf build --target bdlt_date.t --test build"""
             Logs.warn(msg)
 
+        self.export_third_party_flags()
+
     def build(self):
+
         # Create task generators in topological order so that the actual task
         # build order would appear to be meaningful.  Note that ordering this
         # not necessary and the build would work for any order of task
         # generators.
 
-        ordered_uor_names = graphutil.topological_sort(
-            buildconfigutil.get_uor_digraph(self.build_config))
+        ordered_uor_names = graphutil.topological_sort(self.uor_digraph)
 
         for uor_name in ordered_uor_names:
             if uor_name in self.build_config.package_groups:
@@ -108,11 +121,11 @@ the bdlt_date component:
         flags = group.flags
         internal_dep = [d + '_lib' for d in sorted(group.dep)]
         external_dep = [l.upper() for l in sorted(group.external_dep)]
-        install_path = os.path.join('${PREFIX}', self.install_lib_dir)
+
+        lib_install_path = self.install_config.get_lib_install_path(group.name)
 
         # Create task generators in topological order so that the actual task
         # build order would appear to be meaningful.
-
         ordered_package_names = graphutil.topological_sort(
             buildconfigutil.get_package_digraph(self.build_config, group.name))
 
@@ -127,7 +140,7 @@ the bdlt_date component:
 
         self.ctx(name=group.name + '_lib',
                  path=group_node,
-                 target=group.name + self.lib_suffix,
+                 target=self.install_config.get_target_name(group.name),
                  features=['cxx'] + self.libtype_features,
                  linkflags=flags.linkflags,
                  lib=flags.libs,
@@ -138,7 +151,7 @@ the bdlt_date component:
                  uselib=external_dep,
                  export_includes=[group_node.make_node(p) for p in
                                   ordered_package_names],
-                 install_path=install_path,
+                 install_path=lib_install_path,
                  bdevnum=group.version,
                  bdesoname=custom_soname
                  )
@@ -154,12 +167,11 @@ the bdlt_date component:
     def build_stdalone_package(self, package):
         internal_dep = [d + '_lib' for d in sorted(package.dep)]
         external_dep = [l.upper() for l in sorted(package.external_dep)]
-        lib_install_path = os.path.join('${PREFIX}', self.install_lib_dir)
 
-        if self.install_flat_include:
-            h_install_path = os.path.join('${PREFIX}', 'include')
-        else:
-            h_install_path = os.path.join('${PREFIX}', 'include', package.name)
+        lib_install_path = self.install_config.get_lib_install_path(
+            package.name)
+        h_install_path = self.install_config.get_h_install_path(
+            package.name)
 
         self.build_package_impl(package, internal_dep, external_dep,
                                 lib_install_path, h_install_path)
@@ -181,7 +193,7 @@ the bdlt_date component:
             self.ctx(
                 name=package.name + '_app',
                 path=package_node,
-                target=package.name,
+                target=self.install_config.get_target_name(package.name),
                 source=[package.name + '.m.cpp'],
                 features=['cxx', 'cxxprogram'],
                 cflags=flags.cflags,
@@ -206,10 +218,9 @@ the bdlt_date component:
         internal_dep = [d + '_lib' for d in sorted(package.dep | group.dep)]
         external_dep = [l.upper() for l in sorted(group.external_dep)]
 
-        if self.install_flat_include:
-            h_install_path = os.path.join('${PREFIX}', 'include')
-        else:
-            h_install_path = os.path.join('${PREFIX}', 'include', group.name)
+        h_install_path = self.install_config.get_h_install_path(group.name,
+                                                                False,
+                                                                package.name)
 
         if package.type_ == repounits.PackageType.PACKAGE_PLUS:
             self.build_plus_package_impl(package, internal_dep, external_dep,
@@ -266,10 +277,11 @@ the bdlt_date component:
                 header_dirs[head] = []
             header_dirs[head].append(tail)
 
-        for d in header_dirs:
-            self.ctx.install_files(os.path.join(h_install_path, d),
-                                   [os.path.join(relpath, d, h) for h in
-                                    header_dirs[d]])
+        if h_install_path:
+            for d in header_dirs:
+                self.ctx.install_files(os.path.join(h_install_path, d),
+                                       [os.path.join(relpath, d, h) for h in
+                                        header_dirs[d]])
 
     def build_package_impl(self, package, internal_dep, external_dep,
                            lib_install_path, h_install_path):
@@ -339,8 +351,8 @@ the bdlt_date component:
                 # drivers because some third-party libraries are always built
                 # as static libraries, even if the shared library build
                 # configuration is being used.  Sometimes, a test driver
-                # depends on more symbols from the third-party packages than
-                # the component of the test driver, such as
+                # depends on more symbols from the third-party library than the
+                # component of the test driver, such as
                 # 'bdldfp_decimalimputil_inteldfp'.
 
                 third_party_dep = sorted(set(internal_dep) &
@@ -391,9 +403,10 @@ the bdlt_date component:
             depends_on=[c.name + '.t' for c in package.components]
         )
 
-        self.ctx.install_files(
-            h_install_path,
-            [os.path.join(relpath, c.name + '.h') for c in package.components])
+        if h_install_path:
+            self.ctx.install_files(
+                h_install_path, [os.path.join(relpath, c.name + '.h')
+                                 for c in package.components])
 
     def build_thirdparty_dirs(self, third_party):
         relpath = os.path.relpath(third_party.path,
@@ -406,13 +419,11 @@ the bdlt_date component:
         # tool.
         pc_node = self.ctx.path.make_node('vc')
 
-        if self.install_flat_include:
-            install_include_dir = "include"
-        else:
-            install_include_dir = "include/%s" % uor.name
-
-        install_path = os.path.join('${PREFIX}', self.install_lib_dir,
-                                    'pkgconfig')
+        pc_install_path = self.install_config.get_pc_install_path(uor.name)
+        pc_libdir = self.install_config.get_pc_libdir(uor.name)
+        pc_includedir = self.install_config.get_pc_includedir(uor.name)
+        pc_extra_includes = self.install_config.get_pc_extra_includes(uor.name)
+        pc_libname = self.install_config.get_target_name(uor.name)
 
         dep = sorted(uor.dep | uor.external_dep)
 
@@ -420,19 +431,18 @@ the bdlt_date component:
             name=uor.name + '.pc',
             features=['bdepc'],
             path=pc_node,
-            target=uor.name + self.lib_suffix + '.pc',
+            target=pc_libname + '.pc',
             version=uor.version,
             doc=uor.doc,
             url='https://github.com/bloomberg',
-            dep=dep,
-            lib_name=uor.name,
-            lib_suffix=self.lib_suffix,
+            libname=pc_libname,
+            dep=[d + self.install_config.lib_suffix for d in dep],
+            libdir=pc_libdir,
+            includedir=pc_includedir,
             export_libs=uor.flags.export_libs,
+            extra_includes=pc_extra_includes,
             export_flags=uor.flags.export_flags,
-            install_lib_dir=self.install_lib_dir,
-            install_include_dir=install_include_dir,
-            pc_extra_include_dirs=self.pc_extra_include_dirs,
-            install_path=install_path
+            install_path=pc_install_path
         )
 
     def export_third_party_flags(self):
@@ -440,29 +450,44 @@ the bdlt_date component:
 
         Third-party directories should be built using the same build
         configuration as BDE units.
-
-        This function exports the following variables to the build context
-        environment that should be used by the wscript inside of third-party
-        directories:
-
-        - ``BDE_THIRD_PARTY_CFLAGS``
-        - ``BDE_THIRD_PARTY_CXXFLAGS``
         """
 
         def filter_cflags(cflags):
-            # Since we don't own the source code from third-party packages, do
-            # not enable warnings for them.
+            # Since we don't own the source code for third-party directories,
+            # do not enable warnings for them.
             filtered_cflags = []
             for f in cflags:
                 if not f.startswith('-W') and not f.startswith("/W"):
                     filtered_cflags.append(f)
             return filtered_cflags
 
+        # The following three variables are set to preserve backwards
+        # compatibility with older versions of wscripts in third-party
+        # directories.
         self.ctx.env['BDE_THIRD_PARTY_CFLAGS'] = \
             filter_cflags(self.build_config.default_flags.cflags)
+        self.ctx.env['install_lib_dir'] = self.install_config.lib_dir
+        self.ctx.env['lib_suffix'] = self.install_config.lib_suffix
 
-        self.ctx.env['BDE_THIRD_PARTY_CXXFLAGS'] = \
-            filter_cflags(self.build_config.default_flags.cxxflags)
+        for tp in self.build_config.third_party_dirs:
+            key = 'bde_thirdparty_%s_config' % tp
+            self.ctx.env[key] = {
+                'cflags': filter_cflags(
+                    self.build_config.default_flags.cflags),
+                'cxxflags': filter_cflags(
+                    self.build_config.default_flags.cxxflags),
+                'lib_target': self.install_config.get_target_name(tp),
+                'lib_install_path':
+                self.install_config.get_lib_install_path(tp),
+                'h_install_path':
+                self.install_config.get_h_install_path(tp, True),
+                'pc_install_path':
+                self.install_config.get_pc_install_path(tp),
+                'pc_libdir':
+                self.install_config.get_pc_libdir(tp),
+                'pc_includedir':
+                self.install_config.get_pc_includedir(tp, True),
+            }
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

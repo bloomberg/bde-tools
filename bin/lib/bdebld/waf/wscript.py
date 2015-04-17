@@ -135,26 +135,34 @@ def add_cmdline_options(ctx):
           'default': None,
           'help': 'debug rules in the opts files for the specified '
                   '(comma separated) list of opts keys'}),
-        (('lib-suffix',),
-         {'type': 'string',
-          'default': '',
-          'help': 'add a suffix to the names of the package group library '
-                  'files being built'}),
-        (('install-flat-include',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'install all headers into $PREFIX/include instead of '
-                  '$PREFIX/include/<package_group>'}),
-        (('install-lib-dir',),
-         {'type': 'string',
-          'default': 'lib',
-          'help': 'the name of the directory under $PREFIX where '
-                  'library files are installed [default: %default]'}),
         (('verify',),
          {'action': 'store_true',
           'default': False,
           'help': 'Perform additional checks to verify '
                   'repository structure.'}),
+        (('use-dpkg-install',),
+         {'type': 'choice',
+          'choices': ('yes', 'no'),
+          'default': 'no',
+          'help': "Whether to configure install options according to dpkg "
+                  "conventions (yes/no). This options supercedes the options "
+                  "'lib-suffix', 'install-flat-include', and "
+                  "'install-lib-dir'. [default: %default]"}),
+        (('lib-suffix',),
+         {'type': 'string',
+          'default': '',
+          'help': '(deprecated) add a suffix to the names of the package '
+                  'group library files being built'}),
+        (('install-flat-include',),
+         {'action': 'store_true',
+          'default': False,
+          'help': '(deprecated) install all headers into $PREFIX/include '
+                  'instead of $PREFIX/include/<package_group>'}),
+        (('install-lib-dir',),
+         {'type': 'string',
+          'default': 'lib',
+          'help': '(deprecated) the name of the directory under $PREFIX where '
+                  'library files are installed [default: %default]'}),
     ]
     configure_opts = optionsutil.get_ufid_cmdline_options() + configure_opts
     configure_group = ctx.get_option_group('configure options')
@@ -171,6 +179,30 @@ def add_cmdline_options(ctx):
                               default=jobs,
                               type='int',
                               help='amount of parallel jobs (%r)' % jobs)
+
+    build_opts = ctx.get_option_group(
+        'Installation and uninstallation options')
+    build_opts.add_option('--install-dep', type='choice',
+                          choices=('yes', 'no'),
+                          default='yes',
+                          help='When doing a targeted install, wither to also '
+                          'install the dependencies of the targets (yes/no) '
+                          '[default: %default]',
+                          dest='install_dep')
+
+    build_opts.add_option('--install-h', type='choice',
+                          choices=('yes', 'no'),
+                          default='yes',
+                          help='Install header files (yes/no) '
+                          '[default: %default]',
+                          dest='install_h')
+
+    build_opts.add_option('--install-pc', type='choice',
+                          choices=('yes', 'no'),
+                          default='yes',
+                          help='Install pkgconfig files (yes/no) '
+                          '[default: %default]',
+                          dest='install_pc')
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

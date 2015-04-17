@@ -1,6 +1,8 @@
 """Utilties that operate on BuildConfig objects.
 """
 
+from bdebld.meta import repounits
+
 
 def get_uor_dict(build_config):
     uors = {}
@@ -8,6 +10,13 @@ def get_uor_dict(build_config):
     uors.update(build_config.package_groups)
     uors.update(build_config.third_party_dirs)
     return uors
+
+
+def count_components_in_package(package_bc):
+    if package_bc.type_ == repounits.PackageType.PACKAGE_PLUS:
+        return len(package_bc.cpp_sources)
+    else:
+        return len(package_bc.components)
 
 
 def get_uor_digraph(build_config):

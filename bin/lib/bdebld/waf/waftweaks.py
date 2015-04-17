@@ -290,8 +290,8 @@ class bdepc(Task.Task):
     """
 
     PKGCONFIG_TEMPLATE = '''prefix=%s
-libdir=${prefix}/%s
-includedir=${prefix}/%s
+libdir=%s
+includedir=%s
 
 Name: %s
 Description: %s
@@ -303,8 +303,6 @@ Libs: -L${libdir} -l%s %s
 Libs.private:
 Cflags: -I${includedir} %s %s
 '''
-    # Replacement parameters: prefix, lib_dir, include_dir, description,
-    # version, requires.private, name, libs, cflags
 
     def signature(self):
         """Return a signature that uniquely identifies the generated pc file.
@@ -313,55 +311,38 @@ Cflags: -I${includedir} %s %s
         file.
         """
         gen = self.generator
-        self.hcode = gen.bld.env['PREFIX'] + \
-            gen.install_lib_dir + \
-            gen.install_include_dir + \
-            str(gen.doc) + \
-            str(gen.doc) + \
-            gen.url + \
-            str(gen.version) + \
-            str(gen.dep) + \
-            gen.lib_name + \
-            gen.lib_suffix + \
-            str(gen.pc_extra_include_dirs) + \
-            str(gen.export_libs) + \
-            str(gen.export_flags)
+
+        self.hcode = ','.join([str(p) for p in (
+            gen.bld.env['PREFIX'], gen.libdir,
+            gen.includedir, gen.doc, gen.url,
+            gen.version, gen.dep, gen.libname,
+            gen.export_libs, gen.extra_includes,
+            gen.export_flags)])
 
         ret = super(bdepc, self).signature()
         return ret
 
     def run(self):
         gen = self.generator
-        install_lib_dir = gen.install_lib_dir
-        install_include_dir = gen.install_include_dir
-        doc = gen.doc
-        url = gen.url
         if gen.version:
             version = '.'.join(gen.version)
         else:
             version = ''
-        dep = gen.dep
-        lib_name = gen.lib_name
-        lib_suffix = gen.lib_suffix
-        extra_include_dirs_str = \
-            ' '.join(['-I%s' % d for d in
-                      gen.pc_extra_include_dirs])
-        export_libs = [gen.bld.env['LIB_ST'] % l for l in gen.export_libs]
-        export_flags = gen.export_flags
 
         pc_source = self.PKGCONFIG_TEMPLATE % (
             gen.bld.env['PREFIX'],
-            install_lib_dir,
-            install_include_dir,
-            doc.mnemonic,
-            doc.description,
-            url,
+            gen.libdir,
+            gen.includedir,
+            gen.doc.mnemonic,
+            gen.doc.description,
+            gen.url,
             version,
-            ' '.join([d + lib_suffix for d in dep]),
-            lib_name + lib_suffix,
-            ' '.join(export_libs),
-            extra_include_dirs_str,
-            ' '.join(export_flags)
+            ' '.join(gen.dep),
+            gen.libname,
+            ' '.join([gen.bld.env['LIB_ST'] % l for l in gen.export_libs]),
+            ' '.join([gen.bld.env['CPPPATH_ST'] % i for i in
+                      gen.extra_includes]),
+            ' '.join(gen.export_flags)
         )
 
         self.outputs[0].write(pc_source)

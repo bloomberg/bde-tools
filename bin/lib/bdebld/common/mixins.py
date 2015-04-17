@@ -1,6 +1,11 @@
 """Convenince base classes to provide common functionality.
 """
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 
 class BasicEqualityMixin(object):
     """This class serves as a common base to provide the equality operator.
@@ -20,6 +25,18 @@ class BasicReprMixin(object):
     """
     def __repr__(self):
         return '%s' % (vars(self))
+
+
+class BasicSerializeMixin(object):
+    """This class serves as a common base to provide pickle serialization.
+    """
+
+    def to_pickle_str(self):
+        return pickle.dumps(self)
+
+    @classmethod
+    def from_pickle_str(cls, s):
+        return pickle.loads(s)
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

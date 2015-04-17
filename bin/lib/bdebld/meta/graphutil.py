@@ -61,8 +61,12 @@ def levelize(graph, root_nodes=None):
     return levels
 
 
-def topological_sort(graph):
-    """Return a topologically sorted list of nodes in a dgraph.
+def topological_sort(digraph, root_nodes=None):
+    """Return a topologically sorted list of nodes in a directed graph.
+
+    Args:
+        digraph (map of str to list): The directed graph to use.
+        dep_nodes (list, optional): The root dependencies.
     """
 
     visited = set()
@@ -76,16 +80,17 @@ def topological_sort(graph):
             raise ValueError("Cycle detected: %s" %
                              ' -> '.join(stack + [node]))
 
-        if node in graph:
+        if node in digraph:
             stack.append(node)
-            for c in sorted(graph[node]):
+            for c in sorted(digraph[node]):
                 visit(c, stack)
             stack.pop()
 
         visited.add(node)
         ordered.append(node)
 
-    root_nodes = find_root_nodes(graph)
+    if root_nodes is None:
+        root_nodes = find_root_nodes(digraph)
 
     for node in sorted(root_nodes):
         visit(node, [])
@@ -161,16 +166,16 @@ def find_cycles(graph):
     return cycles
 
 
-def find_external_nodes(graph):
+def find_external_nodes(digraph):
     """Return a set of external nodes in a directed graph.
 
     External nodes are node that are referenced as a dependency not defined as
     a key in the graph dictionary.
     """
     external_nodes = set()
-    for ni in graph:
-        for nj in graph[ni]:
-            if nj not in graph:
+    for ni in digraph:
+        for nj in digraph[ni]:
+            if nj not in digraph:
                 external_nodes.add(nj)
 
     return external_nodes

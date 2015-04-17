@@ -93,20 +93,6 @@ def get_msvc_version_from_env():
     return None
 
 
-def get_msvc_version_from_env():
-    """Return the desired Visual Studio version from the environment.
-    """
-    env_uplid_str = os.getenv('BDE_WAF_UPLID')
-    if env_uplid_str:
-        env_uplid = optiontypes.Uplid.from_str(env_uplid_str)
-
-        if env_uplid.comp_type == 'cl':
-            for v in msvcversions.versions:
-                if v.compiler_version == env_uplid.comp_ver:
-                    return v.product_version
-    return None
-
-
 def get_comp_info(ctx):
     """Return the operating system information part of the UPLID.
 

@@ -1,6 +1,7 @@
 """Evaluating build configurations for a BDE-style repository.
 """
 
+import os
 import copy
 import re
 
@@ -218,6 +219,16 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         if (unit.type_ in repounits.UnitTypeCategory.UOR_CAT and
                 unit.type_ != repounits.UnitType.THIRD_PARTY_DIR):
             load_uor(unit)
+
+    # Sometimes we want to override the default SONAME used for a shared
+    # object.  This can be done by setting a environment variable.
+    # E.g., we can set 'BDE_BSL_SONAME' to 'robo20150101bsl' to set the
+    # SONAME of the shared object built for the package group 'bsl'.
+
+    for name in uor_map:
+        soname = os.environ.get('BDE_%s_SONAME' % name.upper())
+        if soname:
+            build_config.soname_overrides[name] = soname
 
     return build_config
 

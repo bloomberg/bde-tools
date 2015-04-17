@@ -82,19 +82,19 @@ def get_ufid_cmdline_options():
          {'type': 'choice',
           'default': 'debug',
           'choices': ('release', 'debug'),
-          'help': "the type of build to produce (debug/release) "
+          'help': 'the type of build to produce (debug/release) '
           "[default: %default]"}),
         (('library-type',),
          {'type': 'choice',
           'default': 'static',
           'choices': ('static', 'shared'),
-          'help': "the type of libraries to build (shared/static) "
+          'help': 'the type of libraries to build (shared/static) '
           "[default: %default]"}),
         (('assert-level',),
          {'type': 'choice',
           'default': 'none',
           'choices': ('none', 'safe', 'safe2'),
-          'help': "bsls_assert level (none/safe/safe2) "
+          'help': 'bsls_assert level (none/safe/safe2) '
           "[default: %default]"}),
         (('noexception',),
          {'action': 'store_true',
@@ -109,8 +109,6 @@ def get_ufid_cmdline_options():
           'default': None,
           'help': 'the Unified Platform ID (UFID) identifying the build '
           'configuration (e.g., dbg_mt_exc). '
-          'See https://github.com/bloomberg/bde-tools/wiki/'
-          'BDE-Style-Repository#ufid for a list of valid ufids. '
           'Note that specifying a UFID will overwrite other build '
           'configuration options such as --library_type.'})
     ]
