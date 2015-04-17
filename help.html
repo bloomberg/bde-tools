@@ -146,7 +146,7 @@ Visual Studio 2013, you can pass the following option to <code class="docutils l
 <h3>I see a python exception when running <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code>.<a class="headerlink" href="#i-see-a-python-exception-when-running-waf-configure" title="Permalink to this headline">¶</a></h3>
 <p>Most likely, you have updated BDE Tools without re-configuring the source repo
 being built.  Try removing the existing configuration:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ waf distclean  # deletes the output directory, including the existing configuration
+<div class="highlight-python"><div class="highlight"><pre>$ waf distclean  # delete the output directory, including the existing configuration
 $ waf configure build
 </pre></div>
 </div>

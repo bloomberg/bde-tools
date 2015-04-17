@@ -365,6 +365,10 @@ value is 200 seconds.</p>
 <p>Shows the output of all test drivers. By default, only the output of
 failed tests is shown.</p>
 </li>
+<li><p class="first"><code class="docutils literal"><span class="pre">--use-dpkg-install</span></code></p>
+<p>choices: <code class="docutils literal"><span class="pre">yes</span></code> (default), <code class="docutils literal"><span class="pre">no</span></code></p>
+<p>Whether to use the Bloomberg&#8217;s dpkg-based install layout.</p>
+</li>
 </ul>
 </div>
 <div class="section" id="build-output">
@@ -419,6 +423,26 @@ directory:</p>
          |-- bsl.pc
          `-- ...                &lt;-- pkg-config files for each lib
 </pre></div>
+</div>
+<div class="section" id="install-options">
+<h4>Install Options<a class="headerlink" href="#install-options" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">--targets</span></code></p>
+<p>Restrict the list of install targets. The value of this option should be a
+comma separated list of units of release (package groups, stand-alone
+packages, or third-party directories).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">--install-h</span></code></p>
+<p>choices: <code class="docutils literal"><span class="pre">yes</span></code> (default), <code class="docutils literal"><span class="pre">no</span></code></p>
+<p>Whether to install header files.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">-install-pc</span></code></p>
+</li>
+</ul>
+<blockquote>
+<div><p>choices: <code class="docutils literal"><span class="pre">yes</span></code> (default), <code class="docutils literal"><span class="pre">no</span></code></p>
+<p>Whether to install pkgconfig files.</p>
+</div></blockquote>
 </div>
 </div>
 </div>
@@ -572,7 +596,10 @@ $ waf step --files=&#39;groups/bsl/bslstl/.*\.cpp&#39;
 <li><a class="reference internal" href="#build-output">Build Output</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#install-command">Install Command</a></li>
+<li><a class="reference internal" href="#install-command">Install Command</a><ul>
+<li><a class="reference internal" href="#install-options">Install Options</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#handling-external-dependencies-using-pkg-config">Handling External Dependencies Using Pkg-config</a></li>

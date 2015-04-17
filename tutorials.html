@@ -90,7 +90,7 @@ build output directory, which by default is just &#8220;build&#8221;.</p>
 <div class="section" id="use-bde-setwafenv-py-to-build-bde">
 <span id="tutorials-setwafenv-bde"></span><h2>Use bde_setwafenv.py to Build BDE<a class="headerlink" href="#use-bde-setwafenv-py-to-build-bde" title="Permalink to this headline">¶</a></h2>
 <p>First, specify the compilers available on your system in a
-<code class="docutils literal"><span class="pre">~/bdecompilerconfig</span></code>.  Here is an example:</p>
+<code class="docutils literal"><span class="pre">~/.bdecompilerconfig</span></code>.  Here is an example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
      <span class="p">{</span>
          <span class="s">&quot;hostname&quot;</span><span class="p">:</span> <span class="s">&quot;.*&quot;</span><span class="p">,</span>
@@ -218,8 +218,9 @@ will apply to that repository directly.</p>
 </div>
 <div class="section" id="use-bde-setwafenv-py-to-build-an-application-on-top-of-bde">
 <span id="tutorials-setwafenv-bde-app"></span><h2>Use bde_setwafenv.py to Build an Application on Top of BDE<a class="headerlink" href="#use-bde-setwafenv-py-to-build-an-application-on-top-of-bde" title="Permalink to this headline">¶</a></h2>
-<p>First, follow <a class="reference internal" href="#tutorials-setwafenv-bde"><span>Use bde_setwafenv.py to Build BDE</span></a> to create <code class="docutils literal"><span class="pre">~/bdecompilerconfig</span></code>,
-set up the environment variables using bde_setwafenv.py, and build BDE.</p>
+<p>First, follow <a class="reference internal" href="#tutorials-setwafenv-bde"><span>Use bde_setwafenv.py to Build BDE</span></a> to create
+<code class="docutils literal"><span class="pre">~/.bdecompilerconfig</span></code>, set up the environment variables using
+bde_setwafenv.py, and build BDE.</p>
 <p>Then, install bde:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ cd &lt;bde&gt;
 $ waf install
@@ -315,7 +316,7 @@ $ waf build
 </ul>
 <p>First, make sure you have cloned the bde and bde-tools repositories, and that
 you have added <code class="docutils literal"><span class="pre">bde-tools/bin</span></code> to your system&#8217;s PATH.</p>
-<p>Then, For Cygwin, export the WIN_PATH environment variable to point to the
+<p>Then, for Cygwin, export the PYTHON_PATH environment variable to point to the
 <em>Cygwin</em> path of the <em>Windows</em> version of Python.  For example, if the Windows
 version of Python is installed to <code class="docutils literal"><span class="pre">C:\Python27\python</span></code>, then you can use the
 following command to set up the required WIN_PATH environment variable:</p>

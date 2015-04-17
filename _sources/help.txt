@@ -101,7 +101,7 @@ being built.  Try removing the existing configuration:
 
 ::
 
-   $ waf distclean  # deletes the output directory, including the existing configuration
+   $ waf distclean  # delete the output directory, including the existing configuration
    $ waf configure build
 
 Waf is not recognizing the changes that I just made.

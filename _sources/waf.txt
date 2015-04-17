@@ -361,6 +361,13 @@ Build Options
    Shows the output of all test drivers. By default, only the output of
    failed tests is shown.
 
+-  ``--use-dpkg-install``
+
+   choices: ``yes`` (default), ``no``
+
+   Whether to use the Bloomberg's dpkg-based install layout.
+
+
 Build Output
 ````````````
 
@@ -420,6 +427,27 @@ directory:
             |
             |-- bsl.pc
             `-- ...                <-- pkg-config files for each lib
+
+
+Install Options
+```````````````
+- ``--targets``
+
+  Restrict the list of install targets. The value of this option should be a
+  comma separated list of units of release (package groups, stand-alone
+  packages, or third-party directories).
+
+- ``--install-h``
+
+  choices: ``yes`` (default), ``no``
+
+  Whether to install header files.
+
+-  ``-install-pc``
+
+  choices: ``yes`` (default), ``no``
+
+  Whether to install pkgconfig files.
 
 .. _waf-pkgconfig:
 
