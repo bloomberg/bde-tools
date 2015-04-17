@@ -363,7 +363,7 @@ Build Options
 
 -  ``--use-dpkg-install``
 
-   choices: ``yes`` (default), ``no``
+   choices: ``no`` (default), ``yes``
 
    Whether to use the Bloomberg's dpkg-based install layout.
 
