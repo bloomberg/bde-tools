@@ -131,6 +131,10 @@ Makefile targets in open source projects:
    Copy the libraries files, public header files, and the generated
    pkg-config files into the installation destination directory.
 
+-  ``uninstall``
+
+   Remove the previously installed files.
+
 -  ``clean``
 
    Remove build artifacts but keep the configuration cache.
@@ -363,9 +367,7 @@ Build Options
 
 -  ``--use-dpkg-install``
 
-   choices: ``no`` (default), ``yes``
-
-   Whether to use the Bloomberg's dpkg-based install layout.
+   Use the install layout used in Bloomberg's dpkg-based system.
 
 
 Build Output
@@ -437,17 +439,22 @@ Install Options
   comma separated list of units of release (package groups, stand-alone
   packages, or third-party directories).
 
-- ``--install-h``
+- ``--install-dep``
 
   choices: ``yes`` (default), ``no``
 
-  Whether to install header files.
+  When doing a targeted install, whether to also install the dependencies of
+  the targets.
 
--  ``-install-pc``
+-  ``--install-parts``
 
-  choices: ``yes`` (default), ``no``
+  choices: ``all`` (default), ``h``, ``lib``, ``pc``
 
-  Whether to install pkgconfig files.
+  Determines which parts of a UOR to install.  If the value is ``all``, then
+  everything will be installed. If ``h``, then only the header files will be
+  installed.  If ``lib``, then only the library files will be installed.  If
+  ``pc``, then only the pkg-config files are installed.
+
 
 .. _waf-pkgconfig:
 
@@ -530,7 +537,7 @@ of the command prompt provided by a specific version of Visual Studio,
 because waf can be configured to use a version of Visual Studio
 different from the one supported by the that command prompt.
 
-Building using cygwin's gcc compiler is not supported. However, you can work in
+Building using Cygwin's gcc compiler is not supported. However, you can work in
 the cygwin environment, but still use the Visual Studio compiler by invoking
 using the provided shell script ``bin/cygwaf.sh``.
 
@@ -547,9 +554,9 @@ required environment variable:
    $ cygwaf.sh <waf command>
 
 Waf also can be used to generate a Visual Studio solution by running the waf
-commands 'msvs' or 'msvs2008'. The 'msvs' command generates a Visual Studio
-2010 solution named project.sln, and 'msvs2008' generates a Visual Studio
-solution named project\_2008.sln.
+commands ``msvs`` or ``msvs2008``. The ``msvs`` command generates a Visual
+Studio 2010 solution named ``project.sln``, and ``msvs2008`` generates a Visual
+Studio solution named ``project_2008.sln``.
 
 The generated Visual Studio solution still uses waf as the back-end for
 compiling and linking, so it simply serves as an alternate interface
@@ -559,9 +566,9 @@ Building on OSX
 ===============
 
 Waf can be used to generate a xcode project by running the waf command
-'xcode'. This command generates a Xcode project named
-foldername.xcodeproj, where 'foldername' is the name of root directory
-of the source repository.
+``xcode``. This command generates a Xcode project named
+``foldername.xcodeproj``, where ``foldername`` is the name of root directory of
+the source repository.
 
 The generated Xcode project still uses waf as the backend for compiling
 and linking, so it simply serves as an alternate interface from running

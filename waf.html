@@ -173,6 +173,9 @@ and running the test drivers.</p>
 <p>Copy the libraries files, public header files, and the generated
 pkg-config files into the installation destination directory.</p>
 </li>
+<li><p class="first"><code class="docutils literal"><span class="pre">uninstall</span></code></p>
+<p>Remove the previously installed files.</p>
+</li>
 <li><p class="first"><code class="docutils literal"><span class="pre">clean</span></code></p>
 <p>Remove build artifacts but keep the configuration cache.</p>
 </li>
@@ -366,8 +369,7 @@ value is 200 seconds.</p>
 failed tests is shown.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">--use-dpkg-install</span></code></p>
-<p>choices: <code class="docutils literal"><span class="pre">no</span></code> (default), <code class="docutils literal"><span class="pre">yes</span></code></p>
-<p>Whether to use the Bloomberg&#8217;s dpkg-based install layout.</p>
+<p>Use the install layout used in Bloomberg&#8217;s dpkg-based system.</p>
 </li>
 </ul>
 </div>
@@ -432,16 +434,20 @@ directory:</p>
 comma separated list of units of release (package groups, stand-alone
 packages, or third-party directories).</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">--install-h</span></code></p>
+<li><p class="first"><code class="docutils literal"><span class="pre">--install-dep</span></code></p>
 <p>choices: <code class="docutils literal"><span class="pre">yes</span></code> (default), <code class="docutils literal"><span class="pre">no</span></code></p>
-<p>Whether to install header files.</p>
+<p>When doing a targeted install, whether to also install the dependencies of
+the targets.</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">-install-pc</span></code></p>
+<li><p class="first"><code class="docutils literal"><span class="pre">--install-parts</span></code></p>
 </li>
 </ul>
 <blockquote>
-<div><p>choices: <code class="docutils literal"><span class="pre">yes</span></code> (default), <code class="docutils literal"><span class="pre">no</span></code></p>
-<p>Whether to install pkgconfig files.</p>
+<div><p>choices: <code class="docutils literal"><span class="pre">all</span></code> (default), <code class="docutils literal"><span class="pre">h</span></code>, <code class="docutils literal"><span class="pre">lib</span></code>, <code class="docutils literal"><span class="pre">pc</span></code></p>
+<p>Determines which parts of a UOR to install.  If the value is <code class="docutils literal"><span class="pre">all</span></code>, then
+everything will be installed. If <code class="docutils literal"><span class="pre">h</span></code>, then only the header files will be
+installed.  If <code class="docutils literal"><span class="pre">lib</span></code>, then only the library files will be installed.  If
+<code class="docutils literal"><span class="pre">pc</span></code>, then only the pkg-config files are installed.</p>
 </div></blockquote>
 </div>
 </div>
@@ -508,7 +514,7 @@ waf build
 of the command prompt provided by a specific version of Visual Studio,
 because waf can be configured to use a version of Visual Studio
 different from the one supported by the that command prompt.</p>
-<p>Building using cygwin&#8217;s gcc compiler is not supported. However, you can work in
+<p>Building using Cygwin&#8217;s gcc compiler is not supported. However, you can work in
 the cygwin environment, but still use the Visual Studio compiler by invoking
 using the provided shell script <code class="docutils literal"><span class="pre">bin/cygwaf.sh</span></code>.</p>
 <p>To use <code class="docutils literal"><span class="pre">cygwaf.sh</span></code>, you must export the WIN_PATH environment variable to
@@ -521,9 +527,9 @@ $ cygwaf.sh &lt;waf command&gt;
 </pre></div>
 </div>
 <p>Waf also can be used to generate a Visual Studio solution by running the waf
-commands &#8216;msvs&#8217; or &#8216;msvs2008&#8217;. The &#8216;msvs&#8217; command generates a Visual Studio
-2010 solution named project.sln, and &#8216;msvs2008&#8217; generates a Visual Studio
-solution named project_2008.sln.</p>
+commands <code class="docutils literal"><span class="pre">msvs</span></code> or <code class="docutils literal"><span class="pre">msvs2008</span></code>. The <code class="docutils literal"><span class="pre">msvs</span></code> command generates a Visual
+Studio 2010 solution named <code class="docutils literal"><span class="pre">project.sln</span></code>, and <code class="docutils literal"><span class="pre">msvs2008</span></code> generates a Visual
+Studio solution named <code class="docutils literal"><span class="pre">project_2008.sln</span></code>.</p>
 <p>The generated Visual Studio solution still uses waf as the back-end for
 compiling and linking, so it simply serves as an alternate interface
 from running waf directly on the command line.</p>
@@ -531,9 +537,9 @@ from running waf directly on the command line.</p>
 <div class="section" id="building-on-osx">
 <h2>Building on OSX<a class="headerlink" href="#building-on-osx" title="Permalink to this headline">¶</a></h2>
 <p>Waf can be used to generate a xcode project by running the waf command
-&#8216;xcode&#8217;. This command generates a Xcode project named
-foldername.xcodeproj, where &#8216;foldername&#8217; is the name of root directory
-of the source repository.</p>
+<code class="docutils literal"><span class="pre">xcode</span></code>. This command generates a Xcode project named
+<code class="docutils literal"><span class="pre">foldername.xcodeproj</span></code>, where <code class="docutils literal"><span class="pre">foldername</span></code> is the name of root directory of
+the source repository.</p>
 <p>The generated Xcode project still uses waf as the backend for compiling
 and linking, so it simply serves as an alternate interface from running
 waf directly on the command line.</p>
