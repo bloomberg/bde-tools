@@ -13,7 +13,7 @@ from bdebld.meta import repounits
 
 
 def add_cmdline_options(opt):
-    grp = opt.add_option_group('graph options')
+    grp = opt.add_option_group('Graph options')
     grp.add_option('--extract-nodes', type='string', default=None,
                    help='extract the (comma separated list of) nodes from '
                         'graph',

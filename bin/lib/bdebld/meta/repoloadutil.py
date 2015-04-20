@@ -167,7 +167,7 @@ def is_bde_repo_path(path):
     """Determine whether a path is the root of a BDE-style repo.
     """
     basename = os.path.basename(path)
-    return basename not in ('build', '_build')
+    return not basename.startswith('_') and basename not in ('build')
 
 
 def _load_opts(path):
