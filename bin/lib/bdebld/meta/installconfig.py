@@ -2,7 +2,7 @@ import copy
 import os
 
 from bdebld.meta import graphutil
-from bdebld.meta import repoerror
+from bdebld.common import blderror
 from bdebld.common import mixins
 
 
@@ -16,13 +16,14 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
     Attributes:
        is_flat_include (bool): Whether header files should be installed to a
            flat directory for all UORs or a separate directory for each UOR.
-       pc_dir (str): The path to the directory in which the .pc file will be
-           installed.
-       lib_dir (str): The name of the directory under ${PREFIX} to which
-           libraries will be installed.
-       install_uors (list of str): The names of uors to be installed.
+       pc_dir (str): The path of the directory relative to the prefix in which
+           pkg-config files will be installed.
+       lib_dir (str): The path of the directory relative to the prefix in which
+           library files will be installed.
+       install_uors (set of str): The names of UORs to be installed.
        lib_suffix (str): The suffix to add to the library being built.
        is_install_h (bool): Whether to install header files.
+       is_install_lib (bool): Whether to install library files.
        is_install_pc (bool): Whether to install pkgconfig files.
     """
 
@@ -54,8 +55,9 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
             self.lib_dir = lib_dir
             self.pc_dir = os.path.join(lib_dir, 'pkgconfig')
             self.lib_suffix = lib_suffix
-        self.install_uors = []
+        self.install_uors = set()
         self.is_install_h = True
+        self.is_install_lib = True
         self.is_install_pc = True
 
     def setup_install_uors(self, targets, is_install_dep, uor_digraph):
@@ -68,22 +70,22 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
             targets (list of str): The list of install targets.
             is_install_dep (bool): Whether to also install dependencies of the
                 targets.
-            uor_digraph (dict): The depency graph of uor names.
+            uor_digraph (dict): The depency graph of UOR names.
 
         Raises:
-            repoerror.InvalidInstallTargetError
+            blderror.InvalidInstallTargetError
         """
 
         uors = uor_digraph.keys()
         if targets:
             targets = targets.split(',')
             if any(t not in uors for t in targets):
-                raise repoerror.InvalidInstallTargetError(
+                raise blderror.InvalidInstallTargetError(
                     'Install targets must be UORs (package groups, '
                     'stand-alone packages, and third-party directories).')
             if is_install_dep:
-                self.install_uors = graphutil.topological_sort(
-                    uor_digraph, targets)
+                self.install_uors = set(graphutil.topological_sort(
+                    uor_digraph, targets))
             else:
                 self.install_uors = targets
         else:
@@ -102,7 +104,7 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
     def get_lib_install_path(self, uor_name):
         """Return library install path of a UOR.
         """
-        if not self.should_install(uor_name):
+        if not self.is_install_lib or not self.should_install(uor_name):
             return None
 
         return os.path.join('${PREFIX}', self.lib_dir)

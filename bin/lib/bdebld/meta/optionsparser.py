@@ -3,7 +3,31 @@
 
 import re
 
+from bdebld.common import blderror
 from bdebld.meta import optiontypes
+
+
+def parse_option_rules_file(file_path):
+    """Parse the option rules file.
+
+    Args:
+        file_path (str): Path to the options file.
+
+    Returns:
+        list of OptionRules
+
+    Raises:
+        IOError: Error accessing the file.
+        InvalidOptionFileError: Invalid option file.
+    """
+
+    with open(file_path) as f:
+        parser = OptionsParser(f)
+        try:
+            parser.parse()
+        except blderror.InvalidOptionRuleError as e:
+            raise blderror.InvalidOptionFileError(file_path, e)
+        return parser.option_rules
 
 
 class OptionsParser(object):
@@ -41,11 +65,16 @@ class OptionsParser(object):
 
     def parse(self):
         """Parse the options file specified on construction.
+
+        Raises:
+           InvalidOptionRuleError: The option rule is invalid.
         """
         continuation = False
         got_line = False
 
+        line_num = 0
         for line in self.opts_file:
+            line_num += 1
             line = line.rstrip('\n')
             if not continuation:
                 rule = optiontypes.OptionRule()
@@ -61,14 +90,20 @@ class OptionsParser(object):
                                 m.group('command'))
                         else:
                             rule.command = optiontypes.OptionCommand.ADD
-                        rule.uplid = optiontypes.Uplid.from_str(
-                            m.group('uplid'))
+
+                        try:
+                            rule.uplid = optiontypes.Uplid.from_str(
+                                m.group('uplid'))
+                        except blderror.InvalidUplidError:
+                            raise blderror.InvalidOptionRuleError(
+                                line_num, line, "invalid UPLID")
                         rule.ufid = optiontypes.Ufid.from_str(m.group('ufid'))
                         rule.key = m.group('key')
                         rule.value = m.group('value')
                         continuation = not m.group('cont') is None
                     else:
-                        raise ValueError('"%s" is not valid!' % line)
+                        raise blderror.InvalidOptionRuleError(
+                            line_num, line, "invalid format")
             else:
                 # The previous line continues.
 

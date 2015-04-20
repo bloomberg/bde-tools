@@ -3,6 +3,8 @@
 
 import os
 
+from bdebld.common import logutil
+
 from bdebld.meta import repocontext
 from bdebld.meta import repocontextutil
 from bdebld.meta import repounits
@@ -16,23 +18,20 @@ class RepoContextLoader(object):
     Attributes:
         repo_context (RepoContext): The repo context to be loaded.
     """
-    def __init__(self, root_path,
-                 log_start=lambda _: None,
-                 log_end=lambda _: None):
+    def __init__(self, root_path):
         """Initialize this loader.
 
         Args:
             root_path (str): Path to the root of the repository.
-            log_start (func): Record log message start.
-            log_end (func): Record log message end.
         """
         self.repo_context = repocontext.RepoContext()
         self.repo_context.root_path = root_path
-        self.log_start = log_start
-        self.log_end = log_end
 
     def load(self):
         """Load the repo context.
+
+        Raises:
+            InvalidConfigFileError:  The layout configuration is invalid.
         """
         root_path = self.repo_context.root_path
         if os.path.isfile(os.path.join(root_path,
@@ -41,15 +40,19 @@ class RepoContextLoader(object):
             for d in dirs:
                 dir_path = os.path.join(root_path, d)
                 if repoloadutil.is_bde_repo_path(dir_path):
-                    self.log_start('Entering repo')
-                    self.log_end(os.path.basename(dir_path), color='YELLOW')
-                    self.load_repo(dir_path)
+                    logutil.start_msg('Entering repo')
+                    logutil.end_msg(os.path.basename(dir_path), color='YELLOW')
+                    self._load_repo(dir_path)
         else:
-            self.load_repo(root_path)
+            self._load_repo(root_path)
         self._load_uor_doc_and_versions()
 
-    def load_repo(self, repo_path):
-        repo_layout = repolayoututil.get_repo_layout(repo_path)
+    def _load_repo(self, repo_path):
+        repo_layout, layout_config_path = repolayoututil.get_repo_layout(
+            repo_path)
+        if layout_config_path:
+            logutil.start_msg('Using layout configuration from')
+            logutil.end_msg(layout_config_path)
         for gd in repo_layout.group_dirs:
             gd_path = os.path.join(repo_path, gd)
             if os.path.isdir(gd_path):
@@ -92,7 +95,7 @@ class RepoContextLoader(object):
             self._load_repo_one_package_group(path)
 
     def _load_repo_one_package_group(self, path):
-        self.log_start('Loading %s' % os.path.basename(path))
+        logutil.start_msg('Loading %s' % os.path.basename(path))
         package_group = repoloadutil.load_package_group(path)
         self.repo_context.add_unit(package_group)
 
@@ -105,7 +108,7 @@ class RepoContextLoader(object):
                 package = repoloadutil.load_package(
                     package_path, repounits.PackageType.PACKAGE_NORMAL)
             self.repo_context.add_unit(package)
-        self.log_end('ok')
+        logutil.end_msg('ok')
 
     def _load_repo_stdalone_packages(self, path, type_):
         dirs = next(os.walk(path))[1]
@@ -116,10 +119,10 @@ class RepoContextLoader(object):
                 package_paths.append(dir_path)
 
         for path in package_paths:
-            self.log_start('Loading %s' % os.path.basename(path))
+            logutil.start_msg('Loading %s' % os.path.basename(path))
             package = repoloadutil.load_package(path, type_)
             self.repo_context.add_unit(package)
-            self.log_end('ok')
+            logutil.end_msg('ok')
 
     def _load_repo_thirdparty_dirs(self, path):
         dirs = next(os.walk(path))[1]
@@ -131,9 +134,9 @@ class RepoContextLoader(object):
 
         for path in tp_paths:
             third_party = repounits.ThirdPartyDir(path)
-            self.log_start('Loading %s' % third_party.name)
+            logutil.start_msg('Loading %s' % third_party.name)
             self.repo_context.add_unit(third_party)
-            self.log_end('ok')
+            logutil.end_msg('ok')
 
     def _load_uor_doc_and_versions(self):
         """Load the doc and version metadata for uors.

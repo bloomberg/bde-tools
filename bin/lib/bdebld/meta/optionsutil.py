@@ -5,12 +5,13 @@ import os
 
 from bdebld.common import logutil
 from bdebld.common import sysutil
+from bdebld.common import blderror
 
 from bdebld.meta import optionsparser
 from bdebld.meta import optiontypes
 
 
-def get_default_option_rules(msg_func=logutil.msg):
+def get_default_option_rules():
     """Return the default option rules.
 
     Args:
@@ -18,6 +19,9 @@ def get_default_option_rules(msg_func=logutil.msg):
 
     Returns:
         list of OptionRule.
+
+    Raises:
+        MissingFileError: If default.opts can not be found.
     """
     default_opts_path = os.path.join(sysutil.repo_root_path(), 'etc',
                                      'default.opts')
@@ -37,13 +41,9 @@ def get_default_option_rules(msg_func=logutil.msg):
         found_default_opts = True
 
     if not found_default_opts:
-        raise ValueError('Cannot find default.opts')
+        raise blderror.MissingFileError('Cannot find default.opts.')
 
-    with open(default_opts_path) as f:
-        parser = optionsparser.OptionsParser(f)
-        parser.parse()
-
-        option_rules = parser.option_rules
+    option_rules = optionsparser.parse_option_rules_file(default_opts_path)
 
     if bde_root:
         default_internal_opts_path = os.path.join(bde_root, 'etc',
@@ -51,19 +51,17 @@ def get_default_option_rules(msg_func=logutil.msg):
 
         if os.path.isfile(default_internal_opts_path):
             found_default_internal_opts = True
-            with open(default_internal_opts_path) as f:
-                parser = optionsparser.OptionsParser(f)
-                parser.parse()
-
-                option_rules += parser.option_rules
+            option_rules += optionsparser.parse_option_rules_file(
+                default_internal_opts_path)
         else:
             logutil.warn('The BDE_ROOT environment variable is set, '
                          'but $BDE_ROOT/etc/default_internal.opts does '
                          'not exist.')
 
-    msg_func("Using default option rules from", default_opts_path)
+    logutil.msg("Using default option rules from", default_opts_path)
     if found_default_internal_opts:
-        msg_func("Using default option rules from", default_internal_opts_path)
+        logutil.msg("Using default option rules from",
+                    default_internal_opts_path)
 
     return option_rules
 
@@ -124,13 +122,13 @@ def make_ufid_from_cmdline_options(opts):
         An Ufid object.
 
     Raises:
-        ValueError on invalid UFID.
+        InvalidUfidError on invalid UFID.
     """
 
     if opts.ufid:
         ufid = optiontypes.Ufid.from_str(opts.ufid)
         if not optiontypes.Ufid.is_valid(ufid.flags):
-            raise ValueError(
+            raise blderror.InvalidUfidError(
                 'Invalid UFID specified, each part of a UFID must be '
                 'in the following list of valid flags: %s.' %
                 ", ".join(
@@ -214,19 +212,13 @@ def _match_uplid_ver(uplid, mask):
 
     mask_ver.extend(['0'] * (len(build_ver) - len(mask_ver)))
 
-    def _is_int(str_):
-        try:
-            int(str_)
-            return True
-        except ValueError:
-            return False
-
     index = 0
     while index < len(build_ver):
         build_subv = build_ver[index]
         mask_subv = mask_ver[index]
 
-        if (not _is_int(build_subv) or not _is_int(mask_subv)):
+        if (not sysutil.is_int_string(build_subv) or
+                not sysutil.is_int_string(mask_subv)):
             if build_subv != mask_subv:
                 return False
         else:

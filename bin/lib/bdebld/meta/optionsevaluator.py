@@ -74,8 +74,10 @@ class OptionsEvaluator(object):
         match = self._match_rule(rule)
 
         if rule.key in debug_keys:
-            logutil.info('%s: %s' % (('Accept' if match else 'Ignore'),
-                                     rule))
+            if match:
+                logutil.info('Accept: %s' % rule)
+            else:
+                logutil.warn('Ingore: %s' % rule)
         if not match:
             return
 
@@ -151,8 +153,7 @@ class OptionsEvaluator(object):
         for key in self.results:
             self.results[key] = evaluate_key(key)
             if key in debug_keys:
-                logutil.info('Evaluated value: %s: %s' % (key,
-                                                          self.results[key]))
+                logutil.info('%s: %s' % (key, self.results[key]))
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

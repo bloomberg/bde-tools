@@ -7,6 +7,8 @@ import re
 import subprocess
 import sys
 
+from bdebld.common import blderror
+
 
 def shell_command(cmd):
     """Execute and return the output of a shell command.
@@ -33,6 +35,16 @@ def find_program(program):
             return path
 
     return None
+
+
+def is_int_string(str_):
+    """Is a string a representation of a integer value.
+    """
+    try:
+        int(str_)
+        return True
+    except ValueError:
+        return False
 
 
 def is_64bit_system():
@@ -145,7 +157,7 @@ def get_win32_os_info_from_cygwin():
 
     platform_str = unversioned_platform()
     if platform_str != 'cygwin':
-        raise ValueError(
+        raise blderror.UnsupportedPlatformError(
             'Function can only be called in a cygwin environment.')
 
     os_type = 'windows'
@@ -155,7 +167,8 @@ def get_win32_os_info_from_cygwin():
     m = re.match(r'\s*Microsoft\s+Windows\s+\[Version\s+(\d+\.\d+)[^\]]+\]',
                  out)
     if not m:
-        raise ValueError('Invalid Windows version string "%s".' % out)
+        raise blderror.UnsupportedPlatformError(
+            'Invalid Windows version string "%s".' % out)
     os_ver = m.group(1)
 
     # Make the assumption that we are on a X86 system.
@@ -239,7 +252,8 @@ def get_os_info():
         }
 
     if platform_str not in os_info_getters:
-        raise ValueError('Unsupported platform %s' % platform_str)
+        raise blderror.UnsupportedPlatformError(
+            'Unsupported platform %s' % platform_str)
 
     return os_info_getters[platform_str]()
 

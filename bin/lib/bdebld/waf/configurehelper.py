@@ -3,7 +3,6 @@
 
 import os
 import sys
-import copy
 
 from waflib import Logs
 
@@ -50,10 +49,9 @@ class ConfigureHelper(object):
             self.ctx.msg('Compiler type', self.uplid.comp_type)
             self.ctx.msg('Compiler version', self.uplid.comp_ver)
 
-        loader = repocontextloader.RepoContextLoader(
-            self.ctx.path.abspath(), self.ctx.start_msg, self.ctx.end_msg)
-
+        loader = repocontextloader.RepoContextLoader(self.ctx.path.abspath())
         loader.load()
+
         self.repo_context = loader.repo_context
 
         if self.ctx.options.verify:
@@ -67,7 +65,7 @@ class ConfigureHelper(object):
             self.ctx.env['CPPPATH_ST'].replace('%s', r'([^ =]+)'),
             '/D' if self.uplid.comp_type == 'cl' else '-D')
 
-        default_rules = optionsutil.get_default_option_rules(self.ctx.msg)
+        default_rules = optionsutil.get_default_option_rules()
         debug_opt_keys = self.ctx.options.debug_opt_keys.split(',') if \
             self.ctx.options.debug_opt_keys is not None else []
         self.build_config = buildconfigfactory.make_build_config(
@@ -95,17 +93,18 @@ class ConfigureHelper(object):
 
         self.install_config = installconfig.InstallConfig(
             self.ufid,
-            self.ctx.options.use_dpkg_install == 'yes',
-            self.ctx.options.install_flat_include,
-            self.ctx.options.install_lib_dir,
+            self.ctx.options.use_dpkg_install,
+            self.ctx.options.use_flat_include_dir,
+            self.ctx.options.lib_dir,
             self.ctx.options.lib_suffix)
 
-        self.ctx.msg('Install flat includes?',
+        self.ctx.msg('Use flat include directory',
                      'yes' if self.install_config.is_flat_include else 'no')
         self.ctx.msg('Lib install directory', self.install_config.lib_dir)
-        self.ctx.msg('Pkg-config install path', self.install_config.pc_dir)
+        self.ctx.msg('Pkg-config install directory',
+                     self.install_config.pc_dir)
         if self.install_config.lib_suffix:
-            self.ctx.msg('Use library suffix', self.install_config.lib_suffix)
+            self.ctx.msg('Lib name suffix', self.install_config.lib_suffix)
 
         num_uors = len(self.build_config.package_groups) + \
             len(self.build_config.stdalone_packages) + \
@@ -117,7 +116,7 @@ class ConfigureHelper(object):
                 self.build_config.inner_packages.values() +
                 self.build_config.stdalone_packages.values()))
 
-        print_list('Num of UORs, inner packages, components',
+        print_list('# UORs, inner packages, and components',
                    (num_uors, num_inner_packages, num_components))
 
         if self.ctx.options.verbose >= 2:
@@ -127,8 +126,7 @@ class ConfigureHelper(object):
 
     def _verify(self):
         self.ctx.msg('Performing additional checks', '')
-        verifier = repocontextverifier.RepoContextVerifier(
-            self.repo_context, self.ctx.start_msg, self.ctx.end_msg)
+        verifier = repocontextverifier.RepoContextVerifier(self.repo_context)
 
         verifier.verify()
         if not verifier.is_success:

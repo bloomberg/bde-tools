@@ -131,7 +131,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         int_oe = copy.deepcopy(oe)
         export_oe.evaluate()
         if export_oe.results.get('CAPABILITY') == 'NEVER':
-            logutil.info('Skipped non-supported UOR %s' % uor.name)
+            logutil.warn('Skipped non-supported UOR %s' % uor.name)
             return
 
         int_oe.store_option_rules(uor.opts)
@@ -188,7 +188,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         int_oe.evaluate(debug_keys)
 
         if int_oe.results.get('CAPABILITY') == 'NEVER':
-            logutil.info('Skipped non-supported package %s' % package_name)
+            logutil.warn('Skipped non-supported package %s' % package_name)
             return False
 
         if package.type_ == repounits.PackageType.PACKAGE_PLUS:

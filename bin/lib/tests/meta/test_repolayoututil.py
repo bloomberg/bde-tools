@@ -20,7 +20,7 @@ class TestRepoLayout(unittest.TestCase):
             os.path.dirname(os.path.realpath(__file__)), 'repos', 'two')
 
     def test_get_repo_layout(self):
-        value = repolayoututil.get_repo_layout(self.repo_root_one)
+        value, config_path = repolayoututil.get_repo_layout(self.repo_root_one)
         exp_value = repolayout.RepoLayout()
         exp_value.group_dirs = ['groups', 'enterprise', 'wrappers']
         exp_value.app_package_dirs = ['applications']
@@ -28,8 +28,9 @@ class TestRepoLayout(unittest.TestCase):
         exp_value.third_party_package_dirs = ['third-party']
         exp_value.group_abs_dirs = []
         self.assertEqual(value, exp_value)
+        self.assertEqual(config_path, None)
 
-        value = repolayoututil.get_repo_layout(self.repo_root_two)
+        value, config_path = repolayoututil.get_repo_layout(self.repo_root_two)
         exp_value = repolayout.RepoLayout()
         exp_value.group_dirs = ['groups1']
         exp_value.app_package_dirs = ['apps1']
@@ -37,6 +38,8 @@ class TestRepoLayout(unittest.TestCase):
         exp_value.third_party_package_dirs = []
         exp_value.group_abs_dirs = ['groupabs1']
         self.assertEqual(value, exp_value)
+        self.assertEqual(config_path,
+                         os.path.join(self.repo_root_two, '.bdelayoutconfig'))
 
     def test_write_repo_layout_to_json(self):
         out = StringIO()

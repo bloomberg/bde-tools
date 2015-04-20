@@ -1,5 +1,6 @@
 import unittest
 
+from bdebld.common import blderror
 from bdebld.meta import graphutil
 
 
@@ -39,7 +40,7 @@ class TestGraph(unittest.TestCase):
         try:
             levels = graphutil.levelize(graph1)
             self.AssertFalse(True)
-        except ValueError:
+        except blderror.CycleError:
             # print(e.message)
             pass
 

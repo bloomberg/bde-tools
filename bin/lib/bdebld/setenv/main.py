@@ -5,15 +5,27 @@ import re
 import sys
 import os
 
-from bdebld.meta import optionsutil
-from bdebld.meta import optiontypes
+from bdebld.common import blderror
 from bdebld.common import sysutil
 from bdebld.common import msvcversions
+from bdebld.meta import optionsutil
+from bdebld.meta import optiontypes
 from bdebld.setenv import compilerinfo
 from bdebld.setenv import cmdline
 
 
 def main():
+    try:
+        program()
+    except blderror.BldError as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
+    except IOError as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
+
+
+def program():
     platform_str = sysutil.unversioned_platform()
 
     if platform_str not in ('win32', 'cygwin', 'linux', 'aix', 'sunos',

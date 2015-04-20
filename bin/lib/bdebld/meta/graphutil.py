@@ -7,6 +7,8 @@ the nodes that are reachable from the node of the key.
 
 import copy
 
+from bdebld.common import blderror
+
 
 def levelize(graph, root_nodes=None):
     """Levelize a directed graph.
@@ -25,8 +27,8 @@ def levelize(graph, root_nodes=None):
 
     def visit(node, stack):
         if node in stack:
-            raise ValueError("Cycle detected: %s" %
-                             ' -> '.join(stack + [node]))
+            raise blderror.CycleError("Cycle detected: %s." %
+                                      ' -> '.join(stack + [node]))
 
         if node in node_levels:
             return node_levels[node]
@@ -77,8 +79,8 @@ def topological_sort(digraph, root_nodes=None):
             return
 
         if node in stack:
-            raise ValueError("Cycle detected: %s" %
-                             ' -> '.join(stack + [node]))
+            raise blderror.CycleError("Cycle detected: %s." %
+                                      ' -> '.join(stack + [node]))
 
         if node in digraph:
             stack.append(node)

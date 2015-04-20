@@ -178,10 +178,12 @@ def bde_exec_command(task, cmd, **kw):
 def post_the_other(self):
     """Allow manual dependency specification with the 'depends_on' attribute.
     """
-    deps = getattr(self, 'depends_on', [])
-    for name in self.to_list(deps):
-        other = self.bld.get_tgen_by_name(name)
-        other.post()
+
+    deps = getattr(self, 'depends_on', None)
+    if deps:
+        for name in self.to_list(deps):
+            other = self.bld.get_tgen_by_name(name)
+            other.post()
 
 
 @TaskGen.feature('cstlib', 'cshlib', 'cxxstlib', 'cxxshlib', 'fcstlib',
@@ -289,20 +291,20 @@ class bdepc(Task.Task):
     """This task writes a pkg-config file having configurable properties.
     """
 
-    PKGCONFIG_TEMPLATE = '''prefix=%s
-libdir=%s
-includedir=%s
+    PKGCONFIG_TEMPLATE = """prefix={prefix}
+libdir={libdir}
+includedir={includedir}
 
-Name: %s
-Description: %s
-URL: %s
-Version: %s
+Name: {name}
+Description: {desc}
+URL: {url}
+Version: {version}
 Requires:
-Requires.private: %s
-Libs: -L${libdir} -l%s %s
+Requires.private: {requires}
+Libs: -L${{libdir}} -l{libname} {export_libs}
 Libs.private:
-Cflags: -I${includedir} %s %s
-'''
+Cflags: -I${{includedir}} {flags}
+"""
 
     def signature(self):
         """Return a signature that uniquely identifies the generated pc file.
@@ -329,20 +331,20 @@ Cflags: -I${includedir} %s %s
         else:
             version = ''
 
-        pc_source = self.PKGCONFIG_TEMPLATE % (
-            gen.bld.env['PREFIX'],
-            gen.libdir,
-            gen.includedir,
-            gen.doc.mnemonic,
-            gen.doc.description,
-            gen.url,
-            version,
-            ' '.join(gen.dep),
-            gen.libname,
-            ' '.join([gen.bld.env['LIB_ST'] % l for l in gen.export_libs]),
-            ' '.join([gen.bld.env['CPPPATH_ST'] % i for i in
-                      gen.extra_includes]),
-            ' '.join(gen.export_flags)
+        pc_source = self.PKGCONFIG_TEMPLATE.format(
+            prefix=gen.bld.env['PREFIX'],
+            libdir=gen.libdir,
+            includedir=gen.includedir,
+            name=gen.doc.mnemonic,
+            desc=gen.doc.description,
+            url=gen.url,
+            version=version,
+            requires=' '.join(gen.dep),
+            libname=gen.libname,
+            export_libs=' '.join([gen.bld.env['LIB_ST'] % l
+                                  for l in gen.export_libs]),
+            flags=' '.join([gen.bld.env['CPPPATH_ST'] % i for i in
+                            gen.extra_includes] + gen.export_flags)
         )
 
         self.outputs[0].write(pc_source)

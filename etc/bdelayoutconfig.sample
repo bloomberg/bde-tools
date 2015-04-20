@@ -1,0 +1,7 @@
+{
+    "group_dirs": ["groups", "enterprise", "wrappers"],
+    "app_package_dirs": ["applications"],
+    "stand_alone_package_dirs": ["adapters"],
+    "third_party_package_dirs": ["third-party"],
+    "group_abs_dirs": []
+}

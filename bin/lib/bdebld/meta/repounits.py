@@ -15,7 +15,7 @@ UorVersion = collections.namedtuple('UorVersion', ['major', 'minor', 'patch'])
 
 
 class ComponentType(object):
-    """This class enumerates over types of component.
+    """This class enumerates over types of components.
 
     Enumerators:
        CXX: A C++ component.

@@ -1,12 +1,15 @@
 """Configure the available compilers.
 """
 
+from __future__ import print_function
+
 import json
 import re
 import os
+import sys
 
+from bdebld.common import blderror
 from bdebld.common import mixins
-from bdebld.common import logutil
 
 from bdebld.meta import optiontypes
 from bdebld.meta import optionsutil
@@ -53,7 +56,7 @@ def get_config_path():
        Path to the config file.
 
     Raises:
-       ValueError if no valid configuration file is found.
+       MissingFileError if no valid configuration file is found.
     """
     localconfig_path = os.path.join(os.path.expanduser('~'),
                                     '.bdecompilerconfig')
@@ -73,12 +76,13 @@ def get_config_path():
             path = defaultconfig_path
 
     if not path:
-        raise ValueError('Cannot find a compiler configuration file at %s '
-                         'or $BDE_ROOT/etc/bdecompilerconfig' %
-                         localconfig_path)
+        raise blderror.MissingFileError(
+            'Cannot find a compiler configuration file at %s '
+            'or $BDE_ROOT/etc/bdecompilerconfig' %
+            localconfig_path)
 
     if path:
-        logutil.warn('using configuration: %s' % path)
+        print('using configuration: %s' % path, file=sys.stderr)
         return path
 
 

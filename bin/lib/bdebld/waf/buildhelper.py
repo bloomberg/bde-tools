@@ -11,7 +11,6 @@ from bdebld.meta import installconfig
 from bdebld.meta import buildconfigutil
 from bdebld.meta import graphutil
 from bdebld.meta import repounits
-from bdebld.meta import repoerror
 
 from bdebld.common import sysutil
 
@@ -33,21 +32,31 @@ class BuildHelper(object):
 
         self.uor_digraph = buildconfigutil.get_uor_digraph(self.build_config)
 
-        if self.ctx.cmd == 'install':
-            try:
-                self.install_config.setup_install_uors(
-                    self.ctx.targets, self.ctx.options.install_dep == 'yes',
-                    self.uor_digraph)
-            except repoerror.InvalidInstallTargetError as e:
-                self.ctx.fatal(e.message)
-            self.install_config.is_install_h = \
-                self.ctx.options.install_h == 'yes'
-            self.install_config.is_install_pc = \
-                self.ctx.options.install_pc == 'yes'
+        if self.ctx.cmd in ('install', 'uninstall'):
+            self.install_config.setup_install_uors(
+                self.ctx.targets, self.ctx.options.install_dep == 'yes',
+                self.uor_digraph)
+
+            if self.ctx.options.install_parts == 'all':
+                self.install_config.is_install_h = True
+                self.install_config.is_install_lib = True
+                self.install_config.is_install_pc = True
+            elif self.ctx.options.install_parts == 'h':
+                self.install_config.is_install_h = True
+                self.install_config.is_install_lib = False
+                self.install_config.is_install_pc = False
+            elif self.ctx.options.install_parts == 'lib':
+                self.install_config.is_install_h = False
+                self.install_config.is_install_lib = True
+                self.install_config.is_install_pc = False
+            elif self.ctx.options.install_parts == 'pc':
+                self.install_config.is_install_h = False
+                self.install_config.is_install_lib = False
+                self.install_config.is_install_pc = True
+
             Logs.info('Waf: Installing UORs: %s' %
                       ','.join(sorted(self.install_config.install_uors)))
 
-        self.soname_overrides = self.ctx.env['soname_overrides']
         self.third_party_lib_targets = set(
             [d + '_lib' for d in self.build_config.third_party_dirs.keys()])
 
@@ -133,11 +142,12 @@ $ waf build --target bdlt_date.t --test build"""
             package = self.build_config.inner_packages[package_name]
             self.build_inner_package(package, group)
 
-        if group.name in self.soname_overrides:
+        if group.name in self.build_config.soname_overrides:
             custom_soname = self.soname_overrides[group.name]
         else:
             custom_soname = None
 
+        self.gen_pc_file(group)
         self.ctx(name=group.name + '_lib',
                  path=group_node,
                  target=self.install_config.get_target_name(group.name),
@@ -153,14 +163,13 @@ $ waf build --target bdlt_date.t --test build"""
                                   ordered_package_names],
                  install_path=lib_install_path,
                  bdevnum=group.version,
-                 bdesoname=custom_soname
+                 bdesoname=custom_soname,
+                 depends_on=[group.name + '_pc']
                  )
-
-        self.gen_pc_file(group)
 
         self.ctx(
             name=group.name,
-            depends_on=[group.name + '_lib', group.name + '.pc'] +
+            depends_on=[group.name + '_lib'] +
             [p + '_tst' for p in ordered_package_names]
         )
 
@@ -173,8 +182,10 @@ $ waf build --target bdlt_date.t --test build"""
         h_install_path = self.install_config.get_h_install_path(
             package.name)
 
+        self.gen_pc_file(package)
         self.build_package_impl(package, internal_dep, external_dep,
-                                lib_install_path, h_install_path)
+                                lib_install_path, h_install_path,
+                                [package.name + '_pc'])
 
         depends_on = [
             package.name + '_lib',
@@ -260,7 +271,7 @@ $ waf build --target bdlt_date.t --test build"""
             export_includes=[package_node],
             use=internal_dep,
             uselib=external_dep,
-            install_path=lib_install_path
+            install_path=lib_install_path,
         )
 
         self.ctx(
@@ -284,7 +295,8 @@ $ waf build --target bdlt_date.t --test build"""
                                         header_dirs[d]])
 
     def build_package_impl(self, package, internal_dep, external_dep,
-                           lib_install_path, h_install_path):
+                           lib_install_path, h_install_path,
+                           extra_taskgen_dep=None):
         relpath = os.path.relpath(package.path, self.build_config.root_path)
         package_node = self.ctx.path.make_node(relpath)
         flags = package.flags
@@ -336,7 +348,8 @@ $ waf build --target bdlt_date.t --test build"""
             export_includes=[package_node],
             use=internal_dep,
             uselib=external_dep,
-            install_path=lib_install_path
+            install_path=lib_install_path,
+            depends_on=extra_taskgen_dep
         )
 
         if self.is_build_tests:
@@ -417,6 +430,7 @@ $ waf build --target bdlt_date.t --test build"""
         # The reason for using "vc" as the output directory storing .pc files
         # is to preserve backward compatibility with an older version of this
         # tool.
+
         pc_node = self.ctx.path.make_node('vc')
 
         pc_install_path = self.install_config.get_pc_install_path(uor.name)
@@ -428,7 +442,7 @@ $ waf build --target bdlt_date.t --test build"""
         dep = sorted(uor.dep | uor.external_dep)
 
         self.ctx(
-            name=uor.name + '.pc',
+            name=uor.name + '_pc',
             features=['bdepc'],
             path=pc_node,
             target=pc_libname + '.pc',

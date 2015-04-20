@@ -14,14 +14,15 @@ from bdebld.meta import repounits
 
 def add_cmdline_options(opt):
     grp = opt.add_option_group('graph options')
-    grp.add_option('--extract-nodes', type='string',
-                   default=None,
+    grp.add_option('--extract-nodes', type='string', default=None,
                    help='extract the (comma separated list of) nodes from '
                         'graph',
                    dest='extract_nodes')
 
-    grp.add_option('--no-trans-reduce', action='store_false', default=True,
-                   help='do not perform transitive reduction on graph',
+    grp.add_option('--trans-reduce',
+                   type='choice', choices=('yes', 'no'), default='yes',
+                   help='whether to perform transitive reduction on graph '
+                        '(yes/no) [default: %default]',
                    dest='trans_reduce')
 
     grp.add_option('--open-graph-with', type='string',
@@ -55,7 +56,7 @@ class GraphHelper(object):
         if self.dot_path:
             self.dot_path = os.path.join(self.dot_path, 'dot')
 
-    def draw(self):
+    def build(self):
         if not self.ctx.targets or self.ctx.targets == '*':
             digraph = buildconfigutil.get_uor_digraph(
                 self.build_config)
@@ -101,7 +102,7 @@ class GraphHelper(object):
         extract_nodes = self.ctx.options.extract_nodes.split(',') if \
             self.ctx.options.extract_nodes is not None else []
 
-        is_trans_reduce = self.ctx.options.trans_reduce
+        is_trans_reduce = self.ctx.options.trans_reduce == 'yes'
 
         dot_text = dotutil.digraph_to_dot(graph_name, digraph, extract_nodes,
                                           is_trans_reduce)

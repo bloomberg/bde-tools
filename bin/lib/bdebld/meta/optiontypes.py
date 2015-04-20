@@ -5,6 +5,7 @@ BDE-style repository.
 
 """
 
+from bdebld.common import blderror
 from bdebld.common import mixins
 
 
@@ -189,10 +190,19 @@ class Uplid(mixins.BasicEqualityMixin):
 
     @classmethod
     def from_str(cls, platform_str):
+        """Parse uplid from a string.
+
+        Args:
+            platform_str: Uplid string.
+
+        Raises:
+            InvalidUplidError
+        """
         parts = platform_str.split('-')
 
         if len(parts) > 6:
-            raise ValueError('Invalid uplid string: %s' % platform_str)
+            raise blderror.InvalidUplidError('Invalid UPLID string: %s'
+                                             % platform_str)
 
         parts = ['*' if p == '' else p for p in parts]
         parts.extend(['*'] * (6 - len(parts)))

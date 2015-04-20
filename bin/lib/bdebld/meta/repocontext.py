@@ -1,7 +1,7 @@
 """Aggregate Repository structure and metadata
 """
 
-from bdebld.meta import repoerror
+from bdebld.common import blderror
 
 
 class RepoContext(object):
@@ -19,7 +19,7 @@ class RepoContext(object):
         if unit.name in self.units:
             msg = '"%s" is redefined at %s. Previously defined at %s' % (
                 unit.name, unit.path, self.units[unit.name].path)
-            raise repoerror.DuplicateUnitError(msg)
+            raise blderror.DuplicateUnitError(msg)
 
         self.units[unit.name] = unit
 

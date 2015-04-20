@@ -9,7 +9,7 @@
 # The script works by invoking the Windows version of Python passing in the
 # Windows path to waf followed by all of the command line arguments.
 #
-# To use, export the WIN_PATH environment variable to point to the *Cygwin*
+# To use, export the WIN_PYTHON environment variable to point to the *Cygwin*
 # path of the *Windows* version of Python.
 #
 # For example, if the Windows version of CPython is installed to

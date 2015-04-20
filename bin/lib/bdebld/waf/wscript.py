@@ -12,9 +12,11 @@ import sys
 from waflib import Utils
 from waflib import Logs
 
-from bdebld.meta import optionsutil
+from bdebld.common import blderror
 from bdebld.common import cmdlineutil
+from bdebld.common import logutil
 from bdebld.common import sysutil
+from bdebld.meta import optionsutil
 
 from bdebld.waf import configurehelper
 from bdebld.waf import configureutil
@@ -22,7 +24,17 @@ from bdebld.waf import buildhelper
 from bdebld.waf import graphhelper
 
 
+def _setup_log(ctx):
+    logutil.info = Logs.info
+    logutil.warn = Logs.warn
+    logutil.fatal = ctx.fatal
+    logutil.msg = ctx.msg
+    logutil.start_msg = ctx.start_msg
+    logutil.end_msg = ctx.end_msg
+
+
 def options(ctx):
+    _setup_log(ctx)
     # check version numbers here because options() is called before any other
     # command-handling function
     if sys.hexversion < 0x2060000:
@@ -55,6 +67,16 @@ def options(ctx):
 
 
 def configure(ctx):
+    try:
+        _configure_impl(ctx)
+    except blderror.BldError as e:
+        ctx.fatal(str(e))
+    except IOError as e:
+        ctx.fatal(str(e))
+
+
+def _configure_impl(ctx):
+    _setup_log(ctx)
     ctx.load('bdebld.waf.bdeunittest')
 
     ufid = configureutil.make_ufid(ctx)
@@ -100,6 +122,17 @@ def configure(ctx):
 
 
 def build(ctx):
+    try:
+        _build_impl(ctx)
+    except blderror.CycleError as e:
+        ctx.fatal(str(e) +
+                  "\nUse 'waf configure --verify' to help find more problems.")
+    except blderror.BldError as e:
+        ctx.fatal(str(e))
+
+
+def _build_impl(ctx):
+    _setup_log(ctx)
     if ctx.cmd == "msvs" or ctx.cmd == "msvs2008":
         if ctx.options.test:
             ctx.waf_command = 'waf.bat --test=%s' % ctx.options.test
@@ -109,13 +142,10 @@ def build(ctx):
 
     if ctx.cmd == 'graph':
         helper = graphhelper.GraphHelper(ctx)
-        helper.draw()
-        return
-
-    if ctx.cmd == 'build':
+    else:
         Logs.info('Waf: Using %d jobs (change with -j)' % ctx.options.jobs)
+        helper = buildhelper.BuildHelper(ctx)
 
-    helper = buildhelper.BuildHelper(ctx)
     helper.build()
 
 
@@ -130,44 +160,60 @@ def add_cmdline_options(ctx):
     """
 
     configure_opts = [
+        (('verify',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'perform additional checks to verify repository structure'}),
+        (('use-dpkg-install',),
+         {'action': 'store_true',
+          'default': False,
+          'help': "configure install options according to dpkg "
+                  "conventions (this options supercedes the options "
+                  "'use-flat-include-dir', 'lib-dir', and 'lib-suffix')"}),
+        (('use-flat-include-dir',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'install all headers into $PREFIX/include '
+                  'instead of $PREFIX/include/<package_group>, and '
+                  'change .pc files accordingly'}),
+        (('lib-dir',),
+         {'type': 'string',
+          'default': 'lib',
+          'help': 'the name of the directory under $PREFIX where '
+                  'library files are installed [default: %default]'}),
+        (('lib-suffix',),
+         {'type': 'string',
+          'default': '',
+          'help': '(deprecated) add a suffix to the names of the package '
+                  'group library files being built [default: %default]'}),
         (('debug-opt-keys',),
          {'type': 'string',
           'default': None,
           'help': 'debug rules in the opts files for the specified '
                   '(comma separated) list of opts keys'}),
-        (('verify',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'Perform additional checks to verify '
-                  'repository structure.'}),
-        (('use-dpkg-install',),
-         {'type': 'choice',
-          'choices': ('yes', 'no'),
-          'default': 'no',
-          'help': "Whether to configure install options according to dpkg "
-                  "conventions (yes/no). This options supercedes the options "
-                  "'lib-suffix', 'install-flat-include', and "
-                  "'install-lib-dir'. [default: %default]"}),
-        (('lib-suffix',),
-         {'type': 'string',
-          'default': '',
-          'help': '(deprecated) add a suffix to the names of the package '
-                  'group library files being built'}),
-        (('install-flat-include',),
-         {'action': 'store_true',
-          'default': False,
-          'help': '(deprecated) install all headers into $PREFIX/include '
-                  'instead of $PREFIX/include/<package_group>'}),
-        (('install-lib-dir',),
-         {'type': 'string',
-          'default': 'lib',
-          'help': '(deprecated) the name of the directory under $PREFIX where '
-                  'library files are installed [default: %default]'}),
     ]
-    configure_opts = optionsutil.get_ufid_cmdline_options() + configure_opts
     configure_group = ctx.get_option_group('configure options')
-
+    configure_opts = optionsutil.get_ufid_cmdline_options() + configure_opts
     cmdlineutil.add_options(configure_group, configure_opts)
+
+    install_group = ctx.get_option_group(
+        'Installation and uninstallation options')
+    install_opts = [
+        (('install-dep',),
+         {'choices': ('yes', 'no'),
+          'default': 'yes',
+          'help': 'when doing a targeted install, whether to also '
+                  'install the dependencies of the targets (yes/no) '
+                  '[default: %default]'}),
+        (('install-parts',),
+         {'choices': ('all', 'h', 'lib', 'pc'),
+          'default': 'all',
+          'help': 'what parts to install (all/h/lib/pc). '
+                  'all -- everything, h -- header files only, '
+                  'lib -- lib files only, pc -- pkg-config files only '
+                  '[default: %default]'}),
+    ]
+    cmdlineutil.add_options(install_group, install_opts)
 
     # Set the upper bound of the default number of jobs to 24
     jobs = ctx.parser.get_option('-j').default
@@ -180,29 +226,6 @@ def add_cmdline_options(ctx):
                               type='int',
                               help='amount of parallel jobs (%r)' % jobs)
 
-    build_opts = ctx.get_option_group(
-        'Installation and uninstallation options')
-    build_opts.add_option('--install-dep', type='choice',
-                          choices=('yes', 'no'),
-                          default='yes',
-                          help='When doing a targeted install, wither to also '
-                          'install the dependencies of the targets (yes/no) '
-                          '[default: %default]',
-                          dest='install_dep')
-
-    build_opts.add_option('--install-h', type='choice',
-                          choices=('yes', 'no'),
-                          default='yes',
-                          help='Install header files (yes/no) '
-                          '[default: %default]',
-                          dest='install_h')
-
-    build_opts.add_option('--install-pc', type='choice',
-                          choices=('yes', 'no'),
-                          default='yes',
-                          help='Install pkgconfig files (yes/no) '
-                          '[default: %default]',
-                          dest='install_pc')
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

@@ -1,6 +1,7 @@
 import json
 import os
 
+from bdebld.common import blderror
 from bdebld.common import logutil
 from bdebld.meta import repolayout
 from bdebld.meta import repoloadutil
@@ -13,10 +14,15 @@ def get_repo_layout(repo_root_path):
         repo_root_path (str): Path to the root of the repository.
 
     Returns:
-        RepoLayout
+        repo_layout (RepoLayout), config_file (str)
+
+        config_file is the the path to the configuration file from which the
+        configuration is derived. The value is 'None' if the default
+        configuration is used.
 
     Raises:
-        IOError
+        IOError: An error occured while accessing the configuration file.
+        InvalidConfigFileError: Invalid configuration file.
     """
     layout_config_path = os.path.join(repo_root_path, '.bdelayoutconfig')
     if not os.path.isfile(layout_config_path):
@@ -36,11 +42,11 @@ def get_repo_layout(repo_root_path):
             repo_layout.third_party_package_dirs = ['third-party']
             repo_layout.group_abs_dirs = []
 
-        return repo_layout
+        return repo_layout, None
 
-    logutil.warn('Using layout configuration from: ' + layout_config_path)
     with open(layout_config_path) as f:
-        return parse_repo_layout_from_json(f)
+        repo_layout = parse_repo_layout_from_json(f)
+        return repo_layout, layout_config_path
 
 
 def write_repo_layout_to_json(file_, repo_layout):
@@ -54,7 +60,7 @@ def write_repo_layout_to_json(file_, repo_layout):
         None
 
     Raises:
-        IOError
+        IOError: Error writing the file.
     """
     json.dump(repo_layout.__dict__, file_)
 
@@ -69,7 +75,7 @@ def parse_repo_layout_from_json(file_):
         RepoLayout
 
     Raises:
-        ValueError
+        InvalidConfigFileError: The configuration file is invalid.
     """
     def ascii_encode_dict(data):
         new_data = {}
@@ -78,14 +84,19 @@ def parse_repo_layout_from_json(file_):
 
         return new_data
 
-    loaded_dict = json.load(file_, object_hook=ascii_encode_dict)
+    try:
+        loaded_dict = json.load(file_, object_hook=ascii_encode_dict)
+    except ValueError as e:
+        raise blderror.InvalidConfigFileError('Invalid .bdelayoutconfig: %s' %
+                                              e.message)
+
     repo_layout = repolayout.RepoLayout()
 
     for key in loaded_dict:
         if key in repo_layout.__dict__:
             setattr(repo_layout, key, loaded_dict[key])
         else:
-            logutil.warn('Invalid keys in repo_options config file: %s.' %
+            logutil.warn('Invalid field in .bdelayoutconfig: %s.' %
                          key)
 
     return repo_layout

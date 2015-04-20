@@ -32,7 +32,7 @@ including `SCons <http://www.scons.org/>`_, `waf
 overall combination of customizability and speed among the tools that were
 evaluated.
 
-Waf, along with Scons, can be extended using Python.  Using python as the
+Waf, along with SCons, can be extended using Python.  Using python as the
 extension language made it easy for us to add additional features that
 integrates natively with the build tool.  Gyp can generate ninja targets, which
 is fast, but gyp's declarative JSON configuration requires preprocessors for
@@ -40,8 +40,8 @@ doing any deep customization. CMake is perhaps the most mature, but CMake's
 domain specific language places certain limitations on what can be integrated
 into the tool and leaves a lot to be desired.
 
-What made us choose waf over Scons is that waf, which began as a fork of Scons,
-is `designed to be much faster than scons
+What made us choose waf over SCons is that waf, which began as a fork of SCons,
+is `designed to be much faster than SCons
 <http://www.freehackers.org/~tnagy/bench.txt>`_.
 
 Why is there a copy of waf in this repository?

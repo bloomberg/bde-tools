@@ -19,20 +19,14 @@ class RepoContextVerifier(object):
              ``verify()``.
     """
 
-    def __init__(self, repo_context,
-                 log_start=lambda _: None,
-                 log_end=lambda _: None):
+    def __init__(self, repo_context):
         """Initialize this object.
 
         Args:
             repo_context (RepoContext): Repo structure.
-            log_start (func): Record log message start.
-            log_end (func): Record log message end.
         """
         self.repo_context = repo_context
         self.is_success = True
-        self.log_start = log_start
-        self.log_end = log_end
 
     def verify(self):
         self.verify_uors()
@@ -40,14 +34,14 @@ class RepoContextVerifier(object):
         self.verify_packages()
 
     def verify_uors(self):
-        self.log_start('Verifying UORs')
+        logutil.start_msg('Verifying UORs')
         digraph = repocontextutil.get_uor_digraph(self.repo_context)
         self._verify_cycles_impl(digraph)
 
     def verify_groups(self):
         for group in (u for u in self.repo_context.units.values() if
                       u.type_ == repounits.UnitType.GROUP):
-            self.log_start('Verifying %s' % group.name)
+            logutil.start_msg('Verifying %s' % group.name)
             digraph = repocontextutil.get_package_digraph(self.repo_context,
                                                           group)
             self._verify_cycles_impl(digraph)
@@ -55,18 +49,18 @@ class RepoContextVerifier(object):
     def verify_packages(self):
         for package in (u for u in self.repo_context.units.values() if
                         u.type_ in repounits.UnitTypeCategory.PACKAGE_CAT):
-            self.log_start('Verifying %s' % package.name)
+            logutil.start_msg('Verifying %s' % package.name)
             digraph = cpreproc.get_component_digraph(package)
             self._verify_cycles_impl(digraph)
 
     def _verify_cycles_impl(self, digraph):
         cycles = graphutil.find_cycles(digraph)
         if len(cycles) == 0:
-            self.log_end('ok')
+            logutil.end_msg('ok')
         else:
-            self.log_end('found cycle(s)', color='RED')
+            logutil.end_msg('found cycle(s)', color='RED')
             for cycle in cycles:
-                logutil.info('CYCLE: ' + ','.join(cycle))
+                logutil.warn('CYCLE: ' + ','.join(cycle))
             self.is_success = False
 
 # -----------------------------------------------------------------------------

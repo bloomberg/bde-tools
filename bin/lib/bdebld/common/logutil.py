@@ -6,29 +6,28 @@ from __future__ import print_function
 import sys
 
 
-def info(msg):
-    """Print a debug statement.
-    """
+def info(msg, **kw):
     print(msg)
 
 
-def warn(msg):
+def warn(msg, **kw):
     print(msg, file=sys.stderr)
 
 
-def fatal(msg):
+def fatal(msg, **kw):
     print(msg, file=sys.stderr)
+    sys.exit(1)
 
 
-def msg(start, end):
+def msg(start, end, **kw):
     print('%s: %s' % (start, end))
 
 
-def start_msg(msg):
-    print('s', end='')
+def start_msg(msg, **kw):
+    print(msg + ': ')
 
 
-def end_msg(msg):
+def end_msg(msg, **kw):
     print(msg)
 
 # -----------------------------------------------------------------------------

@@ -9,8 +9,9 @@ from waflib import Logs
 from waflib import Utils
 from waflib import Context
 
-from bdebld.common import sysutil
+from bdebld.common import blderror
 from bdebld.common import msvcversions
+from bdebld.common import sysutil
 from bdebld.meta import optiontypes
 from bdebld.meta import optionsutil
 
@@ -180,7 +181,8 @@ def get_comp_info(ctx):
         }
 
     if platform_str not in comp_info_getters:
-        raise ValueError('Unsupported platform %s' % platform_str)
+        raise blderror.UnsupportedPlatformError(
+            'Unsupported platform %s' % platform_str)
 
     uplid = sanitize_comp_info(*comp_info_getters[platform_str](ctx))
 

@@ -5,9 +5,10 @@ import glob
 import os
 import re
 
+from bdebld.common import blderror
+from bdebld.common import sysutil
 from bdebld.meta import repounits
 from bdebld.meta import optionsparser
-from bdebld.meta import repoerror
 
 
 def load_package_group(path):
@@ -127,7 +128,7 @@ def load_component(name, package_path):
     c_path = base_path + '.c'
 
     if not os.path.isfile(header_path):
-        raise repoerror.MemError('%s does not exist' % header_path)
+        raise blderror.MemError('%s does not exist' % header_path)
 
     if os.path.isfile(cxx_path):
         component.type_ = repounits.ComponentType.CXX
@@ -136,7 +137,7 @@ def load_component(name, package_path):
         component.type_ = repounits.ComponentType.C
         test_path = base_path + '.t.c'
     else:
-        raise repoerror.MemError('%s source file found for ' % header_path)
+        raise blderror.MemError('%s source file found for ' % header_path)
 
     component.has_test_driver = os.path.isfile(test_path)
     return component
@@ -173,10 +174,7 @@ def _load_opts(path):
     """Load option rules from a file.
     """
     if os.path.isfile(path):
-        with open(path) as f:
-            parser = optionsparser.OptionsParser(f)
-            parser.parse()
-            return parser.option_rules
+        return optionsparser.parse_option_rules_file(path)
     else:
         return []
 
@@ -253,16 +251,10 @@ def get_uor_version(uor, uors_map):
         UorVersion
     """
 
-    def _is_int(str_):
-        try:
-            int(str_)
-            return True
-        except ValueError:
-            return False
-
     def _is_valid(version):
-        return (_is_int(version.major) and _is_int(version.minor) and
-                _is_int(version.patch))
+        return (sysutil.is_int_string(version.major) and
+                sysutil.is_int_string(version.minor) and
+                sysutil.is_int_string(version.patch))
 
     global UOR_VERSIONS_CACHE
     if uor.name in UOR_VERSIONS_CACHE:
