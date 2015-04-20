@@ -79,6 +79,8 @@ echo ================================
 echo ======= ROBO BUILD PHASE =======
 echo ================================
 
+mkdir -p $WORKSPACE/logs
+
 cd $WORKSPACE/robo
 
 if [ $? -ne 0 ]
@@ -86,8 +88,6 @@ then \
     echo FATAL: could not cd in to robo subdir
     exit 1
 fi
-
-mkdir -p logs
 
 src_root=$(pwd)/trunk build_root=$(pwd)/build \
     . /bbsrc/bin/prod/bin/build/build_env
@@ -105,8 +105,28 @@ echo "    ================================"
 mkdir -p build
 cd       build
 
-DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"      \
-    /opt/swt/install/make-3.82/bin/make --no-print-directory -j8 -k     \
-    -f ../trunk/etc/buildlibs.mk INSTALLLIBDIR=$(pwd)/lib/              \
-    TARGET=install robo_prebuild_libs subdirs 2>&1                      \
-    | tee logs/build.$(hostname).$(date +"%Y%m%d-%H%M%S").log
+FULL_LOG_LOCATION=${WORKSPACE}/logs/build.$(hostname).$(date +"%Y%m%d-%H%M%S").log
+
+# We want the error code from make to be propagated, not the ones from
+# the later stages of the pipe like tee or perl (which should very rarely
+# fail)...
+
+set -o pipefail
+
+DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"         \
+    /opt/swt/install/make-3.82/bin/make --no-print-directory -j8 -k        \
+    -f ../trunk/etc/buildlibs.mk INSTALLLIBDIR=$(pwd)/lib/                 \
+    TARGET=install robo_prebuild_libs subdirs 2>&1                         \
+    | tee $FULL_LOG_LOCATION                                               \
+    | perl -ne'print "==== Done $1\n" if /mv -f .*\.a\.tmp (\w+)\.a/; print if /\b[Ee]rror:|\([SIEW]\)|\b[Ww]arning:/'
+
+SAVED_ERROR=$?
+
+echo "========================================================================"
+echo "========================================================================"
+echo "Full log output in: $FULL_LOG_LOCATION on $HOSTNAME"
+echo "Make (and final job) return code: $SAVED_ERROR"
+echo "========================================================================"
+echo "========================================================================"
+
+exit $SAVED_ERROR
