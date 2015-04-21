@@ -39,25 +39,22 @@ For a source-code repository to be built with waf:
 
 - The source code must be organized as a :ref:`bde_repo-top`.
 
+- A copy of ``bde-tools/etc/wscript`` must be located at the root directory of
+  the repository.
+
 .. note::
 
    The repository layout can be customized. Please see
    :ref:`bde_repo-layout_customize` for more details.
 
-- A copy of ``bde-tools/etc/wscript`` must be located at the root directory of
-  the repository.
+.. note::
+
+   The ``bde-tools`` repository contains customziations that may apply to only
+   the version of waf bundled in the repo.
 
 You can either run ``bde-tools/bin/waf`` directly or add ``bde-tools/bin`` to
 the ``PATH`` environment variable.  The rest of the document assumes that you
 have done the later.
-
-.. note::
-
-   The ``bde-tools`` repository contains customziations that may apply to only
-   the version of waf bundled in the repo.  If you would like to use a globally
-   installed instance of waf for other projects, then don't add
-   ``bde-tools/bin`` to your ``PATH``, instead, add to your ``PATH`` a symlink
-   having a unqiue name (say ``bdewaf``) pointing to ``bde-tools/bin/waf``.
 
 .. _waf-supported_platforms:
 
