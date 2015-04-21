@@ -1,1 +1,3 @@
 doc
+bin/.waf*
+bin/waf-*
