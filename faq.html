@@ -76,8 +76,8 @@ is fast, but gyp&#8217;s declarative JSON configuration requires preprocessors f
 doing any deep customization. CMake is perhaps the most mature, but CMake&#8217;s
 domain specific language is awkward to use and places certain limitations on
 what can be integrated into the tool iself.</p>
-<p>What made us choose waf over SCons is that waf is <a class="reference external" href="http://www.freehackers.org/~tnagy/bench.txt">designed to be much faster
-than SCons</a>.</p>
+<p>What made us choose waf over SCons is that waf is much faster than SCons <a class="footnote-reference" href="#f1" id="id1">[1]</a>
+<a class="footnote-reference" href="#f2" id="id2">[2]</a>.</p>
 </div>
 <div class="section" id="why-is-there-a-copy-of-waf-in-this-repository">
 <h2>Why is there a copy of waf in this repository?<a class="headerlink" href="#why-is-there-a-copy-of-waf-in-this-repository" title="Permalink to this headline">¶</a></h2>
@@ -94,6 +94,21 @@ size.</p>
 built on top of BDE, but the tools should work for any conforming
 <a class="reference internal" href="bde_repo.html#bde-repo-top"><span>BDE-Style Repository</span></a>.  Keep in mind that some options, such as
 <code class="docutils literal"><span class="pre">--assert--level</span></code>, are specific to building the BDE libraries.</p>
+<p class="rubric">Footnotes</p>
+<table class="docutils footnote" frame="void" id="f1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="http://sourceforge.net/p/psycle/code/10694/tree//branches/bohan/wonderbuild/benchmarks/time.xml">Benchmarks of various C++ build tools</a>
+Compares the speed of SCons, Waf, Wonderbuild, Jam, Make, the
+Autotools, and CMake.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><a class="reference external" href="http://www.freehackers.org/~tnagy/bench.txt">Comparison between Scons and Waf on no-op build times</a></td></tr>
+</tbody>
+</table>
 </div>
 </div>
 

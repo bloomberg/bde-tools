@@ -37,8 +37,8 @@ doing any deep customization. CMake is perhaps the most mature, but CMake's
 domain specific language is awkward to use and places certain limitations on
 what can be integrated into the tool iself.
 
-What made us choose waf over SCons is that waf is `designed to be much faster
-than SCons <http://www.freehackers.org/~tnagy/bench.txt>`_.
+What made us choose waf over SCons is that waf is much faster than SCons [#f1]_
+[#f2]_.
 
 Why is there a copy of waf in this repository?
 ==============================================
@@ -57,3 +57,13 @@ The build tools are designed to work with BDE and libraries and application
 built on top of BDE, but the tools should work for any conforming
 :ref:`bde_repo-top`.  Keep in mind that some options, such as
 ``--assert--level``, are specific to building the BDE libraries.
+
+
+.. rubric:: Footnotes
+
+.. [#f1] `Benchmarks of various C++ build tools
+         <http://sourceforge.net/p/psycle/code/10694/tree//branches/bohan/wonderbuild/benchmarks/time.xml>`_
+         Compares the speed of SCons, Waf, Wonderbuild, Jam, Make, the
+         Autotools, and CMake.
+
+.. [#f2] `Comparison between Scons and Waf on no-op build times <http://www.freehackers.org/~tnagy/bench.txt>`_
