@@ -14,8 +14,8 @@ Supported build actions include:
 * Building individual components, packages, or package-groups.
 * Building and running test drivers.
 
-The build system is built on top of `waf <https://code.google.com/p/waf/>`_ and
-supports all of the vanilla waf commands and options, as well as additional
+The build system is built on top of `waf <https://github.com/waf-project/waf>`_
+and supports all of the vanilla waf commands and options, as well as additional
 configuration and build options for working with BDE-style repositories.
 
 For brevity, we'll refer to BDE's waf-based build system simply as waf
@@ -291,13 +291,13 @@ UFID And Qualified Build Configuration
 
 There are two ways to specify the build configuration:
 
--  Specify the `UFID <BDE-Style-Repository#ufid>`_ using the ``-t``
-   option. For example ``-tdbg_exc_mt`` indicates a "debug
-   exception-enabled multi-threading-denabled" build.
+- Specify the :ref:`bde_repo-ufid` using the ``-t`` option. For example ``-t
+  dbg_exc_mt`` indicates a "debug exception-enabled multi-threading-denabled"
+  build.
 
--  Using the qualified build options, such as ``--abi-bits``,
-   ``--build-type``, ``--library-type``. The configuration command will
-   convert these options into a UFID value.
+- Using the qualified build options, such as ``--abi-bits``, ``--build-type``,
+  ``--library-type``. The configuration command will convert these options into
+  a UFID value.
 
 If both the UFID (using the ``-t`` option) and some of the qualified
 build options are specified, the UFID will take precedence. Note that

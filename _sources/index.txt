@@ -16,7 +16,8 @@ and applications, including the `BDE libraries
 
    intro
    tutorials
-   help
+   faq
+   troubleshooting
    waf
    bde_repo
    setwafenv
@@ -29,7 +30,8 @@ Getting Started
 
     intro
     tutorials
-    help
+    faq
+    troubleshooting
 
 Reference Documentation
 -----------------------

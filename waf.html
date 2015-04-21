@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="BDE Tools 1.0 documentation" href="index.html" />
     <link rel="next" title="BDE-Style Repository" href="bde_repo.html" />
-    <link rel="prev" title="Help" href="help.html" /> 
+    <link rel="prev" title="Troubleshooting" href="troubleshooting.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -38,7 +38,7 @@
           <a href="bde_repo.html" title="BDE-Style Repository"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="help.html" title="Help"
+          <a href="troubleshooting.html" title="Troubleshooting"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">BDE Tools 1.0 documentation</a> &raquo;</li> 
       </ul>
@@ -59,8 +59,8 @@
 <li>Building individual components, packages, or package-groups.</li>
 <li>Building and running test drivers.</li>
 </ul>
-<p>The build system is built on top of <a class="reference external" href="https://code.google.com/p/waf/">waf</a> and
-supports all of the vanilla waf commands and options, as well as additional
+<p>The build system is built on top of <a class="reference external" href="https://github.com/waf-project/waf">waf</a>
+and supports all of the vanilla waf commands and options, as well as additional
 configuration and build options for working with BDE-style repositories.</p>
 <p>For brevity, we&#8217;ll refer to BDE&#8217;s waf-based build system simply as waf
 going forward.</p>
@@ -304,12 +304,12 @@ option), that will contain any future build artifacts.</p>
 <span id="waf-qualified-build-config"></span><h4>UFID And Qualified Build Configuration<a class="headerlink" href="#ufid-and-qualified-build-configuration" title="Permalink to this headline">¶</a></h4>
 <p>There are two ways to specify the build configuration:</p>
 <ul class="simple">
-<li>Specify the <a class="reference external" href="BDE-Style-Repository#ufid">UFID</a> using the <code class="docutils literal"><span class="pre">-t</span></code>
-option. For example <code class="docutils literal"><span class="pre">-tdbg_exc_mt</span></code> indicates a &#8220;debug
-exception-enabled multi-threading-denabled&#8221; build.</li>
-<li>Using the qualified build options, such as <code class="docutils literal"><span class="pre">--abi-bits</span></code>,
-<code class="docutils literal"><span class="pre">--build-type</span></code>, <code class="docutils literal"><span class="pre">--library-type</span></code>. The configuration command will
-convert these options into a UFID value.</li>
+<li>Specify the <a class="reference internal" href="bde_repo.html#bde-repo-ufid"><span>UFID</span></a> using the <code class="docutils literal"><span class="pre">-t</span></code> option. For example <code class="docutils literal"><span class="pre">-t</span>
+<span class="pre">dbg_exc_mt</span></code> indicates a &#8220;debug exception-enabled multi-threading-denabled&#8221;
+build.</li>
+<li>Using the qualified build options, such as <code class="docutils literal"><span class="pre">--abi-bits</span></code>, <code class="docutils literal"><span class="pre">--build-type</span></code>,
+<code class="docutils literal"><span class="pre">--library-type</span></code>. The configuration command will convert these options into
+a UFID value.</li>
 </ul>
 <p>If both the UFID (using the <code class="docutils literal"><span class="pre">-t</span></code> option) and some of the qualified
 build options are specified, the UFID will take precedence. Note that
@@ -618,8 +618,8 @@ $ waf step --files=&#39;groups/bsl/bslstl/.*\.cpp&#39;
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="help.html"
-                        title="previous chapter">Help</a></p>
+  <p class="topless"><a href="troubleshooting.html"
+                        title="previous chapter">Troubleshooting</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="bde_repo.html"
                         title="next chapter">BDE-Style Repository</a></p>
@@ -657,7 +657,7 @@ $ waf step --files=&#39;groups/bsl/bslstl/.*\.cpp&#39;
           <a href="bde_repo.html" title="BDE-Style Repository"
              >next</a> |</li>
         <li class="right" >
-          <a href="help.html" title="Help"
+          <a href="troubleshooting.html" title="Troubleshooting"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">BDE Tools 1.0 documentation</a> &raquo;</li> 
       </ul>
