@@ -80,27 +80,22 @@ replacement tool will be used.</li>
 <p>For a source-code repository to be built with waf:</p>
 <ul class="simple">
 <li>The source code must be organized as a <a class="reference internal" href="bde_repo.html#bde-repo-top"><span>BDE-Style Repository</span></a>.</li>
+<li>A copy of <code class="docutils literal"><span class="pre">bde-tools/etc/wscript</span></code> must be located at the root directory of
+the repository.</li>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The repository layout can be customized. Please see
 <a class="reference internal" href="bde_repo.html#bde-repo-layout-customize"><span>Customizing The Repository Layout</span></a> for more details.</p>
 </div>
-<ul class="simple">
-<li>A copy of <code class="docutils literal"><span class="pre">bde-tools/etc/wscript</span></code> must be located at the root directory of
-the repository.</li>
-</ul>
-<p>You can either run <code class="docutils literal"><span class="pre">bde-tools/bin/waf</span></code> directly or add <code class="docutils literal"><span class="pre">bde-tools/bin</span></code> to
-the <code class="docutils literal"><span class="pre">PATH</span></code> environment variable.  The rest of the document assumes that you
-have done the later.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <code class="docutils literal"><span class="pre">bde-tools</span></code> repository contains customziations that may apply to only
-the version of waf bundled in the repo.  If you would like to use a globally
-installed instance of waf for other projects, then don&#8217;t add
-<code class="docutils literal"><span class="pre">bde-tools/bin</span></code> to your <code class="docutils literal"><span class="pre">PATH</span></code>, instead, add to your <code class="docutils literal"><span class="pre">PATH</span></code> a symlink
-having a unqiue name (say <code class="docutils literal"><span class="pre">bdewaf</span></code>) pointing to <code class="docutils literal"><span class="pre">bde-tools/bin/waf</span></code>.</p>
+the version of waf bundled in the repo.</p>
 </div>
+<p>You can either run <code class="docutils literal"><span class="pre">bde-tools/bin/waf</span></code> directly or add <code class="docutils literal"><span class="pre">bde-tools/bin</span></code> to
+the <code class="docutils literal"><span class="pre">PATH</span></code> environment variable.  The rest of the document assumes that you
+have done the later.</p>
 </div>
 <div class="section" id="supported-platform-and-compilers">
 <span id="waf-supported-platforms"></span><h2>Supported Platform and Compilers<a class="headerlink" href="#supported-platform-and-compilers" title="Permalink to this headline">¶</a></h2>
