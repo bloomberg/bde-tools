@@ -112,9 +112,9 @@ class ConfigureHelper(object):
         num_inner_packages = len(self.build_config.inner_packages)
         num_components = reduce(
             lambda x, y: x + y,
-            map(buildconfigutil.count_components_in_package,
-                self.build_config.inner_packages.values() +
-                self.build_config.stdalone_packages.values()))
+            [0] + map(buildconfigutil.count_components_in_package,
+                      self.build_config.inner_packages.values() +
+                      self.build_config.stdalone_packages.values()))
 
         print_list('# UORs, inner packages, and components',
                    (num_uors, num_inner_packages, num_components))
