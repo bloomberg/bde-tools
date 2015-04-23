@@ -1,5 +1,17 @@
 #!/opt/bb/bin/bash
 
+mkdir -p $WORKSPACE/logs
+
+TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+FULL_LOG_LOCATION=${WORKSPACE}/logs/robo-full.$(hostname).${TIMESTAMP}.log
+BRIEF_LOG_LOCATION=${WORKSPACE}/logs/robo-brief.$(hostname).${TIMESTAMP}.log
+#JOB_LOG_LOCATION=${WORKSPACE}/logs/full-jenkins-job.$(hostname).${TIMESTAMP}.log
+
+# Need a better way to do this - could wrap whole script in () | tee, but that
+# is clunky...
+
+#exec > $JOB_LOG_LOCATION 2>&1
+
 if [[ -z "$WORKSPACE" ]]
 then \
     echo Must specify WORKSPACE environment variable
@@ -52,6 +64,17 @@ fi
 echo Synchronizing source trees
 rsync -a $WORKSPACE/source/ ./source/
 
+echo =========================================
+echo ======= DPKG GC AND CLEANUP PHASE =======
+echo =========================================
+
+dpkg-distro-dev gc
+mv data.old data.old.$TIMESTAMP
+
+dpkg-distro-dev scan --rmlock
+
+rm -f .distribution.lock
+
 echo ================================
 echo ======= DPKG BUILD PHASE =======
 echo ================================
@@ -73,13 +96,11 @@ BINARY_PACKAGES=$(grep -i '^Package:' source/b*/debian/control   \
                 | grep -v 'RSSUITE'                              \
                 | perl -e'my $line=join ",", map {chomp; $_} <>;
                           print $line,"\n"')
-dpkg-refroot-install $BINARY_PACKAGES
+echo Y | dpkg-refroot-install $BINARY_PACKAGES
 
 echo ================================
 echo ======= ROBO BUILD PHASE =======
 echo ================================
-
-mkdir -p $WORKSPACE/logs
 
 cd $WORKSPACE/robo
 
@@ -105,26 +126,51 @@ echo "    ================================"
 mkdir -p build
 cd       build
 
-FULL_LOG_LOCATION=${WORKSPACE}/logs/build.$(hostname).$(date +"%Y%m%d-%H%M%S").log
-
 # We want the error code from make to be propagated, not the ones from
 # the later stages of the pipe like tee or perl (which should very rarely
 # fail)...
 
 set -o pipefail
 
+# The perl "1-liner" at the end of the pipe trims the robo output down to just
+# library completion messages, warnings, and errors.  It also logs a copy of
+# its output to $BRIEF_LOG_LOCATION.
+
 DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"         \
     /opt/swt/install/make-3.82/bin/make --no-print-directory -j8 -k        \
     -f ../trunk/etc/buildlibs.mk INSTALLLIBDIR=$(pwd)/lib/                 \
     TARGET=install robo_prebuild_libs subdirs 2>&1                         \
     | tee $FULL_LOG_LOCATION                                               \
-    | perl -ne'print "==== Done $1\n" if /mv -f .*\.a\.tmp (\w+)\.a/; print if /\b[Ee]rror:|\([SIEW]\)|\b[Ww]arning:/'
+    | perl -ne'
+        use POSIX qw(strftime);
+        BEGIN{
+            $|++;
+            my $logname = shift @ARGV;
+            open($logFH, ">", $logname)
+               or warn "Perl log filter: Cannot open $logname, error $! "
+                     . " - continuing.";
+        }
+
+        sub output {
+            return if $_[0] =~ /\.(f|inc)", line/;
+            return if $_[0] =~ /1520-003 \(W\) Option DFP is ignored./;
+            return if $_[0] =~ /Debug line numbers >.*Reduce file size/;
+            my $timestamp=strftime("%Y%m%d-%H%M%S", localtime);
+            print $logFH "$timestamp: ", @_ if defined $logFH;
+            print "$timestamp: ", @_;
+        }
+
+        output "==== Done $1\n" if /mv -f .*\.a\.tmp (\w+)\.a/;
+        output($_) if /\b[Ee]rror:|\([SIEW]\)|\b[Ww]arning:/'              \
+            $BRIEF_LOG_LOCATION
 
 SAVED_ERROR=$?
 
 echo "========================================================================"
 echo "========================================================================"
-echo "Full log output in: $FULL_LOG_LOCATION on $HOSTNAME"
+#echo "Jenkins job log on $HOSTNAME in        : $JOB_LOG_LOCATION"
+echo "Full robo log output on $HOSTNAME in   : $FULL_LOG_LOCATION"
+echo "Brief robo log output on $HOSTNAME in  : $BRIEF_LOG_LOCATION"
 echo "Make (and final job) return code: $SAVED_ERROR"
 echo "========================================================================"
 echo "========================================================================"
