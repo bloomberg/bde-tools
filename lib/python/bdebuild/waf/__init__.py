@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-
-from pylibinit import addlibpath
-from bdebuild.runtest import main
-
-
-if __name__ == '__main__':
-    main.main()
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

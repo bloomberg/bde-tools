@@ -1,20 +1,12 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os
+
 import sys
 
-
-def _get_tools_path():
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib')
-    return path
-
-tools_path = _get_tools_path()
-sys.path = [tools_path] + sys.path
-
-
-from bdebld.meta import optionsparser
-from bdebld.meta import optiontypes
+from pylibinit import addlibpath
+from bdebuild.meta import optionsparser
+from bdebuild.meta import optiontypes
 
 
 def _format_rule(option, fill_widths):

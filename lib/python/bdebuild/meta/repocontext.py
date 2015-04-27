@@ -1,11 +1,28 @@
-#!/usr/bin/env python
+"""Aggregate Repository structure and metadata
+"""
 
-from pylibinit import addlibpath
-from bdebuild.runtest import main
+from bdebuild.common import blderror
 
 
-if __name__ == '__main__':
-    main.main()
+class RepoContext(object):
+    """This class represents the structure of a repository.
+
+    Attributes:
+        units (dict of str to Unit): Map of names to unit.
+    """
+
+    def __init__(self):
+        self.root_path = None
+        self.units = {}
+
+    def add_unit(self, unit):
+        if unit.name in self.units:
+            msg = '"%s" is redefined at %s. Previously defined at %s' % (
+                unit.name, unit.path, self.units[unit.name].path)
+            raise blderror.DuplicateUnitError(msg)
+
+        self.units[unit.name] = unit
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

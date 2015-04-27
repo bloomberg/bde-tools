@@ -1,7 +1,18 @@
 Troubleshooting
 ===============
 
-I see a python exception when running ``waf configure``.
+I get the error "BDE waf customizations can not be found."
+----------------------------------------------------------
+
+Make sure that you are running the ``waf`` exectuable located in
+``bde-tool/bin``.  The ``wscript`` file uses the location of waf to find BDE's
+waf customizations.
+
+If the problem presists, then copy ``bde-tools/etc/wscript`` to the root of the
+repo that you are trying to build.  The existing ``wscript`` in your repo is
+probably out of date and is no longer supported.
+
+I get a python exception when running ``waf configure``.
 --------------------------------------------------------
 
 Most likely, you have updated BDE Tools without re-configuring the source repo

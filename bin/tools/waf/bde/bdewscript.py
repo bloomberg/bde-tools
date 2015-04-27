@@ -1,5 +1,5 @@
 # This file is used to preserve backwards compatbility with an older version of
-# the wscript.
+# wscript.
 
 import os
 import sys
@@ -12,23 +12,22 @@ out = 'build'
 
 def _get_tools_path(ctx):
     upd = os.path.dirname
-    base = upd(upd(upd(upd(os.path.realpath(__file__)))))
-    return [os.path.join(base, 'lib'),
-            os.path.join(base, 'lib', 'legacy')]
+    python_libdir = os.path.join(
+        upd(upd(upd(upd(upd(os.path.realpath(__file__)))))), 'lib', 'python')
+    return [python_libdir, os.path.join(python_libdir, 'bdebuild', 'legacy')]
 
 
 def options(ctx):
     waflib.Logs.warn(
-        'The wscript in your repo is out of date and refers to a deprecated '
-        'library location.  Please copy the new one from etc/wscript of the '
-        'bde-tools repo.')
-    ctx.load('bdebld.waf.wscript', tooldir=_get_tools_path(ctx))
+        'The wscript that you are using is out of date.  '
+        'Please copy the new version from bde-tools/etc/wscript.')
+    ctx.load('bdebuild.waf.wscript', tooldir=_get_tools_path(ctx))
 
 
 def configure(ctx):
-    ctx.load('bdebld.waf.wscript', tooldir=_get_tools_path(ctx))
+    ctx.load('bdebuild.waf.wscript', tooldir=_get_tools_path(ctx))
 
 
 def build(ctx):
     sys.path += _get_tools_path(ctx)
-    ctx.load('bdebld.waf.wscript', tooldir=_get_tools_path(ctx))
+    ctx.load('bdebuild.waf.wscript', tooldir=_get_tools_path(ctx))

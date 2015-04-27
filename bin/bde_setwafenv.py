@@ -1,18 +1,7 @@
 #!/usr/bin/env python
 
-import os
-import sys
-
-
-def _get_tools_path():
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                        'lib')
-    return path
-
-tools_path = _get_tools_path()
-sys.path = [tools_path] + sys.path
-
-from bdebld.setenv import main
+from pylibinit import addlibpath
+from bdebuild.setenv import main
 
 
 if __name__ == '__main__':
