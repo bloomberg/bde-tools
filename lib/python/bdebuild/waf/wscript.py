@@ -25,8 +25,9 @@ from bdebuild.waf import graphhelper
 
 
 def _setup_log(ctx):
-    logutil.info = Logs.info
-    logutil.warn = Logs.warn
+    logutil._info_nolog = Logs.info
+    logutil._warn_nolog = Logs.warn
+    logutil.to_log = ctx.to_log
     logutil.fatal = ctx.fatal
     logutil.msg = ctx.msg
     logutil.start_msg = ctx.start_msg
