@@ -51,8 +51,17 @@
             
   <div class="section" id="troubleshooting">
 <h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="i-see-a-python-exception-when-running-waf-configure">
-<h2>I see a python exception when running <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code>.<a class="headerlink" href="#i-see-a-python-exception-when-running-waf-configure" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="i-get-the-error-bde-waf-customizations-can-not-be-found">
+<h2>I get the error &#8220;BDE waf customizations can not be found.&#8221;<a class="headerlink" href="#i-get-the-error-bde-waf-customizations-can-not-be-found" title="Permalink to this headline">¶</a></h2>
+<p>Make sure that you are running the <code class="docutils literal"><span class="pre">waf</span></code> exectuable located in
+<code class="docutils literal"><span class="pre">bde-tool/bin</span></code>.  The <code class="docutils literal"><span class="pre">wscript</span></code> file uses the location of waf to find BDE&#8217;s
+waf customizations.</p>
+<p>If the problem presists, then copy <code class="docutils literal"><span class="pre">bde-tools/etc/wscript</span></code> to the root of the
+repo that you are trying to build.  The existing <code class="docutils literal"><span class="pre">wscript</span></code> in your repo is
+probably out of date and is no longer supported.</p>
+</div>
+<div class="section" id="i-get-a-python-exception-when-running-waf-configure">
+<h2>I get a python exception when running <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code>.<a class="headerlink" href="#i-get-a-python-exception-when-running-waf-configure" title="Permalink to this headline">¶</a></h2>
 <p>Most likely, you have updated BDE Tools without re-configuring the source repo
 being built.  Try removing the existing configuration:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ waf distclean  # delete the output directory, including the existing configuration
@@ -154,7 +163,8 @@ Visual Studio 2013, you can pass the following option to <code class="docutils l
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Troubleshooting</a><ul>
-<li><a class="reference internal" href="#i-see-a-python-exception-when-running-waf-configure">I see a python exception when running <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code>.</a></li>
+<li><a class="reference internal" href="#i-get-the-error-bde-waf-customizations-can-not-be-found">I get the error &#8220;BDE waf customizations can not be found.&#8221;</a></li>
+<li><a class="reference internal" href="#i-get-a-python-exception-when-running-waf-configure">I get a python exception when running <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code>.</a></li>
 <li><a class="reference internal" href="#waf-did-not-detect-the-changes-that-i-made">Waf did not detect the changes that I made.</a></li>
 <li><a class="reference internal" href="#waf-did-not-detect-the-component-i-added">Waf did not detect the component I added.</a></li>
 <li><a class="reference internal" href="#how-do-i-build-using-a-specific-version-of-visual-studio">How do I build using a specific version of Visual Studio?</a></li>
