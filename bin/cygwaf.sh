@@ -30,7 +30,7 @@ if [[ $cygwin == 0 ]]; then
 fi
 
 if [[ -z $WIN_PYTHON ]]; then
-    echo "Set the WIN_PATH environment variable to the Cygwin path of  " 1>&2
+    echo "Set the WIN_PYTHON environment variable to the Cygwin path of  " 1>&2
     echo "the *Windows* Python executable (not the python "
     echo "version that comes with Cygwin)." 1>&2
     echo "Ex: export WIN_PYTHON=/cygdrive/c/Python27/python" 1>&2

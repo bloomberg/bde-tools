@@ -96,7 +96,7 @@ def is_mingw_environment():
     """
     try:
         uname = subprocess.check_output('uname')
-    except subprocess.CalledProcessError:
+    except Exception:
         return False
 
     return -1 != uname.find('MINGW')
