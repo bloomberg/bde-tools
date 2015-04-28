@@ -289,7 +289,7 @@ UFID And Qualified Build Configuration
 There are two ways to specify the build configuration:
 
 - Specify the :ref:`bde_repo-ufid` using the ``-t`` option. For example ``-t
-  dbg_exc_mt`` indicates a "debug exception-enabled multi-threading-denabled"
+  dbg_exc_mt`` indicates a "debug exception-enabled multi-threading-enabled"
   build.
 
 - Using the qualified build options, such as ``--abi-bits``, ``--build-type``,

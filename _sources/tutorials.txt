@@ -332,10 +332,12 @@ bde_setwafenv.py can be used on Windows through Cygwin or Git for Windows (msysg
 First, make sure you have cloned the bde and bde-tools repositories, and that
 you have added ``bde-tools/bin`` to your system's PATH.
 
-Then, for Cygwin, export the PYTHON_PATH environment variable to point to the
+Then, for Cygwin, export the WIN_PYTHON environment variable to point to the
 *Cygwin* path of the *Windows* version of Python.  For example, if the Windows
 version of Python is installed to ``C:\Python27\python``, then you can use the
-following command to set up the required WIN_PATH environment variable: ::
+following command to set up the required WIN_PYTHON environment variable:
+
+::
 
    $ export WIN_PYTHON=/cygdrive/c/Python27/python
 
