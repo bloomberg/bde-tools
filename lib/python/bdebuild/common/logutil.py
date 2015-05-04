@@ -5,22 +5,28 @@ from __future__ import print_function
 
 import sys
 
+
 def warn(msg, **kw):
     to_log(msg)
     _warn_nolog(msg, **kw)
+
 
 def info(msg, **kw):
     to_log(msg)
     _info_nolog(msg, **kw)
 
+
 def _warn_nolog(msg, **kw):
     print(msg, file=sys.stderr)
+
 
 def _info_nolog(msg, **kw):
     print(msg)
 
+
 def to_log(msg):
     pass
+
 
 def fatal(msg, **kw):
     print(msg, file=sys.stderr)

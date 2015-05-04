@@ -143,7 +143,7 @@ $ waf build --target bdlt_date.t --test build"""
             self.build_inner_package(package, group)
 
         if group.name in self.build_config.soname_overrides:
-            custom_soname = self.soname_overrides[group.name]
+            custom_soname = self.build_config.soname_overrides[group.name]
         else:
             custom_soname = None
 

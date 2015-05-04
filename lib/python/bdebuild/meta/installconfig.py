@@ -46,7 +46,8 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
             self.is_flat_include = True
             lib_dir = 'lib64' if '64' in ufid.flags else 'lib'
             ufid_copy = copy.deepcopy(ufid)
-            ufid_copy.flags.remove('64')
+            if '64' in ufid_copy.flags:
+                ufid_copy.flags.remove('64')
             self.pc_dir = os.path.join(lib_dir, 'pkgconfig')
             self.lib_dir = os.path.join(lib_dir, str(ufid_copy))
             self.lib_suffix = ''
