@@ -70,7 +70,8 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
     for e in env_variables:
         if e in def_oe_copy.results:
             m = setenv_re.match(def_oe_copy.results[e])
-            build_config.custom_envs[m.group(1)] = m.group(2)
+            if m:
+                build_config.custom_envs[m.group(1)] = m.group(2)
 
     def set_unit_loc(oe, unit):
         oe.results['%s_LOCN' %

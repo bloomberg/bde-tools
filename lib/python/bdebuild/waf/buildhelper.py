@@ -204,8 +204,8 @@ $ waf build --target bdlt_date.t --test build"""
             self.ctx(
                 name=package.name + '_app',
                 path=package_node,
-                target=self.install_config.get_target_name(package.name),
-                source=[package.name + '.m.cpp'],
+                target=self.install_config.get_target_name(package.name[2:]),
+                source=[package.name[2:] + '.m.cpp'],
                 features=['cxx', 'cxxprogram'],
                 cflags=flags.cflags,
                 cincludes=flags.cincludes,
@@ -215,6 +215,7 @@ $ waf build --target bdlt_date.t --test build"""
                 includes=[package_node],
                 lib=flags.libs,
                 stlib=flags.stlibs,
+                cust_libpaths=flags.libpaths,
                 use=[package.name + '_lib'] + dums_tg_dep,
                 uselib=external_dep
             )

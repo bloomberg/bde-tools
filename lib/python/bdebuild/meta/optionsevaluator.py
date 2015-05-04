@@ -1,6 +1,7 @@
 """Evaluate option rules.
 """
 
+import os
 import re
 import copy
 
@@ -147,8 +148,9 @@ class OptionsEvaluator(object):
                     lambda m: evaluate_key(m.group(2)),
                     self.results[key])
                 return self.results[key]
-            else:
-                return ''
+            elif key in os.environ:
+                return os.environ[key]
+            return ''
 
         for key in self.results:
             self.results[key] = evaluate_key(key)

@@ -154,8 +154,12 @@ def bde_exec_command(task, cmd, **kw):
         msg = '' + out + err
 
         # The Visual Studio compiler always prints name of the input source
-        # file. We try to ignore those outputs using a heuristic.
-        if ret == 0 and msg.strip() == task.inputs[0].name:
+        # file when compiling and "Creating library <file>.lib and object
+        # <file>.exp" when linking an executable. We try to ignore those
+        # outputs using a heuristic.
+        if ret == 0 and (
+                msg.strip() == task.inputs[0].name or
+                msg.strip().startswith('Creating library ')):
             return ret
 
         if len(task.inputs) > 1:

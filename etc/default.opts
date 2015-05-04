@@ -554,10 +554,10 @@ unix-*-*-*-gcc-4.2   _  GCCEXTRAWFLAGS  =   \
 !!  unix-Linux-*-*-gcc        _    CXX                =  $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 !!  unix-Linux-*-*-clang      _    CXX                =  $(LINUX_GXX_PATH) $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 
-!!  windows-*-*-*-cl-15.00    _    CC                 =  cl /TC /W4 $(CC64FLAGS)
-!!  windows-*-*-*-cl-16.00    _    CC                 =  cl /TC /W4 $(CC64FLAGS)
-!!  windows-*-*-*-cl-15.00    _    CXX                =  cl /TP /W4 $(CXX64FLAGS)
-!!  windows-*-*-*-cl-16.00    _    CXX                =  cl /TP /W4 $(CXX64FLAGS)
+!!  windows-*-*-*-cl-15.00    _    CC                 =  cl /TC $(CC64FLAGS)
+!!  windows-*-*-*-cl-16.00    _    CC                 =  cl /TC $(CC64FLAGS)
+!!  windows-*-*-*-cl-15.00    _    CXX                =  cl /TP $(CXX64FLAGS)
+!!  windows-*-*-*-cl-16.00    _    CXX                =  cl /TP $(CXX64FLAGS)
 
 # for development only; use Clang instead of gcc
 !!  unix-Linux-*-*-clang      _    CLANG_GCC_VER_CPP  =  -D__CLANG_GNUC__=4 -D__CLANG_GNUC_MINOR__=7 -D__CLANG_GNUC_PATCHLEVEL__=0
