@@ -18,16 +18,16 @@ fi
 # resides.
 
 tests=(
-    tests.bdebld.meta.test_buildconfigfactory
-    tests.bdebld.meta.test_graphutil
-    tests.bdebld.meta.test_optionsevaluator
-    tests.bdebld.meta.test_optionsparser
-    tests.bdebld.meta.test_optionsutil
-    tests.bdebld.meta.test_repocontextloader
-    tests.bdebld.meta.test_repolayoututil
-    tests.bdebld.meta.test_repoloadutil
-    tests.bdebld.setenv.test_compilerinfo
-    tests.bdebld.common.test_sysutils
+    tests.bdebuild.meta.test_buildconfigfactory
+    tests.bdebuild.meta.test_graphutil
+    tests.bdebuild.meta.test_optionsevaluator
+    tests.bdebuild.meta.test_optionsparser
+    tests.bdebuild.meta.test_optionsutil
+    tests.bdebuild.meta.test_repocontextloader
+    tests.bdebuild.meta.test_repolayoututil
+    tests.bdebuild.meta.test_repoloadutil
+    tests.bdebuild.setenv.test_compilerinfo
+    tests.bdebuild.common.test_sysutils
 )
 
 for t in "${tests[@]}"; do
