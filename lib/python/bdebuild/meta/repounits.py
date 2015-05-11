@@ -133,6 +133,8 @@ class Package(RepoUnit):
             capabilities.
         has_dums (bool): Whether a dums file (containing symbols to dummy out)
             exists.
+        app_main (str): The name of the source file *without its extension*
+            that defines the 'main' function if this is an application package.
         components (list of Component): Components in this Package.
         pt_extras (PlusPackageExtras): Extra information for \
             "+" packages.
@@ -150,6 +152,7 @@ class Package(RepoUnit):
         self.cap = []
         self.has_dums = False
         self.components = []
+        self.app_main = None
         self.pt_extras = None
 
 

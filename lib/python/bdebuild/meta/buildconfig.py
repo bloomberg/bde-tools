@@ -95,6 +95,7 @@ class PackageBase(mixins.BasicEqualityMixin):
 
 class PlusPackageBuildConfig(PackageBase):
     def __init__(self):
+        super(PlusPackageBuildConfig, self).__init__()
         self.headers = set()
         self.cpp_sources = set()
         self.cpp_tests = set()
@@ -103,15 +104,18 @@ class PlusPackageBuildConfig(PackageBase):
 
 class InnerPackageBuildConfig(PackageBase):
     def __init__(self):
+        super(InnerPackageBuildConfig, self).__init__()
         self.components = set()
 
 
 class StdalonePackageBuildConfig(PackageBase):
     def __init__(self):
+        super(StdalonePackageBuildConfig, self).__init__()
         self.doc = None
         self.version = None
         self.external_dep = set()
         self.components = set()
+        self.app_main = None
 
 
 # -----------------------------------------------------------------------------

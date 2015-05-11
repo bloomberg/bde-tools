@@ -150,7 +150,7 @@ First, create a directory to serve as the root of the workspace, say
 
 ::
 
-   $ mkdir myworkspace.
+   $ mkdir myworkspace
 
 Then, check out the repositories that will be part of the workspace:
 

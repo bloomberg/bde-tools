@@ -165,6 +165,7 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         package_bc.components = package.components
         package_bc.type_ = package.type_
         package_bc.has_dums = package.has_dums
+        package_bc.app_main = package.app_main
         build_config.stdalone_packages[package_bc.name] = package_bc
 
     def load_package_group(group, group_bc, oe):

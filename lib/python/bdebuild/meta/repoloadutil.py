@@ -73,6 +73,24 @@ def load_package(path, package_type):
     if package.type_ == repounits.PackageType.PACKAGE_PLUS:
         package.pt_extras = _load_plus_package_extras(package)
     else:
+        if package.type_ == repounits.PackageType.PACKAGE_APPLICATION:
+            main_ext = '.m.cpp'
+            valid_prefixes = [package.name]
+            if package.name.startswith('m_'):
+                valid_prefixes.append(package.name[2:])
+            for prefix in valid_prefixes:
+                main_path = os.path.join(package.path, prefix + main_ext)
+                if os.path.isfile(main_path):
+                    package.app_main = prefix
+                    break
+
+            if not package.app_main:
+                raise blderror.MissingFileError(
+                    'Missing source file "%s" for '
+                    'application package "%s"' %
+                    (os.path.join(package.path, package.name + main_ext),
+                     package.name))
+
         for component_name in sorted(package.mem):
             component = load_component(component_name, package.path)
             package.components.append(component)
