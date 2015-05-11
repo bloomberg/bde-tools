@@ -462,8 +462,16 @@ option files have been read, variables are evaluated by recursive
 expansion, in a manner similar to Make variables. Thus, a variable can
 not refer to itself, or it will result in an infinite recursion during
 expansion.</p>
-<p>For example: <code class="docutils literal"><span class="pre">*</span> <span class="pre">_</span> <span class="pre">FOO</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">_</span> <span class="pre">BAR</span> <span class="pre">=</span> <span class="pre">$(FOO)</span> <span class="pre">b</span></code> After variables are
-evaluated, BAR will have a value &#8220;a b&#8221;.</p>
+<p>If an option variable referenced is not defined in any options files read, then
+its value will be the environment variable having the same name, if it is
+defined; otherwise, the value of the option variable is taken to be an empty
+string.</p>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>* _ FOO = a
+* _ BAR = $(FOO) b
+</pre></div>
+</div>
+<p>After evaluation, the variable BAR will have a value &#8220;a b&#8221;.</p>
 </div>
 <div class="section" id="processing-order">
 <h4>Processing Order<a class="headerlink" href="#processing-order" title="Permalink to this headline">¶</a></h4>

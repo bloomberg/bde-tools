@@ -465,8 +465,19 @@ expansion, in a manner similar to Make variables. Thus, a variable can
 not refer to itself, or it will result in an infinite recursion during
 expansion.
 
-For example: ``* _ FOO = a * _ BAR = $(FOO) b`` After variables are
-evaluated, BAR will have a value "a b".
+If an option variable referenced is not defined in any options files read, then
+its value will be the environment variable having the same name, if it is
+defined; otherwise, the value of the option variable is taken to be an empty
+string.
+
+For example:
+
+::
+
+* _ FOO = a
+* _ BAR = $(FOO) b
+
+After evaluation, the variable BAR will have a value "a b".
 
 Processing Order
 ````````````````
