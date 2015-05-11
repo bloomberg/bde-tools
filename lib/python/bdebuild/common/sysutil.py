@@ -95,7 +95,7 @@ def is_mingw_environment():
     'unversioned_platform')
     """
     try:
-        uname = subprocess.check_output('uname')
+        uname = shell_command('uname')
     except Exception:
         return False
 
