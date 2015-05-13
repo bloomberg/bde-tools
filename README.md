@@ -7,6 +7,8 @@ building BDE-style libraries and applications, including the
 Detailed documentation for the provided tools can be found on
 [the project's gh-pages](https://bloomberg.github.io/bde-tools).
 
+**Bloomberg Employees**: [http://bburl/i3Z6E](http://bburl/Bs67K)
+
 #License
 
 The BDE tools repository is distributed under the Apache License (version 2.0);
