@@ -146,7 +146,8 @@ def load_component(name, package_path):
     c_path = base_path + '.c'
 
     if not os.path.isfile(header_path):
-        raise blderror.MemError('%s does not exist' % header_path)
+        raise blderror.MissingFileError(
+            'Missing header file "%s"' % header_path)
 
     if os.path.isfile(cxx_path):
         component.type_ = repounits.ComponentType.CXX
@@ -155,7 +156,8 @@ def load_component(name, package_path):
         component.type_ = repounits.ComponentType.C
         test_path = base_path + '.t.c'
     else:
-        raise blderror.MemError('%s source file found for ' % header_path)
+        raise blderror.MissingFileError(
+            'Missign source file for header file "%s"' % header_path)
 
     component.has_test_driver = os.path.isfile(test_path)
     return component
