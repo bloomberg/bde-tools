@@ -325,6 +325,7 @@ Cflags: -I${{includedir}} {flags}
             gen.export_libs, gen.extra_includes,
             gen.export_flags)])
 
+        self.hcode = self.hcode.encode('utf-8')
         ret = super(bdepc, self).signature()
         return ret
 
