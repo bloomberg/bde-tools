@@ -138,15 +138,25 @@ directory of the package are built into a library.
 
 Third-Party Packages
 ````````````````````
-Third-party packages are directories that are built in a complete custom way.
-By default, these packages can be located in the ``third-party`` directory.
-These packages do not have :ref:`bde_repo-metadata`, and can not depend on any
-other UORs in the repository.
 
-With the :ref:`waf-top`, the way a third-party package is built is defined by a
-package-local ``wscript``.  For an example, see the `wscript
+Third-party packages are not BDE-style packages and do not contain any
+:ref:`bde_repo-metadata`.  By default, these packages are located under the
+``third-party`` directory, and they are built in a custom way that is defined
+by a directory local ``wscript``.
+
+The ``wscript`` in each third-party package should not depend on BDE's waf
+customizations, and the ``wscript`` should generate a pkg-config file in the
+same way as other types of UORs.  For an example, see the `wscript
 <https://github.com/bloomberg/bde/blob/master/third-party/inteldfp/wscript>`_
-of the decnumber third-party pacakge in BDE.
+of the inteldfp third-party package in BDE.
+
+.. note::
+
+   Third-party packages mainly exist to simplify the build process for
+   certainly low-level libraries.  A third-party package can be easily moved to
+   its own repository if so desired, in which case the third-party package must
+   be first separately built and installed before the original repository that
+   depended on that third-party package can be built.
 
 .. _bde_repo-layout_customize:
 
@@ -188,6 +198,9 @@ Description of Fields:
 - ``group_abs_dirs``
 
   Relative path to directories each pointing to the root of a package group.
+
+An sample configuration file can be found at
+``<bde-tools>/share/sample-config/bdelayoutconfig.sample``.
 
 .. _bde_repo-metadata:
 

@@ -140,7 +140,8 @@ The JSON file should have the following format:
         ...
     ]
 
-An example file is located at ``<bde-tools>/etc/bdecompilerconfig.sample``.
+An sample configuration file can be found at
+``<bde-tools>/share/sample-config/bdecompilerconfig.sample``.
 
 The JSON file should contain a list of machine context (dictionary) to be
 matched, each machine context defines the compilers that are available on the
