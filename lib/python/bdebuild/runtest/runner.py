@@ -94,6 +94,7 @@ class _Worker(threading.Thread):
                 (out, err) = self._proc.communicate()
                 rc = self._proc.returncode
             except Exception as e:
+                self._status.set_failure()
                 self._ctx.log.record_exception(self._case, e)
                 self._status.notify_done()
                 return

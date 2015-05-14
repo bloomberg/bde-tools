@@ -140,11 +140,12 @@ class ConfigureHelper(object):
         try:
             self.ctx.find_program('pkg-config', var='PKGCONFIG')
         except self.ctx.errors.ConfigurationError:
+            Logs.warn('Could not find pkg-config on the PATH.  Using the'
+                      'built-in python based pkg-config (pykp-config) '
+                      'instead.')
             self.ctx.env['PKGCONFIG'] = [sys.executable, os.path.join(
                 sysutil.repo_root_path(), 'bin', 'tools', 'pykg-config',
                 'pykg-config.py')]
-            Logs.warn('Could not find pkg-config on the PATH, using the '
-                      'built-in python based pkg-config instead.')
             self.ctx.find_program('pkg-config', var='PKGCONFIG')
 
         pkgconfig_args = ['--libs', '--cflags']
@@ -164,7 +165,7 @@ class ConfigureHelper(object):
         # loaded into the waf environment.
         rename_keys = ['defines', 'includes', 'libpath', 'stlib', 'lib']
         lib_suffix = self.ctx.options.lib_suffix
-        for lib in self.build_config.external_dep:
+        for lib in sorted(self.build_config.external_dep):
             actual_lib = lib + str(lib_suffix or '')
             help_str = """failed to find the library using pkg-config
 Maybe "%s.pc" is missing from "PKG_CONFIG_PATH"? Inspect config.log in the

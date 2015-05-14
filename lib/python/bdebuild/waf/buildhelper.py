@@ -69,16 +69,6 @@ class BuildHelper(object):
         self.is_build_tests = self.is_run_tests or \
             self.ctx.options.test == 'build'
 
-        test_runner_path = os.path.join(
-            sysutil.repo_root_path(), 'bin', 'bde_runtest.py')
-
-        self.ctx.options.testcmd = \
-            '%s %s %%s --verbosity %s --timeout %s' % (
-                sys.executable,
-                test_runner_path,
-                self.ctx.options.test_verbosity,
-                self.ctx.options.test_timeout)
-
         self.ctx.env['env'] = os.environ.copy()
         self.ctx.env['env'].update(self.build_config.custom_envs)
 

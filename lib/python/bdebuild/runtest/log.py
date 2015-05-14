@@ -14,6 +14,8 @@ class _TextRecorder(object):
         self._logger = logger
 
     def start(self, case):
+        if case == 1:
+            self._logger.info('TEST START')
         self._logger.debug('CASE %2d: START' % case)
 
     def success(self, case, rc, out):
@@ -24,7 +26,7 @@ class _TextRecorder(object):
             self._logger.info('CASE %2d: SUCCESS' % case)
 
     def failure(self, case, rc, out):
-        self._logger.info('CASE %2d: (rc %s)\n%s' % (case, rc, out))
+        self._logger.info('CASE %2d: FAILURE (rc %s)\n%s' % (case, rc, out))
 
     def skip(self, case):
         self._logger.info('CASE %2d: SKIP' % case)
@@ -187,7 +189,7 @@ class Log(object):
         self._recorder.failure(case, rc, out)
 
     def record_exception(self, case, e):
-        self._logger.info('CASE %2d: PYTHON EXCEPTION (%s)' % str(e))
+        self._logger.info('CASE %2d: PYTHON EXCEPTION (%s)' % (case, str(e)))
 
     def info(self, msg):
         self._logger.info(msg)

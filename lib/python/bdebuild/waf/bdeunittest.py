@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 
 from waflib import Utils
 from waflib import Task
@@ -9,7 +10,11 @@ from waflib import Logs
 from waflib import Options
 from waflib import TaskGen
 
+from bdebuild.common import sysutil
+
 testlock = Utils.threading.Lock()
+test_runner_path = os.path.join(sysutil.repo_root_path(), 'bin',
+                                'bde_runtest.py')
 
 
 @TaskGen.feature('test')
@@ -49,18 +54,32 @@ class utest(Task.Task):
 
         return ret
 
+    def get_testcmd(self):
+        testcmd = [
+            sys.executable, test_runner_path,
+            '--verbosity=%s' % Options.options.test_v,
+            '--timeout=%s' % Options.options.test_timeout,
+            '-j%s' % Options.options.test_j,
+            self.testdriver_node.abspath()
+        ]
+        if Options.options.test_junit:
+            testcmd += ['--junit=%s-junit.xml' %
+                        self.testdriver_node.abspath()]
+
+        if Options.options.valgrind:
+            testcmd += [
+                '--valgrind',
+                '--valgrind-tool=%s' % Options.options.valgrind_tool
+            ]
+        return testcmd
+
     def run(self):
         """
         Execute the test. The execution is always successful, but the results
         are stored on ``self.generator.bld.utest_results`` for postprocessing.
         """
 
-        filename = self.inputs[0].abspath()
-        self.ut_exec = getattr(self.generator, 'ut_exec', [filename])
-        if getattr(self.generator, 'ut_fun', None):
-            # FIXME waf 1.8 - add a return statement here?
-            self.generator.ut_fun(self)
-
+        self.testdriver_node = self.inputs[0]
         try:
             fu = getattr(self.generator.bld, 'all_test_paths')
         except AttributeError:
@@ -88,27 +107,21 @@ class utest(Task.Task):
                 add_path(fu, lst, 'LD_LIBRARY_PATH')
             self.generator.bld.all_test_paths = fu
 
-        cwd = (getattr(self.generator, 'ut_cwd', '') or
-               self.inputs[0].parent.abspath())
+        cwd = self.testdriver_node.parent.abspath()
+        testcmd = self.get_testcmd()
 
-        testcmd = getattr(Options.options, 'testcmd', False)
-        if testcmd:
-            ut_exec = self.ut_exec[0]
-            self.ut_exec = (testcmd % ut_exec).split(' ')
-            if Options.options.test_junit:
-                self.ut_exec += ['--junit=%s-junit.xml' % ut_exec]
-            if Options.options.valgrind:
-                self.ut_exec += ['--valgrind', '--valgrind-tool=%s' %
-                                 Options.options.valgrind_tool]
-
-        proc = Utils.subprocess.Popen(self.ut_exec, cwd=cwd, env=fu,
+        start_time = time.time()
+        proc = Utils.subprocess.Popen(testcmd, cwd=cwd, env=fu,
                                       stderr=Utils.subprocess.STDOUT,
                                       stdout=Utils.subprocess.PIPE)
         stdout = proc.communicate()[0]
-        if stdout:
+        end_time = time.time()
+
+        if not isinstance(stdout, str):
             stdout = stdout.decode(sys.stdout.encoding or 'iso8859-1')
 
-        tup = (filename, proc.returncode, stdout)
+        tup = (self.testdriver_node, proc.returncode, stdout,
+               end_time - start_time)
         self.generator.utest_result = tup
 
         testlock.acquire()
@@ -132,6 +145,14 @@ def summary(bld):
             from waflib.Tools import waf_unit_test
             bld.add_post_fun(waf_unit_test.summary)
     """
+
+    def get_time(seconds):
+        m, s = divmod(seconds, 60)
+        if m == 0:
+            return '%dms' % (seconds * 1000)
+        else:
+            return '%02d:%02d' % (m, s)
+
     lst = getattr(bld, 'utest_results', [])
     from waflib import Logs
     Logs.pprint('CYAN', 'Test Summary')
@@ -140,19 +161,19 @@ def summary(bld):
     tfail = len([x for x in lst if x[1]])
 
     Logs.pprint('CYAN', '  tests that pass %d/%d' % (total-tfail, total))
-    for (f, code, out) in lst:
+    for (f, code, out, t) in lst:
         if not code:
             if bld.options.show_test_out:
-                Logs.pprint('GREEN', '[%s (TEST)] <<<<<<<<<<' % f)
+                Logs.pprint('GREEN', '[%s (TEST)] <<<<<<<<<<' % f.abspath())
                 Logs.pprint('CYAN', out)
                 Logs.pprint('GREEN', '>>>>>>>>>>')
             else:
-                Logs.pprint('GREEN', '%s' % f)
+                Logs.pprint('GREEN', '%s (%s)' % (f, get_time(t)))
 
     Logs.pprint('CYAN', '  tests that fail %d/%d' % (tfail, total))
-    for (f, code, out) in lst:
+    for (f, code, out, t) in lst:
         if code:
-            Logs.pprint('YELLOW', '[%s (TEST)] <<<<<<<<<<' % f)
+            Logs.pprint('YELLOW', '[%s (TEST)] <<<<<<<<<<' % f.abspath())
             Logs.pprint('CYAN', out)
             Logs.pprint('YELLOW', '>>>>>>>>>>')
 
@@ -170,19 +191,28 @@ def options(opt):
     grp.add_option('--test', type='choice',
                    choices=('none', 'build', 'run'),
                    default='none',
-                   help="Whether to build and run test drivers "
-                   "(none/build/run). none: don't build or run tests" +
-                   ", build: build tests but don't run them" +
-                   ", run: build and run tests [default: %default]",
+                   help="whether to build and run test drivers "
+                        "(none/build/run) [default: %default]. "
+                        "none: don't build or run tests, "
+                        "build: build tests but don't run them, "
+                        "run: build and run tests",
                    dest='test')
 
     grp.add_option('--test-v', type='int', default=0,
                    help='verbosity level of test output [default: %default]',
-                   dest='test_verbosity')
+                   dest='test_v')
+
+    grp.add_option('--test-j', type='int', default=4,
+                   help='amount of parallel jobs used by the test runner '
+                        '[default: %default]. '
+                        'This value is independent and multiplicative with '
+                        'the number of jobs used by waf itself, which can be '
+                        'beneficial as some the test drivers are highly '
+                        'I/O bound.',
+                   dest='test_j')
 
     grp.add_option('--show-test-out', action='store_true', default=False,
-                   help='show output of tests even if they pass '
-                        '[default: %default]',
+                   help='show output of tests even if they pass',
                    dest='show_test_out')
 
     grp.add_option('--test-timeout', type='int', default=200,
