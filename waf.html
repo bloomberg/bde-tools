@@ -80,7 +80,7 @@ replacement tool will be used.</li>
 <p>For a source-code repository to be built with waf:</p>
 <ul class="simple">
 <li>The source code must be organized as a <a class="reference internal" href="bde_repo.html#bde-repo-top"><span>BDE-Style Repository</span></a>.</li>
-<li>A copy of <code class="docutils literal"><span class="pre">bde-tools/etc/wscript</span></code> must be located at the root directory of
+<li>A copy of <code class="docutils literal"><span class="pre">bde-tools/share/wscript</span></code> must be located at the root directory of
 the repository.</li>
 </ul>
 <div class="admonition note">
@@ -185,13 +185,12 @@ in a package group, or UORs in a repository.</p>
 <p>You can view the list of options available for each command by running <code class="docutils literal"><span class="pre">waf</span> <span class="pre">--help</span></code>.</p>
 <div class="section" id="configure-command">
 <h3>Configure Command<a class="headerlink" href="#configure-command" title="Permalink to this headline">¶</a></h3>
-<p>The first step in building a BDE-Style repository is to configure the
-build by running <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code>. This command reads the BDE metadata
-files to determine the source files to build, and the appropriate
-compiler and linker flags to use. This information is cached, so the
-command only needs to be invoked once per build configuration. This
-command <strong>must</strong> be invoked from the root path of the repository (the
-location of the wscript file).</p>
+<p>The first step in building a BDE-Style repository is to configure the build by
+running <code class="docutils literal"><span class="pre">waf</span> <span class="pre">configure</span></code>. This command reads the BDE metadata files to
+determine the source files to build, and the appropriate compiler and linker
+flags to use. This information is cached, so the command only needs to be
+invoked once per build configuration. This command <em>must</em> be invoked from the
+root path of the repository (the location of the wscript file).</p>
 <div class="highlight-python"><div class="highlight"><pre>waf configure [-t=(UFID)] [--build-type=(debug|release)] [--abi-bits=(32|64)]
               [--library-type=(static|shared)] [--assert-level=(none|safe|safe2)]
               [--out=&lt;output directory&gt;] [--prefix=&lt;install prefix&gt;]
@@ -246,6 +245,10 @@ installation it detects.</p>
 <li><p class="first"><code class="docutils literal"><span class="pre">--verify</span></code></p>
 <p>Perform verification of the structure of the repository.  Currently this
 option checks whether cycles exist between UORs, packages, and components.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">--with-coverage</span></code></p>
+<p>Generate coverage report when running unit tests. This is currently only
+supported with gcc, and requires gcov and lcov.</p>
 </li>
 </ul>
 </div>
@@ -322,9 +325,8 @@ configurations.</p>
 </div>
 <div class="section" id="build-command">
 <h3>Build Command<a class="headerlink" href="#build-command" title="Permalink to this headline">¶</a></h3>
-<p>Once the repository has been configured, it can be built using the the
-build command. This command <strong>must</strong> be invoked from a path within the
-repository.</p>
+<p>Once the repository has been configured, it can be built using the the build
+command.</p>
 <div class="highlight-python"><div class="highlight"><pre>waf build [--targets=&lt;list of targets&gt;] [-j &lt;number of jobs&gt;] [--test=(none|build|run)]
           [--test-v=&lt;test driver verbosity level&gt;] [--test-timeout=&lt;test driver timeout&gt;]
           [--show-test-out]
@@ -363,6 +365,17 @@ value is 200 seconds.</p>
 <p>Shows the output of all test drivers. By default, only the output of
 failed tests is shown.</p>
 </li>
+<li><p class="first"><code class="docutils literal"><span class="pre">--coverage-out</span></code></p>
+<p>The output directory in which to store the generated HTML coverage report.
+By default, a temporary directory in the build output directory will be used.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">--valgrind</span></code></p>
+<p>Use valgrind to run test drivers.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">--valgrind-tool</span></code></p>
+<p>choices: <code class="docutils literal"><span class="pre">memchk</span></code> (default), <code class="docutils literal"><span class="pre">helgrind</span></code>, <code class="docutils literal"><span class="pre">drd</span></code></p>
+<p>Use the specified valgrind tool.</p>
+</li>
 <li><p class="first"><code class="docutils literal"><span class="pre">--use-dpkg-install</span></code></p>
 <p>Use the install layout used in Bloomberg&#8217;s dpkg-based system.</p>
 </li>
@@ -390,9 +403,8 @@ directory from which the output file is built.</p>
 </div>
 <div class="section" id="install-command">
 <h3>Install Command<a class="headerlink" href="#install-command" title="Permalink to this headline">¶</a></h3>
-<p>Once the repository has been built, it can be installed using the
-install command. This command <strong>must</strong> be invoked from a path within the
-repository.</p>
+<p>Once the repository has been built, it can be installed using the install
+command.</p>
 <div class="highlight-python"><div class="highlight"><pre>waf install
 </pre></div>
 </div>
@@ -485,7 +497,8 @@ workspace feature.</li>
 </ol>
 <p>To use the workspace feature, first, create a workspace directory and check out
 the repositories that you want to store in the workspace. Then, simply add an
-(empty) file named <code class="docutils literal"><span class="pre">.bdeworkspaceconfig</span></code> and copy <code class="docutils literal"><span class="pre">bde-tools/etc/wscript</span></code>.</p>
+(empty) file named <code class="docutils literal"><span class="pre">.bdeworkspaceconfig</span></code> and copy
+<code class="docutils literal"><span class="pre">bde-tools/share/wscript</span></code>.</p>
 <p>See <a class="reference internal" href="tutorials.html#tutorials-workspace"><span>Use waf Workspace to Build Multiple BDE-Style Repositories</span></a> for an example.</p>
 </div>
 <div class="section" id="building-on-windows">

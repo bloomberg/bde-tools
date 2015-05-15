@@ -8,9 +8,9 @@ Make sure that you are running the ``waf`` exectuable located in
 ``bde-tool/bin``.  The ``wscript`` file uses the location of waf to find BDE's
 waf customizations.
 
-If the problem presists, then copy ``bde-tools/etc/wscript`` to the root of the
-repo that you are trying to build.  The existing ``wscript`` in your repo is
-probably out of date and is no longer supported.
+If the problem presists, then copy ``bde-tools/share/wscript`` to the root of
+the repo that you are trying to build.  The existing ``wscript`` in your repo
+is probably out of date and is no longer supported.
 
 I get a python exception when running ``waf configure``.
 --------------------------------------------------------

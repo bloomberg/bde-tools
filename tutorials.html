@@ -177,30 +177,22 @@ $ git clone &lt;bde-bb-url&gt;
 </pre></div>
 </div>
 <p>Next, add a empty file named <code class="docutils literal"><span class="pre">.bdeworkspaceconfig</span></code> and copy
-<code class="docutils literal"><span class="pre">bde-tools/etc/wscript</span></code> to the root of the workspace:</p>
+<code class="docutils literal"><span class="pre">bde-tools/share/wscript</span></code> to the root of the workspace:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ touch .bdeworkspaceconfig
-$ cp &lt;bde-tools&gt;/etc/wscript .
+$ cp &lt;bde-tools&gt;/share/wscript .
 </pre></div>
 </div>
 <p>The workspace should now have the following layout:</p>
 <div class="highlight-python"><div class="highlight"><pre>myworkspace
-|
 |-- .bdeworkspaceconfig
 |-- wscript
 |-- bsl-internal
-|   |
 |   |-- wscript
 |   `-- ...      &lt;-- other files in bsl-internal
-|
 |-- bde-core
-|   |
-|   |-- wscript
-|   `-- ...      &lt;-- other files in bde-core
-|
+|   `-- ...      &lt;-- files in bde-core
 `-- bde-bb
-    |
-    |-- wscript
-    `-- ...      &lt;-- other files in bde-bb
+    `-- ...      &lt;-- files in bde-bb
 </pre></div>
 </div>
 <p>Now, you can build every repository in the workspace together:</p>
@@ -252,7 +244,7 @@ $ waf install
 be building.</p>
 <div class="highlight-python"><div class="highlight"><pre>$ mkdir testrepo
 $ cd testrepo
-$ cp &lt;bde-tools&gt;/etc/wscript .  # wscript is required for using waf
+$ cp &lt;bde-tools&gt;/share/wscript .  # wscript is required for using waf
 </pre></div>
 </div>
 <p>Then, create the following directory and file structure in the repo
