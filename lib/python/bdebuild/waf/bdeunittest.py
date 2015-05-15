@@ -250,9 +250,7 @@ def summary(ctx):
 
         genhtml_cmd = [
             ctx.env['GENHTML'][0],
-            '--demangle-cpp',
             '--function-coverage',
-            # '--branch-coverage',
             '-o', test_coverage_out_path,
             test_info_final
         ]
