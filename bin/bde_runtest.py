@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from pylibinit import addlibpath
+addlibpath.add_lib_path()
+
 from bdebuild.runtest import main
 
 

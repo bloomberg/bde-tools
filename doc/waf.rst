@@ -39,7 +39,7 @@ For a source-code repository to be built with waf:
 
 - The source code must be organized as a :ref:`bde_repo-top`.
 
-- A copy of ``bde-tools/etc/wscript`` must be located at the root directory of
+- A copy of ``bde-tools/share/wscript`` must be located at the root directory of
   the repository.
 
 .. note::
@@ -150,13 +150,12 @@ You can view the list of options available for each command by running ``waf --h
 Configure Command
 -----------------
 
-The first step in building a BDE-Style repository is to configure the
-build by running ``waf configure``. This command reads the BDE metadata
-files to determine the source files to build, and the appropriate
-compiler and linker flags to use. This information is cached, so the
-command only needs to be invoked once per build configuration. This
-command **must** be invoked from the root path of the repository (the
-location of the wscript file).
+The first step in building a BDE-Style repository is to configure the build by
+running ``waf configure``. This command reads the BDE metadata files to
+determine the source files to build, and the appropriate compiler and linker
+flags to use. This information is cached, so the command only needs to be
+invoked once per build configuration. This command *must* be invoked from the
+root path of the repository (the location of the wscript file).
 
 ::
 
@@ -228,6 +227,11 @@ Configure Options
 
   Perform verification of the structure of the repository.  Currently this
   option checks whether cycles exist between UORs, packages, and components.
+
+- ``--with-coverage``
+
+  Generate coverage report when running unit tests. This is currently only
+  supported with gcc, and requires gcov and lcov.
 
 Environment Variables
 `````````````````````
@@ -312,9 +316,8 @@ configurations.
 Build Command
 -------------
 
-Once the repository has been configured, it can be built using the the
-build command. This command **must** be invoked from a path within the
-repository.
+Once the repository has been configured, it can be built using the the build
+command.
 
 ::
 
@@ -325,46 +328,61 @@ repository.
 Build Options
 `````````````
 
--  ``--targets``
+- ``--targets``
 
-   Restrict the list of build targets. By default, the build command
-   will build all targets. You can use ``python waf list`` to get a list
-   of available targets. Multiple targets can be specified via a
-   comma-delimited list. For example,
-   ``python waf build --target bsls,bslstl`` builds only the 'bsls' and
-   'bslstl' packages (and their dependencies).
+  Restrict the list of build targets. By default, the build command
+  will build all targets. You can use ``python waf list`` to get a list
+  of available targets. Multiple targets can be specified via a
+  comma-delimited list. For example,
+  ``python waf build --target bsls,bslstl`` builds only the 'bsls' and
+  'bslstl' packages (and their dependencies).
 
--  ``-j``
+- ``-j``
 
-   Set the number of parallel jobs. By default, this is set to the
-   number of cores available on the system.
+  Set the number of parallel jobs. By default, this is set to the
+  number of cores available on the system.
 
--  ``--test``
+- ``--test``
 
-   choices: ``none`` (default), ``build``, ``run``
+  choices: ``none`` (default), ``build``, ``run``
 
-   Control whether to build and run test drivers. Test drivers will not
-   be built if the value is ``none``; they will be only built if the
-   value is ``build``; they will be built and run if the value is
-   ``run``.
+  Control whether to build and run test drivers. Test drivers will not
+  be built if the value is ``none``; they will be only built if the
+  value is ``build``; they will be built and run if the value is
+  ``run``.
 
--  ``--test-v``
+- ``--test-v``
 
-   Set the verbosity level of the test output. The default value is 0.
+  Set the verbosity level of the test output. The default value is 0.
 
--  ``--test-timeout``
+- ``--test-timeout``
 
-   Set the timeout for running each test driver in seconds. The default
-   value is 200 seconds.
+  Set the timeout for running each test driver in seconds. The default
+  value is 200 seconds.
 
--  ``--show-test-out``
+- ``--show-test-out``
 
-   Shows the output of all test drivers. By default, only the output of
-   failed tests is shown.
+  Shows the output of all test drivers. By default, only the output of
+  failed tests is shown.
 
--  ``--use-dpkg-install``
+- ``--coverage-out``
 
-   Use the install layout used in Bloomberg's dpkg-based system.
+  The output directory in which to store the generated HTML coverage report.
+  By default, a temporary directory in the build output directory will be used.
+
+- ``--valgrind``
+
+  Use valgrind to run test drivers.
+
+- ``--valgrind-tool``
+
+  choices: ``memchk`` (default), ``helgrind``, ``drd``
+
+  Use the specified valgrind tool.
+
+- ``--use-dpkg-install``
+
+  Use the install layout used in Bloomberg's dpkg-based system.
 
 
 Build Output
@@ -391,9 +409,8 @@ build output directory:
 Install Command
 ---------------
 
-Once the repository has been built, it can be installed using the
-install command. This command **must** be invoked from a path within the
-repository.
+Once the repository has been built, it can be installed using the install
+command.
 
 ::
 
@@ -502,7 +519,8 @@ You have 2 options to work with multiple BDE-style repositories:
 
 To use the workspace feature, first, create a workspace directory and check out
 the repositories that you want to store in the workspace. Then, simply add an
-(empty) file named ``.bdeworkspaceconfig`` and copy ``bde-tools/etc/wscript``.
+(empty) file named ``.bdeworkspaceconfig`` and copy
+``bde-tools/share/wscript``.
 
 See :ref:`tutorials-workspace` for an example.
 

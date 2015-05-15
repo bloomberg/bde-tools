@@ -12,8 +12,6 @@ from bdebuild.meta import buildconfigutil
 from bdebuild.meta import graphutil
 from bdebuild.meta import repounits
 
-from bdebuild.common import sysutil
-
 from bdebuild.waf import waftweaks  # NOQA
 from bdebuild.waf import bdeunittest
 
@@ -110,9 +108,6 @@ $ waf build --target bdlt_date.t --test build"""
             if uor_name in self.build_config.third_party_dirs:
                 tp = self.build_config.third_party_dirs[uor_name]
                 self.build_thirdparty_dirs(tp)
-
-        if self.is_run_tests:
-            self.ctx.add_post_fun(bdeunittest.summary)
 
     def build_package_group(self, group):
         relpath = os.path.relpath(group.path, self.build_config.root_path)

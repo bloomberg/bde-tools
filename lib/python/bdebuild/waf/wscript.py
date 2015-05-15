@@ -78,7 +78,6 @@ def configure(ctx):
 
 def _configure_impl(ctx):
     _setup_log(ctx)
-    ctx.load('bdebuild.waf.bdeunittest')
 
     ufid = configureutil.make_ufid(ctx)
 
@@ -115,7 +114,7 @@ def _configure_impl(ctx):
             ctx.fatal('C compiler and C++ compiler must be the same version. '
                       'C compiler version: %s, '
                       'C++ compiler version: %s' % (cc_ver, cxx_ver))
-
+    ctx.load('bdebuild.waf.bdeunittest')
     effective_uplid, actual_uplid = configureutil.make_uplid(ctx)
     helper = configurehelper.ConfigureHelper(ctx, ufid,
                                              effective_uplid, actual_uplid)
@@ -144,6 +143,7 @@ def _build_impl(ctx):
     if ctx.cmd == 'graph':
         helper = graphhelper.GraphHelper(ctx)
     else:
+        ctx.load('bdebuild.waf.bdeunittest')
         Logs.info('Waf: Using %d jobs (change with -j)' % ctx.options.jobs)
         helper = buildhelper.BuildHelper(ctx)
 

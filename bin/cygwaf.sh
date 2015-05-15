@@ -14,7 +14,7 @@
 #
 # For example, if the Windows version of CPython is installed to
 # C:\Python27\python, then you can use the following command to set up the
-# required WIN_PATH environment variable:
+# required WIN_PYTHON environment variable:
 #
 #   $ export WIN_PYTHON=/cygdrive/c/Python27/python
 #   $ cygwaf.sh <waf command>  # start using cygwaf.sh as you would waf

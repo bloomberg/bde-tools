@@ -1,8 +1,12 @@
 # This is a fork of waf_unit_test.py supporting BDE-style unit tests.
 
+from __future__ import print_function
+
+import fnmatch
 import os
 import sys
 import time
+import subprocess
 
 from waflib import Utils
 from waflib import Task
@@ -15,6 +19,15 @@ from bdebuild.common import sysutil
 testlock = Utils.threading.Lock()
 test_runner_path = os.path.join(sysutil.repo_root_path(), 'bin',
                                 'bde_runtest.py')
+
+
+@TaskGen.feature('cxx', 'c')
+@TaskGen.after_method('process_use')
+def add_coverage(self):
+    if self.bld.env['with_coverage']:
+        if getattr(self, 'uselib', None):
+            if 'GCOV' not in self.uselib:
+                self.uselib += ['GCOV']
 
 
 @TaskGen.feature('test')
@@ -121,7 +134,7 @@ class utest(Task.Task):
             stdout = stdout.decode(sys.stdout.encoding or 'iso8859-1')
 
         tup = (self.testdriver_node, proc.returncode, stdout,
-               end_time - start_time)
+               end_time - start_time, self.generator.source[0])
         self.generator.utest_result = tup
 
         testlock.acquire()
@@ -136,14 +149,14 @@ class utest(Task.Task):
             testlock.release()
 
 
-def summary(bld):
+def summary(ctx):
     """
     Display an execution summary::
 
         def build(bld):
             bld(features='cxx cxxprogram test', source='main.c', target='app')
             from waflib.Tools import waf_unit_test
-            bld.add_post_fun(waf_unit_test.summary)
+            ctx.add_post_fun(waf_unit_test.summary)
     """
 
     def get_time(seconds):
@@ -153,7 +166,8 @@ def summary(bld):
         else:
             return '%02d:%02d' % (m, s)
 
-    lst = getattr(bld, 'utest_results', [])
+    lst = getattr(ctx, 'utest_results', [])
+
     from waflib import Logs
     Logs.pprint('CYAN', 'Test Summary')
 
@@ -161,32 +175,142 @@ def summary(bld):
     tfail = len([x for x in lst if x[1]])
 
     Logs.pprint('CYAN', '  tests that pass %d/%d' % (total-tfail, total))
-    for (f, code, out, t) in lst:
+    for (f, code, out, t, _) in lst:
         if not code:
-            if bld.options.show_test_out:
+            if ctx.options.show_test_out:
                 Logs.pprint('GREEN', '[%s (TEST)] <<<<<<<<<<' % f.abspath())
                 Logs.pprint('CYAN', out)
                 Logs.pprint('GREEN', '>>>>>>>>>>')
             else:
-                Logs.pprint('GREEN', '%s (%s)' % (f, get_time(t)))
+                Logs.pprint('GREEN', '%s (%s)' % (f.abspath(), get_time(t)))
 
     Logs.pprint('CYAN', '  tests that fail %d/%d' % (tfail, total))
-    for (f, code, out, t) in lst:
+    for (f, code, out, _, _) in lst:
         if code:
             Logs.pprint('YELLOW', '[%s (TEST)] <<<<<<<<<<' % f.abspath())
             Logs.pprint('CYAN', out)
             Logs.pprint('YELLOW', '>>>>>>>>>>')
 
+    if ctx.env['with_coverage']:
+        test_dir_paths = set()
+        src_dir_paths = set()
+        for (tst, _, _, _, src) in lst:
+            test_dir_path = tst.parent.abspath()
+            if test_dir_path not in test_dir_paths:
+                test_dir_paths.add(test_dir_path)
+            src_dir_path = src.parent.abspath()
+            if src_dir_path not in src_dir_paths:
+                src_dir_paths.add(src_dir_path)
+
+        Logs.info('[ Generate Lcov Coverage Report ]')
+        logfile_path = os.path.join(ctx.bldnode.abspath(), 'coverage.log')
+        Logs.info('Log file: %s' % logfile_path)
+        test_info_path1 = os.path.join(ctx.bldnode.abspath(),
+                                       'test_data1.info')
+        test_info_path2 = os.path.join(ctx.bldnode.abspath(),
+                                       'test_data2.info')
+        if ctx.options.coverage_out:
+            test_coverage_out_path = ctx.options.coverage_out
+        else:
+            test_coverage_out_path = os.path.join(ctx.bldnode.abspath(),
+                                                  '_test_coverage')
+        lcov_cmd1 = ctx.env['LCOV'] + [
+            '--no-external',
+            '-c', '-o', test_info_path1
+        ]
+        for path in (test_dir_paths | src_dir_paths):
+            lcov_cmd1 += ['-d', path]
+
+        lcov_cmd2 = ctx.env['LCOV'] + [
+            '--remove', test_info_path1, '*.t.cpp',
+            '-o', test_info_path2
+        ]
+
+        genhtml_cmd = [
+            ctx.env['GENHTML'][0], '-o', test_coverage_out_path,
+            test_info_path2
+        ]
+
+        with open(logfile_path, 'w') as logfile:
+            success = True
+            for val in [(lcov_cmd1, "Generating tracefile..."),
+                        (lcov_cmd2, "Filtering tracefile..."),
+                        (genhtml_cmd, "Generating html report...")]:
+                cmd = val[0]
+                msg = val[1]
+                Logs.info(msg)
+                print('Running cmd %s' % cmd, file=logfile)
+                print('-'*79, file=logfile)
+                logfile.flush()
+
+                p = subprocess.Popen(cmd, cwd=ctx.path.abspath(),
+                                     stdout=logfile,
+                                     stderr=logfile)
+                rc = p.wait()
+                if rc != 0:
+                    success = False
+                    break
+        if success:
+            Logs.warn('Generated report:')
+            Logs.warn(os.path.join(test_coverage_out_path, 'index.html'))
+        else:
+            Logs.warn('Failed')
+
     if tfail > 0:
-        bld.fatal("Some tests failed. (%s)" % (str(bld.log_timer)))
+        ctx.fatal("Some tests failed. (%s)" % (str(ctx.log_timer)))
 
 
-def options(opt):
+def remove_gcda_files(ctx):
+    """Remove gcda coverage files generated from previous test run.
+
+    Info about the types of gcov data files:
+    https://gcc.gnu.org/onlinedocs/gcc/Gcov-Data-Files.html
     """
-    Provide the command-line options.
+
+    Logs.info('Removing leftover gcda files...')
+    matches = []
+    for root, dirnames, filenames in os.walk(ctx.bldnode.abspath()):
+        for filename in fnmatch.filter(filenames, '*.gcda'):
+            matches.append(os.path.join(root, filename))
+
+    for f in matches:
+        os.remove(f)
+
+
+def build(ctx):
+    if ctx.options.test == 'run':
+        if ctx.env['with_coverage']:
+            remove_gcda_files(ctx)
+        ctx.add_post_fun(summary)
+
+
+def configure(ctx):
+    if ctx.options.with_coverage:
+        if ctx.env.COMPILER_CC == 'gcc':
+            ctx.check(cxxflags=['-fprofile-arcs', '-ftest-coverage'],
+                      stlib=['gcov'],
+                      uselib_store='GCOV', mandatory=True)
+            ctx.find_program('gcov', var='GCOV')
+            ctx.find_program('lcov', var='LCOV')
+            ctx.find_program('genhtml', var='GENHTML')
+            ctx.env.LCOV = ctx.env.LCOV + ['--gcov-tool',
+                                           ctx.env.GCOV[0]]
+        else:
+            ctx.fatal('Coverage test is not supported on this compiler.')
+
+    ctx.env['with_coverage'] = ctx.options.with_coverage
+
+
+def options(ctx):
+    """Provide the command-line options.
     """
 
-    grp = opt.get_option_group('build and install options')
+    grp = ctx.get_option_group('configure options')
+    grp.add_option('--with-coverage', action='store_true', default=False,
+                   help='generate a test coverage report using lcov',
+                   dest='with_coverage')
+
+    grp = ctx.get_option_group('build and install options')
 
     grp.add_option('--test', type='choice',
                    choices=('none', 'build', 'run'),
@@ -205,10 +329,8 @@ def options(opt):
     grp.add_option('--test-j', type='int', default=4,
                    help='amount of parallel jobs used by the test runner '
                         '[default: %default]. '
-                        'This value is independent and multiplicative with '
-                        'the number of jobs used by waf itself, which can be '
-                        'beneficial as some the test drivers are highly '
-                        'I/O bound.',
+                        'This value is independent of the number of jobs '
+                        'used by waf itself.',
                    dest='test_j')
 
     grp.add_option('--show-test-out', action='store_true', default=False,
@@ -224,8 +346,12 @@ def options(opt):
                         'test drivers that are executed',
                    dest='test_junit')
 
+    grp.add_option('--coverage-out', type='str', default=None,
+                   help='output directory of the test coverage report',
+                   dest='coverage_out')
+
     grp.add_option('--valgrind', action='store_true', default=False,
-                   help='enable valgrind when running the test driver',
+                   help='use valgrind to run test drivers',
                    dest='valgrind')
 
     grp.add_option('--valgrind-tool', type='choice', default='memcheck',

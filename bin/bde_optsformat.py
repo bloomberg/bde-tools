@@ -2,9 +2,11 @@
 
 from __future__ import print_function
 
+from pylibinit import addlibpath
+addlibpath.add_lib_path()
+
 import sys
 
-from pylibinit import addlibpath
 from bdebuild.meta import optionsparser
 from bdebuild.meta import optiontypes
 

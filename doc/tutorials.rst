@@ -162,35 +162,27 @@ Then, check out the repositories that will be part of the workspace:
    $ git clone <bde-bb-url>
 
 Next, add a empty file named ``.bdeworkspaceconfig`` and copy
-``bde-tools/etc/wscript`` to the root of the workspace:
+``bde-tools/share/wscript`` to the root of the workspace:
 
 ::
 
    $ touch .bdeworkspaceconfig
-   $ cp <bde-tools>/etc/wscript .
+   $ cp <bde-tools>/share/wscript .
 
 The workspace should now have the following layout:
 
 ::
 
    myworkspace
-   |
    |-- .bdeworkspaceconfig
    |-- wscript
    |-- bsl-internal
-   |   |
    |   |-- wscript
    |   `-- ...      <-- other files in bsl-internal
-   |
    |-- bde-core
-   |   |
-   |   |-- wscript
-   |   `-- ...      <-- other files in bde-core
-   |
+   |   `-- ...      <-- files in bde-core
    `-- bde-bb
-       |
-       |-- wscript
-       `-- ...      <-- other files in bde-bb
+       `-- ...      <-- files in bde-bb
 
 
 Now, you can build every repository in the workspace together:
@@ -256,7 +248,7 @@ be building.
 
    $ mkdir testrepo
    $ cd testrepo
-   $ cp <bde-tools>/etc/wscript .  # wscript is required for using waf
+   $ cp <bde-tools>/share/wscript .  # wscript is required for using waf
 
 Then, create the following directory and file structure in the repo
 (see :ref:`bde_repo-physical_layout` for more details):

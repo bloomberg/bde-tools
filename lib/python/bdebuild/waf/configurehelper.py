@@ -60,9 +60,12 @@ class ConfigureHelper(object):
         build_flags_parser = buildflagsparser.BuildFlagsParser(
             self.ctx.env['SHLIB_MARKER'],
             self.ctx.env['STLIB_MARKER'],
-            self.ctx.env['LIB_ST'].replace('.', '\.').replace('%s', r'([^ =]+)'),
-            self.ctx.env['LIBPATH_ST'].replace('.', '\.').replace('%s', r'([^ =]+)'),
-            self.ctx.env['CPPPATH_ST'].replace('.', '\.').replace('%s', r'([^ =]+)'),
+            self.ctx.env['LIB_ST'].replace('.', '\.').replace(
+                '%s', r'([^ =]+)'),
+            self.ctx.env['LIBPATH_ST'].replace('.', '\.').replace(
+                '%s', r'([^ =]+)'),
+            self.ctx.env['CPPPATH_ST'].replace('.', '\.').replace(
+                '%s', r'([^ =]+)'),
             '/D' if self.uplid.comp_type == 'cl' else '-D')
 
         default_rules = optionsutil.get_default_option_rules()
