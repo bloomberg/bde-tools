@@ -207,27 +207,45 @@ def summary(ctx):
         Logs.info('[ Generate Lcov Coverage Report ]')
         logfile_path = os.path.join(ctx.bldnode.abspath(), 'coverage.log')
         Logs.info('Log file: %s' % logfile_path)
-        test_info_path1 = os.path.join(ctx.bldnode.abspath(),
-                                       'test_data1.info')
-        test_info_path2 = os.path.join(ctx.bldnode.abspath(),
-                                       'test_data2.info')
+        test_info_base = os.path.join(ctx.bldnode.abspath(),
+                                      'test_base.info')
+        test_info_run = os.path.join(ctx.bldnode.abspath(),
+                                     'test_run.info')
+        test_info_total = os.path.join(ctx.bldnode.abspath(),
+                                       'test_total.info')
+        test_info_final = os.path.join(ctx.bldnode.abspath(),
+                                       'test_final.info')
         if ctx.options.coverage_out:
             test_coverage_out_path = ctx.options.coverage_out
         else:
             test_coverage_out_path = os.path.join(ctx.bldnode.abspath(),
                                                   '_test_coverage')
-        lcov_cmd1 = ctx.env['LCOV'] + [
-            '--no-external',
-            # Branch coverage is supported well
-            # '--rc', 'lcov_branch_coverage=1',
-            '-c', '-o', test_info_path1
-        ]
+
+        lcov_d = []
         for path in (test_dir_paths | src_dir_paths):
-            lcov_cmd1 += ['-d', path]
+            lcov_d += ['-d', path]
+
+        lcov_cmd1 = ctx.env['LCOV'] + [
+            '--no-checksum', '--no-external',
+            '-c', '-i',
+            '-c', '-o', test_info_base
+        ] + lcov_d
 
         lcov_cmd2 = ctx.env['LCOV'] + [
-            '--remove', test_info_path1, '*.t.cpp',
-            '-o', test_info_path2
+            '--no-checksum', '--no-external',
+            '-c', '-o', test_info_run
+        ] + lcov_d
+
+        lcov_cmd3 = ctx.env['LCOV'] + [
+            '--no-checksum',
+            '-a', test_info_base, '-a', test_info_run,
+            '-o', test_info_total
+        ]
+
+        lcov_cmd4 = ctx.env['LCOV'] + [
+            '--no-checksum',
+            '--remove', test_info_total, '*.t.cpp',
+            '-o', test_info_final
         ]
 
         genhtml_cmd = [
@@ -236,13 +254,15 @@ def summary(ctx):
             '--function-coverage',
             # '--branch-coverage',
             '-o', test_coverage_out_path,
-            test_info_path2
+            test_info_final
         ]
 
         with open(logfile_path, 'w') as logfile:
             success = True
-            for val in [(lcov_cmd1, "Generating tracefile..."),
-                        (lcov_cmd2, "Filtering tracefile..."),
+            for val in [(lcov_cmd1, "Generating base tracefile..."),
+                        (lcov_cmd2, "Generating run tracefile..."),
+                        (lcov_cmd3, "Combining tracefiles..."),
+                        (lcov_cmd4, "Filtering tracefile..."),
                         (genhtml_cmd, "Generating html report...")]:
                 cmd = val[0]
                 msg = val[1]
