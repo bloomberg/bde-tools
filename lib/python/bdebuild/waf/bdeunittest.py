@@ -28,6 +28,8 @@ def add_coverage(self):
         if getattr(self, 'uselib', None):
             if 'GCOV' not in self.uselib:
                 self.uselib += ['GCOV']
+        else:
+            self.uselib = ['GCOV']
 
 
 @TaskGen.feature('test')
@@ -216,6 +218,8 @@ def summary(ctx):
                                                   '_test_coverage')
         lcov_cmd1 = ctx.env['LCOV'] + [
             '--no-external',
+            # Branch coverage is supported well
+            # '--rc', 'lcov_branch_coverage=1',
             '-c', '-o', test_info_path1
         ]
         for path in (test_dir_paths | src_dir_paths):
@@ -227,7 +231,11 @@ def summary(ctx):
         ]
 
         genhtml_cmd = [
-            ctx.env['GENHTML'][0], '-o', test_coverage_out_path,
+            ctx.env['GENHTML'][0],
+            '--demangle-cpp',
+            '--function-coverage',
+            # '--branch-coverage',
+            '-o', test_coverage_out_path,
             test_info_path2
         ]
 
