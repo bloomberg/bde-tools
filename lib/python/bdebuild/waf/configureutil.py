@@ -95,7 +95,10 @@ def get_msvc_version_from_env():
 
 
 def get_comp_info(ctx):
-    """Return the operating system information part of the UPLID.
+    """Return the compiler information part of the UPLID.
+
+    See sysutil.get_os_info() which gets the operating system part of the
+    UPLID.
 
     Args:
         ctx (ConfigurationContext): The waf configuration context.
@@ -103,6 +106,7 @@ def get_comp_info(ctx):
     Returns:
         comp_type, compiler_version
     """
+
     def sanitize_comp_info(comp_type, comp_ver):
         """Correct problematic compiler information.
 

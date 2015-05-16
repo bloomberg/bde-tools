@@ -8,7 +8,7 @@ class RepoContext(object):
     """This class represents the structure of a repository.
 
     Attributes:
-        units (dict of str to Unit): Map of names to unit.
+        units (dict of str to RepoUnit): Map names to units.
     """
 
     def __init__(self):
@@ -17,8 +17,9 @@ class RepoContext(object):
 
     def add_unit(self, unit):
         if unit.name in self.units:
-            msg = '"%s" is redefined at %s. Previously defined at %s' % (
-                unit.name, unit.path, self.units[unit.name].path)
+            msg = '"%s" is redefined at "%s". '\
+                  'The unit was previously defined at %s.' % (
+                      unit.name, unit.path, self.units[unit.name].path)
             raise blderror.DuplicateUnitError(msg)
 
         self.units[unit.name] = unit
