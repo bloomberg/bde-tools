@@ -508,6 +508,8 @@ sub postprocess_configuration ($@) {
             next;
         }
 
+        $id=~s/-.*//;  # Strip off "-core" or "-bb" if necessary
+
         $id = "id:$id";
 
         if (!exists $platform->{$id}) {
