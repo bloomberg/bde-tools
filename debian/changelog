@@ -1,8 +1,9 @@
 bde-tools (2.23.0.5) unstable; urgency=low
 
+  * d0df040 Changelog for version 2.23.0.5
   * df7b848 add jenkins-build-robo-on-git.sh to releases/2.23.x
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 23 Apr 2015 09:26:31 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 18 May 2015 10:58:27 -0400
 
 bde-tools (2.23.0.0.icbeta) git; urgency=low
 
