@@ -1,5 +1,12 @@
-bde-tools (2.23.0.0.icbeta) unstable; urgency=low
+bde-tools (2.23.0.5) unstable; urgency=low
 
+  * df7b848 add jenkins-build-robo-on-git.sh to releases/2.23.x
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 23 Apr 2015 09:26:31 -0400
+
+bde-tools (2.23.0.0.icbeta) git; urgency=low
+
+  * e002282 bump changelog to 2.23.0.0.icbeta
   * 7e8be5b [APPROVAL] origin/review/move-to-waf-nightly-builds to master
   * b1c081c [APPROVAL] origin/review/move-to-waf-nightly-builds to master
   * 9071c2d [APPROVAL] origin/review/move-to-waf-nightly-builds to master
@@ -64,7 +71,7 @@ bde-tools (2.23.0.0.icbeta) unstable; urgency=low
   * 595762f [APPROVAL] origin/review/add-xlc-12.1-support-drqs-56270209 to master
   * abe9c65 [APPROVAL] enable-brmwnydgenap05-builds to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 28 Mar 2015 11:00:42 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 1 Apr 2015 15:45:22 -0400
 
 bde-tools (2.21.0.6) git; urgency=low
 
