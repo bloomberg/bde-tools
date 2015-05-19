@@ -78,11 +78,47 @@ driver file <code class="docutils literal"><span class="pre">bslstl_map.t.cpp</s
 <dl class="glossary docutils">
 <dt id="term-uor-unit-of-release">UOR (Unit of Release)</dt>
 <dd>A stand-alone package or a package group. Generally, UORs are the
-libraries (.a files or applications) that gets deployed on a system.</dd>
+libraries (.a files or applications) that gets deployed on a system.
+The names of UORs must be globally unique.</dd>
 </dl>
 </div>
 <div class="section" id="bde-physical-code-organization">
 <span id="bde-repo-physical-layout"></span><h2>BDE Physical Code Organization<a class="headerlink" href="#bde-physical-code-organization" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="units-and-unique-names">
+<span id="bde-repo-units"></span><h3>Units and Unique Names<a class="headerlink" href="#units-and-unique-names" title="Permalink to this headline">¶</a></h3>
+<p>Components, Packages, and Package Groups are all considered physical units
+inside of a repository.  Unit names have the constraint that they must be
+globally unique. This characterist of units greatly simplifies how we can
+reason about the source code.</p>
+<p>Having globally unique component names allows BDE to use direct include
+directives instead of relative ones. I.e., using <code class="docutils literal"><span class="pre">#include</span> <span class="pre">&lt;bdlt_date.h&gt;</span></code>
+instead of <code class="docutils literal"><span class="pre">#include</span> <span class="pre">&quot;include/header.h&quot;</span></code>.  Using direct includes affords us
+flexibility with development and deployment.  Otherwise, we would not be able
+to extract an arbitrary subset of our code for point distributions without
+recreating our entire directory structure.  Separately, our development process
+for package groups may choose to locate headers differently when using code
+withing the group compared with once the code is released.</p>
+<p>The argument for angle brackets rather than quotes is similar: Angle brackets
+<code class="docutils literal"><span class="pre">&lt;&gt;</span></code> provide full control over source of headers and can simulate the common
+usage of double quotes <code class="docutils literal"><span class="pre">&quot;&quot;</span></code> simply by adding <code class="docutils literal"><span class="pre">-I.</span></code> to the compile line.</p>
+<p>Unique unit names are achieved for BDE via of using a central name registry as
+well as following certain naming conventions:</p>
+<ul class="simple">
+<li>The name of each package group is a unique mnemonic exactly three characters
+long (e.g., <code class="docutils literal"><span class="pre">bsl</span></code>).</li>
+<li>The name of a package should be prefixed with the name of the package group
+and should also be a mnemonic no longer than six characters (e.g.,
+<code class="docutils literal"><span class="pre">bslma</span></code>).</li>
+<li>The name of the component should be prefixed by the name of the package
+followed an <code class="docutils literal"><span class="pre">_</span></code> (e.g., <code class="docutils literal"><span class="pre">bslma_allocator</span></code>).</li>
+<li>The name of a stand-alone package should be prefixed with <code class="docutils literal"><span class="pre">a_</span></code> if it&#8217;s an
+adapter, and <code class="docutils literal"><span class="pre">m_</span></code> if it&#8217;s an application.</li>
+<li>All of the names should be in lower case.</li>
+</ul>
+<p>For more details on naming conventions and design rules of components,
+packages, and package groups, please see <a class="reference external" href="https://github.com/bloomberg/bde/wiki/physical-code-organization#physical-code-organization">BDE Physical Code Organization
+Guidelines</a>.</p>
+</div>
 <div class="section" id="normal-components-packages-and-package-groups">
 <h3>Normal Components, Packages, and Package Groups<a class="headerlink" href="#normal-components-packages-and-package-groups" title="Permalink to this headline">¶</a></h3>
 <p>The source code must be organized into 3 hierarchical levels of aggregation (in
@@ -119,16 +155,6 @@ physical units should have the following structure on the file system:</p>
      `-- ...
 </pre></div>
 </div>
-<p>By convention, the name of a package group should be a mnemonic exactly three
-characters long. The name of a package should be prefixed with the name of the
-package group and should also be a mnemonic no longer than six characters. The
-name of the component should be prefixed by the name of the package followed an
-<code class="docutils literal"><span class="pre">_</span></code>. All of the names should be in lower case. For example,
-<code class="docutils literal"><span class="pre">bslma_allocator</span></code> is the name of a component in the <code class="docutils literal"><span class="pre">bslma</span></code> package, which
-is part of the <code class="docutils literal"><span class="pre">bsl</span></code> package group.</p>
-<p>For more details on naming conventions and design rules of components,
-packages, and package groups, please see <a class="reference external" href="https://github.com/bloomberg/bde/wiki/physical-code-organization#physical-code-organization">BDE Physical Code Organization
-Guidelines</a>.</p>
 </div>
 <div class="section" id="stand-alone-and-application-packages">
 <h3>Stand-Alone and Application Packages<a class="headerlink" href="#stand-alone-and-application-packages" title="Permalink to this headline">¶</a></h3>
@@ -578,6 +604,7 @@ of a library.</p>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#terminology">Terminology</a></li>
 <li><a class="reference internal" href="#bde-physical-code-organization">BDE Physical Code Organization</a><ul>
+<li><a class="reference internal" href="#units-and-unique-names">Units and Unique Names</a></li>
 <li><a class="reference internal" href="#normal-components-packages-and-package-groups">Normal Components, Packages, and Package Groups</a></li>
 <li><a class="reference internal" href="#stand-alone-and-application-packages">Stand-Alone and Application Packages</a></li>
 <li><a class="reference internal" href="#non-conforming-package-types">Non-Conforming Package Types</a><ul>

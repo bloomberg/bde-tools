@@ -40,11 +40,53 @@ Terminology
    UOR (Unit of Release)
        A stand-alone package or a package group. Generally, UORs are the
        libraries (.a files or applications) that gets deployed on a system.
+       The names of UORs must be globally unique.
 
 .. _bde_repo-physical_layout:
 
 BDE Physical Code Organization
 ==============================
+
+.. _bde_repo-units:
+
+Units and Unique Names
+----------------------
+
+Components, Packages, and Package Groups are all considered physical units
+inside of a repository.  Unit names have the constraint that they must be
+globally unique. This characterist of units greatly simplifies how we can
+reason about the source code.
+
+Having globally unique component names allows BDE to use direct include
+directives instead of relative ones. I.e., using ``#include <bdlt_date.h>``
+instead of ``#include "include/header.h"``.  Using direct includes affords us
+flexibility with development and deployment.  Otherwise, we would not be able
+to extract an arbitrary subset of our code for point distributions without
+recreating our entire directory structure.  Separately, our development process
+for package groups may choose to locate headers differently when using code
+withing the group compared with once the code is released.
+
+The argument for angle brackets rather than quotes is similar: Angle brackets
+``<>`` provide full control over source of headers and can simulate the common
+usage of double quotes ``""`` simply by adding ``-I.`` to the compile line.
+
+Unique unit names are achieved for BDE via of using a central name registry as
+well as following certain naming conventions:
+
+- The name of each package group is a unique mnemonic exactly three characters
+  long (e.g., ``bsl``).
+- The name of a package should be prefixed with the name of the package group
+  and should also be a mnemonic no longer than six characters (e.g.,
+  ``bslma``).
+- The name of the component should be prefixed by the name of the package
+  followed an ``_`` (e.g., ``bslma_allocator``).
+- The name of a stand-alone package should be prefixed with ``a_`` if it's an
+  adapter, and ``m_`` if it's an application.
+- All of the names should be in lower case.
+
+For more details on naming conventions and design rules of components,
+packages, and package groups, please see `BDE Physical Code Organization
+Guidelines <https://github.com/bloomberg/bde/wiki/physical-code-organization#physical-code-organization>`_.
 
 Normal Components, Packages, and Package Groups
 -----------------------------------------------
@@ -86,19 +128,6 @@ physical units should have the following structure on the file system:
      `-- bdl
          |
          `-- ...
-
-
-By convention, the name of a package group should be a mnemonic exactly three
-characters long. The name of a package should be prefixed with the name of the
-package group and should also be a mnemonic no longer than six characters. The
-name of the component should be prefixed by the name of the package followed an
-``_``. All of the names should be in lower case. For example,
-``bslma_allocator`` is the name of a component in the ``bslma`` package, which
-is part of the ``bsl`` package group.
-
-For more details on naming conventions and design rules of components,
-packages, and package groups, please see `BDE Physical Code Organization
-Guidelines <https://github.com/bloomberg/bde/wiki/physical-code-organization#physical-code-organization>`_.
 
 Stand-Alone and Application Packages
 ------------------------------------

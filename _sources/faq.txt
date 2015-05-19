@@ -58,7 +58,6 @@ built on top of BDE, but the tools should work for any conforming
 :ref:`bde_repo-top`.  Keep in mind that some options, such as
 ``--assert--level``, are specific to building the BDE libraries.
 
-
 .. rubric:: Footnotes
 
 .. [#f1] `Benchmarks of various C++ build tools
