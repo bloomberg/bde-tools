@@ -347,6 +347,8 @@ def process(filename_arg, text):
     if prev != "":
         ufids.append((99999999999999, prev))
 
+    print "\tUFIDS: ",ufids
+
     ufids_index = 0
     ufid = ""
 
@@ -357,7 +359,7 @@ def process(filename_arg, text):
         while pos > ufids[ufids_index][0]:
             ufid = ufids[ufids_index][1]
             ufids_index += 1
-            print "At position %d, switched to ufid %s" % (pos, ufid)
+            print "\t\tAt position %d, switched to ufid %s" % (pos, ufid)
 
         component_name = re.sub(".*[\\\\/]", "", match.group(1))
         component_name = re.sub("\..*", "", component_name)
