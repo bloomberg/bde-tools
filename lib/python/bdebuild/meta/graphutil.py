@@ -2,7 +2,9 @@
 
 Note that for simplicity, graph arguments are represented using a python
 dictionary, with each key being a node in the graph and and the value the list
-the nodes that are reachable from the node of the key.
+the nodes that are reachable from the node of the key.  This data structure is
+slower than a typical graph implementation with nodes and vertex types, but
+it's performance is currently sufficient.
 """
 
 import copy

@@ -6,7 +6,6 @@ import fnmatch
 import os
 import sys
 import time
-import subprocess
 
 from waflib import Utils
 from waflib import Task
@@ -15,6 +14,7 @@ from waflib import Options
 from waflib import TaskGen
 
 from bdebuild.common import sysutil
+from bdebuild.waf import lcov
 
 testlock = Utils.threading.Lock()
 test_runner_path = os.path.join(sysutil.repo_root_path(), 'bin',
@@ -196,130 +196,33 @@ def print_test_summary(ctx):
 def generate_coverage_report(ctx):
     """Generate a test coverage report.
 
-    The test coverage of each source file include the transitive coverage of
-    all test drivers ran.  This means the coverage of a particular component
-    doesn't include just the coverage from its own test drivers, but from all
-    other test drivers that has been ran as well.
-
-    To see the coverage of an individual test driver, generate a report for
-    just that test driver itself.
-
-    This limitation is partly due to the way ``lcov`` works.  ``lcov`` can only
-    filter based on a directory level, so getting a non-transitive report would
-    involve moving the coverage data files manually for each test driver.
-
-    Possible future improvements:
-
-    Generate a separate trace file for each package.  This way, the coverage of
-    each component will come from only the test drivers within its package.
-    Also, since ``lcov`` is not multithreaded, coverage report generation can
-    be sped up by generating multiple trace files in parallel.
-
     Args:
         ctx (BuildContext): The build context.
 
-    Return:
+    Returns:
         True if successful.
-
     """
 
     lst = getattr(ctx, 'utest_results', [])
-    test_dir_paths = set()
-    src_dir_paths = set()
+    obj_dirs = []
+    src_dirs = []
     for (tst, _, _, _, src) in lst:
-        test_dir_path = tst.parent.abspath()
-        if test_dir_path not in test_dir_paths:
-            test_dir_paths.add(test_dir_path)
-        src_dir_path = src.parent.abspath()
-        if src_dir_path not in src_dir_paths:
-            src_dir_paths.add(src_dir_path)
+        if tst.parent.abspath() not in obj_dirs:
+            obj_dirs.append(tst.parent.abspath())
+            src_dirs.append(src.parent.abspath())
 
-    Logs.pprint('CYAN', 'Generating Test Coverage Report')
-    logfile_path = os.path.join(ctx.bldnode.abspath(), 'coverage.log')
-    Logs.pprint('GREEN', '  log file: %s' % logfile_path)
-    covdir = os.path.join(ctx.bldnode.abspath(), '_test_coverage')
-    test_info_base = os.path.join(covdir, 'test_base.info')
-    test_info_run = os.path.join(covdir, 'test_run.info')
-    test_info_total = os.path.join(covdir, 'test_total.info')
-    test_info_final = os.path.join(covdir, 'test_final.info')
+    tmp_dir_node = ctx.bldnode.make_node('_test_coverage')
+    tmp_dir_node.mkdir()
+
     if ctx.options.coverage_out:
         test_coverage_out_path = ctx.options.coverage_out
     else:
-        test_coverage_out_path = os.path.join(covdir, 'report')
+        test_coverage_out_path = tmp_dir_node.make_node('report').abspath()
 
-    lcov_d = []
-    for path in (test_dir_paths | src_dir_paths):
-        lcov_d += ['-d', path]
-
-    lcov_cmd1 = ctx.env['LCOV'] + [
-        '--no-checksum', '--no-external',
-        '-c', '-i',
-        '-c', '-o', test_info_base
-    ] + lcov_d
-
-    lcov_cmd2 = ctx.env['LCOV'] + [
-        '--no-checksum', '--no-external',
-        '-c', '-o', test_info_run
-    ] + lcov_d
-
-    lcov_cmd3 = ctx.env['LCOV'] + [
-        '--no-checksum',
-        '-a', test_info_base, '-a', test_info_run,
-        '-o', test_info_total
-    ]
-
-    lcov_cmd4 = ctx.env['LCOV'] + [
-        '--no-checksum',
-        '--remove', test_info_total, '*.t.cpp',
-        '-o', test_info_final
-    ]
-
-    genhtml_cmd = [
-        ctx.env['GENHTML'][0],
-        '--function-coverage',
-        '-o', test_coverage_out_path,
-        test_info_final
-    ]
-    cmd_descs = [(lcov_cmd1, 'Building baseline trace file'),
-                 (lcov_cmd2, 'Building test-run trace file'),
-                 (lcov_cmd3, 'Combining trace files'),
-                 (lcov_cmd4, 'Filtering trace file'),
-                 (genhtml_cmd, 'Generating html pages')]
-
-    is_success = True
-    with open(logfile_path, 'w') as logfile:
-        print('='*79, file=logfile)
-        print('all cmds: %s' % cmd_descs, file=logfile)
-        print('='*79, file=logfile)
-
-        cmd_idx = 0
-        cmd_len = len(cmd_descs)
-        while cmd_idx < cmd_len:
-            cmd = cmd_descs[cmd_idx][0]
-            msg = '[%d/%d] %s%s%s' % ((cmd_idx + 1), cmd_len,
-                                      Logs.colors.YELLOW,
-                                      cmd_descs[cmd_idx][1],
-                                      Logs.colors.NORMAL)
-            cmd_idx += 1
-
-            Logs.info(msg, extra={'c1': '', 'c2': ''})
-            print('='*79, file=logfile)
-            print('run cmd: %s' % cmd, file=logfile)
-            print('='*79, file=logfile)
-            logfile.flush()
-
-            p = subprocess.Popen(cmd, cwd=ctx.path.abspath(),
-                                 stdout=logfile,
-                                 stderr=logfile)
-            rc = p.wait()
-            if rc != 0:
-                is_success = False
-                break
-    if is_success:
-        Logs.pprint('CYAN', 'Generated Report')
-        Logs.pprint('YELLOW', '  ' +
-                    os.path.join(test_coverage_out_path, 'index.html'))
-    return is_success
+    return lcov.generate_coverage_report(
+        obj_dirs, src_dirs, ctx.path.abspath(), ctx.bldnode.abspath(),
+        tmp_dir_node.abspath(), test_coverage_out_path, ctx.env['LCOV'],
+        ctx.env['GENHTML'])
 
 
 def remove_gcda_files(ctx):
@@ -352,8 +255,8 @@ def post_build_fun(ctx):
 
     if ctx.env['with_coverage']:
         is_coverage_success = generate_coverage_report(ctx)
-        is_coverage_success = False
         if not is_coverage_success:
+            is_success = False
             error_msg += '\nFailed to generate coverage report.'
 
     if not is_success:

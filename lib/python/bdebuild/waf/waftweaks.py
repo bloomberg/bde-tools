@@ -18,6 +18,9 @@ from waflib import TaskGen
 from waflib import Utils
 
 
+from waflib.Tools import ccroot  # NOQA
+
+
 class PreConfigure(Configure.ConfigurationContext):
     cmd = 'configure'
 
@@ -170,9 +173,10 @@ def bde_exec_command(task, cmd, **kw):
         status_str = 'WARNING' if ret == 0 else 'ERROR'
         color = Logs.colors.YELLOW if ret == 0 else Logs.colors.RED
 
-        Logs.info('[%s (%s)] <<<<<<<<<<\n%s>>>>>>>>>>' %
-                  (src_str, status_str, msg),
-                  extra={'stream': sys.stderr, 'c1': color})
+        msg = '%s[%s (%s)] <<<<<<<<<<%s\n%s%s>>>>>>>>>>%s' % (
+            color, src_str, status_str, Logs.colors.NORMAL,
+            msg, color, Logs.colors.NORMAL)
+        Logs.info(msg, extra={'stream': sys.stderr, 'c1': '', 'c2': ''})
 
     return ret
 

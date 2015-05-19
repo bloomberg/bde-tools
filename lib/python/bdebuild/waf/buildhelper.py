@@ -1,8 +1,7 @@
-"""Implement waf.build operations.
+"""Implement waf build operations.
 """
 
 import os
-import sys
 
 from waflib import Logs
 
@@ -13,16 +12,38 @@ from bdebuild.meta import graphutil
 from bdebuild.meta import repounits
 
 from bdebuild.waf import waftweaks  # NOQA
-from bdebuild.waf import bdeunittest
 
 
 class BuildHelper(object):
+    """Helper class to build a BDE-style repository.
+
+    Attributes:
+       ctx (BuildContext): The waf build context.
+       build_config (BuildConfig): Build configuration of the repo.
+       install_config (InstallConfig): Install configuration of the repo.
+       uor_diagraph (dict of str to list): UOR depdency graph.
+       third_party_lib_targets (set of str): Names of third party "_lib" task
+           generators.
+       libtype_features (list of str): Features to build a library
+           (static or dynamic).
+       is_run_tests (bool): Whether to run test drivers.
+       is_build_tests (bool): Whether to build test drivers.
+       global_taskgen_idx (int): The index to use for all task generators.
+    """
+
     def __init__(self, ctx):
         for class_name in ('cxx', 'cxxprogram', 'cxxshlib', 'cxxstlib',
                            'c', 'cprogram', 'cshlib', 'cstlib'):
             waftweaks.activate_custom_exec_command(class_name)
 
         self.ctx = ctx
+
+        # Use the same index for all task generators.  Since we don't ever
+        # build the same source file using two different build options, this is
+        # safe to do.  Doing so saves us from having to manually make task
+        # generators for builds with and without test drivers to have the same
+        # index.
+        self.global_taskgen_idx = 1
         self.build_config = buildconfig.BuildConfig.from_pickle_str(
             self.ctx.env['build_config'])
         self.install_config = installconfig.InstallConfig.from_pickle_str(
@@ -149,7 +170,8 @@ $ waf build --target bdlt_date.t --test build"""
                  install_path=lib_install_path,
                  bdevnum=group.version,
                  bdesoname=custom_soname,
-                 depends_on=[group.name + '_pc']
+                 depends_on=[group.name + '_pc'],
+                 idx=self.global_taskgen_idx
                  )
 
         self.ctx(
@@ -202,7 +224,8 @@ $ waf build --target bdlt_date.t --test build"""
                 stlib=flags.stlibs,
                 cust_libpaths=flags.libpaths,
                 use=[package.name + '_lib'] + dums_tg_dep,
-                uselib=external_dep
+                uselib=external_dep,
+                idx=self.global_taskgen_idx
             )
             depends_on.append(package.name + '_app')
 
@@ -258,6 +281,7 @@ $ waf build --target bdlt_date.t --test build"""
             use=internal_dep,
             uselib=external_dep,
             install_path=lib_install_path,
+            idx=self.global_taskgen_idx,
         )
 
         self.ctx(
@@ -304,7 +328,8 @@ $ waf build --target bdlt_date.t --test build"""
                 path=package_node,
                 target=package.name + '_dums.c',
                 rule='cp ${SRC} ${TGT}',
-                source=dums_node
+                source=dums_node,
+                idx=self.global_taskgen_idx,
             )
             self.ctx(
                 name=package.name + '_dums_build',
@@ -314,6 +339,7 @@ $ waf build --target bdlt_date.t --test build"""
                 cflags=flags.cflags,
                 cincludes=flags.cincludes,
                 depends_on=package.name + '_dums_cp',
+                idx=self.global_taskgen_idx,
             )
             dums_tg_dep = [package.name + '_dums_build']
 
@@ -335,7 +361,8 @@ $ waf build --target bdlt_date.t --test build"""
             use=internal_dep,
             uselib=external_dep,
             install_path=lib_install_path,
-            depends_on=extra_taskgen_dep
+            depends_on=extra_taskgen_dep,
+            idx=self.global_taskgen_idx
         )
 
         if self.is_build_tests:
@@ -381,26 +408,17 @@ $ waf build --target bdlt_date.t --test build"""
                         stlib=flags.stlibs,
                         cust_libpaths=flags.libpaths,
                         use=test_dep,
-                        uselib=external_dep
+                        uselib=external_dep,
+                        idx=self.global_taskgen_idx
                     )
-                else:
-                    self.ctx(
-                        name=c.name + '.t',
-                        path=package_node
-                    )
-        else:
-            # Create the same number of task generators to ensure that the
-            # generators created with or without tests have the same idx
-            for c in package.components:
-                self.ctx(
-                    name=c.name + '.t',
-                    path=package_node
-                )
 
-        self.ctx(
-            name=package.name + '_tst',
-            depends_on=[c.name + '.t' for c in package.components]
-        )
+            self.ctx(
+                name=package.name + '_tst',
+                depends_on=[c.name + '.t' for c in package.components
+                            if c.has_test_driver]
+            )
+        else:
+            self.ctx(name=package.name + '_tst')
 
         if h_install_path:
             self.ctx.install_files(
