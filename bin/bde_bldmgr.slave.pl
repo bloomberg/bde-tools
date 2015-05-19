@@ -228,13 +228,20 @@ if ($opts{uplid}) {
 
 if ($group) {
     if (@ARGV) {
-        usage("Trailing arguments incompatible with --group");
+        usage("Trailing arguments (@ARGV) incompatible with --group");
         exit EXIT_FAILURE;
     }
 } else {
   SWITCH: foreach (scalar@ARGV) {
         $_==0 and do {
             usage("No --group or trailing group argument supplied");
+
+            print "########## OPTIONS #################\n";
+            foreach my $opt (keys %opts) {
+                print STDERR "\tOption $opt: $opts{$opt}\n";
+            }
+            print "########## END OPTIONS #################\n";
+
             exit EXIT_FAILURE;
         };
         $_==1 and do {
@@ -243,6 +250,13 @@ if ($group) {
         };
       DEFAULT:
         usage("@ARGV: only one trailing group argument allowed");
+
+        print "########## OPTIONS #################\n";
+        foreach my $opt (keys %opts) {
+            print STDERR "\tOption $opt: $opts{$opt}\n";
+        }
+        print "########## END OPTIONS #################\n";
+
         exit EXIT_FAILURE;
     }
 }
