@@ -351,7 +351,8 @@ def process(filename_arg, text):
 
         substr = text[:match.start()]
 
-        regex_results = re.findall("BDE_WAF_UFID=(\\w+)|ufid\\s+:\\s(\\w+)", substr)
+        regex_string = "BDE_WAF_UFID=(\\w+)|(?:ufid\\s+|building targets):\\s+(\\w+)"
+        regex_results = re.findall(regex_string, substr)
 
         if regex_results:
 
@@ -367,7 +368,7 @@ def process(filename_arg, text):
                                   categorynames[istest][category],
                                   diagnostics)
         else:
-            print "No match for ufid string in %s..." % substr[:1000]
+            print "No match (using regex '%s') for ufid string in %s..." % (regex_string, substr[:1000])
 
     connection.commit()
 
