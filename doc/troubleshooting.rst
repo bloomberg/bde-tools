@@ -94,14 +94,14 @@ Visual Studio 2013, you can pass the following option to ``waf configure``:
 
 Alternatively, you can :ref:`tutorials-setwafenv-bde-windows`.
 
-How can I get color compiler diagnostic using waf?
---------------------------------------------------
+How can I get color compiler diagnostics using waf?
+---------------------------------------------------
 
 Newer versions of clang and gcc supports printing color warning and error
-messages to simplify debugging.  By default, the compilers uses color only if a
+messages to simplify debugging.  By default, the compilers use colors only if a
 TTY is attached to the terminal. There is no easy way to work around this issue
-in waf due to the need to waf's need to store the output of multi-threaded
-builds. See https://github.com/waf-project/waf/issues/1555 for more details.
+in waf due to the waf's need to store the output of multi-threaded builds. See
+https://github.com/waf-project/waf/issues/1555 for more details.
 
 A manual workaround can be used for now:
 
