@@ -70,8 +70,8 @@ The argument for angle brackets rather than quotes is similar: Angle brackets
 ``<>`` provide full control over source of headers and can simulate the common
 usage of double quotes ``""`` simply by adding ``-I.`` to the compile line.
 
-Unique unit names are achieved for BDE via of using a central name registry as
-well as following certain naming conventions:
+Having unique unit names is achieved in BDE via using a central name registry
+as well as following certain naming conventions:
 
 - The name of each package group is a unique mnemonic exactly three characters
   long (e.g., ``bsl``).

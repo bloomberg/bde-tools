@@ -275,7 +275,7 @@ class ListContext(Build.BuildContext):
         lst = list(self.task_gen_cache_names.keys())
         lst.sort()
 
-        hidden_suffixes = ['_lib', '_src', '_tst']
+        hidden_suffixes = ['_lib', '_src', '_tst', '_pc']
         for k in lst:
             if len(k) > 4 and (k[-4:] in hidden_suffixes):
                 continue
