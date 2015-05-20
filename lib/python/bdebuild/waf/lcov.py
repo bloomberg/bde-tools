@@ -92,6 +92,7 @@ def generate_coverage_report(obj_dirs, src_dirs, repo_root, bld_dir, tmp_dir,
         ]
         args_list_list.append([package_name, cmd_descs, filt_tracefile])
 
+    Logs.pprint('CYAN', 'Generating Coverage Report')
     p = 0
     total = num_packages * 4 + 1
     tracefiles = []

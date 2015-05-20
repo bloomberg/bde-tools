@@ -177,18 +177,18 @@ def print_test_summary(ctx):
     for (f, code, out, t, _) in lst:
         if not code:
             if ctx.options.show_test_out:
-                Logs.pprint('GREEN', '[%s (TEST)] <<<<<<<<<<' % f.abspath())
-                Logs.pprint('CYAN', out)
-                Logs.pprint('GREEN', '>>>>>>>>>>')
+                Logs.pprint('YELLOW', '[%s (TEST)] <<<<<<<<<<' % f.abspath())
+                Logs.info(out, extra={'c1': '', 'c2': ''})
+                Logs.pprint('YELLOW', '>>>>>>>>>>')
             else:
                 Logs.pprint('GREEN', '%s (%s)' % (f.abspath(), get_time(t)))
 
     Logs.pprint('CYAN', '  tests that fail %d/%d' % (tfail, total))
     for (f, code, out, _, _) in lst:
         if code:
-            Logs.pprint('YELLOW', '[%s (TEST)] <<<<<<<<<<' % f.abspath())
-            Logs.pprint('CYAN', out)
-            Logs.pprint('YELLOW', '>>>>>>>>>>')
+            Logs.pprint('RED', '[%s (TEST)] <<<<<<<<<<' % f.abspath())
+            Logs.info(out, extra={'c1': '', 'c2': ''})
+            Logs.pprint('RED', '>>>>>>>>>>')
 
     return tfail
 
