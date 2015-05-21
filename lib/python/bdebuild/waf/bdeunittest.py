@@ -157,7 +157,7 @@ def print_test_summary(ctx):
         ctx (BuildContext): The build context.
 
     Returns:
-        Number of test failures.
+        Number of test failures and total number of tests.
     """
 
     def get_time(seconds):
@@ -181,7 +181,11 @@ def print_test_summary(ctx):
                 Logs.info(out, extra={'c1': '', 'c2': ''})
                 Logs.pprint('YELLOW', '>>>>>>>>>>')
             else:
-                Logs.pprint('GREEN', '%s (%s)' % (f.abspath(), get_time(t)))
+
+                msg = '%s%s%s %s(%s)%s' % (
+                    Logs.colors.GREEN, f.abspath(), Logs.colors.NORMAL,
+                    Logs.colors.YELLOW, get_time(t), Logs.colors.NORMAL)
+                Logs.info(msg, extra={'c1': '', 'c2': ''})
 
     Logs.pprint('CYAN', '  tests that fail %d/%d' % (tfail, total))
     for (f, code, out, _, _) in lst:
@@ -190,7 +194,7 @@ def print_test_summary(ctx):
             Logs.info(out, extra={'c1': '', 'c2': ''})
             Logs.pprint('RED', '>>>>>>>>>>')
 
-    return tfail
+    return tfail, total
 
 
 def generate_coverage_report(ctx):
@@ -244,11 +248,12 @@ def remove_gcda_files(ctx):
 
 def post_build_fun(ctx):
     is_success = True
-    num_test_failures = print_test_summary(ctx)
+    num_test_failures, num_tests = print_test_summary(ctx)
 
     error_msg = ''
     if num_test_failures > 0:
-        error_msg += 'Some tests have failed.'
+        error_msg += '%d/%d tests have failed.' % (num_test_failures,
+                                                   num_tests)
         is_success = False
     else:
         Logs.info('All tests passed.')
