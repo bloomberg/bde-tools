@@ -120,6 +120,7 @@ class Ufid(mixins.BasicEqualityMixin):
         'safe': (BACK - 3, 'Build safe (paranoid) libraries'),
         'shr': (BACK - 2, 'Build dynamic libraries'),
         'pic': (BACK - 1, 'Build static PIC libraries'),
+        'stlport': (BACK, 'Build with STLPort on Sun'),
         'cpp11': (BACK + 12, 'Build with support for C++11 (C++0x) features')
     }
 
