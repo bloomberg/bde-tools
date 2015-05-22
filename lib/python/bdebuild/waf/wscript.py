@@ -170,18 +170,24 @@ def add_cmdline_options(ctx):
           'default': False,
           'help': "configure install options according to dpkg "
                   "conventions (this options supercedes the options "
-                  "'use-flat-include-dir', 'lib-dir', and 'lib-suffix')"}),
+                  "'use-flat-include-dir', 'libdir', and 'lib-suffix')"}),
         (('use-flat-include-dir',),
          {'action': 'store_true',
           'default': False,
           'help': 'install all headers into $PREFIX/include '
                   'instead of $PREFIX/include/<package_group>, and '
                   'change .pc files accordingly'}),
-        (('lib-dir',),
+        (('libdir',),
          {'type': 'string',
           'default': 'lib',
+          'dest': 'lib_dir',
           'help': 'the name of the directory under $PREFIX where '
                   'library files are installed [default: %default]'}),
+        (('bindir',),
+         {'type': 'string',
+          'default': 'bin',
+          'help': 'the name of the directory under $PREFIX where '
+                  'binaries are installed [default: %default]'}),
         (('lib-suffix',),
          {'type': 'string',
           'default': '',

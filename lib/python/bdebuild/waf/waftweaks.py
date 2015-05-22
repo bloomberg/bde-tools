@@ -277,7 +277,7 @@ class ListContext(Build.BuildContext):
 
         hidden_suffixes = ['_lib', '_src', '_tst', '_pc']
         for k in lst:
-            if len(k) > 4 and (k[-4:] in hidden_suffixes):
+            if any(k.endswith(s) for s in hidden_suffixes):
                 continue
 
             Logs.pprint('GREEN', k)

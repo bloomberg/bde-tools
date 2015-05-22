@@ -24,12 +24,11 @@ def generate_coverage_report(obj_dirs, src_dirs, repo_root, bld_dir, tmp_dir,
     filter based on a directory level, so getting a non-transitive report would
     involve moving the coverage data files manually for each test driver.
 
-    This module was originally designed to running lcov in parallel across all
+    This function was originally designed to run lcov in parallel across all
     packages.  Unfortunately running lcov for each package in parallel is not
-    possible due to the way that lcov opens all files instrumented by gcov
-    regardless of whether its needed in the output.  Running multiple lcov
-    processes in parallel resulted in file open errors for some of the
-    processes.
+    possible, because lcov opens all intrumented files in all packages
+    regardless of whether its needed for the output, which results in random
+    file open errors for some lcov instances.
 
     Args:
         obj_dirs (list of str): Paths to object file directories.
