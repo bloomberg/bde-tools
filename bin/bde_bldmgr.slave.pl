@@ -617,6 +617,12 @@ MAIN: {
         my $configureOutput="";
         my $flag = 0;
 
+        write_logandverbose("=========== START ENVIRONMENT VARIABLES =======");
+        foreach my $key(sort keys %ENV) {
+            write_logandverbose("\t$key = $ENV{$key}\n");
+        }
+        write_logandverbose("===========  END  ENVIRONMENT VARIABLES =======");
+
         CONFIGURE: while(1) {
             $configureOutput = `${pythonprefix}${pythonprefixsep}$waf configure $extraConfigureOptions 2>&1`;
 
