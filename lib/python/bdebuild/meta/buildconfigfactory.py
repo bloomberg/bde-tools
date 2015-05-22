@@ -106,6 +106,20 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
                     oe.store_option_rules(dep_uor.cap)
                     oe.store_option_rules(dep_uor.defs)
 
+        if (build_config.uplid.os_type == 'windows' and
+                build_config.uplid.comp_type == 'cl'):
+            # By default, Visual Studio uses a single pdb file for all object
+            # files compiled from a particular directory named
+            # vc<vs_version>.pdb.  We want to use a separate pdb file for each
+            # package group and standard alone package.
+            #
+            # BDE_CXXFLAGS and BDE_CFLAGS are defined by default.opts, so the
+            # code below is a bit hackish.
+            pdb_option = ' /Fd%s\\%s.pdb' % (
+                os.path.relpath(uor.path, build_config.root_path), uor.name)
+            oe.results['BDE_CXXFLAGS'] += pdb_option
+            oe.results['BDE_CFLAGS'] += pdb_option
+
         if uor.type_ == repounits.UnitType.GROUP:
             uor_bc = buildconfig.PackageGroupBuildConfig()
         elif uor.type_ in repounits.UnitTypeCategory.PACKAGE_STAND_ALONE_CAT:
