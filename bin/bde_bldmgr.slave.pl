@@ -564,16 +564,18 @@ MAIN: {
         my $extraConfigureOptions = "";
 
         if (!$iamwindows) {
-            my $setwafenv = "${pythonprefix}${pythonprefixsep}bde_setwafenv.py -c $compiler -t $target --force_uplid=$uplid";
+            my $setwafenv = "${pythonprefix}${pythonprefixsep}bde_setwafenv.py -c $compiler -t $target";
 
             write_logandverbose("Setting up waf env, with\n\tBDE_ROOT=$ENV{BDE_ROOT}\n\tBDE_PATH=$ENV{BDE_PATH}\n\tsetwafenv=\"$setwafenv\"\n\tPATH=$ENV{PATH}");
 
             print `which bde_setwafenv.py`;
 
-            open(SETWAFENV,"$setwafenv|") or die "Unable to run $setwafenv, error $!";
+            open(SETWAFENV,"$setwafenv 2>&1 |") or die "Unable to run $setwafenv, error $!";
 
             while(<SETWAFENV>) {
-                if (/export\s+(\w+)="(.*)"/) {
+                chomp;
+                write_logandverbose("bde_setwafenv.py output: $_");
+                if (/export\s+(\w+)="?([^"]*)/) {
                     write_logandverbose "Adding to env: $1=$2";
                     $ENV{$1}=$2;
                 }
@@ -612,8 +614,24 @@ MAIN: {
         }
 
         # construct target-specific command arguments
-        write_logandverbose(`${pythonprefix}${pythonprefixsep}$waf configure $extraConfigureOptions 2>&1`);
+        my $configureOutput="";
+        my $flag = 0;
 
+        CONFIGURE: while(1) {
+            $configureOutput = `${pythonprefix}${pythonprefixsep}$waf configure $extraConfigureOptions 2>&1`;
+
+            if ($? && !$flag) {
+                write_logandverbose($configureOutput) if defined $configureOutput;
+                write_logandverbose("******** Configure failed, error $? - running distclean\n");
+                write_logandverbose(`${pythonprefix}${pythonprefixsep}$waf distclean 2>&1`);
+                ++$flag;
+                next CONFIGURE;
+            }
+
+            last CONFIGURE;
+        };
+
+        write_logandverbose($configureOutput);
         my @cmd = ($waf, 'build');
         unshift @cmd, $pythonprefix if $pythonprefix;
         push @cmd, "--target=$group";

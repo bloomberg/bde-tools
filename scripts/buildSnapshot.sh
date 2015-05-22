@@ -122,6 +122,7 @@ do \
     if [[ ( ! -e etc/default.opts ) && ( -e $path/etc/default.opts ) ]]
     then \
         rsync -av $path/etc/default*.opts etc/
+        rsync -av $path/etc/bdecompilerconfig etc/
     fi
 
     for group in bde bdx
