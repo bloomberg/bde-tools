@@ -166,7 +166,8 @@ class ConfigureHelper(object):
         # to have the same suffix as well. Since the .dep files will not have
         # the suffix, we will remove the suffix from the names of the options
         # loaded into the waf environment.
-        rename_keys = ['defines', 'includes', 'libpath', 'stlib', 'lib']
+        rename_keys = ['defines', 'includes', 'lib', 'libpath', 'stlib',
+                       'stlibpath']
         lib_suffix = self.ctx.options.lib_suffix
         for lib in sorted(self.build_config.external_dep):
             actual_lib = lib + str(lib_suffix or '')
@@ -188,16 +189,6 @@ build output directory for details.""" % \
 
             sl_key = ('stlib_' + lib).upper()
             dl_key = ('lib_' + lib).upper()
-
-            # check_cfg always stores the libpath as dynamic library path
-            # instead of static even if the configuration option is set to
-            # static.
-            if 'shr' not in self.ufid.flags:
-                slp_key = ('stlibpath_' + lib).upper()
-                dlp_key = ('libpath_' + lib).upper()
-                if dlp_key in self.ctx.env:
-                    self.ctx.env[slp_key] = self.ctx.env[dlp_key]
-                    del self.ctx.env[dlp_key]
 
             # preserve the order of libraries
             for l in dl_overrides:
