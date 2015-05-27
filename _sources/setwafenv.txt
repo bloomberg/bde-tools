@@ -35,7 +35,7 @@ Prerequisites and Supported Platforms
 
 bde_setwafenv.py requires:
 
--  Python 2.6.x - 2.7.x, Python 3.3+
+-  Python 2.6.x - 2.7.x, Python 3.3+, Pypy
 
 bde_setwafenv.py is supported on all platform where the :ref:`waf based build
 system is supported <waf-supported_platforms>`.

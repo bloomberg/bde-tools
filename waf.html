@@ -69,7 +69,7 @@ going forward.</p>
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
 <p>Running waf requires:</p>
 <ul class="simple">
-<li>Python 2.6.x - 2.7.x, Python 3.3+</li>
+<li>Python 2.6.x - 2.7.x, Python 3.3+, Pypy</li>
 </ul>
 <p>Optional:</p>
 <ul class="simple">
@@ -276,6 +276,9 @@ variable is not applicable when building using Visual Studio on
 Windows; To select from multiple visual studio compilers installed on
 the system, use the <code class="docutils literal"><span class="pre">--msvc_version</span></code> option instead.</p>
 </li>
+<li><p class="first"><code class="docutils literal"><span class="pre">AR</span></code></p>
+<p>Set the archive-maintaining program.</p>
+</li>
 <li><p class="first"><code class="docutils literal"><span class="pre">CFLAGS</span></code></p>
 <p>Set extra C compiler options, e.g., &#8220;-O3&#8221;.</p>
 </li>
@@ -285,7 +288,7 @@ the system, use the <code class="docutils literal"><span class="pre">--msvc_vers
 <li><p class="first"><code class="docutils literal"><span class="pre">CPPFLAGS</span></code></p>
 <p>Set extra preprocessor options, e.g., &#8220;-DFOO=bar&#8221;.</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">LINKFLAGS</span></code></p>
+<li><p class="first"><code class="docutils literal"><span class="pre">LINKFLAGS</span></code> or <code class="docutils literal"><span class="pre">LDFLAGS</span></code></p>
 <p>Set extra linker options, e.g., &#8220;-L/usr/local -lsome-library&#8221;.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">PREFIX</span></code></p>
