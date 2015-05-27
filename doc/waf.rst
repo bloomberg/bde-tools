@@ -26,7 +26,7 @@ Prerequisites
 
 Running waf requires:
 
-- Python 2.6.x - 2.7.x, Python 3.3+
+- Python 2.6.x - 2.7.x, Python 3.3+, Pypy
 
 Optional:
 
@@ -259,6 +259,10 @@ installation prefix.
    Windows; To select from multiple visual studio compilers installed on
    the system, use the ``--msvc_version`` option instead.
 
+-  ``AR``
+
+   Set the archive-maintaining program.
+
 -  ``CFLAGS``
 
    Set extra C compiler options, e.g., "-O3".
@@ -271,7 +275,7 @@ installation prefix.
 
    Set extra preprocessor options, e.g., "-DFOO=bar".
 
--  ``LINKFLAGS``
+-  ``LINKFLAGS`` or ``LDFLAGS``
 
    Set extra linker options, e.g., "-L/usr/local -lsome-library".
 
@@ -280,6 +284,7 @@ installation prefix.
    Set the installation prefix to use, if ``--prefix`` option is not
    specified. This is the directory where the ``install`` command will
    install the headers and built libraries.
+
 
 Successful execution of the configure command creates a build output
 sub-directory, named 'build' by default (can be set using the ``-o``
