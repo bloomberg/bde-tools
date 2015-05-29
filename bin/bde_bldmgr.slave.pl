@@ -274,7 +274,9 @@ if ($group) {
 
         my $logdir=shift;
 
-        my @lt = localtime();
+        # Starting "nightly" builds at 2100.  Treat anything after 20:30 as
+        # part of the next day...
+        my @lt = localtime(time()+(3.5*3600));
         my $ymdtag = strftime("%Y%m%d", @lt);
 
         $logdir.="${FS}$ymdtag";
