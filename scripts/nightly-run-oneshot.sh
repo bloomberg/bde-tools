@@ -5,12 +5,12 @@ echo SCRIPT-TRACE - running $0 -- $*
 SCRIPT_NAME=nightly-run-oneshot
 BUILD_TYPE=oneshot
 
-BDE_CORE_BRANCH=remotes/origin/review/guidutil-win_drqs-63818360
-BDE_BB_BRANCH=remotes/origin/master
+BDE_CORE_BRANCH=remotes/origin/releases/2.23.x
+BDE_BB_BRANCH=remotes/origin/releases/2.23.x
 
 BSL_TYPE=internal
 
-if true
+if false
 then
     # just bsl and bdl
     CORE_UORS="bsl bdl"
@@ -31,7 +31,7 @@ exec > ~bdebuild/logs/log.$SCRIPT_NAME.`date +"%Y%m%d-%H%M%S"` 2>&1
 
 TOOLSPATH=/home/mgiroux/bde-tools
 
-export TARGET_OPTION="-pw32_2010,w64brm_dbg,w32_2013_dbg -vvv"
+#export TARGET_OPTION="-pw32_2010,w64brm_dbg,w32_2013_dbg -vvv"
 
 cd $TOOLSPATH
 /opt/swt/bin/git pull
