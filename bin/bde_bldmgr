@@ -1076,10 +1076,13 @@ if(!defined $deadline) {
     $deadline = "11:00";
 }
 
+# Deadline is reached if we're between "deadline" and "deadline + 1/2hr".
+# Otherwise, this might be part of tomorrow's build.
 sub deadlineReached {
     my $now = strftime("%H:%M",localtime);
+    my $now_less_one_half_hour = strftime("%H:%M",localtime(time()-1800));
 
-    return ($now ge $deadline);
+    return ($now ge $deadline) && ($now_less_one_half_hour le $deadline);
 }
 
 while(scalar keys %kids) {
