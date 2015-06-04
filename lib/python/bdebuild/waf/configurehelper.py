@@ -69,6 +69,7 @@ class ConfigureHelper(object):
             '/D' if self.uplid.comp_type == 'cl' else '-D')
 
         default_rules = optionsutil.get_default_option_rules()
+
         debug_opt_keys = self.ctx.options.debug_opt_keys.split(',') if \
             self.ctx.options.debug_opt_keys is not None else []
         self.build_config = buildconfigfactory.make_build_config(
@@ -234,22 +235,35 @@ build output directory for details.""" % \
                 else:
                     self.ctx.env[var] = additional_flags.split()
 
-        # For visual studio, waf explicitly includes the system header files by
-        # setting the 'INCLUDES' variable. BSL_OVERRIDE_STD mode requires that
-        # the system header files, which contains the standard library, be
-        # overridden with custom versions in bsl, so we workaround the issue by
-        # moving the system includes to 'INCLUDE_BSL' if it exists. This
-        # solution is not perfect, because it doesn't support package groups
-        # that doesn't depend on bsl -- this is not a problem for BDE
-        # libraries.
+        if self.uplid.os_type == 'windows':
 
-        if (self.uplid.os_type == 'windows' and
-           'INCLUDES_BSL' in self.ctx.env):
+            # /MT is the default for cl.exe compiler, but /MD is the default
+            # for the MSVC compiler. We explicitly define the flags for both
+            # static and dynamic runtime types for the sack of clarity.
+            if self.ctx.options.msvc_runtime_type == 'dynamic':
+                rt_flag = '/MD'
+            else:
+                rt_flag = '/MT'
 
-            # Assume that 'INCLUDES' containly system header only.
+            if 'dbg' in self.ufid.flags:
+                rt_flag += 'd'
 
-            self.ctx.env['INCLUDES_BSL'].extend(self.ctx.env['INCLUDES'])
-            del self.ctx.env['INCLUDES']
+            self.ctx.env.append_value('CFLAGS', [rt_flag])
+            self.ctx.env.append_value('CXXFLAGS', [rt_flag])
+
+            if 'INCLUDES_BSL' in self.ctx.env:
+                # For visual studio, waf explicitly includes the system header
+                # files by setting the 'INCLUDES' variable. BSL_OVERRIDE_STD
+                # mode requires that the system header files, which contains
+                # the standard library, be overridden with custom versions in
+                # bsl, so we workaround the issue by moving the system includes
+                # to 'INCLUDE_BSL' if it exists. This solution is not perfect,
+                # because it doesn't support package groups that doesn't depend
+                # on bsl -- this is not a problem for BDE libraries.
+
+                # Assume that 'INCLUDES' containly system header only.
+                self.ctx.env['INCLUDES_BSL'].extend(self.ctx.env['INCLUDES'])
+                del self.ctx.env['INCLUDES']
 
         if self.uplid.comp_type == 'xlc':
 

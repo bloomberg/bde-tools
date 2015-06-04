@@ -46,7 +46,7 @@ def options(ctx):
     from waflib.Tools.compiler_c import c_compiler
     c_compiler['win32'] = ['msvc']
     c_compiler['linux'] = ['gcc', 'clang']
-    c_compiler['darwin'] = ['gcc', 'clang']
+    c_compiler['darwin'] = ['clang', 'gcc']
     c_compiler['aix'] = ['xlc', 'gcc']
     c_compiler['sunos'] = ['suncc', 'gcc']
 
@@ -55,11 +55,10 @@ def options(ctx):
     from waflib.Tools.compiler_cxx import cxx_compiler
     cxx_compiler['win32'] = ['msvc']
     cxx_compiler['linux'] = ['g++', 'clang++']
-    cxx_compiler['darwin'] = ['g++', 'clang++']
+    cxx_compiler['darwin'] = ['clang++', 'g++']
     cxx_compiler['aix'] = ['xlc++', 'g++']
     cxx_compiler['sunos'] = ['sunc++', 'g++']
     ctx.load('compiler_cxx')
-
     ctx.load('msvs')
     ctx.load('xcode')
 
@@ -202,6 +201,18 @@ def add_cmdline_options(ctx):
     configure_group = ctx.get_option_group('configure options')
     configure_opts = optionsutil.get_ufid_cmdline_options() + configure_opts
     cmdlineutil.add_options(configure_group, configure_opts)
+
+    waf_platform = Utils.unversioned_sys_platform()
+    if waf_platform == 'win32':
+        win_opts = [
+            (('msvc-runtime-type',),
+             {'choices': ('static', 'dynamic'),
+              'default': 'dynamic',
+              'help': 'whether to build using the static or dynamic version '
+                      'of the C run-time library on Windows '
+                      '[default: %default]'})
+        ]
+        cmdlineutil.add_options(configure_group, win_opts)
 
     install_group = ctx.get_option_group(
         'Installation and uninstallation options')
