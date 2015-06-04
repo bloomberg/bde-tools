@@ -228,13 +228,20 @@ if ($opts{uplid}) {
 
 if ($group) {
     if (@ARGV) {
-        usage("Trailing arguments incompatible with --group");
+        usage("Trailing arguments (@ARGV) incompatible with --group");
         exit EXIT_FAILURE;
     }
 } else {
   SWITCH: foreach (scalar@ARGV) {
         $_==0 and do {
             usage("No --group or trailing group argument supplied");
+
+            print "########## OPTIONS #################\n";
+            foreach my $opt (keys %opts) {
+                print STDERR "\tOption $opt: $opts{$opt}\n";
+            }
+            print "########## END OPTIONS #################\n";
+
             exit EXIT_FAILURE;
         };
         $_==1 and do {
@@ -243,6 +250,13 @@ if ($group) {
         };
       DEFAULT:
         usage("@ARGV: only one trailing group argument allowed");
+
+        print "########## OPTIONS #################\n";
+        foreach my $opt (keys %opts) {
+            print STDERR "\tOption $opt: $opts{$opt}\n";
+        }
+        print "########## END OPTIONS #################\n";
+
         exit EXIT_FAILURE;
     }
 }
@@ -260,7 +274,9 @@ if ($group) {
 
         my $logdir=shift;
 
-        my @lt = localtime();
+        # Starting "nightly" builds at 2100.  Treat anything after 20:30 as
+        # part of the next day...
+        my @lt = localtime(time()+(3.5*3600));
         my $ymdtag = strftime("%Y%m%d", @lt);
 
         $logdir.="${FS}$ymdtag";
@@ -602,6 +618,12 @@ MAIN: {
         # construct target-specific command arguments
         my $configureOutput="";
         my $flag = 0;
+
+        write_logandverbose("=========== START ENVIRONMENT VARIABLES =======");
+        foreach my $key(sort keys %ENV) {
+            write_logandverbose("\t$key = $ENV{$key}\n");
+        }
+        write_logandverbose("===========  END  ENVIRONMENT VARIABLES =======");
 
         CONFIGURE: while(1) {
             $configureOutput = `${pythonprefix}${pythonprefixsep}$waf configure $extraConfigureOptions 2>&1`;

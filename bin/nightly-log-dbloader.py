@@ -333,8 +333,33 @@ def process(filename_arg, text):
                      False: dict(WARNING="BUILD_WARNING", ERROR="BUILD_ERROR", TEST=None)
                      }
 
+    regex_string = "(?:BDE_WAF_UFID=|(?:ufid\\s+|building targets):\\s+)(\\w+)"
+
+    ufids=[]
+
+    prev = ""
+
+    for match in re.finditer(regex_string, text):
+        if match.group(1) != prev:
+            ufids.append((match.start(0), match.group(1)))
+            prev=match.group(1)
+
+    if prev != "":
+        ufids.append((99999999999999, prev))
+
+    print "\tUFIDS: ",ufids
+
+    ufids_index = 0
+    ufid = ""
+
     for match in pattern.finditer(text):
         istest = True if re.search("\.t", match.group(1)) else False
+
+        pos = match.start(0)
+        while pos > ufids[ufids_index][0]:
+            ufid = ufids[ufids_index][1]
+            ufids_index += 1
+            print "\t\tAt position %d, switched to ufid %s" % (pos, ufid)
 
         component_name = re.sub(".*[\\\\/]", "", match.group(1))
         component_name = re.sub("\..*", "", component_name)
@@ -349,25 +374,11 @@ def process(filename_arg, text):
         category = match.group(2)
         diagnostics = match.group(3)
 
-        substr = text[:match.start()]
-
-        regex_results = re.findall("BDE_WAF_UFID=(\\w+)|ufid\\s+:\\s(\\w+)", substr)
-
-        if regex_results:
-
-            # Use $1 of the LAST match if populated, otherwise use $2
-            if len(regex_results[-1][0]):
-                ufid = regex_results[-1][0]
-            else:
-                ufid = regex_results[-1][1]
-
-            add_diagnostics_event(component_name,
-                                  uplid,
-                                  ufid,
-                                  categorynames[istest][category],
-                                  diagnostics)
-        else:
-            print "No match for ufid string in %s..." % substr[:1000]
+        add_diagnostics_event(component_name,
+                              uplid,
+                              ufid,
+                              categorynames[istest][category],
+                              diagnostics)
 
     connection.commit()
 

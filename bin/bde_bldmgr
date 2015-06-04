@@ -481,32 +481,46 @@ sub postprocess_configuration ($@) {
     my ($config,@platforms)=@_;
 
     # assign default values
-    if (my $default = $config->{default}) {
-        message "Processing default config values";
-        foreach my $plid (@platforms) {
-            message "... for platform $plid";
-            foreach my $key (keys %$default) {
-                message "... ... checking key $key";
-                  unless (exists $config->{$plid}{$key}) {
-                      $config->{$plid}{$key}=$config->{default}{$key};
-                      message("... ... ... Platform $plid assigned default value ".
-                              $key."='".$config->{default}{$key}."'");
-                  }
-            }
-        }
-
-        delete $config->{default};
-    }
+#    if (my $default = $config->{default}) {
+#        message "Processing default config values";
+#        foreach my $plid (@platforms) {
+#            message "... for platform $plid";
+#            foreach my $key (keys %$default) {
+#                message "... ... checking key $key";
+#                  unless (exists $config->{$plid}{$key}) {
+#                      $config->{$plid}{$key}=$config->{default}{$key};
+#                      message("... ... ... Platform $plid assigned default value ".
+#                              $key."='".$config->{default}{$key}."'");
+#                  }
+#            }
+#        }
+#
+#        delete $config->{default};
+#    }
 
     # assign ID-specific values
     foreach my $plid (@platforms) {
         my $platform=$config->{$plid};
         my $id=$opts{id} || $platform->{defaultid};
-        next unless $id and $id="id:$id" and exists $platform->{$id};
-        verbose("Platform $plid assigning values from $id");
+        #next unless $id and $id="id:$id" and exists $platform->{$id};
+        if (not defined $id) {
+            message "id not defined for platform $plid";
+            next;
+        }
+
+        $id=~s/-.*//;  # Strip off "-core" or "-bb" if necessary
+
+        $id = "id:$id";
+
+        if (!exists $platform->{$id}) {
+            message "No data for $id for platform $plid";
+            next;
+        }
+
+        message("Platform $plid assigning values from $id");
         foreach my $key (keys %{$platform->{$id}}) {
             $platform->{$key}=$platform->{$id}{$key};
-            verbose("Platform $plid assigned value ".
+            message("Platform $plid assigned value ".
                     $key."='".$platform->{$key}."'");
         }
     }
@@ -1062,10 +1076,13 @@ if(!defined $deadline) {
     $deadline = "11:00";
 }
 
+# Deadline is reached if we're between "deadline" and "deadline + 1/2hr".
+# Otherwise, this might be part of tomorrow's build.
 sub deadlineReached {
     my $now = strftime("%H:%M",localtime);
+    my $now_less_one_half_hour = strftime("%H:%M",localtime(time()-1800));
 
-    return ($now ge $deadline);
+    return ($now ge $deadline) && ($now_less_one_half_hour le $deadline);
 }
 
 while(scalar keys %kids) {

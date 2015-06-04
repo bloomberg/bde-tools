@@ -162,7 +162,7 @@ def convert_bdet_to_bdlt(text, verbose = False):
     for key, value in FORWARD_DECLARATIONS.iteritems():
         replacement = get_replacement_text(value, key, "// bdet->bdlt")
         (text, num) = re.subn(
-                             "^\s*(class\s*{0}\s*;).*\n".format("bdet_" + key),
+                "^\s*((?:struct|class)\s*{0}\s*;).*\n".format("bdet_" + key),
                              replacement,
                              text,
                              0,
@@ -221,7 +221,7 @@ def convert_bdet_to_include(text, verbose = False):
                                                   "// bdet->#include")
 
         (text, num) = re.subn(
-                             "^\s*(class\s*{0}\s*;).*\n".format(bdet_typename),
+                "^\s*((?:class|struct)\s*{0}\s*;).*\n".format(bdet_typename),
                              replacement,
                              text,
                              0,
