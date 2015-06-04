@@ -179,20 +179,28 @@ def convert_bdet_to_bdlt(text, verbose = False):
     
     return text
 
-def undo_convert_bdet_to_include(text):
+def clean_up_bdet_aliases(text):
 
-    (text, num) = re.subn("^// *(class .*;) *// bdet->#include$\n",
-                          "\\1 \n",
-                          text,
-                          flags=re.MULTILINE)
-
-    (text, num) = re.subn("^.*// bdet->#include$\n",
+    (text, num) = re.subn("\n// Updated by 'bde-replace.*\n",
                           "",
                           text,
                           flags=re.MULTILINE)
-    (text, num) = re.subn("\n// Updated.*\n.*\n.*bdet -> #include'\..*\n",
+
+    (text, num) = re.subn("\n// Updated .*bdet -> bdlt.*\n",
                           "",
-                          text)
+                          text,
+                          flags=re.MULTILINE)
+
+
+    (text, num) = re.subn("\ntypedef .*// bdet -> bdlt.*\n",
+                          "",
+                          text,
+                          flags=re.MULTILINE)
+
+    (text, num) = re.subn("(namespace .*) *// bdet -> bdlt.*",
+                          r"\1",
+                          text,
+                          flags=re.MULTILINE)
     return text
 
     
@@ -288,17 +296,28 @@ def main():
         "--mode",
         action="store",
         dest="mode",
-        default="include",
-        help="Either \"include\" or \"bdlt\".  If \"include\" forward "\
-             "declares of 'bdet' types are replaced with a #include for that "\
-             "type.  If \"bdlt\" then forward delcares of 'bdet' types are "\
-             "replaced by forward declares of 'bdlt' types. "\
-             "[default: include]")
+        default="bdlt",
+        help= \
+"""Either 'include', 'bdlt', or 'clean-bdlt'.
+
+If 'include' then forward declarations of 'bdet' types are replaced with
+a #include for that 'type'.
+
+If 'bdlt' then forward delcares of 'bdet' types are replaced by forward
+declares of 'bdlt' types.
+
+If 'clean-bdlt' then remove any aliases to bdet types created by this
+script in 'bdlt' mode.
+
+[default: bdlt]""")
 
     (options, args) = parser.parse_args()
 
-    if (options.mode != "include" and options.mode != "bdlt"):
-        parser.error('--mode option must be either "include" or "bdlt"')
+    if (not (options.mode == "include" or
+             options.mode == "bdlt" or
+             options.mode == "clean-bdlt")):
+        parser.error(
+             '--mode option must be either "include", "bdlt", or "clean-bdlt"')
 
     if (0 >= len(args)):
         parser.error("File name required")
@@ -318,6 +337,8 @@ def main():
         if (options.mode == "bdlt"):
             text = undo_convert_bdet_to_include(text)
             text = convert_bdet_to_bdlt(text, options.verbose)
+        elif (options.mode == "clean-bdlt"):
+            text = clean_up_bdet_aliases(text)
         else:
             text = convert_bdet_to_include(text, options.verbose)
 
