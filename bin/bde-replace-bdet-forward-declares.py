@@ -190,17 +190,26 @@ def clean_up_bdet_aliases(text):
                           "",
                           text,
                           flags=re.MULTILINE)
-
-
+ 
     (text, num) = re.subn("\ntypedef .*// bdet -> bdlt.*\n",
                           "",
                           text,
                           flags=re.MULTILINE)
 
+    # Insert a new line after the last text substitution.
+    
+    last_position = text.rfind("// bdet -> bdlt")
+    if (-1 != last_position):
+        text = text[:last_position] + \
+               text[last_position:].replace("// bdet -> bdlt",
+                                                "// bdet -> bdlt\n")
+        
     (text, num) = re.subn("(namespace .*) *// bdet -> bdlt.*",
                           r"\1",
                           text,
                           flags=re.MULTILINE)
+
+
     return text
 
     
