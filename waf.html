@@ -236,11 +236,18 @@ install the headers and libraries by default, unless the <code class="docutils l
 is used.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">--msvc_version</span></code></p>
-<p>choices: &#8220;msvc 12.0&#8221;, &#8220;msvc 11.0&#8221;, &#8220;msvc 10.0&#8221;, &#8220;msvc 9.0&#8221;</p>
+<p>choices: <code class="docutils literal"><span class="pre">msvc</span> <span class="pre">12.0</span></code>, <code class="docutils literal"><span class="pre">msvc</span> <span class="pre">11.0</span></code>, <code class="docutils literal"><span class="pre">msvc</span> <span class="pre">10.0</span></code>, <code class="docutils literal"><span class="pre">msvc</span> <span class="pre">9.0</span></code></p>
 <p>For windows only: use either the compiler and linker provided by Visual
 Studio 2013 (msvc 12.0), 2012 (msvc 11.0), 2010 (msvc 10.0), or 2008 (msvc
 9.0). Note that by default, waf will select the most recent Visual Studio
 installation it detects.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">--msvc-runtime-type</span></code></p>
+<p>choices: <code class="docutils literal"><span class="pre">dynamic</span></code> (default), <code class="docutils literal"><span class="pre">static</span></code></p>
+<p>For windows only: whether to build using the static (/MT) or dynamic (/MD)
+version of the C run-time library.  Note that that <code class="docutils literal"><span class="pre">dynamic</span></code> is chosen as
+the default because that is the default option used by the Visual Studio IDE,
+while the default option when running cl.exe compiler directly is /MD.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">--verify</span></code></p>
 <p>Perform verification of the structure of the repository.  Currently this
@@ -506,21 +513,11 @@ the repositories that you want to store in the workspace. Then, simply add an
 </div>
 <div class="section" id="building-on-windows">
 <span id="waf-windows"></span><h2>Building on Windows<a class="headerlink" href="#building-on-windows" title="Permalink to this headline">¶</a></h2>
-<p>Waf can be used on the windows command prompt in the same way as it can
-be used on Unix platforms. You can select the version of Visual Studio
-compiler to use at configuration time using the <code class="docutils literal"><span class="pre">--msvc_version</span></code>
-option.</p>
-<p>An important curiosity is that the Visual Studio command line compiler
-uses /MT by default, which statically links the C Runtime. This is
-different than the IDE, which uses /MD by default (dynamically linking
-the C Runtime). The two cannot be mixed. Therefore, if you want to
-ensure that BDE dynamically loads the C Runtime, be sure to set your
-CXXFLAGS environment variable as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre>set CXXFLAGS=/MD
-waf configure
-waf build
-</pre></div>
-</div>
+<p>Waf can be used on the windows command prompt in the same way as it can be used
+on Unix platforms. You can select the version of Visual Studio compiler to use
+at configuration time using the <code class="docutils literal"><span class="pre">--msvc_version</span></code> option.  You can select
+whether to build agains the static or dynamic versions of the C run-time
+library using <code class="docutils literal"><span class="pre">--msvc-runtime-type</span></code> option.</p>
 <p><em>Important</em>: You should use a <em>regular</em> command prompt (cmd.exe) instead
 of the command prompt provided by a specific version of Visual Studio,
 because waf can be configured to use a version of Visual Studio

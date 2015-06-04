@@ -216,12 +216,21 @@ Configure Options
 
 - ``--msvc_version``
 
-  choices: "msvc 12.0", "msvc 11.0", "msvc 10.0", "msvc 9.0"
+  choices: ``msvc 12.0``, ``msvc 11.0``, ``msvc 10.0``, ``msvc 9.0``
 
   For windows only: use either the compiler and linker provided by Visual
   Studio 2013 (msvc 12.0), 2012 (msvc 11.0), 2010 (msvc 10.0), or 2008 (msvc
   9.0). Note that by default, waf will select the most recent Visual Studio
   installation it detects.
+
+- ``--msvc-runtime-type``
+
+  choices: ``dynamic`` (default), ``static``
+
+  For windows only: whether to build using the static (/MT) or dynamic (/MD)
+  version of the C run-time library.  Note that that ``dynamic`` is chosen as
+  the default because that is the default option used by the Visual Studio IDE,
+  while the default option when running cl.exe compiler directly is /MD.
 
 - ``--verify``
 
@@ -534,23 +543,11 @@ See :ref:`tutorials-workspace` for an example.
 Building on Windows
 ===================
 
-Waf can be used on the windows command prompt in the same way as it can
-be used on Unix platforms. You can select the version of Visual Studio
-compiler to use at configuration time using the ``--msvc_version``
-option.
-
-An important curiosity is that the Visual Studio command line compiler
-uses /MT by default, which statically links the C Runtime. This is
-different than the IDE, which uses /MD by default (dynamically linking
-the C Runtime). The two cannot be mixed. Therefore, if you want to
-ensure that BDE dynamically loads the C Runtime, be sure to set your
-CXXFLAGS environment variable as follows:
-
-::
-
-    set CXXFLAGS=/MD
-    waf configure
-    waf build
+Waf can be used on the windows command prompt in the same way as it can be used
+on Unix platforms. You can select the version of Visual Studio compiler to use
+at configuration time using the ``--msvc_version`` option.  You can select
+whether to build agains the static or dynamic versions of the C run-time
+library using ``--msvc-runtime-type`` option.
 
 *Important*: You should use a *regular* command prompt (cmd.exe) instead
 of the command prompt provided by a specific version of Visual Studio,
