@@ -90,6 +90,12 @@
                 "c_path": "/opt/swt/install/gcc-4.7.2/bin/gcc",
                 "cxx_path": "/opt/swt/install/gcc-4.7.2/bin/g++",
                 "version": "4.7.2"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.9.2/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.9.2/bin/g++",
+                "version": "4.9.2"
             }
         ]
     },
