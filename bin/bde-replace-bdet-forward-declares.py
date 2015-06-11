@@ -179,6 +179,21 @@ def convert_bdet_to_bdlt(text, verbose = False):
     
     return text
 
+def undo_convert_bdet_to_include(text):
+    (text, num) = re.subn("^// *(class .*;) *// bdet->#include$\n",
+                          "\\1 \n",
+                          text,
+                          flags=re.MULTILINE)
+
+    (text, num) = re.subn("^.*// bdet->#include$\n",
+                          "",
+                          text,
+                          flags=re.MULTILINE)
+    (text, num) = re.subn("\n// Updated.*\n.*\n.*bdet -> #include'\..*\n",
+                          "",
+                          text)
+    return text
+
 def clean_up_bdet_aliases(text):
 
     (text, num) = re.subn("\n// Updated by 'bde-replace.*\n",
@@ -307,13 +322,14 @@ def main():
         dest="mode",
         default="bdlt",
         help= \
-"""Either 'include', 'bdlt', or 'clean-bdlt'.
+"""Either 'bdlt', 'include', or 'clean-bdlt'.
+
+If 'bdlt' then forward delcares of 'bdet' types are replaced by forward
+declares of 'bdlt' types [DEFAULT].
 
 If 'include' then forward declarations of 'bdet' types are replaced with
 a #include for that 'type'.
 
-If 'bdlt' then forward delcares of 'bdet' types are replaced by forward
-declares of 'bdlt' types.
 
 If 'clean-bdlt' then remove any aliases to bdet types created by this
 script in 'bdlt' mode.
