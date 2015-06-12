@@ -11,7 +11,7 @@ collection of tools to help with developing and building BDE-style libraries
 and applications, including the `BDE libraries
 <https://github.com/bloomberg/bde>`_.
 
-**Bloomberg Employees**: `<http://bburl/i3Z6E>`_
+**Bloomberg Employees**: `<http://bburl/x2DMc>`_
 
 .. toctree::
    :hidden:
