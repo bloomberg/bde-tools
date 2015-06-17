@@ -120,6 +120,12 @@
                 "c_path": "/bb/util/version12-072014/usr/vacpp/bin/xlc_r",
                 "cxx_path": "/bb/util/version12-072014/usr/vacpp/bin/xlC_r",
                 "version": "12.1"
+            },
+            {
+                "type": "xlc",
+                "c_path": "/bb/util/version12-052015/usr/vacpp/bin/xlc_r",
+                "cxx_path": "/bb/util/version12-052015/usr/vacpp/bin/xlC_r",
+                "version": "12.2"
             }
         ]
     }
