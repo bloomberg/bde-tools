@@ -196,6 +196,9 @@ def get_os_info():
         # os_ver can contain a '-flavor' part, strip it
         os_ver = os_ver.split('-', 1)[0]
 
+        if cpu_type == 'ppc64':
+            cpu_type = 'powerpc'
+
         return os_type, os_name, cpu_type, os_ver
 
     def get_aix_os_info():
@@ -236,7 +239,7 @@ def get_os_info():
 
         # Make the assumption that we are on a X86 system.
         if is_64bit_system():
-            cpu_type = 'amd64'
+            cpu_type = 'x86_64'
         else:
             cpu_type = 'x86'
 

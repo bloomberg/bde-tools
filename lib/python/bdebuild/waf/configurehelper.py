@@ -12,6 +12,7 @@ from bdebuild.meta import buildconfigutil
 from bdebuild.meta import buildflagsparser
 from bdebuild.meta import installconfig
 from bdebuild.meta import optionsutil
+from bdebuild.meta import optionsparser
 from bdebuild.meta import repocontextloader
 from bdebuild.meta import repocontextverifier
 
@@ -23,6 +24,7 @@ class ConfigureHelper(object):
         self.ufid = ufid
         self.uplid = effective_uplid
         self.actual_uplid = actual_uplid
+        optionsparser.is_verbose = self.ctx.options.verify
 
     def configure(self):
         self.ctx.msg('Prefix', self.ctx.env['PREFIX'])

@@ -1,10 +1,16 @@
 """Parse options rules.
+
+Attibutes:
+    is_verbose (bool): Warn about invalid UPLIDs. Default to False.
 """
 
 import re
 
 from bdebuild.common import blderror
+from bdebuild.common import logutil
 from bdebuild.meta import optiontypes
+
+is_verbose = False
 
 
 def parse_option_rules_file(file_path):
@@ -21,10 +27,17 @@ def parse_option_rules_file(file_path):
         InvalidOptionFileError: Invalid option file.
     """
 
+    def log_warn(line, msg):
+        logutil.warn("%s %d: %s" % (file_path, line, msg))
+
     with open(file_path) as f:
         parser = OptionsParser(f)
         try:
-            parser.parse()
+            global is_verbose
+            if is_verbose:
+                parser.parse(log_warn)
+            else:
+                parser.parse()
         except blderror.InvalidOptionRuleError as e:
             raise blderror.InvalidOptionFileError(file_path, e)
         return parser.option_rules
@@ -53,6 +66,8 @@ class OptionsParser(object):
 
     _OPT_CONTINUE_RE = re.compile(r'^(?P<value>.*?)(?P<cont>\\)?$')
 
+    is_verbose = False
+
     def __init__(self, opts_file):
         """Initialize the object with an options file.
 
@@ -63,7 +78,7 @@ class OptionsParser(object):
         self.option_rules = []
         self.all_lines = []
 
-    def parse(self):
+    def parse(self, log=None):
         """Parse the options file specified on construction.
 
         Raises:
@@ -94,6 +109,11 @@ class OptionsParser(object):
                         try:
                             rule.uplid = optiontypes.Uplid.from_str(
                                 m.group('uplid'))
+                            if log and not optiontypes.Uplid.is_valid(
+                                    rule.uplid):
+                                log(line_num, 'Encountered unsupported Uplid, '
+                                    '"%s", in "%s"' % (rule.uplid, line))
+
                         except blderror.InvalidUplidError:
                             raise blderror.InvalidOptionRuleError(
                                 line_num, line, "invalid UPLID")

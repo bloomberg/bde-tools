@@ -180,6 +180,10 @@ class Uplid(mixins.BasicEqualityMixin):
     Uplids are used to identify the platform and toolchain used for a build.
     """
 
+    VALID_OS_TYPES = ('*', 'unix', 'windows')
+    VALID_OS_NAMES = ('*', 'linux', 'darwin', 'aix', 'sunos', 'windows_nt')
+    VALID_COMP_TYPES = ('*', 'gcc', 'clang', 'xlc', 'cc', 'cl')
+
     def __init__(self, os_type='*', os_name='*', cpu_type='*', os_ver='*',
                  comp_type='*', comp_ver='*'):
         self.os_type = os_type
@@ -188,6 +192,25 @@ class Uplid(mixins.BasicEqualityMixin):
         self.os_ver = os_ver
         self.comp_type = comp_type
         self.comp_ver = comp_ver
+
+    @classmethod
+    def is_valid(cls, uplid):
+        """Determine whether a UPLID is valid.
+
+        Args:
+            uplid (Uplid): Uplid to validate.
+
+        Returns:
+            True if valid
+        """
+
+        if uplid.os_type not in cls.VALID_OS_TYPES:
+            return False
+        if uplid.os_name not in cls.VALID_OS_NAMES:
+            return False
+        if uplid.comp_type not in cls.VALID_COMP_TYPES:
+            return False
+        return True
 
     @classmethod
     def from_str(cls, platform_str):
