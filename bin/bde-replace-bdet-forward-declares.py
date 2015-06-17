@@ -363,6 +363,7 @@ script in 'bdlt' mode.
             text = undo_convert_bdet_to_include(text)
             text = convert_bdet_to_bdlt(text, options.verbose)
         elif (options.mode == "clean-bdlt"):
+            text = undo_convert_bdet_to_include(text)
             text = clean_up_bdet_aliases(text)
         else:
             text = convert_bdet_to_include(text, options.verbose)
