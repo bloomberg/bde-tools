@@ -424,9 +424,91 @@ determine it is to run <code class="docutils literal"><span class="pre">waf</spa
 <p>A wildcard UPLID allows the use of the wildcard symbol, <code class="docutils literal"><span class="pre">*</span></code>, as one or
 more parts of the UPLID. When <code class="docutils literal"><span class="pre">*</span></code> is used for a part, any value for
 that part will be matched.</p>
+<div class="section" id="valid-os-types">
+<span id="bde-repo-ufid"></span><span id="index-3"></span><h5>Valid OS Types<a class="headerlink" href="#valid-os-types" title="Permalink to this headline">¶</a></h5>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">OS Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>unix</td>
+<td>Unix based operating systems (Linux, Solaris, AIX, and OS X)</td>
+</tr>
+<tr class="row-odd"><td>windows</td>
+<td>Microsoft Windows operating system</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="valid-os-names">
+<h5>Valid OS Names<a class="headerlink" href="#valid-os-names" title="Permalink to this headline">¶</a></h5>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">OS Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>linux</td>
+<td>Linux</td>
+</tr>
+<tr class="row-odd"><td>darwin</td>
+<td>OS X</td>
+</tr>
+<tr class="row-even"><td>aix</td>
+<td>AIX</td>
+</tr>
+<tr class="row-odd"><td>sunos</td>
+<td>Solaris</td>
+</tr>
+<tr class="row-even"><td>windows_nt</td>
+<td>Windows NT</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="valid-compiler-types">
+<h5>Valid Compiler Types<a class="headerlink" href="#valid-compiler-types" title="Permalink to this headline">¶</a></h5>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Compiler Type</td>
+<td>Description</td>
+</tr>
+<tr class="row-even"><td>gcc</td>
+<td>gcc compiler</td>
+</tr>
+<tr class="row-odd"><td>clang</td>
+<td>clang compiler</td>
+</tr>
+<tr class="row-even"><td>xlc</td>
+<td>IBM XL C/C++ compiler</td>
+</tr>
+<tr class="row-odd"><td>cc</td>
+<td>Sun Studio C/C++ compiler</td>
+</tr>
+<tr class="row-even"><td>cl</td>
+<td>Visual Studio C/C++ compiler</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="section" id="ufid">
-<span id="bde-repo-ufid"></span><span id="index-3"></span><h4>UFID<a class="headerlink" href="#ufid" title="Permalink to this headline">¶</a></h4>
+<h4>UFID<a class="headerlink" href="#ufid" title="Permalink to this headline">¶</a></h4>
 <p>The third field of an option rule is a UFID. UFID stands for Unified
 Flag ID. It is used to identify the configuration used to build the
 repo. It comprises one or more flags. The following flags are
@@ -620,7 +702,12 @@ of a library.</p>
 <li><a class="reference internal" href="#dep-file">Dep File</a></li>
 <li><a class="reference internal" href="#options-file-format">Options File Format</a><ul>
 <li><a class="reference internal" href="#rule-commands">Rule Commands</a></li>
-<li><a class="reference internal" href="#uplid">UPLID</a></li>
+<li><a class="reference internal" href="#uplid">UPLID</a><ul>
+<li><a class="reference internal" href="#valid-os-types">Valid OS Types</a></li>
+<li><a class="reference internal" href="#valid-os-names">Valid OS Names</a></li>
+<li><a class="reference internal" href="#valid-compiler-types">Valid Compiler Types</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#ufid">UFID</a></li>
 <li><a class="reference internal" href="#variable-expansion">Variable Expansion</a></li>
 <li><a class="reference internal" href="#processing-order">Processing Order</a></li>
