@@ -143,6 +143,8 @@ def _build_impl(ctx):
         helper = graphhelper.GraphHelper(ctx)
     else:
         ctx.load('bdebuild.waf.bdeunittest')
+        if ctx.options.clang_compilation_database:
+            ctx.load('clang_compilation_database')
         Logs.info('Waf: Using %d jobs (change with -j)' % ctx.options.jobs)
         helper = buildhelper.BuildHelper(ctx)
 
@@ -232,6 +234,16 @@ def add_cmdline_options(ctx):
                   '[default: %default]'}),
     ]
     cmdlineutil.add_options(install_group, install_opts)
+
+    build_group = ctx.get_option_group('build and install options')
+    build_opts = [
+        (('clang-compilation-database',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'Generate a clang compilation database '
+                  '(compile_commands.json) in the build output directory'})
+    ]
+    cmdlineutil.add_options(build_group, build_opts)
 
     # Set the upper bound of the default number of jobs to 24
     jobs = ctx.parser.get_option('-j').default
