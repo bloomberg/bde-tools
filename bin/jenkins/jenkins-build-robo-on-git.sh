@@ -58,6 +58,10 @@ echo ================================
 
 for package in source/bde{oss-,internal-,}tools source/bsl* source/bde-{core,bb,bdx}
 do \
+    echo "    ================================"
+    echo "    ======= BUILDING $package"
+    echo "    ================================"
+
     dpkg-distro-dev build $package
 
     if [ $? -ne 0 ]
