@@ -173,27 +173,13 @@ $TOOLSPATH/bin/bde_bldmgr -v                \
        -k $TOOLSPATH/etc/bde_bldmgr.config  \
        -f -k -m -i${BUILD_TYPE}-core        \
        $TARGET_OPTION                       \
-       $CORE_UORS                           \
+       $CORE_UORS $BB_UORS                  \
        -vvv                                 \
        < /dev/null 2>&1                     \
-   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-core \
-   && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-core
+   | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-core
 
-if [[ ! -z "$BB_UORS" ]]
-then
-    echo Invoking bde_bldmgr for bb build
-
-    # run ${BUILD_TYPE}-bb build
-    $TOOLSPATH/bin/bde_bldmgr -v                \
-           -k $TOOLSPATH/etc/bde_bldmgr.config  \
-           -f -k -m -i${BUILD_TYPE}-bb          \
-           $BB_UORS                             \
-           $TARGET_OPTION                       \
-           < /dev/null 2>&1                     \
-       | $TOOLSPATH/scripts/logTs.pl /home/bdebuild/logs/log.${BUILD_TYPE}-bb   \
-       && $TOOLSPATH/scripts/report-latest ${BUILD_TYPE}-bb
-fi
+touch /home/bdebuild/logs/log.${BUILD_TYPE}-bb
 
 # generate gcc warnings
-$TOOLSPATH/scripts/generateGccWarningsLogs.pl ${BUILD_TYPE} ${LOG_DIR}
+#$TOOLSPATH/scripts/generateGccWarningsLogs.pl ${BUILD_TYPE} ${LOG_DIR}
 
