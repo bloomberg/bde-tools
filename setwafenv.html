@@ -95,6 +95,28 @@ unique for each build configuration.</p>
 output must be executed by the current <em>Bourne</em> shell using the <code class="docutils literal"><span class="pre">eval</span></code>
 command.</p>
 </div>
+</div>
+<div class="section" id="usage-examples">
+<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first"><code class="docutils literal"><span class="pre">eval</span> <span class="pre">$(bde_setwafenv.py</span> <span class="pre">-c</span> <span class="pre">gcc-4.7.2</span> <span class="pre">-t</span> <span class="pre">dbg_mt_exc</span> <span class="pre">-i</span> <span class="pre">~/bde-install)</span></code></p>
+<p>Set up the environment variables so that the waf-based build tool uses the
+gcc-4.7.2 compiler, builds with the UFID configuration &#8216;dbg_mt_exc&#8217; to the
+output directory <code class="docutils literal"><span class="pre">&lt;uplid&gt;-&lt;ufid&gt;</span></code>, and install the libraries to a
+installation prefix of <code class="docutils literal"><span class="pre">~/bde-install/&lt;uplid&gt;-&lt;ufid&gt;</span></code>.</p>
+<p>For example, on my system, the uplid was
+<code class="docutils literal"><span class="pre">unix-linux-x86_64-2.6.18-gcc-4.7.2</span></code>, and
+<code class="docutils literal"><span class="pre">unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc</span></code> was the name of the build
+output directory.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">eval</span> <span class="pre">$(bde_setwafenv.py)</span></code></p>
+<p>Set up the environment variables so that the BDE waf build tool uses the
+default compiler on the current system configured using the default
+UFID. Use the default installation prefix, which typically will be
+<code class="docutils literal"><span class="pre">/usr/local</span></code> &#8211; this is not recommended, because the default prefix is
+typically not writable by a regular user.</p>
+</li>
+</ol>
 <div class="section" id="environment-variables-set-by-bde-setwafenv-py">
 <h3>Environment Variables Set by bde_setwafenv.py<a class="headerlink" href="#environment-variables-set-by-bde-setwafenv-py" title="Permalink to this headline">¶</a></h3>
 <p>The following environment variables may be set by evaluating the output of
@@ -254,28 +276,6 @@ installation directory previously configured by this script is used.</p>
 can be used.  Use the <code class="docutils literal"><span class="pre">--help</span></code> option for more information.</p>
 </div>
 </div>
-<div class="section" id="usage-examples">
-<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic">
-<li><p class="first"><code class="docutils literal"><span class="pre">eval</span> <span class="pre">$(bde_setwafenv.py</span> <span class="pre">-c</span> <span class="pre">gcc-4.7.2</span> <span class="pre">-t</span> <span class="pre">dbg_mt_exc</span> <span class="pre">-i</span> <span class="pre">~/bde-install)</span></code></p>
-<p>Set up the environment variables so that the waf-based build tool uses the
-gcc-4.7.2 compiler, builds with the UFID configuration &#8216;dbg_mt_exc&#8217; to the
-output directory <code class="docutils literal"><span class="pre">&lt;uplid&gt;-&lt;ufid&gt;</span></code>, and install the libraries to a
-installation prefix of <code class="docutils literal"><span class="pre">~/bde-install/&lt;uplid&gt;-&lt;ufid&gt;</span></code>.</p>
-<p>For example, on my system, the uplid was
-<code class="docutils literal"><span class="pre">unix-linux-x86_64-2.6.18-gcc-4.7.2</span></code>, and
-<code class="docutils literal"><span class="pre">unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc</span></code> was the name of the build
-output directory.</p>
-</li>
-<li><p class="first"><code class="docutils literal"><span class="pre">eval</span> <span class="pre">$(bde_setwafenv.py)</span></code></p>
-<p>Set up the environment variables so that the BDE waf build tool uses the
-default compiler on the current system configured using the default
-UFID. Use the default installation prefix, which typically will be
-<code class="docutils literal"><span class="pre">/usr/local</span></code> &#8211; this is not recommended, because the default prefix is
-typically not writable by a regular user.</p>
-</li>
-</ol>
-</div>
 </div>
 
 
@@ -289,7 +289,8 @@ typically not writable by a regular user.</p>
 <li><a class="reference internal" href="#">bde_setwafenv.py</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#prerequisites-and-supported-platforms">Prerequisites and Supported Platforms</a></li>
-<li><a class="reference internal" href="#how-it-works">How It Works</a><ul>
+<li><a class="reference internal" href="#how-it-works">How It Works</a></li>
+<li><a class="reference internal" href="#usage-examples">Usage Examples</a><ul>
 <li><a class="reference internal" href="#environment-variables-set-by-bde-setwafenv-py">Environment Variables Set by bde_setwafenv.py</a></li>
 </ul>
 </li>
@@ -299,7 +300,6 @@ typically not writable by a regular user.</p>
 <li><a class="reference internal" href="#set-command-options">Set Command Options</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#usage-examples">Usage Examples</a></li>
 </ul>
 </li>
 </ul>

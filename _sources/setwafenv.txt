@@ -59,6 +59,31 @@ unique for each build configuration.
    output must be executed by the current *Bourne* shell using the ``eval``
    command.
 
+
+Usage Examples
+==============
+
+1. ``eval $(bde_setwafenv.py -c gcc-4.7.2 -t dbg_mt_exc -i ~/bde-install)``
+
+   Set up the environment variables so that the waf-based build tool uses the
+   gcc-4.7.2 compiler, builds with the UFID configuration 'dbg_mt_exc' to the
+   output directory ``<uplid>-<ufid>``, and install the libraries to a
+   installation prefix of ``~/bde-install/<uplid>-<ufid>``.
+
+   For example, on my system, the uplid was
+   ``unix-linux-x86_64-2.6.18-gcc-4.7.2``, and
+   ``unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc`` was the name of the build
+   output directory.
+
+2. ``eval $(bde_setwafenv.py)``
+
+   Set up the environment variables so that the BDE waf build tool uses the
+   default compiler on the current system configured using the default
+   UFID. Use the default installation prefix, which typically will be
+   ``/usr/local`` -- this is not recommended, because the default prefix is
+   typically not writable by a regular user.
+
+
 Environment Variables Set by bde_setwafenv.py
 ---------------------------------------------
 
@@ -246,26 +271,3 @@ Set Command Options
 
 In addition, most of the configuration option provided by the :ref:`waf-top`
 can be used.  Use the ``--help`` option for more information.
-
-Usage Examples
-==============
-
-1. ``eval $(bde_setwafenv.py -c gcc-4.7.2 -t dbg_mt_exc -i ~/bde-install)``
-
-   Set up the environment variables so that the waf-based build tool uses the
-   gcc-4.7.2 compiler, builds with the UFID configuration 'dbg_mt_exc' to the
-   output directory ``<uplid>-<ufid>``, and install the libraries to a
-   installation prefix of ``~/bde-install/<uplid>-<ufid>``.
-
-   For example, on my system, the uplid was
-   ``unix-linux-x86_64-2.6.18-gcc-4.7.2``, and
-   ``unix-linux-x86_64-2.6.18-gcc-4.7.2-dbg_mt_exc`` was the name of the build
-   output directory.
-
-2. ``eval $(bde_setwafenv.py)``
-
-   Set up the environment variables so that the BDE waf build tool uses the
-   default compiler on the current system configured using the default
-   UFID. Use the default installation prefix, which typically will be
-   ``/usr/local`` -- this is not recommended, because the default prefix is
-   typically not writable by a regular user.
