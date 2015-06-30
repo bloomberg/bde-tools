@@ -13,7 +13,7 @@ class CPreProc(object):
     (potentially based on the one from waf) will be more conforming.
     """
 
-    INCLUDE_RE = re.compile(r'\s*#include\s*<([^>]+)>\s*(//)?.*$')
+    INCLUDE_RE = re.compile(r'\s*#include\s*<([^>]+)>\s*(//\s*(.*))?$')
 
     def __init__(self, defines=None):
         self.defines = defines
@@ -26,6 +26,10 @@ class CPreProc(object):
         for line in lines:
             m = self.INCLUDE_RE.match(line)
             if m:
+                comment = m.group(3)
+                if comment == 'for testing only':
+                    continue
+
                 includes.append(m.group(1))
 
         return includes
