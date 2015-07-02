@@ -35,10 +35,22 @@ def get_repo_layout(repo_root_path):
             repo_layout.stand_alone_package_dirs = []
             repo_layout.third_party_package_dirs = []
             repo_layout.group_abs_dirs = ['.']
+        elif os.path.isdir(os.path.join(repo_root_path, 'src')):
+            # Attempt to automatically support repos using the "src" directory
+            # instead of the repo root to store typical directories such as
+            # "groups" and "adapters". If this simple heuristic fails for a
+            # repo, use ".bdelayoutconfig" to customize its layout manually.
+            repo_layout.group_dirs = ['src/groups', 'src/enterprise',
+                                      'src/wrappers']
+            repo_layout.app_package_dirs = ['src/applications']
+            repo_layout.stand_alone_package_dirs = ['src/adapters',
+                                                    'src/standalones']
+            repo_layout.third_party_package_dirs = ['src/third-party']
+            repo_layout.group_abs_dirs = []
         else:
             repo_layout.group_dirs = ['groups', 'enterprise', 'wrappers']
             repo_layout.app_package_dirs = ['applications']
-            repo_layout.stand_alone_package_dirs = ['adapters']
+            repo_layout.stand_alone_package_dirs = ['adapters', 'standalones']
             repo_layout.third_party_package_dirs = ['third-party']
             repo_layout.group_abs_dirs = []
 
