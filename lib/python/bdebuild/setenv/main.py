@@ -168,7 +168,11 @@ def print_envs(options, info):
             PREFIX = sysutil.shell_command('cygpath -m "%s"' % PREFIX).rstrip()
 
         print('export PREFIX="%s"' % PREFIX)
-        print('export PKG_CONFIG_PATH="%s/lib/pkgconfig"' % PREFIX)
+        pkg_path = '%s/lib/pkgconfig' % PREFIX
+        extra_pkg_path = os.environ.get('BDE_WAF_EXTRA_PKG_CONFIG_PATH')
+        if extra_pkg_path:
+            pkg_path += ':' + extra_pkg_path
+        print('export PKG_CONFIG_PATH="%s"' % pkg_path)
 
 
 def list_compilers(compiler_infos):
