@@ -593,6 +593,7 @@ MAIN: {
             $ENV{PKG_CONFIG_PATH} = "$ENV{PREFIX}\\lib\\pkgconfig";
             $ENV{BDE_WAF_BUILD_DIR} = "$compiler-$target";
             $ENV{BDE_WAF_UFID}      = $target;
+            $ENV{WAFLOCK}           = ".lock-waf-$uplid-$target";
 
             write_logandverbose("Creating $ENV{PKG_CONFIG_PATH} if not present");
             File::Path::mkpath($ENV{PKG_CONFIG_PATH});
