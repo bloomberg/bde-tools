@@ -87,6 +87,7 @@ my %msvc_version_map = (
     "cl-14.00" => "msvc 8.0"
   , "cl-15.00" => "msvc 9.0"
   , "cl-16.00" => "msvc 10.0"
+  , "cl-17.00" => "msvc 11.0"
   , "cl-18.00" => "msvc 12.0"
 );
 
