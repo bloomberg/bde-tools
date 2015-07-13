@@ -7,6 +7,11 @@ Go to https://openstack.dnj1.bcpc.bloomberg.com/horizon/project/instances/
 2) Make sure its name is "results", and it's associated with an IP address (the
    rest of this assumes you used the same one, 100.127.4.161).
 
+   2.1) If that IP address ever changes, ~bdebuild/bin/load-results-db.sh
+        has to be edited to specify the new address - that's the script
+        that runs the parser periodically then copies the databases over to
+        the webserver.
+
 3) Make sure the /web_data partition is mounted on the webserver:
     ssh -i ~bdebuild/.ssh/bdebuild.pem ubuntu@100.127.4.161 \
             sudo mount /dev/vdb /vol001
@@ -23,3 +28,4 @@ Go to https://openstack.dnj1.bcpc.bloomberg.com/horizon/project/instances/
 
 6) If CGI scripts aren't loading correctly, make sure the apache configuration
    and root files match the contents of system-setup.tar.gz.
+
