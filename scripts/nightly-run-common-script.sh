@@ -29,6 +29,8 @@ fi
 
 echo SCRIPT-TRACE - running $0 -- $*
 
+A_CDB2_GIT_REPO=/home/bdebuild/bs/a_cdb2-${BUILD_TYPE}
+
 BDE_BSL_GIT_REPO=/home/bdebuild/bs/bsl-${BSL_TYPE}-${BUILD_TYPE}
 
 BDE_CORE_GIT_REPO=/home/bdebuild/bs/bde-core-${BUILD_TYPE}
@@ -80,6 +82,20 @@ then \
 else
     echo ERROR: Invalid BDE_BSL_GIT_REPO $BDE_BSL_GIT_REPO of type $BSL_TYPE specified
     exit 1
+fi
+
+
+if [ -e $A_CDB2_GIT_REPO ]
+then \
+    pushd $A_CDB2_GIT_REPO 2> /dev/null
+    /opt/swt/bin/git fetch
+    /opt/swt/bin/git reset --hard
+    /opt/swt/bin/git checkout $BDE_CORE_BRANCH
+    popd
+
+    REPO_LIST="$REPO_LIST $A_CDB2_GIT_REPO"
+else
+    echo WARNING: Invalid A_CDB2_GIT_REPO $A_CDB2_GIT_REPO specified
 fi
 
 pushd $BDE_CORE_GIT_REPO 2> /dev/null
