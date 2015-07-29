@@ -106,15 +106,20 @@ class _Worker(threading.Thread):
                 return txt if txt else ''
 
             # BDE uses the -1 return code to indicate that no more tests are
-            # left to run.
+            # left to run:
+            #
             #   * On Linux, -1 becomes 255, because return codes are always
             #     unsigned.
-            #   * On Windows, -1 stay as -1.
+            #
+            #   * On Windows, -1 stay as -1 for python 2, and 4294967295
+            #     (INT32_MAX) for python 3.
+            #
             #   * On Cygwin, -1 becomes 127!
             #
             # To handle malformed test drivers, stop when there are more
             # than 99 test cases.
-            if (rc == 255 or rc == -1 or rc == 127 or self._case > 99):
+            if (rc == 255 or rc == -1 or rc == 127 or rc == 4294967295
+                    or self._case > 99):
                 self._ctx.log.debug_case(self._case, 'DOES NOT EXIST')
                 self._status.notify_done()
                 return
