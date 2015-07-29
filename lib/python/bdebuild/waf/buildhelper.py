@@ -488,12 +488,29 @@ $ waf build --target bdlt_date.t --test build"""
         self.ctx.env['lib_suffix'] = self.install_config.lib_suffix
 
         for tp in self.build_config.third_party_dirs:
+            # By default, Visual Studio uses a single pdb file for all object
+            # files compiled from a particular directory named
+            # vc<vs_version>.pdb.  We want to use a separate pdb file for each
+            # third-party package.  Similar logic for using separate pdb files
+            # for libraries built from package groups and standalone package is
+            # done in the module meta.buildconfigfactory.
             key = 'bde_thirdparty_%s_config' % tp
+
+            cflags = filter_cflags(self.build_config.default_flags.cflags)
+            cxxflags = filter_cflags(self.build_config.default_flags.cxxflags)
+
+            if (self.build_config.uplid.os_type == 'windows' and
+                    self.build_config.uplid.comp_type == 'cl'):
+                tp_unit = self.build_config.third_party_dirs[tp]
+                pdb_option = '/Fd%s\\%s.pdb' % (
+                    os.path.relpath(tp_unit.path, self.build_config.root_path),
+                    tp_unit.name)
+                cflags += [pdb_option]
+                cxxflags += [pdb_option]
+
             self.ctx.env[key] = {
-                'cflags': filter_cflags(
-                    self.build_config.default_flags.cflags),
-                'cxxflags': filter_cflags(
-                    self.build_config.default_flags.cxxflags),
+                'cflags': cflags,
+                'cxxflags': cxxflags,
                 'lib_target': self.install_config.get_target_name(tp),
                 'lib_install_path':
                 self.install_config.get_lib_install_path(tp),
