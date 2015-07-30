@@ -52,9 +52,9 @@ fi
 echo Synchronizing source trees
 rsync -a $WORKSPACE/source/ ./new-source/
 
-echo ================================
-echo ======= DPKG BUILD PHASE =======
-echo ================================
+echo ====================================
+echo ======= BDE DPKG BUILD PHASE =======
+echo ====================================
 
 for package in new-source/bde-{oss-,internal-,}tools new-source/bsl* new-source/bde-core new-source/a_cdb2 new-source/bde-{bb,bdx}
 do \
@@ -62,7 +62,7 @@ do \
     echo "    ======= BUILDING $package"
     echo "    ================================"
 
-    dpkg-distro-dev build $package
+    time dpkg-distro-dev build $package
 
     if [ $? -ne 0 ]
     then \
@@ -71,7 +71,11 @@ do \
     fi
 done
 
-dpkg-distro-dev buildall
+echo =========================================
+echo ======= BUILDALL DPKG BUILD PHASE =======
+echo =========================================
+
+time dpkg-distro-dev buildall
 
 #BINARY_PACKAGES=$(grep -i '^Package:' source/b*/debian/control   \
 #                | awk '{print $NF}'                              \
@@ -81,7 +85,11 @@ dpkg-distro-dev buildall
 #                          print $line,"\n"')
 #dpkg-refroot-install $BINARY_PACKAGES
 
-echo Y | dpkg-refroot-install --select robobuild-meta
+echo =========================================
+echo ======= REFROOT-INSTALL PHASE ===========
+echo =========================================
+
+echo Y | time dpkg-refroot-install --select robobuild-meta
 
 echo ================================
 echo ======= ROBO BUILD PHASE =======
@@ -104,7 +112,7 @@ echo "    ================================"
 echo "    ======== BUILD_PREBUILD ========"
 echo "    ================================"
 
-/bbsrc/bin/prod/bin/build/build_prebuild
+time /bbsrc/bin/prod/bin/build/build_prebuild
 
 echo "    ================================"
 echo "    ======== ROBO LIB BUILD ========"
@@ -114,7 +122,7 @@ mkdir -p build
 cd       build
 
 DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"      \
-    /opt/swt/install/make-3.82/bin/make --no-print-directory -j8 -k     \
+    time /opt/swt/install/make-3.82/bin/make --no-print-directory -j8 -k     \
     -f ../trunk/etc/buildlibs.mk INSTALLLIBDIR=$(pwd)/lib/              \
     TARGET=install robo_prebuild_libs subdirs 2>&1                      \
     | tee logs/build.$(hostname).$(date +"%Y%m%d-%H%M%S").log
