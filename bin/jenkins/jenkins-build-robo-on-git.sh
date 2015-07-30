@@ -56,7 +56,7 @@ echo ================================
 echo ======= DPKG BUILD PHASE =======
 echo ================================
 
-for package in source/bde{oss-,internal-,}tools source/bsl* source/bde-core source/a_cdb2 source/bde-{bb,bdx}
+for package in source/bde-{oss-,internal-,}tools source/bsl* source/bde-core source/a_cdb2 source/bde-{bb,bdx}
 do \
     echo "    ================================"
     echo "    ======= BUILDING $package"
