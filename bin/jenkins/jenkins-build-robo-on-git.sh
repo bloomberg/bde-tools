@@ -50,13 +50,13 @@ then \
 fi
 
 echo Synchronizing source trees
-rsync -a $WORKSPACE/source/ ./source/
+rsync -a $WORKSPACE/source/ ./new-source/
 
 echo ================================
 echo ======= DPKG BUILD PHASE =======
 echo ================================
 
-for package in source/bde-{oss-,internal-,}tools source/bsl* source/bde-core source/a_cdb2 source/bde-{bb,bdx}
+for package in new-source/bde-{oss-,internal-,}tools new-source/bsl* new-source/bde-core new-source/a_cdb2 new-source/bde-{bb,bdx}
 do \
     echo "    ================================"
     echo "    ======= BUILDING $package"
@@ -71,13 +71,17 @@ do \
     fi
 done
 
-BINARY_PACKAGES=$(grep -i '^Package:' source/b*/debian/control   \
-                | awk '{print $NF}'                              \
-                | sort -u                                        \
-                | grep -v 'RSSUITE'                              \
-                | perl -e'my $line=join ",", map {chomp; $_} <>;
-                          print $line,"\n"')
-dpkg-refroot-install $BINARY_PACKAGES
+dpkg-distro-dev buildall
+
+#BINARY_PACKAGES=$(grep -i '^Package:' source/b*/debian/control   \
+#                | awk '{print $NF}'                              \
+#                | sort -u                                        \
+#                | grep -v 'RSSUITE'                              \
+#                | perl -e'my $line=join ",", map {chomp; $_} <>;
+#                          print $line,"\n"')
+#dpkg-refroot-install $BINARY_PACKAGES
+
+echo Y | dpkg-refroot-install --select robobuild-meta
 
 echo ================================
 echo ======= ROBO BUILD PHASE =======
