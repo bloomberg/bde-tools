@@ -12,6 +12,8 @@ mkdir -p $DPKG_LOCATION
 
 echo Operating in WORKSPACE $WORKSPACE and DPKG_LOCATION $DPKG_LOCATION
 
+RETRY="$WORKSPACE/source/bde-tools/bin/retry -v -x nonzero -a 3 -p 60 "
+
 cd "$DPKG_LOCATION"
 
 if [ $? -ne 0 ]
@@ -75,7 +77,13 @@ echo =========================================
 echo ======= BUILDALL DPKG BUILD PHASE =======
 echo =========================================
 
-time dpkg-distro-dev buildall
+time $RETRY dpkg-distro-dev buildall
+
+if [ $? -ne 0 ]
+then \
+    echo FATAL: Failure in buildall step
+    exit 1
+fi
 
 #BINARY_PACKAGES=$(grep -i '^Package:' source/b*/debian/control   \
 #                | awk '{print $NF}'                              \
@@ -89,7 +97,16 @@ echo =========================================
 echo ======= REFROOT-INSTALL PHASE ===========
 echo =========================================
 
-echo Y | time dpkg-refroot-install --select robobuild-meta
+# Echo a safe # of 'Y' lines so any retries get prompt satisfied.
+perl -e'print "Y\n"x10' \
+    | time $RETRY dpkg-refroot-install --select robobuild-meta
+
+if [ $? -ne 0 ]
+then \
+    echo FATAL: Failure in dpkg-refroot-install step
+    exit 1
+fi
+
 
 echo ================================
 echo ======= ROBO BUILD PHASE =======
@@ -112,7 +129,14 @@ echo "    ================================"
 echo "    ======== BUILD_PREBUILD ========"
 echo "    ================================"
 
-time /bbsrc/bin/prod/bin/build/build_prebuild
+time $RETRY /bbsrc/bin/prod/bin/build/build_prebuild
+
+if [ $? -ne 0 ]
+then \
+    echo FATAL: build_prebuild failed
+    exit 1
+fi
+
 
 echo "    ================================"
 echo "    ======== ROBO LIB BUILD ========"
