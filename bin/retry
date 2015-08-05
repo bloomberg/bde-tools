@@ -133,7 +133,7 @@ C<exec>. Permits but nullifies the effect of all other flags.
 The C<--onsignal>, C<--match>, C<--exitstatus> (or C<--exits>), and C<--timeout>
 options are used to determine under which circumstances the target command
 should be retried. A new attempt will be made if any one of the four criteria
-are met, unless 
+are met, unless
 
 =over 4
 
@@ -349,46 +349,46 @@ Note that all local exit statuses are overridden with the specified value.
     my $max_signo=-1;
     my @sig_names=();
     foreach (@sig_nos) {
-	# signal nos may not be monotonically contiguous
-	$sig_names[$_]=$sig_nms[$_];
-	$max_signo=$_ if $_>$max_signo;
+        # signal nos may not be monotonically contiguous
+        $sig_names[$_]=$sig_nms[$_];
+        $max_signo=$_ if $_>$max_signo;
     }
 
     # return signal name from signal number (or valid name)
     sub signal_name ($) {
-	my $signo=shift;
+        my $signo=shift;
 
-	if ($signo=~/^\D+$/) {
-	    return $signo if exists $sig_numbers{$signo};
-	    return undef;
-	}
+        if ($signo=~/^\D+$/) {
+            return $signo if exists $sig_numbers{$signo};
+            return undef;
+        }
 
-	if (defined $sig_names[$signo]) {
-	    return $sig_names[$signo];
-	}
+        if (defined $sig_names[$signo]) {
+            return $sig_names[$signo];
+        }
 
-	return undef;
+        return undef;
     }
 
     # return signal number from name (or valid number)
     sub signal_number ($) {
-	my $signm=shift;
+        my $signm=shift;
 
-	if ($signm=~/^\d+$/) {
-	    return $signm if defined $sig_names[$signm];
-	    return undef;
-	}
+        if ($signm=~/^\d+$/) {
+            return $signm if defined $sig_names[$signm];
+            return undef;
+        }
 
-	if (exists $sig_numbers{$signm}) {
-	    return $sig_numbers{$signm};
-	}
+        if (exists $sig_numbers{$signm}) {
+            return $sig_numbers{$signm};
+        }
 
-	return undef;
+        return undef;
     }
 
     # return the highest recognized signal number on this platform
     sub max_signal () {
-	return $max_signo;
+        return $max_signo;
     }
 }
 
@@ -398,19 +398,19 @@ sub signal_list ($) {
     my @signals=();
 
     if (defined $sigspec) {
-	@signals=split /\W+/,$sigspec;
-	foreach (@signals) {
-	    if (/^\d+$/) {
-		signal_name($_) or usage("Bad signal number $_"),
-		  exit(EXIT_BAD_ARGS);
-		$_ = signal_name($_);
-	    } else {
-		$_ = uc($_);
-		$_ =~s/^SIG//;
-		signal_number($_) or usage("Bad signal name $_"),
-		  exit(EXIT_BAD_ARGS);
-	    }
-	}
+        @signals=split /\W+/,$sigspec;
+        foreach (@signals) {
+            if (/^\d+$/) {
+                signal_name($_) or usage("Bad signal number $_"),
+                  exit(EXIT_BAD_ARGS);
+                $_ = signal_name($_);
+            } else {
+                $_ = uc($_);
+                $_ =~s/^SIG//;
+                signal_number($_) or usage("Bad signal name $_"),
+                  exit(EXIT_BAD_ARGS);
+            }
+        }
     }
 
     # return list in signal number order
@@ -426,14 +426,14 @@ sub signal_mask {
     my $maxsig=max_signal();
 
     if (@siglist) {
-	@sigmask=map { 0 } 0..$maxsig;
-	foreach my $signo (@siglist) {
-	    $signo=signal_number($signo); #if a name, convert to no.
-	    $sigmask[$signo]=1;
-	}
+        @sigmask=map { 0 } 0..$maxsig;
+        foreach my $signo (@siglist) {
+            $signo=signal_number($signo); #if a name, convert to no.
+            $sigmask[$signo]=1;
+        }
     } else {
-	# never mask signal 0
-	@sigmask=(0, map { 1 } 1..$maxsig);
+        # never mask signal 0
+        @sigmask=(0, map { 1 } 1..$maxsig);
     }
 
     return @sigmask;
@@ -449,7 +449,7 @@ sub get_options () {
         help|h
         debug|d
         exitstatus|x=s
-	failstatus|f=i
+        failstatus|f=i
         verbose|v
         onsignal|s=s
         initial|i=i
@@ -458,15 +458,15 @@ sub get_options () {
         random|r=i
         attempts|a=i
         match|m=s
-	timeout|t=i
+        timeout|t=i
         noretry|X
     ]) or return undef;
 
     if (defined $opts->{timeout}) {
-	usage("Timeout must be zero or positive"), exit(EXIT_BAD_ARGS)
-	  unless $opts->{timeout}>=0;
+        usage("Timeout must be zero or positive"), exit(EXIT_BAD_ARGS)
+          unless $opts->{timeout}>=0;
     } else {
-	$opts->{timeout} = DEFAULT_TIMEOUT;
+        $opts->{timeout} = DEFAULT_TIMEOUT;
     }
 
     # time
@@ -482,64 +482,64 @@ sub get_options () {
     # attempts
     $opts->{attempts}=100 unless defined $opts->{attempts};
     unless ($opts->{attempts} || $opts->{limit}) {
-	usage("One of --attempts or --limit must be positive"),
-	  exit(EXIT_BAD_ARGS);
+        usage("One of --attempts or --limit must be positive"),
+          exit(EXIT_BAD_ARGS);
     }
 
     # signals
     if ($opts->{onsignal} and $opts->{onsignal}=~/^nonzero$/i) {
-	$opts->{onsignal}="!0";
+        $opts->{onsignal}="!0";
     }
     if ($opts->{onsignal} and $opts->{onsignal}=~s/^!//) {
-	$opts->{invertedsignallist}=1;
+        $opts->{invertedsignallist}=1;
     }
     $opts->{signallist}=[ signal_list($opts->{onsignal}) ];
     $opts->{signalmask}=[ signal_mask(@{$opts->{signallist}}) ];
     if ($opts->{invertedsignallist}) {
-	$opts->{signalmask}=[ map { $_?0:1 } @{$opts->{signalmask}} ];
-	$opts->{signalmask}->[0]=0;
+        $opts->{signalmask}=[ map { $_?0:1 } @{$opts->{signalmask}} ];
+        $opts->{signalmask}->[0]=0;
     }
 
     # match
     if (defined $opts->{match}) {
-	if ($opts->{match} =~ s/^!//) {
-	    $opts->{invertedmatch}=1;
-	}
+        if ($opts->{match} =~ s/^!//) {
+            $opts->{invertedmatch}=1;
+        }
 
-	usage("Match text is empty"), exit(EXIT_BAD_ARGS)
-	  unless length($opts->{match});
+        usage("Match text is empty"), exit(EXIT_BAD_ARGS)
+          unless length($opts->{match});
     }
 
     # exit stati
     if (defined $opts->{exitstatus}) {
-	my @stati;
+        my @stati;
 
-	if ($opts->{exitstatus}=~/^nonzero$/i) {
-	    @stati=( 'nonzero' );
-	} else {
-	    if ($opts->{exitstatus}=~s/^!//) {
-		$opts->{invertedexitstatus}=1;
-	    }
+        if ($opts->{exitstatus}=~/^nonzero$/i) {
+            @stati=( 'nonzero' );
+        } else {
+            if ($opts->{exitstatus}=~s/^!//) {
+                $opts->{invertedexitstatus}=1;
+            }
 
-	    @stati=split /\W+/,$opts->{exitstatus};
-	    foreach (@stati) {
-		next if /^nonzero$/i;
-		usage("Bad exit status $_"), exit(EXIT_BAD_ARGS)
-		  unless /^\d+$/;
-		usage("Bad exit status $_"), exit(EXIT_BAD_ARGS)
-		  if $_>255 or $_<-254;
-	    }
-	}
+            @stati=split /\W+/,$opts->{exitstatus};
+            foreach (@stati) {
+                next if /^nonzero$/i;
+                usage("Bad exit status $_"), exit(EXIT_BAD_ARGS)
+                  unless /^\d+$/;
+                usage("Bad exit status $_"), exit(EXIT_BAD_ARGS)
+                  if $_>255 or $_<-254;
+            }
+        }
 
-	# convert into a hash map
-	$opts->{exitstatus}={ map { $_ => 1 } @stati };
+        # convert into a hash map
+        $opts->{exitstatus}={ map { $_ => 1 } @stati };
     }
 
     # fail status
     if (defined $opts->{failstatus}) {
-	usage("Bad fail status $opts->{failstatus}"), exit(EXIT_BAD_ARGS)
-	  unless $opts->{failstatus}=~/^\d+$/;
-	set_failstatus($opts->{failstatus});
+        usage("Bad fail status $opts->{failstatus}"), exit(EXIT_BAD_ARGS)
+          unless $opts->{failstatus}=~/^\d+$/;
+        set_failstatus($opts->{failstatus});
     }
 
     $opts->{noretry}=1 if NORETRY;
@@ -599,7 +599,7 @@ _USAGE_END
     }
 
     END {
-	$?=$failstatus if $failstatus;
+        $?=$failstatus if $failstatus;
     }
 }
 
@@ -620,21 +620,21 @@ MAIN: {
 
     if ($opts->{debug} and $opts->{verbose}) {
         if ($opts->{signallist}) {
-	    print STDERR "[[ $$ ($program) Signals: ",
-	      (join ', ',@{$opts->{signallist}}),
-		($opts->{invertedsignallist}?" (inverted)":""),"\n";
+            print STDERR "[[ $$ ($program) Signals: ",
+              (join ', ',@{$opts->{signallist}}),
+                ($opts->{invertedsignallist}?" (inverted)":""),"\n";
         }
-	print STDERR "[[ $$ ($program)    Mask: ",
-	  (join '',@{$opts->{signalmask}}),"\n";
-	print STDERR "[[ $$ ($program)   Exits: ",
-	  (join '',(keys %{$opts->{exitstatus}})),
-	    ($opts->{invertedexitstatus}?" (inverted)":""),"\n";
-	if ($opts->{match}) {
-	    print STDERR "[[ $$ ($program)   Match: $opts->{match}",
+        print STDERR "[[ $$ ($program)    Mask: ",
+          (join '',@{$opts->{signalmask}}),"\n";
+        print STDERR "[[ $$ ($program)   Exits: ",
+          (join '',(keys %{$opts->{exitstatus}})),
+            ($opts->{invertedexitstatus}?" (inverted)":""),"\n";
+        if ($opts->{match}) {
+            print STDERR "[[ $$ ($program)   Match: $opts->{match}",
                 ($opts->{invertedmatch}?" (inverted)":""),"\n";
-	}
-	print STDERR "[[ $$ ($program)   Limit: $opts->{attempts} attempts, ".
-	  "$opts->{limit} seconds, Timeout: $opts->{timeout} seconds\n";
+        }
+        print STDERR "[[ $$ ($program)   Limit: $opts->{attempts} attempts, ".
+          "$opts->{limit} seconds, Timeout: $opts->{timeout} seconds\n";
     }
 
     print STDERR "** Executing: @command\n" if $opts->{verbose};
@@ -642,7 +642,7 @@ MAIN: {
     my $attempts=0;
     my $pause=$opts->{initial};
     if ($opts->{random}) {
-	$pause += int (rand $opts->{random});
+        $pause += int (rand $opts->{random});
     }
     my $cumulativepause=0;
 
@@ -653,141 +653,141 @@ MAIN: {
 
     my $retry=1;
     while ($retry) {
-	$retry=0;
-	$attempts++;
+        $retry=0;
+        $attempts++;
 
-	print STDERR "!! $$ Attempt limit exceeded running \n!! $$        @command\n" and exit(EXIT_ALIMIT)
-	  if $opts->{attempts} and $attempts > $opts->{attempts};
-	print STDERR "-- $$ Attempt $attempts\n" if $opts->{verbose};
+        print STDERR "!! $$ Attempt limit exceeded running \n!! $$        @command\n" and exit(EXIT_ALIMIT)
+          if $opts->{attempts} and $attempts > $opts->{attempts};
+        print STDERR "-- $$ Attempt $attempts\n" if $opts->{verbose};
 
-	# initiate a new command child process
-	my ($wrh,$rdh,$erh)=(new IO::Handle,new IO::Handle,new IO::Handle);
-	my $pid=retry_open3($rdh,$wrh,$erh,@command);
-	unless (defined $pid) {
-	    print STDERR "!! $$ Failed to open command: $!\n";
-	    print STDERR "-- $$ Retrying on IPC failure\n"
-	      if $opts->{verbose};
-	    $retry=1;
-	} else {
-	    print STDERR "[[ $$ ($program) Child process $pid\n" if $opts->{debug};
+        # initiate a new command child process
+        my ($wrh,$rdh,$erh)=(new IO::Handle,new IO::Handle,new IO::Handle);
+        my $pid=retry_open3($rdh,$wrh,$erh,@command);
+        unless (defined $pid) {
+            print STDERR "!! $$ Failed to open command: $!\n";
+            print STDERR "-- $$ Retrying on IPC failure\n"
+              if $opts->{verbose};
+            $retry=1;
+        } else {
+            print STDERR "[[ $$ ($program) Child process $pid\n" if $opts->{debug};
 
-	    # write previously gathered input to command <<< not yet implemented
-	    if ($command_input) {
-		print $wrh $command_input;
-	    }
-	    close $wrh;
+            # write previously gathered input to command <<< not yet implemented
+            if ($command_input) {
+                print $wrh $command_input;
+            }
+            close $wrh;
 
-	    # gather output and errors -.do both together to avoid deadlocks
-	    ($command_output,$command_errors)=("","");
-	    my $select=new IO::Select($rdh,$erh);
-	    my $text;
-	    while (my @waiting=$select->can_read($opts->{timeout} || undef)) {
-		foreach my $fh (@waiting) {
-		    my $read=sysread($fh,$text,1024);
-		    $select->remove($fh) if defined($read) and $read==0;
-		
-		    next unless $text;
-		    if ($fh == $rdh) {
-			$command_output .= $text;
-		    } else {
-			$command_errors .= $text;
-		    }
-		}
-	    }
-	
-	    # check for a timeout - a handle still in the select array
-	    if ($select->handles) {
-		print STDERR "[[ $$ ($program) timed out ".
-		  "on attempt $attempts\n" if $opts->{debug};
-		kill 9,$pid;
-		sleep 5;
-		waitpid $pid,&WNOHANG; #try to reap, but don't insist on it
-		print STDERR "-- $$ Retrying on timeout\n"
-		  if $opts->{verbose};
-		$retry=1;
-	    }
+            # gather output and errors -.do both together to avoid deadlocks
+            ($command_output,$command_errors)=("","");
+            my $select=new IO::Select($rdh,$erh);
+            my $text;
+            while (my @waiting=$select->can_read($opts->{timeout} || undef)) {
+                foreach my $fh (@waiting) {
+                    my $read=sysread($fh,$text,1024);
+                    $select->remove($fh) if defined($read) and $read==0;
 
-	    # gather and process exit status
-	    waitpid $pid,0;
+                    next unless $text;
+                    if ($fh == $rdh) {
+                        $command_output .= $text;
+                    } else {
+                        $command_errors .= $text;
+                    }
+                }
+            }
 
-	    my $result=$?;
-	    $status=$result >> 8;
-	    $signal=$result & 127;
-	    my $cored=($result & 128)?1:0;
+            # check for a timeout - a handle still in the select array
+            if ($select->handles) {
+                print STDERR "[[ $$ ($program) timed out ".
+                  "on attempt $attempts\n" if $opts->{debug};
+                kill 9,$pid;
+                sleep 5;
+                waitpid $pid,&WNOHANG; #try to reap, but don't insist on it
+                print STDERR "-- $$ Retrying on timeout\n"
+                  if $opts->{verbose};
+                $retry=1;
+            }
 
-	    print STDERR "[[ $$ ($program) X$status/S$signal/C$cored ".
-	      "on attempt $attempts\n" if $opts->{debug};
-	
-	    # write command output back to original invoker
-	    if ($opts->{verbose}) {
-		$command_output=~s|^|OO |mg;
-		$command_errors=~s|^|EE |mg;
-	    }
-	    print $command_output;
-	    print STDERR $command_errors;
-	}
+            # gather and process exit status
+            waitpid $pid,0;
 
-	# should we retry this command?
-	if ($signal and $opts->{signalmask}->[$signal]) {
-	    print STDERR "-- $$ Retrying on signal $signal\n"
-	      if $opts->{verbose};
-	    $retry=1;
-	}
-	if ($opts->{exitstatus}) {
-	    if ($opts->{exitstatus}{nonzero} and $status) {
-		print STDERR "-- $$ Retrying on nonzero exit status $status\n"
-		  if $opts->{verbose};
-		$retry=1;
-	    } else {
-		if ($opts->{invertedexitstatus}) {
-		    if (not exists $opts->{exitstatus}{$status}) {
-			print STDERR "-- $$ Retrying on unlisted exit status".
-			  $status."\n" if $opts->{verbose};
-			$retry=1;
-		    }
-		} else {
-		    if (exists $opts->{exitstatus}{$status}) {
-			print STDERR
-			  "-- $$ Retrying on exit status $status\n"
-			  if $opts->{verbose};
-			$retry=1;
-		    }
-		}
-	    }
-	}
-	if ($opts->{match}) {
-	    if ($opts->{invertmatch}) {
-		if ($command_output !~ /$opts->{match}/s
-		  and $command_errors !~ /$opts->{match}/s) {
-		    print STDERR "-- $$ Retrying on failed match\n";
-		    $retry=1;
-		}
-	    } else {
-		if ($command_output =~ /$opts->{match}/s
-		  or $command_errors =~ /$opts->{match}/s) {
-		    print STDERR "-- $$ Retrying on successful match '$&'\n";
-		    $retry=1;
-		}
-	    }
-	}
+            my $result=$?;
+            $status=$result >> 8;
+            $signal=$result & 127;
+            my $cored=($result & 128)?1:0;
 
-	# sleep, perchance to retry
-	if ($retry) {
-	    my $thispause=$pause;
-	    $pause+=$opts->{pause};
-	    if ($opts->{random}) {
-		$pause+=int (rand $opts->{random});
-	    }
-	    print STDERR "!! $$ Pause limit exceeded while running\n!! $$       @command\n"
-	      and exit(EXIT_PLIMIT)
-	      if $opts->{limit} and $pause > $opts->{limit};
-	    $cumulativepause+=$pause;
+            print STDERR "[[ $$ ($program) X$status/S$signal/C$cored ".
+              "on attempt $attempts\n" if $opts->{debug};
 
-	    print STDERR "-- $$ Sleeping $thispause seconds\n"
-	      if $opts->{verbose};
+            # write command output back to original invoker
+            if ($opts->{verbose}) {
+                $command_output=~s|^|OO |mg;
+                $command_errors=~s|^|EE |mg;
+            }
+            print $command_output;
+            print STDERR $command_errors;
+        }
+
+        # should we retry this command?
+        if ($signal and $opts->{signalmask}->[$signal]) {
+            print STDERR "-- $$ Retrying on signal $signal\n"
+              if $opts->{verbose};
+            $retry=1;
+        }
+        if ($opts->{exitstatus}) {
+            if ($opts->{exitstatus}{nonzero} and $status) {
+                print STDERR "-- $$ Retrying on nonzero exit status $status\n"
+                  if $opts->{verbose};
+                $retry=1;
+            } else {
+                if ($opts->{invertedexitstatus}) {
+                    if (not exists $opts->{exitstatus}{$status}) {
+                        print STDERR "-- $$ Retrying on unlisted exit status".
+                          $status."\n" if $opts->{verbose};
+                        $retry=1;
+                    }
+                } else {
+                    if (exists $opts->{exitstatus}{$status}) {
+                        print STDERR
+                          "-- $$ Retrying on exit status $status\n"
+                          if $opts->{verbose};
+                        $retry=1;
+                    }
+                }
+            }
+        }
+        if ($opts->{match}) {
+            if ($opts->{invertmatch}) {
+                if ($command_output !~ /$opts->{match}/s
+                  and $command_errors !~ /$opts->{match}/s) {
+                    print STDERR "-- $$ Retrying on failed match\n";
+                    $retry=1;
+                }
+            } else {
+                if ($command_output =~ /$opts->{match}/s
+                  or $command_errors =~ /$opts->{match}/s) {
+                    print STDERR "-- $$ Retrying on successful match '$&'\n";
+                    $retry=1;
+                }
+            }
+        }
+
+        # sleep, perchance to retry
+        if ($retry) {
+            my $thispause=$pause;
+            $pause+=$opts->{pause};
+            if ($opts->{random}) {
+                $pause+=int (rand $opts->{random});
+            }
+            print STDERR "!! $$ Pause limit exceeded while running\n!! $$       @command\n"
+              and exit(EXIT_PLIMIT)
+              if $opts->{limit} and $pause > $opts->{limit};
+            $cumulativepause+=$pause;
+
+            print STDERR "-- $$ Sleeping $thispause seconds\n"
+              if $opts->{verbose};
             print STDERR "[[ $$ ($program) Retry\n" if $opts->{debug};
-	    my $slept=sleep($thispause);
-	}
+            my $slept=sleep($thispause);
+        }
     }
 
     print STDERR "** Done ($status) on attempt $attempts\n"
