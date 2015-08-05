@@ -6,7 +6,7 @@ then \
     exit 1
 fi
 
-DPKG_LOCATION=/bb/bde/bdebuild/jenkins/$(hostname)/dpkg
+DPKG_LOCATION=/bb/bde/bdebuild/jenkins/$(hostname)/dpkg-$PID
 export DPKG_LOCATION
 mkdir -p $DPKG_LOCATION
 
@@ -52,18 +52,6 @@ then \
 fi
 
 echo ====================================
-echo ======= Synchronizing source tree ==
-echo ====================================
-
-$RETRY rsync -a $WORKSPACE/source/ ./new-source/
-
-if [ $? -ne 0 ]
-then \
-    echo FATAL: rsync failed from $WORKSPACE/source/ to ./new-source/
-    exit 1
-fi
-
-echo ====================================
 echo ======= DPKG SCAN AND RMLOCK =======
 echo ====================================
 
@@ -79,7 +67,7 @@ echo ====================================
 echo ======= BDE DPKG BUILD PHASE =======
 echo ====================================
 
-for package in new-source/bde-{oss-,internal-,}tools new-source/bsl* new-source/bde-core new-source/a_cdb2 new-source/bde-{bb,bdx}
+for package in $WORKSPACE/source/bde-{oss-,internal-,}tools $WORKSPACE/source/bsl* $WORKSPACE/source/bde-core $WORKSPACE/source/a_cdb2 $WORKSPACE/source/bde-{bb,bdx}
 do \
     echo "    ================================"
     echo "    ======= BUILDING $package"
