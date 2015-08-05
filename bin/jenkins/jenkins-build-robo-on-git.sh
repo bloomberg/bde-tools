@@ -6,7 +6,7 @@ then \
     exit 1
 fi
 
-DPKG_LOCATION=/bb/bde/bdebuild/jenkins/$(hostname)/dpkg-$PID
+DPKG_LOCATION=/bb/bde/bdebuild/jenkins/$(hostname)/dpkg-$$
 export DPKG_LOCATION
 mkdir -p $DPKG_LOCATION
 
