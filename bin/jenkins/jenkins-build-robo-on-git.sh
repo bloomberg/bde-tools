@@ -51,12 +51,27 @@ then \
     dpkg-distro-dev init .
 fi
 
-echo Synchronizing source trees
+echo ====================================
+echo ======= Synchronizing source tree ==
+echo ====================================
+
 $RETRY rsync -a $WORKSPACE/source/ ./new-source/
 
 if [ $? -ne 0 ]
 then \
     echo FATAL: rsync failed from $WORKSPACE/source/ to ./new-source/
+    exit 1
+fi
+
+echo ====================================
+echo ======= DPKG SCAN AND RMLOCK =======
+echo ====================================
+
+dpkg-distro-dev scan --rmlock
+
+if [ $? -ne 0 ]
+then \
+    echo FATAL: failed dpkg-distro-dev scan --rmlock
     exit 1
 fi
 
