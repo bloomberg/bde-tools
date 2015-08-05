@@ -12,7 +12,7 @@ mkdir -p $DPKG_LOCATION
 
 echo Operating in WORKSPACE $WORKSPACE and DPKG_LOCATION $DPKG_LOCATION
 
-RETRY="$WORKSPACE/source/bde-tools/bin/retry -v -x nonzero -a 3 -p 60 "
+RETRY="$WORKSPACE/source/bde-tools/bin/retry -v -x nonzero -a 3 -p 60 -t 0 "
 
 cd "$DPKG_LOCATION"
 
@@ -52,7 +52,13 @@ then \
 fi
 
 echo Synchronizing source trees
-rsync -a $WORKSPACE/source/ ./new-source/
+$RETRY rsync -a $WORKSPACE/source/ ./new-source/
+
+if [ $? -ne 0 ]
+then \
+    echo FATAL: rsync failed from $WORKSPACE/source/ to ./new-source/
+    exit 1
+fi
 
 echo ====================================
 echo ======= BDE DPKG BUILD PHASE =======
@@ -64,7 +70,7 @@ do \
     echo "    ======= BUILDING $package"
     echo "    ================================"
 
-    time dpkg-distro-dev build $package
+    time $RETRY dpkg-distro-dev build $package
 
     if [ $? -ne 0 ]
     then \
