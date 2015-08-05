@@ -689,8 +689,19 @@ MAIN: {
                     next unless $text;
                     if ($fh == $rdh) {
                         $command_output .= $text;
+
+                        while($command_output=~/^([^\n]+\n)(.*)/) {
+                            my $current_line = $1;
+                            $command_output  = $2;
+
+                            $current_line =~s|^|OO |mg if $opts->{verbose};
+                            print $current_line;
+                        }
                     } else {
                         $command_errors .= $text;
+                        $command_errors=~s|^|EE |mg if $opts->{verbose};
+                        print STDERR $command_errors;
+                        $command_errors = "";
                     }
                 }
             }
@@ -719,12 +730,14 @@ MAIN: {
               "on attempt $attempts\n" if $opts->{debug};
 
             # write command output back to original invoker
-            if ($opts->{verbose}) {
-                $command_output=~s|^|OO |mg;
-                $command_errors=~s|^|EE |mg;
+            if (length $command_output) {
+                $command_output=~s|^|OO |mg if $opts->{verbose};
+                print $command_output;
             }
-            print $command_output;
-            print STDERR $command_errors;
+            if (length $command_errors) {
+                $command_errors=~s|^|EE |mg if $opts->{verbose};
+                print STDERR $command_errors;
+            }
         }
 
         # should we retry this command?
