@@ -12,7 +12,7 @@ mkdir -p $DPKG_LOCATION
 
 echo Operating in WORKSPACE $WORKSPACE and DPKG_LOCATION $DPKG_LOCATION
 
-RETRY="$WORKSPACE/source/bde-tools/bin/retry -v -x nonzero -a 3 -p 60 -t 0 "
+RETRY="$WORKSPACE/source/bde-tools/bin/retry -v -x nonzero -a 3 -p 60 -t 0 -- "
 
 cd "$DPKG_LOCATION"
 
