@@ -52,7 +52,7 @@ then \
 fi
 
 echo Synchronizing source trees
-$RETRY rsync -a $WORKSPACE/source/ ./new-source/ 2>&1
+$RETRY rsync -a $WORKSPACE/source/ ./new-source/
 
 if [ $? -ne 0 ]
 then \
@@ -70,7 +70,7 @@ do \
     echo "    ======= BUILDING $package"
     echo "    ================================"
 
-    time $RETRY dpkg-distro-dev build $package 2>&1
+    time $RETRY dpkg-distro-dev build $package
 
     if [ $? -ne 0 ]
     then \
@@ -83,7 +83,7 @@ echo =========================================
 echo ======= BUILDALL DPKG BUILD PHASE =======
 echo =========================================
 
-time $RETRY dpkg-distro-dev buildall 2>&1
+time $RETRY dpkg-distro-dev buildall
 
 if [ $? -ne 0 ]
 then \
@@ -105,7 +105,7 @@ echo =========================================
 
 # Echo a safe # of 'Y' lines so any retries get prompt satisfied.
 perl -e'print "Y\n"x10' \
-    | time $RETRY dpkg-refroot-install --select robobuild-meta 2>&1
+    | time $RETRY dpkg-refroot-install --select robobuild-meta
 
 if [ $? -ne 0 ]
 then \
@@ -135,7 +135,7 @@ echo "    ================================"
 echo "    ======== BUILD_PREBUILD ========"
 echo "    ================================"
 
-time $RETRY /bbsrc/bin/prod/bin/build/build_prebuild 2>&1
+time $RETRY /bbsrc/bin/prod/bin/build/build_prebuild
 
 if [ $? -ne 0 ]
 then \
