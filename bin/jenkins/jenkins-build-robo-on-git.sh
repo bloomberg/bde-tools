@@ -6,10 +6,24 @@ then \
     exit 1
 fi
 
-DPKG_LOCATION=/bb/bde/bdebuild/jenkins/$(hostname)/dpkg-$$
+ROOT_LOCATION=/bb/bde/bdebuild/jenkins
+
+LOG_LOCATION=${ROOT_LOCATION}/logs
+export LOG_LOCATION
+mkdir -p $LOG_LOCATION
+
+LOGFILE=$LOG_LOCATION/log-$(/opt/bb/bin/date +"%Y%m%d-%H%M%S")-${hostname}-$$.txt
+
+# Redundant in case exec &>... fails for some reason
+echo Logging to $LOGFILE
+
+exec &> >(/opt/bb/bin/tee -a $LOGFILE)
+
+DPKG_LOCATION=${ROOT_LOCATION}/$(hostname)/dpkg-$$
 export DPKG_LOCATION
 mkdir -p $DPKG_LOCATION
 
+echo Logging to $LOGFILE
 echo Operating in WORKSPACE $WORKSPACE and DPKG_LOCATION $DPKG_LOCATION
 
 RETRY="$WORKSPACE/source/bde-tools/bin/retry -v -x nonzero -a 3 -p 60 -t 0 -- "
@@ -33,7 +47,7 @@ if test -d /opt/swt/bin
 then
     for OVERRIDE in \
         /opt/swt/bin/readlink /opt/swt/bin/tar /opt/swt/bin/gmake \
-        /opt/swt/bin/find
+        /opt/swt/bin/findAleksandr Sheynin
     do
         PATH=$(/usr/bin/dirname $(/opt/swt/bin/readlink "$OVERRIDE")):$PATH
     done
@@ -86,7 +100,7 @@ echo =========================================
 echo ======= BUILDALL DPKG BUILD PHASE =======
 echo =========================================
 
-time $RETRY dpkg-distro-dev buildall
+time $RETRY dpkg-distro-dev buildall -j12 -k
 
 if [ $? -ne 0 ]
 then \
