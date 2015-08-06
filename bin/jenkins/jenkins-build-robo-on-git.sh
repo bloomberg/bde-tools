@@ -106,7 +106,7 @@ echo =========================================
 echo ======= BUILDALL DPKG BUILD PHASE =======
 echo =========================================
 
-time $RETRY dpkg-distro-dev buildall -j12 -k
+time $RETRY dpkg-distro-dev buildall -j 12 -k
 
 if [ $? -ne 0 ]
 then \
