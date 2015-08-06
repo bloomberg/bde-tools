@@ -12,7 +12,7 @@ LOG_LOCATION=${ROOT_LOCATION}/logs
 export LOG_LOCATION
 mkdir -p $LOG_LOCATION
 
-LOGFILE=$LOG_LOCATION/log-$(/opt/bb/bin/date +"%Y%m%d-%H%M%S")-${hostname}-$$.txt
+LOGFILE=$LOG_LOCATION/log-$(/opt/bb/bin/date +"%Y%m%d-%H%M%S")-$(hostname)-$$.txt
 
 # Redundant in case exec &>... fails for some reason
 echo Logging to $LOGFILE
@@ -20,7 +20,10 @@ echo Logging to $LOGFILE
 # This redirects both STDOUT and STDERR (&>) into a subshell (with >() ) where
 # each line is prefixed with the timestamp and then sent via tee into both the
 # $LOGFILE file and the screen.
-exec &> >(/opt/bb/bin/perl -MPOSIX=strftime -ne'BEGIN{$|++} printf "%s: %s",(strftime("%Y%m%d-%H%M%S", localtime)), $_' | /opt/bb/bin/tee -a $LOGFILE)
+exec &> >(/opt/bb/bin/perl -MPOSIX=strftime \
+            -ne'BEGIN{$|++} \
+                printf "%s: %s",(strftime("%Y%m%d-%H%M%S", localtime)), $_' \
+        | /opt/bb/bin/tee -a $LOGFILE)
 
 DPKG_LOCATION=${ROOT_LOCATION}/$(hostname)/dpkg-$$
 export DPKG_LOCATION
