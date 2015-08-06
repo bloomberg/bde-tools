@@ -17,7 +17,7 @@ LOGFILE=$LOG_LOCATION/log-$(/opt/bb/bin/date +"%Y%m%d-%H%M%S")-${hostname}-$$.tx
 # Redundant in case exec &>... fails for some reason
 echo Logging to $LOGFILE
 
-exec &> >(/opt/bb/bin/tee -a $LOGFILE)
+exec &> >(/opt/bb/bin/perl -MPOSIX=strftime -ne'BEGIN{$|++} printf "%s: %s",(strftime("%Y%m%d-%H%M%S", localtime)), $_' | /opt/bb/bin/tee -a $LOGFILE)
 
 DPKG_LOCATION=${ROOT_LOCATION}/$(hostname)/dpkg-$$
 export DPKG_LOCATION
