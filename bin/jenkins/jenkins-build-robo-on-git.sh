@@ -93,6 +93,17 @@ do \
     echo "    ======= BUILDING $package"
     echo "    ================================"
 
+    echo "       ================================="
+    echo "       ====== last commit for $package"
+    echo "       ================================="
+    pushd $package > /dev/null 2>&1
+    git log -1
+    popd > /dev/null 2>&1
+
+    echo "       ================================="
+    echo "       ====== dpkg-distro-dev build $package"
+    echo "       ================================="
+
     time $RETRY dpkg-distro-dev build $package
 
     if [ $? -ne 0 ]
