@@ -97,7 +97,7 @@ do \
     echo "       ====== last commit for $package"
     echo "       ================================="
     pushd $package > /dev/null 2>&1
-    /opt/bb/bin/git log -1
+    /opt/bb/bin/git log -1 --decorate=full
     popd > /dev/null 2>&1
 
     echo "       ================================="
