@@ -123,7 +123,13 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
             return None
 
         install_path = os.path.join('${PREFIX}', 'include')
-        if is_thirdparty or not self.is_flat_include:
+
+        # Temporary: Don't treat third-party packages specially: Install
+        # third-party header files of third-party packages in the same global
+        # include path as other types of UORs to preserve backwards
+        # compatibilty.  In the future, we want to use relatively include path
+        # for third-party packages internally within BDE.
+        if not self.is_flat_include:
             install_path = os.path.join(install_path, uor_name)
         if inner_package_name == 'bsl+stdhdrs':
             install_path = os.path.join(install_path, 'stlport')
@@ -146,7 +152,13 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
         """Return the value of the $includedir variable in the pkg-config file.
         """
         include_path = '${prefix}/include'
-        if is_thirdparty or not self.is_flat_include:
+
+        # Temporary: Don't treat third-party packages specially: Install
+        # third-party header files of third-party packages in the same global
+        # include path as other types of UORs to preserve backwards
+        # compatibilty.  In the future, we want to use relatively include path
+        # for third-party packages internally within BDE.
+        if not self.is_flat_include:
             # use "/" even on Windows for compatibility with pykg-config.
             include_path += '/%s' % uor_name
         return include_path
