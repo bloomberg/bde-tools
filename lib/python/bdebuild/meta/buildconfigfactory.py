@@ -164,9 +164,19 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         dep_flags = get_build_flags_from_opts(build_flags_parser,
                                               dep_oe.results, dep_oe.results)
 
+        if uor.name == 'bsl':
+            # Include flags such as "-lpthread" in bsl.pc, because
+            # historically, some of the applications built on top of BDE
+            # requires this.
+            exclude_exportflags = []
+            exclude_exportlibs = []
+        else:
+            exclude_exportflags = dep_flags.export_flags
+            exclude_exportlibs = dep_flags.export_libs
+
         uor_bc.flags = get_build_flags_from_opts(
             build_flags_parser, int_oe.results, export_oe.results,
-            dep_flags.export_flags, dep_flags.export_libs)
+            exclude_exportflags, exclude_exportlibs)
 
         if uor.type_ == repounits.UnitType.GROUP:
             load_package_group(uor, uor_bc, int_oe_copy)
