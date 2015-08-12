@@ -25,7 +25,7 @@ exec &> >(/opt/bb/bin/perl -MPOSIX=strftime \
                 printf "%s: %s",(strftime("%Y%m%d-%H%M%S", localtime)), $_' \
         | /opt/bb/bin/tee -a $LOGFILE)
 
-DPKG_LOCATION=${ROOT_LOCATION}/$(hostname)/dpkg-$$
+DPKG_LOCATION=${WORKSPACE}/dpkg-$$
 export DPKG_LOCATION
 mkdir -p $DPKG_LOCATION
 
