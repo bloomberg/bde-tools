@@ -68,7 +68,7 @@ fi
 if [[ ! -d data ]]
 then \
     echo Initializing DPKG distro - should be needed only once
-    dpkg-distro-dev init --distribution=robo-trunk .
+    dpkg-distro-dev init --distribution=unstable .
 fi
 
 echo ====================================
