@@ -121,8 +121,7 @@ time $RETRY dpkg-distro-dev buildall -j 12 -k
 
 if [ $? -ne 0 ]
 then \
-    echo FATAL: Failure in buildall step
-    exit 1
+    echo WARNING: Failure in buildall step, ignoring it
 fi
 
 #BINARY_PACKAGES=$(grep -i '^Package:' source/b*/debian/control   \
@@ -137,9 +136,7 @@ echo =========================================
 echo ======= REFROOT-INSTALL PHASE ===========
 echo =========================================
 
-# Echo a safe # of 'Y' lines so any retries get prompt satisfied.
-perl -e'print "Y\n"x10' \
-    | time $RETRY dpkg-refroot-install --select robobuild-meta
+echo "Y" | time dpkg-refroot-install --select robobuild-meta
 
 if [ $? -ne 0 ]
 then \
