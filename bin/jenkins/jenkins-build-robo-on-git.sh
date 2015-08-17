@@ -138,7 +138,11 @@ echo =========================================
 echo ======= REFROOT-INSTALL PHASE ===========
 echo =========================================
 
-echo "Y" | time dpkg-refroot-install --select robobuild-meta
+DISTRIBUTION_REFROOT=$DPKG_LOCATION/refroot/$(dpkg --print-architecture)
+export DISTRIBUTION_REFROOT
+
+echo "Y" | REFROOT=$DISTRIBUTION_REFROOT \
+                  time dpkg-refroot-install --select robobuild-meta
 
 # if [ $? -ne 0 ]
 # then \
