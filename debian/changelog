@@ -1,5 +1,7 @@
-bde-tools (2.24.0.0) unstable; urgency=low
+bde-tools (2.24.0.3) unstable; urgency=low
 
+  * 3a9f750 [APPROVAL] origin/review/retry-with-ongoing-output to master
+  * 6a812e1 fixup rules and bump version to 2.24.0.0
   * e9d9677 [APPROVAL] origin/review/move-a_cdb2-out-of-bde-bb-drqs-64413405 to master
   * 538e0bf [APPROVAL] origin/review/tweak-nightly-build-platforms-20150721 to master
   * d19d7fa [APPROVAL] tweak-nightly-build-platforms-20150721 to master
@@ -87,7 +89,7 @@ bde-tools (2.24.0.0) unstable; urgency=low
   * 595762f [APPROVAL] origin/review/add-xlc-12.1-support-drqs-56270209 to master
   * abe9c65 [APPROVAL] enable-brmwnydgenap05-builds to master
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 30 Jul 2015 16:28:33 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 13 Aug 2015 10:27:54 -0400
 
 bde-tools (2.21.0.6) git; urgency=low
 
