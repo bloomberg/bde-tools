@@ -192,8 +192,12 @@ DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"      \
     TARGET=install robo_prebuild_libs subdirs 2>&1                      \
     | tee $ROBOLOG
 
+EXIT_STATUS=$?
+
 echo "    ===================================="
 echo "    ======== ROBO ERROR SUMMARY ========"
 echo "    ===================================="
 
 grep -e '[Ee]rror:' -e '(S)' -e ' Error ' $ROBOLOG
+
+exit $EXIT_STATUS
