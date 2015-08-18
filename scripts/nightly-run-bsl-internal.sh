@@ -5,12 +5,12 @@ echo SCRIPT-TRACE - running $0 -- $*
 SCRIPT_NAME=nightly-run-bsl-internal
 BUILD_TYPE=bslintdev
 
-BDE_CORE_BRANCH=remotes/origin/dev-integration
+BDE_CORE_BRANCH=remotes/origin/review/2015-opensource-baseline
 BDE_BB_BRANCH=remotes/origin/dev-integration
 
 BSL_TYPE=internal
 
-CORE_UORS="bsl bdl"
+CORE_UORS="bsl bdl bbl"
 BB_UORS=""
 
 ALL_UORS="$CORE_UORS"
