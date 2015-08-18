@@ -182,8 +182,18 @@ echo "    ================================"
 mkdir -p build
 cd       build
 
+mkdir -p logs
+
+ROBOLOG=logs/build.$(hostname).$(date +"%Y%m%d-%H%M%S").log
+
 DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"      \
     time /opt/swt/install/make-3.82/bin/make --no-print-directory -j8 -k     \
     -f ../trunk/etc/buildlibs.mk INSTALLLIBDIR=$(pwd)/lib/              \
     TARGET=install robo_prebuild_libs subdirs 2>&1                      \
-    | tee logs/build.$(hostname).$(date +"%Y%m%d-%H%M%S").log
+    | tee $ROBOLOG
+
+echo "    ===================================="
+echo "    ======== ROBO ERROR SUMMARY ========"
+echo "    ===================================="
+
+grep -e '[Ee]rror:' -e '(S)' -e ' Error ' $ROBOLOG
