@@ -53,7 +53,7 @@ if test -d /opt/swt/bin
 then
     for OVERRIDE in \
         /opt/swt/bin/readlink /opt/swt/bin/tar /opt/swt/bin/gmake \
-        /opt/swt/bin/findAleksandr Sheynin
+        /opt/swt/bin/find
     do
         PATH=$(/usr/bin/dirname $(/opt/swt/bin/readlink "$OVERRIDE")):$PATH
     done
