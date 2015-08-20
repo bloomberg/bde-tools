@@ -132,10 +132,12 @@ echo =========================================
 
 time $RETRY dpkg-distro-dev buildall -j 12 -k
 
-if [ $? -ne 0 ]
-then \
-    echo WARNING: Failure in buildall step, ignoring it
-fi
+# if [ $? -ne 0 ]
+# then \
+#     echo WARNING: Failure in buildall step, ignoring it
+# fi
+
+echo "Ignoring failure"
 
 #BINARY_PACKAGES=$(grep -i '^Package:' source/b*/debian/control   \
 #                | awk '{print $NF}'                              \
@@ -149,13 +151,17 @@ echo =========================================
 echo ======= REFROOT-INSTALL PHASE ===========
 echo =========================================
 
-echo "Y" | time dpkg-refroot-install --select robobuild-meta
+DISTRIBUTION_REFROOT=$DPKG_LOCATION/refroot/$(dpkg --print-architecture)
+export DISTRIBUTION_REFROOT
 
-if [ $? -ne 0 ]
-then \
-    echo FATAL: Failure in dpkg-refroot-install step
-    exit 1
-fi
+echo "Y" | REFROOT=$DISTRIBUTION_REFROOT \
+                  time dpkg-refroot-install --select robobuild-meta
+
+# if [ $? -ne 0 ]
+# then \
+#     echo FATAL: Failure in dpkg-refroot-install step
+#     exit 1
+# fi
 
 
 echo ================================
