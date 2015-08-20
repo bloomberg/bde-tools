@@ -1,5 +1,21 @@
 #!/opt/bb/bin/bash
 
+# https://cms.prod.bloomberg.com/team/display/sb/DPKG+-+Architecture+Names
+#
+#    Linux-x86_64: amd64
+#    AIX-powerpc: aix6-powerpc
+#    SunOS-sparc: solaris10-sparc
+
+ARCH_FOR_DPKG=$(/opt/bb/bin/perl -e'
+    my %dpkg_arch_for_uname = (
+        SunOS => "solaris10-sparc"
+      , AIX   => "aix6-powerpc"
+      , Linux => "amd64"
+    );
+
+    print $dpkg_arch_for_uname{$ARGV[0]}
+    ' $(/opt/bb/bin/uname))
+
 if [[ -z "$WORKSPACE" ]]
 then \
     echo Must specify WORKSPACE environment variable
@@ -65,11 +81,8 @@ fi
 
 #END   Copied from devgit:deveng/chimera contrib/dpkg
 
-if [[ ! -d data ]]
-then \
-    echo Initializing DPKG distro - should be needed only once
-    dpkg-distro-dev init --distribution=unstable .
-fi
+echo Initializing DPKG distro for $ARCH_FOR_DPKG
+dpkg-distro-dev init --distribution=unstable --arch=$ARCH_FOR_DPKG .
 
 echo ====================================
 echo ======= DPKG SCAN AND RMLOCK =======
