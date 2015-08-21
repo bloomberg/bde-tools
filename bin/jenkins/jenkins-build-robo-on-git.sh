@@ -65,9 +65,21 @@ fi
 
 #END   Copied from devgit:deveng/chimera contrib/dpkg
 
+DPKG_ARCH=$(dpkg --print-architecture)
+
+# We need EXTRA_ARCH on non-amd platforms so "Architecture: all" packages can
+# build there.
+EXTRA_ARCH=""
+
+if [ "$DPKG_ARCH" != "amd64" ]
+then
+    EXTRA_ARCH="--arch=amd64"
+fi
+
 echo Initializing DPKG distro for arch $(dpkg --print-architecture)
-dpkg-distro-dev init --distribution=unstable\
-                     --arch=$(dpkg --print-architecture)\
+dpkg-distro-dev init --distribution=unstable             \
+                     --arch=$(dpkg --print-architecture) \
+                     $EXTRA_ARCH                         \
                      .
 
 echo ====================================
