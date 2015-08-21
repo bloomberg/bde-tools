@@ -204,7 +204,7 @@ mkdir -p logs
 ROBOLOG=logs/build.$(hostname).$(date +"%Y%m%d-%H%M%S").log
 
 DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"      \
-    time /opt/swt/install/make-3.82/bin/make --no-print-directory -j12 -k \
+    time /opt/swt/install/make-3.82/bin/make --no-print-directory -j20 -k \
     -f ../trunk/etc/buildlibs.mk INSTALLLIBDIR=$(pwd)/lib/              \
     TARGET=install robo_prebuild_libs subdirs 2>&1                      \
     | tee $ROBOLOG
