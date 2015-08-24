@@ -108,7 +108,7 @@ def get_ufid_cmdline_options():
           'help': 'the Unified Platform ID (UFID) identifying the build '
           'configuration (e.g., dbg_mt_exc). '
           'Note that specifying a UFID will overwrite other build '
-          'configuration options such as --library_type.'})
+          'configuration options such as --library_type'})
     ]
 
 
