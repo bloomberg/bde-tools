@@ -173,7 +173,7 @@ def get_win32_os_info_from_cygwin():
 
     # Make the assumption that we are on a X86 system.
     if is_64bit_system():
-        cpu_type = 'amd64'
+        cpu_type = 'x86_64'
     else:
         cpu_type = 'x86'
 
