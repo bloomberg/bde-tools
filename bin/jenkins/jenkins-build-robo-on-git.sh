@@ -98,7 +98,7 @@ echo ====================================
 echo ======= BDE DPKG BUILD PHASE =======
 echo ====================================
 
-for package in $WORKSPACE/source/bde-{oss-,internal-,}tools $WORKSPACE/source/bsl* $WORKSPACE/source/bde-core $WORKSPACE/source/a_cdb2 $WORKSPACE/source/bde-{bb,bdx}
+for package in $WORKSPACE/source/bde-{oss-,internal-,}tools $WORKSPACE/source/bsl* $WORKSPACE/source/bde-core $WORKSPACE/source/a-cdb2 $WORKSPACE/source/bde-{bb,bdx}
 do \
     echo "    ================================"
     echo "    ======= BUILDING $package"
