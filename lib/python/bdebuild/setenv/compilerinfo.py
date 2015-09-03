@@ -82,7 +82,7 @@ def get_config_path():
             localconfig_path)
 
     if path:
-        print('using configuration: %s' % path, file=sys.stderr)
+        print('Using configuration: %s' % path, file=sys.stderr)
         return path
 
 

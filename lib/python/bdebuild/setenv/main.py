@@ -53,7 +53,7 @@ def program():
         command = args[0]
 
     if command not in ('set', 'unset', 'list'):
-        print('Invalid command: %s' % command)
+        print('Invalid command: %s' % command, file=sys.stderr)
         parser.print_help()
         sys.exit(1)
 
@@ -72,19 +72,23 @@ def program():
         sys.exit(0)
 
     # command == 'set'
-
+    info = None
     if options.compiler is None:
         info = compiler_infos[0]
+    elif sysutil.is_int_string(options.compiler):
+        idx = int(options.compiler)
+        if idx < len(compiler_infos):
+            info = compiler_infos[idx]
     else:
-        compiler_key_map = {}
-        for c in compiler_infos:
-            compiler_key_map[c.key()] = c
 
-        if options.compiler in compiler_key_map:
-            info = compiler_key_map[options.compiler]
-        else:
-            list_compilers(compiler_infos)
-            sys.exit(1)
+        for c in compiler_infos:
+            if c.key() == options.compiler:
+                info = c
+
+    if not info:
+        print("Invalid compiler: %s" % options.compiler, file=sys.stderr)
+        list_compilers(compiler_infos)
+        sys.exit(1)
 
     print_envs(options, info)
 
@@ -137,8 +141,8 @@ def print_envs(options, info):
     uplid = optiontypes.Uplid(os_type, os_name, cpu_type, os_ver,
                               info.type_, info.version)
 
-    print('using compiler: %s' % info.description(), file=sys.stderr)
-    print('using ufid: %s' % ufid, file=sys.stderr)
+    print('Using compiler: %s' % info.description(), file=sys.stderr)
+    print('Using ufid: %s' % ufid, file=sys.stderr)
 
     print('export BDE_WAF_UPLID=%s' % uplid)
     print('export BDE_WAF_UFID=%s' % ufid)
@@ -162,7 +166,7 @@ def print_envs(options, info):
             os.environ.get('PREFIX'), uplid)
 
     if install_dir:
-        print('using install directory: %s' % install_dir, file=sys.stderr)
+        print('Using install directory: %s' % install_dir, file=sys.stderr)
         PREFIX = os.path.join(install_dir, id_str)
         if sysutil.unversioned_platform() == 'cygwin':
             PREFIX = sysutil.shell_command('cygpath -m "%s"' % PREFIX).rstrip()
@@ -177,9 +181,10 @@ def print_envs(options, info):
 
 def list_compilers(compiler_infos):
     print('Avaliable compilers:', file=sys.stderr)
-    print(compiler_infos[0].description(), '(default)', file=sys.stderr)
-    print('\n'.join([c.description() for c in compiler_infos[1:]]),
-          file=sys.stderr)
+    print(' 0:', compiler_infos[0].description(), '(default)', file=sys.stderr)
+
+    for idx, c in enumerate(compiler_infos[1:]):
+        print(' %d:' % (idx + 1), c.description(), file=sys.stderr)
 
 
 def _determine_installation_location(prefix, uplid):

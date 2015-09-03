@@ -2,7 +2,6 @@
 """
 
 import collections
-import copy
 
 from bdebuild.common import logutil
 from bdebuild.meta import graphutil

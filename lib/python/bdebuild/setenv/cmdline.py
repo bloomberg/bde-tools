@@ -17,8 +17,8 @@ def get_option_parser():
     usage = """eval $(bde_setwafenv.py [set|list|unset] [-i INSTALL_DIR]
                      [-c COMPILER] [-t UFID])
 
-set: set environment variables (default)
-list: list available compilers
+set:   set environment variables (default)
+list:  list available compilers
 unset: unset environment variables"""
     parser = optparse.OptionParser(usage=usage)
 

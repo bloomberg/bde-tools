@@ -157,7 +157,7 @@ def load_component(name, package_path):
         test_path = base_path + '.t.c'
     else:
         raise blderror.MissingFileError(
-            'Missign source file for header file "%s"' % header_path)
+            'Missing source (cpp) file for header file "%s"' % header_path)
 
     component.has_test_driver = os.path.isfile(test_path)
     return component
