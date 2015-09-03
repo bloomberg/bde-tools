@@ -75,6 +75,12 @@
             },
             {
                 "type": "gcc",
+                "c_path": "/opt/swt/install/gcc-4.5.2/bin/gcc",
+                "cxx_path": "/opt/swt/install/gcc-4.5.2/bin/g++",
+                "version": "4.5.2"
+            },
+            {
+                "type": "gcc",
                 "c_path": "/opt/swt/install/gcc-4.3.2/bin/gcc",
                 "cxx_path": "/opt/swt/install/gcc-4.3.2/bin/g++",
                 "version": "4.3.5"
