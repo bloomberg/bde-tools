@@ -24,7 +24,7 @@ class TestRepoLayout(unittest.TestCase):
         exp_value = repolayout.RepoLayout()
         exp_value.group_dirs = ['groups', 'enterprise', 'wrappers']
         exp_value.app_package_dirs = ['applications']
-        exp_value.stand_alone_package_dirs = ['adapters']
+        exp_value.stand_alone_package_dirs = ['adapters', 'standalones']
         exp_value.third_party_package_dirs = ['third-party']
         exp_value.group_abs_dirs = []
         self.assertEqual(value, exp_value)
