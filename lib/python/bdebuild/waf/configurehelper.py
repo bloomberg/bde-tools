@@ -1,6 +1,7 @@
 """Implement waf.configure operations.
 """
 
+import copy
 import os
 import sys
 
@@ -138,11 +139,38 @@ class ConfigureHelper(object):
         if not verifier.is_success:
             self.ctx.fatal('Repo verification failed.')
 
+    def _configure_distribution_refroot(self):
+        # When the DISTRIBUTION_REFROOT environment variable is set, then
+        # configure waf to consume external libraries from the refroot.  This
+        # is mainly used with the DPKG environment at Bloomberg.
+        if 'DISTRIBUTION_REFROOT' in os.environ:
+            distribution_refroot = os.environ['DISTRIBUTION_REFROOT']
+            self.ctx.msg('Using DISTRIBUTION_REFROOT', distribution_refroot)
+            prefix = os.path.join(distribution_refroot, 'opt', 'bb')
+            lib_path = os.path.join(prefix,
+                                    '64' in self.ufid.flags
+                                    and 'lib64' or 'lib')
+            pkg_config_path = os.path.join(lib_path, 'pkgconfig')
+            if 'PKG_CONFIG_PATH' in os.environ:
+                pkg_config_path += ':' + os.environ['PKG_CONFIG_PATH']
+            os.environ['PKG_CONFIG_PATH'] = pkg_config_path
+            ufid_copy = copy.deepcopy(self.ufid)
+            ufid_copy.flags.discard('64')
+            extra_link_flag = self.ctx.env['LIBPATH_ST'] % os.path.join(
+                lib_path, str(ufid_copy))
+            if 'LINKFLAGS' in self.ctx.env:
+                self.ctx.env['LINKFLAGS'].append(extra_link_flag)
+            else:
+                self.ctx.env['LINKFLAGS'] = [extra_link_flag]
+
+            self.ctx.env['PKG_CONFIG_DEFINES'] = dict(prefix=prefix)
+
     def _configure_external_libs(self):
 
         if len(self.build_config.external_dep) == 0:
             return
 
+        self._configure_distribution_refroot()
         try:
             self.ctx.find_program('pkg-config', var='PKGCONFIG')
         except self.ctx.errors.ConfigurationError:
