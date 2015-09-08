@@ -23,9 +23,9 @@ We had the following goals for the cross-platform build system:
 
 Requirements 1 and 4 meant that ease of customization was an extremely
 important criteria. We chose waf because it had the best overall combination of
-customizability and speed among the tools that were evaluated.
+customizability and speed among the build systems that were evaluated.
 
-We evaluated a few different cross-platform build tools, including `SCons
+We evaluated a few different cross-platform build systems, including `SCons
 <http://www.scons.org/>`_, `waf <https://github.com/waf-project/waf>`_, `CMake
 <http://www.cmake.org/>`_, and `gyp <http://www.cmake.org/>`_.
 
@@ -50,13 +50,14 @@ will never affect the customizations made to waf in a local project.
 Furthermore, waf is also relatively lightweight, being only about 100KB in
 size.
 
-Do I have to be using the BDE libraries to utilize the provided build tools?
-============================================================================
+Do I have to be using the BDE libraries to utilize the provided tools?
+======================================================================
 
-The build tools are designed to work with BDE and libraries and application
-built on top of BDE, but the tools should work for any conforming
-:ref:`bde_repo-top`.  Keep in mind that some options, such as
-``--assert--level``, are specific to building the BDE libraries.
+The tools provided in this repository are designed to work with BDE and
+libraries and application built on top of BDE, but the tools should work for
+any conforming :ref:`bde_repo-top`.  Keep in mind that some options for the
+waf-based build system, such as ``--assert-level``, are specific to building
+the BDE libraries.
 
 .. rubric:: Footnotes
 

@@ -78,8 +78,9 @@ as well as following certain naming conventions:
 - The name of a package should be prefixed with the name of the package group
   and should also be a mnemonic no longer than six characters (e.g.,
   ``bslma``).
-- The name of the component should be prefixed by the name of the package
-  followed an ``_`` (e.g., ``bslma_allocator``).
+- The name of a component should be prefixed by the name of the package in
+  which the component is contained followed an ``_`` (e.g.,
+  ``bslma_allocator``).
 - The name of a stand-alone package should be prefixed with ``a_`` if it's an
   adapter, and ``m_`` if it's an application.
 - All of the names should be in lower case.
@@ -138,8 +139,9 @@ difference being that an application package contains a ``<package>.m.cpp``
 file in which the ``main`` function is defined.
 
 By default, application packages should be located in the ``applications``
-directory, and other types of stand-alone packages can be located in the
-``adapters`` directory.
+directory, adapter packages should be located in the ``adapters`` directory,
+and other types of stand-alone packages can be located in the ``standalones``
+directory.
 
 Non-Conforming Package Types
 ----------------------------
@@ -201,7 +203,7 @@ Here is the default layout configuration:
     {
         "group_dirs": ["groups", "enterprise", "wrappers"],
         "app_package_dirs": ["applications"],
-        "stand_alone_package_dirs": ["adapters"],
+        "stand_alone_package_dirs": ["adapters", "standalones"],
         "third_party_package_dirs": ["third-party"],
         "group_abs_dirs": []
     }
@@ -443,10 +445,6 @@ A wildcard UPLID allows the use of the wildcard symbol, ``*``, as one or
 more parts of the UPLID. When ``*`` is used for a part, any value for
 that part will be matched.
 
-.. index::
-   single: UFID
-
-.. _bde_repo-ufid:
 
 Valid OS Types
 ~~~~~~~~~~~~~~
@@ -481,7 +479,7 @@ Valid Compiler Types
 
 +---------------+------------------------------+
 | Compiler Type | Description                  |
-+---------------+------------------------------+
++===============+==============================+
 | gcc           | gcc compiler                 |
 +---------------+------------------------------+
 | clang         | clang compiler               |
@@ -492,6 +490,11 @@ Valid Compiler Types
 +---------------+------------------------------+
 | cl            | Visual Studio C/C++ compiler |
 +---------------+------------------------------+
+
+.. index::
+   single: UFID
+
+.. _bde_repo-ufid:
 
 UFID
 ````
