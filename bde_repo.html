@@ -109,8 +109,9 @@ long (e.g., <code class="docutils literal"><span class="pre">bsl</span></code>).
 <li>The name of a package should be prefixed with the name of the package group
 and should also be a mnemonic no longer than six characters (e.g.,
 <code class="docutils literal"><span class="pre">bslma</span></code>).</li>
-<li>The name of the component should be prefixed by the name of the package
-followed an <code class="docutils literal"><span class="pre">_</span></code> (e.g., <code class="docutils literal"><span class="pre">bslma_allocator</span></code>).</li>
+<li>The name of a component should be prefixed by the name of the package in
+which the component is contained followed an <code class="docutils literal"><span class="pre">_</span></code> (e.g.,
+<code class="docutils literal"><span class="pre">bslma_allocator</span></code>).</li>
 <li>The name of a stand-alone package should be prefixed with <code class="docutils literal"><span class="pre">a_</span></code> if it&#8217;s an
 adapter, and <code class="docutils literal"><span class="pre">m_</span></code> if it&#8217;s an application.</li>
 <li>All of the names should be in lower case.</li>
@@ -163,8 +164,9 @@ Applications are a special kinds of stand-alone packages, with the main
 difference being that an application package contains a <code class="docutils literal"><span class="pre">&lt;package&gt;.m.cpp</span></code>
 file in which the <code class="docutils literal"><span class="pre">main</span></code> function is defined.</p>
 <p>By default, application packages should be located in the <code class="docutils literal"><span class="pre">applications</span></code>
-directory, and other types of stand-alone packages can be located in the
-<code class="docutils literal"><span class="pre">adapters</span></code> directory.</p>
+directory, adapter packages should be located in the <code class="docutils literal"><span class="pre">adapters</span></code> directory,
+and other types of stand-alone packages can be located in the <code class="docutils literal"><span class="pre">standalones</span></code>
+directory.</p>
 </div>
 <div class="section" id="non-conforming-package-types">
 <h3>Non-Conforming Package Types<a class="headerlink" href="#non-conforming-package-types" title="Permalink to this headline">¶</a></h3>
@@ -213,7 +215,7 @@ depended on that third-party package can be built.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
     <span class="s">&quot;group_dirs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;groups&quot;</span><span class="p">,</span> <span class="s">&quot;enterprise&quot;</span><span class="p">,</span> <span class="s">&quot;wrappers&quot;</span><span class="p">],</span>
     <span class="s">&quot;app_package_dirs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;applications&quot;</span><span class="p">],</span>
-    <span class="s">&quot;stand_alone_package_dirs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;adapters&quot;</span><span class="p">],</span>
+    <span class="s">&quot;stand_alone_package_dirs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;adapters&quot;</span><span class="p">,</span> <span class="s">&quot;standalones&quot;</span><span class="p">],</span>
     <span class="s">&quot;third_party_package_dirs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;third-party&quot;</span><span class="p">],</span>
     <span class="s">&quot;group_abs_dirs&quot;</span><span class="p">:</span> <span class="p">[]</span>
 <span class="p">}</span>
@@ -425,7 +427,7 @@ determine it is to run <code class="docutils literal"><span class="pre">waf</spa
 more parts of the UPLID. When <code class="docutils literal"><span class="pre">*</span></code> is used for a part, any value for
 that part will be matched.</p>
 <div class="section" id="valid-os-types">
-<span id="bde-repo-ufid"></span><span id="index-3"></span><h5>Valid OS Types<a class="headerlink" href="#valid-os-types" title="Permalink to this headline">¶</a></h5>
+<h5>Valid OS Types<a class="headerlink" href="#valid-os-types" title="Permalink to this headline">¶</a></h5>
 <table border="1" class="docutils">
 <colgroup>
 <col width="13%" />
@@ -484,10 +486,12 @@ that part will be matched.</p>
 <col width="33%" />
 <col width="67%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>Compiler Type</td>
-<td>Description</td>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Compiler Type</th>
+<th class="head">Description</th>
 </tr>
+</thead>
+<tbody valign="top">
 <tr class="row-even"><td>gcc</td>
 <td>gcc compiler</td>
 </tr>
@@ -508,7 +512,7 @@ that part will be matched.</p>
 </div>
 </div>
 <div class="section" id="ufid">
-<h4>UFID<a class="headerlink" href="#ufid" title="Permalink to this headline">¶</a></h4>
+<span id="bde-repo-ufid"></span><span id="index-3"></span><h4>UFID<a class="headerlink" href="#ufid" title="Permalink to this headline">¶</a></h4>
 <p>The third field of an option rule is a UFID. UFID stands for Unified
 Flag ID. It is used to identify the configuration used to build the
 repo. It comprises one or more flags. The following flags are

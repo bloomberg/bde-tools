@@ -10,8 +10,8 @@ Use waf to Build BDE
 .. note::
 
    The following instruction assumes that you are running a unix
-   platform. Building on windows is almost equivalent, except you must use the
-   equivalent commands in windows command prompt. For more details, please see
+   platform. Building on windows is similar, except you must use the equivalent
+   commands in windows command prompt. For more details, please see
    :ref:`waf-windows`.
 
 First, clone the bde and bde-tools repositores from `github
