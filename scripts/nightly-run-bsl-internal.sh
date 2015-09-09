@@ -10,7 +10,7 @@ BDE_BB_BRANCH=remotes/origin/dev-integration
 
 BSL_TYPE=internal
 
-CORE_UORS="bsl bdl bbl"
+CORE_UORS="bsl bdl bbl btl bal"
 BB_UORS=""
 
 ALL_UORS="$CORE_UORS"
