@@ -89,15 +89,8 @@ def parse_repo_layout_from_json(file_):
     Raises:
         InvalidConfigFileError: The configuration file is invalid.
     """
-    def ascii_encode_dict(data):
-        new_data = {}
-        for key, value in data.items():
-            new_data[key] = [i.encode('ascii') for i in value]
-
-        return new_data
-
     try:
-        loaded_dict = json.load(file_, object_hook=ascii_encode_dict)
+        loaded_dict = json.load(file_)
     except ValueError as e:
         raise blderror.InvalidConfigFileError('Invalid .bdelayoutconfig: %s' %
                                               e.message)
