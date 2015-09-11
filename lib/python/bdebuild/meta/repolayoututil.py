@@ -89,8 +89,22 @@ def parse_repo_layout_from_json(file_):
     Raises:
         InvalidConfigFileError: The configuration file is invalid.
     """
+
+    def encode_dict(data):
+        new_data = {}
+        for key, value in data.items():
+            # Waf Node API requires String objects
+            if not isinstance(key, str):
+                new_data[key.encode('utf-8')] = [i.encode('utf-8')
+                                                 for i in value]
+            else:
+                new_data[key] = value
+
+        return new_data
+
     try:
-        loaded_dict = json.load(file_)
+        loaded_dict = json.load(file_, object_hook=encode_dict)
+
     except ValueError as e:
         raise blderror.InvalidConfigFileError('Invalid .bdelayoutconfig: %s' %
                                               e.message)
