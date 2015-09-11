@@ -51,25 +51,40 @@
 (defun bde-c-style--indent-statement-block-intro (langelem)
   "Return the appropriate indent for the start of a statement block.
 
-The default identation is is '+' (1 basic offset), unless we are in
-a switch statement, in which case the indentation is set to
-'*' (half basic offset).
+- The default indentation is is '+' (1 basic offset).
+- Unless:
+  - This is a case statement in a switch.  The indentation of this statement
+    will be set to '*' (half basic offset).
+  - This is a nested for-loop declaration, whose parent for-loop is immediately
+    above this line.  The indentation of this statement will be set to 0.
 
-Example:
-
+Examples:
+..
 switch(val) {
   case 100: {
-    return 1;
-  } break;
+     return 1;
+  }  break;
   default: {
-    return 0;
-  } break;
+     return 0;
+  }  break;
 }
+
+for (int i = 0; i < 100; ++i) {
+for (int j = 0; j < 100; ++j) {   // No extra indentation for the second 'for'
+}
+}
+..
 "
   (save-excursion
     (goto-char (c-langelem-pos langelem))
     (if (looking-at "\\(case\\|default\\)")
-        '* '+)))
+        '*
+      (if (looking-at "for")
+          (progn
+            (forward-line 1)
+            (if (looking-at "\\s-*for")
+                0 '+))
+        '+))))
 
 (defun bde-c-style--under-function-member-p (class-elem top-elem)
   "Return t if point is directly under a function member.
