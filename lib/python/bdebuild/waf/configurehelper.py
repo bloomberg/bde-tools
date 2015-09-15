@@ -105,6 +105,24 @@ class ConfigureHelper(object):
             self.ctx.options.lib_dir,
             self.ctx.options.lib_suffix)
 
+        # The .pc files should be UFID neutral when installed to the DPKG
+        # environment in Bloomberg.  I.e., a single .pc file supports multiple
+        # UFID-specific types of a library.  By default, the installed .pc file
+        # points to the release library.  A client can select a different
+        # library type (e.g., dbg_mt_exc_safe) by prepending an -L linker flag
+        # pointing to that particular type.  Here, we remove exported macro
+        # definitions that are specific to any single UFID library type.
+        if (self.ctx.options.use_dpkg_install and
+                'bsl' in self.build_config.package_groups):
+            pg = self.build_config.package_groups['bsl']
+            remove_flags = []
+            for f in pg.flags.export_flags:
+                if (f.find('BDE_BUILD_TARGET') != -1 or
+                        f.find('BSL_OVERRIDES_STD') != -1):
+                    remove_flags.append(f)
+            for f in remove_flags:
+                pg.flags.export_flags.remove(f)
+
         self.ctx.msg('Use flat include directory',
                      'yes' if self.install_config.is_flat_include else 'no')
         self.ctx.msg('Lib install directory', self.install_config.lib_dir)
