@@ -181,10 +181,11 @@ def print_envs(options, info):
 
 def list_compilers(compiler_infos):
     print('Avaliable compilers:', file=sys.stderr)
-    print(' 0:', compiler_infos[0].description(), '(default)', file=sys.stderr)
 
-    for idx, c in enumerate(compiler_infos[1:]):
-        print(' %d:' % (idx + 1), c.description(), file=sys.stderr)
+    for idx, c in enumerate(compiler_infos[0:]):
+        print(' %d:' % (idx), c.description(),
+              '(default)' if idx == 0 else '', file=sys.stderr)
+        print('     CXX: %s  CC: %s' % (c.cxx_path, c.c_path), file=sys.stderr)
 
 
 def _determine_installation_location(prefix, uplid):

@@ -129,10 +129,10 @@ def make_ufid_from_cmdline_options(opts):
         ufid = optiontypes.Ufid.from_str(opts.ufid)
         if not optiontypes.Ufid.is_valid(ufid.flags):
             raise blderror.InvalidUfidError(
-                'Invalid UFID specified, each part of a UFID must be '
+                'The UFID, "%s", is invalid.  Each part of a UFID must be '
                 'in the following list of valid flags: %s.' %
-                ", ".join(
-                    sorted(optiontypes.Ufid.VALID_FLAGS.keys())))
+                (opts.ufid, ", ".join(sorted(
+                    optiontypes.Ufid.VALID_FLAGS.keys()))))
         return ufid
 
     ufid_map = {
