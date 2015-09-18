@@ -88,16 +88,20 @@ def get_ufid_cmdline_options():
           'choices': ('static', 'shared'),
           'help': 'the type of libraries to build (shared/static) '
           "[default: %default]"}),
-        (('assert-level',),
-         {'type': 'choice',
-          'default': 'none',
-          'choices': ('none', 'safe', 'safe2'),
-          'help': 'bsls_assert level (none/safe/safe2) '
-          "[default: %default]"}),
         (('noexception',),
          {'action': 'store_true',
           'default': False,
           'help': 'disable exception support'}),
+        (('safe',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BDE_BUILD_TARGET_SAFE" as described in '
+          'the component-level documentation of bsls_assert'}),
+        (('safe2',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BDE_BUILD_TARGET_SAFE_2" as described in '
+          'the component-level documentation of bsls_assert'}),
         (('cpp11',),
          {'action': 'store_true',
           'default': False,
@@ -138,7 +142,8 @@ def make_ufid_from_cmdline_options(opts):
     ufid_map = {
         'abi_bits': {'64': '64'},
         'build_type': {'debug': 'dbg', 'release': 'opt'},
-        'assert_level': {'safe': 'safe', 'safe2': 'safe2'},
+        'safe': {True: 'safe'},
+        'safe2': {True: 'safe2'},
         'cpp11': {True: 'cpp11'},
         'noexception': {False: 'exc'},
         'library_type': {'shared': 'shr'}

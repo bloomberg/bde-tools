@@ -178,13 +178,18 @@ Configure Options
   Control whether the build system produces 32-bit x86 (``32``) or 64-bit
   x86\_64 (``64``) object files and libraries.
 
-- ``--assert-level``
+- ``--safe``
 
-  choices: ``none`` (default), ``safe``, ``safe2``
+  Use safe asserts by defining the macro ``BDE_BUILD_TARGET_SAFE``, which
+  enables additional debugging code in the libraries. See the component level
+  documentation in ``bsls_assert.h`` for more details.
 
-  Control the level of "Safe mode" builds. "Safe mode" enables additional
-  debugging code in the libraries. See the component level documentation in
-  ``bsls_assert.h`` for more details on Safe mode.
+- ``--safe2``
+
+  Use binary incompatible safe asserts by defining the macro
+  ``BDE_BUILD_TARGET_SAFE_2``.  This option is distinct from ``--safe``, and
+  both options can be enabled together or separately. See the component level
+  documentation in ``bsls_assert.h`` for more details.
 
 - ``--build-type`` or ``-b``
 
