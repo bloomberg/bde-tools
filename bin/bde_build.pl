@@ -1758,12 +1758,8 @@ sub makeMakefile ($@) {
         @build_list = $pkg->getMembers();
     }
     unless (@build_list) {
-        if (isApplication($pkg)) {
-            warning("no components found for $pkg");
-        } else {
-            error("no components found for $pkg");
-            return 2;
-        }
+        warning("no components found for $pkg");
+        return;
     }
     # look for extra source files
     my $extrasrcinfo = calculateExtraSources($options,$pkg,@build_list);
