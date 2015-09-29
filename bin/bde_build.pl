@@ -1758,7 +1758,109 @@ sub makeMakefile ($@) {
         @build_list = $pkg->getMembers();
     }
     unless (@build_list) {
-        warning("no components found for $pkg");
+        warning("no components found for $pkg - generating no-op makefile");
+        my $FMK=new IO::File;
+        retry_open($FMK, "> $dir${FS}$makefile")
+            or fatal "Cannot create $dir${FS}$makefile: $!\n";
+
+        print $FMK <<'EMPTY_MAKEFILE' ;
+
+# $pkg has no components - this is a special empty no-op makefile.
+
+.PHONY: all test install install_library install_include \
+        uninstall_library uninstall_include preprocess_package_include \
+        install_package install_package_library install_package_include \
+        uninstall_package uninstall_package_library uninstall_package_include\
+        install_group install_group_library install_group_include \
+        uninstall_group uninstall_group_library uninstall_group_include \
+        lib clean cleancache realclean build_test \
+        build_package_objects build_package_test_objects \
+        build_package_library preprocess_package_include noop
+
+all: test install
+
+install: install_package install_group
+
+install_library: install_package_library install_group_library
+
+install_include: install_package_include install_group_include
+
+uninstall: uninstall_package uninstall_group
+
+uninstall_lib: uninstall_package_library uninstall_group_library
+
+uninstall_include: uninstall_package_include uninstall_group_include
+
+noop:
+
+#--- Build Package
+
+preprocess_package_include:
+
+build:
+
+build_package_library:
+
+build_package_objects:
+
+build_package_test_objects:
+
+#--- Install Package
+
+install_package: install_package_library install_package_include
+
+install_package_include:
+
+
+install_package_library:
+
+#--- Uninstall Package
+
+uninstall_package:
+
+uninstall_package_include:
+
+uninstall_package_library:
+
+#--- Install (Package to) Group
+
+install_group:
+
+install_group_include:
+
+
+install_group_library:
+
+#--- Uninstall (Package from) Group
+
+uninstall_group:
+
+uninstall_group_include:
+
+uninstall_group_library:
+
+#--- Clean!
+
+clean:
+
+clean.using_relative_paths:
+
+cleancache:
+
+realclean:
+
+cleandir:
+
+cleanalldir:
+
+#--- Tests and Checks
+
+build_test:
+
+test:
+
+EMPTY_MAKEFILE
+
         return;
     }
     # look for extra source files
