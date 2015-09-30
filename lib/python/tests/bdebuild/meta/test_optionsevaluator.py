@@ -44,7 +44,6 @@ unix- dbg K2 = V3
 >> unix- _ K1 = V6
 << unix- _ K1 = V7
 -- unix- _ K1 = V8
-!! unix- _ XLC_INTERNAL_PREFIX1 = IGNORED
 !! unix- _ BDE_COMPILER_FLAG = gcc
 !! windows- _ BDE_COMPILER_FLAG = msvc
 !! unix-*-*-*-def _ K3 = DEF_MATCH
@@ -68,7 +67,6 @@ unix- dbg K2 = V3
         expected_results = {
             'K1': 'V8 V7V1 V5V6',
             'K2': 'V2 V8 V7V1 V5V6 V3',
-            'K3': 'DEF_MATCH',
             'K5': 'K5_VAL',
             'BDE_COMPILER_FLAG': 'gcc'
         }

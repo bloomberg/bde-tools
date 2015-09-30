@@ -10,12 +10,6 @@ from bdebuild.meta import optionsutil
 from bdebuild.common import sysutil
 from bdebuild.common import logutil
 
-# The default compiler is set by an option with the key 'BDE_COMPILER_FLAG'. If
-# this option exist any uplid having the value 'def' in its compiler field is
-# equivalent to the value of the said option.  Having this as a global variable
-# is the simplest workaround that I could think of.
-DEFAULT_COMPILER = None
-
 
 class OptionsEvaluator(object):
     """Evaluates a list of option rules.
@@ -46,23 +40,7 @@ class OptionsEvaluator(object):
         """Determine if an option rule matches with the build configuration.
         """
 
-        # These keys are used to preserve backwards compatibility with
-        # bde_build.pl and should be ignored.
-        ignore_keys = ('XLC_INTERNAL_PREFIX1',
-                       'XLC_INTERNAL_PREFIX2',
-                       'AIX_GCC_PREFIX',
-                       'SUN_CC_INTERNAL_PREFIX',
-                       'SUN_GCC_INTERNAL_PREFIX',
-                       'LINUX_GCC_PREFIX',
-                       'WINDOWS_CC_PREFIX',
-                       'RETRY_ON_SIGNAL')
-
-        if option_rule.key in ignore_keys:
-            return False
-
-        global DEFAULT_COMPILER
-        if not optionsutil.match_uplid(self._uplid, option_rule.uplid,
-                                       DEFAULT_COMPILER):
+        if not optionsutil.match_uplid(self._uplid, option_rule.uplid):
             return False
         if not optionsutil.match_ufid(self._ufid, option_rule.ufid):
             return False
@@ -96,10 +74,6 @@ class OptionsEvaluator(object):
 
         key = rule.key
         value = rule.value
-
-        if key == 'BDE_COMPILER_FLAG':
-            global DEFAULT_COMPILER
-            DEFAULT_COMPILER = value
 
         if key not in self.results:
             self.results[key] = value

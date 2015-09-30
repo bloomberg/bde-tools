@@ -172,7 +172,7 @@ def match_ufid(ufid, mask):
     return mask.flags.issubset(ufid.flags)
 
 
-def match_uplid(uplid, mask, default_compiler=None):
+def match_uplid(uplid, mask):
     """Determine if option-rule uplid mask match a uplid configuration.
 
     The mask matches the uplid configuration if:
@@ -193,9 +193,7 @@ def match_uplid(uplid, mask, default_compiler=None):
         return False
 
     if not _match_uplid_str(uplid.comp_type, mask.comp_type):
-        if not (mask.comp_type == 'def' and
-                default_compiler == uplid.comp_type):
-            return False
+        return False
 
     if not all(_match_uplid_ver(getattr(uplid, part), getattr(mask, part)) for
                part in ('os_ver', 'comp_ver')):
