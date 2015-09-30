@@ -479,27 +479,20 @@ $ waf build --target bdlt_date.t --test build"""
                     filtered_cflags.append(f)
             return filtered_cflags
 
-        # The following three variables are set to preserve backwards
-        # compatibility with older versions of wscripts in third-party
-        # directories.
-        self.ctx.env['BDE_THIRD_PARTY_CFLAGS'] = \
-            filter_cflags(self.build_config.default_flags.cflags)
-        self.ctx.env['install_lib_dir'] = self.install_config.lib_dir
-        self.ctx.env['lib_suffix'] = self.install_config.lib_suffix
-
         for tp in self.build_config.third_party_dirs:
-            # By default, Visual Studio uses a single pdb file for all object
-            # files compiled from a particular directory named
-            # vc<vs_version>.pdb.  We want to use a separate pdb file for each
-            # third-party package.  Similar logic for using separate pdb files
-            # for libraries built from package groups and standalone package is
-            # done in the module meta.buildconfigfactory.
             key = 'bde_thirdparty_%s_config' % tp
 
             cflags = filter_cflags(self.build_config.default_flags.cflags)
             cxxflags = filter_cflags(self.build_config.default_flags.cxxflags)
 
             if (self.build_config.uplid.os_type == 'windows' and
+                # By default, Visual Studio uses a single pdb file for all
+                # object files compiled from a particular directory named
+                # vc<vs_version>.pdb.  We want to use a separate pdb file for
+                # each third-party package.  Similar logic for using separate
+                # pdb files for libraries built from package groups and
+                # standalone package is done in the module
+                # meta.buildconfigfactory.
                     self.build_config.uplid.comp_type == 'cl'):
                 tp_unit = self.build_config.third_party_dirs[tp]
                 pdb_option = '/Fd%s\\%s.pdb' % (
