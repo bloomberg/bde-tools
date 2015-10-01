@@ -118,7 +118,8 @@ class ConfigureHelper(object):
             remove_flags = []
             for f in pg.flags.export_flags:
                 if (f.find('BDE_BUILD_TARGET') != -1 or
-                        f.find('BSL_OVERRIDES_STD') != -1):
+                    f.find('BSL_OVERRIDES_STD') != -1 or
+                        f.find('NDEBUG') != -1):
                     remove_flags.append(f)
             for f in remove_flags:
                 pg.flags.export_flags.remove(f)
