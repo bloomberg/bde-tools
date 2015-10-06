@@ -266,7 +266,8 @@ def get_build_flags_from_opts(parser, options, export_options=None,
     cc = options['CC'].split()[1:]
     cxxlink = options['CXXLINK'].split()[1:]
 
-    def load_flags(flags, cxxflags, cflags, ldflags, test_cxxflags):
+    def load_flags(flags, cxxflags, cflags, ldflags, test_cxxflags,
+                   test_cflags):
         # test_flags = buildconfig.BuildFlags()
 
         flags.cxxincludes, flags.cxxflags = parser.partition_cflags(
@@ -278,7 +279,11 @@ def get_build_flags_from_opts(parser, options, export_options=None,
         flags.stlibs, flags.libs, flags.libpaths, flags.linkflags = \
             parser.partition_linkflags(cxxlink + ldflags)
 
-        _, flags.test_cxxflags = parser.partition_cflags(cxx + test_cxxflags)
+        flags.test_cxxincludes, flags.test_cxxflags = parser.partition_cflags(
+            cxx + test_cxxflags)
+
+        flags.test_cincludes, flags.test_cflags = parser.partition_cflags(
+            cc + test_cflags)
 
     def load_export_flags(flags, cxxflags, ldflags):
 
@@ -299,7 +304,8 @@ def get_build_flags_from_opts(parser, options, export_options=None,
                options['COMPONENT_BDEBUILD_CXXFLAGS'].split(),
                options['COMPONENT_BDEBUILD_CFLAGS'].split(),
                options['COMPONENT_BDEBUILD_LDFLAGS'].split(),
-               options['TESTDRIVER_BDEBUILD_CXXFLAGS'].split())
+               options['TESTDRIVER_BDEBUILD_CXXFLAGS'].split(),
+               options['TESTDRIVER_BDEBUILD_CFLAGS'].split())
     if export_options:
         load_export_flags(
             flags,

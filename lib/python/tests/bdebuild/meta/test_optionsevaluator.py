@@ -80,6 +80,7 @@ unix- dbg K2 = V3
         opts_string = """
 !! unix- _ K1 = a \\"`echo 123`\\" b
 !! unix- _ K2 = $(shell echo 123)
+!! unix- _ K3 = $(subst 1,,$(K2))
         """
         opts_file = StringIO(opts_string)
         parser = optionsparser.OptionsParser(opts_file)
@@ -95,8 +96,8 @@ unix- dbg K2 = V3
         ev.evaluate()
 
         expected_results = {
+            'K1': 'a "123" b',
             'K2': '123',
-            'K1': 'a "123" b'
         }
         self.assertEqual(ev.results, expected_results)
 

@@ -18,9 +18,6 @@ class OptionsEvaluator(object):
         results (dict of str to str): Evaluated key value map.
     """
 
-    _OPT_INLINE_COMMAND_RE = re.compile(r'\\"`([^`]+)`\\"')
-    _OPT_INLINE_COMMAND_RE2 = re.compile(r'\$\(shell([^\)]+)\)')
-
     def __init__(self, uplid, ufid, initial_options=None):
         """Initialize the object with a build configuration.
 
@@ -32,9 +29,10 @@ class OptionsEvaluator(object):
         self._uplid = uplid
         self._ufid = ufid
         if initial_options:
-            self.results = copy.deepcopy(initial_options)
+            self.options = copy.deepcopy(initial_options)
         else:
-            self.results = {}
+            self.options = {}
+        self.results = {}
 
     def _match_rule(self, option_rule):
         """Determine if an option rule matches with the build configuration.
@@ -47,6 +45,11 @@ class OptionsEvaluator(object):
 
         return True
 
+    _OPT_INLINE_COMMAND_RE = re.compile(r'\\"`([^`]+)`\\"')
+    _OPT_INLINE_COMMAND_RE2 = re.compile(r'\$\(shell([^\)]+)\)')
+    _OPT_INLINE_SUBST_RE = re.compile(
+        r'\$\(subst ([^,]+),([^,]*),([^\)]+)\)')
+
     def _store_option_rule(self, rule, debug_keys=[]):
         """Store the key and value of an option rule.
         """
@@ -56,10 +59,21 @@ class OptionsEvaluator(object):
             if match:
                 logutil.info('Accept: %s' % rule)
             else:
-                logutil.warn('Ingore: %s' % rule)
+                logutil.warn('Ignore: %s' % rule)
         if not match:
             return
 
+        # `subst` was a hack to remove a flag from the list of compiler flags
+        # when building test drivers.  This is no longer needed and will be
+        # removed from opts files in BDE. It is explicitly ignored here for
+        # backward compatibliity.
+        if self._OPT_INLINE_SUBST_RE.match(rule.value):
+            if rule.key in debug_keys:
+                logutil.warn('Skipping rule: %s' % rule)
+            return
+
+        # `shell` returns output of a terminal command. It is used as part of a
+        # hack to build bde-bb.
         mc = self._OPT_INLINE_COMMAND_RE.search(rule.value)
         if mc:
             v = rule.value
@@ -75,30 +89,30 @@ class OptionsEvaluator(object):
         key = rule.key
         value = rule.value
 
-        if key not in self.results:
-            self.results[key] = value
+        if key not in self.options:
+            self.options[key] = value
         else:
-            orig = self.results[key]
+            orig = self.options[key]
             if rule.command == optiontypes.OptionCommand.ADD:
                 if orig:
-                    self.results[key] = orig + ' ' + value
+                    self.options[key] = orig + ' ' + value
                 else:
-                    self.results[key] = value
+                    self.options[key] = value
             elif rule.command == optiontypes.OptionCommand.INSERT:
                 if orig:
-                    self.results[key] = value + ' ' + orig
+                    self.options[key] = value + ' ' + orig
                 else:
-                    self.results[key] = value
+                    self.options[key] = value
             elif rule.command == optiontypes.OptionCommand.APPEND:
-                self.results[key] = orig + value
+                self.options[key] = orig + value
             elif rule.command == optiontypes.OptionCommand.PREPEND:
-                self.results[key] = value + orig
+                self.options[key] = value + orig
             elif rule.command == optiontypes.OptionCommand.OVERRIDE:
-                self.results[key] = value
+                self.options[key] = value
 
         if rule.key in debug_keys:
             logutil.info('Update: %s -> %s\n' % (rule.key,
-                                                 self.results[rule.key]))
+                                                 self.options[rule.key]))
 
     def store_option_rules(self, option_rules, debug_keys=[]):
         """Store the keys and values of a list of option rules for evaluation.
@@ -109,6 +123,7 @@ class OptionsEvaluator(object):
     def clear(self):
         """Clear all stored key values.
         """
+        self.options.clear()
         self.results.clear()
 
     def evaluate(self, debug_keys=[]):
@@ -117,17 +132,26 @@ class OptionsEvaluator(object):
 
         def evaluate_key(key):
             if key in self.results:
-                self.results[key] = re.sub(
+                return self.results[key]
+            elif key in self.options:
+                result = re.sub(
                     r'(\$\((\w+)\))',
                     lambda m: evaluate_key(m.group(2)),
-                    self.results[key])
+                    self.options[key])
+
+                self.results[key] = result
                 return self.results[key]
             elif key in os.environ:
-                return os.environ[key]
+                logutil.warn(
+                    'Using the environment variable "%s" as an option key',
+                    key)
+                self.results[key] = os.environ[key]
+                return self.results[key]
             return ''
 
-        for key in self.results:
+        for key in self.options:
             self.results[key] = evaluate_key(key)
+
             if key in debug_keys:
                 logutil.info('%s: %s' % (key, self.results[key]))
 

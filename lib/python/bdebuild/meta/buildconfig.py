@@ -59,10 +59,13 @@ class BuildFlags(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
         self.libpaths = None
         self.linkflags = None
         self.cflags = None
-        self.cxxflags = None
         self.cincludes = None
+        self.cxxflags = None
         self.cxxincludes = None
+        self.test_cflags = None
+        self.test_cincludes = None
         self.test_cxxflags = None
+        self.test_cxxincludes = None
 
 
 class PackageGroupBuildConfig(mixins.BasicEqualityMixin):
