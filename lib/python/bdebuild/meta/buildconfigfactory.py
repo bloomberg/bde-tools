@@ -98,10 +98,19 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
         # to preserve the behavior with bde_build (older version of the build
         # tool).  Note that we cannot cache intermediate results because later
         # option rules may change the results from the preivous rule.
+
+        if uor.type_ == repounits.UnitType.GROUP:
+            uor_bc = buildconfig.PackageGroupBuildConfig()
+        elif uor.type_ in repounits.UnitTypeCategory.PACKAGE_STAND_ALONE_CAT:
+            uor_bc = buildconfig.StdalonePackageBuildConfig()
+        else:
+            assert(False)
+
         for level in dep_levels:
             for dep_name in sorted(level):
-                if dep_name not in build_config.external_dep and \
-                   dep_name not in build_config.third_party_dirs:
+                if dep_name in build_config.external_dep:
+                    uor_bc.external_dep.add(dep_name)
+                elif dep_name not in build_config.third_party_dirs:
                     dep_uor = uor_map[dep_name]
                     oe.store_option_rules(dep_uor.cap)
                     oe.store_option_rules(dep_uor.defs)
@@ -120,19 +129,12 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
             oe.results['BDE_CXXFLAGS'] += pdb_option
             oe.results['BDE_CFLAGS'] += pdb_option
 
-        if uor.type_ == repounits.UnitType.GROUP:
-            uor_bc = buildconfig.PackageGroupBuildConfig()
-        elif uor.type_ in repounits.UnitTypeCategory.PACKAGE_STAND_ALONE_CAT:
-            uor_bc = buildconfig.StdalonePackageBuildConfig()
-        else:
-            assert(False)
-
         uor_bc.name = uor.name
         uor_bc.path = uor.path
         uor_bc.doc = uor.doc
         uor_bc.version = uor.version
         uor_bc.dep = uor.dep - build_config.external_dep
-        uor_bc.external_dep = uor.dep & build_config.external_dep
+        uor_bc.external_dep.union(uor.dep & build_config.external_dep)
 
         # Store options from dependencies, options for exports, and internal
         # options separately
