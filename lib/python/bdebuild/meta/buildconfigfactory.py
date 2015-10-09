@@ -126,8 +126,8 @@ def make_build_config(repo_context, build_flags_parser, uplid, ufid,
             # code below is a bit hackish.
             pdb_option = ' /Fd%s\\%s.pdb' % (
                 os.path.relpath(uor.path, build_config.root_path), uor.name)
-            oe.results['BDE_CXXFLAGS'] += pdb_option
-            oe.results['BDE_CFLAGS'] += pdb_option
+            oe.options['BDE_CXXFLAGS'] += pdb_option
+            oe.options['BDE_CFLAGS'] += pdb_option
 
         uor_bc.name = uor.name
         uor_bc.path = uor.path
