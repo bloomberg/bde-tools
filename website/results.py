@@ -3,6 +3,10 @@
 import bdetools_website_startup
 
 connection = bdetools_website_startup.sqlite3.connect(bdetools_website_startup.db())
+
+# Make connection resistant to invalid utf-8
+connection.text_factory = str
+
 cursor = connection.cursor()
 
 bdetools_website_startup.print_title_row("<H1 align=\"center\">Results from %s</H1>" % bdetools_website_startup.db(),

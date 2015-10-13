@@ -146,6 +146,10 @@ if bdetools_website_startup.db() is None:
     bdetools_website_startup.sys.exit(0)
 
 connection = bdetools_website_startup.sqlite3.connect(bdetools_website_startup.db())
+
+# Make connection resistant to invalid utf-8
+connection.text_factory = str
+
 cursor = connection.cursor()
 
 cursor.execute("SELECT * FROM aggregated_results_at_uor_name_level")
