@@ -136,7 +136,7 @@ print "</STYLE>"
 print "</HEAD>"
 print "<BODY class=\"default\">"
 
-bdetools_website_startup.print_title_row("<H1 align=\"center\">Results from %s - %s </H1>" % (
+bdetools_website_startup.print_title_row("<H1>Results from %s - %s </H1>" % (
     bdetools_website_startup.date(), bdetools_website_startup.branch()), "summary.py")
 
 if bdetools_website_startup.db() is None:
@@ -146,6 +146,10 @@ if bdetools_website_startup.db() is None:
     bdetools_website_startup.sys.exit(0)
 
 connection = bdetools_website_startup.sqlite3.connect(bdetools_website_startup.db())
+
+# Make connection resistant to invalid utf-8
+connection.text_factory = str
+
 cursor = connection.cursor()
 
 cursor.execute("SELECT * FROM aggregated_results_at_uor_name_level")
