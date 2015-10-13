@@ -177,22 +177,25 @@ def print_title_row(title, page):
        links to the specified 'page' for the previous and next dates.
     """
 
-    print "<TABLE class=\"noborders\" ALIGN=\"center\" STYLE=\"width:75em;\">"
+    #print "<TABLE class=\"noborders\" ALIGN=\"center\" STYLE=\"width:75em;\">"
+    print "<TABLE ALIGN=\"center\" STYLE=\"width:75em;\">"
 
     print "<TR>"
-
-    print  "<TD ALIGN=\"CENTER\">%s</TD>" % title
-
+    print  "<TD COLSPAN=5 ALIGN=\"CENTER\">%s</TD>" % title
     print "</TR>"
+
     print "<TR>"
-    print "<TD ALIGN=\"LEFT\"><A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Previous Date</A></TD>" % (
+
+    print "<TD>"
+    print "<A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Previous Date</A>" % (
         page,
         get_branch_date_params_string(dateParm=get_prev_date()),
         get_params_string()
     )
+    print "</TD>"
 
     print "<TD>"
-    print "<A ALIGN=\"LEFT\" HREF=\"%s?%s;%s\" TARGET=\"_blank\">Nextrel</A>" % (
+    print "<A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Nextrel</A>" % (
         page,
         get_branch_date_params_string(branchParm="nextrel"),
         get_params_string()
@@ -200,7 +203,7 @@ def print_title_row(title, page):
     print "</TD>"
 
     print "<TD>"
-    print "<A ALIGN=\"CENTER\" HREF=\"%s?%s;%s\" TARGET=\"_blank\">Dev</A>" % (
+    print "<A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Dev</A>" % (
         page,
         get_branch_date_params_string(branchParm="dev"),
         get_params_string()
@@ -208,18 +211,20 @@ def print_title_row(title, page):
     print "</TD>"
 
     print "<TD>"
-    print "<A ALIGN=\"RIGHT\" HREF=\"%s?%s;%s\" TARGET=\"_blank\">OSS</A>" % (
+    print "<A HREF=\"%s?%s;%s\" TARGET=\"_blank\">OSS</A>" % (
         page,
         get_branch_date_params_string(branchParm="bslintdev"),
         get_params_string()
     )
     print "</TD>"
 
-    print "<TD ALIGN=\"RIGHT\"><A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Next Date</A></TD>" % (
+    print "<TD>"
+    print "<A HREF=\"%s?%s;%s\" TARGET=\"_blank\">Next Date</A>" % (
         page,
         get_branch_date_params_string(dateParm=get_next_date()),
         get_params_string()
     )
+    print "</TD>"
 
     print "</TR>"
 

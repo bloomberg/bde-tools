@@ -136,7 +136,7 @@ print "</STYLE>"
 print "</HEAD>"
 print "<BODY class=\"default\">"
 
-bdetools_website_startup.print_title_row("<H1 align=\"center\">Results from %s - %s </H1>" % (
+bdetools_website_startup.print_title_row("<H1>Results from %s - %s </H1>" % (
     bdetools_website_startup.date(), bdetools_website_startup.branch()), "summary.py")
 
 if bdetools_website_startup.db() is None:
