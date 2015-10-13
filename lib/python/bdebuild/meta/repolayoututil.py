@@ -51,7 +51,8 @@ def get_repo_layout(repo_root_path):
             repo_layout.group_dirs = ['groups', 'enterprise', 'wrappers']
             repo_layout.app_package_dirs = ['applications']
             repo_layout.stand_alone_package_dirs = ['adapters', 'standalones']
-            repo_layout.third_party_package_dirs = ['third-party']
+            repo_layout.third_party_package_dirs = ['thirdparty',
+                                                    'third-party']
             repo_layout.group_abs_dirs = []
 
         return repo_layout, None
