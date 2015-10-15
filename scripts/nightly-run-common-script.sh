@@ -39,6 +39,10 @@ BDE_BB_GIT_REPO=/home/bdebuild/bs/bde-bb-${BUILD_TYPE}
 
 BDE_BDX_GIT_REPO=/home/bdebuild/bs/bde-bdx-${BUILD_TYPE}
 
+BDE_OSS_TOOLS_REPO=/home/bdebuild/bs/bde-oss-tools-${BUILD_TYPE}
+
+BDE_INTERNAL_TOOLS_REPO=/home/bdebuild/bs/bde-internal-tools-${BUILD_TYPE}
+
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
 LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 
@@ -121,6 +125,22 @@ pushd $BDE_BDX_GIT_REPO 2> /dev/null
 popd
 
 REPO_LIST="$REPO_LIST $BDE_BDX_GIT_REPO"
+
+pushd $BDE_OSS_TOOLS_REPO 2> /dev/null
+/opt/swt/bin/git fetch
+/opt/swt/bin/git reset --hard
+/opt/swt/bin/git checkout origin/master
+popd
+
+REPO_LIST="$REPO_LIST $BDE_OSS_TOOLS_REPO"
+
+pushd $BDE_INTERNAL_TOOLS_REPO 2> /dev/null
+/opt/swt/bin/git fetch
+/opt/swt/bin/git reset --hard
+/opt/swt/bin/git checkout origin/master
+popd
+
+REPO_LIST="$REPO_LIST $BDE_INTERNAL_TOOLS_REPO"
 
 $SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR \
                               $ROOT_REPO $BDE_CORE_GIT_REPO $REPO_LIST \
