@@ -53,7 +53,7 @@ if test -d /opt/swt/bin
 then
     for OVERRIDE in \
         /opt/swt/bin/readlink /opt/swt/bin/tar /opt/swt/bin/gmake \
-        /opt/swt/bin/findAleksandr Sheynin
+        /opt/swt/bin/find
     do
         PATH=$(/usr/bin/dirname $(/opt/swt/bin/readlink "$OVERRIDE")):$PATH
     done
@@ -65,11 +65,22 @@ fi
 
 #END   Copied from devgit:deveng/chimera contrib/dpkg
 
-if [[ ! -d data ]]
-then \
-    echo Initializing DPKG distro - should be needed only once
-    dpkg-distro-dev init --distribution=unstable .
+DPKG_ARCH=$(dpkg --print-architecture)
+
+# We need EXTRA_ARCH on non-amd platforms so "Architecture: all" packages can
+# build there.
+EXTRA_ARCH=""
+
+if [ "$DPKG_ARCH" != "amd64" ]
+then
+    EXTRA_ARCH="--arch=amd64"
 fi
+
+echo Initializing DPKG distro for arch $(dpkg --print-architecture)
+dpkg-distro-dev init --distribution=unstable             \
+                     --arch=$(dpkg --print-architecture) \
+                     $EXTRA_ARCH                         \
+                     .
 
 echo ====================================
 echo ======= DPKG SCAN AND RMLOCK =======
@@ -87,7 +98,7 @@ echo ====================================
 echo ======= BDE DPKG BUILD PHASE =======
 echo ====================================
 
-for package in $WORKSPACE/source/bde-{oss-,internal-,}tools $WORKSPACE/source/bsl* $WORKSPACE/source/bde-core $WORKSPACE/source/a_cdb2 $WORKSPACE/source/bde-{bb,bdx}
+for package in $WORKSPACE/source/bde-{oss-,internal-,}tools $WORKSPACE/source/bsl* $WORKSPACE/source/bde-core $WORKSPACE/source/a-cdb2 $WORKSPACE/source/bde-{bb,bdx}
 do \
     echo "    ================================"
     echo "    ======= BUILDING $package"
@@ -119,10 +130,12 @@ echo =========================================
 
 time $RETRY dpkg-distro-dev buildall -j 12 -k
 
-if [ $? -ne 0 ]
-then \
-    echo WARNING: Failure in buildall step, ignoring it
-fi
+# if [ $? -ne 0 ]
+# then \
+#     echo WARNING: Failure in buildall step, ignoring it
+# fi
+
+echo "Ignoring failure"
 
 #BINARY_PACKAGES=$(grep -i '^Package:' source/b*/debian/control   \
 #                | awk '{print $NF}'                              \
@@ -136,13 +149,17 @@ echo =========================================
 echo ======= REFROOT-INSTALL PHASE ===========
 echo =========================================
 
-echo "Y" | time dpkg-refroot-install --select robobuild-meta
+DISTRIBUTION_REFROOT=$DPKG_LOCATION/refroot/$(dpkg --print-architecture)
+export DISTRIBUTION_REFROOT
 
-if [ $? -ne 0 ]
-then \
-    echo FATAL: Failure in dpkg-refroot-install step
-    exit 1
-fi
+echo "Y" | REFROOT=$DISTRIBUTION_REFROOT \
+                  time dpkg-refroot-install --select robobuild-meta
+
+# if [ $? -ne 0 ]
+# then \
+#     echo FATAL: Failure in dpkg-refroot-install step
+#     exit 1
+# fi
 
 
 echo ================================
@@ -182,8 +199,22 @@ echo "    ================================"
 mkdir -p build
 cd       build
 
+mkdir -p logs
+
+ROBOLOG=logs/build.$(hostname).$(date +"%Y%m%d-%H%M%S").log
+
 DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"      \
-    time /opt/swt/install/make-3.82/bin/make --no-print-directory -j8 -k     \
+    time /opt/swt/install/make-3.82/bin/make --no-print-directory -j20 -k \
     -f ../trunk/etc/buildlibs.mk INSTALLLIBDIR=$(pwd)/lib/              \
     TARGET=install robo_prebuild_libs subdirs 2>&1                      \
-    | tee logs/build.$(hostname).$(date +"%Y%m%d-%H%M%S").log
+    | tee $ROBOLOG
+
+EXIT_STATUS=$?
+
+echo "    ===================================="
+echo "    ======== ROBO ERROR SUMMARY ========"
+echo "    ===================================="
+
+grep -e '[Ee]rror:' -e '(S)' -e ' Error ' $ROBOLOG
+
+exit $EXIT_STATUS
