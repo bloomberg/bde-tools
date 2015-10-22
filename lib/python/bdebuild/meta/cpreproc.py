@@ -18,7 +18,7 @@ class CPreProc(object):
     def __init__(self, defines=None):
         self.defines = defines
 
-    def get_includes(self, file_path):
+    def get_includes(self, file_path, use_test_includes=False):
         includes = []
         with open(file_path) as f:
             lines = [l.rstrip('\n') for l in f.readlines()]
@@ -27,7 +27,7 @@ class CPreProc(object):
             m = self.INCLUDE_RE.match(line)
             if m:
                 comment = m.group(3)
-                if comment == 'for testing only':
+                if not use_test_includes and comment == 'for testing only':
                     continue
 
                 includes.append(m.group(1))
@@ -35,11 +35,12 @@ class CPreProc(object):
         return includes
 
 
-def get_component_digraph(package):
+def get_component_digraph(package, use_test_includes=False):
     """Return a directed graph of the components in a package.
 
     Args:
        package (Package or PackageBuildConfig): A package.
+       use_test_includes: Parse includes in test drivers.
     """
     components = package.components
     c_hs = set(c.header() for c in components)
@@ -51,9 +52,12 @@ def get_component_digraph(package):
     dgraph = {}
     for comp in components:
         h_path = os.path.join(package.path, comp.header())
-        includes = preproc.get_includes(h_path)
+        includes = preproc.get_includes(h_path, use_test_includes)
         cpp_path = os.path.join(package.path, comp.source())
-        includes.extend(preproc.get_includes(cpp_path))
+        includes.extend(preproc.get_includes(cpp_path, use_test_includes))
+        if use_test_includes and comp.has_test_driver:
+            test_path = os.path.join(package.path, comp.test_driver())
+            includes.extend(preproc.get_includes(test_path, use_test_includes))
         dep_c_hs = set(includes) & c_hs
         dep_c_names = set(h_c_map[h] for h in dep_c_hs)
         dgraph[comp.name] = dep_c_names - set([comp.name])

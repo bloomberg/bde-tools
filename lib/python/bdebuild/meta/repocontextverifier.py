@@ -50,7 +50,7 @@ class RepoContextVerifier(object):
         for package in (u for u in self.repo_context.units.values() if
                         u.type_ in repounits.UnitTypeCategory.PACKAGE_CAT):
             logutil.start_msg('Verifying %s' % package.name)
-            digraph = cpreproc.get_component_digraph(package)
+            digraph = cpreproc.get_component_digraph(package, True)
             self._verify_cycles_impl(digraph)
 
     def _verify_cycles_impl(self, digraph):
