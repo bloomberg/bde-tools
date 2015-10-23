@@ -211,6 +211,18 @@ DPKG_DISTRIBUTION="unstable --distro-override=\"$DPKG_LOCATION\"/"      \
 
 EXIT_STATUS=$?
 
+echo "    ========================================"
+echo "    ======== OBJECT FILE ZERO PHASE ========"
+echo "    ========================================"
+
+# The empty-file-but-keep-date.pl script replaces any object or archive
+# argument with a 0-byte file with the same timestamp.  Since we're not
+# attempting any links, this works fine for our test dependency builds.
+
+find $WORKSPACE/robo -name '*.[oa]' -size +1 \
+    | ~mgiroux/bin/parallel -N50 -P20 --verbose \
+              ~mgiroux/bin/empty-file-but-keep-date.pl
+
 echo "    ===================================="
 echo "    ======== ROBO ERROR SUMMARY ========"
 echo "    ===================================="
