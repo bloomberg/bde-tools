@@ -39,6 +39,10 @@ BDE_BB_GIT_REPO=/home/bdebuild/bs/bde-bb-${BUILD_TYPE}
 
 BDE_BDX_GIT_REPO=/home/bdebuild/bs/bde-bdx-${BUILD_TYPE}
 
+BDE_OSS_TOOLS_REPO=/home/bdebuild/bs/bde-oss-tools-${BUILD_TYPE}
+
+BDE_INTERNAL_TOOLS_REPO=/home/bdebuild/bs/bde-internal-tools-${BUILD_TYPE}
+
 BUILD_DIR=/home/bdebuild/bs/build-${BUILD_TYPE}
 LOG_DIR=/home/bdebuild/bs/nightly-logs/${BUILD_TYPE}
 
@@ -71,6 +75,7 @@ ROOT_REPO=
 
 if [ -e $BDE_BSL_GIT_REPO ]
 then \
+    echo Processing BDE_BSL_GIT_REPO $BDE_BSL_GIT_REPO
     pushd $BDE_BSL_GIT_REPO 2> /dev/null
     /opt/swt/bin/git fetch
     /opt/swt/bin/git reset --hard
@@ -87,6 +92,7 @@ fi
 
 if [ -e $A_CDB2_GIT_REPO ]
 then \
+    echo Processing A_CDB2_GIT_REPO $A_CDB2_GIT_REPO
     pushd $A_CDB2_GIT_REPO 2> /dev/null
     /opt/swt/bin/git fetch
     /opt/swt/bin/git reset --hard
@@ -99,6 +105,7 @@ else
 fi
 
 pushd $BDE_CORE_GIT_REPO 2> /dev/null
+echo Processing BDE_CORE_GIT_REPO $BDE_CORE_GIT_REPO
 /opt/swt/bin/git fetch
 /opt/swt/bin/git reset --hard
 /opt/swt/bin/git checkout $BDE_CORE_BRANCH
@@ -107,6 +114,7 @@ popd
 REPO_LIST="$REPO_LIST $BDE_CORE_GIT_REPO"
 
 pushd $BDE_BB_GIT_REPO 2> /dev/null
+echo Processing BDE_BB_GIT_REPO $BDE_BB_GIT_REPO
 /opt/swt/bin/git fetch
 /opt/swt/bin/git reset --hard
 /opt/swt/bin/git checkout $BDE_BB_BRANCH
@@ -115,6 +123,7 @@ popd
 REPO_LIST="$REPO_LIST $BDE_BB_GIT_REPO"
 
 pushd $BDE_BDX_GIT_REPO 2> /dev/null
+echo Processing BDE_BDX_GIT_REPO $BDE_BDX_GIT_REPO
 /opt/swt/bin/git fetch
 /opt/swt/bin/git reset --hard
 /opt/swt/bin/git checkout $BDE_BB_BRANCH
@@ -122,6 +131,27 @@ popd
 
 REPO_LIST="$REPO_LIST $BDE_BDX_GIT_REPO"
 
+pushd $BDE_OSS_TOOLS_REPO 2> /dev/null
+echo Processing BDE_OSS_TOOLS_REPO $BDE_OSS_TOOLS_REPO
+/opt/swt/bin/git fetch
+/opt/swt/bin/git reset --hard
+/opt/swt/bin/git checkout origin/master
+popd
+
+REPO_LIST="$REPO_LIST $BDE_OSS_TOOLS_REPO"
+
+pushd $BDE_INTERNAL_TOOLS_REPO 2> /dev/null
+echo Processing BDE_INTERNAL_TOOLS_REPO $BDE_INTERNAL_TOOLS_REPO
+/opt/swt/bin/git fetch
+/opt/swt/bin/git reset --hard
+/opt/swt/bin/git checkout origin/master
+popd
+
+REPO_LIST="$REPO_LIST $BDE_INTERNAL_TOOLS_REPO"
+
+echo ------------------------------------------------
+echo -------- invoking $SCRIPT_PATH/buildSnapshot.sh
+echo ------------------------------------------------
 $SCRIPT_PATH/buildSnapshot.sh $TARBALL $SNAPSHOT_DIR \
                               $ROOT_REPO $BDE_CORE_GIT_REPO $REPO_LIST \
                          -- \

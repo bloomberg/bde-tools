@@ -119,11 +119,8 @@ done
 for path in $ROOTPATH $(perl -e'foreach my $path (split /:/,$ENV{BDE_PATH}) { print "$path\n"  }')
 do \
     # bde_snapshot.pl has a bug - it will only snapshot default.opts from the -w location.
-    if [[ ( ! -e etc/default.opts ) && ( -e $path/etc/default.opts ) ]]
-    then \
-        rsync -av $path/etc/default*.opts etc/
-        rsync -av $path/etc/bdecompilerconfig etc/
-    fi
+    rsync -av $path/etc/default*.opts etc/
+    rsync -av $path/etc/bdecompilerconfig etc/
 
     for group in bde bdx
     do \

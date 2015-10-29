@@ -224,9 +224,18 @@ find $WORKSPACE/robo -name '*.[oa]' -size +1 \
               ~mgiroux/bin/empty-file-but-keep-date.pl
 
 echo "    ===================================="
+echo "    ======== DPKG ERROR SUMMARY ========"
+echo "    ===================================="
+
+perl -ne'/(EE gmake:.*dpkg-distro-dev-build\] Error \d+)/ or next;
+         print "$1\n" unless $s{$1}++' \
+     $LOGFILE | sort
+
+echo "    ===================================="
 echo "    ======== ROBO ERROR SUMMARY ========"
 echo "    ===================================="
 
-grep -e '[Ee]rror:' -e '(S)' -e ' Error ' $ROBOLOG
+grep -e '[Ee]rror:' -e '(S)' -e ' Error ' $ROBOLOG \
+                                            | grep -v 'warning:.*syntax error:'
 
 exit $EXIT_STATUS

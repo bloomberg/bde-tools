@@ -356,7 +356,7 @@ if ($iamwindows) {
 
 if (!find_waf()) {
     if (!$iamwindows) {
-        $ENV{PATH} = "/opt/bb/bin:$ENV{PATH}:/bbshr/bde/bde-oss-tools/bin:$FindBin::Bin/../../bde-oss-tools/bin:$FindBin::Bin";
+        $ENV{PATH} = "/opt/bb/bin:/bbshr/bde/bde-oss-tools/bin:$ENV{PATH}:$FindBin::Bin/../../bde-oss-tools/bin:$FindBin::Bin";
         $ENV{BDE_PATH}.=":/bbshr/bde/bde-oss-tools:$FindBin::Bin/../../bde-oss-tools";
 
         write_logandverbose "PATH is now $ENV{PATH}";
