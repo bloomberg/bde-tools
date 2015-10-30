@@ -1,0 +1,105 @@
+# This opt file contains rules that are needed by the legacy bde_build.pl or
+# rules used only internally at Bloomberg.  It will be deprecated once the waf
+# build tool is mature.
+
+#==============================================================================
+# Internal Rules
+#==============================================================================
+
+# Provide a way to selectively disable BSL_OVERRIDES_STD. The BSL_STD_FLAG is
+# used by bsl.defs, and the flag is disabled by bsl+bslhdrs.opts to compile the
+# pacakge's test drivers.
+
+!! *  _  BSL_STD_FLAG  =  $(SWITCHCHAR)DBSL_OVERRIDES_STD
+
+windows-        _   LIBPATH_FLAG    = /libpath:
+unix-           _   LIBPATH_FLAG    = -L
+
+unix-  _  INTERNAL_LDFLAGS =  $(LIBPATH_FLAG)/bbsrc/bde/registry/lroot/lib/$(UPLID)
+
+# DRQS 56729929 -- make -fPIC available in pic builds on Linux
+unix-Linux-*-*-gcc      pic  BDE_CXXFLAGS   = -fPIC
+
+# -qtunes optimizes the binary for a particular platform, so the rules below are specific to Bloomberg.
+unix-AIX-*-*-*           _   ARCH_TUNE       = -qarch=pwr5 -qtune=pwr5
+!! unix-AIX-*-*-xlc-11.2 _   ARCH_TUNE       = -qarch=pwr5 -qtune=pwr7
+
+#==============================================================================
+# Integration
+#==============================================================================
+
+# The rules below are used mostly by bde-bb.  E.g., PLINK_ARCH and BDE_WORD_64
+# in e_ipc.defs.
+
+# Portable 64 bit indicators
+
+!! *                       _ BDE_WORD64 =
+!! *                      64 BDE_WORD64 = 64
+
+!! *                       _ BDE_WORD_64 =
+!! *                      64 BDE_WORD_64 = _64
+
+!! *                       _ BDE_32_OR_64 = 32
+!! *                      64 BDE_32_OR_64 = 64
+
+# This macro can be used by units of release that link against external .o
+*                       _       PLINK_ARCH      =
+!! unix-SunOS           _       PLINK_ARCH      = sundev1
+!! unix-AIX             _       PLINK_ARCH      = ibm
+!! unix-Linux           _       PLINK_ARCH      = linux
+
+!! *            _   PLINK_ARCH64        = $(PLINK_ARCH)$(BDE_WORD64)
+!! *            _   PLINK_ARCH_64       = $(PLINK_ARCH)$(BDE_WORD_64)
+!! *            _   PLINK_ARCH32_OR_64  = $(PLINK_ARCH)$(BDE_WORD_32_OR_64)
+!! *            _   PLINK_ARCH_32_OR_64 = $(PLINK_ARCH)_$(BDE_WORD_32_OR_64)
+
+!! *            _   BBSRC       = /bbsrc/proot/include
+!! *            _   BBSRCBBINC  = $(BBSRC)/bbinc
+!! *            _   DEPLOYED_INCLUDE   = $(BBSRC)/00deployed
+!! *            _   DEPBUILD_INCLUDE   = $(BBSRC)/00depbuild
+!! *            _   OFFLONLY_INCLUDE   = $(BBSRC)/00offlonly
+!! *            _   BBINC       = $(BBSRCBBINC)/bbinc
+!! *            _   CINCLUDE    = $(BBSRCBBINC)/Cinclude
+
+# Package-based build refroot computation
+# Note that perl snippet in the commandline extracts the last field from the
+# line.
+unix-*             _ BDE_REFROOT               = $(shell perl -e'exit 1 unless -e "/bbsrc/mkincludes/machindep.defines"' && gmake -f /bbsrc/mkincludes/machindep.defines -f /bbsrc/mkincludes/build_maint.mk print-DISTRIBUTION_REFROOT | perl -a -ne'print pop @F' || echo "NO-SUCH-LOCATION")
+unix-*             _ BDE_LIBREFROOT            = $(BDE_REFROOT)/opt/bb/lib$(BDE_WORD64)
+unix-*             _ BDE_INCREFROOT            = $(BDE_REFROOT)/opt/bb/include
+
+#==============================================================================
+# GCC Rpath
+#==============================================================================
+
+# The gcc compilers installed in the Linux dev machines requires the rpath to
+# be set manually in order for the linkner to pick up the appropriate standard
+# library.
+
+!!  unix-*-*-*-gcc-3.4.6  _   GCC_VER       =  3.4.6
+!!  unix-*-*-*-gcc-4.1.2  _   GCC_VER       =  4.1.2
+!!  unix-*-*-*-gcc-4.2.1  _   GCC_VER       =  4.2.1
+!!  unix-*-*-*-gcc-4.3.0  _   GCC_VER       =  4.3.0
+!!  unix-*-*-*-gcc-4.3.1  _   GCC_VER       =  4.3.1
+!!  unix-*-*-*-gcc-4.3.2  _   GCC_VER       =  4.3.2
+!!  unix-*-*-*-gcc-4.3.4  _   GCC_VER       =  4.3.4
+!!  unix-*-*-*-gcc-4.3.5  _   GCC_VER       =  4.3.5
+!!  unix-*-*-*-gcc-4.5.2  _   GCC_VER       =  4.5.2
+!!  unix-*-*-*-gcc-4.6.1  _   GCC_VER       =  4.6.1
+!!  unix-*-*-*-gcc-4.7.0  _   GCC_VER       =  4.7.0
+!!  unix-*-*-*-gcc-4.7.2  _   GCC_VER       =  4.7.2
+!!  unix-*-*-*-gcc-4.8.1  _   GCC_VER       =  4.8.1
+!!  unix-*-*-*-gcc-4.9.2  _   GCC_VER       =  4.9.2
+
+!!  unix-linux-*-*-gcc-4  _   RPATH_LIBDIR  =  lib
+!!  unix-linux-*-*-gcc-4  64  RPATH_LIBDIR  =  lib64
+
+# we don't want these options for the "built-in" gcc 4.1.2 on RHEL5,
+# so only enable RPATH starting from gcc-4.2
+!!  unix-linux-*-*-gcc-4.2  _  RPATH_FLAGS  =  -Wl,-rpath -Wl,/opt/swt/install/gcc-$(GCC_VER)/$(RPATH_LIBDIR)
+# gcc-4.4 is built-in on RHEL5
+!!  unix-linux-*-*-gcc-4.4  _  RPATH_FLAGS  =
+# Restore gcc-4.2 settings for gcc 4.5 or above
+!!  unix-linux-*-*-gcc-4.5  _  RPATH_FLAGS  =  -Wl,-rpath -Wl,/opt/swt/install/gcc-$(GCC_VER)/$(RPATH_LIBDIR)
+
+unix-Linux-*-*-*        _   DEF_ENDLDFLAGS = $(RPATH_FLAGS)
