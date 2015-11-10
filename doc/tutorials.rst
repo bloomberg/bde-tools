@@ -168,47 +168,55 @@ application will have 1 component `mycomponent` and a `main` located in
    |           `-- myapp.mem
    `-- wscript
 
-myapp.m.cpp
+**myapp.m.cpp**
     This file contains the `main` of the application (as indicated by the 
     `.m.cpp` filename suffix).  Note that is the one artifact containing
     C++ code that is not in a component.  For the moment it contains:
 
 ::
+
    #include <iostream>
    int main()
    {
        std::cout << "hello world" << std::endl;
    }
    
-mycomponent.h/.cpp/.t.cpp
+**mycomponent.h/.cpp/.t.cpp**
     A simple component.  This can be empty for the purposes of illustration.
 
-package
+**package**
     A directory containing :ref:`bde-metadata` for the application.
 
-myapp.dep
-    A list of dependencies for the application (:ref:`Dep-File`).  Currently
-    empty.  An example `dep` file for a project using BDE might be:
+**myapp.dep**
+    A list of dependencies for the application (:ref:`_bde_repo-dep`).  
+    Currently empty.  An example `dep` file for a project using BDE might be:
 
 ::
+
    bsl
    bdl
    bal
    btl
 
-myapp.mem
-    A list of components in the package (:ref:`Mem-File`).  Currently:
+**myapp.mem**
+    A list of components in the package (:ref:`_bde_repo-mem`).  Currently:
 
 ::
+
    mycomponent   # currently the only component
 
 Notice that its possible to configure the top-level directory names (here, 
 `application`) by supplying a `.bdelayoutconfig`.  See 
-:ref:`Customizing The Repository Layout`.
+:ref:`_bde_repo-layout_customize`.
+
+
+Building myapp
+--------------
 
 From the top-level workspace directory we can now run `waf configure`:
 
 :: 
+
    $ waf configure
    ...
    # UORs, inner packages, and components   : 1 0 1
