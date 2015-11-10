@@ -135,6 +135,97 @@ See :ref:`setwafenv-top` for detailed reference.
 
 .. _tutorials-workspace:
 
+Creating a New Application Using Waf
+====================================
+
+The following example demonstrates how to create a simple application `myapp`
+that builds using 'waf'.  
+
+First we create a new directory 'workspace' that will hold our application::
+
+   $ mkdir workspace
+   $ cd workspace
+
+Then we copy the default `wscript` file from `bde-tools`::
+
+   $ cp path/to/bde-tools/share/wscript ./
+
+Then we create a basic physcial organization of directories for our
+application.  A reference for the physical organization is here: 
+:ref:`bde_repo-physical_layout`.  Since this is an application,
+we will create a directory `myapp` under the `applications` directory.  This 
+application will have 1 component `mycomponent` and a `main` located in 
+`myapp.m.cpp`.  The resulting directory structure should look like::
+
+   |-- applications
+   |   `-- myapp
+   |       |-- myapp.m.cpp
+   |       |-- mycomponent.cpp
+   |       |-- mycomponent.h
+   |       |-- mycomponent.t.cpp
+   |       `-- package
+   |           |-- myapp.dep
+   |           `-- myapp.mem
+   `-- wscript
+
+myapp.m.cpp
+    This file contains the `main` of the application (as indicated by the 
+    `.m.cpp` filename suffix).  Note that is the one artifact containing
+    C++ code that is not in a component.  For the moment it contains:
+
+::
+   #include <iostream>
+   int main()
+   {
+       std::cout << "hello world" << std::endl;
+   }
+   
+mycomponent.h/.cpp/.t.cpp
+    A simple component.  This can be empty for the purposes of illustration.
+
+package
+    A directory containing :ref:`bde-metadata` for the application.
+
+myapp.dep
+    A list of dependencies for the application (:ref:`Dep-File`).  Currently
+    empty.  An example `dep` file for a project using BDE might be:
+
+::
+   bsl
+   bdl
+   bal
+   btl
+
+myapp.mem
+    A list of components in the package (:ref:`Mem-File`).  Currently:
+
+::
+   mycomponent   # currently the only component
+
+Notice that its possible to configure the top-level directory names (here, 
+`application`) by supplying a `.bdelayoutconfig`.  See 
+:ref:`Customizing The Repository Layout`.
+
+From the top-level workspace directory we can now run `waf configure`:
+
+:: 
+   $ waf configure
+   ...
+   # UORs, inner packages, and components   : 1 0 1
+
+Notice that `waf configure` is reporting 1 UOR (unit-of-release), which is
+our application, and 1 component.
+
+Then we can build our application::
+
+   $ waf build
+   [5/5] Linking path/to/executable/applications/myapp/myapp
+
+Finally we can run it::
+
+   $ path/to/executable/applications/myapp/myapp
+   hello world
+
 Use waf Workspace to Build Multiple BDE-Style Repositories
 ==========================================================
 
