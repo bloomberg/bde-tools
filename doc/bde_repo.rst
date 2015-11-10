@@ -110,26 +110,26 @@ physical units should have the following structure on the file system:
 ::
 
     <repo_root>
-     |-- groups
-     |-- bsl
-     |   |-- bsls
-     |   |   |-- bsls_ident.h
-     |   |   |-- bsls_ident.cpp
-     |   |   |-- bsls_ident.t.cpp
-     |   |   |-- bsls_util.h
-     |   |   |-- bsls_util.cpp
-     |   |   |-- bsls_util.t.cpp
-     |   |-- bslma
-     |   |   |-- bslma_allocator.h
-     |   |   |-- bslma_allocator.cpp
-     |   |   |-- bslma_allocator.t.cpp
-     |   |   |-- bslma_testallocator.h
-     |   |   |-- bslma_testallocator.cpp
-     |   |   `-- bslma_testallocator.t.cpp
-     `-- bdl
-         |
-         `-- ...
-
+     `-- groups
+         |-- bsl
+         |   |-- bsls
+         |   |   |-- bsls_ident.h
+         |   |   |-- bsls_ident.cpp
+         |   |   |-- bsls_ident.t.cpp
+         |   |   |-- bsls_util.h
+         |   |   |-- bsls_util.cpp
+         |   |   |-- bsls_util.t.cpp
+         |   `-- bslma
+         |       |-- bslma_allocator.h
+         |       |-- bslma_allocator.cpp
+         |       |-- bslma_allocator.t.cpp
+         |       |-- bslma_testallocator.h
+         |       |-- bslma_testallocator.cpp
+         |       `-- bslma_testallocator.t.cpp
+         `-- bdl
+             |
+             `-- ...
+    
 Stand-Alone and Application Packages
 ------------------------------------
 
