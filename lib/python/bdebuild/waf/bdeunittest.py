@@ -56,13 +56,13 @@ class utest(Task.Task):
         Execute the test if the option ``--test run`` has been used.
         """
 
-        run_test = Options.options.test == 'run'
-        if not run_test:
+        skip_test = Options.options.test not in ('run', 'changed')
+        if skip_test:
             return Task.SKIP_ME
 
         ret = super(utest, self).runnable_status()
         if ret == Task.SKIP_ME:
-            if run_test:
+            if Options.options.test == 'run':
                 return Task.RUN_ME
 
         return ret
@@ -304,13 +304,14 @@ def options(ctx):
     grp = ctx.get_option_group('build and install options')
 
     grp.add_option('--test', type='choice',
-                   choices=('none', 'build', 'run'),
+                   choices=('none', 'build', 'run', 'changed'),
                    default='none',
                    help="whether to build and run test drivers "
-                        "(none/build/run) [default: %default]. "
+                        "(none/build/run/changed) [default: %default]. "
                         "none: don't build or run tests, "
                         "build: build tests but don't run them, "
-                        "run: build and run tests",
+                        "run: build and run tests, "
+                        "changed: run rebuilt tests only",
                    dest='test')
 
     grp.add_option('--test-v', type='int', default=0,

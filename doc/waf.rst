@@ -363,12 +363,14 @@ Build Options
 
 - ``--test``
 
-  choices: ``none`` (default), ``build``, ``run``
+  choices: ``none`` (default), ``build``, ``run``, ``changed``
 
-  Control whether to build and run test drivers. Test drivers will not
-  be built if the value is ``none``; they will be only built if the
-  value is ``build``; they will be built and run if the value is
-  ``run``.
+  Control whether to build and run test drivers. Test drivers will not be built
+  if the value is ``none``; they will be only built if the value is ``build``;
+  they will be built and run if the value is ``run``, they will be built and
+  run when required if the value is ``changed``.  Note that the ``changed``
+  option does not re-run a previuosly failed test if it is *not* required to be
+  rebuilt.
 
 - ``--test-v``
 

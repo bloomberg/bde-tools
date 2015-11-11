@@ -84,7 +84,7 @@ class BuildHelper(object):
         else:
             self.libtype_features = ['cxxstlib']
 
-        self.is_run_tests = self.ctx.options.test == 'run'
+        self.is_run_tests = self.ctx.options.test in ('run', 'changed')
         self.is_build_tests = self.is_run_tests or \
             self.ctx.options.test == 'build'
 
