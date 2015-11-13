@@ -97,7 +97,7 @@ To build and run the test drivers, use:
 
 ::
 
-   shell waf build --test run
+   waf build --test run
 
 For additional examples, see `Quick Reference`_.
 
