@@ -48,6 +48,8 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
             ufid_copy = copy.deepcopy(ufid)
             if '64' in ufid_copy.flags:
                 ufid_copy.flags.remove('64')
+            if 'cpp11' in ufid_copy.flags:
+                ufid_copy.flags.remove('cpp11')
             self.pc_dir = os.path.join(lib_dir, 'pkgconfig')
             self.lib_dir = os.path.join(lib_dir, str(ufid_copy))
             self.lib_suffix = ''
