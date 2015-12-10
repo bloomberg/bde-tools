@@ -281,9 +281,12 @@ def configure(ctx):
             ctx.check(cxxflags=['-fprofile-arcs', '-ftest-coverage'],
                       stlib=['gcov'],
                       uselib_store='GCOV', mandatory=True)
-            ctx.find_program('gcov', var='GCOV')
-            ctx.find_program('lcov', var='LCOV')
-            ctx.find_program('genhtml', var='GENHTML')
+            gcov_search_paths = os.environ['PATH'].split(os.pathsep)
+            for gcc_path in ctx.env.CC:
+                gcov_search_paths.insert(0, os.path.dirname(gcc_path))
+            ctx.find_program('gcov', path_list=gcov_search_paths)
+            ctx.find_program('lcov')
+            ctx.find_program('genhtml')
             ctx.env.LCOV = ctx.env.LCOV + ['--gcov-tool',
                                            ctx.env.GCOV[0]]
         else:
