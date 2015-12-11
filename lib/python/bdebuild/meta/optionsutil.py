@@ -14,9 +14,6 @@ from bdebuild.meta import optiontypes
 def get_default_option_rules():
     """Return the default option rules.
 
-    Args:
-        msg_func (func, optional): function to print status messages
-
     Returns:
         list of OptionRule.
 
@@ -102,10 +99,12 @@ def get_ufid_cmdline_options():
           'default': False,
           'help': 'define the macro "BDE_BUILD_TARGET_SAFE_2" as described in '
           'the component-level documentation of bsls_assert'}),
-        (('cpp11',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'enable C++11 support'}),
+        (('cpp-std',),
+         {'type': 'choice',
+          'default': None,
+          'choices': (None, '03', '11'),
+          'help': 'use a C++11 standard version ("03"/"11") '
+                  '[default value depends on compiler]'}),
         (('t', 'ufid'),
          {'type': 'string',
           'default': None,
@@ -114,6 +113,23 @@ def get_ufid_cmdline_options():
           'Note that specifying a UFID will overwrite other build '
           'configuration options such as --library_type'})
     ]
+
+
+def get_default_cpp_std(compiler_type, compiler_version):
+    """Determine the default C++ standard for a particular compiler.
+
+    Args:
+        compiler_type (str): Compiler type.
+        compiler_version (str): Compile version.
+
+    Returns:
+        One of the choices for the option "cpp-std", "11" or "03".
+    """
+
+    if (compiler_type == 'gcc' and compiler_version >= '4.8' or
+        compiler_type == 'clang' and compiler_version >= '3.6'):
+        return "11"
+    return "03"
 
 
 def make_ufid_from_cmdline_options(opts):
@@ -144,7 +160,7 @@ def make_ufid_from_cmdline_options(opts):
         'build_type': {'debug': 'dbg', 'release': 'opt'},
         'safe': {True: 'safe'},
         'safe2': {True: 'safe2'},
-        'cpp11': {True: 'cpp11'},
+        'cpp_std': {'11': 'cpp11'},
         'noexception': {False: 'exc'},
         'library_type': {'shared': 'shr'}
         }

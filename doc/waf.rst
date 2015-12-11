@@ -247,6 +247,13 @@ Configure Options
   Generate coverage report when running unit tests. This is currently only
   supported with gcc, and requires gcov and lcov.
 
+- ``--cpp-std``
+
+  choices: ``03``, ``11`` (default value depend on the compiler)
+
+  Build using the specified standard C++ version.  Note that BDE's support for
+  C++11 library features and is still in development and may not be complete.
+
 Environment Variables
 `````````````````````
 Some environment variables also affect the behavior of the configure

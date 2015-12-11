@@ -90,11 +90,14 @@ def program():
         list_compilers(compiler_infos)
         sys.exit(1)
 
+    if options.cpp_std is None:
+        options.cpp_std = optionsutil.get_default_cpp_std(info.type_, info.version)
     print_envs(options, info)
 
 
 def unset_command():
     print('unset CXX')
+    print('unset CC')
     print('unset BDE_WAF_UPLID')
     print('unset BDE_WAF_UFID')
     print('unset BDE_WAF_BUILD_DIR')
