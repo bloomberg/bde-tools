@@ -7,6 +7,7 @@ configure() - waf configure
 build() - waf build
 """
 
+import os
 import sys
 
 from waflib import Utils
@@ -115,6 +116,12 @@ def _configure_impl(ctx):
                       'C++ compiler version: %s' % (cc_ver, cxx_ver))
     ctx.load('bdebuild.waf.bdeunittest')
     effective_uplid, actual_uplid = configureutil.make_uplid(ctx)
+
+    if (not os.getenv('BDE_WAF_UFID') and (ctx.options.cpp_std is None) and
+        (optionsutil.get_default_cpp_std(effective_uplid.comp_type,
+                                         effective_uplid.comp_ver) == "11")):
+        ufid.flags.add('cpp11')
+
     helper = configurehelper.ConfigureHelper(ctx, ufid,
                                              effective_uplid, actual_uplid)
     helper.configure()
