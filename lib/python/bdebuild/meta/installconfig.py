@@ -20,10 +20,13 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
            pkg-config files will be installed.
        lib_dir (str): The path of the directory relative to the prefix in which
            library files will be installed.
+       bin_dir (str): The path of the directory relative to the prefix in which
+           executable files will be installed.
        install_uors (set of str): The names of UORs to be installed.
        lib_suffix (str): The suffix to add to the library being built.
-       is_install_h (bool): Whether to install header files.
        is_install_lib (bool): Whether to install library files.
+       is_install_bin (bool): Whether to install executable files.
+       is_install_h (bool): Whether to install header files.
        is_install_pc (bool): Whether to install pkgconfig files.
     """
 
@@ -31,6 +34,7 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
                  is_dpkg,
                  is_flat_include,
                  lib_dir,
+                 bin_dir,
                  lib_suffix):
         """Initialize the object.
 
@@ -58,10 +62,13 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
             self.lib_dir = lib_dir
             self.pc_dir = os.path.join(lib_dir, 'pkgconfig')
             self.lib_suffix = lib_suffix
+
+        self.bin_dir = bin_dir
         self.install_uors = set()
         self.is_install_h = True
         self.is_install_lib = True
         self.is_install_pc = True
+        self.is_install_bin = True
 
     def setup_install_uors(self, targets, is_install_dep, uor_digraph):
         """Determine install targets.
@@ -111,6 +118,14 @@ class InstallConfig(mixins.BasicEqualityMixin, mixins.BasicReprMixin,
             return None
 
         return os.path.join('${PREFIX}', self.lib_dir)
+
+    def get_bin_install_path(self, uor_name):
+        """Return executable install path of a UOR.
+        """
+        if not self.is_install_bin or not self.should_install(uor_name):
+            return None
+
+        return os.path.join('${PREFIX}', self.bin_dir)
 
     def get_h_install_path(self, uor_name, is_thirdparty=False,
                            inner_package_name=None):

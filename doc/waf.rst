@@ -490,12 +490,13 @@ Install Options
 
 -  ``--install-parts``
 
-  choices: ``all`` (default), ``h``, ``lib``, ``pc``
+  choices: ``all`` (default), ``lib``, ``bin``, ``h``, ``pc``
 
   Determines which parts of a UOR to install.  If the value is ``all``, then
-  everything will be installed. If ``h``, then only the header files will be
-  installed.  If ``lib``, then only the library files will be installed.  If
-  ``pc``, then only the pkg-config files are installed.
+  everything will be installed.  If ``lib``, then only the library files will
+  be installed.  If ``bin``, the only the executable files will be installed.
+  If ``h``, then only the header files will be installed.  If ``pc``, then only
+  the pkg-config files are installed.
 
 
 .. _waf-pkgconfig:

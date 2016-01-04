@@ -56,22 +56,15 @@ class BuildHelper(object):
                 self.ctx.targets, self.ctx.options.install_dep == 'yes',
                 self.uor_digraph)
 
-            if self.ctx.options.install_parts == 'all':
-                self.install_config.is_install_h = True
-                self.install_config.is_install_lib = True
-                self.install_config.is_install_pc = True
-            elif self.ctx.options.install_parts == 'h':
-                self.install_config.is_install_h = True
-                self.install_config.is_install_lib = False
-                self.install_config.is_install_pc = False
-            elif self.ctx.options.install_parts == 'lib':
-                self.install_config.is_install_h = False
-                self.install_config.is_install_lib = True
-                self.install_config.is_install_pc = False
-            elif self.ctx.options.install_parts == 'pc':
-                self.install_config.is_install_h = False
-                self.install_config.is_install_lib = False
-                self.install_config.is_install_pc = True
+            all_parts = ("lib", "bin", "h", "pc")
+            install_part = self.ctx.options.install_parts
+
+            for attr in ("is_install_" + part for part in all_parts):
+                setattr(self.install_config, attr, True)
+            if install_part != "all":
+                for attr in ("is_install_" + part for part in all_parts
+                             if part != install_part):
+                    setattr(self.install_config, attr, False)
 
             Logs.info('Waf: Installing UORs: %s' %
                       ','.join(sorted(self.install_config.install_uors)))
@@ -225,6 +218,8 @@ $ waf build --target bdlt_date.t --test build"""
                 cust_libpaths=flags.libpaths,
                 use=[package.name + '_lib'] + dums_tg_dep,
                 uselib=external_dep,
+                install_path=self.install_config.get_bin_install_path(
+                    package.app_main),
                 idx=self.global_taskgen_idx
             )
             depends_on.append(package.name + '_app')

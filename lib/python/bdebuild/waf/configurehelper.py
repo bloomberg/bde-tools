@@ -102,7 +102,8 @@ class ConfigureHelper(object):
             self.ufid,
             self.ctx.options.use_dpkg_install,
             self.ctx.options.use_flat_include_dir,
-            self.ctx.options.lib_dir,
+            self.ctx.options.libdir,
+            self.ctx.options.bindir,
             self.ctx.options.lib_suffix)
 
         # The .pc files should be UFID neutral when installed to the DPKG
