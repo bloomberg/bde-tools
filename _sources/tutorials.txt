@@ -139,7 +139,8 @@ Creating a New Application Using Waf
 ====================================
 
 The following example demonstrates how to create a simple application `myapp`
-that builds using 'waf'.  
+that builds using 'waf'.  This example application consists of a simple 
+"hello world" `main` and an empty component.
 
 First we create a new directory 'workspace' that will hold our application::
 
@@ -182,13 +183,13 @@ application will have 1 component `mycomponent` and a `main` located in
    }
    
 **mycomponent.h/.cpp/.t.cpp**
-    A simple component.  This can be empty for the purposes of illustration.
+    A simple component -- empty files for the purposes of illustration.
 
 **package**
-    A directory containing :ref:`bde-metadata` for the application.
+    A directory containing :ref:`bde_repo-metadata` for the application.
 
 **myapp.dep**
-    A list of dependencies for the application (:ref:`_bde_repo-dep`).  
+    A list of dependencies for the application ( :ref:`bde_repo-dep` ).  
     Currently empty.  An example `dep` file for a project using BDE might be:
 
 ::
@@ -199,7 +200,7 @@ application will have 1 component `mycomponent` and a `main` located in
    btl
 
 **myapp.mem**
-    A list of components in the package (:ref:`_bde_repo-mem`).  Currently:
+    A list of components in the package ( :ref:`bde_repo-mem` ).  Currently:
 
 ::
 
@@ -207,7 +208,7 @@ application will have 1 component `mycomponent` and a `main` located in
 
 Notice that its possible to configure the top-level directory names (here, 
 `application`) by supplying a `.bdelayoutconfig`.  See 
-:ref:`_bde_repo-layout_customize`.
+:ref:`bde_repo-layout_customize`.
 
 
 Building myapp
@@ -222,7 +223,7 @@ From the top-level workspace directory we can now run `waf configure`:
    # UORs, inner packages, and components   : 1 0 1
 
 Notice that `waf configure` is reporting 1 UOR (unit-of-release), which is
-our application, and 1 component.
+our application, and 1 component (the empty `mycomponent`).
 
 Then we can build our application::
 
