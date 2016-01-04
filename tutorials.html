@@ -157,8 +157,99 @@ $ waf configure build
 </div>
 <p>See <a class="reference internal" href="setwafenv.html#setwafenv-top"><span>bde_setwafenv.py</span></a> for detailed reference.</p>
 </div>
+<div class="section" id="creating-a-new-application-using-waf">
+<span id="tutorials-workspace"></span><h2>Creating a New Application Using Waf<a class="headerlink" href="#creating-a-new-application-using-waf" title="Permalink to this headline">¶</a></h2>
+<p>The following example demonstrates how to create a simple application <cite>myapp</cite>
+that builds using &#8216;waf&#8217;.</p>
+<p>First we create a new directory &#8216;workspace&#8217; that will hold our application:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ mkdir workspace
+$ cd workspace
+</pre></div>
+</div>
+<p>Then we copy the default <cite>wscript</cite> file from <cite>bde-tools</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cp path/to/bde-tools/share/wscript ./
+</pre></div>
+</div>
+<p>Then we create a basic physcial organization of directories for our
+application.  A reference for the physical organization is here:
+<a class="reference internal" href="bde_repo.html#bde-repo-physical-layout"><span>BDE Physical Code Organization</span></a>.  Since this is an application,
+we will create a directory <cite>myapp</cite> under the <cite>applications</cite> directory.  This
+application will have 1 component <cite>mycomponent</cite> and a <cite>main</cite> located in
+<cite>myapp.m.cpp</cite>.  The resulting directory structure should look like:</p>
+<div class="highlight-python"><div class="highlight"><pre>|-- applications
+|   `-- myapp
+|       |-- myapp.m.cpp
+|       |-- mycomponent.cpp
+|       |-- mycomponent.h
+|       |-- mycomponent.t.cpp
+|       `-- package
+|           |-- myapp.dep
+|           `-- myapp.mem
+`-- wscript
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><strong>myapp.m.cpp</strong></dt>
+<dd>This file contains the <cite>main</cite> of the application (as indicated by the
+<cite>.m.cpp</cite> filename suffix).  Note that is the one artifact containing
+C++ code that is not in a component.  For the moment it contains:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre>#include &lt;iostream&gt;
+int main()
+{
+    std::cout &lt;&lt; &quot;hello world&quot; &lt;&lt; std::endl;
+}
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><strong>mycomponent.h/.cpp/.t.cpp</strong></dt>
+<dd>A simple component.  This can be empty for the purposes of illustration.</dd>
+<dt><strong>package</strong></dt>
+<dd>A directory containing <span class="xref std std-ref">bde-metadata</span> for the application.</dd>
+<dt><strong>myapp.dep</strong></dt>
+<dd>A list of dependencies for the application (<span class="xref std std-ref">_bde_repo-dep</span>).
+Currently empty.  An example <cite>dep</cite> file for a project using BDE might be:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">bsl</span>
+<span class="n">bdl</span>
+<span class="n">bal</span>
+<span class="n">btl</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><strong>myapp.mem</strong></dt>
+<dd>A list of components in the package (<span class="xref std std-ref">_bde_repo-mem</span>).  Currently:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mycomponent</span>   <span class="c"># currently the only component</span>
+</pre></div>
+</div>
+<p>Notice that its possible to configure the top-level directory names (here,
+<cite>application</cite>) by supplying a <cite>.bdelayoutconfig</cite>.  See
+<span class="xref std std-ref">_bde_repo-layout_customize</span>.</p>
+<div class="section" id="building-myapp">
+<h3>Building myapp<a class="headerlink" href="#building-myapp" title="Permalink to this headline">¶</a></h3>
+<p>From the top-level workspace directory we can now run <cite>waf configure</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ waf configure
+...
+# UORs, inner packages, and components   : 1 0 1
+</pre></div>
+</div>
+<p>Notice that <cite>waf configure</cite> is reporting 1 UOR (unit-of-release), which is
+our application, and 1 component.</p>
+<p>Then we can build our application:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ waf build
+[5/5] Linking path/to/executable/applications/myapp/myapp
+</pre></div>
+</div>
+<p>Finally we can run it:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ path/to/executable/applications/myapp/myapp
+hello world
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="use-waf-workspace-to-build-multiple-bde-style-repositories">
-<span id="tutorials-workspace"></span><h2>Use waf Workspace to Build Multiple BDE-Style Repositories<a class="headerlink" href="#use-waf-workspace-to-build-multiple-bde-style-repositories" title="Permalink to this headline">¶</a></h2>
+<h2>Use waf Workspace to Build Multiple BDE-Style Repositories<a class="headerlink" href="#use-waf-workspace-to-build-multiple-bde-style-repositories" title="Permalink to this headline">¶</a></h2>
 <p>You can you the workspace feature to build multiple BDE-style repositories in
 the same way as a single repository (see <a class="reference internal" href="waf.html#waf-workspace"><span>Building Multiple Repos Using Workspaces</span></a>)</p>
 <p>For example, suppose that you have the following BDE-style repositories that
@@ -365,6 +456,10 @@ You can download a free version of Visual Studio Express from <a class="referenc
 <li><a class="reference internal" href="#">Tutorials</a><ul>
 <li><a class="reference internal" href="#use-waf-to-build-bde">Use waf to Build BDE</a></li>
 <li><a class="reference internal" href="#use-bde-setwafenv-py-to-build-bde">Use bde_setwafenv.py to Build BDE</a></li>
+<li><a class="reference internal" href="#creating-a-new-application-using-waf">Creating a New Application Using Waf</a><ul>
+<li><a class="reference internal" href="#building-myapp">Building myapp</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#use-waf-workspace-to-build-multiple-bde-style-repositories">Use waf Workspace to Build Multiple BDE-Style Repositories</a></li>
 <li><a class="reference internal" href="#use-bde-setwafenv-py-to-build-an-application-on-top-of-bde">Use bde_setwafenv.py to Build an Application on Top of BDE</a></li>
 <li><a class="reference internal" href="#use-bde-setwafenv-py-to-build-bde-on-windows">Use bde_setwafenv.py to Build BDE on Windows</a></li>

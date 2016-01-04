@@ -142,7 +142,7 @@ waf build
 </pre></div>
 </div>
 <p>To build and run the test drivers, use:</p>
-<div class="highlight-python"><div class="highlight"><pre>shell waf build --test run
+<div class="highlight-python"><div class="highlight"><pre>waf build --test run
 </pre></div>
 </div>
 <p>For additional examples, see <a class="reference internal" href="#quick-reference">Quick Reference</a>.</p>
@@ -207,11 +207,16 @@ root path of the repository (the location of the wscript file).</p>
 <p>Control whether the build system produces 32-bit x86 (<code class="docutils literal"><span class="pre">32</span></code>) or 64-bit
 x86_64 (<code class="docutils literal"><span class="pre">64</span></code>) object files and libraries.</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">--assert-level</span></code></p>
-<p>choices: <code class="docutils literal"><span class="pre">none</span></code> (default), <code class="docutils literal"><span class="pre">safe</span></code>, <code class="docutils literal"><span class="pre">safe2</span></code></p>
-<p>Control the level of &#8220;Safe mode&#8221; builds. &#8220;Safe mode&#8221; enables additional
-debugging code in the libraries. See the component level documentation in
-<code class="docutils literal"><span class="pre">bsls_assert.h</span></code> for more details on Safe mode.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">--safe</span></code></p>
+<p>Use safe asserts by defining the macro <code class="docutils literal"><span class="pre">BDE_BUILD_TARGET_SAFE</span></code>, which
+enables additional debugging code in the libraries. See the component level
+documentation in <code class="docutils literal"><span class="pre">bsls_assert.h</span></code> for more details.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">--safe2</span></code></p>
+<p>Use binary incompatible safe asserts by defining the macro
+<code class="docutils literal"><span class="pre">BDE_BUILD_TARGET_SAFE_2</span></code>.  This option is distinct from <code class="docutils literal"><span class="pre">--safe</span></code>, and
+both options can be enabled together or separately. See the component level
+documentation in <code class="docutils literal"><span class="pre">bsls_assert.h</span></code> for more details.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">--build-type</span></code> or <code class="docutils literal"><span class="pre">-b</span></code></p>
 <p>choices: <code class="docutils literal"><span class="pre">debug</span></code> (default), <code class="docutils literal"><span class="pre">release</span></code></p>
@@ -256,6 +261,11 @@ option checks whether cycles exist between UORs, packages, and components.</p>
 <li><p class="first"><code class="docutils literal"><span class="pre">--with-coverage</span></code></p>
 <p>Generate coverage report when running unit tests. This is currently only
 supported with gcc, and requires gcov and lcov.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">--cpp-std</span></code></p>
+<p>choices: <code class="docutils literal"><span class="pre">03</span></code>, <code class="docutils literal"><span class="pre">11</span></code> (default value depend on the compiler)</p>
+<p>Build using the specified standard C++ version.  Note that BDE&#8217;s support for
+C++11 library features and is still in development and may not be complete.</p>
 </li>
 </ul>
 </div>
@@ -358,11 +368,13 @@ comma-delimited list. For example,
 number of cores available on the system.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">--test</span></code></p>
-<p>choices: <code class="docutils literal"><span class="pre">none</span></code> (default), <code class="docutils literal"><span class="pre">build</span></code>, <code class="docutils literal"><span class="pre">run</span></code></p>
-<p>Control whether to build and run test drivers. Test drivers will not
-be built if the value is <code class="docutils literal"><span class="pre">none</span></code>; they will be only built if the
-value is <code class="docutils literal"><span class="pre">build</span></code>; they will be built and run if the value is
-<code class="docutils literal"><span class="pre">run</span></code>.</p>
+<p>choices: <code class="docutils literal"><span class="pre">none</span></code> (default), <code class="docutils literal"><span class="pre">build</span></code>, <code class="docutils literal"><span class="pre">run</span></code>, <code class="docutils literal"><span class="pre">changed</span></code></p>
+<p>Control whether to build and run test drivers. Test drivers will not be built
+if the value is <code class="docutils literal"><span class="pre">none</span></code>; they will be only built if the value is <code class="docutils literal"><span class="pre">build</span></code>;
+they will be built and run if the value is <code class="docutils literal"><span class="pre">run</span></code>, they will be built and
+run when required if the value is <code class="docutils literal"><span class="pre">changed</span></code>.  Note that the <code class="docutils literal"><span class="pre">changed</span></code>
+option does not re-run a previuosly failed test if it is <em>not</em> required to be
+rebuilt.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">--test-v</span></code></p>
 <p>Set the verbosity level of the test output. The default value is 0.</p>
@@ -460,11 +472,12 @@ the targets.</p>
 </li>
 </ul>
 <blockquote>
-<div><p>choices: <code class="docutils literal"><span class="pre">all</span></code> (default), <code class="docutils literal"><span class="pre">h</span></code>, <code class="docutils literal"><span class="pre">lib</span></code>, <code class="docutils literal"><span class="pre">pc</span></code></p>
+<div><p>choices: <code class="docutils literal"><span class="pre">all</span></code> (default), <code class="docutils literal"><span class="pre">lib</span></code>, <code class="docutils literal"><span class="pre">bin</span></code>, <code class="docutils literal"><span class="pre">h</span></code>, <code class="docutils literal"><span class="pre">pc</span></code></p>
 <p>Determines which parts of a UOR to install.  If the value is <code class="docutils literal"><span class="pre">all</span></code>, then
-everything will be installed. If <code class="docutils literal"><span class="pre">h</span></code>, then only the header files will be
-installed.  If <code class="docutils literal"><span class="pre">lib</span></code>, then only the library files will be installed.  If
-<code class="docutils literal"><span class="pre">pc</span></code>, then only the pkg-config files are installed.</p>
+everything will be installed.  If <code class="docutils literal"><span class="pre">lib</span></code>, then only the library files will
+be installed.  If <code class="docutils literal"><span class="pre">bin</span></code>, the only the executable files will be installed.
+If <code class="docutils literal"><span class="pre">h</span></code>, then only the header files will be installed.  If <code class="docutils literal"><span class="pre">pc</span></code>, then only
+the pkg-config files are installed.</p>
 </div></blockquote>
 </div>
 </div>
@@ -509,7 +522,7 @@ workspace feature.</li>
 the repositories that you want to store in the workspace. Then, simply add an
 (empty) file named <code class="docutils literal"><span class="pre">.bdeworkspaceconfig</span></code> and copy
 <code class="docutils literal"><span class="pre">bde-tools/share/wscript</span></code>.</p>
-<p>See <a class="reference internal" href="tutorials.html#tutorials-workspace"><span>Use waf Workspace to Build Multiple BDE-Style Repositories</span></a> for an example.</p>
+<p>See <a class="reference internal" href="tutorials.html#tutorials-workspace"><span>Creating a New Application Using Waf</span></a> for an example.</p>
 </div>
 <div class="section" id="building-on-windows">
 <span id="waf-windows"></span><h2>Building on Windows<a class="headerlink" href="#building-on-windows" title="Permalink to this headline">¶</a></h2>

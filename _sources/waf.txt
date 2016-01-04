@@ -97,7 +97,7 @@ To build and run the test drivers, use:
 
 ::
 
-   shell waf build --test run
+   waf build --test run
 
 For additional examples, see `Quick Reference`_.
 
@@ -178,13 +178,18 @@ Configure Options
   Control whether the build system produces 32-bit x86 (``32``) or 64-bit
   x86\_64 (``64``) object files and libraries.
 
-- ``--assert-level``
+- ``--safe``
 
-  choices: ``none`` (default), ``safe``, ``safe2``
+  Use safe asserts by defining the macro ``BDE_BUILD_TARGET_SAFE``, which
+  enables additional debugging code in the libraries. See the component level
+  documentation in ``bsls_assert.h`` for more details.
 
-  Control the level of "Safe mode" builds. "Safe mode" enables additional
-  debugging code in the libraries. See the component level documentation in
-  ``bsls_assert.h`` for more details on Safe mode.
+- ``--safe2``
+
+  Use binary incompatible safe asserts by defining the macro
+  ``BDE_BUILD_TARGET_SAFE_2``.  This option is distinct from ``--safe``, and
+  both options can be enabled together or separately. See the component level
+  documentation in ``bsls_assert.h`` for more details.
 
 - ``--build-type`` or ``-b``
 
@@ -241,6 +246,13 @@ Configure Options
 
   Generate coverage report when running unit tests. This is currently only
   supported with gcc, and requires gcov and lcov.
+
+- ``--cpp-std``
+
+  choices: ``03``, ``11`` (default value depend on the compiler)
+
+  Build using the specified standard C++ version.  Note that BDE's support for
+  C++11 library features and is still in development and may not be complete.
 
 Environment Variables
 `````````````````````
@@ -358,12 +370,14 @@ Build Options
 
 - ``--test``
 
-  choices: ``none`` (default), ``build``, ``run``
+  choices: ``none`` (default), ``build``, ``run``, ``changed``
 
-  Control whether to build and run test drivers. Test drivers will not
-  be built if the value is ``none``; they will be only built if the
-  value is ``build``; they will be built and run if the value is
-  ``run``.
+  Control whether to build and run test drivers. Test drivers will not be built
+  if the value is ``none``; they will be only built if the value is ``build``;
+  they will be built and run if the value is ``run``, they will be built and
+  run when required if the value is ``changed``.  Note that the ``changed``
+  option does not re-run a previuosly failed test if it is *not* required to be
+  rebuilt.
 
 - ``--test-v``
 
@@ -476,12 +490,13 @@ Install Options
 
 -  ``--install-parts``
 
-  choices: ``all`` (default), ``h``, ``lib``, ``pc``
+  choices: ``all`` (default), ``lib``, ``bin``, ``h``, ``pc``
 
   Determines which parts of a UOR to install.  If the value is ``all``, then
-  everything will be installed. If ``h``, then only the header files will be
-  installed.  If ``lib``, then only the library files will be installed.  If
-  ``pc``, then only the pkg-config files are installed.
+  everything will be installed.  If ``lib``, then only the library files will
+  be installed.  If ``bin``, the only the executable files will be installed.
+  If ``h``, then only the header files will be installed.  If ``pc``, then only
+  the pkg-config files are installed.
 
 
 .. _waf-pkgconfig:
