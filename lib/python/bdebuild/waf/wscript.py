@@ -188,12 +188,13 @@ def add_cmdline_options(ctx):
         (('libdir',),
          {'type': 'string',
           'default': 'lib',
-          'dest': 'lib_dir',
+          'dest': 'libdir',
           'help': 'the name of the directory under $PREFIX where '
                   'library files are installed [default: %default]'}),
         (('bindir',),
          {'type': 'string',
           'default': 'bin',
+          'dest': 'bindir',
           'help': 'the name of the directory under $PREFIX where '
                   'binaries are installed [default: %default]'}),
         (('lib-suffix',),
@@ -233,11 +234,14 @@ def add_cmdline_options(ctx):
                   'install the dependencies of the targets (yes/no) '
                   '[default: %default]'}),
         (('install-parts',),
-         {'choices': ('all', 'h', 'lib', 'pc'),
+         {'choices': ('all', 'lib', 'bin', 'h', 'pc'),
           'default': 'all',
           'help': 'what parts to install (all/h/lib/pc). '
-                  'all -- everything, h -- header files only, '
-                  'lib -- lib files only, pc -- pkg-config files only '
+                  'all -- everything, '
+                  'lib -- lib files only, '
+                  'bin - executable files only, '
+                  'h -- header files only, '
+                  'pc -- pkg-config files only '
                   '[default: %default]'}),
     ]
     cmdlineutil.add_options(install_group, install_opts)
