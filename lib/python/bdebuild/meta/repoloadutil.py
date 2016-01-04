@@ -311,7 +311,7 @@ def _get_uor_version_impl(uor):
         scm_path = os.path.join(uor.path, '%sscm' % uor.name)
         versiontag_path = os.path.join(scm_path,
                                        '%sscm_versiontag.h' % uor.name)
-        if uor.name in ('bde', 'bsl'):
+        if uor.name in ('bde', 'bsl', 'hsl'):
             version_path = os.path.join(scm_path,
                                         '%sscm_patchversion.h' % uor.name)
         else:
