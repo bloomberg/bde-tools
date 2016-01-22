@@ -117,7 +117,10 @@ def _configure_impl(ctx):
     ctx.load('bdebuild.waf.bdeunittest')
     effective_uplid, actual_uplid = configureutil.make_uplid(ctx)
 
-    if (not os.getenv('BDE_WAF_UFID') and (ctx.options.cpp_std is None) and
+    # If UFID is not set by bde_setwafenv.py or the --ufid flag, use "cpp11" as
+    # the default when appropriate.
+    if (not os.getenv('BDE_WAF_UFID') and (ctx.options.ufid is None) and
+        (ctx.options.cpp_std is None) and
         (optionsutil.get_default_cpp_std(effective_uplid.comp_type,
                                          effective_uplid.comp_ver) == "11")):
         ufid.flags.add('cpp11')
