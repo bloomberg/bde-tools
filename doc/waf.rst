@@ -607,6 +607,39 @@ and linking, so it simply serves as an alternate interface from running
 waf directly on the command line.
 
 
+Using the Correct Version
+=========================
+
+Although the waf-based build system in BDE tools is designed to automatically
+support any :ref:`BDE-style repository <bde_repo-top>` without customization,
+the build system and repo standard sometimes do change in a backwards
+incompatible way.  Changes to BDE tools are recorded in the ``ChangeLog`` file.
+
+You can determine the version number of BDE tools by running
+
+::
+
+   $ waf --bde-tools-version
+
+
+You can restrict the range of version numbers that can build a particular
+repository by adding 2 global variables to the wscript file:
+
+::
+
+   ...
+   out = 'build'
+
+   min_bde_tools_version = "1.0"
+   max_bde_tools_version = "1.3"  # This is optional
+
+   def options(ctx):
+   ...
+
+If the version of waf being used is outside of range of supported versions, an
+error message will be printed.
+
+
 Quick Reference
 ===============
 

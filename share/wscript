@@ -10,6 +10,11 @@ import sys
 top = '.'
 out = 'build'
 
+# Restrict building using a range of version numbers of BDE Tools if
+# applicable.
+
+# min_bde_tools_version = "1.0"
+# max_bde_tools_version = "1.1"  # This is optional
 
 def _get_tools_path(ctx):
     waf_path = sys.argv[0]

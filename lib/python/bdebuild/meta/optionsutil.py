@@ -127,7 +127,7 @@ def get_default_cpp_std(compiler_type, compiler_version):
     """
 
     if (compiler_type == 'gcc' and compiler_version >= '4.8' or
-        compiler_type == 'clang' and compiler_version >= '3.6'):
+            compiler_type == 'clang' and compiler_version >= '3.6'):
         return "11"
     return "03"
 
@@ -226,29 +226,7 @@ def _match_uplid_ver(uplid, mask):
     if mask == '*' or uplid == '*':
         return True
 
-    build_ver = uplid.split('.')
-    mask_ver = mask.split('.')
-
-    mask_ver.extend(['0'] * (len(build_ver) - len(mask_ver)))
-
-    index = 0
-    while index < len(build_ver):
-        build_subv = build_ver[index]
-        mask_subv = mask_ver[index]
-
-        if (not sysutil.is_int_string(build_subv) or
-                not sysutil.is_int_string(mask_subv)):
-            if build_subv != mask_subv:
-                return False
-        else:
-            if int(mask_subv) < int(build_subv):
-                return True
-            elif int(mask_subv) > int(build_subv):
-                return False
-
-        index += 1
-
-    return len(mask_ver) <= len(build_ver)
+    return sysutil.match_version_strs(uplid, mask)
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.
