@@ -64,7 +64,7 @@ class ConfigureHelper(object):
             self.ctx.env['SHLIB_MARKER'],
             self.ctx.env['STLIB_MARKER'],
             self.ctx.env['LIB_ST'].replace('.', '\.').replace(
-                '%s', r'([^ =]+)'),
+                '%s', r'([^ =]+)$'),
             self.ctx.env['LIBPATH_ST'].replace('.', '\.').replace(
                 '%s', r'([^ =]+)'),
             self.ctx.env['CPPPATH_ST'].replace('.', '\.').replace(

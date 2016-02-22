@@ -7,7 +7,7 @@ class TestBuildFlagsParser(unittest.TestCase):
     def setUp(self):
         self.parser = buildflagsparser.BuildFlagsParser('-Wl,-Bdynamic',
                                                         '-Wl,-Bstatic',
-                                                        '-l([^ =]+)',
+                                                        '-l([^ =]+)$',
                                                         '-L([^ =]+)',
                                                         '-I([^ =]+)', '-D')
 
