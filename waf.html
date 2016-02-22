@@ -565,6 +565,31 @@ the source repository.</p>
 and linking, so it simply serves as an alternate interface from running
 waf directly on the command line.</p>
 </div>
+<div class="section" id="using-the-correct-version">
+<h2>Using the Correct Version<a class="headerlink" href="#using-the-correct-version" title="Permalink to this headline">¶</a></h2>
+<p>Although the waf-based build system in BDE tools is designed to automatically
+support any <a class="reference internal" href="bde_repo.html#bde-repo-top"><span>BDE-style repository</span></a> without customization,
+the build system and repo standard sometimes do change in a backwards
+incompatible way.  Changes to BDE tools are recorded in the <code class="docutils literal"><span class="pre">ChangeLog</span></code> file.</p>
+<p>You can determine the version number of BDE tools by running</p>
+<div class="highlight-python"><div class="highlight"><pre>$ waf --bde-tools-version
+</pre></div>
+</div>
+<p>You can restrict the range of version numbers that can build a particular
+repository by adding 2 global variables to the wscript file:</p>
+<div class="highlight-python"><div class="highlight"><pre>...
+out = &#39;build&#39;
+
+min_bde_tools_version = &quot;1.0&quot;
+max_bde_tools_version = &quot;1.3&quot;  # This is optional
+
+def options(ctx):
+...
+</pre></div>
+</div>
+<p>If the version of waf being used is outside of range of supported versions, an
+error message will be printed.</p>
+</div>
 <div class="section" id="quick-reference">
 <h2>Quick Reference<a class="headerlink" href="#quick-reference" title="Permalink to this headline">¶</a></h2>
 <p>Below are examples of build options that are frequently useful during
@@ -633,6 +658,7 @@ $ waf step --files=&#39;groups/bsl/bslstl/.*\.cpp&#39;
 <li><a class="reference internal" href="#building-multiple-repos-using-workspaces">Building Multiple Repos Using Workspaces</a></li>
 <li><a class="reference internal" href="#building-on-windows">Building on Windows</a></li>
 <li><a class="reference internal" href="#building-on-osx">Building on OSX</a></li>
+<li><a class="reference internal" href="#using-the-correct-version">Using the Correct Version</a></li>
 <li><a class="reference internal" href="#quick-reference">Quick Reference</a></li>
 </ul>
 </li>
