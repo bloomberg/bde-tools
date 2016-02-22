@@ -102,6 +102,70 @@ def is_mingw_environment():
     return -1 != uname.find('MINGW')
 
 
+def match_version_strs(comp_str, match_min_str, match_max_str=None):
+    """Determine whether a version string is within a specified range.
+
+    Args:
+        comp_str (str): The version string to check.  This should have the form
+            (1.2.3...).
+        match_min_str (str):  The minimum allowed version.
+        match_max_str (str, optional):  The maximum allowed version.
+
+    Returns:
+        True if the version being checked is in the specified range.
+    """
+    comp_ver = comp_str.split('.')
+    min_ver = match_min_str.split('.')
+    if match_max_str:
+        max_ver = match_max_str.split('.')
+    else:
+        max_ver = comp_ver
+
+    ver_len = max(len(comp_ver), len(min_ver), len(max_ver))
+    for v in (comp_ver, min_ver, max_ver):
+        v.extend(['0'] * (ver_len - len(v)))
+
+    def gen_subvers():
+        i = 0
+        while i < ver_len:
+            yield comp_ver[i], min_ver[i], max_ver[i]
+            i += 1
+
+    min_valid = None
+    for (comp_subv, min_subv, max_subv) in gen_subvers():
+        if any(not is_int_string(v) for v in (comp_subv, min_subv, max_subv)):
+            if comp_subv != min_subv or comp_subv != max_subv:
+                return False
+        else:
+            if int(min_subv) < int(comp_subv):
+                min_valid = True
+                break
+            elif int(comp_subv) < int(min_subv):
+                min_valid = False
+                break
+    if min_valid is None:
+        min_valid = True
+
+    if match_max_str:
+        max_valid = None
+        for (comp_subv, min_subv, max_subv) in gen_subvers():
+            if not any(not is_int_string(v) for v in
+                       (comp_subv, min_subv, max_subv)):
+                if int(comp_subv) < int(max_subv):
+                    max_valid = True
+                    break
+                elif int(max_subv) < int(comp_subv):
+                    max_valid = False
+                    break
+
+        if max_valid is None:
+            max_valid = True
+    else:
+        max_valid = True
+
+    return min_valid and max_valid
+
+
 class CompilerType:
     C = 0,
     CXX = 1

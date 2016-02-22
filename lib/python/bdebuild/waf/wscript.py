@@ -7,11 +7,14 @@ configure() - waf configure
 build() - waf build
 """
 
+from __future__ import print_function
+
 import os
 import sys
 
 from waflib import Utils
 from waflib import Logs
+from waflib import Context
 
 from bdebuild.common import blderror
 from bdebuild.common import cmdlineutil
@@ -23,6 +26,9 @@ from bdebuild.waf import configurehelper
 from bdebuild.waf import configureutil
 from bdebuild.waf import buildhelper
 from bdebuild.waf import graphhelper
+
+# Version of bde-tools
+BDE_TOOLS_VERSION = "1.0"
 
 
 def _setup_log(ctx):
@@ -39,8 +45,22 @@ def options(ctx):
     _setup_log(ctx)
     # check version numbers here because options() is called before any other
     # command-handling function
+
     if sys.hexversion < 0x2060000:
         ctx.fatal('Pyhon 2.6 and above is required to build BDE using waf.')
+
+    min_version = getattr(Context.g_module, 'min_bde_tools_version', None)
+    max_version = getattr(Context.g_module, 'max_bde_tools_version', None)
+
+    if (min_version and not sysutil.match_version_strs(BDE_TOOLS_VERSION,
+                                                       min_version,
+                                                       max_version)):
+        msg = 'This repo requires BDE Tools version of at least ' + min_version
+        if max_version:
+            msg += ' and at most ' + max_version
+
+        msg += '. The current version is ' + BDE_TOOLS_VERSION + '.'
+        ctx.fatal(msg)
 
     ctx.load('bdebuild.waf.bdeunittest')
 
@@ -170,6 +190,12 @@ def add_cmdline_options(ctx):
     Returns:
         None
     """
+    def print_version(option, opt, value, parser):
+        print('BDE Tools version: %s' % BDE_TOOLS_VERSION)
+        sys.exit(0)
+
+    ctx.add_option('--bde-tools-version',
+                   action='callback', callback=print_version)
 
     configure_opts = [
         (('verify',),
