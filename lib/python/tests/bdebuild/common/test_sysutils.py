@@ -33,6 +33,35 @@ class TestSysutil(unittest.TestCase):
 
         self.assertTrue(os.path.isdir(os.path.join(root_path, 'etc')))
 
+    def test_match_version_strs(self):
+        test_data = (
+            ("1.0.0", "1.0.0", "1.0.0", True),
+            ("1.0.0", "0.9.9", "1.0.0", True),
+            ("1.0.0", "1.0.0", "1.0.1", True),
+            ("1.0.0", "0.9.9", "1.0.1", True),
+            ("1.0.0", "1.0.1", "1.0.2", False),
+            ("1.0.0", "0.9.8", "0.9.9", False),
+            ("999.98", "999.97", "999.99", True),
+            ("999.98", "999.99", "999.99", False),
+            ("111", "110", "112", True),
+            ("111", "111", "111", True),
+            ("111", "112", "113", False),
+            ("111", "99", "99", False),
+            ("1.0.0", None, "1.0.0", True),
+            ("1.0.0", "1.0.0", None, True),
+            ("1.0.0", None, None, True),
+            ("1.0.0", None, "0.9.9", False),
+            ("1.0.0", "1.1.1", None, False),
+        )
+
+        for row in test_data:
+            comp_str = row[0]
+            match_min_str = row[1]
+            match_max_str = row[2]
+            exp_result = row[3]
+            self.assertEqual(exp_result, sysutil.match_version_strs(
+                comp_str, match_min_str, match_max_str))
+
 
 if __name__ == '__main__':
     unittest.main()
