@@ -27,8 +27,6 @@ def main():
     temp_directory = tempfile.mkdtemp()
     os.environ["TMPDIR"] = temp_directory
 
-    print("temp files redirected to %s" % temp_directory)
-
     option_parser = get_cmdline_options()
     options, args = option_parser.parse_args()
 
