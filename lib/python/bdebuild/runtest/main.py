@@ -38,16 +38,15 @@ def main():
 
     test_runner = runner.Runner(ctx)
 
-    if test_runner.start():
-        # Clean up our TMPDIR.
-        shutil.rmtree(temp_directory)
+    exit_code = 0
 
-        sys.exit(0)
-    else:
-        # Clean up our TMPDIR.
-        shutil.rmtree(temp_directory)
+    if not test_runner.start():
+        exit_code = 1
 
-        sys.exit(1)
+    # Clean up our TMPDIR.
+    shutil.rmtree(temp_directory)
+
+    sys.exit(exit_code)
 
 
 def get_cmdline_options():
