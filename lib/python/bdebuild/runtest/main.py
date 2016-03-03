@@ -1,8 +1,11 @@
 from __future__ import print_function
 
+import contextlib
 import optparse
 import os
+import shutil
 import sys
+import tempfile
 
 import bdebuild.runtest.options
 
@@ -19,6 +22,13 @@ def main():
     driver ``Runner``.  Exit with a return code 0 on success and 1 on failure.
     """
 
+    # We're going to create our own tmpdir, and then repoint 'TMPDIR' to it.
+    # At exit time, we'll clean it up.
+    temp_directory = tempfile.mkdtemp()
+    os.environ["TMPDIR"] = temp_directory
+
+    print("temp files redirected to %s" % temp_directory)
+
     option_parser = get_cmdline_options()
     options, args = option_parser.parse_args()
 
@@ -29,9 +39,16 @@ def main():
     ctx = make_context_from_options(options, args)
 
     test_runner = runner.Runner(ctx)
+
     if test_runner.start():
+        # Clean up our TMPDIR.
+        shutil.rmtree(temp_directory)
+
         sys.exit(0)
     else:
+        # Clean up our TMPDIR.
+        shutil.rmtree(temp_directory)
+
         sys.exit(1)
 
 
