@@ -20,6 +20,10 @@ def main():
 
     Create a context from the command line arguments and start up the test
     driver ``Runner``.  Exit with a return code 0 on success and 1 on failure.
+
+    Creates a unique directory for tempfiles, and cleans it up as long as
+    "BDE_KEEP_TMPFILES" is not in the environment or the '--keeptmp' option was
+    not used.
     """
 
     # We're going to create our own tmpdir, and then repoint 'TMPDIR' to it.
@@ -44,7 +48,10 @@ def main():
         exit_code = 1
 
     # Clean up our TMPDIR.
-    shutil.rmtree(temp_directory)
+    if not (options.keeptmp or "BDE_KEEP_TMPFILES" in os.environ):
+        shutil.rmtree(temp_directory)
+    else:
+        print("Not deleting temp files - they are in %s" % temp_directory)
 
     sys.exit(exit_code)
 
@@ -71,6 +78,9 @@ def get_cmdline_options():
                       'the test driver being executed.')
     parser.add_option('--valgrind', action='store_true',
                       help='enable valgrind when running the test driver')
+    parser.add_option('--keeptmp', action='store_true',
+                      help='Keep the temporary directory instead of cleaning '
+                      'it')
     parser.add_option('--valgrind-tool', type='choice', default='memcheck',
                       choices=('memcheck', 'helgrind', 'drd'),
                       help='use valgrind tool: memchk, helgrind, or drd '
