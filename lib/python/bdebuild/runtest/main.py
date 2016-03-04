@@ -80,7 +80,8 @@ def get_cmdline_options():
                       help='enable valgrind when running the test driver')
     parser.add_option('--keeptmp', action='store_true',
                       help='Keep the temporary directory instead of cleaning '
-                      'it')
+                      'it (can also be enabled by setting "BDE_KEEP_TMPFILES" '
+                      'in environment)')
     parser.add_option('--valgrind-tool', type='choice', default='memcheck',
                       choices=('memcheck', 'helgrind', 'drd'),
                       help='use valgrind tool: memchk, helgrind, or drd '
