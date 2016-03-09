@@ -127,6 +127,8 @@ class Package(RepoUnit):
         version (UorVersion): Version of the package.
         mem (set of str): Members of this package.
         dep (set of str): Dependencies of this package.
+        pub (set of str): Public headers of this package (if the value is None,
+            all headers are public)
         opts (list of OptionRule): List of option rules representing build
             options.
         cap (list of OptionRule): List of option rules representing
@@ -146,7 +148,7 @@ class Package(RepoUnit):
         self.version = None
         self.mem = set()
         self.dep = set()
-        self.pub = set()
+        self.pub = None
         self.opts = []
         self.defs = []
         self.cap = []
