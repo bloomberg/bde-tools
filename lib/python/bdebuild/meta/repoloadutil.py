@@ -53,9 +53,7 @@ def load_package(path, package_type):
     package.mem = set(_load_lsv(
         os.path.join(package.path, 'package',
                      package.name + '.mem')))
-    package.pub = set(_load_lsv(
-        os.path.join(package.path, 'package',
-                     package.name + '.pub')))
+
     package.dep = set(_load_lsv(
         os.path.join(package.path, 'package',
                      package.name + '.dep')))
@@ -69,6 +67,17 @@ def load_package(path, package_type):
 
     dums_path = os.path.join(package.path, 'package', package.name + '.dums')
     package.has_dums = os.path.isfile(dums_path)
+
+    # We need to distinguish between the case when the pub file does not exist
+    # and the case when the pub file exist but is empty.  If the pub file does
+    # not exist, then every header file should be exported; if the pub file
+    # does exist but is empty, then no header file should be exported.
+
+    pub_path = os.path.join(package.path, 'package', package.name + '.pub')
+    if os.path.isfile(pub_path):
+        package.pub = set(_load_lsv(pub_path))
+    else:
+        package.pub = None
 
     if package.type_ == repounits.PackageType.PACKAGE_PLUS:
         package.pt_extras = _load_plus_package_extras(package)
@@ -112,15 +121,15 @@ def _load_plus_package_extras(package):
         return set([os.path.relpath(path, package.path) for path in l])
 
     extras = repounits.PlusPackageExtras()
-    if len(package.pub) > 0:
-        extras.headers = package.pub
-    else:
+    if not package.pub:  # pub file does not exist
         headers = glob.glob(os.path.join(package.path, '*.h'))
         headers.extend(glob.glob(os.path.join(package.path, '*.SUNWCCh')))
         headers.extend(glob.glob(os.path.join(package.path, '*/*.h')))
         headers.extend(glob.glob(os.path.join(package.path, '*/*.SUNWCCh')))
-
-        extras.headers = rps(headers)
+    elif len(package.pub) > 0:
+        extras.headers = package.pub
+    else:  # pub file is empty
+        extras.headers = []
 
     extras.cpp_sources = rps(glob.glob(os.path.join(package.path, '*.cpp')))
     extras.cpp_tests = rps(glob.glob(os.path.join(package.path,
@@ -205,8 +214,8 @@ REMOVE_COMMENT_RE = re.compile(r'^([^#]*)(#.*)?$')
 def _load_lsv(path):
     """Load values from line separated file.
 
-    Return the contents of the line separated file from the specified path.  If
-    the path does not exist, return an empty array.
+    Return a list containing the contents of the line separated file from the
+    specified path.  If the path does not exist, return an empty list.
     """
 
     try:
