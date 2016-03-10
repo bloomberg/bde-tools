@@ -121,7 +121,7 @@ def _load_plus_package_extras(package):
         return set([os.path.relpath(path, package.path) for path in l])
 
     extras = repounits.PlusPackageExtras()
-    if not package.pub:  # pub file does not exist
+    if package.pub is None:  # pub file does not exist
         headers = glob.glob(os.path.join(package.path, '*.h'))
         headers.extend(glob.glob(os.path.join(package.path, '*.SUNWCCh')))
         headers.extend(glob.glob(os.path.join(package.path, '*/*.h')))
