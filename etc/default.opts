@@ -419,6 +419,7 @@
 
 # DRQS 22147649 -- allow PIC builds for static libs under SunOS
 ++  unix-sunos-sparc-*-cc-*  pic      BDE_CXXFLAGS  =  -xcode=pic32
+++  unix-sunos-sparc-*-cc-*  pic      BDE_CFLAGS    =  -xcode=pic32
 
 # enable support for building with the Sun supplied version of STLPort as the
 # default implementation of the Standard Library
