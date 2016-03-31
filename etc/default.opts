@@ -127,9 +127,8 @@
 # templates.
 !!  windows-*-*-*-cl        _     DEF_CXXFLAGS        =  /wd4661 /GR
 
-# DRQS 17611641: Enforce that win2k is the minumum required OS version supported.
-!!  windows-*-*-*-cl-*       _  WIN_VERSION_FLAGS  =  /D_WIN32_WINNT=0x0500 /DWINVER=0x0500
-!!  windows-*-x86_64-*-cl-*  _  WIN_VERSION_FLAGS  =  /D_WIN32_WINNT=0x0502 /DWINVER=0x0502
+# Pre-WindowsXP versions no longer supported.
+!!  windows-*-*-*-cl-*  _  WIN_VERSION_FLAGS  =  /D_WIN32_WINNT=0x0502 /DWINVER=0x0502
 
 !!  windows-*-*-*-*-*        _  NOGDI              =  /DNOGDI
 !!  windows-*-*-*-cl-15.00   _  DEF_CFLAGS         =  /nologo /Oi /we4715 /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE /DNOMINMAX $(NOGDI) $(WIN_VERSION_FLAGS)
