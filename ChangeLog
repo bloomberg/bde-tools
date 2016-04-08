@@ -1,3 +1,9 @@
+## [1.1] - 2016-02-23
+- Always install headers of third-party packages into a subdirectory of
+  includedir.
+- Fixed SUN stlport build issue where "-library=stlport4" was misinterpreted as
+  a library name.
+
 ## [1.0] - 2016-02-19
 - Added versioning support -- wscript in project repos now can specify
   `min_bde_tools_version` and `max_bde_tools_version`
