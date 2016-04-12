@@ -14,6 +14,7 @@ from bdebuild.meta import buildflagsparser
 from bdebuild.meta import installconfig
 from bdebuild.meta import optionsutil
 from bdebuild.meta import optionsparser
+from bdebuild.meta import optiontypes
 from bdebuild.meta import repocontextloader
 from bdebuild.meta import repocontextverifier
 
@@ -72,6 +73,22 @@ class ConfigureHelper(object):
             '/D' if self.uplid.comp_type == 'cl' else '-D')
 
         default_rules = optionsutil.get_default_option_rules()
+
+        # Enable -Werror for building .cpp files (but not .t.cpp) if --werror
+        # is enabled.
+        if self.ctx.options.werror == 'cpp':
+            default_rules.append(optiontypes.OptionRule(
+                optiontypes.OptionCommand.ADD,
+                optiontypes.Uplid.from_str('*-*-*-*-gcc-*'),
+                optiontypes.Ufid(),
+                'COMPONENT_BDEBUILD_CXXFLAGS',
+                '-Werror'))
+            default_rules.append(optiontypes.OptionRule(
+                optiontypes.OptionCommand.ADD,
+                optiontypes.Uplid.from_str('*-*-*-*-clang-*'),
+                optiontypes.Ufid(),
+                'COMPONENT_BDEBUILD_CXXFLAGS',
+                '-Werror'))
 
         debug_opt_keys = self.ctx.options.debug_opt_keys.split(',') if \
             self.ctx.options.debug_opt_keys is not None else []
@@ -274,15 +291,20 @@ build output directory for details.""" % \
         # particular compular via the 'BDE_WAF_COMP_FLAGS' environment
         # variable.  This is mostly done to support special compiler flags such
         # as '-qpath' for the IBM Xlc compiler that can be partially patched.
-        additional_flags = os.environ.get('BDE_WAF_COMP_FLAGS')
-        if additional_flags:
-            flag_vars = ('CFLAGS', 'CXXFLAGS')
-            for var in flag_vars:
+        extra_cflags = (os.environ.get('BDE_WAF_COMP_FLAGS') or '').split()
+        extra_cxxflags = list(extra_cflags)
+
+        flags_map = {
+            'CFLAGS': extra_cflags,
+            'CXXFLAGS': extra_cxxflags
+        }
+
+        for var, flags in flags_map.items():
+            if flags:
                 if var in self.ctx.env:
-                    self.ctx.env[var] = additional_flags.split() + \
-                        self.ctx.env[var]
+                    self.ctx.env[var] = flags + self.ctx.env[var]
                 else:
-                    self.ctx.env[var] = additional_flags.split()
+                    self.ctx.env[var] = flags
 
         if self.uplid.os_type == 'windows':
 

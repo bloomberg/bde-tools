@@ -145,6 +145,14 @@ def _configure_impl(ctx):
                                          effective_uplid.comp_ver) == "11")):
         ufid.flags.add('cpp11')
 
+    # Enable -Werror by default if the compiler is gcc-4.9
+    if ctx.options.werror is None:
+        if (effective_uplid.comp_type == 'gcc' and
+                effective_uplid.comp_ver >= '4.9'):
+            ctx.options.werror = 'cpp'
+        else:
+            ctx.options.werror = 'none'
+
     helper = configurehelper.ConfigureHelper(ctx, ufid,
                                              effective_uplid, actual_uplid)
     helper.configure()
@@ -236,6 +244,14 @@ def add_cmdline_options(ctx):
           'default': None,
           'help': 'debug rules in the opts files for the specified '
                   '(comma separated) list of opts keys'}),
+        (('werror',),
+         {'choices': ('none', 'cpp'),
+          'default': None,
+          'help': 'whether to treat all compiler warning as errors when '
+                  'building with clang or gcc (cpp/none). '
+                  "none: don't enable -Werror, "
+                  'cpp: enable -Werror for .cpp files, but not .t.cpp files.'
+                  '[default value depends on compiler]'})
     ]
     configure_group = ctx.get_option_group('configure options')
     configure_opts = optionsutil.get_ufid_cmdline_options() + configure_opts

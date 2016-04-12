@@ -249,10 +249,20 @@ Configure Options
 
 - ``--cpp-std``
 
-  choices: ``03``, ``11`` (default value depend on the compiler)
+  choices: ``03``, ``11`` (default value depends on the compiler)
 
   Build using the specified standard C++ version.  Note that BDE's support for
   C++11 library features and is still in development and may not be complete.
+
+- ``--werror``
+
+  choices: ``none``, ``cpp`` (default value depends on the compiler)
+
+  Whether to treat all compiler warnings as errors for gcc or
+  clang. ``-Werror`` is not enabled if the value is ``none``; ``-Werror`` is
+  enabled for ``.cpp`` files (but not ``.t.cpp`` files) if the value is
+  ``cpp``.
+
 
 Environment Variables
 `````````````````````
