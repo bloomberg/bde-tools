@@ -250,7 +250,7 @@ def add_cmdline_options(ctx):
           'help': 'whether to treat all compiler warning as errors when '
                   'building with clang or gcc (cpp/none). '
                   "none: don't enable -Werror, "
-                  'cpp: enable -Werror for .cpp files, but not .t.cpp files.'
+                  'cpp: enable -Werror for .cpp files but not .t.cpp files '
                   '[default value depends on compiler]'})
     ]
     configure_group = ctx.get_option_group('configure options')
