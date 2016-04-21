@@ -145,10 +145,11 @@ def _configure_impl(ctx):
                                          effective_uplid.comp_ver) == "11")):
         ufid.flags.add('cpp11')
 
-    # Enable -Werror by default if the compiler is gcc-4.9
+    # Enable -Werror by default if the compiler is gcc-4.9 and build mode is
+    # not 'opt'.
     if ctx.options.werror is None:
         if (effective_uplid.comp_type == 'gcc' and
-                effective_uplid.comp_ver >= '4.9'):
+                effective_uplid.comp_ver >= '4.9' and 'opt' not in ufid.flags):
             ctx.options.werror = 'cpp'
         else:
             ctx.options.werror = 'none'
