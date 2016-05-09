@@ -211,7 +211,7 @@ class ConfigureHelper(object):
             self.ctx.find_program('pkg-config', var='PKGCONFIG')
         except self.ctx.errors.ConfigurationError:
             Logs.warn('Could not find pkg-config on the PATH.  Using the'
-                      'built-in python based pkg-config (pykp-config) '
+                      'built-in python based pkg-config (pykg-config) '
                       'instead.')
             self.ctx.env['PKGCONFIG'] = [sys.executable, os.path.join(
                 sysutil.repo_root_path(), 'bin', 'tools', 'pykg-config',
