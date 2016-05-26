@@ -143,7 +143,7 @@ class OptionsEvaluator(object):
                 return self.results[key]
             elif key in os.environ:
                 logutil.warn(
-                    'Using the environment variable "%s" as an option key',
+                    'Using the environment variable "%s" as an option key' %
                     key)
                 self.results[key] = os.environ[key]
                 return self.results[key]
