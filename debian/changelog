@@ -1,5 +1,29 @@
-bde-tools (2.24.0.3) unstable; urgency=low
+bde-tools (2.24.1.0) unstable; urgency=low
 
+  * 8f567d4 [APPROVAL] origin/review/remove-bde_verify-symlink to releases/2.24.x
+  * ee5573d [APPROVAL] origin/review/remove-njsbldo4-and-nysbldo9-from-build-configs to releases/2.24.x
+  * 9d04ed4 [APPROVAL] origin/review/move-to-bbgh-for-jenkins-and-nightlies to releases/2.24.x
+  * 3d00c60 [APPROVAL] origin/review/remove_nylnxbldo3_from_nightlies to releases/2.24.x
+  * b43fe53 [APPROVAL] gather-dpkg-failure-errors to releases/2.24.x
+  * dcb36be [APPROVAL] origin/review/empty-jenkins-object-files to master
+  * 5834163 [APPROVAL] origin/review/remove-all-default-opts to master
+  * 4d01b36 [APPROVAL] origin/review/add-oss-to-websites to master
+  * 58caf0e bump build kill time back to 17:00
+  * 5aed57c [APPROVAL] origin/review/insert-boilerplate-to-sources-drqs-72154396 to master
+  * bb0f7d9 [APPROVAL] origin/review/add-btl-bal-to-nightly to master
+  * 8de144c [APPROVAL] origin/review/reinstate-gcc-4.5.2-build to master
+  * 2a7e32d [APPROVAL] origin/review/reinstate-gcc-4.5.2-build to master
+  * b375dd6 bump up parallelism more for robo build
+  * 6f99315 bump up parallelism for robo build
+  * 0d56aaa [APPROVAL] origin/ignore-glib-failure to master
+  * e234a8e [APPROVAL] origin/review/fix-slave-PATH to master
+  * 2b886e4 [APPROVAL] origin/review/add-baseline-build to master
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 18 Nov 2015 11:43:09 -0500
+
+bde-tools (2.24.0.3) git; urgency=low
+
+  * 975f61a Changelog for version 2.24.0.3
   * 3a9f750 [APPROVAL] origin/review/retry-with-ongoing-output to master
   * 6a812e1 fixup rules and bump version to 2.24.0.0
   * e9d9677 [APPROVAL] origin/review/move-a_cdb2-out-of-bde-bb-drqs-64413405 to master
@@ -88,8 +112,9 @@ bde-tools (2.24.0.3) unstable; urgency=low
   * 65520d2 [APPROVAL] shared_ptr_conversion_nildeleter_fix to master
   * 595762f [APPROVAL] origin/review/add-xlc-12.1-support-drqs-56270209 to master
   * abe9c65 [APPROVAL] enable-brmwnydgenap05-builds to master
+  * a8f56c2 unwind snapshot changes, bring vs2013 default.opts change into bde-tools
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 13 Aug 2015 10:27:54 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 18 Aug 2015 10:11:47 -0400
 
 bde-tools (2.21.0.6) git; urgency=low
 
@@ -190,10 +215,13 @@ bde-tools (2.20.0.0.bsl.freeze) git; urgency=low
   * 4e9c39f Removed rules for visual studio version < 2008.
   * 0299ae7 Moved rules used only by bde_build.pl to generate make files, rules for gcc version to default_internal.opts. Removed rules for sun cc pre version 5.9.
   * bfad202 [APPROVAL] origin/review/bdeflag to master
+  * d6109c5 Merge remote-tracking branch 'origin/master' into bdeflag
   * 9f7e995 [APPROVAL] igit/phalpern/sim_cpp11_features to master
   * 3a0fd11 [APPROVAL] add-a_cdrdb-to-dev-builds to master
   * cd971a4 [APPROVAL] add-compile_tests-target to master
   * 99326d1 [APPROVAL] INCPATH_FLAG-drqs-39657739 to master
+  * a4e62c5 Merge remote-tracking branch 'refs/remotes/devgit/master'
+  * 86be9bb Merge remote-tracking branch 'devgit/master'
   * a280af7 [APPROVAL] add-refroot-include-support-drqs-42818632 to master
   * 0de1624 [APPROVAL] origin/review/winpaths-drqs42360181 to master
   * 4f5a84a [APPROVAL] origin/review/bdeflag to master
@@ -236,6 +264,7 @@ bde-tools (20130404.1) git; urgency=low
 bde-tools (20120625.2) git; urgency=low
 
   * 0fcfa35 bump changelog
+  * b11e394 Merge remote-tracking branch 'origin/master' into dev/druoso/debian-packaging
   * cbcaa09 [APPROVAL] add-gcc-4.7.2-warnings-checks to master
   * 3c58f22 [APPROVAL] fix-perl-location-on-w64a to master
   * 57f20aa [APPROVAL] sim_cpp11_features-import to master
