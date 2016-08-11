@@ -175,10 +175,11 @@ class ConfigureHelper(object):
         if not verifier.is_success:
             self.ctx.fatal('Repo verification failed.')
 
-    def _configure_distribution_refroot(self):
+    def _get_pkg_config_kwargs(self):
         # When the DISTRIBUTION_REFROOT environment variable is set, then
         # configure waf to consume external libraries from the refroot.  This
         # is mainly used with the DPKG environment at Bloomberg.
+        kw = {}
         if 'DISTRIBUTION_REFROOT' in os.environ:
             distribution_refroot = os.environ['DISTRIBUTION_REFROOT']
             self.ctx.msg('Using DISTRIBUTION_REFROOT', distribution_refroot)
@@ -189,7 +190,6 @@ class ConfigureHelper(object):
             pkg_config_path = os.path.join(lib_path, 'pkgconfig')
             if 'PKG_CONFIG_PATH' in os.environ:
                 pkg_config_path += ':' + os.environ['PKG_CONFIG_PATH']
-            os.environ['PKG_CONFIG_PATH'] = pkg_config_path
             ufid_copy = copy.deepcopy(self.ufid)
             ufid_copy.flags.discard('64')
             extra_link_flag = self.ctx.env['LIBPATH_ST'] % os.path.join(
@@ -199,14 +199,20 @@ class ConfigureHelper(object):
             else:
                 self.ctx.env['LINKFLAGS'] = [extra_link_flag]
 
-            self.ctx.env['PKG_CONFIG_DEFINES'] = dict(prefix=prefix)
+            kw['pkg_config_path'] = pkg_config_path
+            kw['define_variable'] = dict(prefix=prefix)
+
+        pkgconfig_args = ['--libs', '--cflags']
+        if 'shr' not in self.ufid.flags:
+            pkgconfig_args.append('--static')
+        kw['args'] = pkgconfig_args
+        return kw
 
     def _configure_external_libs(self):
 
         if len(self.build_config.external_dep) == 0:
             return
 
-        self._configure_distribution_refroot()
         try:
             self.ctx.find_program('pkg-config', var='PKGCONFIG')
         except self.ctx.errors.ConfigurationError:
@@ -218,10 +224,7 @@ class ConfigureHelper(object):
                 'pykg-config.py')]
             self.ctx.find_program('pkg-config', var='PKGCONFIG')
 
-        pkgconfig_args = ['--libs', '--cflags']
-
-        if 'shr' not in self.ufid.flags:
-            pkgconfig_args.append('--static')
+        kw = self._get_pkg_config_kwargs()
 
         # If the static build is chosen (the default), waf assumes that all
         # libraries queried from pkg-config are to be built statically, which
@@ -242,10 +245,9 @@ class ConfigureHelper(object):
 Maybe "%s.pc" is missing from "PKG_CONFIG_PATH"? Inspect config.log in the
 build output directory for details.""" % \
                 actual_lib
-            self.ctx.check_cfg(
-                package=actual_lib,
-                args=pkgconfig_args,
-                errmsg=help_str)
+            kw['package'] = actual_lib
+            kw['errmsg'] = help_str
+            self.ctx.check_cfg(**kw)
 
             if lib_suffix:
                 for k in rename_keys:

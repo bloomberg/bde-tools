@@ -1,3 +1,8 @@
+## [1.2] - 2016-08-11
+- Upgrade to waf 1.9.2.
+- Add Visual Studio 2015 to the list of compilers supported by bde_setwafenv.py.
+- Bug fixes.
+
 ## [1.1] - 2016-02-23
 - Always install headers of third-party packages into a subdirectory of
   includedir.

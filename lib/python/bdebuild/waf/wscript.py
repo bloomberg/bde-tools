@@ -28,7 +28,7 @@ from bdebuild.waf import buildhelper
 from bdebuild.waf import graphhelper
 
 # Version of bde-tools
-BDE_TOOLS_VERSION = "1.1"
+BDE_TOOLS_VERSION = "1.2"
 
 
 def _setup_log(ctx):
