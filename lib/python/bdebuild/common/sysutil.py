@@ -305,13 +305,23 @@ def get_os_info():
 
         return os_type, os_name, cpu_type, os_ver
 
+    def get_freebsd_os_info():
+        os_type = 'unix'
+        os_name = 'freebsd'
+        uname = os.uname()
+        cpu_type = 'x86_64' if uname[4] == 'amd64' else \
+                   'x86' if uname[4] == 'i386' else uname[4]
+        os_ver = uname[2].split('-', 1)[0]
+        return os_type, os_name, cpu_type, os_ver
+
     platform_str = unversioned_platform()
     os_info_getters = {
         'linux': get_linux_os_info,
         'aix': get_aix_os_info,
         'sunos': get_sunos_os_info,
         'darwin': get_darwin_os_info,
-        'win32': get_windows_os_info
+        'win32': get_windows_os_info,
+        'freebsd': get_freebsd_os_info
         }
 
     if platform_str not in os_info_getters:

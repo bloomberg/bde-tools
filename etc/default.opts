@@ -339,6 +339,7 @@
 !!  unix-aix-*-*-gcc    mt       MT_LDFLAGS   =  -lpthread
 !!  unix-linux-*-*-*    mt       MT_LDFLAGS   =  -lpthread
 !!  unix-darwin-*-*-*   mt       MT_LDFLAGS   =  -lpthread
+!!  unix-freebsd-*-*-*  mt       MT_LDFLAGS   =  -lpthread
 
 ++  *  _  BDE_CFLAGS    =  $(MT_CFLAGS)
 ++  *  _  BDE_CXXFLAGS  =  $(MT_CXXFLAGS)
