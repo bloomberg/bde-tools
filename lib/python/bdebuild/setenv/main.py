@@ -29,7 +29,7 @@ def program():
     platform_str = sysutil.unversioned_platform()
 
     if platform_str not in ('win32', 'cygwin', 'linux', 'aix', 'sunos',
-                            'darwin'):
+                            'darwin', 'freebsd'):
         print('Unsupported platform: %s' % platform_str, file=sys.stderr)
         sys.exit(1)
 

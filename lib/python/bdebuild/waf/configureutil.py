@@ -175,13 +175,17 @@ def get_comp_info(ctx):
 
         return compiler, compilerversion
 
+    def get_freebsd_comp_info(ctx):
+        return ctx.env.CXX_NAME, '.'.join(ctx.env.CC_VERSION)
+
     platform_str = sysutil.unversioned_platform()
     comp_info_getters = {
         'linux': get_linux_comp_info,
         'aix': get_aix_comp_info,
         'sunos': get_sunos_comp_info,
         'darwin': get_darwin_comp_info,
-        'win32': get_windows_comp_info
+        'win32': get_windows_comp_info,
+        'freebsd': get_freebsd_comp_info
         }
 
     if platform_str not in comp_info_getters:
