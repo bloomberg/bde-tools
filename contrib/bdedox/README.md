@@ -12,8 +12,8 @@ Description
 -----------
 
 The `bdedox` command generates Doxygen HTML pages from source files documented
-according to the BDE style rules. The command takes a single argument, a script
-of shell-variable assignments serving as a "configuration" file (à la
+according to the BDE style rules.  The command takes a single argument, a
+script of shell-variable assignments serving as a "configuration" file (à la
 `.profile`).
 
 Note that, because the file is in-sourced, the `config-file` file must be in
@@ -79,5 +79,34 @@ delivered by `doxygen`. The `$BDEDOX_DOXYDIR` specifies a directory to be used
 as work-area. It is filled with files in Doxygen-markup created from the BDE
 markup-ed source files listed in `$BDEDOX_FILELIST`.
 
-Other (optional) parameters are described in `bdedox.cfg`, a sample
-configuration file, which is colocated with `bdedox`.
+Dependencies
+------------
+
+`bdedox` depends on Doxygen 1.7.1.  The `doxygen` executable must be in the
+`PATH`.  On recent OS distributions it may be necessary to install Doxygen
+1.7.1 manually, and override `PATH` when invoking `bdedox`, to avoid confusion
+with the system-supported Doxygen:
+
+    PATH=/opt/doxygen-1.7.1/bin:$PATH ./bdedox ./my-project.cfg
+
+Additional Documentation
+------------------------
+
+Other (optional) parameters are described in `bdedox.cfg`, a configuration file
+template located in the root directory of this repository.
+
+Sample Configuration
+--------------------
+
+A sample configuration file for producing documentation for BDE 3.0.0 is
+provided in the `sample` directory, along with a `bash` script to drive the
+documentation generation process.
+
+Disclaimer
+----------
+
+`bdedox` is legacy software that depends on an outdated version of Doxygen
+(version 1.7.1).  While `bdedox` is functional, and is currently used to
+produce the documentation for [BDE](http://bloomberg.github.io/bde/), we no
+longer maintain the scripts and are actively looking for a modern replacement.
+These scripts are provided on an as-is, use-at-your-own-risk basis.
