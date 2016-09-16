@@ -4,9 +4,7 @@ bdedox
 Syntax
 ------
 
-``` code
-bdedox <config-file>
-```
+    bdedox <config-file>
 
 Description
 -----------
@@ -21,9 +19,7 @@ your `$PATH` or you must specify `config-file` by a path (either absolute or
 relative). For example, if a configuration file named `projectA.cfg` is in the
 current directory but `.` is not in your `$PATH`, you must specify:
 
-``` code
-bdedox ./projectA.cfg
-```
+    bdedox ./projectA.cfg
 
 The configuration file must assign certain shell variables for `bdedox`. The
 key values, for which there are no defaults, are:
@@ -46,29 +42,25 @@ BDEDOX_HTMLDIR=""         # no default
 
 For example, `projectA.cfg` might contain:
 
-``` code
-BDEDOX_FILELIST='projectA_filelist'
-BDEDOX_DOXYDIR='/tmp/doxydir'
-BDEDOX_HTMLDIR='~jdoe/public_html/projectA'
-```
+    BDEDOX_FILELIST='projectA_filelist'
+    BDEDOX_DOXYDIR='/tmp/doxydir'
+    BDEDOX_HTMLDIR='~jdoe/public_html/projectA'
 
 where `projectA_filelist` might contain:
 
-``` code
-/public/src/groups/bdl/bdlt/doc/bdlt.txt
-/public/src/groups/bdl/bdlt/bdlt_date.h
-/public/src/groups/bdl/bdlt/bdlt_datetime.h
-/public/src/groups/bdl/bdlt/bdlt_datetimeinterval.h
-/public/src/groups/bdl/bdlt/bdlt_datetimetz.h
-/public/src/groups/bdl/bdlt/bdlt_datetz.h
-/public/src/groups/bdl/bdlt/bdlt_dayofweek.h
-/public/src/groups/bdl/bdlt/bdlt_month.h
-/public/src/groups/bdl/bdlt/bdlt_monthofyear.h
-/public/src/groups/bdl/bdlt/bdlt_time.h
-/public/src/groups/bdl/bdlt/bdlt_timeinterval.h
-/public/src/groups/bdl/bdlt/bdlt_timemachine.h
-/public/src/groups/bdl/bdlt/bdlt_timetz.h
-```
+    /public/src/groups/bdl/bdlt/doc/bdlt.txt
+    /public/src/groups/bdl/bdlt/bdlt_date.h
+    /public/src/groups/bdl/bdlt/bdlt_datetime.h
+    /public/src/groups/bdl/bdlt/bdlt_datetimeinterval.h
+    /public/src/groups/bdl/bdlt/bdlt_datetimetz.h
+    /public/src/groups/bdl/bdlt/bdlt_datetz.h
+    /public/src/groups/bdl/bdlt/bdlt_dayofweek.h
+    /public/src/groups/bdl/bdlt/bdlt_month.h
+    /public/src/groups/bdl/bdlt/bdlt_monthofyear.h
+    /public/src/groups/bdl/bdlt/bdlt_time.h
+    /public/src/groups/bdl/bdlt/bdlt_timeinterval.h
+    /public/src/groups/bdl/bdlt/bdlt_timemachine.h
+    /public/src/groups/bdl/bdlt/bdlt_timetz.h
 
 Note that the input can include both package- and group-level documentation
 (e.g., `bdlt.txt`) as well as `.h` files. *Every* file listed in the
