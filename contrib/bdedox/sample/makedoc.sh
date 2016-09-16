@@ -14,7 +14,7 @@
 # Note that the Doxygen 1.7.1 executable must be in one of the directories in
 # your 'PATH'.
 
-# Generate file list
+# Generate the file list
 find "$1/groups" -type f \( \( -name '*.h' -not -path '*+*' \) \
                             -o -name '*.txt' \)                \
     > filelist
@@ -43,7 +43,7 @@ if [ -d converted ]; then
     rm -r converted
 fi
 
-# Clean up file list
+# Clean up the file list
 if [ -f filelist ]; then
     rm -r filelist
 fi
