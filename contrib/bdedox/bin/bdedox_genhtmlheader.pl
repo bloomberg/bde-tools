@@ -64,6 +64,10 @@ Usage: $prog -h | [-d] [-v] <-f fileList> <-o doxyDir> [-r file.header ]
                                  default: .
    --header  | -r <header>   header filename defining HTML 'quick links'
                                  default: doxydir/BDEQuicklinks.header'
+
+Generate the standard html header for all documentation output, including
+quicklinks to all included UORs.
+
 _USAGE_END
 }
 

@@ -22,7 +22,8 @@
 #                            [-p project] [-n projectno]
 #                            [-c cfgfile]
 #
-# Purpose: This script runs 'doxygen' in the 'bdedox' framework.
+# Purpose: This script invokes 'doxygen' with the configuration options
+# specified in the 'bdedox' configuration file.
 #==============================================================================
 
 syntax="Syntax: bdedox_genhtml.sh [-h] |"

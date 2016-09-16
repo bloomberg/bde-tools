@@ -64,6 +64,9 @@ Usage: $prog -h | [-d] [-v] [-o htmlDir] [-f filesFile] [-m modulesFile] \
                                    Component information file (written)
                                    default: 'components.html'
 
+Generate 'components.html', containing a collapsible hierarchical listing of
+all components in the library being documented.
+
 _USAGE_END
 }
 

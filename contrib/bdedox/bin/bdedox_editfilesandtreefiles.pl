@@ -46,6 +46,12 @@ Usage: $prog -h | [-d] [-v] <-o htmlDir>
    --htmlDir   | -o <htmlDir>  Output directory (home of Doxygenated files)
                                    default: ./html
 
+Correct references to 'txt' files in Doxygen html output.  'txt' files in the
+'bdedox' input file list are replaced with synthesized header files before
+invoking Doxygen.  This script replaces references to those synthesized header
+files with references to the original 'txt' files.
+
+
 _USAGE_END
 }
 

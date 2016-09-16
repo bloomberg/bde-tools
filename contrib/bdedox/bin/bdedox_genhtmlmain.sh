@@ -22,7 +22,8 @@
 #                                [-p project] [-n projectno]
 #                                [-c cfgfile] [file ... ]
 #
-# Purpose: Runs 'doxygen' in the 'bdedox' framework to create 'main.html'.
+# Purpose: This script invokes 'doxygen' to generate the 'main.html' landing
+# page for the project being documented.
 #==============================================================================
 
 syntax="Syntax: bdedox_genhtmlmain.sh [-h] |"

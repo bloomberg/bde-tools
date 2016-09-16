@@ -48,6 +48,9 @@ Usage: $prog -h | [-d] [-v] <-f fileList > <-o doxyDir>
   --preprocess | -p <filter>   Input filter of form 'cmd [opts] <filename>'.
                                    default: none
   --doxyDir    | -o <dir>      Output directory (for Doxygen-ated files)
+
+Invoke Doxygen on source files that have been converted from BDE markup to Doxygen markup.
+
 _USAGE_END
 }
 #------------------------------------------------------------------------------

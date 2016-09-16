@@ -50,6 +50,8 @@ Usage: $prog -h | [-d] [-v] <-f fileList> <-o htmlDir> [-b <baseTitle>]
    --baseTitle | -b            Base HTML title
                                    default: "Bloomberg Development Environment"
 
+Replace converted header files with their original BDE-markup forms.
+
 _USAGE_END
 }
 
