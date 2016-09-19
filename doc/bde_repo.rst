@@ -310,15 +310,15 @@ Dep File
 --------
 
 A ``.dep`` file describes the allowed dependencies for either a package
-or package-group. A package-group's ``.dep`` file describes the other
-package-groups that components within that package-group may depend.
+or a package-group. A package-group's ``.dep`` file describes the other
+package-groups that components within that package-group may depend on.
 Similarly, a package's ``.dep`` file describes the other packages within
-the *same* package-group which components within that package may
-depend. Note that a package's .dep file should *not* refer to other
+the *same* package-group that components within that package may
+depend on. Note that a package's .dep file should *not* refer to other
 package-groups, since the dependencies on other package-groups are
-inherited from the package-group level .dep file.
+inherited from the package-group-level .dep file.
 
-The ``dep`` file format is a line separated text file. Each line
+The ``dep`` file format is a line-separated text file. Each line
 contains a single entry (a package or a package group), blank lines are
 ignored, and portions of a line can be commented out using the prefix
 ``#``.
