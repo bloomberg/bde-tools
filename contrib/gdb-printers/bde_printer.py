@@ -1033,10 +1033,9 @@ def build_pretty_printer():
     add_printer('NullableValue',
                 'BloombergLP::bdeut_NullableValue<.*>',
                 Nullable)
-    add_printer('bdet_Time', 'BloombergLP::bdet_Time', Time);
-    add_printer('bdet_Date', '^BloombergLP::bdet_Date$', Date);
-    add_printer('bdet_Date', '^BloombergLP::bdlt::Date$', Date);
-    add_printer('bdet_DateTz', '^BloombergLP::bdet_DateTz$', DateTz);
+    add_printer('Time', '^BloombergLP::bdlt::Time$', Time);
+    add_printer('Date', '^BloombergLP::bdlt::Date$', Date);
+    add_printer('DateTz', '^BloombergLP::bdlt::DateTz$', DateTz);
 
     add_printer('ContainerBase',
                 '^BloombergLP::bslalg::ContainerBase<bsl::allocator<.*> >$',
