@@ -107,8 +107,8 @@ def _createAllocatorList(cbase):
 
 def _sizeAndAllocator(size, allocator):
     printAllocator = gdb.parameter('print bslma-allocator')
-    return 'size:%d' % size if not printAllocator \
-                            else 'size:%d,alloc:%s' % (size,allocator)
+    return ('size:%d' % size if not printAllocator else
+            'size:%d,alloc:%s' % (size,allocator))
 
 def keyValueIterator(arg):
     eclipseMode = gdb.parameter('print bsl-eclipse')
@@ -332,8 +332,8 @@ class BslRbTreeIterator:
                 l = self.followPointer(pointer,'d_left_p')
         else:
             p = self.followPointer(pointer, 'd_parentWithColor_p')
-            while p != self.sentinel.address \
-                    and self.followPointer(p, 'd_right_p') == pointer:
+            while p != self.sentinel.address and self.followPointer(
+                                                    p, 'd_right_p') == pointer:
                 pointer = p
                 p = self.followPointer(p, 'd_parentWithColor_p')
             pointer = p
@@ -487,6 +487,7 @@ class Time:
     """
     def __init__(self, val):
         self.val = val
+
     def to_string(self):
         tmp = int(self.val['d_milliseconds'])
         ms  = tmp % 1000
@@ -497,6 +498,7 @@ class Time:
         hh = tmp / 60
 
         return "%02d:%02d:%02d.%03d" % (hh, min, sec, ms)
+
 class Date:
     """Pretty printer for 'bdet_Date'
 
@@ -585,8 +587,8 @@ class Date:
             return (year, dayOfYear)
 
     def isLeapYear(self, year):
-        return 0 == year % 4 \
-                and (0 != year % 100 or 0 == year % 400 or year <= 1752)
+        return 0 == year % 4 and (
+            0 != year % 100 or 0 == year % 400 or year <= 1752)
 
     def dayOfYearToDayMonth(self, year, dayOfYear):
         if year == Date.YEAR_1752:
@@ -609,7 +611,7 @@ class Date:
         return (m,d)
 
     def to_string(self):
-        serialDay = int(self.val['d_date'])
+        serialDay = int(self.val['d_serialDate'])
 
         (year, dayOfYear) = self.serialToYearDate(serialDay)
         (month, day)      = self.dayOfYearToDayMonth(year, dayOfYear)
@@ -617,9 +619,7 @@ class Date:
         return "%04d-%02d-%02d" % (year, month, day)
 
 class DateTz:
-    """Pretty printer for 'bdet_DateTz'
-
-    """
+    """Pretty printer for 'bdet_DateTz'"""
     def __init__(self,val):
         self.val = val
 
@@ -786,9 +786,8 @@ class BslUnorderedMap:
         self.listRoot = anchor['d_listRootAddress_p']
 
     def to_string(self):
-        return "unordered_map<%s,%s> [size:%d,capacity:%d,buckets:%d]" \
-                % (self.keyArg, self.valueArg, self.size, self.capacity,
-                   self.buckets)
+        return "unordered_map<%s,%s> [size:%d,capacity:%d,buckets:%d]" % (
+            self.keyArg, self.valueArg, self.size, self.capacity, self.buckets)
 
     def display_hint(self):
         return 'map'
@@ -935,8 +934,8 @@ class BdeHelpCommand(gdb.Command):
         args = gdb.string_to_argv(arg)
         if len(args) == 0:
             print __doc__
-        elif len(args) == 1:
-            print eval(args[0]).__doc__
+        elif len(args) == 1 and args[0] in docs:
+            print docs[args[0]]
         else:
             print """
     Usage: bde-help [element]
@@ -1012,61 +1011,59 @@ def init_globals():
     try:
         global boolType
         boolType = gdb.lookup_type('bool')
+
+        global docs
+        docs = { }
+
+        global pp
+        pp = gdb.printing.RegexpCollectionPrettyPrinter("BDE")
     except:
         pass
+
+def add_printer(name, re, klass):
+    docs[name] = klass.__doc__
+    docs[klass.__name__] = klass.__doc__
+    pp.add_printer(name, re, klass)
 
 def build_pretty_printer():
     if boolType is None:
         init_globals()
 
-    pp = gdb.printing.RegexpCollectionPrettyPrinter("BDE")
+    add_printer('IPv4Address', '^BloombergLP::bteso_IPv4Address$', IPv4Address)
+    add_printer('NullableValue',
+                'BloombergLP::bdeut_NullableValue<.*>',
+                Nullable)
+    add_printer('bdet_Time', 'BloombergLP::bdet_Time', Time);
+    add_printer('bdet_Date', '^BloombergLP::bdet_Date$', Date);
+    add_printer('bdet_DateTz', '^BloombergLP::bdet_DateTz$', DateTz);
 
-    pp.add_printer('IPv4Address',
-                   '^BloombergLP::bteso_IPv4Address$',
-                   IPv4Address)
-    pp.add_printer('NullableValue',
-                   'BloombergLP::bdeut_NullableValue<.*>',
-                   Nullable)
-    pp.add_printer('bdet_Time',
-                   'BloombergLP::bdet_Time',
-                   Time);
-    pp.add_printer('bdet_Date',
-                   '^BloombergLP::bdet_Date$',
-                   Date);
-    pp.add_printer('bdet_DateTz',
-                   '^BloombergLP::bdet_DateTz$',
-                   DateTz);
+    add_printer('ContainerBase',
+                '^BloombergLP::bslalg::ContainerBase<bsl::allocator<.*> >$',
+                ContainerBaseBslma)
 
-    pp.add_printer('ContainerBase',
-                   '^BloombergLP::bslalg::ContainerBase<bsl::allocator<.*> >$',
-                   ContainerBaseBslma)
+    add_printer('StringImp', '^bsl::String_Imp<char,.*>$', BslStringImp)
+    add_printer('string', '^bsl::basic_string<char,.*>$', BslString)
 
-    pp.add_printer('StringImp', '^bsl::String_Imp<char,.*>$',   BslStringImp)
-    pp.add_printer('string',    '^bsl::basic_string<char,.*>$', BslString)
+    add_printer('VectorImp', '^bsl::Vector_ImpBase<.*>', BslVectorImp)
+    add_printer('vector', '^bsl::vector<.*>$', BslVector)
 
-    pp.add_printer('VectorImp', '^bsl::Vector_ImpBase<.*>',     BslVectorImp)
-    pp.add_printer('vector',    '^bsl::vector<.*>$',            BslVector)
+    add_printer('map', '^bsl::map<.*>$', BslMap)
+    add_printer('set', '^bsl::set<.*>$', BslSet)
 
-    pp.add_printer('map',       '^bsl::map<.*>$',               BslMap)
-    pp.add_printer('set',       '^bsl::set<.*>$',               BslSet)
+    add_printer('unordered_map', '^bsl::unordered_map<.*>$', BslUnorderedMap)
+    add_printer('unordered_set', '^bsl::unordered_set<.*>$', BslUnorderedSet)
 
-    pp.add_printer('unordered_map',
-                   '^bsl::unordered_map<.*>$',                 BslUnorderedMap)
-    pp.add_printer('unordered_set',
-                   '^bsl::unordered_set<.*>$',                 BslUnorderedSet)
+    add_printer('pair', '^bsl::pair<.*>$', BslPair)
 
-    pp.add_printer('pair',      '^bsl::pair<.*>$',              BslPair)
+    add_printer('atomic', '^BloombergLP::bsls::Atomic.*$', BslAtomic)
 
-    pp.add_printer('atomic',
-                   '^BloombergLP::bsls::Atomic.*$',
-                                                                BslAtomic)
+    add_printer('shared_ptr', '^bsl::shared_ptr<.*>$', BslSharedPtr)
+    add_printer('weak_ptr', '^bsl::weak_ptr<.*>$', BslSharedPtr)
+    add_printer('ManagedPtr',
+                '^BloombergLP::bslma::ManagedPtr<.*>$',
+                BslmaManagedPtr)
 
-    pp.add_printer('shared_ptr', '^bsl::shared_ptr<.*>$',       BslSharedPtr)
-    pp.add_printer('weak_ptr',   '^bsl::weak_ptr<.*>$',         BslSharedPtr)
-    pp.add_printer('ManagedPtr',
-                   '^BloombergLP::bslma::ManagedPtr<.*>$',     BslmaManagedPtr)
-
-    #pp.add_printer('catchall',  '.*',                           CatchAll)
+    #add_printer('catchall', '.*', CatchAll)
     return pp
 
 def reload():
