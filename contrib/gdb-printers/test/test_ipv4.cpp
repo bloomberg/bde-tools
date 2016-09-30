@@ -12,5 +12,5 @@ int main()
 
     bsl::cout << addr2 << "\n";
 
-    return 0;
+    std::cout << "Done\n";
 }

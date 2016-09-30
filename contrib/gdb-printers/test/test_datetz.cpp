@@ -19,5 +19,5 @@ int main()
     def.setDateTz(date, -5);
     bsl::cout << "Date is" << def << "\n";
 
-    return 0;
+    std::cout << "Done\n";
 }

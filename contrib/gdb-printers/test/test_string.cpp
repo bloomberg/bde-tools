@@ -15,5 +15,5 @@ int main()
     bsl::string large(100, 'a');
     bsl::cout << large.size() << "\n";
 
-    return 0;
+    std::cout << "Done\n";
 }

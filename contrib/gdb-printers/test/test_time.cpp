@@ -16,5 +16,5 @@ int main()
     bsl::cout << noon << "\n";
     bsl::cout << random << "\n";
 
-    return 0;
+    std::cout << "Done\n";
 }

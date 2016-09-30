@@ -14,5 +14,5 @@ int main()
     bsls::AtomicPointer<int> aptr;
     aptr = 0;
 
-    return 0;
+    std::cout << "Done\n";
 }

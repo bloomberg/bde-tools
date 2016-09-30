@@ -95,7 +95,11 @@ import gdb.printing
 # Private Types and Helpers
 ###############################################################################
 
-boolType = None
+global docs
+docs = { }
+
+global pp
+pp = None
 
 ##  Helpers controlling the printout based on printer options
 def _createAllocatorList(cbase):
@@ -931,6 +935,7 @@ class BdeHelpCommand(gdb.Command):
         super(BdeHelpCommand, self).__init__("bde-help", gdb.COMMAND_SUPPORT)
 
     def invoke(self, arg, from_tty):
+        global docs
         args = gdb.string_to_argv(arg)
         if len(args) == 0:
             print __doc__
@@ -1009,32 +1014,28 @@ class BslEclipseModeParameter(gdb.Parameter):
 def init_globals():
     ## Init globals
     try:
-        global boolType
-        boolType = gdb.lookup_type('bool')
-
         global docs
         docs = { }
-
         global pp
         pp = gdb.printing.RegexpCollectionPrettyPrinter("BDE")
     except:
         pass
 
 def add_printer(name, re, klass):
+    global docs
     docs[name] = klass.__doc__
     docs[klass.__name__] = klass.__doc__
+    global pp
     pp.add_printer(name, re, klass)
 
 def build_pretty_printer():
-    if boolType is None:
-        init_globals()
-
     add_printer('IPv4Address', '^BloombergLP::bteso_IPv4Address$', IPv4Address)
     add_printer('NullableValue',
                 'BloombergLP::bdeut_NullableValue<.*>',
                 Nullable)
     add_printer('bdet_Time', 'BloombergLP::bdet_Time', Time);
     add_printer('bdet_Date', '^BloombergLP::bdet_Date$', Date);
+    add_printer('bdet_Date', '^BloombergLP::bdlt::Date$', Date);
     add_printer('bdet_DateTz', '^BloombergLP::bdet_DateTz$', DateTz);
 
     add_printer('ContainerBase',
@@ -1064,18 +1065,20 @@ def build_pretty_printer():
                 BslmaManagedPtr)
 
     #add_printer('catchall', '.*', CatchAll)
+    global pp
     return pp
 
 def reload():
     ## Create the commands
+    init_globals()
     BslShowAllocatorParameter ()
     BdeHelpCommand ()
     BslEclipseModeParameter ()
 
     ## Remove the pretty printer if it exists
-    for pp in gdb.pretty_printers:
-        if (pp.name == 'BDE'):
-            gdb.pretty_printers.remove(pp)
+    for printer in gdb.pretty_printers:
+        if (printer.name == 'BDE'):
+            gdb.pretty_printers.remove(printer)
             break
 
     ## Create the new pretty printer

@@ -26,5 +26,5 @@ int main()
     };
     bsl::for_each(ss.begin(), ss.end(), &SS::f);
 
-    return 0;
+    std::cout << "Done\n";
 }

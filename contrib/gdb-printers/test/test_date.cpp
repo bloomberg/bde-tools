@@ -21,5 +21,5 @@ int main()
     bsl::cout << leap2 << "\n";
     bsl::cout << leap3 << "\n";
 
-    return 0;
+    std::cout << "Done\n";
 }

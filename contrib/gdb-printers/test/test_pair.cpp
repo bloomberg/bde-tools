@@ -1,4 +1,5 @@
-#include <utility>
+#include <bsl_iostream.h>
+#include <bsl_utility.h>
 
 int main() {
     bsl::pair<int,double> pii(0,1.5);
@@ -6,5 +7,7 @@ int main() {
     bsl::pair<bsl::string,int> psi("Hi", 2);
     bsl::pair<bsl::string,bsl::string> pss("Hi", "there");
 
-    return pii.first;
+    std::cout << pii.first << "\n";
+
+    std::cout << "Done\n";
 }

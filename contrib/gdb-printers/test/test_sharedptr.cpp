@@ -13,5 +13,5 @@ int main()
 
     bsl::shared_ptr<int> p22(p2);
 
-    return 0;
+    std::cout << "Done\n";
 }
