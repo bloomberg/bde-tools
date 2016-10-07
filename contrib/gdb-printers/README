@@ -93,18 +93,30 @@ running:
 (gdb) info pretty-printer
 global pretty-printers:
   BDE
-    ContainerBase
-    IPv4Address
-    NullableValue
-    StringImp
-    VectorImp
+    (internal)ContainerBase
+    (internal)StringImp
+    (internal)StringRefData
+    (internal)VectorImp
     atomic
+    bdeut_NullableValue
+    bdlt::Date
+    bdlt::DateTz
+    bdlt::Datetime
+    bdlt::DatetimeTz
+    bdlt::Time
+    bdlt::TimeTz
+    bslma::ManagedPtr
+    bslstl::StringRef
+    bteso_IPv4Address
     map
     pair
     set
     shared_ptr
     string
+    unordered_map
+    unordered_set
     vector
+    weak_ptr
 
 Each printer can be enabled or disabled individually or by blocks.  This can be
 useful to inspect the raw memory when we need to access some detail that is not
@@ -151,18 +163,30 @@ at this point support the following types (implementation types shown inside
 brackets)
 
   BDE
-    ContainerBase   [bslalg::ContainerBase (1)]
-    IPv4Address     bteso_IPv4Address
-    NullableValue   b
-    StringImp       [bsl::String_Imp]
-    VectorImp       [bsl::Vector_ImpBase]
-    atomic          bsls::Atomic -- multiple types
-    map             bsl::map<K,V>
-    pair            bsl::pair<T,U>
-    set             bsl::set<T>
-    shared_ptr      bsl::shared_ptr<T>
-    string          bsl::string
-    vector          bsl::vector<T> (2)
+    (internal)ContainerBase  [bslalg::ContainerBase (1)]
+    (internal)StringImp      [bsl::String_Imp]
+    (internal)StringRefData  [bslstl::StringRefData]
+    (internal)VectorImp      [bsl::Vector_ImpBase]
+    atomic                   bsls::Atomic -- multiple types
+    bdeut_NullableValue      bdeut_NullableValue<T>
+    bdlt::Date               bdlt::Date
+    bdlt::DateTz             bdlt::DateTz
+    bdlt::Datetime           bdlt::Datetime
+    bdlt::DatetimeTz         bdlt::DatetimeTz
+    bdlt::Time               bdlt::Time
+    bdlt::TimeTz             bdlt::TimeTz
+    bslma::ManagedPtr        bslma::ManagedPtr<T>
+    bslstl::StringRef        bslstl::StringRef
+    bteso_IPv4Address        bteso_IPv4Address
+    map                      bsl::map<K,V>
+    pair                     bsl::pair<T,U>
+    set                      bsl::set<T>
+    shared_ptr               bsl::shared_ptr<T>
+    string                   bsl::string
+    unordered_map            bsl::unordered_map<K,V>
+    unordered_set            bsl::unordered_set<T>
+    vector                   bsl::vector<T> (2)
+    weak_ptr                 bsl::weak_ptr<T>
 
 (1) Only specialization with 'bsl::allocator<T>' (i.e. polymorphic allocator
     adaptor) is supported
