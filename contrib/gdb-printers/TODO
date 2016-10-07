@@ -14,8 +14,6 @@ bsl::vector<bool>
 bsl::multiset
 bsl::multimap
 bsl::deque
-bsl::unordered_set
-bsl::unordered_map
 bsl::unordered_multiset
 bsl::unordered_multimap
 

@@ -87,10 +87,9 @@ def _createAllocatorList(cbase):
     printAllocator = gdb.parameter('print bslma-allocator')
     return [] if not printAllocator else [('alloc',cbase)]
 
-def _sizeAndAllocator(size, allocator):
-    printAllocator = gdb.parameter('print bslma-allocator')
-    return ('size:%d' % size if not printAllocator else
-            'size:%d,alloc:%s' % (size,allocator))
+def _optionalAllocator(allocator, prefix = ',', suffix = ''):
+    printalloc = gdb.parameter('print bslma-allocator')
+    return '%salloc:%s%s' % (prefix, allocator, suffix) if printalloc else ''
 
 def keyValueIterator(arg):
     eclipseMode = gdb.parameter('print bsl-eclipse')
@@ -819,10 +818,10 @@ class BslMap:
 
     def to_string(self):
         # Locally handle the printing the allocator or not
-        return "map<%s,%s> [%s]" % (self.keyArg,
-                                    self.valueArg,
-                                    _sizeAndAllocator(self.size, self.alloc)
-                                    )
+        return "map<%s,%s> [size%d%s]" % (self.keyArg,
+                                          self.valueArg,
+                                          self.size,
+                                          _optionalAllocator(self.alloc))
 
     def display_hint(self):
         return 'map'
@@ -844,19 +843,20 @@ class BslSet:
     all state other than the actual contents.
     """
     def __init__(self, val):
-        self.val       = val
+        self.val = val
         self.valueType = val.type.template_argument(0)
-        self.nodeType  = gdb.lookup_type('BloombergLP::bslstl::TreeNode<%s>'
-                                                              % self.valueType)
+        self.nodeType = gdb.lookup_type(
+            'BloombergLP::bslstl::TreeNode<%s>' % self.valueType)
 
-        self.size     = val['d_tree']['d_numNodes']
-        self.alloc    = (
-            val['d_compAndAlloc']['d_pool']['d_pool']['d_mechanism'])
+        self.size = val['d_tree']['d_numNodes']
+        self.alloc = val['d_compAndAlloc']['d_pool']['d_pool']['d_mechanism']
         self.sentinel = val['d_tree']['d_sentinel']
 
     def to_string(self):
-        return "set<%s> [%s]" % (self.valueType,
-                                 _sizeAndAllocator(self.size, self.alloc))
+        # Locally handle the printing the allocator or not
+        return "set<%s> [size:%d%s]" % (self.valueType,
+                                        self.size,
+                                        _optionalAllocator(self.alloc))
 
     def display_hint(self):
         return 'array'
@@ -864,13 +864,14 @@ class BslSet:
     def children(self):
         return valueIterator(BslRbTreeIterator(self.valueType, self.sentinel))
 
-# TODO: add support for bslma-allocator parameter
 class BslUnorderedMap:
     """Printer for a bsl::unordered_map<K,V>"""
     def __init__(self, val):
-        self.impl     = val['d_impl']
-        self.size     = int(self.impl['d_size'])
+        self.impl = val['d_impl']
+        self.size = int(self.impl['d_size'])
         self.capacity = int(self.impl['d_capacity'])
+        self.alloc = (self.impl['d_parameters']['d_nodeFactory']['d_pool']
+                               ['d_mechanism'])
 
         self.keyArg   = val.type.template_argument(0)
         self.valueArg = val.type.template_argument(1)
@@ -884,8 +885,9 @@ class BslUnorderedMap:
         self.listRoot = anchor['d_listRootAddress_p']
 
     def to_string(self):
-        return "unordered_map<%s,%s> [size:%d,capacity:%d,buckets:%d]" % (
-            self.keyArg, self.valueArg, self.size, self.capacity, self.buckets)
+        return "unordered_map<%s,%s> [size:%d,capacity:%d,buckets:%d%s]" % (
+            self.keyArg, self.valueArg, self.size, self.capacity, self.buckets,
+            _optionalAllocator(self.alloc))
 
     def display_hint(self):
         return 'map'
@@ -894,23 +896,25 @@ class BslUnorderedMap:
         return keyValueIterator(PairTupleIterator(
             HashTableIterator(self.valueType, self.listRoot)))
 
-# TODO: add support for bslma-allocator parameter
 class BslUnorderedSet:
     """Printer for a bsl::unordered_set<V>"""
     def __init__(self, val):
-        self.impl     = val['d_impl']
-        self.size     = int(self.impl['d_size'])
+        self.impl = val['d_impl']
+        self.size = int(self.impl['d_size'])
         self.capacity = int(self.impl['d_capacity'])
+        self.alloc = (self.impl['d_parameters']['d_nodeFactory']['d_pool']
+                               ['d_mechanism'])
 
         self.valueType = val.type.template_argument(0)
 
-        anchor        = self.impl['d_anchor']
-        self.buckets  = int(anchor['d_bucketArraySize'])
+        anchor = self.impl['d_anchor']
+        self.buckets = int(anchor['d_bucketArraySize'])
         self.listRoot = anchor['d_listRootAddress_p']
 
     def to_string(self):
-        return ("unordered_set<%s> [size:%d,capacity:%d,buckets:%d]"
-                % (self.valueType, self.size, self.capacity, self.buckets))
+        return ("unordered_set<%s> [size:%d,capacity:%d,buckets:%d%s]"
+                % (self.valueType, self.size, self.capacity, self.buckets,
+                   _optionalAllocator(self.alloc)))
 
     def display_hint(self):
         return 'array'
