@@ -17,8 +17,8 @@ script used to configure the build environment.
 
 ##Option File Formatter
 
-The bde\_opts\_format.py tool reformats BDE-style [option files]\
-(https://bloomberg.github.io/bde-tools/bde\_repo.html#options-file-format).
+The bde\_opts\_format.py tool reformats BDE-style [option files](
+https://bloomberg.github.io/bde-tools/bde\_repo.html#options-file-format).
 
 ##Test Runner
 
