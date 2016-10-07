@@ -5,7 +5,7 @@ building BDE-style libraries and applications, including the
 [BDE libraries](https://github.com/bloomberg/bde).
 
 The [tools](https://bloomberg.github.io/bde-tools/intro.html) found in this
-repository are listed below, and described in details in the 
+repository are listed below, and described in detail in the 
 [tool's documentation](https://bloomberg.github.io/bde-tools)
 
 ####WAF
