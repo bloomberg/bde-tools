@@ -1,0 +1,8 @@
+python
+## Import bde pretty printers
+import sys
+sys.path.append('/bbshr/bde/bde-oss-tools/contrib/gdb-printers')
+import bde_printer
+
+bde_printer.reload()
+end
