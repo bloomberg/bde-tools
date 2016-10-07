@@ -5,9 +5,10 @@ building BDE-style libraries and applications, including the
 [BDE libraries](https://github.com/bloomberg/bde).
 
 The [tools](https://bloomberg.github.io/bde-tools/intro.html) found in this
-repository are documented below.
+repository are listed below, and described in details in the 
+[tool's documentation](https://bloomberg.github.io/bde-tools)
 
-##WAF
+####WAF
 
 The [WAF](https://bloomberg.github.io/bde-tools) build system is a collection
 of tools used to build BDE-style libraries and applications.  It contains the
@@ -15,26 +16,26 @@ build tool [waf](https://bloomberg.github.io/bde-tools/waf.html#quick-start)
 and the [bde\_setenv.py](https://bloomberg.github.io/bde-tools/setwafenv.html)
 script used to configure the build environment.
 
-##Option File Formatter
+####Option File Formatter
 
 The bde\_opts\_format.py tool reformats BDE-style [option files](
 https://bloomberg.github.io/bde-tools/bde\_repo.html#options-file-format).
 
-##Test Runner
+####Test Runner
 
 The bde\_runtest.py tool exercises a test driver by running all of its cases.
 
 
-#Other Tools
+##Other Tools
 
 Several other tools are available in the 'contrib' area:
 
-##BDEDOX
+####bdedox
 
 The [bdedox](https://github.com/bloomberg/bde-tools/blob/master/contrib/bdedox)
 tool generates Doxygen HTML from source code files written in BDE style.
 
-##GDB-PRINTERS
+####gdb-printers
 
 The [gdb-printers](https://github.com/bloomberg/bde-tools/blob/master/contrib/gdb-printers) module contains an add-in for the GDB debugger that provides
 pretty-printers for a number of BDE components.
