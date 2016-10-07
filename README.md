@@ -25,8 +25,9 @@ https://bloomberg.github.io/bde-tools/bde\_repo.html#options-file-format).
 The bde\_runtest.py tool exercises a test driver by running all of its cases.
 
 
-Several other tools are available in the 'contrib' area:
+#Other Tools
 
+Several other tools are available in the 'contrib' area:
 
 ##BDEDOX
 
