@@ -13,5 +13,5 @@ int main()
 
     bsl::cout << vi.value() << '|' << vs.value() << "\n";
 
-    std::cout << "Done\n";
+    bsl::cout << "Done\n";
 }

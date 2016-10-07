@@ -1,12 +1,12 @@
-#include <bdet_datetz.h>
+#include <bdlt_datetz.h>
 #include <bsl_iostream.h>
 
 using namespace BloombergLP;
 
 int main()
 {
-    bdet_Date   date(2015, 1, 15);
-    bdet_DateTz def;
+    bdlt::Date   date(2015, 1, 15);
+    bdlt::DateTz def;
 
     bsl::cout << "Date is " << def << "\n";
 
@@ -19,5 +19,5 @@ int main()
     def.setDateTz(date, -5);
     bsl::cout << "Date is " << def << "\n";
 
-    std::cout << "Done\n";
+    bsl::cout << "Done\n";
 }

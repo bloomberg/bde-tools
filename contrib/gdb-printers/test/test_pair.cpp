@@ -7,7 +7,7 @@ int main() {
     bsl::pair<bsl::string,int> psi("Hi", 2);
     bsl::pair<bsl::string,bsl::string> pss("Hi", "there");
 
-    std::cout << pii.first << "\n";
+    bsl::cout << pii.first << "\n";
 
-    std::cout << "Done\n";
+    bsl::cout << "Done\n";
 }

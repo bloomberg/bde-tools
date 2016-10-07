@@ -9,8 +9,6 @@ Issues are not listed in any particular order.
 
 Components                  Concerns
 --------------------------  ---------------------------------------------------
-bslstl::StringRef
-
 bsl::bitset
 bsl::vector<bool>
 bsl::multiset
@@ -39,8 +37,7 @@ variants
 
 Improvements                Concerns
 --------------------------  ---------------------------------------------------
-Usability
-                            Allow printing of the bslma::Allocator in the first
+Usability                   Allow printing of the bslma::Allocator in the first
                             (outer component) but skip it internally.
 
                             Add 'terse' printing that will also skip capacity()

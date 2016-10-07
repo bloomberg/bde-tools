@@ -1,4 +1,5 @@
 #include <bsls_atomic.h>
+#include <bsl_iostream.h>
 
 using namespace BloombergLP;
 
@@ -14,5 +15,5 @@ int main()
     bsls::AtomicPointer<int> aptr;
     aptr = 0;
 
-    std::cout << "Done\n";
+    bsl::cout << "Done\n";
 }

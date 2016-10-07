@@ -10,29 +10,6 @@
             Evgeny Yakimov        <eyakimov@bloomberg.net>
             Hyman Rosen           <hrosen4@bloomberg.net>
 
-   List of provided pretty printers
-   --------------------------------
-
-    Printer           Implementation type
-    ---------------   -----------------------------------------------------
-    BDE
-      ManagedPtr      BslmaManagedPtr
-      atomic          BslAtomic
-      map             BslMap
-      pair            BslPair
-      set             BslSet
-      shared_ptr      BslSharedPtr
-      string          BslString
-      unordered_map   BslUnorderedMap
-      unordered_set   BslUnorderedSet
-      vector          BslVector
-      weak_ptr        BslSharedPtr
-
-    [implementation details]
-      ContainerBase   ContainerBaseBslma
-      StringImp       BslStringImp
-      VectorImp       BslVectorImp
-
    Configuration options
    ---------------------
     These settings configure some of the behavior of the pretty printer to
@@ -67,27 +44,28 @@
     command by running it in "raw" mode:
 
         (gdb) print /r container
-
-   General design considerations
-   -----------------------------
-
-    Pretty printers should focus on the useful information for the developer
-    that is debugging the application.  What is useful for one developer might
-    be too verbose for another and not enough for a third one.  Unless
-    otherwise noted the provided pretty printers will reformat the available
-    information but avoid hiding data from the developer.  The implication is
-    that the output might be slightly verbose (the 'bslma::Allocator' pointer
-    in containers is printed always, the size and capacity for 'bsl::string' is
-    printed...).  Other existing pretty printers (for example for the standard
-    library provided with gcc) will omit details and focus on the data.
-
-    The format used for output has been considered for a high information
-    density given that it will print more things than needed by most users.
-    The description of the format for each one of the pretty printers is
-    documented below and does not reflect the layout of the C++ types that are
-    being printed.
 """
+
+#  General design considerations
+#  -----------------------------
+#   Pretty printers should focus on the useful information for the developer
+#   that is debugging the application.  What is useful for one developer might
+#   be too verbose for another and not enough for a third one.  Unless
+#   otherwise noted the provided pretty printers will reformat the available
+#   information but avoid hiding data from the developer.  The implication is
+#   that the output might be slightly verbose (the 'bslma::Allocator' pointer
+#   in containers is printed always, the size and capacity for 'bsl::string' is
+#   printed...).  Other existing pretty printers (for example for the standard
+#   library provided with gcc) will omit details and focus on the data.
+#
+#   The format used for output has been considered for a high information
+#   density given that it will print more things than needed by most users.
+#   The description of the format for each one of the pretty printers is
+#   documented below and does not reflect the layout of the C++ types that are
+#   being printed.
+
 import re
+import sys
 import gdb
 import gdb.printing
 
@@ -364,7 +342,7 @@ class PairTupleIterator:
     """Helper class to convert bsl::pair to a tuple as an iterator"""
 
     def __init__(self,iter):
-        self.iter = iter;
+        self.iter = iter
 
     def __iter__(self):
         return self
@@ -378,7 +356,7 @@ class KeyValueIterator:
     """
     def __init__(self,iter):
         self.value  = None
-        self.iter = iter;
+        self.iter = iter
 
     def __iter__(self):
         return self
@@ -397,7 +375,7 @@ class KeyValueIterator:
 class ValueIterator:
     """This iterator returns a ('value',value) tuple from an iterator."""
     def __init__(self,iter):
-        self.iter = iter;
+        self.iter = iter
 
     def __iter__(self):
         return self
@@ -409,19 +387,19 @@ class ValueIterator:
 class RawKeyValueIterator:
     """This iterator returns a (str(key),value) tuple from an iterator."""
     def __init__(self,iter):
-        self.iter = iter;
+        self.iter = iter
 
     def __iter__(self):
         return self
 
     def next(self):
-        next = self.iter.next();
+        next = self.iter.next()
         return (str(next[0]),next[1])
 
 class RawValueIterator:
     """This iterator returns a (str(value),value) tuple from an iterator."""
     def __init__(self,iter):
-        self.iter = iter;
+        self.iter = iter
 
     def __iter__(self):
         return self
@@ -484,32 +462,68 @@ class Nullable:
         return iter(self.members)
 
 class Time:
-    """Pretty printer for 'bdet_Time'
+    """Pretty printer for 'bdlt::Time'
 
-    This pretty printer shows the value of the time object in 'hh:mm:ss.xxx'
-    format.
+    The value is shown in 'hh:mm:ss.xxx' format.
     """
     def __init__(self, val):
         self.val = val
 
-    def to_string(self):
-        tmp = int(self.val['d_milliseconds'])
-        ms  = tmp % 1000
-        tmp = tmp / 1000
-        sec = tmp % 60
-        tmp = tmp / 60
-        min = tmp % 60
-        hh = tmp / 60
+    @classmethod
+    def toHMmS(cls, value):
+        milliseconds  = value % 1000
+        value        /= 1000
+        seconds       = value % 60
+        value        /= 60
+        minutes       = value % 60
+        value        /= 60
+        hours         = value
 
-        return "%02d:%02d:%02d.%03d" % (hh, min, sec, ms)
+        return "%02d:%02d:%02d.%03d" % (hours, minutes, seconds, milliseconds)
+
+    @classmethod
+    def toHMuS(cls, value):
+        microseconds  = value % 1000000
+        value        /= 1000000
+        seconds       = value % 60
+        value        /= 60
+        minutes       = value % 60
+        value        /= 60
+        hours         = value
+
+        return "%02d:%02d:%02d.%06d" % (hours, minutes, seconds, microseconds)
+
+    def to_string(self):
+        return Time.toHMmS(self.val['d_milliseconds'])
+
+class Tz:
+    """Utility to format a time zone offset."""
+    @classmethod
+    def toHM(cls, offset):
+        sign = '-' if offset < 0 else '+'
+        if offset < 0:
+            offset = -offset
+            sign = '-'
+        else:
+            sign = '+'
+        return '%s%02d:%02d' % (sign, offset / 60, offset % 60)
+
+class TimeTz:
+    """Pretty printer for 'bdlt::TimeTz'
+
+    The value is shown in 'hh:mm:ss.xxx+hh:mm' format.
+    """
+    def __init__(self,val):
+        self.val = val
+
+    def to_string(self):
+        time = Time(self.val['d_localTime']).to_string()
+        return '%s%s' % (time, Tz.toHM(self.val['d_offset']))
 
 class Date:
-    """Pretty printer for 'bdet_Date'
+    """Pretty printer for 'bdlt::Date'
 
-    This pretty printer shows the value of the date in 'YYYYY-MM-DD' format.
-
-    Note: The implementation of the pretty printer is incomplete and is only
-    precise for "recent" dates.
+    The value is shown in 'YYYYY-MM-DD' format.
     """
     SEPTEMBER = 9
     YEAR_1752 = 1752
@@ -534,7 +548,8 @@ class Date:
     def __init__(self, val):
         self.val = val
 
-    def serialToYearDate(self, serialDay):
+    @classmethod
+    def serialToYearDate(cls, serialDay):
         """Extract the year and day of the year from the value in 'serialDay'.
         """
         if serialDay > Date.JAN_01_1753:
@@ -571,33 +586,35 @@ class Date:
             return (year, dayOfYear)
         else:
             # Date pre-1753
-            y = 1;                                # base year
-            n = serialDay - 1;                    # num actual days since 1/1/1
+            y = 1                                 # base year
+            n = serialDay - 1                     # num actual days since 1/1/1
 
-            z4 = n / Date.DAYS_IN_4_YEARS;        # num 4-year blocks
-            y += z4 * 4;
-            n -= z4 * Date.DAYS_IN_4_YEARS;       # num days since y/1/1 (4)
+            z4 = n / Date.DAYS_IN_4_YEARS         # num 4-year blocks
+            y += z4 * 4
+            n -= z4 * Date.DAYS_IN_4_YEARS        # num days since y/1/1 (4)
 
-            z = n / Date.DAYS_IN_NON_LEAP_YEAR;   # num whole years
-            y += z;
-            n -= z * Date.DAYS_IN_NON_LEAP_YEAR;  # num days since y/1/1 (1)
+            z = n / Date.DAYS_IN_NON_LEAP_YEAR    # num whole years
+            y += z
+            n -= z * Date.DAYS_IN_NON_LEAP_YEAR   # num days since y/1/1 (1)
 
             if 4 == z and 0 == n:                 # last day in a leap year
-                year      = y - 1;
-                dayOfYear = Date.DAYS_IN_LEAP_YEAR;
+                year      = y - 1
+                dayOfYear = Date.DAYS_IN_LEAP_YEAR
             else:
-                year      = y;
-                dayOfYear = n + 1;
+                year      = y
+                dayOfYear = n + 1
             return (year, dayOfYear)
 
-    def isLeapYear(self, year):
+    @classmethod
+    def isLeapYear(cls, year):
         return 0 == year % 4 and (
             0 != year % 100 or 0 == year % 400 or year <= 1752)
 
-    def dayOfYearToDayMonth(self, year, dayOfYear):
+    @classmethod
+    def dayOfYearToDayMonth(cls, year, dayOfYear):
         if year == Date.YEAR_1752:
             daysThroughMonth = Date.y1752DaysThroughMonth
-        elif self.isLeapYear(year):
+        elif Date.isLeapYear(year):
             daysThroughMonth = Date.leapDaysThroughMonth
         else:
             daysThroughMonth = Date.normDaysThroughMonth
@@ -614,26 +631,74 @@ class Date:
 
         return (m,d)
 
-    def to_string(self):
-        serialDay = int(self.val['d_serialDate'])
-
-        (year, dayOfYear) = self.serialToYearDate(serialDay)
-        (month, day)      = self.dayOfYearToDayMonth(year, dayOfYear)
+    @classmethod
+    def toYMD(cls, serialDay):
+        (year, dayOfYear) = Date.serialToYearDate(serialDay)
+        (month, day)      = Date.dayOfYearToDayMonth(year, dayOfYear)
 
         return "%04d-%02d-%02d" % (year, month, day)
 
+    def to_string(self):
+        return Date.toYMD(self.val['d_serialDate'])
+
 class DateTz:
-    """Pretty printer for 'bdet_DateTz'"""
+    """Pretty printer for 'bdlt::DateTz'
+
+    The value is shown in 'YYYYY-MM-DDT00+hh:mm' format.
+    """
     def __init__(self,val):
         self.val = val
 
     def to_string(self):
         date = Date(self.val['d_localDate']).to_string()
-        offset = self.val['d_offset']
-        if (offset >= 0):
-            return '%s +%d' % (date, offset)
+        return '%sT00%s' % (date, Tz.toHM(self.val['d_offset']))
+
+class Datetime:
+    """Pretty printer for 'bdlt::Datetime'
+    
+    The value is shown in 'YYYYY-MM-DDTHH:MM:SS.SSSSSS' format.
+    """
+    REP_MASK  = 0x08000000000000000L
+    DATE_MASK = 0x0ffffffe000000000L
+    TIME_MASK = 0x00000001fffffffffL
+    MASK_32   = 0x000000000ffffffffL
+    SHIFT_32  = 32
+    TIME_BITS = 37
+
+    def __init__(self,val):
+        self.val = val
+
+    def to_string(self):
+        value = long(self.val['d_value'])
+        if value < 0:
+            value += 2L ** 64
+        invalid = (value & Datetime.REP_MASK) == 0
+        if invalid:
+            if sys.byteorder == "little":
+                days = (value & Datetime.MASK_32) - 1
+                milliseconds = value >> Datetime.SHIFT_32
+            else:
+                days = (value >> Datetime.SHIFT_32) - 1
+                milliseconds = value & Datetime.MASK_32
+            value = (days << Datetime.TIME_BITS) | (1000L * milliseconds)
         else:
-            return '%s %d' % (date, offset)
+            value ^= Datetime.REP_MASK
+        date = Date.toYMD((value >> Datetime.TIME_BITS) + 1)
+        time = Time.toHMuS(value & Datetime.TIME_MASK)
+
+        return "%s%sT%s" % (("[invalid]" if invalid else ""), date, time)
+
+class DatetimeTz:
+    """Pretty printer for 'bdlt::DatetimeTz'
+    
+    The value is shown in 'YYYYY-MM-DDThh:mm:ss.ssssss+hh:mm' format.
+    """
+    def __init__(self,val):
+        self.val = val
+
+    def to_string(self):
+        datetime = Datetime(self.val['d_localDatetime']).to_string()
+        return '%s%s' % (datetime, Tz.toHM(self.val['d_offset']))
 
 class BslString:
     """Printer for 'bsl::string'.
@@ -665,6 +730,35 @@ class BslString:
 
     def to_string(self):
         return "bsl::string"
+
+    def children(self):
+        return iter(self.members)
+
+class StringRefData:
+    """Printer for bslstl::StringRef implementation data
+
+    The format of the output is [length:6] "abcdef"
+    """
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        length = self.val['d_end_p'] - self.val['d_begin_p']
+        buffer = self.val['d_begin_p']
+        return '[length:%d] "%s"' % (length, buffer.string(length = length))
+
+class StringRef:
+    """Printer for bslstl::StringRef
+
+    The format of the output is bslstl::StringRef = {data = [length:2] "ab"}
+    """
+    def __init__(self, val):
+        self.val = val
+        self.imp = val.cast(val.type.items()[0][1].type)
+        self.members = [('data', self.imp)]
+
+    def to_string(self):
+        return "bslstl::StringRef";
 
     def children(self):
         return iter(self.members)
@@ -866,40 +960,36 @@ class BslSharedPtr:
 
     This pretty printer will display the shared/weak pointer reference count
     and the value of the pointed object.  The format of the output will be
+    bsl::shared_ptr<type> [ref:n,weak:n] = {*d_ptr_p = ...} (and the same for
+    bsl::weak_ptr).  If the pointer is null, the data portion looks like
+    {d_ptr_p = 0x0} instead.
 
     """
     def __init__(self, val):
         self.val  = val
         self.type = val.type.template_argument(0)
         ptr = val['d_ptr_p']
-        if ptr == 0:
-            self.null   = True
+        rep = val['d_rep_p']
+        if rep == 0:
+            self.shared = 0
+            self.weak = 0
         else:
-            self.null = False
-            ## adjusted shared count holds 2*count + X
-            ##      where X == 1 if at least 1 weak ptr was created
-            self.shared = BslAtomic(
-                val['d_rep_p']['d_adjustedSharedCount']).to_int()
-            self.shared = self.shared / 2
-            ## adjusted weak count holds 2*count + X
-            ##      where X == 1 if there are outstanding shared ptrs
-            self.weak   = BslAtomic(
-                val['d_rep_p']['d_adjustedWeakCount']).to_int()
-            self.weak   = self.weak / 2
-            self.members = [ ('*d_ptr_p', val['d_ptr_p'].dereference() )]
+            # adjusted shared count holds 2*count + X
+            # where X == 1 if at least 1 weak ptr was created
+            self.shared = BslAtomic(rep['d_adjustedSharedCount']).to_int() / 2
+            # adjusted weak count holds 2*count + X
+            # where X == 1 if there are outstanding shared ptrs
+            self.weak = BslAtomic(rep['d_adjustedWeakCount']).to_int() / 2
+        if ptr == 0:
+            self.members = [('d_ptr_p', ptr)]
+        else:
+            self.members = [('*d_ptr_p', ptr.dereference())]
 
     def to_string(self):
-        if self.null:
-            return '[null]' % (self.type)
-        else:
-            return '%s [ref:%d,weak:%d]' % (self.val.type, self.shared,
-                                            self.weak)
+        return '%s [ref:%d,weak:%d]' % (self.val.type, self.shared, self.weak)
 
     def children(self):
-        if self.null:
-            return []
-        else:
-            return iter(self.members)
+        return iter(self.members)
 
 class BslmaManagedPtr:
     """Pretty printer for 'bslma::ManagedPtr<TYPE>'
@@ -939,6 +1029,9 @@ class BdeHelpCommand(gdb.Command):
         args = gdb.string_to_argv(arg)
         if len(args) == 0:
             print __doc__
+            print "The following pretty-printers are documented:"
+            for d in sorted(docs.keys()):
+                print d
         elif len(args) == 1 and args[0] in docs:
             print docs[args[0]]
         else:
@@ -1024,27 +1117,40 @@ def init_globals():
 def add_printer(name, re, klass):
     global docs
     docs[name] = klass.__doc__
-    docs[klass.__name__] = klass.__doc__
+    # docs[klass.__name__] = klass.__doc__
     global pp
     pp.add_printer(name, re, klass)
 
 def build_pretty_printer():
-    add_printer('IPv4Address', '^BloombergLP::bteso_IPv4Address$', IPv4Address)
-    add_printer('NullableValue',
-                'BloombergLP::bdeut_NullableValue<.*>',
+    add_printer('bteso_IPv4Address', '^BloombergLP::bteso_IPv4Address$',
+                IPv4Address)
+    add_printer('bdeut_NullableValue', 'BloombergLP::bdeut_NullableValue<.*>',
                 Nullable)
-    add_printer('Time', '^BloombergLP::bdlt::Time$', Time);
-    add_printer('Date', '^BloombergLP::bdlt::Date$', Date);
-    add_printer('DateTz', '^BloombergLP::bdlt::DateTz$', DateTz);
 
-    add_printer('ContainerBase',
+    add_printer('bdlt::Date', '^BloombergLP::bdlt::Date$', Date)
+    add_printer('bdlt::DateTz', '^BloombergLP::bdlt::DateTz$', DateTz)
+    add_printer('bdlt::Datetime', '^BloombergLP::bdlt::Datetime$', Datetime)
+    add_printer('bdlt::DatetimeTz', '^BloombergLP::bdlt::DatetimeTz$',
+                DatetimeTz)
+    add_printer('bdlt::Time', '^BloombergLP::bdlt::Time$', Time)
+    add_printer('bdlt::TimeTz', '^BloombergLP::bdlt::TimeTz$', TimeTz)
+
+    add_printer('(internal)ContainerBase',
                 '^BloombergLP::bslalg::ContainerBase<bsl::allocator<.*> >$',
                 ContainerBaseBslma)
 
-    add_printer('StringImp', '^bsl::String_Imp<char,.*>$', BslStringImp)
     add_printer('string', '^bsl::basic_string<char,.*>$', BslString)
+    add_printer('(internal)StringImp', '^bsl::String_Imp<char,.*>$',
+                BslStringImp)
+    add_printer('bslstl::StringRef',
+                '^BloombergLP::bslstl::StringRefImp<char>$',
+                StringRef)
+    add_printer('(internal)StringRefData',
+                '^BloombergLP::bslstl::StringRefData<char>$',
+                StringRefData)
 
-    add_printer('VectorImp', '^bsl::Vector_ImpBase<.*>', BslVectorImp)
+    add_printer('(internal)VectorImp', '^bsl::Vector_ImpBase<.*>',
+                BslVectorImp)
     add_printer('vector', '^bsl::vector<.*>$', BslVector)
 
     add_printer('map', '^bsl::map<.*>$', BslMap)
@@ -1059,8 +1165,7 @@ def build_pretty_printer():
 
     add_printer('shared_ptr', '^bsl::shared_ptr<.*>$', BslSharedPtr)
     add_printer('weak_ptr', '^bsl::weak_ptr<.*>$', BslSharedPtr)
-    add_printer('ManagedPtr',
-                '^BloombergLP::bslma::ManagedPtr<.*>$',
+    add_printer('bslma::ManagedPtr', '^BloombergLP::bslma::ManagedPtr<.*>$',
                 BslmaManagedPtr)
 
     #add_printer('catchall', '.*', CatchAll)

@@ -23,5 +23,5 @@ int main()
     bsl::cout << mis[0] << " " << mis[1] << " " << mis[2] << "\n";
     bsl::cout << single[100] << "\n";
 
-    std::cout << "Done\n";
+    bsl::cout << "Done\n";
 }

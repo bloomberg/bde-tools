@@ -26,5 +26,5 @@ int main()
     };
     bsl::for_each(vb.begin(), vb.end(), &SB::f);
 
-    std::cout << "Done\n";
+    bsl::cout << "Done\n";
 }

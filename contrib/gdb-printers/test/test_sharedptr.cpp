@@ -3,7 +3,7 @@
 
 int main()
 {
-    bsl::shared_ptr<int> p1;
+    bsl::shared_ptr<int> null;
 
     bsl::shared_ptr<int> p2(new int(5));
 
@@ -13,5 +13,5 @@ int main()
 
     bsl::shared_ptr<int> p22(p2);
 
-    std::cout << "Done\n";
+    bsl::cout << "Done\n";
 }
