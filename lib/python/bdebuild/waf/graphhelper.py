@@ -19,6 +19,12 @@ def add_cmdline_options(opt):
                         'graph',
                    dest='extract_nodes')
 
+    grp.add_option('--use-test-only',
+                   type='choice', choices=('yes', 'no'), default='yes',
+                   help='use includes used for testing only '
+                        '(yes/no) [default: %default]',
+                   dest='use_test_only')
+
     grp.add_option('--trans-reduce',
                    type='choice', choices=('yes', 'no'), default='yes',
                    help='whether to perform transitive reduction on graph '
@@ -81,7 +87,8 @@ class GraphHelper(object):
                       'a + package.')
             return
 
-        digraph = cpreproc.get_component_digraph(package)
+        digraph = cpreproc.get_component_digraph(
+            package, self.ctx.options.use_test_only == 'yes')
         prefix = package.name + '_'
 
         def remove_prefix(str_):
