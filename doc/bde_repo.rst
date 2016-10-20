@@ -324,11 +324,11 @@ as a comment.
 
 For example:
 
-* The ``dep`` file for the bdl library:
+* The ``dep`` file for the bdl group
 
   `bdl.dep <https://github.com/bloomberg/bde/blob/master/groups/bdl/group/bdl.dep>`_
 
-* The ``dep`` file for the bslma library:
+* The ``dep`` file for the bslma package
 
   `bslma.dep <https://github.com/bloomberg/bde/blob/master/groups/bsl/bslma/package/bslma.dep>`_
 
