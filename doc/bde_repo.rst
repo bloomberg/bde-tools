@@ -20,10 +20,10 @@ Terminology
 .. glossary::
 
    component
-       A component comprises a .h and .cpp pair, along with an associated test
-       driver (.t.cpp file).  E.g., the component bslstl_map comprises
-       ``bslstl_map.h`` and ``bslstl_map.cpp``, and is associated with the test
-       driver file ``bslstl_map.t.cpp``.
+       A component comprises a ``.h`` and ``.cpp`` pair, along with an
+       associated test driver (``.t.cpp`` file).  E.g., the component
+       ``bslstl_map`` comprises ``bslstl_map.h`` and ``bslstl_map.cpp``, and is
+       associated with the test driver file ``bslstl_map.t.cpp``.
 
    package
        A physical unit that comprises a collection of related components.
@@ -39,7 +39,7 @@ Terminology
 .. glossary::
    UOR (Unit of Release)
        A stand-alone package or a package group.  Generally, UORs are the
-       libraries (.a files or applications) that gets deployed on a system.
+       libraries (``.a`` files or applications) that get deployed on a system.
        The names of UORs must be globally unique.
 
 .. _bde_repo-physical_layout:
@@ -134,7 +134,7 @@ Stand-Alone and Application Packages
 ------------------------------------
 
 Stand-alone packages are packages that do not belong to a package group.
-Applications are a special kind of stand-alone package, with the main
+An application package is a special kind of stand-alone package, with the main
 difference being that an application package contains a ``<package>.m.cpp``
 file in which the ``main`` function is defined.
 
@@ -160,7 +160,7 @@ Plus Packages
 that they do not contain BDE components.  Therefore, they do not need ``mem``
 files.  (Having an empty ``mem`` file is also permitted.)
 
-The test drivers for these packages are located in the ``test`` sub-directory.
+The test drivers for these packages are located in a ``test`` sub-directory.
 These tests are run only one time unlike BDE-style test drivers, which get
 run repeatedly with incrementing case numbers as arguments.
 
@@ -261,7 +261,7 @@ And four types of metadata are optional:
 
    Define the build options visible externally.
 
--  ``caps``
+-  ``cap``
 
    Define the supported platforms and build types (capability).
 
@@ -297,9 +297,9 @@ comment.
 
 For example:
 
-* the ``mem`` file for the bsl group `bsl.mem <https://github.com/bloomberg/bde/blob/master/groups/bsl/group/bsl.mem>`_
+* the ``mem`` file for the ``bsl`` group `bsl.mem <https://github.com/bloomberg/bde/blob/master/groups/bsl/group/bsl.mem>`_
 
-* the ``mem`` file for the bslma package `bslma.mem <https://github.com/bloomberg/bde/blob/master/groups/bsl/bslma/package/bslma.mem>`_
+* the ``mem`` file for the ``bslma`` package `bslma.mem <https://github.com/bloomberg/bde/blob/master/groups/bsl/bslma/package/bslma.mem>`_
 
 .. index::
    single: dep file
@@ -324,13 +324,9 @@ as a comment.
 
 For example:
 
-* The ``dep`` file for the bdl group
+* The ``dep`` file for the ``bdl`` group `bdl.dep <https://github.com/bloomberg/bde/blob/master/groups/bdl/group/bdl.dep>`_
 
-  `bdl.dep <https://github.com/bloomberg/bde/blob/master/groups/bdl/group/bdl.dep>`_
-
-* The ``dep`` file for the bslma package
-
-  `bslma.dep <https://github.com/bloomberg/bde/blob/master/groups/bsl/bslma/package/bslma.dep>`_
+* The ``dep`` file for the ``bslma`` package `bslma.dep <https://github.com/bloomberg/bde/blob/master/groups/bsl/bslma/package/bslma.dep>`_
 
 .. _bde_repo-options_format:
 
@@ -375,7 +371,7 @@ For example, here is a rule that sets the variable ``EXC_CXXFLAGS``:
 
 The ``!!`` command states that the value should completely override any
 existing values for the ``EXC_CXXFLAGS``, but only if the OS type is
-``unix``, the platform is ``SunOS``, the compiler is cc, and if an
+``unix``, the platform is ``SunOS``, the compiler is ``cc``, and if an
 exception-enabled build was requested with the ``exc`` UFID.
 
 The first three fields of an option rule are described in more detail in
@@ -435,7 +431,7 @@ For example, ``unix-linux-x86_64-2.6.18-gcc-4.3.2`` is an UPLID whose OS
 type is ``unix``, OS Name is ``linux``, CPU type is ``x86_64``, OS
 version is ``2.6.18``, compiler type is ``gcc``, and compiler version is
 ``4.3.2``.  This UPLID identifies a platform running Linux (kernel)
-version 2.6.18, with an X86\_64 CPU, using gcc version 4.3.2.
+version 2.6.18, with an X86\_64 CPU, using ``gcc`` version 4.3.2.
 
 If you are unsure of the UPLID for a particular platform, a good way to
 determine it is to run ``waf configure`` on that platform.
@@ -530,7 +526,7 @@ permissible:
 +--------+--------------------------------------------------------------+
 
 .. note::
-   ``Waf`` always enables ``mt``.  It is still a valid ufid for historical
+   ``Waf`` always enables ``mt``.  It is still a valid UFID for historical
    reasons.
 
 For example, the UFID ``dbg_mt_exc_shr`` represents a build
@@ -550,7 +546,7 @@ Variable Expansion
 
 The values of a variable can reference other variables.  After all of the
 option files have been read, variables are evaluated by recursive
-expansion, in a manner similar to Make variables.  Thus, a variable can
+expansion, in a manner similar to ``make`` variables.  Thus, a variable can
 not refer to itself, or it will result in an infinite recursion during
 expansion.
 
@@ -566,7 +562,7 @@ For example:
 * _ FOO = a
 * _ BAR = $(FOO) b
 
-After evaluation, the variable BAR will have a value "a b".
+After evaluation, the variable ``BAR`` will have a value "a b".
 
 Processing Order
 ````````````````
@@ -579,7 +575,7 @@ on their intended scope of influence:
    package group.  The value of variables defined here can be further
    augmented or overridden by group- or package-level rules.  The default
    options file, ``default.opts``, is stored in the ``etc`` directory of the
-   open source repository ``bde-tools`` hosted on github.
+   open source repository ``bde-tools`` hosted on ``Github``.
 
 -  At the package-group level.  Option rules defined at this level apply
    to the whole package group.  These rules are processed after those in
