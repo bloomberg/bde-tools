@@ -192,6 +192,8 @@ class ConfigureHelper(object):
             os.environ['PKG_CONFIG_PATH'] = pkg_config_path
             ufid_copy = copy.deepcopy(self.ufid)
             ufid_copy.flags.discard('64')
+            ufid_copy.flags.discard('cpp11')
+
             extra_link_flag = self.ctx.env['LIBPATH_ST'] % os.path.join(
                 lib_path, str(ufid_copy))
             if 'LINKFLAGS' in self.ctx.env:
