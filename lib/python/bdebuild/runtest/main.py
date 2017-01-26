@@ -1,8 +1,11 @@
 from __future__ import print_function
 
+import contextlib
 import optparse
 import os
+import shutil
 import sys
+import tempfile
 
 import bdebuild.runtest.options
 
@@ -17,7 +20,16 @@ def main():
 
     Create a context from the command line arguments and start up the test
     driver ``Runner``.  Exit with a return code 0 on success and 1 on failure.
+
+    Creates a unique directory for tempfiles, and cleans it up as long as
+    "BDE_KEEP_TMPFILES" is not in the environment or the '--keeptmp' option was
+    not used.
     """
+
+    # We're going to create our own tmpdir, and then repoint 'TMPDIR' to it.
+    # At exit time, we'll clean it up.
+    temp_directory = tempfile.mkdtemp()
+    os.environ["TMPDIR"] = temp_directory
 
     option_parser = get_cmdline_options()
     options, args = option_parser.parse_args()
@@ -29,10 +41,19 @@ def main():
     ctx = make_context_from_options(options, args)
 
     test_runner = runner.Runner(ctx)
-    if test_runner.start():
-        sys.exit(0)
+
+    exit_code = 0
+
+    if not test_runner.start():
+        exit_code = 1
+
+    # Clean up our TMPDIR.
+    if not (options.keeptmp or "BDE_KEEP_TMPFILES" in os.environ):
+        shutil.rmtree(temp_directory)
     else:
-        sys.exit(1)
+        print("Not deleting temp files - they are in %s" % temp_directory)
+
+    sys.exit(exit_code)
 
 
 def get_cmdline_options():
@@ -57,6 +78,10 @@ def get_cmdline_options():
                       'the test driver being executed.')
     parser.add_option('--valgrind', action='store_true',
                       help='enable valgrind when running the test driver')
+    parser.add_option('--keeptmp', action='store_true',
+                      help='Keep the temporary directory instead of cleaning '
+                      'it (can also be enabled by setting "BDE_KEEP_TMPFILES" '
+                      'in environment)')
     parser.add_option('--valgrind-tool', type='choice', default='memcheck',
                       choices=('memcheck', 'helgrind', 'drd'),
                       help='use valgrind tool: memchk, helgrind, or drd '
