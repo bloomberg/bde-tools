@@ -217,7 +217,7 @@
 
 !!  unix-sunos-*-*-*-*       dbg  DBG_CXXFLAGS  =  -g0
 !!  unix-sunos-*-*-cc-5.9    dbg  DBG_CXXFLAGS  =  -g0 -xdebugformat=stabs
-!!  unix-sunos-*-*-cc-5.12.4 dbg  DBG_CXXFLAGS  =  -g0
+!!  unix-sunos-*-*-cc-5.12.4 dbg  DBG_CXXFLAGS  =  -g0 -xs=no
 
 !!  unix-aix-*-*-*-*        dbg   DBG_CXXFLAGS  =  -g
 !!  unix-aix-*-*-xlc-10.0   dbg   DBG_CXXFLAGS  =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
