@@ -71,11 +71,12 @@
 # C++11 (a.k.a. C++0x) support
 #==============================================================================
 
-++  *                     cpp11  CPP11_FLAGS   =  --this-compiler-does-not-have-cpp11-support-configured
-!!  unix-*-*-*-gcc-4.4.3  cpp11  CPP11_FLAGS   =  -std=c++0x
-!!  unix-*-*-*-gcc-4.7.0  cpp11  CPP11_FLAGS   =  -std=c++11
-!!  unix-*-*-*-clang      cpp11  CPP11_FLAGS   =  -std=c++11
-++  *                     cpp11  BDE_CXXFLAGS  =  $(CPP11_FLAGS)
+++  *                         cpp11  CPP11_FLAGS   =  --this-compiler-does-not-have-cpp11-support-configured
+!!  unix-*-*-*-gcc-4.4.3      cpp11  CPP11_FLAGS   =  -std=c++0x
+!!  unix-*-*-*-gcc-4.7.0      cpp11  CPP11_FLAGS   =  -std=c++11
+!!  unix-*-*-*-clang          cpp11  CPP11_FLAGS   =  -std=c++11
+!!  unix-sunos-*-*-cc-5.12.4  cpp11  CPP11_FLAGS   =  -std=c++11
+++  *                         cpp11  BDE_CXXFLAGS  =  $(CPP11_FLAGS)
 
 #==============================================================================
 # FLAGS: BDE_CFLAGS, BDE_CXXFLAGS, BDE_LDFLAGS
@@ -211,18 +212,19 @@
 ++  *                       _    DBG_LDFLAGS   =
 
 
-!!  unix-*-*-*-*-*          dbg  DBG_CFLAGS    =  -g
-!!  unix-*-*-*-*-*          dbg  DBG_CXXFLAGS  =  -g
+!!  unix-*-*-*-*-*          dbg   DBG_CFLAGS    =  -g
+!!  unix-*-*-*-*-*          dbg   DBG_CXXFLAGS  =  -g
 
-!!  unix-sunos-*-*-*-*      dbg  DBG_CXXFLAGS  =  -g0
-!!  unix-sunos-*-*-cc-5.9   dbg  DBG_CXXFLAGS  =  -g0 -xdebugformat=stabs
+!!  unix-sunos-*-*-*-*       dbg  DBG_CXXFLAGS  =  -g0
+!!  unix-sunos-*-*-cc-5.9    dbg  DBG_CXXFLAGS  =  -g0 -xdebugformat=stabs
+!!  unix-sunos-*-*-cc-5.12.4 dbg  DBG_CXXFLAGS  =  -g0
 
-!!  unix-aix-*-*-*-*        dbg  DBG_CXXFLAGS  =  -g
-!!  unix-aix-*-*-xlc-10.0   dbg  DBG_CXXFLAGS  =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
+!!  unix-aix-*-*-*-*        dbg   DBG_CXXFLAGS  =  -g
+!!  unix-aix-*-*-xlc-10.0   dbg   DBG_CXXFLAGS  =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug  -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 
-!!  unix-aix-*-*-xlc-10.1   dbg  DBG_CXXFLAGS  =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
-!!  unix-aix-*-*-xlc-11.1   dbg  DBG_CXXFLAGS  =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
-!!  unix-aix-*-*-xlc-13.1   dbg  DBG_CXXFLAGS  =  -qxflag=v6align -g -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
+!!  unix-aix-*-*-xlc-10.1   dbg   DBG_CXXFLAGS  =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
+!!  unix-aix-*-*-xlc-11.1   dbg   DBG_CXXFLAGS  =  -qxflag=v6align -g -qalias=noansi -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
+!!  unix-aix-*-*-xlc-13.1   dbg   DBG_CXXFLAGS  =  -qxflag=v6align -g -qxflag=inlinewithdebug:stepOverInline -qlanglvl=staticstoreoverlinkage -Q -qxflag=noautoinline
 
 !!  unix-*-*-*-gcc-*        dbg  DBG_CXXFLAGS  =  -g
 !!  unix-*-*-*-clang-*      dbg  DBG_CXXFLAGS  =  -g

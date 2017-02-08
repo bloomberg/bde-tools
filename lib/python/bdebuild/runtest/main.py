@@ -130,6 +130,9 @@ def make_context_from_options(options, args):
     return context.Context(options=test_options, log=test_logger,
                            policy=test_policy)
 
+
+if __name__ == '__main__':
+    main()
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.
 #
