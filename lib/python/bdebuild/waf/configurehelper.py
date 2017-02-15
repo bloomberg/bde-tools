@@ -3,6 +3,7 @@
 
 import copy
 import os
+import re
 import sys
 
 from waflib import Logs
@@ -183,6 +184,10 @@ class ConfigureHelper(object):
             distribution_refroot = os.environ['DISTRIBUTION_REFROOT']
             self.ctx.msg('Using DISTRIBUTION_REFROOT', distribution_refroot)
             prefix = os.path.join(distribution_refroot, 'opt', 'bb')
+
+            # DRQS 96445078: Get rid of duplicated // in prefix.
+            prefix = re.sub(os.sep + "+", os.sep, prefix)
+
             lib_path = os.path.join(prefix,
                                     '64' in self.ufid.flags
                                     and 'lib64' or 'lib')
