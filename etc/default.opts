@@ -425,9 +425,6 @@
 ++  unix-sunos-*-*-cc-*      stlport  BDE_CXXFLAGS  =  -library=stlport4 -template=no%extdef
 ++  unix-sunos-*-*-cc-*      stlport  BDE_LDFLAGS   =  -library=stlport4
 
-# DRQS 29644737 - disable BSLS_IDENT to save space in bigs
-++  *-*-*-*-*-*              _        BDE_CXXFLAGS  =  $(SWITCHCHAR)DBSLS_IDENT_OFF
-
 ###############################################################################
 # CC and CXX
 ###############################################################################
