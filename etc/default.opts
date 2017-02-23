@@ -114,7 +114,6 @@
 !!  unix-*-*-*-gcc          _     CMP_TUNE            =  --param ggc-min-expand=30
 !!  unix-*-*-*-gcc          _     DEF_CXXFLAGS        =  $(CMP_TUNE)
 !!  unix-*-*-*-clang        _     DEF_CXXFLAGS        =
-!!  unix-sunos-*-*-gcc      _     DEF_CXXFLAGS        =  $(CMP_TUNE) -mcpu=niagara2
 
 # DRQS 29544311 - some .so's linking against BCE and BAE fail unless the sources are built
 # with -xthreadvar=dynamic
