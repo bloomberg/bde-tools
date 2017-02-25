@@ -5,6 +5,7 @@ implementations of existing methods in waf.
 """
 
 import os
+import re
 import sys
 import tempfile
 
@@ -340,8 +341,10 @@ Cflags: -I${{includedir}} {flags}
         else:
             version = ''
 
+        corrected_prefix=re.sub(os.sep + "+", os.sep, gen.bld.env['PREFIX'])
+
         pc_source = self.PKGCONFIG_TEMPLATE.format(
-            prefix=gen.bld.env['PREFIX'],
+            prefix=corrected_prefix,
             libdir=gen.libdir,
             includedir=gen.includedir,
             name=gen.doc.mnemonic,
