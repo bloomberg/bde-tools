@@ -342,13 +342,13 @@ Cflags: -I${{includedir}} {flags}
         else:
             version = ''
 
-        sep = os.sep
+        corrected_prefix=gen.bld.env['PREFIX']
 
-        if platform.system() == 'Windows':
-            # Double up backslashes on windows
-            sep+=sep
-
-        corrected_prefix=re.sub(sep + "+", os.sep, gen.bld.env['PREFIX'])
+        if platform.system() != 'Windows':
+            # DRQS 96445078: Get rid of duplicated // in prefix.
+            corrected_prefix=re.sub(os.sep + "+",
+                                    os.sep,
+                                    gen.bld.env['PREFIX'])
 
         pc_source = self.PKGCONFIG_TEMPLATE.format(
             prefix=corrected_prefix,
