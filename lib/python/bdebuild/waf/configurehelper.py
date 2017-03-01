@@ -3,6 +3,7 @@
 
 import copy
 import os
+import platform
 import re
 import sys
 
@@ -185,8 +186,14 @@ class ConfigureHelper(object):
             self.ctx.msg('Using DISTRIBUTION_REFROOT', distribution_refroot)
             prefix = os.path.join(distribution_refroot, 'opt', 'bb')
 
+            sep = os.sep
+
+            if platform.system() == 'Windows':
+                # Double up backslashes on windows
+                sep+=sep
+
             # DRQS 96445078: Get rid of duplicated // in prefix.
-            prefix = re.sub(os.sep + "+", os.sep, prefix)
+            prefix = re.sub(sep + "+", os.sep, prefix)
 
             lib_path = os.path.join(prefix,
                                     '64' in self.ufid.flags
