@@ -76,6 +76,7 @@
 !!  unix-*-*-*-gcc-4.7.0      cpp11  CPP11_FLAGS   =  -std=c++11
 !!  unix-*-*-*-clang          cpp11  CPP11_FLAGS   =  -std=c++11
 !!  unix-sunos-*-*-cc-5.12.4  cpp11  CPP11_FLAGS   =  -std=c++11
+!!  unix-sunos-*-*-cc-5.12.4  cpp11  BDE_LDFLAGS   =  -std=c++11
 ++  *                         cpp11  BDE_CXXFLAGS  =  $(CPP11_FLAGS)
 
 #==============================================================================
