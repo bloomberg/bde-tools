@@ -11,10 +11,12 @@ from __future__ import print_function
 
 import os
 import sys
+import re
 
 from waflib import Utils
 from waflib import Logs
 from waflib import Context
+from waflib.TaskGen import feature, after_method
 
 from bdebuild.common import blderror
 from bdebuild.common import cmdlineutil
@@ -30,6 +32,18 @@ from bdebuild.waf import graphhelper
 # Version of bde-tools
 BDE_TOOLS_VERSION = "1.2"
 
+# The Sun CC 5.12 compiler treats relative include paths with ../ incorrectly
+# (see {DRQS 71035398}), so make them absolute for that platform.
+@feature('c', 'cxx')
+@after_method('apply_incpaths')
+def _fullpath_includes(self):
+    if re.search('sparc.*5[.]12', os.environ['BDE_WAF_UPLID']) is not None:
+        self.env.INCPATHS = map(
+            lambda path: path if re.match('/', path) else os.path.realpath(
+                os.path.join(os.getcwd(),
+                             os.environ['BDE_WAF_BUILD_DIR'],
+                             path)),
+                self.env.INCPATHS)
 
 def _setup_log(ctx):
     logutil._info_nolog = Logs.info
