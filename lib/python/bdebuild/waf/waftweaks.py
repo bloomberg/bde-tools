@@ -438,6 +438,28 @@ def apply_bdevnum(self):
             path = os.path.join(p, self.link_task.outputs[0].name)
             self.env.append_value('LINKFLAGS', ['-install_name', path])
 
+
+
+@TaskGen.feature('c', 'cxx', 'd', 'asm', 'fc', 'includes')
+@TaskGen.after_method('propagate_uselib_vars', 'process_source')
+def bde_apply_incpaths(self):
+    """
+    Replace ccroot.apply_incpath to use absolute include path.
+
+    The Sun CC 5.12 compiler treats relative include paths with ../ incorrectly
+    (see {DRQS 71035398}), so make them absolute for that platform.
+
+    Once we move away from Sun CC 5.12, this method can be removed.
+    """
+
+    lst = self.to_incnodes(self.to_list(getattr(self, 'includes', [])) +
+                           self.env.INCLUDES)
+    self.includes_nodes = lst
+    cwd = self.get_cwd()
+    self.env.INCPATHS = [x.abspath() for x in lst]
+
+ccroot.apply_incpaths = bde_apply_incpaths
+
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.
 #
