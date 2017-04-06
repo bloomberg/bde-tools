@@ -58,6 +58,20 @@ def append_custom_cxxincludes(self):
         self.env.STLIBPATH.extend(self.cust_libpaths)
 
 
+# The Sun CC 5.12 compiler treats relative include paths with ../ incorrectly
+# (see {DRQS 71035398}), so make them absolute for that platform.
+@TaskGen.feature('c', 'cxx')
+@TaskGen.after_method('apply_incpaths')
+def fullpath_includes(self):
+    if re.search('sparc.*5[.]12', os.getenv('BDE_WAF_UPLID')) is not None:
+        self.env.INCPATHS = map(
+            lambda path: path if re.match('/', path) else os.path.realpath(
+                os.path.join(os.getcwd(),
+                             os.getenv('BDE_WAF_BUILD_DIR'),
+                             path)),
+                self.env.INCPATHS)
+
+
 def activate_custom_exec_command(class_name):
     """Patch exec_command method of a task to support BDE customizations.
 
