@@ -11,12 +11,10 @@ from __future__ import print_function
 
 import os
 import sys
-import re
 
 from waflib import Utils
 from waflib import Logs
 from waflib import Context
-from waflib.TaskGen import feature, after_method
 
 from bdebuild.common import blderror
 from bdebuild.common import cmdlineutil
@@ -30,8 +28,7 @@ from bdebuild.waf import buildhelper
 from bdebuild.waf import graphhelper
 
 # Version of bde-tools
-BDE_TOOLS_VERSION = "1.2"
-
+BDE_TOOLS_VERSION = "1.3"
 
 def _setup_log(ctx):
     logutil._info_nolog = Logs.info

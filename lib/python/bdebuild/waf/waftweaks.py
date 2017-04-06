@@ -58,20 +58,6 @@ def append_custom_cxxincludes(self):
         self.env.STLIBPATH.extend(self.cust_libpaths)
 
 
-# The Sun CC 5.12 compiler treats relative include paths with ../ incorrectly
-# (see {DRQS 71035398}), so make them absolute for that platform.
-@TaskGen.feature('c', 'cxx')
-@TaskGen.after_method('apply_incpaths')
-def fullpath_includes(self):
-    if re.search('sparc.*5[.]12', os.getenv('BDE_WAF_UPLID')) is not None:
-        self.env.INCPATHS = map(
-            lambda path: path if re.match('/', path) else os.path.realpath(
-                os.path.join(os.getcwd(),
-                             os.getenv('BDE_WAF_BUILD_DIR'),
-                             path)),
-                self.env.INCPATHS)
-
-
 def activate_custom_exec_command(class_name):
     """Patch exec_command method of a task to support BDE customizations.
 
@@ -451,6 +437,28 @@ def apply_bdevnum(self):
             p = Utils.subst_vars(inst_to, self.env)
             path = os.path.join(p, self.link_task.outputs[0].name)
             self.env.append_value('LINKFLAGS', ['-install_name', path])
+
+
+
+@TaskGen.feature('c', 'cxx', 'd', 'asm', 'fc', 'includes')
+@TaskGen.after_method('propagate_uselib_vars', 'process_source')
+def bde_apply_incpaths(self):
+    """
+    Replace ccroot.apply_incpath to use absolute include path.
+
+    The Sun CC 5.12 compiler treats relative include paths with ../ incorrectly
+    (see {DRQS 71035398}), so make them absolute for that platform.
+
+    Once we move away from Sun CC 5.12, this method can be removed.
+    """
+
+    lst = self.to_incnodes(self.to_list(getattr(self, 'includes', [])) +
+                           self.env.INCLUDES)
+    self.includes_nodes = lst
+    cwd = self.get_cwd()
+    self.env.INCPATHS = [x.abspath() for x in lst]
+
+ccroot.apply_incpaths = bde_apply_incpaths
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.
