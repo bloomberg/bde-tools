@@ -149,7 +149,8 @@ def _configure_impl(ctx):
     # not 'opt'.
     if ctx.options.werror is None:
         if (effective_uplid.comp_type == 'gcc' and
-                effective_uplid.comp_ver >= '4.9' and 'opt' not in ufid.flags):
+            effective_uplid.comp_ver >= '4.9' and
+                effective_uplid.comp_ver < '5' and 'opt' not in ufid.flags):
             ctx.options.werror = 'cpp'
         else:
             ctx.options.werror = 'none'
