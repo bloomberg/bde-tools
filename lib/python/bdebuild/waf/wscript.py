@@ -28,8 +28,7 @@ from bdebuild.waf import buildhelper
 from bdebuild.waf import graphhelper
 
 # Version of bde-tools
-BDE_TOOLS_VERSION = "1.2"
-
+BDE_TOOLS_VERSION = "1.3"
 
 def _setup_log(ctx):
     logutil._info_nolog = Logs.info
