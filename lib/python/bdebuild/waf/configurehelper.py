@@ -381,12 +381,6 @@ build output directory for details.""" % \
                                                   '-lc', '-lm', '-lsunmath',
                                                   '-lpthread'])
 
-        if (self.uplid.os_name == 'linux' and self.uplid.comp_type == 'gcc' and
-            self.uplid.comp_ver >= '5'):
-            if 'LINKFLAGS' not in self.ctx.env:
-                self.ctx.env['LINKFLAGS'] = []
-            self.ctx.env['LINKFLAGS'].extend(['-fno-use-linker-plugin'])
-
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.
 #
