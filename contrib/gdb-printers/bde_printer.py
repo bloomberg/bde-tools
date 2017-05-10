@@ -235,8 +235,8 @@ class BslVectorImp:
     """
     def __init__(self, val):
         self.val = val
-        self.begin    = val['d_dataBegin']
-        self.end      = val['d_dataEnd']
+        self.begin    = val['d_dataBegin_p']
+        self.end      = val['d_dataEnd_p']
         self.size     = int(self.end - self.begin)
         self.capacity = int(val['d_capacity'])
 
