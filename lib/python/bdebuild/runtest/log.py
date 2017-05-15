@@ -101,7 +101,7 @@ class _JunitRecorder(object):
         timeoutProperty.set('name', 'timeout')
         timeoutProperty.set('value', '%d' % self._opts.timeout)
 
-        cases = sorted(self._skipped + self._results.keys())
+        cases = sorted(self._skipped + list(self._results.keys()))
 
         for case in cases:
             testcase = ET.SubElement(suite, 'testcase')
