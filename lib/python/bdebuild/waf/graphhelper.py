@@ -114,10 +114,10 @@ class GraphHelper(object):
         dot_text = dotutil.digraph_to_dot(graph_name, digraph, extract_nodes,
                                           is_trans_reduce)
         dot_node = self.graph_dir_node.make_node(file_name + '.dot')
-        dg_node = self.graph_dir_node.make_node(file_name + '.gif')
+        dg_node = self.graph_dir_node.make_node(file_name + '.png')
         dot_node.write(dot_text)
         cmd = [self.dot_path if self.dot_path else 'dot',
-               '-Tgif', dot_node.abspath(), '-o', dg_node.abspath()]
+               '-Tpng', dot_node.abspath(), '-o', dg_node.abspath()]
 
         if not self.dot_path:
             Logs.warn('Can not find the program "dot" in the "PATH" '
