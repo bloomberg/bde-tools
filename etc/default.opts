@@ -41,6 +41,7 @@
 ++  *  safe2    BUILD_TYPE      =  -DBDE_BUILD_TARGET_SAFE_2
 ++  *  stlport  BUILD_TYPE      =  -DBDE_BUILD_TARGET_STLPORT
 ++  *  cpp11    BUILD_TYPE      =  -DBDE_BUILD_TARGET_CPP11
+++  *  cpp14    BUILD_TYPE      =  -DBDE_BUILD_TARGET_CPP14
 
 ++  *  _        BDE_CFLAGS      =  $(BUILD_TYPE)
 ++  *  _        BDE_CXXFLAGS    =  $(BUILD_TYPE)
@@ -78,6 +79,14 @@
 !!  unix-sunos-*-*-cc-5.12.4  cpp11  CPP11_FLAGS   =  -std=c++11
 !!  unix-sunos-*-*-cc-5.12.4  cpp11  BDE_LDFLAGS   =  -std=c++11
 ++  *                         cpp11  BDE_CXXFLAGS  =  $(CPP11_FLAGS)
+
+#==============================================================================
+# C++14 support
+#==============================================================================
+
+++  *                         cpp14  CPP14_FLAGS   =  --this-compiler-does-not-have-cpp14-support-configured
+!!  unix-*-*-*-gcc-5.4.0      cpp14  CPP14_FLAGS   =  -std=c++14
+++  *                         cpp14  BDE_CXXFLAGS  =  $(CPP14_FLAGS)
 
 #==============================================================================
 # FLAGS: BDE_CFLAGS, BDE_CXXFLAGS, BDE_LDFLAGS
