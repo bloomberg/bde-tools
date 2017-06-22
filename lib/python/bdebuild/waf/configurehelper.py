@@ -238,7 +238,8 @@ class ConfigureHelper(object):
         # libraries queried from pkg-config are to be built statically, which
         # is not true for some libraries. We work around this issue by manually
         # changing the affected libraries to be linked dynamically instead.
-        dl_overrides = ['pthread', 'rt', 'nsl', 'socket']
+        dl_overrides = ['dl', 'pthread', 'pthreads', 'rt', 'nsl', 'resolv',
+                        'socket']
 
         # If lib_suffix is set, we expect the pkgconfig files being depended on
         # to have the same suffix as well. Since the .dep files will not have
