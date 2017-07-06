@@ -66,6 +66,12 @@ class BuildHelper(object):
                              if part != install_part):
                     setattr(self.install_config, attr, False)
 
+            # Reset targets to include everything to fix {DRQS 103254585}.
+            # Without this and with --targets specified, headers and pc files
+            # are not installed.  (Probably because we're managing to not
+            # associate the installation requests with their correct targets.)
+            self.ctx.targets = '*'
+
             Logs.info('Waf: Installing UORs: %s' %
                       ','.join(sorted(self.install_config.install_uors)))
 
