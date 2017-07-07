@@ -294,7 +294,9 @@ def make_pc(self):
                            self.path.find_or_declare(self.target))
 
     if getattr(self, 'install_path', None):
-        self.bld.install_files(self.install_path, tsk.outputs)
+        self.add_install_files(
+            install_to=getattr(self, 'install_path', None),
+            install_from=tsk.outputs)
 
 
 class bdepc(Task.Task):

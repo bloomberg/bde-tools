@@ -66,12 +66,6 @@ class BuildHelper(object):
                              if part != install_part):
                     setattr(self.install_config, attr, False)
 
-            # Reset targets to include everything to fix {DRQS 103254585}.
-            # Without this and with --targets specified, headers and pc files
-            # are not installed.  (Probably because we're managing to not
-            # associate the installation requests with their correct targets.)
-            self.ctx.targets = '*'
-
             Logs.info('Waf: Installing UORs: %s' %
                       ','.join(sorted(self.install_config.install_uors)))
 
@@ -301,9 +295,10 @@ $ waf build --target bdlt_date.t --test build"""
 
         if h_install_path:
             for d in header_dirs:
-                self.ctx.install_files(os.path.join(h_install_path, d),
-                                       [os.path.join(relpath, d, h) for h in
-                                        header_dirs[d]])
+                self.ctx().add_install_files(
+                    install_to=os.path.join(h_install_path, d),
+                    install_from=[os.path.join(relpath, d, h) for h in
+                                  header_dirs[d]])
 
     def build_package_impl(self, package, internal_dep, external_dep,
                            lib_install_path, h_install_path,
@@ -422,9 +417,10 @@ $ waf build --target bdlt_date.t --test build"""
             self.ctx(name=package.name + '_tst')
 
         if h_install_path:
-            self.ctx.install_files(
-                h_install_path, [os.path.join(relpath, c.name + '.h')
-                                 for c in package.components])
+            self.ctx().add_install_files(
+                install_to=h_install_path,
+                install_from=[os.path.join(relpath, c.name + '.h')
+                              for c in package.components])
 
     def build_thirdparty_dirs(self, third_party):
         relpath = os.path.relpath(third_party.path,
