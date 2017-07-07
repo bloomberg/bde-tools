@@ -80,7 +80,10 @@ def options(ctx):
     cxx_compiler['sunos'] = ['sunc++', 'g++']
     ctx.load('compiler_cxx')
     ctx.load('msvs')
-    ctx.load('xcode')
+    try:
+        ctx.load('xcode6')
+    except ImportError:
+        ctx.load('xcode')
 
     add_cmdline_options(ctx)
     graphhelper.add_cmdline_options(ctx)
