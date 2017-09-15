@@ -2,6 +2,7 @@ import threading
 import subprocess
 import signal
 import sys
+import time
 
 
 class _Status(object):
@@ -148,6 +149,20 @@ class Runner(object):
         self._workers = [_Worker(self._ctx, self._status)
                          for j in range(self._ctx.options.num_jobs)]
 
+    def _count_live_workers(self, context):
+        filtered_workers = [(worker is not None \
+                  and worker.is_alive()  \
+                  and worker._proc       \
+                  and worker._case > 0)
+                      for worker in self._workers]
+
+        count = sum([x for x in filtered_workers if x is not None])
+
+        self._ctx.log.debug("There are %d live workers in context '%s'"
+                                % (count, context))
+
+        return count
+
     def _terminate(self, log_func):
         """Terminate any subprocess spawned by worker threads.
 
@@ -156,16 +171,23 @@ class Runner(object):
         """
         self._status.set_failure()
         self._status.notify_done()
-        for worker in self._workers:
-            # The following technique to kill processes is not thread
-            # safe, but it is acceptable considering that a race condition will
-            # most like mean that the test process was already terminated.
-            try:
-                if worker.is_alive() and worker._proc and worker._case > 0:
-                    worker._proc.kill()
-                    log_func(worker._case, worker._proc.pid)
-            except:
-                pass
+        # While there are live workers, try to kill them.  We do this in a loop
+        # to alleviate any race conditions.
+        while self._count_live_workers("TIMEOUT") > 0:
+            for worker in self._workers:
+                # The following technique to kill processes is not thread safe,
+                # but it is acceptable considering that a race condition will
+                # most like mean that the test process was already terminated.
+                #
+                # The outer loop should alleviate any thread-safety issues
+                # where a thread is skipped and NOT terminated.
+                try:
+                    if worker.is_alive() and worker._proc and worker._case > 0:
+                        worker._proc.kill()
+                        log_func(worker._case, worker._proc.pid)
+                except:
+                    pass
+            time.sleep(1)
 
     def start(self):
         """Start running test cases in parallel.
