@@ -150,13 +150,15 @@ class Runner(object):
                          for j in range(self._ctx.options.num_jobs)]
 
     def _count_live_workers(self, context):
-        filtered_workers = [(worker is not None \
+        # Extra "or False" converts any "None" entries to "False".
+        filtered_workers = [((worker is not None \
                   and worker.is_alive()  \
                   and worker._proc       \
                   and worker._case > 0)
+                  or False)
                       for worker in self._workers]
 
-        count = sum([x for x in filtered_workers if x is not None])
+        count = sum(filtered_workers)
 
         self._ctx.log.debug("There are %d live workers in context '%s'"
                                 % (count, context))
