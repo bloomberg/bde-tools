@@ -73,7 +73,7 @@ def activate_custom_exec_command(class_name):
 
     def exec_command(self, *k, **kw):
         if self.env['CC_NAME'] == 'msvc':
-            return super(derived_class, self).exec_command(*k, **kw)
+            return self.exec_response_command(*k, **kw)
         else:
             return self.bde_exec_command(*k, **kw)
 
