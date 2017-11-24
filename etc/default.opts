@@ -42,6 +42,7 @@
 ++  *  stlport  BUILD_TYPE      =  -DBDE_BUILD_TARGET_STLPORT
 ++  *  cpp11    BUILD_TYPE      =  -DBDE_BUILD_TARGET_CPP11
 ++  *  cpp14    BUILD_TYPE      =  -DBDE_BUILD_TARGET_CPP14
+++  *  cpp17    BUILD_TYPE      =  -DBDE_BUILD_TARGET_CPP17
 
 ++  *  _        BDE_CFLAGS      =  $(BUILD_TYPE)
 ++  *  _        BDE_CXXFLAGS    =  $(BUILD_TYPE)
@@ -85,8 +86,22 @@
 #==============================================================================
 
 ++  *                         cpp14  CPP14_FLAGS   =  --this-compiler-does-not-have-cpp14-support-configured
+!!  unix-*-*-*-gcc-5.3.1      cpp14  CPP14_FLAGS   =  -std=c++14
 !!  unix-*-*-*-gcc-5.4.0      cpp14  CPP14_FLAGS   =  -std=c++14
+!!  unix-*-*-*-gcc-6.4.0      cpp14  CPP14_FLAGS   =  -std=c++14
+!!  unix-*-*-*-gcc-7.2.0      cpp14  CPP14_FLAGS   =  -std=c++14
+!!  unix-*-*-*-clang          cpp14  CPP14_FLAGS   =  -std=c++14
 ++  *                         cpp14  BDE_CXXFLAGS  =  $(CPP14_FLAGS)
+
+#==============================================================================
+# C++17 support
+#==============================================================================
+
+++  *                         cpp17  CPP17_FLAGS   =  --this-compiler-does-not-have-cpp17-support-configured
+!!  unix-*-*-*-gcc-6.4.0      cpp17  CPP17_FLAGS   =  -std=c++17
+!!  unix-*-*-*-gcc-7.2.0      cpp17  CPP17_FLAGS   =  -std=c++17
+!!  unix-*-*-*-clang          cpp17  CPP17_FLAGS   =  -std=c++17
+++  *                         cpp17  BDE_CXXFLAGS  =  $(CPP17_FLAGS)
 
 #==============================================================================
 # FLAGS: BDE_CFLAGS, BDE_CXXFLAGS, BDE_LDFLAGS
@@ -481,9 +496,7 @@
 !!  unix-sunos-*-*-gcc        _    CXX                =  g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS) -ftemplate-depth-150
 
 !!  unix-linux-*-*-gcc        _    CC                 =  gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
-!!  unix-linux-*-*-clang      _    CC                 =  gcc -DUSE_REAL_MALLOC $(GCCEXTRAWFLAGS) $(CC64FLAGS) -std=gnu99
 !!  unix-linux-*-*-gcc        _    CXX                =  g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
-!!  unix-linux-*-*-clang      _    CXX                =  g++ $(GCCEXTRAWFLAGS) $(CXX64FLAGS)
 
 !!  windows-*-*-*-cl-15.00    _    CC                 =  cl /TC $(CC64FLAGS)
 !!  windows-*-*-*-cl-16.00    _    CC                 =  cl /TC $(CC64FLAGS)
