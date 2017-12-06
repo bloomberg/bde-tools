@@ -122,7 +122,8 @@ class Ufid(mixins.BasicEqualityMixin):
         'pic': (BACK - 1, 'Build static PIC libraries'),
         'stlport': (BACK, 'Build with STLPort on Sun'),
         'cpp11': (BACK + 12, 'Build with support for C++11 (C++0x) features'),
-        'cpp14': (BACK + 13, 'Build with support for C++14 features')
+        'cpp14': (BACK + 13, 'Build with support for C++14 features'),
+        'cpp17': (BACK + 14, 'Build with support for C++17 features')
     }
 
     def __init__(self, flags=[]):
