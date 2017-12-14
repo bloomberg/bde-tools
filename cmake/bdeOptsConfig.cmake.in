@@ -1,0 +1,10 @@
+# Compute paths
+get_filename_component(bdeOpts_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+if(NOT TARGET bdeOpts AND NOT bdeOpts_BINARY_DIR)
+  foreach(dep @package_depends@)
+    find_package(${dep} REQUIRED)
+  endforeach()
+
+  include("${bdeOpts_CMAKE_DIR}/bdeOptsTargets.cmake")
+endif()
