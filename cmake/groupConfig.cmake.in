@@ -1,0 +1,19 @@
+# - Config file for the FooBar package
+# It defines the following variables
+#  @group@_INCLUDE_DIRS - include directories for FooBar
+#  @group@_LIBRARIES    - libraries to link against
+ 
+# Compute paths
+get_filename_component(@group@_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+if(NOT TARGET @group@ AND NOT @group@_BINARY_DIR)
+  if(NOT WIN32)
+    find_package(Threads REQUIRED)
+  endif()
+  foreach(dep @depends@)
+    find_package(${dep} REQUIRED PATHS ${CMAKE_CURRENT_LIST_DIR})
+  endforeach()
+
+  include("${@group@_CMAKE_DIR}/@group@InterfaceTargets.cmake")
+  include("${@group@_CMAKE_DIR}/@group@Targets.cmake")
+endif()
