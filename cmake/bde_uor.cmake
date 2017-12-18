@@ -45,29 +45,29 @@ function(bde_target_objlib_sources target)
     target_sources(${target} PRIVATE ${objSources})
 endfunction()
 
-function(bde_process_standard_package outName list_file uorName)
-    get_filename_component(packageName ${list_file} NAME_WE)
-    get_filename_component(list_dir ${list_file} DIRECTORY)
-    get_filename_component(root_dir ${list_dir} DIRECTORY)
+function(bde_process_standard_package outInfoTarget listFile uorName)
+    get_filename_component(packageName ${listFile} NAME_WE)
+    get_filename_component(listDir ${listFile} DIRECTORY)
+    get_filename_component(rootDir ${listDir} DIRECTORY)
 
     bde_add_info_target(${packageName})
-    set(${outName} ${packageName} PARENT_SCOPE)
+    set(${outInfoTarget} ${packageName} PARENT_SCOPE)
 
     # Sources and headers
-    bde_utils_add_meta_file("${list_dir}/${packageName}.mem" components TRACK)
-    bde_list_template_substitute(sources "%" "${root_dir}/%.cpp" ${components})
-    bde_list_template_substitute(headers "%" "${root_dir}/%.h" ${components})
+    bde_utils_add_meta_file("${listDir}/${packageName}.mem" components TRACK)
+    bde_list_template_substitute(sources "%" "${rootDir}/%.cpp" ${components})
+    bde_list_template_substitute(headers "%" "${rootDir}/%.h" ${components})
     bde_info_target_set_property(${packageName} SOURCES "${sources}")
     bde_info_target_set_property(${packageName} HEADERS "${headers}")
 
     # Dependencies
-    bde_utils_add_meta_file("${list_dir}/${packageName}.dep" dependencies TRACK)
+    bde_utils_add_meta_file("${listDir}/${packageName}.dep" dependencies TRACK)
     bde_info_target_set_property(${packageName} DEPENDS "${dependencies}")
 
     # Tests
     bde_list_template_substitute(test_targets "%" "%.t" ${components})
     foreach (component ${components})
-        add_test_executable(${component} ${root_dir}/${component}.t.cpp)
+        add_test_executable(${component} ${rootDir}/${component}.t.cpp)
     endforeach()
     bde_info_target_set_property(${packageName} TEST_TARGETS "${test_targets}")
 
@@ -75,9 +75,9 @@ function(bde_process_standard_package outName list_file uorName)
     bde_add_interface_target(${packageName})
     bde_info_target_set_property(${packageName} INTERFACE_TARGET ${packageName})
     bde_interface_target_include_directories(
-        ${packageName} 
+        ${packageName}
         PUBLIC
-            $<BUILD_INTERFACE:${root_dir}>
+            $<BUILD_INTERFACE:${rootDir}>
             $<INSTALL_INTERFACE:"include">
     )
 
@@ -87,29 +87,6 @@ function(bde_process_standard_package outName list_file uorName)
         DESTINATION "include"
         COMPONENT "${uorName}-headers"
     )
-endfunction()
-
-# Include the package cmake file if it exists.
-# If it doesn't, use default processing
-function(_bde_include_package outName groupRootDir package uorName)
-    set(packageFileName "${groupRootDir}/${package}/package/${package}.cmake")
-    if(EXISTS "${packageFileName}")
-        bde_reset_function(process_package)
-        include("${packageFileName}")
-        process_package(infoTarget "${packageFileName}" "${uorName}")
-    else()
-        bde_process_standard_package(infoTarget "${packageFileName}" "${uorName}")
-    endif()
-
-    bde_info_target_name(info_target ${infoTarget})
-    if (NOT TARGET ${info_target})
-        message(
-            FATAL_ERROR
-            "${package} failed to create "
-            "info target (see bde_add_info_target)."
-        )
-    endif()
-    set(${outName} ${infoTarget} PARENT_SCOPE)
 endfunction()
 
 # :: bde_project_add_group ::
@@ -134,24 +111,23 @@ endfunction()
 #  o If 'groupName' is left blank, it will be derived from the name of the
 #    current directory.
 #
-function(bde_project_add_group outName list_file)
-    #TODO: implement additional options.
-    get_filename_component(uorName ${list_file} NAME_WE)
-    get_filename_component(list_dir ${list_file} DIRECTORY)
-    get_filename_component(root_dir ${list_dir} DIRECTORY)
+function(bde_project_add_group outInfoTarget listFile)
+    get_filename_component(uorName ${listFile} NAME_WE)
+    get_filename_component(listDir ${listFile} DIRECTORY)
+    get_filename_component(rootDir ${listDir} DIRECTORY)
 
-    message(STATUS "[${uorName}]: Start processing")
+    bde_log(VERBOSE "[${uorName}]: Start processing")
 
     bde_add_info_target(${uorName})
-    set(${outName} ${uorName} PARENT_SCOPE)
+    set(${outInfoTarget} ${uorName} PARENT_SCOPE)
     bde_info_target_set_property(${uorName} TARGET "${uorName}")
     bde_info_target_set_property(${uorName} TEST_TARGETS "${uorName}.t")
 
     # Sources and headers
-    bde_utils_add_meta_file("${list_dir}/${uorName}.mem" packages TRACK)
+    bde_utils_add_meta_file("${listDir}/${uorName}.mem" packages TRACK)
 
     # Dependencies
-    bde_utils_add_meta_file("${list_dir}/${uorName}.dep" dependencies TRACK)
+    bde_utils_add_meta_file("${listDir}/${uorName}.dep" dependencies TRACK)
     bde_info_target_set_property(${uorName} DEPENDS "${dependencies}")
 
     # ${uorName} interface target contains _only_ the build requirements
@@ -159,7 +135,7 @@ function(bde_project_add_group outName list_file)
     # transitively included from the member packages. This interface
     # target is only used directly by the test targets.
     bde_add_interface_target(${uorName})
-    bde_interface_target_names(uor_interface_targets ${uorName})
+    bde_interface_target_names(uorInterfaceTargets ${uorName})
     bde_interface_target_link_libraries(${uorName} PUBLIC ${dependencies})
 
     cmake_parse_arguments("" "" "COMMON_INTERFACE_TARGET" "" ${ARGN})
@@ -168,9 +144,9 @@ function(bde_project_add_group outName list_file)
     endif()
 
     # ${uorName}-full interface target contains both the requirements of
-    # the UOR itself and all the requirements of the member packages.
+    # the UOR itself and all the requirements of all the member packages.
     # This interface target is used for the building the final library
-    # as well as the external users.
+    # as well as for the external users.
     bde_add_interface_target(${uorName}-full)
     bde_interface_target_names(uor_full_interface_targets ${uorName}-full)
     bde_interface_target_assimilate(${uorName}-full ${uorName})
@@ -183,42 +159,43 @@ function(bde_project_add_group outName list_file)
     # process packages
     add_custom_target("${uorName}.t")
     foreach(package ${packages})
-        _bde_include_package(packageInfoName ${root_dir} ${package} ${uorName})
-        bde_info_target_get_property(interface_target ${packageInfoName} INTERFACE_TARGET)
+        _bde_default_process(
+            packageInfoName "${rootDir}/${package}" package package ${uorName}
+        )
+        bde_info_target_get_property(interfaceTarget ${packageInfoName} INTERFACE_TARGET)
 
         # Add package usage requirements to the package group target
-        bde_interface_target_assimilate(${uorName}-full ${interface_target})
-        bde_install_interface_target(${interface_target} EXPORT ${uorName}InterfaceTargets)
+        bde_interface_target_assimilate(${uorName}-full ${interfaceTarget})
+        bde_install_interface_target(${interfaceTarget} EXPORT ${uorName}InterfaceTargets)
 
-        bde_info_target_get_property(srcs ${packageInfoName} SOURCES)
-        bde_info_target_get_property(hdrs ${packageInfoName} HEADERS)
-        bde_info_target_get_property(hdrs_suffix ${packageInfoName} HEADERS_INSTALL_SUFFIX)
-        bde_info_target_get_property(deps ${packageInfoName} DEPENDS)
+        bde_info_target_get_property(packageSrcs ${packageInfoName} SOURCES)
+        bde_info_target_get_property(packageHdrs ${packageInfoName} HEADERS)
+        bde_info_target_get_property(packageDeps ${packageInfoName} DEPENDS)
 
-        message(
-            STATUS
+        bde_log(
+            VERBOSE
             "[${uorName}]: Processing package [${package}] "
-            "(${deps})"
+            "(${packageDeps})"
         )
 
-        bde_interface_target_names(package_interface_targets ${interface_target})
+        bde_interface_target_names(packageInterfaceTargets ${interfaceTarget})
 
         set(
-            all_package_depends
+            allPackageDepends
             # Requirements specific to this particular package
-            ${package_interface_targets}
+            ${packageInterfaceTargets}
             # Inter-package dependencies
-            ${deps}
+            ${packageDeps}
             # 'Pure' requirements of the package
-            ${uor_interface_targets}
+            ${uorInterfaceTargets}
         )
 
-        if(srcs)
+        if(packageSrcs)
             # object library
             add_library(
                 ${package}-obj
                 OBJECT EXCLUDE_FROM_ALL
-                ${srcs} ${hdrs}
+                ${packageSrcs} ${packageHdrs}
             )
 
             # CMake as of 3.10 does not allow calling target_link_libraries
@@ -228,7 +205,7 @@ function(bde_project_add_group outName list_file)
             set_target_properties(
                 ${package}-obj
                 PROPERTIES
-                    LINK_LIBRARIES "${all_package_depends}"
+                    LINK_LIBRARIES "${allPackageDepends}"
             )
 
             # target for tests
@@ -240,20 +217,25 @@ function(bde_project_add_group outName list_file)
             bde_target_objlib_sources(${uorName} ${package}-obj)
         else()
             # Add IDE target (https://gitlab.kitware.com/cmake/cmake/issues/15234)
-            add_custom_target(${package}-headers SOURCES ${hdrs})
+            add_custom_target(${package}-headers SOURCES ${packageHdrs})
 
             # target for tests
             add_library(${package} INTERFACE)
         endif()
 
         # Add usage requirements to the package target for tests
-        target_link_libraries(${package} INTERFACE ${all_package_depends})
+        target_link_libraries(${package} INTERFACE ${allPackageDepends})
 
         # Process package tests
         bde_info_target_get_property(tests ${packageInfoName} TEST_TARGETS)
         if (tests)
             foreach (test ${tests})
                 target_link_libraries(${test} ${package})
+                set_property(
+                    TEST ${test}
+                    APPEND PROPERTY
+                    LABELS ${uorName} ${package}
+                )
             endforeach()
 
             add_custom_target(${package}.t)
@@ -261,8 +243,6 @@ function(bde_project_add_group outName list_file)
             add_dependencies(${uorName}.t ${package}.t)
         endif()
     endforeach()
-
-    message(STATUS "[${uorName}]: Dependencies are resolved")
 
     # Install main target
     install(
@@ -283,12 +263,6 @@ function(bde_project_add_group outName list_file)
 
         install(
             CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${symlink_val} ${symlink_file})"
-            COMPONENT "${uorName}-symlinks"
-            EXCLUDE_FROM_ALL
-        )
-
-        install(
-            CODE "message(\" -- ${symlink_val} ${symlink_file}\")"
             COMPONENT "${uorName}-symlinks"
             EXCLUDE_FROM_ALL
         )
@@ -316,7 +290,7 @@ function(bde_project_add_group outName list_file)
     install(
         EXPORT ${uorName}InterfaceTargets
         DESTINATION "${bde_install_lib_suffix}/${bde_install_ufid}/cmake"
-        NAMESPACE "${uorName}::" 
+        NAMESPACE "${uorName}::"
         COMPONENT "${uorName}"
     )
 
@@ -353,7 +327,7 @@ function(bde_project_add_group outName list_file)
         DEPENDS ${uorName}
     )
 
-    message(STATUS "[${uorName}]: Done")
+    bde_log(VERBOSE "[${uorName}]: Done")
 endfunction()
 
 # :: bde_project_add_application ::
