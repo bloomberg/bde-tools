@@ -104,12 +104,3 @@ function( bde_utils_track_file file )
         COPYONLY
     )
 endfunction()
-
-# Make a function with a particular name undefined
-function(bde_reset_function functionName)
-    set_property(GLOBAL PROPERTY BDE_RESET_FUNCTION_NAME ${functionName})
-    function(${functionName})
-        get_property(functionName GLOBAL PROPERTY BDE_RESET_FUNCTION_NAME)
-        message(FATAL_ERROR "${functionName} was not defined.")
-    endfunction()
-endfunction()

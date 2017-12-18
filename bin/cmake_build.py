@@ -210,8 +210,8 @@ def build(options):
                     ]
 
         if 'all' not in target_list:
-            test_pattern = "|".join(options.targets)
-            test_cmd += ['-R', test_pattern]
+            test_pattern = "|".join(['(^)'+t+'($)' for t in options.targets])
+            test_cmd += ['-L', test_pattern]
 
         subprocess.check_call(test_cmd, cwd = options.build_dir)
 

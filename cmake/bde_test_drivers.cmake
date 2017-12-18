@@ -84,6 +84,7 @@ function(add_test_executable name src)
                 "-P" "${CMAKE_MODULE_PATH}/bde_run_test.cmake"
         )
     endif()
+    set_property(TEST ${name}.t PROPERTY LABELS ${name} ${name}.t)
 endfunction()
 
 # :: add_td_target ::

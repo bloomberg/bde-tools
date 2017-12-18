@@ -39,7 +39,7 @@
 #:  # Use 'add_directory' to include any application / groups CMakeLists.txt;
 #:  # include order *MUST* be in dependency order, lower to higher level.
 #:  # The application/groups CMakeLists.txt can simply call
-#:    'bde_project_add_group', 'bde_project_add_standlone', or 
+#:    'bde_project_add_group', 'bde_project_add_standlone', or
 #:    'bde_project_add_application'.
 #:
 #:  bde_project_print_summary() # Optional
@@ -70,52 +70,76 @@ set(BDE_PROJECT_INCLUDED true)
 
 # BDE CMake modules.
 include(bde_uor)
+include(bde_log)
+include(bde_default_process)
 include(CMakeParseArguments)
 
 # :: bde_project_summary ::
-# ----------------------------------------------------------------------------- 
+# -----------------------------------------------------------------------------
 # Print a summary containing the various configuration parameters, overlays
 # used and versions of libraries found.
 
 function(bde_project_summary)
-    message(STATUS "=========================================")
-    message(STATUS "=====            SUMMARY            =====")
-    message(STATUS "=========================================")
-    message(STATUS " BuildType........: ${CMAKE_BUILD_TYPE}")
-    message(STATUS " UFID.............: ${UFID}")
-    message(STATUS " Canonical UFID...: ${bde_canonical_ufid}")
-    message(STATUS " Install UFID.....: ${bde_install_ufid}")
-    message(STATUS " Install lib path.: ${bde_install_lib_suffix}")
-    message(STATUS "=========================================")
+    bde_log(NORMAL "=========================================")
+    bde_log(NORMAL "=====            SUMMARY            =====")
+    bde_log(NORMAL "=========================================")
+    bde_log(NORMAL " BuildType........: ${CMAKE_BUILD_TYPE}")
+    bde_log(NORMAL " UFID.............: ${UFID}")
+    bde_log(NORMAL " Canonical UFID...: ${bde_canonical_ufid}")
+    bde_log(NORMAL " Install UFID.....: ${bde_install_ufid}")
+    bde_log(NORMAL " Install lib path.: ${bde_install_lib_suffix}")
+    bde_log(NORMAL "=========================================")
+endfunction()
+
+function(_bde_process_uor_list outAllInfoTargets uorList intermediateDir type)
+    set(allInfoTargets)
+    foreach(uor ${uorList})
+        bde_log(NORMAL "Processing ${uor} as ${type}")
+        _bde_default_process(
+            uorInfoTarget
+            ${uor}
+            ${intermediateDir}
+            ${type}
+            ${ARGN}
+        )
+        list(APPEND allInfoTargets ${uorInfoTarget})
+    endforeach()
+    set(${outAllInfoTargets} ${allInfoTargets} PARENT_SCOPE)
 endfunction()
 
 function(bde_project name)
-    cmake_parse_arguments(proj "" "COMMON_INTERFACE_TARGET" "FILES" ${ARGN})
-    
-    set(property_list TARGET DEPENDS TEST_TARGETS)
+    cmake_parse_arguments(
+        proj
+        ""
+        "COMMON_INTERFACE_TARGET"
+        "PACKAGE_GROUPS;APPLICATIONS;STANDALONE_PACKAGES"
+        ${ARGN}
+    )
 
-    foreach(prop ${property_list})
-        set(all_${prop})
-    endforeach()
+    _bde_process_uor_list(
+        groupInfoTargets "${proj_PACKAGE_GROUPS}" group package_group
+        COMMON_INTERFACE_TARGET ${proj_COMMON_INTERFACE_TARGET}
+    )
+    _bde_process_uor_list(
+        pkgInfoTargets "${proj_STANDALONE_PACKAGES}" package standalone_package
+        COMMON_INTERFACE_TARGET ${proj_COMMON_INTERFACE_TARGET}
+    )
+    _bde_process_uor_list(
+        appInfoTargets "${proj_APPLICATIONS}" package application
+        COMMON_INTERFACE_TARGET ${proj_COMMON_INTERFACE_TARGET}
+    )
 
-    foreach(uorFileName ${proj_FILES})
-        # The uor file must contain the definition of 'process_uor' function or macro
-        bde_reset_function(process_uor)
-        message(STATUS "Processing ${uorFileName}")
-        include(${uorFileName})
-        process_uor(
-            uorInfoTarget
-            ${uorFileName}
-            COMMON_INTERFACE_TARGET
-                ${proj_COMMON_INTERFACE_TARGET}
-        )
+    # Join information from all UORs
+    set(properties TARGET DEPENDS TEST_TARGETS)
 
-        foreach(prop ${property_list})
-            bde_info_target_get_property(value ${uorInfoTarget} ${prop})
+    foreach(infoTarget ${groupInfoTargets} ${pkgInfoTargets} ${appInfoTargets})
+        foreach(prop ${properties})
+            bde_info_target_get_property(value ${infoTarget} ${prop})
             list(APPEND all_${prop} ${value})
         endforeach()
     endforeach()
 
+    # Build project info target
     bde_add_info_target(${name})
     bde_info_target_set_property(${name} TARGETS ${all_TARGET})
     bde_info_target_set_property(${name} DEPENDS ${all_DEPENDS})
@@ -127,17 +151,28 @@ function(bde_project name)
     endif()
 endfunction()
 
-# takes in all project names
-function(bde_finalize_projects)
-    # todo - remove duplication
-    set(property_list TARGETS DEPENDS TEST_TARGETS)
+# Resolve external dependency [TODO]
+function(bde_resolve_external_dependency externalDep)
+    find_package(
+        ${externalDep} REQUIRED
+        PATH_SUFFIXES "${bde_install_lib_suffix}/${bde_install_ufid}/cmake"
+    )
+    if (NOT TARGET ${externalDep})
+        message(
+            FATAL_ERROR
+            "Found external dependency '${externalDep}', "
+            "but the target '${externalDep}' was not defined."
+        )
+    endif()
+endfunction()
 
-    foreach(prop ${property_list})
-        set(all_${prop})
-    endforeach()
+# Resolve all external dependencies and add all.t test target
+# Takes in all project names
+function(bde_finalize_projects)
+    set(properties TARGETS DEPENDS TEST_TARGETS)
 
     foreach(proj ${ARGN})
-        foreach(prop ${property_list})
+        foreach(prop ${properties})
             bde_info_target_get_property(value ${proj} ${prop})
             list(APPEND all_${prop} ${value})
         endforeach()
@@ -147,17 +182,14 @@ function(bde_finalize_projects)
     list(REMOVE_ITEM all_DEPENDS ${all_TARGETS})
     list(REMOVE_DUPLICATES all_DEPENDS)
 
-    message(STATUS "Searching for EXTERNAL dependencies: ${all_DEPENDS}")
-    foreach(external_dep ${all_DEPENDS})
-        find_package(${external_dep} REQUIRED PATH_SUFFIXES "${bde_install_lib_suffix}/${bde_install_ufid}/cmake")
-        if (NOT TARGET ${external_dep})
-            message(
-                FATAL_ERROR
-                "Found external dependency '${external_dep}', "
-                "but the target '${external_dep}' was not defined."
-            )
-        endif()
-    endforeach()
+    if (${all_DEPENDS})
+        bde_log(NORMAL "Searching for EXTERNAL dependencies: ${all_DEPENDS}.")
+        foreach(externalDep ${all_DEPENDS})
+            bde_resolve_external_dependency(${externalDep})
+        endforeach()
+    else()
+        bde_log(NORMAL "All dependencies were resolved internally.")
+    endif()
 
     if(all_TEST_TARGETS)
         add_custom_target(all.t)
@@ -167,7 +199,7 @@ function(bde_finalize_projects)
     bde_project_summary()
 endfunction()
 
-macro(bde_process_workspace) 
+macro(bde_process_workspace)
     # macro and not a function because enable_testing()
     # should be called at top level
 
@@ -187,4 +219,3 @@ macro(bde_process_workspace)
 
     bde_finalize_projects(${projects})
 endmacro()
-
