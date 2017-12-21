@@ -182,7 +182,7 @@ function(bde_finalize_projects)
     list(REMOVE_ITEM all_DEPENDS ${all_TARGETS})
     list(REMOVE_DUPLICATES all_DEPENDS)
 
-    if (${all_DEPENDS})
+    if (all_DEPENDS)
         bde_log(NORMAL "Searching for EXTERNAL dependencies: ${all_DEPENDS}.")
         foreach(externalDep ${all_DEPENDS})
             bde_resolve_external_dependency(${externalDep})
