@@ -162,11 +162,17 @@ function(bde_project_add_group outInfoTarget listFile)
         _bde_default_process(
             packageInfoName "${rootDir}/${package}" package package ${uorName}
         )
-        bde_info_target_get_property(interfaceTarget ${packageInfoName} INTERFACE_TARGET)
+
+        bde_info_target_get_property(
+            interfaceTarget ${packageInfoName} INTERFACE_TARGET
+        )
 
         # Add package usage requirements to the package group target
         bde_interface_target_assimilate(${uorName}-full ${interfaceTarget})
-        bde_install_interface_target(${interfaceTarget} EXPORT ${uorName}InterfaceTargets)
+
+        bde_install_interface_target(
+            ${interfaceTarget} EXPORT ${uorName}InterfaceTargets
+        )
 
         bde_info_target_get_property(packageSrcs ${packageInfoName} SOURCES)
         bde_info_target_get_property(packageHdrs ${packageInfoName} HEADERS)
@@ -174,8 +180,7 @@ function(bde_project_add_group outInfoTarget listFile)
 
         bde_log(
             VERBOSE
-            "[${uorName}]: Processing package [${package}] "
-            "(${packageDeps})"
+            "[${uorName}]: Processing package [${package}] (${packageDeps})"
         )
 
         bde_interface_target_names(packageInterfaceTargets ${interfaceTarget})
@@ -306,6 +311,22 @@ function(bde_project_add_group outInfoTarget listFile)
     install(
         FILES "${PROJECT_BINARY_DIR}/${uorName}Config.cmake"
         DESTINATION "${bde_install_lib_suffix}/${bde_install_ufid}/cmake"
+        COMPONENT "${uorName}"
+    )
+
+    # Create the group.pc for the build tree
+    # In CMake a list is a string with ';' as an item separator.
+    set(pc_depends ${dependencies})
+    string(REPLACE ";" " " pc_depends "${pc_depends}")
+    configure_file(
+        "${CMAKE_MODULE_PATH}/group.pc.in"
+        "${PROJECT_BINARY_DIR}/${uorName}.pc"
+        @ONLY
+    )
+
+    install(
+        FILES "${PROJECT_BINARY_DIR}/${uorName}.pc"
+        DESTINATION "${bde_install_lib_suffix}/${bde_install_ufid}/pkgconfig"
         COMPONENT "${uorName}"
     )
 
