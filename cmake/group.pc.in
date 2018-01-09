@@ -1,0 +1,11 @@
+prefix=@CMAKE_PREFIX_PATH@
+libdir=${prefix}/@bde_install_lib_suffix@
+includedir=${prefix}/include
+
+Name: @group@
+Description: The @group@ library.
+Version: 4.0.0
+Requires:
+Requires.private: @pc_depends@
+Cflags: -I\${includedir}
+Libs: -L\${libdir} -l@group@

@@ -26,6 +26,17 @@ def value_or_env(value, envVariableName, humanReadableName, required=False):
         )
     return ret
 
+def cmake_module_path_or_env(value, envVariableName):
+    ''' Evaluate the cmake modules path that provided ether in the command line, environment
+        variable or guessed
+    '''
+    ret = value if value else os.getenv(envVariableName)
+    if not ret:
+        upd = os.path.dirname
+        ret = os.path.join(upd(upd(os.path.realpath(__file__))), 'cmake')
+
+    return ret
+
 class JobsOptions:
     Type = enum('ALL_AVAILABLE', 'FIXED', 'NONE')
     def __init__(self, parsedArgs):
@@ -40,6 +51,7 @@ class Options:
     def __init__(self, args):
         self.ufid = value_or_env(args.ufid, 'BDE_WAF_UFID', 'UFID', required='configure' in args.cmd)
         self.build_dir = value_or_env(args.build_dir, 'BDE_WAF_BUILD_DIR', 'Build directory', required=True)
+        self.cmake_module_path = cmake_module_path_or_env(args.cmake_module_path, 'CMAKE_MODULE_PATH')
         self.prefix = value_or_env(args.prefix, 'PREFIX', 'Installation prefix')
         self.targets = args.targets
         self.tests = args.tests
@@ -76,10 +88,10 @@ class Platform:
         if 'Windows' == host_platform:
             return ['msvc' + str(y) for y in [2013, 2015, 2017]] + ['Ninja']
         elif 'SunOS' == host_platform:
-            return 'Unix Makefiles'
+            return ['Unix Makefiles']
         else:
-            return 'Ninja'
-        
+            return ['Ninja', 'Unix Makefiles']
+
     @staticmethod
     def generator_jobs_arg(gen, options):
         formatStrings = {JobsOptions.Type.NONE: ''}
@@ -113,9 +125,20 @@ class Platform:
         else:
             return 'all'
 
+def run_command(cmd, cwd=None):
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
+    (out, err) = p.communicate()
+    ret = p.returncode
+
+    if ret:
+        print("{}".format(out), file=sys.stdout)
+        print("{}".format(err), file=sys.stderr)
+
+    return ret
+
 def wrapper():
     parser = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]))
-    parser.add_argument('cmd', nargs='+', choices=['configure', 'build'])
+    parser.add_argument('cmd', nargs='+', choices=['configure', 'build', 'install'])
     parser.add_argument('--build_dir')
     parser.add_argument('-j', '--jobs', nargs='?', type=int, action='append')
         # append is to differentiate between passed '-j' with no number and
@@ -124,11 +147,12 @@ def wrapper():
     group = parser.add_argument_group('configure', 'Configuration options')
     group.add_argument('-u', '--ufid')
     group.add_argument('--prefix')
-    
+    group.add_argument('--cmake-module-path')
+
     genChoices = Platform.generator_choices()
     if len(genChoices) > 1:
         group.add_argument('-G', choices=genChoices, dest='generator')
-    
+
     group = parser.add_argument_group('build', 'Build options')
     group.add_argument('--targets', nargs='+')
     group.add_argument('--tests', choices=['build', 'run'])
@@ -145,6 +169,8 @@ def wrapper():
     if 'build' in args.cmd:
         build(options)
 
+    if 'install' in args.cmd:
+        install(options)
     return
 
 
@@ -163,10 +189,12 @@ def configure(options):
 
     configure_cmd = ['cmake', os.getcwd(),
                      '-G' + Platform.generator(options),
+                     '-DCMAKE_MODULE_PATH=' + options.cmake_module_path,
                      '-DUFID=' + options.ufid,
                     ]
     if (options.prefix):
         configure_cmd.append('-DCMAKE_PREFIX_PATH=' + options.prefix)
+        configure_cmd.append('-DCMAKE_INSTALL_PREFIX=' + options.prefix)
 
     subprocess.check_call(configure_cmd, cwd = options.build_dir)
 
@@ -183,9 +211,10 @@ def build_target(target, build_dir, extra_args):
     build_cmd = ['cmake', '--build', build_dir]
     if target:
         build_cmd += ['--target', target]
-        
+
     # filter out empty extra_args or Ninja wont like it
     build_cmd += ['--'] + [arg for arg in extra_args if arg]
+
     subprocess.check_call(build_cmd)
 
 def build(options):
@@ -214,6 +243,12 @@ def build(options):
             test_cmd += ['-L', test_pattern]
 
         subprocess.check_call(test_cmd, cwd = options.build_dir)
+
+def install(options):
+    """ Install
+    """
+
+    build_target('install', options.build_dir, [])
 
 
 if __name__ == '__main__':

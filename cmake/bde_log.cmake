@@ -12,6 +12,6 @@ set(BDE_LOG_LEVEL_VERBOSE 2)
 
 function(bde_log level)
     if (${BDE_LOG_LEVEL_${level}} LESS_EQUAL ${BDE_LOG_LEVEL_${BDE_LOG_LEVEL}})
-        message(STATUS ${ARGN})
+        message(STATUS "${ARGN}")
     endif()
 endfunction()

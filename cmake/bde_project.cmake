@@ -74,6 +74,9 @@ include(bde_log)
 include(bde_default_process)
 include(CMakeParseArguments)
 
+# External packages
+find_package(PkgConfig REQUIRED)
+
 # :: bde_project_summary ::
 # -----------------------------------------------------------------------------
 # Print a summary containing the various configuration parameters, overlays
@@ -154,10 +157,25 @@ endfunction()
 # Resolve external dependency [TODO]
 function(bde_resolve_external_dependency externalDep)
     find_package(
-        ${externalDep} REQUIRED
+        ${externalDep} QUIET
         PATH_SUFFIXES "${bde_install_lib_suffix}/${bde_install_ufid}/cmake"
     )
-    if (NOT TARGET ${externalDep})
+    if (NOT ${${externalDep}_FOUND})
+        # No cmake configuration found. Trying pkg-config.
+        pkg_check_modules(
+            ${externalDep}_pkg REQUIRED ${externalDep}
+        )
+
+        add_library(${externalDep} INTERFACE IMPORTED)
+        set_target_properties(
+            ${externalDep}
+            PROPERTIES
+                INTERFACE_COMPILE_OPTIONS "${${externalDep}_pkg_CFLAGS}"
+                INTERFACE_LINK_LIBRARIES "${${externalDep}_pkg_STATIC_LDFLAGS}"
+        )
+    endif()
+
+    if(NOT TARGET ${externalDep})
         message(
             FATAL_ERROR
             "Found external dependency '${externalDep}', "
