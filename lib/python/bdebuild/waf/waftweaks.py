@@ -82,6 +82,18 @@ def activate_custom_exec_command(class_name):
     derived_class.exec_response_command = bde_msvc_exec_response_command
 
 
+def quote_response_command(flag):
+    """This is a copy of a now-removed function in msvc.py.
+    """
+    if flag.find(' ') > -1:
+        for x in ('/LIBPATH:', '/IMPLIB:', '/OUT:', '/I'):
+			if flag.startswith(x):
+				flag = '%s"%s"' % (x, flag[len(x):])
+				break
+		else:
+			flag = '"%s"' % flag
+	return flag
+
 def bde_msvc_exec_response_command(task, cmd, **kw):
     """This is a copy of waflib.Tools.msvc.exec_response_command.
     """
@@ -91,7 +103,7 @@ def bde_msvc_exec_response_command(task, cmd, **kw):
                 len(' '.join(cmd)) >= 8192):
             # unquoted program name, otherwise exec_command will fail
             program = cmd[0]
-            cmd = [task.quote_response_command(x) for x in cmd]
+            cmd = [quote_response_command(x) for x in cmd]
             (fd, tmp) = tempfile.mkstemp()
             os.write(fd, '\r\n'.join(i.replace('\\', '\\\\') for i
                                      in cmd[1:]).encode())
