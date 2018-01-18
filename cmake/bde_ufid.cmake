@@ -44,8 +44,8 @@ function(bde_parse_ufid UFID)
     endif()
 
     # These flags form potential installation prefix
-    set(install_ufid_flags opt dbg mt exc safe safe2 pic shr)
-    set(known_ufid_flags ${install_ufid_flags} 64 ndebug cpp11 cpp14)
+    set(install_ufid_flags opt dbg exc mt 64 safe safe2 pic shr)
+    set(known_ufid_flags ${install_ufid_flags} ndebug cpp11 cpp14)
 
     foreach(flag ${ufid_flags})
         if (NOT ${flag} IN_LIST known_ufid_flags)
@@ -253,6 +253,9 @@ function(bde_set_common_target_properties)
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 -fno-strict-aliasing
+                $<${bde_ufid_is_opt}:
+                    -fno-gcse
+                >
                 $<IF:${bde_ufid_is_exc},
                     -fexceptions,
                     -fno-exceptions
