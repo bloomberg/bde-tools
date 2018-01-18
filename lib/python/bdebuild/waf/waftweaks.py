@@ -87,12 +87,12 @@ def quote_response_command(flag):
     """
     if flag.find(' ') > -1:
         for x in ('/LIBPATH:', '/IMPLIB:', '/OUT:', '/I'):
-			if flag.startswith(x):
-				flag = '%s"%s"' % (x, flag[len(x):])
-				break
-		else:
-			flag = '"%s"' % flag
-	return flag
+            if flag.startswith(x):
+                flag = '%s"%s"' % (x, flag[len(x):])
+                break
+        else:
+            flag = '"%s"' % flag
+    return flag
 
 def bde_msvc_exec_response_command(task, cmd, **kw):
     """This is a copy of waflib.Tools.msvc.exec_response_command.
