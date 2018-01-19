@@ -14,6 +14,11 @@ def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
     return type('Enum', (), enums)
 
+def replace_path_sep(path, sep = '/'):
+    if not path:
+        return path
+    return path.replace(os.path.sep, sep)
+
 def value_or_env(value, envVariableName, humanReadableName, required=False):
     ''' Get value which is either provided or from a fallback
         environment location
@@ -38,25 +43,30 @@ def cmake_module_path_or_env(value, envVariableName):
     return ret
 
 class JobsOptions:
-    Type = enum('ALL_AVAILABLE', 'FIXED', 'NONE')
+    Type = enum('ALL_AVAILABLE', 'FIXED')
     def __init__(self, parsedArgs):
         if not parsedArgs:
-            self.type = JobsOptions.Type.NONE
+            self.type = JobsOptions.Type.ALL_AVAILABLE
             self.count = None
         else:
-            self.type = JobsOptions.Type.FIXED if parsedArgs[-1] else JobsOptions.Type.ALL_AVAILABLE
-            self.count = parsedArgs[-1]
+            self.type = JobsOptions.Type.FIXED
+            self.count = parsedArgs
 
 class Options:
     def __init__(self, args):
         self.ufid = value_or_env(args.ufid, 'BDE_WAF_UFID', 'UFID', required='configure' in args.cmd)
-        self.build_dir = value_or_env(args.build_dir, 'BDE_WAF_BUILD_DIR', 'Build directory', required=True)
-        self.cmake_module_path = cmake_module_path_or_env(args.cmake_module_path, 'CMAKE_MODULE_PATH')
-        self.prefix = value_or_env(args.prefix, 'PREFIX', 'Installation prefix')
+        self.build_dir = \
+            replace_path_sep(value_or_env(args.build_dir, 'BDE_WAF_BUILD_DIR', 'Build directory', required=True))
+        self.cmake_module_path = \
+            replace_path_sep(cmake_module_path_or_env(args.cmake_module_path, 'CMAKE_MODULE_PATH'))
+        self.prefix = replace_path_sep(value_or_env(args.prefix, 'PREFIX', 'Installation prefix'))
         self.targets = args.targets
         self.tests = args.tests
         self.jobs = JobsOptions(args.jobs)
         self.generator = args.generator if hasattr(args, 'generator') else None
+        self.timeout = args.timeout
+        self.refroot = \
+            replace_path_sep(value_or_env(args.refroot, 'DISTRIBUTION_REFROOT', 'Distribution refroot'))
 
 class Platform:
     @staticmethod
@@ -94,7 +104,7 @@ class Platform:
 
     @staticmethod
     def generator_jobs_arg(gen, options):
-        formatStrings = {JobsOptions.Type.NONE: ''}
+        formatStrings = {}
         if gen.startswith('Visual Studio'):
             formatStrings[JobsOptions.Type.ALL_AVAILABLE] = '/maxcpucount'
             formatStrings[JobsOptions.Type.FIXED] = '/maxcpucount:{}'
@@ -108,9 +118,7 @@ class Platform:
 
     @staticmethod
     def ctest_jobs_arg(options):
-        if options.jobs.type == JobsOptions.Type.NONE:
-            return ''
-        elif options.jobs.type == JobsOptions.Type.FIXED:
+        if options.jobs.type == JobsOptions.Type.FIXED:
             return '-j{}'.format(options.jobs.count)
         elif options.jobs.type == JobsOptions.Type.ALL_AVAILABLE:
             return '-j{}'.format(multiprocessing.cpu_count())
@@ -140,14 +148,13 @@ def wrapper():
     parser = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]))
     parser.add_argument('cmd', nargs='+', choices=['configure', 'build', 'install'])
     parser.add_argument('--build_dir')
-    parser.add_argument('-j', '--jobs', nargs='?', type=int, action='append')
-        # append is to differentiate between passed '-j' with no number and
-        # not passing '-j' at all
+    parser.add_argument('-j', '--jobs', type=int)
 
     group = parser.add_argument_group('configure', 'Configuration options')
     group.add_argument('-u', '--ufid')
     group.add_argument('--prefix')
     group.add_argument('--cmake-module-path')
+    group.add_argument('--refroot')
 
     genChoices = Platform.generator_choices()
     if len(genChoices) > 1:
@@ -156,6 +163,9 @@ def wrapper():
     group = parser.add_argument_group('build', 'Build options')
     group.add_argument('--targets', nargs='+')
     group.add_argument('--tests', choices=['build', 'run'])
+
+    group = parser.add_argument_group('test', 'Testing options')
+    group.add_argument('--timeout', type=int, default=120)
 
     group = parser.add_argument_group('install', 'Installation options')
 
@@ -189,23 +199,35 @@ def configure(options):
 
     configure_cmd = ['cmake', os.getcwd(),
                      '-G' + Platform.generator(options),
-                     '-DCMAKE_MODULE_PATH=' + options.cmake_module_path,
-                     '-DUFID=' + options.ufid,
+                     '-DCMAKE_MODULE_PATH:PATH=' + options.cmake_module_path,
+                     '-DUFID:STRING=' + options.ufid,
                     ]
-    if (options.prefix):
-        configure_cmd.append('-DCMAKE_PREFIX_PATH=' + options.prefix)
-        configure_cmd.append('-DCMAKE_INSTALL_PREFIX=' + options.prefix)
+    if options.prefix:
+        configure_cmd.append('-DCMAKE_PREFIX_PATH:PATH=' + options.prefix)
+        configure_cmd.append('-DCMAKE_INSTALL_PREFIX:PATH=' + options.prefix)
+    if options.refroot:
+        configure_cmd.append('-DDISTRIBUTION_REFROOT:PATH=' + options.refroot)
 
     subprocess.check_call(configure_cmd, cwd = options.build_dir)
 
-def get_generator_from_cache(build_dir):
-    cacheFileName = os.path.join(build_dir, 'CMakeCache.txt')
-    if not os.path.isfile(cacheFileName):
-        raise RuntimeError('The project build configuration not found in ' + build_dir)
+class CacheInfo:
+    def __init__(self, build_dir):
+        self.generator = None
+        self.multiconfig = False
+        self.build_type = None
 
-    for line in open(cacheFileName):
-        if line.startswith('CMAKE_GENERATOR:'):
-            return line.split('=')[1]
+        cacheFileName = os.path.join(build_dir, 'CMakeCache.txt')
+        if not os.path.isfile(cacheFileName):
+            raise RuntimeError('The project build configuration not found in ' + build_dir)
+
+        for line in open(cacheFileName):
+            if line.startswith('CMAKE_GENERATOR:'):
+                self.generator = line.strip().split('=')[1]
+            elif line.startswith('CMAKE_CONFIGURATION_TYPES:'):
+                self.multiconfig = True
+            elif line.startswith('CMAKE_BUILD_TYPE:'):
+                self.build_type = line.strip().split('=')[1]
+
 
 def build_target(target, build_dir, extra_args):
     build_cmd = ['cmake', '--build', build_dir]
@@ -213,30 +235,37 @@ def build_target(target, build_dir, extra_args):
         build_cmd += ['--target', target]
 
     # filter out empty extra_args or Ninja wont like it
-    build_cmd += ['--'] + [arg for arg in extra_args if arg]
+    build_cmd += [arg for arg in extra_args if arg]
 
     subprocess.check_call(build_cmd)
 
 def build(options):
-    """ Build 
+    """ Build
     """
-    cache_gen = get_generator_from_cache(options.build_dir)
-    jobs_arg = Platform.generator_jobs_arg(cache_gen, options)
+    cache_info = CacheInfo(options.build_dir)
+    extra_args = []
+    if cache_info.multiconfig:
+        extra_args += ['--config', cache_info.build_type]
+    extra_args += ['--', Platform.generator_jobs_arg(cache_info.generator, options)]
 
     target_list = options.targets if options.targets else ['all']
-
     for target in target_list:
         if options.tests and not target.endswith('.t'):
             full_target = target + '.t'
         else:
             full_target = None if target == 'all' else target
-        build_target(full_target, options.build_dir, [jobs_arg])
+        build_target(full_target, options.build_dir, extra_args)
 
     if 'run' == options.tests:
         test_cmd = ['ctest',
                     '--output-on-failure',
                     Platform.ctest_jobs_arg(options)
                     ]
+        if cache_info.multiconfig:
+            test_cmd += ['-C', cache_info.build_type]
+
+        if options.timeout > 0:
+            test_cmd += ['--timeout', str(options.timeout)]
 
         if 'all' not in target_list:
             test_pattern = "|".join(['(^)'+t+'($)' for t in options.targets])

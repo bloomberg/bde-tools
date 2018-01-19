@@ -104,3 +104,23 @@ function( bde_utils_track_file file )
         COPYONLY
     )
 endfunction()
+
+
+function(bde_list_template_substitute output placeholder template)
+    set(out)
+    foreach(target ${ARGN})
+        string(REPLACE ${placeholder} ${target} elem ${template})
+        list(APPEND out ${elem})
+    endforeach()
+    set(${output} ${out} PARENT_SCOPE)
+endfunction()
+
+function(bde_filter_directories output)
+    set(out)
+    foreach(f ${ARGN})
+        if(IS_DIRECTORY ${f})
+            list(APPEND out ${f})
+        endif()
+    endforeach()
+    set(${output} ${out} PARENT_SCOPE)
+endfunction()
