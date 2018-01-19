@@ -1,5 +1,5 @@
 set(TEST_RESULT 0)
-set(TEST_NUMBER 0)
+set(TEST_NUMBER 1)
 set(FAIL_COUNT  0)
 
 while(TEST_RESULT EQUAL "0")

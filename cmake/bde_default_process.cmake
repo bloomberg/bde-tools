@@ -20,16 +20,29 @@ endfunction()
 
 # Include the package cmake file if it exists.
 # If it doesn't, use default processing
-function(_bde_default_process outInfoTarget rootDir intermediateDir type)
+macro(bde_default_process fileName defaultFileName)
+    bde_reset_function(process)
+    if(EXISTS ${fileName})
+        include(${fileName})
+    else()
+        include(${defaultFileName})
+    endif()
+    process(${ARGN})
+endmacro()
+
+# Use default processing facility for a UOR and ensure that an
+# info target is created after processing
+function(bde_default_process_uor outInfoTarget rootDir intermediateDir type)
     get_filename_component(entityName ${rootDir} NAME)
     set(entityFileName "${rootDir}/${intermediateDir}/${entityName}.cmake")
-    bde_reset_function(process)
-    if(EXISTS "${entityFileName}")
-        include("${entityFileName}")
-    else()
-        include(bde_default_process_${type})
-    endif()
-    process(infoTarget "${entityFileName}" ${ARGN})
+
+    bde_default_process(
+        ${entityFileName}
+        bde_default_process_${type}
+        infoTarget
+        ${entityFileName}
+        ${ARGN}
+    )
 
     _bde_check_info_target(${infoTarget} ${entityName})
     set(${outInfoTarget} ${infoTarget} PARENT_SCOPE)

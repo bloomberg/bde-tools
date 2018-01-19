@@ -121,7 +121,7 @@ function(bde_set_common_target_properties)
     else()
         message(FATAL_ERROR "The build type is not set in UFID: ${UFID}")
     endif()
-    set(CMAKE_BUILD_TYPE ${build_type} PARENT_SCOPE)
+    set(CMAKE_BUILD_TYPE ${build_type} CACHE STRING "Build type")
 
     bde_interface_target_compile_features(
         bde_ufid_flags

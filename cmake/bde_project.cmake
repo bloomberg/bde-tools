@@ -75,7 +75,7 @@ include(bde_default_process)
 include(CMakeParseArguments)
 
 # External packages
-find_package(PkgConfig REQUIRED)
+find_package(PkgConfig)
 
 # :: bde_project_summary ::
 # -----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ function(_bde_process_uor_list outAllInfoTargets uorList intermediateDir type)
     set(allInfoTargets)
     foreach(uor ${uorList})
         bde_log(NORMAL "Processing ${uor} as ${type}")
-        _bde_default_process(
+        bde_default_process_uor(
             uorInfoTarget
             ${uor}
             ${intermediateDir}
@@ -111,7 +111,7 @@ function(_bde_process_uor_list outAllInfoTargets uorList intermediateDir type)
     set(${outAllInfoTargets} ${allInfoTargets} PARENT_SCOPE)
 endfunction()
 
-function(bde_project name)
+function(bde_project_process_uors projName)
     cmake_parse_arguments(
         proj
         ""
@@ -122,15 +122,12 @@ function(bde_project name)
 
     _bde_process_uor_list(
         groupInfoTargets "${proj_PACKAGE_GROUPS}" group package_group
-        COMMON_INTERFACE_TARGET ${proj_COMMON_INTERFACE_TARGET}
     )
     _bde_process_uor_list(
         pkgInfoTargets "${proj_STANDALONE_PACKAGES}" package standalone_package
-        COMMON_INTERFACE_TARGET ${proj_COMMON_INTERFACE_TARGET}
     )
     _bde_process_uor_list(
         appInfoTargets "${proj_APPLICATIONS}" package application
-        COMMON_INTERFACE_TARGET ${proj_COMMON_INTERFACE_TARGET}
     )
 
     # Join information from all UORs
@@ -141,17 +138,35 @@ function(bde_project name)
             bde_info_target_get_property(value ${infoTarget} ${prop})
             list(APPEND all_${prop} ${value})
         endforeach()
+
+        if (proj_COMMON_INTERFACE_TARGET)
+            bde_info_target_get_property(
+                interfaceTargets ${infoTarget} INTERFACE_TARGETS
+            )
+            foreach(interfaceTarget ${interfaceTargets})
+                bde_interface_target_assimilate(
+                    ${interfaceTarget} ${proj_COMMON_INTERFACE_TARGET}
+                )
+            endforeach()
+            bde_info_target_append_property(
+                ${infoTarget} INTERFACE_TARGETS ${proj_COMMON_INTERFACE_TARGET}
+            )
+        endif()
+        bde_install_uor(${infoTarget})
     endforeach()
 
     # Build project info target
-    bde_add_info_target(${name})
-    bde_info_target_set_property(${name} TARGETS ${all_TARGET})
-    bde_info_target_set_property(${name} DEPENDS ${all_DEPENDS})
+    bde_info_target_append_property(${projName} TARGETS ${all_TARGET})
+    bde_info_target_append_property(${projName} DEPENDS "${all_DEPENDS}")
 
     if(all_TEST_TARGETS)
-        add_custom_target(${name}.t)
-        add_dependencies(${name}.t ${all_TEST_TARGETS})
-        bde_info_target_set_property(${name} TEST_TARGETS ${name}.t)
+        bde_info_target_get_property(testTarget ${projName} TEST_TARGET)
+        if(NOT testTarget)
+            set(testTarget ${projName}.t)
+            add_custom_target(${testTarget})
+            bde_info_target_set_property(${projName} TEST_TARGET ${testTarget})
+        endif()
+        add_dependencies(${testTarget} ${all_TEST_TARGETS})
     endif()
 endfunction()
 
@@ -167,8 +182,8 @@ function(bde_import_target_raw_library libName)
     endif()
 
     bde_log(VERBOSE "Searching raw library: ${libName}")
-    # find_library is limited to search only in the specified 
-    # distribution refroot directory. 
+    # find_library is limited to search only in the specified
+    # distribution refroot directory.
 
     # TODO: Might add the hints for lookup path.
     set(libraryPath "${DISTRIBUTION_REFROOT}/opt/bb/${bde_install_lib_suffix}")
@@ -199,11 +214,15 @@ endfunction()
 # If the library is found the function creates an imported target that
 # can be used in target_link_libraries(). The imported target has necessary
 # transitive dependencies.
-# The function returns a list of additional dependencies found in 
+# The function returns a list of additional dependencies found in
 # the .pc file.
 function(bde_import_target_from_pc outDeps depName)
     # The dependency was resolved already.
     if (TARGET ${depName})
+        return()
+    endif()
+
+    if(NOT ${PKG_CONFIG_FOUND})
         return()
     endif()
 
@@ -315,7 +334,7 @@ endfunction()
 
 # :: bde_resolve_external_dependencies ::
 # -----------------------------------------------------------------------------
-# The function tries to resolve all external dependencies in the following 
+# The function tries to resolve all external dependencies in the following
 # order:
 # 1. CMake config
 # 2. .pc file
@@ -379,7 +398,7 @@ endfunction()
 # Resolve all external dependencies and add all.t test target
 # Takes in all project names
 function(bde_finalize_projects)
-    set(properties TARGETS DEPENDS TEST_TARGETS)
+    set(properties TARGETS DEPENDS TEST_TARGET)
 
     foreach(proj ${ARGN})
         foreach(prop ${properties})
@@ -399,12 +418,27 @@ function(bde_finalize_projects)
         bde_log(NORMAL "All dependencies were resolved internally.")
     endif()
 
-    if(all_TEST_TARGETS)
+    if(all_TEST_TARGET)
         add_custom_target(all.t)
-        add_dependencies(all.t ${all_TEST_TARGETS})
+        add_dependencies(all.t ${all_TEST_TARGET})
     endif()
 
     bde_project_summary()
+endfunction()
+
+function(bde_default_process_project outInfoTarget rootDir)
+    bde_default_process(
+        "${rootDir}/project.cmake"
+        bde_default_process_project
+        infoTarget
+        ${rootDir}
+    )
+
+    if(infoTarget)
+        set(${outInfoTarget} ${infoTarget} PARENT_SCOPE)
+    else()
+        bde_log(NORMAL "${rootDir} does not seem to contain a valid BDE-style project.")
+    endif()
 endfunction()
 
 macro(bde_process_workspace)
@@ -416,14 +450,12 @@ macro(bde_process_workspace)
     include(bde_utils)
     include(bde_ufid)
 
-    set(projects)
+    set(projInfoTargets)
     bde_process_ufid()
     foreach(dir ${ARGN})
-        bde_reset_function(process_project)
-        include(${dir}/project.cmake)
-        process_project(proj ${dir})
-        list(APPEND projects ${proj})
+        bde_default_process_project(projInfoTarget ${dir})
+        list(APPEND projInfoTargets ${projInfoTarget})
     endforeach()
 
-    bde_finalize_projects(${projects})
+    bde_finalize_projects(${projInfoTargets})
 endmacro()
