@@ -279,7 +279,7 @@ function(bde_import_target_from_pc outDeps depName)
                     rawLib_${depName}
                     NAMES
                         lib${depName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
-                        lib${deepName}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                        lib${depName}${CMAKE_STATIC_LIBRARY_SUFFIX}
                         ${searchHints}
                 )
 
