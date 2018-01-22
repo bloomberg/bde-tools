@@ -88,68 +88,56 @@ endfunction()
 # :: bde_project_parse_package_metadata ::
 # ----------------------------------------------------------------------------- 
 # This function parses the metadata (.dep and .mem files) of the specified
-# 'packageName' standalone package library, and exports the following
-# variables:
-#  o <packageName>_COMPONENTS:    List of relative path to all the components
-#                                 in the library
+# 'packageName' package library, and exports the following properties via its
+# info Target:
+#  o HEADERS:       List of relative path to all .h headers in the library
 #
-#  o <packageName>_HEADERS:       List of relative path to all .h headers in
-#                                 the library
+#  o SOURCES:       List of relative path to all .cpp source files in the
+#                   library
 #
-#  o <packageName>_SOURCES:       List of relative path to all .cpp source
-#                                 files in the library
+#  o DEPENDS:       List of 'raw' dependencies of the library
 #
-#  o <packageName>_DEPENDS:       List of 'raw' dependencies of the library
-#
-#  o <packageName>_TEST_DEPENDS:  List of 'raw' 'extra' TEST dependencies of
-#                                 the library
+#  o TEST_DEPENDS:  List of 'raw' 'extra' TEST dependencies of the library
 #
 # NOTE: This function must be called from within a '<package>/' directory
 #
-function(bde_project_parse_package_metadata packageName)
-    # Get the list of all sources by looking at the .mem of each packages
-    # Also generate a list of all headers (useful for install rules)
-    set(headers)
-    set(sources)
+function(bde_project_parse_package_metadata infoTarget listDir packageName)
+    get_filename_component(rootDir ${listDir} DIRECTORY)
 
-    bde_utils_add_meta_file(
-        "${packageName}/package/${packageName}.mem"
-        components
-        TRACK
-    )
 
-    foreach(component ${components})
-        list(APPEND headers "${packageName}/${component}.h")
-        if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${packageName}/${component}.cpp")
-            list(APPEND sources "${packageName}/${component}.cpp")
-        else()
-            message(FATAL_ERROR ".cpp file for ${component} not found.")
+    bde_utils_add_meta_file("${listDir}/${packageName}.mem" components TRACK)
+
+    foreach(componentName ${components})
+        bde_project_find_component(${listDir} ${componentName})
+
+        bde_info_target_get_property(header ${componentName} HEADER)
+        bde_info_target_append_property(${packageName} HEADERS ${header})
+
+        bde_info_target_get_property(source ${componentName} SOURCE)
+        bde_info_target_append_property(${packageName} SOURCES ${source})
+
+        bde_info_target_get_property(testTarget ${componentName} TEST_TARGET)
+        if (testTarget)
+            bde_info_target_append_property(${packageName} TEST_TARGETS ${testTarget})
         endif()
     endforeach()
 
     # Get list of all dependencies from the <folderName>/<packageName>.dep
-    bde_utils_add_meta_file(
-        "${packageName}/package/${packageName}.dep"
-        depends
-        TRACK
-    )
+    bde_utils_add_meta_file("${listDir}/${packageName}.dep" depends TRACK)
 
     # Get list of all TEST dependencies from the
     # <packageName>/package/<packageName>.t.dep
-    if(EXISTS "${packageName}/package/${packageName}.t.dep")
+    if(EXISTS "${listDir}/${packageName}.t.dep")
         bde_utils_add_meta_file(
-            "${packageName}/package/${packageName}.t.dep"
+            "${listDir}/${packageName}.t.dep"
             testDepends
             TRACK
         )
     endif()
 
-    # Export to caller the various variables
-    set(${packageName}_COMPONENTS    ${components}   PARENT_SCOPE)
-    set(${packageName}_HEADERS       ${headers}      PARENT_SCOPE)
-    set(${packageName}_SOURCES       ${sources}      PARENT_SCOPE)
-    set(${packageName}_DEPENDS       ${depends}      PARENT_SCOPE)
-    set(${packageName}_TEST_DEPENDS  ${testDepends}  PARENT_SCOPE)
+    # Populate package's infoTarget with the found information
+    bde_info_target_set_property(${packageName} DEPENDS "${depends}")
+    bde_info_target_set_property(${packageName} TEST_DEPENDS "${testDepends}")
 endfunction()
 
 # :: bde_project_parse_application_metadata ::
@@ -210,4 +198,53 @@ function(bde_project_parse_application_metadata appname)
     set(${appName}_SOURCES       ${${appName}_SOURCES}       PARENT_SCOPE)
     set(${appName}_DEPENDS       ${${appName}_DEPENDS}       PARENT_SCOPE)
     set(${appName}_TEST_DEPENDS  ${${appName}_TEST_DEPENDS}  PARENT_SCOPE)
+endfunction()
+
+function(bde_project_find_component listDir componentName)
+    get_filename_component(rootDir ${listDir} DIRECTORY)
+
+    bde_add_info_target(${componentName})
+
+    # Finding headers
+    if(EXISTS "${rootDir}/${componentName}.h")
+        bde_info_target_set_property(
+            ${componentName}
+            HEADER "${rootDir}/${componentName}.h"
+        )
+    else()
+        message(FATAL_ERROR ".cpp or .c file for ${componentName} not found.")
+    endif()
+
+    # Sources
+    set(source)
+    if(EXISTS "${rootDir}/${componentName}.cpp")
+        set(source "${rootDir}/${componentName}.cpp")
+    elseif(EXISTS "${rootDir}/${componentName}.c")
+        set(source "${rootDir}/${componentName}.c")
+    else()
+        message(FATAL_ERROR "Source for ${componentName} not found.")
+    endif()
+
+    bde_info_target_set_property(
+        ${componentName}
+        SOURCE "${source}"
+    )
+
+    # Test drivers
+    set(testDriver)
+    if(EXISTS "${rootDir}/${componentName}.t.cpp")
+        set(testDriver "${rootDir}/${componentName}.t.cpp")
+    elseif(EXISTS "${rootDir}/${componentName}.t.c")
+        set(testDriver "${rootDir}/${componentName}.t.c")
+    else()
+        message(WARNING "Test driver for ${componentName} not found.")
+    endif()
+
+    if(testDriver)
+        add_test_executable(${componentName} ${testDriver})
+        bde_info_target_set_property(
+            ${componentName}
+            TEST_TARGET "${componentName}.t"
+        )
+    endif()
 endfunction()

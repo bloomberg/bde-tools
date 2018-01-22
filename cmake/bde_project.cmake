@@ -356,7 +356,7 @@ function(bde_resolve_external_dependencies externalDeps)
         bde_log(VERBOSE "Active dependencies: ${currentDeps}")
 
         foreach(depName IN LISTS currentDeps)
-            if(TARGET ${depName})
+            if(NOT depName OR TARGET ${depName})
                 continue()
             endif()
 

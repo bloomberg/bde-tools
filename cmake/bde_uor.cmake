@@ -53,23 +53,9 @@ function(bde_process_standard_package outInfoTarget listFile uorName)
     bde_add_info_target(${packageName})
     set(${outInfoTarget} ${packageName} PARENT_SCOPE)
 
-    # Sources and headers
-    bde_utils_add_meta_file("${listDir}/${packageName}.mem" components TRACK)
-    bde_list_template_substitute(sources "%" "${rootDir}/%.cpp" ${components})
-    bde_list_template_substitute(headers "%" "${rootDir}/%.h" ${components})
-    bde_info_target_set_property(${packageName} SOURCES "${sources}")
-    bde_info_target_set_property(${packageName} HEADERS "${headers}")
-
-    # Dependencies
-    bde_utils_add_meta_file("${listDir}/${packageName}.dep" dependencies TRACK)
-    bde_info_target_set_property(${packageName} DEPENDS "${dependencies}")
-
-    # Tests
-    bde_list_template_substitute(test_targets "%" "%.t" ${components})
-    foreach (component ${components})
-        add_test_executable(${component} ${rootDir}/${component}.t.cpp)
-    endforeach()
-    bde_info_target_set_property(${packageName} TEST_TARGETS "${test_targets}")
+    # Populate sources, headers, test drivers and dependancies in the 
+    # info target.
+    bde_project_parse_package_metadata(${packageName} ${listDir} ${packageName})
 
     # Include directories
     bde_add_interface_target(${packageName})
@@ -81,7 +67,8 @@ function(bde_process_standard_package outInfoTarget listFile uorName)
             $<INSTALL_INTERFACE:"include">
     )
 
-    # By default all headers are installed in 'include'.
+    # By default all component's headers are installed in 'include'.
+    bde_info_target_get_property(headers ${packageName} HEADERS)
     install(
         FILES ${headers}
         DESTINATION "include"
@@ -244,6 +231,7 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
             ${uorInterfaceTarget}
             ${uorFullInterfaceTarget}
     )
+
     foreach(packageInfoTarget ${packageInfoTargets})
         set(packageName ${packageInfoTarget})
         bde_info_target_get_property(
@@ -258,8 +246,8 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
                 ${packageInterfaceTarget}
         )
 
-        bde_info_target_get_property(packageSrcs ${packageInfoTarget} SOURCES)
         bde_info_target_get_property(packageHdrs ${packageInfoTarget} HEADERS)
+        bde_info_target_get_property(packageSrcs ${packageInfoTarget} SOURCES)
         bde_info_target_get_property(packageDeps ${packageInfoTarget} DEPENDS)
 
         bde_log(
@@ -339,7 +327,6 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
         endif()
     endforeach()
 endfunction()
-
 
 # :: bde_project_add_group ::
 # -----------------------------------------------------------------------------
