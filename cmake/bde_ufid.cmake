@@ -1,5 +1,5 @@
 ## bde_ufid.cmake
-## 
+##
 #
 ## OVERVIEW
 ## ---------
@@ -14,14 +14,17 @@ if(BDE_UFID_INCLUDED)
 endif()
 set(BDE_UFID_INCLUDED true)
 
-include(bde_special_targets)
+include(bde_interface_target)
+include(bde_utils)
 
 # :: bde_ufid_filter ::
 # -----------------------------------------------------------------------------
 function(bde_ufid_filter target_ufid ufid_flags filter_list)
+    bde_assert_no_extra_args()
+
     set(filtered_ufid "")
 
-    foreach(flag ${filter_list})
+    foreach(flag IN LISTS filter_list)
         if(${flag} IN_LIST ufid_flags)
             list(APPEND filtered_ufid "${flag}")
         endif()
@@ -33,6 +36,8 @@ endfunction()
 # :: bde_parse_ufid ::
 # -----------------------------------------------------------------------------
 function(bde_parse_ufid UFID)
+    bde_assert_no_extra_args()
+
     string(REGEX MATCHALL "[^-_]+" ufid_flags "${UFID}")
 
     # Check for duplicates
@@ -47,7 +52,7 @@ function(bde_parse_ufid UFID)
     set(install_ufid_flags opt dbg exc mt 64 safe safe2 pic shr)
     set(known_ufid_flags ${install_ufid_flags} ndebug cpp11 cpp14)
 
-    foreach(flag ${ufid_flags})
+    foreach(flag IN LISTS ufid_flags)
         if (NOT ${flag} IN_LIST known_ufid_flags)
             message(
                 FATAL_ERROR
@@ -62,7 +67,7 @@ function(bde_parse_ufid UFID)
     endif()
 
     # Setting the flags in local...
-    foreach(flag ${known_ufid_flags})
+    foreach(flag IN LISTS known_ufid_flags)
         set(bde_ufid_is_${flag} 0)
         if(${flag} IN_LIST ufid_flags)
             set(bde_ufid_is_${flag} 1)
@@ -75,7 +80,7 @@ function(bde_parse_ufid UFID)
     endif()
 
     # ... and in parent scope. Cmake details.
-    foreach(flag ${known_ufid_flags})
+    foreach(flag IN LISTS known_ufid_flags)
         set(bde_ufid_is_${flag} ${bde_ufid_is_${flag}} PARENT_SCOPE)
     endforeach()
 
@@ -96,6 +101,8 @@ endfunction()
 # :: bde_set_common_target_properties ::
 # -----------------------------------------------------------------------------
 function(bde_set_common_target_properties)
+    bde_assert_no_extra_args()
+
     bde_add_interface_target(bde_ufid_flags)
 
     # Set up shared/static library build
@@ -429,4 +436,3 @@ macro(bde_process_ufid)
     bde_parse_ufid(${UFID})
     bde_set_common_target_properties()
 endmacro()
-

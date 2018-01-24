@@ -1,41 +1,7 @@
-if(BDE_SPECIAL_TARGETS_INCLUDED)
+if(BDE_INTERFACE_TARGET_INCLUDED)
     return()
 endif()
-set(BDE_SPECIAL_TARGEST_INCLUDED true)
-
-#####################################################################
-# Info target
-#####################################################################
-function(bde_add_info_target name)
-    # An INTERFACE library, so it doesn't show up in MSVC solution
-    add_library(${name}-INFO INTERFACE)
-endfunction()
-
-function(bde_info_target_append_property name property value)
-    set_property(
-        TARGET ${name}-INFO
-        APPEND PROPERTY INTERFACE_${property} ${value} ${ARGN}
-    )
-endfunction()
-
-function(bde_info_target_set_property name property value)
-    set_property(
-        TARGET ${name}-INFO
-        PROPERTY INTERFACE_${property} ${value} ${ARGN}
-    )
-endfunction()
-
-function(bde_info_target_get_property output name property)
-    get_target_property(val ${name}-INFO INTERFACE_${property})
-    if("${val}" STREQUAL "val-NOTFOUND")
-        set(val "")
-    endif()
-    set(${output} ${val} PARENT_SCOPE)
-endfunction()
-
-function(bde_info_target_name out name)
-    set(${out} ${name}-INFO PARENT_SCOPE)
-endfunction()
+set(BDE_INTERFACE_TARGET_INCLUDED true)
 
 #####################################################################
 # Interface target
@@ -67,7 +33,7 @@ endfunction()
 # Unfortunately, the functions below are copy-pasted
 # because a function cannot be called if its name is
 # stored in a variable
-macro(_parse_and_join_arguments prefix)
+macro(internal_parse_and_join_arguments prefix)
     cmake_parse_arguments(${prefix} "" "" "PUBLIC;PRIVATE;INTERFACE" ${ARGN})
 
     if (${prefix}_PUBLIC)
@@ -77,7 +43,7 @@ macro(_parse_and_join_arguments prefix)
 endmacro()
 
 function(bde_interface_target_include_directories name)
-    _parse_and_join_arguments(args ${ARGN})
+    internal_parse_and_join_arguments(args ${ARGN})
 
     foreach(type INTERFACE PRIVATE)
         if(args_${type})
@@ -90,7 +56,7 @@ function(bde_interface_target_include_directories name)
 endfunction()
 
 function(bde_interface_target_compile_options name)
-    _parse_and_join_arguments(args ${ARGN})
+    internal_parse_and_join_arguments(args ${ARGN})
 
     foreach(type INTERFACE PRIVATE)
         if(args_${type})
@@ -103,7 +69,7 @@ function(bde_interface_target_compile_options name)
 endfunction()
 
 function(bde_interface_target_compile_definitions name)
-    _parse_and_join_arguments(args ${ARGN})
+    internal_parse_and_join_arguments(args ${ARGN})
 
     foreach(type INTERFACE PRIVATE)
         if(args_${type})
@@ -116,7 +82,7 @@ function(bde_interface_target_compile_definitions name)
 endfunction()
 
 function(bde_interface_target_compile_features name)
-    _parse_and_join_arguments(args ${ARGN})
+    internal_parse_and_join_arguments(args ${ARGN})
 
     foreach(type INTERFACE PRIVATE)
         if(args_${type})
@@ -129,7 +95,7 @@ function(bde_interface_target_compile_features name)
 endfunction()
 
 function(bde_interface_target_link_libraries name)
-    _parse_and_join_arguments(args ${ARGN})
+    internal_parse_and_join_arguments(args ${ARGN})
 
     foreach(type INTERFACE PRIVATE)
         if(args_${type})
@@ -142,7 +108,7 @@ function(bde_interface_target_link_libraries name)
 endfunction()
 
 function(bde_interface_target_set_property name property)
-    _parse_and_join_arguments(args ${ARGN})
+    internal_parse_and_join_arguments(args ${ARGN})
 
     foreach(type INTERFACE PRIVATE)
         if(args_${type})
