@@ -1,197 +1,33 @@
-## bde_our.cmake
-## ~~~~~~~~~~~~~~~
-#  This CMake module exposes a set of functions for adding UOR with BDE
-#  Metadata. Three types of UORs are supported:
-#    - Package Group
-#    - Standalone Package
-#    - Application
-#
-## OVERVIEW
-## --------
-# o bde_project_add_group..............: Add a Package Group UOR to build.
-# o bde_project_add_standalone_package.: Add a Standalone Package UOR to build.
-# o bde_project_add_application........: Add an Application UOR to build.
-# o bde_project_add_uor................: Add a UOR to build. The above are
-#                                        convenience wrappers to this function.
-# o bde_project_add_uor_subdirectory...: Add the subdirectory of a UOR only if
-#                                        that UOR should be installed. (mostly
-#                                        usefull on repositories with multiple
-#                                        independently released UORs).
-#
-## ========================================================================= ##
 if(BDE_UOR_INCLUDED)
-  return()
+    return()
 endif()
 set(BDE_UOR_INCLUDED true)
 
-# Standard CMake modules.
-
-# BDE CMake modules.
-include(bde_test_drivers)
-include(bde_metadata)
-include(bde_special_targets)
+include(bde_interface_target)
+include(bde_log)
+include(bde_struct)
 include(bde_utils)
 
-function(bde_append_test_labels test)
-    set_property(
-        TEST ${test}
-        APPEND PROPERTY
-        LABELS ${ARGN}
-    )
-endfunction()
+set(
+    BDE_UOR_TYPE
+        SOURCES
+        HEADERS
+        DEPENDS
+        TARGET
+        INTERFACE_TARGETS
+        TEST_TARGETS
+)
 
-function(bde_target_objlib_sources target)
-    bde_list_template_substitute(objSources "%" "$<TARGET_OBJECTS:%>" ${ARGN})
+function(internal_target_objlib_sources target)
+    bde_utils_list_template_substitute(
+        objSources "%" "$<TARGET_OBJECTS:%>" ${ARGN}
+    )
     target_sources(${target} PRIVATE ${objSources})
 endfunction()
 
-function(bde_process_standard_package outInfoTarget listFile uorName)
-    get_filename_component(packageName ${listFile} NAME_WE)
-    get_filename_component(listDir ${listFile} DIRECTORY)
-    get_filename_component(rootDir ${listDir} DIRECTORY)
-
-    bde_add_info_target(${packageName})
-    set(${outInfoTarget} ${packageName} PARENT_SCOPE)
-
-    # Sources and headers
-    bde_utils_add_meta_file("${listDir}/${packageName}.mem" components TRACK)
-    bde_list_template_substitute(sources "%" "${rootDir}/%.cpp" ${components})
-    bde_list_template_substitute(headers "%" "${rootDir}/%.h" ${components})
-    bde_info_target_set_property(${packageName} SOURCES "${sources}")
-    bde_info_target_set_property(${packageName} HEADERS "${headers}")
-
-    # Dependencies
-    bde_utils_add_meta_file("${listDir}/${packageName}.dep" dependencies TRACK)
-    bde_info_target_set_property(${packageName} DEPENDS "${dependencies}")
-
-    # Tests
-    bde_list_template_substitute(test_targets "%" "%.t" ${components})
-    foreach (component ${components})
-        add_test_executable(${component} ${rootDir}/${component}.t.cpp)
-    endforeach()
-    bde_info_target_set_property(${packageName} TEST_TARGETS "${test_targets}")
-
-    # Include directories
-    bde_add_interface_target(${packageName})
-    bde_info_target_set_property(${packageName} INTERFACE_TARGET ${packageName})
-    bde_interface_target_include_directories(
-        ${packageName}
-        PUBLIC
-            $<BUILD_INTERFACE:${rootDir}>
-            $<INSTALL_INTERFACE:"include">
-    )
-
-    # By default all headers are installed in 'include'.
-    install(
-        FILES ${headers}
-        DESTINATION "include"
-        COMPONENT "${uorName}-headers"
-    )
-endfunction()
-
-function(bde_install_uor uorInfoTarget)
-    bde_info_target_get_property(uorName ${uorInfoTarget} TARGET)
-    bde_info_target_get_property(depends ${uorInfoTarget} DEPENDS)
-    bde_info_target_get_property(interfaceTargets ${uorInfoTarget} INTERFACE_TARGETS)
-
-    # Install main target
-    install(
-        TARGETS ${uorName}
-        EXPORT ${uorName}Targets
-        COMPONENT "${uorName}"
-        ARCHIVE DESTINATION ${bde_install_lib_suffix}/${bde_install_ufid}
-        LIBRARY DESTINATION ${bde_install_lib_suffix}/${bde_install_ufid}
-        RUNTIME DESTINATION ${bde_install_lib_suffix}/${bde_install_ufid}
-    )
-
-    if(CMAKE_HOST_UNIX)
-        # This code will create a symlink to a corresponding "ufid" build.
-        # Use with care.
-        set(libName "${CMAKE_STATIC_LIBRARY_PREFIX}${uorName}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-        set(symlink_val "${bde_install_ufid}/${libName}")
-        set(symlink_file "\$ENV{DESTDIR}/\${CMAKE_INSTALL_PREFIX}/${bde_install_lib_suffix}/${libName}")
-
-        install(
-            CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${symlink_val} ${symlink_file})"
-            COMPONENT "${uorName}-symlinks"
-            EXCLUDE_FROM_ALL
-        )
-    endif()
-
-    install(
-        EXPORT ${uorName}Targets
-        DESTINATION "${bde_install_lib_suffix}/${bde_install_ufid}/cmake"
-        COMPONENT "${uorName}"
-    )
-
-    # Install interface targets
-    foreach(interfaceTarget ${interfaceTargets})
-        bde_install_interface_target(
-            ${interfaceTarget}
-            EXPORT ${uorName}InterfaceTargets
-        )
-    endforeach()
-
-    # Namespace is needed for disambuguation of
-    # common interface target if multiple UORs built by this
-    # project are used by an external project
-    install(
-        EXPORT ${uorName}InterfaceTargets
-        DESTINATION "${bde_install_lib_suffix}/${bde_install_ufid}/cmake"
-        NAMESPACE "${uorName}::"
-        COMPONENT "${uorName}"
-    )
-
-    # Create the groupConfig.cmake for the build tree
-    set(group ${uorName})
-    configure_file(
-        "${CMAKE_MODULE_PATH}/groupConfig.cmake.in"
-        "${PROJECT_BINARY_DIR}/${uorName}Config.cmake"
-        @ONLY
-    )
-
-    install(
-        FILES "${PROJECT_BINARY_DIR}/${uorName}Config.cmake"
-        DESTINATION "${bde_install_lib_suffix}/${bde_install_ufid}/cmake"
-        COMPONENT "${uorName}"
-    )
-
-    # Create the group.pc for the build tree
-    # In CMake a list is a string with ';' as an item separator.
-    set(pc_depends ${depends})
-    string(REPLACE ";" " " pc_depends "${pc_depends}")
-    configure_file(
-        "${CMAKE_MODULE_PATH}/group.pc.in"
-        "${PROJECT_BINARY_DIR}/${uorName}.pc"
-        @ONLY
-    )
-
-    install(
-        FILES "${PROJECT_BINARY_DIR}/${uorName}.pc"
-        DESTINATION "${bde_install_lib_suffix}/${bde_install_ufid}/pkgconfig"
-        COMPONENT "${uorName}"
-    )
-
-    set(extra_install_arg)
-    if(MSVC)
-        set(extra_install_arg "-DBUILD_TYPE=${CMAKE_CFG_INTDIR}")
-    endif()
-
-    add_custom_target(
-        "install.${uorName}"
-        COMMAND ${CMAKE_COMMAND}
-            -DCOMPONENT="${uorName}"
-            ${extra_install_arg}
-            -P ${CMAKE_BINARY_DIR}/cmake_install.cmake
-        COMMAND ${CMAKE_COMMAND}
-            -DCOMPONENT="${uorName}-headers"
-            ${extra_install_arg}
-            -P ${CMAKE_BINARY_DIR}/cmake_install.cmake
-        DEPENDS ${uorName}
-    )
-endfunction()
-
 function(bde_prepare_uor uorName uorInfoTarget uorDepends uorType)
+    bde_assert_no_extra_args()
+
     set(knownUORTypes APPLICATION LIBRARY)
     if (NOT ${uorType} IN_LIST knownUORTypes)
         message(FATAL_ERROR "UOR type '${uorType}' is unknown.")
@@ -207,14 +43,16 @@ function(bde_prepare_uor uorName uorInfoTarget uorDepends uorType)
     endif()
     set_target_properties(${uorName} PROPERTIES LINKER_LANGUAGE CXX)
 
-    bde_add_info_target(${uorInfoTarget})
-    bde_info_target_set_property(${uorInfoTarget} TARGET "${uorName}")
-    bde_info_target_set_property(${uorInfoTarget} DEPENDS "${uorDepends}")
+    bde_struct_create(BDE_UOR_TYPE ${uorInfoTarget})
+    bde_struct_set_field(${uorInfoTarget} TARGET "${uorName}")
+    bde_struct_set_field(${uorInfoTarget} DEPENDS "${uorDepends}")
 endfunction()
 
 function(bde_project_add_uor uorInfoTarget packageInfoTargets)
-    bde_info_target_get_property(uorName ${uorInfoTarget} TARGET)
-    bde_info_target_get_property(uorDeps ${uorInfoTarget} DEPENDS)
+    bde_assert_no_extra_args()
+
+    bde_struct_get_field(uorName ${uorInfoTarget} TARGET)
+    bde_struct_get_field(uorDeps ${uorInfoTarget} DEPENDS)
 
     # uorInterfaceTarget contains _only_ the build requirements
     # specified for the UOR itself. It does NOT contain the requirements
@@ -235,36 +73,37 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
 
     set(uorTestTarget ${uorName}.t)
     add_custom_target(${uorTestTarget})
-    bde_info_target_set_property(${uorInfoTarget} TEST_TARGETS ${uorTestTarget})
+    bde_struct_set_field(${uorInfoTarget} TEST_TARGETS ${uorTestTarget})
 
     # Process packages using their info targets
-    bde_info_target_set_property(
+    bde_struct_set_field(
         ${uorInfoTarget}
         INTERFACE_TARGETS
             ${uorInterfaceTarget}
             ${uorFullInterfaceTarget}
     )
-    foreach(packageInfoTarget ${packageInfoTargets})
+
+    foreach(packageInfoTarget IN LISTS packageInfoTargets)
         set(packageName ${packageInfoTarget})
-        bde_info_target_get_property(
+        bde_struct_get_field(
             packageInterfaceTarget ${packageInfoTarget} INTERFACE_TARGET
         )
 
         # Add package usage requirements to the UOR target
         bde_interface_target_assimilate(${uorFullInterfaceTarget} ${packageInterfaceTarget})
-        bde_info_target_append_property(
+        bde_struct_append_field(
             ${uorInfoTarget}
             INTERFACE_TARGETS
                 ${packageInterfaceTarget}
         )
 
-        bde_info_target_get_property(packageSrcs ${packageInfoTarget} SOURCES)
-        bde_info_target_get_property(packageHdrs ${packageInfoTarget} HEADERS)
-        bde_info_target_get_property(packageDeps ${packageInfoTarget} DEPENDS)
+        bde_struct_get_field(packageSrcs ${packageInfoTarget} SOURCES)
+        bde_struct_get_field(packageHdrs ${packageInfoTarget} HEADERS)
+        bde_struct_get_field(packageDeps ${packageInfoTarget} DEPENDS)
 
         bde_log(
             VERBOSE
-            "[${uorName}]: Incorporating package [${packageName}] (${packageDeps})"
+            "[${uorName}]: Adding package [${packageName}] (${packageDeps})"
         )
 
         bde_interface_target_names(uorInterfaceTargets ${uorInterfaceTarget})
@@ -309,10 +148,10 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
             # target for tests
             add_library(${packageLibrary} EXCLUDE_FROM_ALL "")
             set_target_properties(${packageLibrary} PROPERTIES LINKER_LANGUAGE CXX)
-            bde_target_objlib_sources(${packageLibrary} ${packageObjLibrary})
+            internal_target_objlib_sources(${packageLibrary} ${packageObjLibrary})
 
             # Add object files as sources to the package froup target
-            bde_target_objlib_sources(${uorName} ${packageObjLibrary})
+            internal_target_objlib_sources(${uorName} ${packageObjLibrary})
         else()
             # Add IDE target (https://gitlab.kitware.com/cmake/cmake/issues/15234)
             add_custom_target(${packageLibrary}-headers SOURCES ${packageHdrs})
@@ -325,121 +164,123 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
         target_link_libraries(${packageLibrary} INTERFACE ${allPackageDepends})
 
         # Process package tests
-        bde_info_target_get_property(tests ${packageInfoTarget} TEST_TARGETS)
+        bde_struct_get_field(tests ${packageInfoTarget} TEST_TARGETS)
         if (tests)
-            foreach (test ${tests})
+            foreach(test IN LISTS tests)
                 target_link_libraries(${test} ${packageLibrary})
-                bde_append_test_labels(${test} ${uorName} ${packageName})
+                bde_append_test_labels(${test} ${uorName})
             endforeach()
 
-            set(packageTestTarget ${packageLibrary}.t)
-            add_custom_target(${packageTestTarget})
-            add_dependencies(${uorTestTarget} ${packageTestTarget})
-            add_dependencies(${packageTestTarget} ${tests})
+            set(packageTestName ${packageLibrary}.t)
+            add_custom_target(${packageTestName})
+            add_dependencies(${uorTestTarget} ${packageTestName})
+            add_dependencies(${packageTestName} ${tests})
         endif()
     endforeach()
 endfunction()
 
+function(bde_install_uor uorInfoTarget)
+    bde_assert_no_extra_args()
 
-# :: bde_project_add_group ::
-# -----------------------------------------------------------------------------
-# Function to add a new group library having the specified 'groupName' name.
-#
-# Options
-# -------
-#
-# Target Properties
-# -----------------
-# The following properties are set on the target:
-#  o BDE_GROUP_COMPONENTS: list of components part of this group (in the format
-#                          'grppkg/grppkg_component')
-#  o BDE_INSTALL_MANIFEST: list of all files installed by this target (in a
-#                          location relative to CMAKE_PREFIX_PATH). Note that
-#                          the property is only populated if the target is in
-#                          the INSTALL_TARGETS.
-#
-# NOTE
-# ----
-#  o If 'groupName' is left blank, it will be derived from the name of the
-#    current directory.
-#
-function(bde_project_add_group outInfoTarget listFile)
-    get_filename_component(uorName ${listFile} NAME_WE)
-    get_filename_component(listDir ${listFile} DIRECTORY)
-    get_filename_component(rootDir ${listDir} DIRECTORY)
+    bde_struct_get_field(uorName ${uorInfoTarget} TARGET)
+    bde_struct_get_field(depends ${uorInfoTarget} DEPENDS)
+    bde_struct_get_field(interfaceTargets ${uorInfoTarget} INTERFACE_TARGETS)
 
-    bde_log(VERBOSE "[${uorName}]: Start processing package group")
+    set(ufidInstallDir ${bde_install_lib_suffix}/${bde_install_ufid})
 
-    # Sources and headers
-    bde_utils_add_meta_file("${listDir}/${uorName}.mem" packages TRACK)
+    # Install main target
+    install(
+        TARGETS ${uorName}
+        EXPORT ${uorName}Targets
+        COMPONENT "${uorName}"
+        ARCHIVE DESTINATION ${ufidInstallDir}
+        LIBRARY DESTINATION ${ufidInstallDir}
+        RUNTIME DESTINATION ${ufidInstallDir}
+    )
 
-    # Dependencies
-    bde_utils_add_meta_file("${listDir}/${uorName}.dep" dependencies TRACK)
+    if(CMAKE_HOST_UNIX)
+        # This code will create a symlink to a corresponding "ufid" build.
+        # Use with care.
+        set(libName "${CMAKE_STATIC_LIBRARY_PREFIX}${uorName}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        set(symlinkVal "${bde_install_ufid}/${libName}")
+        set(symlinkFile "\$ENV{DESTDIR}/\${CMAKE_INSTALL_PREFIX}/${bde_install_lib_suffix}/${libName}")
 
-    # Process packages
-    set(packageInfoTargets)
-    foreach(packageName ${packages})
-        bde_log(
-            VERBOSE
-            "[${uorName}]: Processing package [${packageName}]"
+        install(
+            CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${symlinkVal} ${symlinkFile})"
+            COMPONENT "${uorName}-symlinks"
+            EXCLUDE_FROM_ALL
         )
+    endif()
 
-        bde_default_process_uor(
-            packageInfoTarget "${rootDir}/${packageName}"
-            package package ${uorName}
+    install(
+        EXPORT ${uorName}Targets
+        DESTINATION "ufidInstallDir/cmake"
+        COMPONENT "${uorName}"
+    )
+
+    # Install interface targets
+    foreach(interfaceTarget IN LISTS interfaceTargets)
+        bde_install_interface_target(
+            ${interfaceTarget}
+            EXPORT ${uorName}InterfaceTargets
         )
-        list(APPEND packageInfoTargets ${packageInfoTarget})
     endforeach()
 
-    bde_prepare_uor(${uorName} ${uorName} "${dependencies}" LIBRARY)
-    bde_project_add_uor(${uorName} "${packageInfoTargets}" ${ARGN})
-    set(${outInfoTarget} ${uorName} PARENT_SCOPE)
+    # Namespace is needed for disambuguation of
+    # common interface target if multiple UORs built by this
+    # project are used by an external project
+    install(
+        EXPORT ${uorName}InterfaceTargets
+        DESTINATION "ufidInstallDir/cmake"
+        NAMESPACE "${uorName}::"
+        COMPONENT "${uorName}"
+    )
 
-    bde_log(VERBOSE "[${uorName}]: Done")
+    # Create the groupConfig.cmake for the build tree
+    set(group ${uorName})
+    configure_file(
+        "${CMAKE_MODULE_PATH}/groupConfig.cmake.in"
+        "${PROJECT_BINARY_DIR}/${uorName}Config.cmake"
+        @ONLY
+    )
+
+    install(
+        FILES "${PROJECT_BINARY_DIR}/${uorName}Config.cmake"
+        DESTINATION "ufidInstallDir/cmake"
+        COMPONENT "${uorName}"
+    )
+
+    # Create the group.pc for the build tree
+    # In CMake a list is a string with ';' as an item separator.
+    set(pc_depends ${depends})
+    string(REPLACE ";" " " pc_depends "${pc_depends}")
+    configure_file(
+        "${CMAKE_MODULE_PATH}/group.pc.in"
+        "${PROJECT_BINARY_DIR}/${uorName}.pc"
+        @ONLY
+    )
+
+    install(
+        FILES "${PROJECT_BINARY_DIR}/${uorName}.pc"
+        DESTINATION "ufidInstallDir/pkgconfig"
+        COMPONENT "${uorName}"
+    )
+
+    set(extraInstallArg)
+    if(MSVC)
+        set(extraInstallArg "-DBUILD_TYPE=${CMAKE_CFG_INTDIR}")
+    endif()
+
+    add_custom_target(
+        "install.${uorName}"
+        COMMAND ${CMAKE_COMMAND}
+            -DCOMPONENT="${uorName}"
+            ${extraInstallArg}
+            -P ${CMAKE_BINARY_DIR}/cmake_install.cmake
+        COMMAND ${CMAKE_COMMAND}
+            -DCOMPONENT="${uorName}-headers"
+            ${extraInstallArg}
+            -P ${CMAKE_BINARY_DIR}/cmake_install.cmake
+        DEPENDS ${uorName}
+    )
 endfunction()
-
-macro(_bde_project_add_standalone outInfoTarget listFile uorType)
-    get_filename_component(uorName ${listFile} NAME_WE)
-    get_filename_component(listDir ${listFile} DIRECTORY)
-    get_filename_component(rootDir ${listDir} DIRECTORY)
-
-    bde_log(VERBOSE "[${uorName}]: Start processing")
-
-    bde_process_standard_package(packageInfoTarget ${listFile} ${uorName})
-
-    # Standalone dependencies should be interpreted as UOR
-    # dependencies in 'bde_prepare_uor'
-    bde_info_target_get_property(packageDeps ${packageInfoTarget} DEPENDS)
-    bde_info_target_set_property(${packageInfoTarget} DEPENDS "")
-
-    set(infoTarget ${uorName}-standalone)
-    bde_prepare_uor(${uorName} ${infoTarget} "${packageDeps}" ${uorType})
-    bde_project_add_uor(${infoTarget} ${packageInfoTarget} ${ARGN})
-    set(${outInfoTarget} ${infoTarget} PARENT_SCOPE)
-
-    bde_log(VERBOSE "[${uorName}]: Done")
-endmacro()
-
-function(bde_project_add_standalone_package outInfoTarget listFile)
-    _bde_project_add_standalone(${outInfoTarget} ${listFile} LIBRARY ${ARGN})
-endfunction()
-
-function(bde_project_add_application outInfoTarget listFile)
-    _bde_project_add_standalone(${outInfoTarget} ${listFile} APPLICATION ${ARGN})
-endfunction()
-
-# :: bde_project_add_application ::
-# -----------------------------------------------------------------------------
-# Function to add a new application having the specified 'appName'.
-#
-# Options
-# -------
-#
-# Target Properties
-# -----------------
-#
-# NOTE
-# ----
-#  o If 'appName' is left blank, it will be derived from the name of the
-#    current directory.
-#

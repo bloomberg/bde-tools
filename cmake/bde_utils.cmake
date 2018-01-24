@@ -12,7 +12,7 @@
 ## ========================================================================= ##
 
 if(BDE_UTILS_INCLUDED)
-  return()
+    return()
 endif()
 set(BDE_UTILS_INCLUDED true)
 
@@ -43,6 +43,7 @@ function(bde_utils_add_meta_file file out)
     # Parameters parse
     #   One optional parameter: TRACK
     cmake_parse_arguments(args "TRACK" "" "" ${ARGN})
+    bde_assert_no_unparsed_args(args)
 
     # Read all lines from 'file', ignoring the ones starting with '#'
     file(STRINGS "${file}" lines REGEX "^[^#].*")
@@ -50,7 +51,7 @@ function(bde_utils_add_meta_file file out)
     set(tmp)
 
     # For each line, split at ' '
-    foreach(line ${lines})
+    foreach(line IN LISTS lines)
         # Remove comment
         string(REGEX REPLACE " *#.*$" "" line ${line})
 
@@ -88,6 +89,8 @@ endfunction()
 # potentially leading to silent collisions, the copied files name correspond to
 # the first 10 characters of the SHA1 of the absolute path of the input 'file'.
 function( bde_utils_track_file file )
+    bde_assert_no_extra_args()
+
     # Get the real path to the file
     get_filename_component(realPath ${file} REALPATH)
 
@@ -106,21 +109,70 @@ function( bde_utils_track_file file )
 endfunction()
 
 
-function(bde_list_template_substitute output placeholder template)
+function(bde_utils_list_template_substitute output placeholder template)
     set(out)
-    foreach(target ${ARGN})
+    foreach(target IN LISTS ARGN)
         string(REPLACE ${placeholder} ${target} elem ${template})
         list(APPEND out ${elem})
     endforeach()
     set(${output} ${out} PARENT_SCOPE)
 endfunction()
 
-function(bde_filter_directories output)
+function(bde_utils_filter_directories output)
     set(out)
-    foreach(f ${ARGN})
+    foreach(f IN LISTS ARGN)
         if(IS_DIRECTORY ${f})
             list(APPEND out ${f})
         endif()
     endforeach()
     set(${output} ${out} PARENT_SCOPE)
 endfunction()
+
+function(bde_utils_find_file_extension outFullName baseName extensions)
+    bde_assert_no_extra_args()
+
+    foreach(ext IN LISTS extensions)
+        set(fullName ${baseName}${ext})
+        if(EXISTS ${fullName})
+            set(${outFullName} ${fullName} PARENT_SCOPE)
+            return()
+        endif()
+    endforeach()
+
+    set(${outFileName} "" PARENT_SCOPE)
+endfunction()
+
+function(bde_append_test_labels test)
+    set_property(
+        TEST ${test}
+        APPEND PROPERTY
+        LABELS ${ARGN}
+    )
+endfunction()
+
+macro(bde_assert_no_extra_args)
+    if (ARGN)
+        # This 'conversion' is required to use the ARGN actually passed
+        # to the surrounding function and not the macro itself
+        set(args)
+        foreach(var IN LISTS ARGN)
+            list(APPEND args ${var})
+        endforeach()
+
+        message(
+            FATAL_ERROR
+            "Unexpected extra arguments passed to function: ${args}"
+        )
+
+    endif()
+endmacro()
+
+macro(bde_assert_no_unparsed_args prefix)
+    if (${prefix}_UNPARSED_ARGUMENTS)
+        message(
+            FATAL_ERROR
+            "Unknown arguments arguments passed to function:\
+            ${${prefix}_UNPARSED_ARGUMENTS}."
+        )
+    endif()
+endmacro()

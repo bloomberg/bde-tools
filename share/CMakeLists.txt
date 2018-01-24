@@ -1,7 +1,6 @@
 # This CMakeLists.txt can be used to build a workspace containing multiple
 # BDE-style repositories.
 
-
 cmake_minimum_required(VERSION 3.8)
 
 if (NOT CMAKE_MODULE_PATH)
@@ -9,8 +8,10 @@ if (NOT CMAKE_MODULE_PATH)
 endif()
 
 include(bde_utils)
+include(bde_workspace)
+
 file(GLOB files "*")
-bde_filter_directories(workspaceDirs ${files})
+bde_utils_filter_directories(workspaceDirs ${files})
 
 project(workspace)
 
