@@ -111,10 +111,12 @@ function(bde_set_common_target_properties)
     endif()
 
     # Set up PIC
+    # This code does not work in 3.8, but will be fixed in later versions.
+    # The -fPIC flag is set explicitely in the compile options for now.
     if(${bde_ufid_is_shr} OR ${bde_ufid_is_pic})
         bde_interface_target_set_property(
             bde_ufid_flags
-                POSITION_INDEPENDENT_CODE 1
+                POSITION_INDEPENDENT_CODE PUBLIC 1
         )
     endif()
 
@@ -128,7 +130,9 @@ function(bde_set_common_target_properties)
     else()
         message(FATAL_ERROR "The build type is not set in UFID: ${UFID}")
     endif()
-    set(CMAKE_BUILD_TYPE ${build_type} CACHE STRING "Build type")
+
+    message(STATUS "Setting build type to ${build_type}.")
+    set(CMAKE_BUILD_TYPE ${build_type} CACHE STRING "Build type" FORCE)
 
     bde_interface_target_compile_features(
         bde_ufid_flags
@@ -142,9 +146,11 @@ function(bde_set_common_target_properties)
         PUBLIC
             $<$<CXX_COMPILER_ID:Clang>:
                 $<IF:${bde_ufid_is_64}, -m64, -m32>
+                $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -fPIC>
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 $<IF:${bde_ufid_is_64}, -m64, -m32>
+                $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -fPIC>
             >
             $<$<CXX_COMPILER_ID:MSVC>:
                 /bigobj
@@ -223,8 +229,16 @@ function(bde_set_common_target_properties)
 
             # Compiler specific definitions
             $<$<CXX_COMPILER_ID:Clang>:
+                $<${bde_ufid_is_mt}:
+                    _POSIX_PTHREAD_SEMANTICS
+                    _REENTRANT
+                >
             >
             $<$<CXX_COMPILER_ID:GNU>:
+                $<${bde_ufid_is_mt}:
+                    _POSIX_PTHREAD_SEMANTICS
+                    _REENTRANT
+                >
             >
             $<$<CXX_COMPILER_ID:MSVC>:
                 NOGDI
@@ -237,14 +251,22 @@ function(bde_set_common_target_properties)
                 WINVER=0x0502
             >
             $<$<CXX_COMPILER_ID:SunPro>:
-                _POSIX_PTHREAD_SEMANTICS
-                _PTHREADS
+                $<${bde_ufid_is_mt}:
+                    _POSIX_PTHREAD_SEMANTICS
+                    _REENTRANT
+                    _PTHREADS
+                >
                 _RWSTD_COMPILE_INSTANTIATE=1
                 __FUNCTION__=__FILE__
 
             >
             $<$<CXX_COMPILER_ID:XL>:
-                $<${bde_ufid_is_mt}: _THREAD_SAFE>
+                $<${bde_ufid_is_mt}:
+                    _POSIX_PTHREAD_SEMANTICS
+                    _REENTRANT
+                    _PTHREADS
+                    _THREAD_SAFE
+                >
             >
     )
 
@@ -260,8 +282,39 @@ function(bde_set_common_target_properties)
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 -fno-strict-aliasing
+                -fdiagnostics-show-option
+                --param ggc-min-expand=30
                 $<${bde_ufid_is_opt}:
                     -fno-gcse
+                    # Warnings
+                    -Waddress
+                    -Wall
+                    -Wcast-align
+                    -Wcast-qual
+                    -Wconversion
+                    -Werror=cast-qual
+                    -Wextra
+                    -Wformat
+                    -Wformat-security
+                    -Wformat-y2k
+                    -Winit-self
+                    -Wlarger-than-100000
+                    -Wlogical-op
+                    -Wno-char-subscripts
+                    -Wno-long-long
+                    -Wno-sign-conversion
+                    -Wno-unknown-pragmas
+                    -Wno-unused-value
+                    -Woverflow
+                    -Wpacked
+                    -Wparentheses
+                    -Wpointer-arith
+                    -Wsign-compare
+                    -Wstrict-overflow=1
+                    -Wtype-limits
+                    -Wvla
+                    -Wvolatile-register-var
+                    -Wwrite-strings
                 >
                 $<IF:${bde_ufid_is_exc},
                     -fexceptions,
@@ -361,7 +414,6 @@ function(bde_set_common_target_properties)
                 NDEBUG
                 BDE_BUILD_TARGET_NDEBUG
             >
-            $<${bde_ufid_is_opt}: NDEBUG>
 
             $<IF:${bde_ufid_is_exc},
                 BDE_BUILD_TARGET_EXC,
