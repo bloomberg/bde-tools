@@ -110,6 +110,16 @@ function(bde_set_common_target_properties)
         set(BUILD_SHARED_LIBS ON PARENT_SCOPE)
     endif()
 
+    # Set up PIC
+    # This code does not work in 3.8, but will be fixed in later versions.
+    # The -fPIC flag is set explicitely in the compile options for now.
+    if(${bde_ufid_is_shr} OR ${bde_ufid_is_pic})
+        bde_interface_target_set_property(
+            bde_ufid_flags
+                POSITION_INDEPENDENT_CODE PUBLIC 1
+        )
+    endif()
+
     # Set up build type
     if(${bde_ufid_is_opt} AND ${bde_ufid_is_dbg})
         set(build_type RelWithDebInfo)

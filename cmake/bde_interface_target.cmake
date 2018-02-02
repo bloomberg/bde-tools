@@ -3,6 +3,8 @@ if(BDE_INTERFACE_TARGET_INCLUDED)
 endif()
 set(BDE_INTERFACE_TARGET_INCLUDED true)
 
+include(bde_utils)
+
 #####################################################################
 # Interface target
 #####################################################################
@@ -35,6 +37,7 @@ endfunction()
 # stored in a variable
 macro(internal_parse_and_join_arguments prefix)
     cmake_parse_arguments(${prefix} "" "" "PUBLIC;PRIVATE;INTERFACE" ${ARGN})
+    bde_assert_no_unparsed_args(${prefix})
 
     if (${prefix}_PUBLIC)
         list(APPEND ${prefix}_PRIVATE ${${prefix}_PUBLIC})
