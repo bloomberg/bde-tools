@@ -142,9 +142,9 @@ function(bde_interface_target_set_property name property)
 endfunction()
 
 # Get actual interface target names
-function(bde_interface_target_names out name)
+function(bde_interface_target_names retTargetNames name)
     bde_assert_no_extra_args()
-    set(${out} ${name}-INTERFACE ${name}-PRIVATE PARENT_SCOPE)
+    bde_return(${name}-INTERFACE ${name}-PRIVATE)
 endfunction()
 
 # Install INTERFACE targets

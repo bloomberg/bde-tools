@@ -16,7 +16,7 @@ set(
 # :: add_test_executable ::
 # This function adds a target for test identified by 'name' and with the source
 # file in 'src'. The make/test target is 'name.t'.
-function(bde_add_test_executable outTestName name src)
+function(bde_add_test_executable retTestName name src)
     bde_assert_no_extra_args()
 
     set(testName ${name}.t)
@@ -32,10 +32,10 @@ function(bde_add_test_executable outTestName name src)
     add_test(NAME ${testName} COMMAND ${testCommand})
     bde_append_test_labels(${testName} ${name} ${testName})
 
-    set(${outTestName} ${testName} PARENT_SCOPE)
+    bde_return(${testName})
 endfunction()
 
-function(bde_process_component outInfoTarget rootDir componentName)
+function(bde_process_component retComponent rootDir componentName)
     bde_assert_no_extra_args()
 
     bde_struct_create(BDE_COMPONENT_TYPE ${componentName})
@@ -64,5 +64,5 @@ function(bde_process_component outInfoTarget rootDir componentName)
         message(WARNING "Test driver for ${componentName} not found.")
     endif()
 
-    set(${outInfoTarget} ${componentName} PARENT_SCOPE)
+    bde_return(${componentName})
 endfunction()

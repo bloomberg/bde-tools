@@ -17,7 +17,7 @@ set(
         INTERFACE_TARGET
 )
 
-function(bde_process_package outInfoTarget listFile uorName)
+function(bde_process_package retPackage listFile uorName)
     bde_assert_no_extra_args()
 
     get_filename_component(packageName ${listFile} NAME_WE)
@@ -25,7 +25,6 @@ function(bde_process_package outInfoTarget listFile uorName)
     get_filename_component(rootDir ${listDir} DIRECTORY)
 
     bde_struct_create(BDE_PACKAGE_TYPE ${packageName})
-    set(${outInfoTarget} ${packageName} PARENT_SCOPE)
 
     # Populate sources, headers, test drivers and dependancies in the
     # info target.
@@ -33,16 +32,16 @@ function(bde_process_package outInfoTarget listFile uorName)
     bde_utils_add_meta_file("${packageBaseName}.mem" components TRACK)
 
     foreach(componentName IN LISTS components)
-        unset(componentInfoTarget)
+        unset(component)
         bde_process_component(
-            componentInfoTarget ${rootDir} ${componentName}
+            component ${rootDir} ${componentName}
         )
         bde_struct_check_return(
-            ${componentInfoTarget} BDE_COMPONENT_TYPE ${componentName}
+            ${component} BDE_COMPONENT_TYPE ${componentName}
         )
 
         foreach(prop HEADER SOURCE TEST_TARGET)
-            bde_struct_get_field(${prop}-val ${componentInfoTarget} ${prop})
+            bde_struct_get_field(${prop}-val ${component} ${prop})
             bde_struct_append_field(${packageName} ${prop}S "${${prop}-val}")
         endforeach()
 
@@ -79,4 +78,6 @@ function(bde_process_package outInfoTarget listFile uorName)
         DESTINATION "include"
         COMPONENT "${uorName}-headers"
     )
+
+    bde_return(${packageName})
 endfunction()

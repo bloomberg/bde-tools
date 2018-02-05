@@ -17,31 +17,32 @@ set(
         TEST_TARGET
 )
 
-function(internal_process_uor_list outAllInfoTargets uorList uorType intermediateDir)
+function(internal_process_uor_list retUORs uorRoots uorType intermediateDir)
     bde_assert_no_extra_args()
 
-    set(allInfoTargets)
-    foreach(uorRoot IN LISTS uorList)
+    set(allUORs)
+    foreach(uorRoot IN LISTS uorRoots)
         get_filename_component(uorName ${uorRoot} NAME)
         bde_log(NORMAL "Processing '${uorName}' as ${uorType} (${uorRoot})")
 
         set(uorFileName "${uorRoot}/${intermediateDir}/${uorName}.cmake")
-        unset(uorInfoTarget)
+        unset(uor)
         bde_process_with_default(
             ${uorFileName}
             defaults/bde_process_${uorType}
             # Arguments passed to the process() function:
-            uorInfoTarget
+            uor
             ${uorFileName}
         )
 
         bde_struct_check_return(
-            "${uorInfoTarget}" BDE_UOR_TYPE "${uorName}'s process()"
+            "${uor}" BDE_UOR_TYPE "${uorName}'s process()"
         )
 
-        list(APPEND allInfoTargets ${uorInfoTarget})
+        list(APPEND allUORs ${uor})
     endforeach()
-    set(${outAllInfoTargets} ${allInfoTargets} PARENT_SCOPE)
+
+    bde_return(${allUORs})
 endfunction()
 
 function(bde_process_project_uors projName)
@@ -55,26 +56,26 @@ function(bde_process_project_uors projName)
     bde_assert_no_unparsed_args(proj)
 
     internal_process_uor_list(
-        groupInfoTargets "${proj_PACKAGE_GROUPS}" package_group group
+        groupUORs "${proj_PACKAGE_GROUPS}" package_group group
     )
     internal_process_uor_list(
-        pkgInfoTargets "${proj_STANDALONE_PACKAGES}" standalone_package package
+        packageUORs "${proj_STANDALONE_PACKAGES}" standalone_package package
     )
     internal_process_uor_list(
-        appInfoTargets "${proj_APPLICATIONS}" application package
+        applicationUORs "${proj_APPLICATIONS}" application package
     )
 
     # Join information from all UORs
     set(properties TARGET DEPENDS TEST_TARGETS)
 
-    foreach(infoTarget IN LISTS groupInfoTargets pkgInfoTargets appInfoTargets)
+    foreach(uor IN LISTS groupUORs packageUORs applicationUORs)
         foreach(prop IN LISTS properties)
-            bde_struct_get_field(value ${infoTarget} ${prop})
+            bde_struct_get_field(value ${uor} ${prop})
             list(APPEND all_${prop} ${value})
         endforeach()
 
         bde_struct_get_field(
-            interfaceTargets ${infoTarget} INTERFACE_TARGETS
+            interfaceTargets ${uor} INTERFACE_TARGETS
         )
 
         foreach(commonInterfaceTarget IN LISTS proj_COMMON_INTERFACE_TARGETS)
@@ -84,11 +85,11 @@ function(bde_process_project_uors projName)
                 )
             endforeach()
             bde_struct_append_field(
-                ${infoTarget} INTERFACE_TARGETS ${commonInterfaceTarget}
+                ${uor} INTERFACE_TARGETS ${commonInterfaceTarget}
             )
         endforeach()
 
-        bde_install_uor(${infoTarget})
+        bde_install_uor(${uor})
     endforeach()
 
     # Build project info target
@@ -106,7 +107,7 @@ function(bde_process_project_uors projName)
     endif()
 endfunction()
 
-function(bde_process_project outInfoTarget listDir)
+function(bde_process_project retProject listDir)
     bde_assert_no_extra_args()
 
     macro(find_uors type)
@@ -133,6 +134,8 @@ function(bde_process_project outInfoTarget listDir)
             APPLICATIONS
                 ${applications}
         )
-        set(${outInfoTarget} ${projName} PARENT_SCOPE)
+        bde_return(${projName})
     endif()
+
+    bde_return()
 endfunction()

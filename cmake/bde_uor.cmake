@@ -25,7 +25,8 @@ function(internal_target_objlib_sources target)
     target_sources(${target} PRIVATE ${objSources})
 endfunction()
 
-function(bde_prepare_uor uorName uorInfoTarget uorDepends uorType)
+#TODO: this is a weird function
+function(bde_prepare_uor uorName uor uorDepends uorType)
     bde_assert_no_extra_args()
 
     set(knownUORTypes APPLICATION LIBRARY)
@@ -43,22 +44,22 @@ function(bde_prepare_uor uorName uorInfoTarget uorDepends uorType)
     endif()
     set_target_properties(${uorName} PROPERTIES LINKER_LANGUAGE CXX)
 
-    bde_struct_create(BDE_UOR_TYPE ${uorInfoTarget})
-    bde_struct_set_field(${uorInfoTarget} TARGET "${uorName}")
-    bde_struct_set_field(${uorInfoTarget} DEPENDS "${uorDepends}")
+    bde_struct_create(BDE_UOR_TYPE ${uor})
+    bde_struct_set_field(${uor} TARGET "${uorName}")
+    bde_struct_set_field(${uor} DEPENDS "${uorDepends}")
 endfunction()
 
-function(bde_project_add_uor uorInfoTarget packageInfoTargets)
+function(bde_project_add_uor uor packages)
     bde_assert_no_extra_args()
 
-    bde_struct_get_field(uorName ${uorInfoTarget} TARGET)
-    bde_struct_get_field(uorDeps ${uorInfoTarget} DEPENDS)
+    bde_struct_get_field(uorName ${uor} TARGET)
+    bde_struct_get_field(uorDeps ${uor} DEPENDS)
 
     # uorInterfaceTarget contains _only_ the build requirements
     # specified for the UOR itself. It does NOT contain the requirements
     # transitively included from the member packages. This interface
     # target is only used directly by the test targets.
-    set(uorInterfaceTarget ${uorInfoTarget})
+    set(uorInterfaceTarget ${uor})
     bde_add_interface_target(${uorInterfaceTarget})
     bde_interface_target_link_libraries(${uorInterfaceTarget} PUBLIC ${uorDeps})
 
@@ -73,11 +74,11 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
 
     set(uorTestTarget ${uorName}.t)
     add_custom_target(${uorTestTarget})
-    bde_struct_set_field(${uorInfoTarget} TEST_TARGETS ${uorTestTarget})
+    bde_struct_set_field(${uor} TEST_TARGETS ${uorTestTarget})
 
     # Process packages using their info targets
     bde_struct_set_field(
-        ${uorInfoTarget}
+        ${uor}
         INTERFACE_TARGETS
             ${uorInterfaceTarget}
             ${uorFullInterfaceTarget}
@@ -85,10 +86,10 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
 
     set(allInterpackageDeps)
     set(allPackageTargets)
-    foreach(packageInfoTarget IN LISTS packageInfoTargets)
-        set(packageName ${packageInfoTarget})
+    foreach(package IN LISTS packages)
+        set(packageName ${package})
         bde_struct_get_field(
-            packageInterfaceTarget ${packageInfoTarget} INTERFACE_TARGET
+            packageInterfaceTarget ${package} INTERFACE_TARGET
         )
 
         # Add package usage requirements to the UOR target
@@ -100,14 +101,14 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
             INTERFACE_ONLY
         )
         bde_struct_append_field(
-            ${uorInfoTarget}
+            ${uor}
             INTERFACE_TARGETS
                 ${packageInterfaceTarget}
         )
 
-        bde_struct_get_field(packageSrcs ${packageInfoTarget} SOURCES)
-        bde_struct_get_field(packageHdrs ${packageInfoTarget} HEADERS)
-        bde_struct_get_field(packageDeps ${packageInfoTarget} DEPENDS)
+        bde_struct_get_field(packageSrcs ${package} SOURCES)
+        bde_struct_get_field(packageHdrs ${package} HEADERS)
+        bde_struct_get_field(packageDeps ${package} DEPENDS)
         list(APPEND allInterpackageDeps ${packageDeps})
 
         bde_log(
@@ -175,7 +176,7 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
         bde_target_link_interface_target(${packageLibrary} ${packageInterfaceTarget} INTERFACE_ONLY)
 
         # Process package tests
-        bde_struct_get_field(tests ${packageInfoTarget} TEST_TARGETS)
+        bde_struct_get_field(tests ${package} TEST_TARGETS)
         if (tests)
             foreach(test IN LISTS tests)
                 target_link_libraries(${test} PRIVATE ${packageLibrary})
@@ -203,12 +204,12 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
 
 endfunction()
 
-function(bde_install_uor uorInfoTarget)
+function(bde_install_uor uor)
     bde_assert_no_extra_args()
 
-    bde_struct_get_field(uorName ${uorInfoTarget} TARGET)
-    bde_struct_get_field(depends ${uorInfoTarget} DEPENDS)
-    bde_struct_get_field(interfaceTargets ${uorInfoTarget} INTERFACE_TARGETS)
+    bde_struct_get_field(uorName ${uor} TARGET)
+    bde_struct_get_field(depends ${uor} DEPENDS)
+    bde_struct_get_field(interfaceTargets ${uor} INTERFACE_TARGETS)
 
     set(ufidInstallDir ${bde_install_lib_suffix}/${bde_install_ufid})
 
