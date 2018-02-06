@@ -50,9 +50,16 @@ function(bde_process_package_group retPackageGroup listFile)
         list(APPEND packages ${package})
     endforeach()
 
-    bde_prepare_uor(${uorName} ${uorName} "${dependencies}" LIBRARY)
-    bde_project_add_uor(${uorName} "${packages}")
+    add_library(${uorName} "")
+    bde_struct_create(
+        uor
+        BDE_UOR_TYPE
+        NAME "${uorName}"
+        TARGET "${uorName}"
+        DEPENDS "${dependencies}"
+    )
+    bde_project_add_uor(${uor} "${packages}")
 
     bde_log(VERBOSE "[${uorName}]: Done")
-    bde_return(${uorName})
+    bde_return(${uor})
 endfunction()

@@ -8,7 +8,7 @@ include(bde_log)
 include(bde_struct)
 include(bde_utils)
 
-set(
+bde_register_struct_type(
     BDE_UOR_TYPE
         SOURCES
         HEADERS
@@ -25,41 +25,18 @@ function(internal_target_objlib_sources target)
     target_sources(${target} PRIVATE ${objSources})
 endfunction()
 
-#TODO: this is a weird function
-function(bde_prepare_uor uorName uor uorDepends uorType)
-    bde_assert_no_extra_args()
-
-    set(knownUORTypes APPLICATION LIBRARY)
-    if (NOT ${uorType} IN_LIST knownUORTypes)
-        message(FATAL_ERROR "UOR type '${uorType}' is unknown.")
-    endif()
-
-    if (${uorType} STREQUAL APPLICATION)
-        add_executable(${uorName} "")
-        set_target_properties(
-            ${uorName} PROPERTIES SUFFIX ".tsk${CMAKE_EXECUTABLE_SUFFIX}"
-        )
-    else()
-        add_library(${uorName} "")
-    endif()
-    set_target_properties(${uorName} PROPERTIES LINKER_LANGUAGE CXX)
-
-    bde_struct_create(BDE_UOR_TYPE ${uor})
-    bde_struct_set_field(${uor} TARGET "${uorName}")
-    bde_struct_set_field(${uor} DEPENDS "${uorDepends}")
-endfunction()
-
 function(bde_project_add_uor uor packages)
     bde_assert_no_extra_args()
 
-    bde_struct_get_field(uorName ${uor} TARGET)
+    bde_struct_get_field(uorName ${uor} NAME)
+    bde_struct_get_field(uorTarget ${uor} TARGET)
     bde_struct_get_field(uorDeps ${uor} DEPENDS)
 
     # uorInterfaceTarget contains _only_ the build requirements
     # specified for the UOR itself. It does NOT contain the requirements
     # transitively included from the member packages. This interface
     # target is only used directly by the test targets.
-    set(uorInterfaceTarget ${uor})
+    set(uorInterfaceTarget ${uorName}-uor)
     bde_add_interface_target(${uorInterfaceTarget})
     bde_interface_target_link_libraries(${uorInterfaceTarget} PUBLIC ${uorDeps})
 
@@ -70,13 +47,13 @@ function(bde_project_add_uor uor packages)
     set(uorFullInterfaceTarget ${uorInterfaceTarget}-full)
     bde_add_interface_target(${uorFullInterfaceTarget})
     bde_interface_target_assimilate(${uorFullInterfaceTarget} ${uorInterfaceTarget})
-    bde_target_link_interface_target(${uorName} ${uorFullInterfaceTarget})
+    bde_target_link_interface_target(${uorTarget} ${uorFullInterfaceTarget})
 
     set(uorTestTarget ${uorName}.t)
     add_custom_target(${uorTestTarget})
     bde_struct_set_field(${uor} TEST_TARGETS ${uorTestTarget})
 
-    # Process packages using their info targets
+    # Process packages
     bde_struct_set_field(
         ${uor}
         INTERFACE_TARGETS
@@ -87,10 +64,8 @@ function(bde_project_add_uor uor packages)
     set(allInterpackageDeps)
     set(allPackageTargets)
     foreach(package IN LISTS packages)
-        set(packageName ${package})
-        bde_struct_get_field(
-            packageInterfaceTarget ${package} INTERFACE_TARGET
-        )
+        bde_struct_get_field(packageName ${package} NAME)
+        bde_struct_get_field(packageInterfaceTarget ${package} INTERFACE_TARGET)
 
         # Add package usage requirements to the UOR target
         # Do not add private requirements as they should only affect the
@@ -162,7 +137,7 @@ function(bde_project_add_uor uor packages)
             internal_target_objlib_sources(${packageLibrary} ${packageObjLibrary})
 
             # Add object files as sources to the package froup target
-            internal_target_objlib_sources(${uorName} ${packageObjLibrary})
+            internal_target_objlib_sources(${uorTarget} ${packageObjLibrary})
         else()
             # Add IDE target (https://gitlab.kitware.com/cmake/cmake/issues/15234)
             add_custom_target(${packageLibrary}-headers SOURCES ${packageHdrs})
