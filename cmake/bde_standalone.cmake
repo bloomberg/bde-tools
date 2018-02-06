@@ -6,6 +6,7 @@ set(BDE_STANDALONE_INCLUDED true)
 include(bde_log)
 include(bde_package)
 include(bde_uor)
+include(bde_utils)
 
 macro(internal_process_standalone uorName)
     bde_log(VERBOSE "[${uorName}]: Start processing")

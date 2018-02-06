@@ -183,9 +183,9 @@ macro(bde_assert_no_unparsed_args prefix)
     endif()
 endmacro()
 
-function(bde_add_exceutable)
-    add_executable(${ARGN})
+function(bde_add_executable target)
+    add_executable(${target} ${ARGN} "")
     set_target_properties(
-        ${uorName} PROPERTIES SUFFIX ".tsk${CMAKE_EXECUTABLE_SUFFIX}"
+        ${target} PROPERTIES SUFFIX ".tsk${CMAKE_EXECUTABLE_SUFFIX}"
     )
 endfunction()
