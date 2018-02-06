@@ -10,21 +10,39 @@ include(bde_utils)
 #####################################################################
 
 function(bde_add_interface_target name)
+    bde_assert_no_extra_args()
     add_library(${name}-INTERFACE INTERFACE)
     add_library(${name}-PRIVATE INTERFACE)
 endfunction()
 
 function(bde_target_link_interface_target target name)
-    target_link_libraries(
-        ${target}
-        INTERFACE ${name}-INTERFACE
-        PRIVATE ${name}-PRIVATE
-    )
+    cmake_parse_arguments("" "INTERFACE_ONLY" "" "" ${ARGN})
+    bde_assert_no_unparsed_args("")
+
+    set(types PRIVATE INTERFACE)
+    if(_INTERFACE_ONLY)
+        set(types INTERFACE)
+    endif()
+
+    foreach(type IN LISTS types)
+        target_link_libraries(
+            ${target}
+            ${type} ${name}-${type}
+        )
+    endforeach()
 endfunction()
 
 # Merge the requirements from 'other_target' to 'target'
 function(bde_interface_target_assimilate target other_target)
-    foreach(type INTERFACE PRIVATE)
+    cmake_parse_arguments("" "INTERFACE_ONLY" "" "" ${ARGN})
+    bde_assert_no_unparsed_args("")
+
+    set(types PRIVATE INTERFACE)
+    if(_INTERFACE_ONLY)
+        set(types INTERFACE)
+    endif()
+
+    foreach(type IN LISTS types)
         target_link_libraries(
             ${target}-${type}
             INTERFACE ${other_target}-${type}
@@ -125,6 +143,7 @@ endfunction()
 
 # Get actual interface target names
 function(bde_interface_target_names out name)
+    bde_assert_no_extra_args()
     set(${out} ${name}-INTERFACE ${name}-PRIVATE PARENT_SCOPE)
 endfunction()
 

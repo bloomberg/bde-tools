@@ -83,6 +83,8 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
             ${uorFullInterfaceTarget}
     )
 
+    set(allInterpackageDeps)
+    set(allPackageTargets)
     foreach(packageInfoTarget IN LISTS packageInfoTargets)
         set(packageName ${packageInfoTarget})
         bde_struct_get_field(
@@ -90,7 +92,13 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
         )
 
         # Add package usage requirements to the UOR target
-        bde_interface_target_assimilate(${uorFullInterfaceTarget} ${packageInterfaceTarget})
+        # Do not add private requirements as they should only affect the
+        # package itself
+        bde_interface_target_assimilate(
+            ${uorFullInterfaceTarget}
+            ${packageInterfaceTarget}
+            INTERFACE_ONLY
+        )
         bde_struct_append_field(
             ${uorInfoTarget}
             INTERFACE_TARGETS
@@ -100,6 +108,7 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
         bde_struct_get_field(packageSrcs ${packageInfoTarget} SOURCES)
         bde_struct_get_field(packageHdrs ${packageInfoTarget} HEADERS)
         bde_struct_get_field(packageDeps ${packageInfoTarget} DEPENDS)
+        list(APPEND allInterpackageDeps ${packageDeps})
 
         bde_log(
             VERBOSE
@@ -124,6 +133,7 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
         if (${uorName} STREQUAL ${packageName})
             set(packageLibrary ${packageName}-pkg)
         endif()
+        list(APPEND allPackageTargets ${packageLibrary})
 
         if(packageSrcs)
             set(packageObjLibrary ${packageLibrary}-obj)
@@ -161,13 +171,15 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
         endif()
 
         # Add usage requirements to the package target for tests
-        target_link_libraries(${packageLibrary} INTERFACE ${allPackageDepends})
+        target_link_libraries(${packageLibrary} INTERFACE ${packageDeps} ${uorInterfaceTargets})
+        bde_target_link_interface_target(${packageLibrary} ${packageInterfaceTarget} INTERFACE_ONLY)
 
         # Process package tests
         bde_struct_get_field(tests ${packageInfoTarget} TEST_TARGETS)
         if (tests)
             foreach(test IN LISTS tests)
-                target_link_libraries(${test} ${packageLibrary})
+                target_link_libraries(${test} PRIVATE ${packageLibrary})
+                bde_target_link_interface_target(${test} ${packageInterfaceTarget})
                 bde_append_test_labels(${test} ${uorName})
             endforeach()
 
@@ -177,6 +189,18 @@ function(bde_project_add_uor uorInfoTarget packageInfoTargets)
             add_dependencies(${packageTestName} ${tests})
         endif()
     endforeach()
+
+    if(allInterpackageDeps)
+        list(REMOVE_ITEM allInterpackageDeps ${allPackageTargets})
+        if(allInterpackageDeps)
+            message(
+                FATAL_ERROR
+                "Found unresolved inter-package dependencies: \
+                ${allInterpackageDeps}"
+            )
+        endif()
+    endif()
+
 endfunction()
 
 function(bde_install_uor uorInfoTarget)
@@ -237,12 +261,14 @@ function(bde_install_uor uorInfoTarget)
     )
 
     # Create the groupConfig.cmake for the build tree
+    find_file(configFile "groupConfig.cmake.in" PATHS ${CMAKE_MODULE_PATH})
     set(group ${uorName})
     configure_file(
-        "${CMAKE_MODULE_PATH}/groupConfig.cmake.in"
+        ${configFile}
         "${PROJECT_BINARY_DIR}/${uorName}Config.cmake"
         @ONLY
     )
+    unset(configFile)
 
     install(
         FILES "${PROJECT_BINARY_DIR}/${uorName}Config.cmake"
@@ -252,13 +278,15 @@ function(bde_install_uor uorInfoTarget)
 
     # Create the group.pc for the build tree
     # In CMake a list is a string with ';' as an item separator.
+    find_file(configFile "group.pc.in" PATHS ${CMAKE_MODULE_PATH})
     set(pc_depends ${depends})
     string(REPLACE ";" " " pc_depends "${pc_depends}")
     configure_file(
-        "${CMAKE_MODULE_PATH}/group.pc.in"
+        ${configFile}
         "${PROJECT_BINARY_DIR}/${uorName}.pc"
         @ONLY
     )
+    unset(configFile)
 
     install(
         FILES "${PROJECT_BINARY_DIR}/${uorName}.pc"

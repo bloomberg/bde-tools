@@ -33,6 +33,7 @@ function(bde_process_package outInfoTarget listFile uorName)
     bde_utils_add_meta_file("${packageBaseName}.mem" components TRACK)
 
     foreach(componentName IN LISTS components)
+        unset(componentInfoTarget)
         bde_process_component(
             componentInfoTarget ${rootDir} ${componentName}
         )

@@ -26,6 +26,7 @@ function(internal_process_uor_list outAllInfoTargets uorList uorType intermediat
         bde_log(NORMAL "Processing '${uorName}' as ${uorType} (${uorRoot})")
 
         set(uorFileName "${uorRoot}/${intermediateDir}/${uorName}.cmake")
+        unset(uorInfoTarget)
         bde_process_with_default(
             ${uorFileName}
             defaults/bde_process_${uorType}
@@ -47,8 +48,8 @@ function(bde_process_project_uors projName)
     cmake_parse_arguments(
         proj
         ""
-        "COMMON_INTERFACE_TARGET"
-        "PACKAGE_GROUPS;APPLICATIONS;STANDALONE_PACKAGES"
+        ""
+        "COMMON_INTERFACE_TARGETS;PACKAGE_GROUPS;APPLICATIONS;STANDALONE_PACKAGES"
         ${ARGN}
     )
     bde_assert_no_unparsed_args(proj)
@@ -72,19 +73,21 @@ function(bde_process_project_uors projName)
             list(APPEND all_${prop} ${value})
         endforeach()
 
-        if (proj_COMMON_INTERFACE_TARGET)
-            bde_struct_get_field(
-                interfaceTargets ${infoTarget} INTERFACE_TARGETS
-            )
+        bde_struct_get_field(
+            interfaceTargets ${infoTarget} INTERFACE_TARGETS
+        )
+
+        foreach(commonInterfaceTarget IN LISTS proj_COMMON_INTERFACE_TARGETS)
             foreach(interfaceTarget IN LISTS interfaceTargets)
                 bde_interface_target_assimilate(
-                    ${interfaceTarget} ${proj_COMMON_INTERFACE_TARGET}
+                    ${interfaceTarget} ${commonInterfaceTarget}
                 )
             endforeach()
             bde_struct_append_field(
-                ${infoTarget} INTERFACE_TARGETS ${proj_COMMON_INTERFACE_TARGET}
+                ${infoTarget} INTERFACE_TARGETS ${commonInterfaceTarget}
             )
-        endif()
+        endforeach()
+
         bde_install_uor(${infoTarget})
     endforeach()
 
@@ -121,7 +124,7 @@ function(bde_process_project outInfoTarget listDir)
 
         bde_process_project_uors(
             ${projName}
-            COMMON_INTERFACE_TARGET
+            COMMON_INTERFACE_TARGETS
                 bde_ufid_flags
             PACKAGE_GROUPS
                 ${groups}

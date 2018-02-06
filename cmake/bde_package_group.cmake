@@ -33,6 +33,7 @@ function(bde_process_package_group outInfoTarget listFile)
         )
 
         set(packageFileName "${rootDir}/${packageName}/package/${packageName}.cmake")
+        unset(packageInfoTarget)
         bde_process_with_default(
             ${packageFileName}
             defaults/bde_process_package
