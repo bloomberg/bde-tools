@@ -8,7 +8,7 @@ include(bde_interface_target)
 include(bde_struct)
 include(bde_utils)
 
-set(
+bde_register_struct_type(
     BDE_PACKAGE_TYPE
         SOURCES
         HEADERS
@@ -24,10 +24,9 @@ function(bde_process_package retPackage listFile uorName)
     get_filename_component(listDir ${listFile} DIRECTORY)
     get_filename_component(rootDir ${listDir} DIRECTORY)
 
-    bde_struct_create(BDE_PACKAGE_TYPE ${packageName})
+    bde_struct_create(package BDE_PACKAGE_TYPE NAME ${packageName})
 
-    # Populate sources, headers, test drivers and dependancies in the
-    # info target.
+    # Populate sources, headers, test drivers and dependencies
     set(packageBaseName "${listDir}/${packageName}")
     bde_utils_add_meta_file("${packageBaseName}.mem" components TRACK)
 
@@ -42,7 +41,7 @@ function(bde_process_package retPackage listFile uorName)
 
         foreach(prop HEADER SOURCE TEST_TARGET)
             bde_struct_get_field(${prop}-val ${component} ${prop})
-            bde_struct_append_field(${packageName} ${prop}S "${${prop}-val}")
+            bde_struct_append_field(${package} ${prop}S "${${prop}-val}")
         endforeach()
 
         if(TEST_TARGET-val)
@@ -52,18 +51,18 @@ function(bde_process_package retPackage listFile uorName)
 
     # Get list of all dependencies from the <folderName>/<packageName>.dep
     bde_utils_add_meta_file("${packageBaseName}.dep" depends TRACK)
-    bde_struct_set_field(${packageName} DEPENDS "${depends}")
+    bde_struct_set_field(${package} DEPENDS "${depends}")
 
     # Get list of all TEST dependencies from the
     # <packageName>/package/<packageName>.t.dep
     if(EXISTS "${packageBaseName}.t.dep")
         bde_utils_add_meta_file("${packageBaseName}.t.dep" testDepends TRACK)
-        bde_struct_set_field(${packageName} TEST_DEPENDS "${testDepends}")
+        bde_struct_set_field(${package} TEST_DEPENDS "${testDepends}")
     endif()
 
     # Include directories
     bde_add_interface_target(${packageName})
-    bde_struct_set_field(${packageName} INTERFACE_TARGET ${packageName})
+    bde_struct_set_field(${package} INTERFACE_TARGET ${packageName})
     bde_interface_target_include_directories(
         ${packageName}
         PUBLIC
@@ -72,12 +71,12 @@ function(bde_process_package retPackage listFile uorName)
     )
 
     # By default all component's headers are installed in 'include'.
-    bde_struct_get_field(headers ${packageName} HEADERS)
+    bde_struct_get_field(headers ${package} HEADERS)
     install(
         FILES ${headers}
         DESTINATION "include"
         COMPONENT "${uorName}-headers"
     )
 
-    bde_return(${packageName})
+    bde_return(${package})
 endfunction()

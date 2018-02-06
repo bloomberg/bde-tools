@@ -6,7 +6,7 @@ set(BDE_COMPONENT_INCLUDED true)
 include(bde_struct)
 include(bde_utils)
 
-set(
+bde_register_struct_type(
     BDE_COMPONENT_TYPE
         SOURCE
         HEADER
@@ -38,31 +38,35 @@ endfunction()
 function(bde_process_component retComponent rootDir componentName)
     bde_assert_no_extra_args()
 
-    bde_struct_create(BDE_COMPONENT_TYPE ${componentName})
-
     # Header
     set(baseName "${rootDir}/${componentName}")
     bde_utils_find_file_extension(header ${baseName} ".h")
     if(NOT header)
         message(FATAL_ERROR "Header for ${componentName} not found.")
     endif()
-    bde_struct_set_field(${componentName} HEADER ${header})
 
     # Source
     bde_utils_find_file_extension(source ${baseName} ".c;.cpp")
     if(NOT source)
         message(FATAL_ERROR "Source for ${componentName} not found.")
     endif()
-    bde_struct_set_field(${componentName} SOURCE ${source})
+
+    bde_struct_create(
+        component
+        BDE_COMPONENT_TYPE
+        NAME ${componentName}
+        HEADER ${header}
+        SOURCE ${source}
+    )
 
     # Test driver
     bde_utils_find_file_extension(test ${baseName} ".t.c;.t.cpp")
     if(test)
         bde_add_test_executable(testName ${componentName} ${test})
-        bde_struct_set_field(${componentName} TEST_TARGET "${testName}")
+        bde_struct_set_field(${component} TEST_TARGET "${testName}")
     else()
         message(WARNING "Test driver for ${componentName} not found.")
     endif()
 
-    bde_return(${componentName})
+    bde_return(${component})
 endfunction()
