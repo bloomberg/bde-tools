@@ -156,27 +156,10 @@ function(bde_set_common_target_properties)
                 /bigobj
             >
             $<$<CXX_COMPILER_ID:SunPro>:
-                # 'dbg' and 'opt' flags must be handeled separately as they can
-                # be both valid.
-                $<${bde_ufid_is_dbg}: -g0 -xdebugformat=stabs>
-                $<${bde_ufid_is_opt}: -O>
                 $<IF:${bde_ufid_is_64}, -m64, -m32>
             >
             $<$<CXX_COMPILER_ID:XL>:
-                -fno-strict-aliasing
-                -qalias=noansi
-                -qarch=pwr6
-                -qrtti=all
-                -qtbtable=small
-                -qtls
-                -qtune=pwr7
-                -qxflag=dircache:71,100
-                -qxflag=inlinewithdebug:stepOverInline
-                -qxflag=noautoinline
-                -qxflag=tocrel
-                -qxflag=v6align
-                -qxflag=FunctionCVTmplArgDeduction2011
-                -qxflag=UnwindTypedefInClassDecl
+                $<IF:${bde_ufid_is_64}, -q64, -q32>
 
                 $<${bde_ufid_is_mt}: -qthreaded>
 
@@ -219,54 +202,10 @@ function(bde_set_common_target_properties)
             $<${bde_ufid_is_safe}:
                 BDE_BUILD_TARGET_SAFE
                 BDE_DONT_ALLOW_TRANSITIVE_INCLUDES
-                _STLP_EXTRA_OPERATORS_FOR_DEBUG=1
             >
             $<${bde_ufid_is_safe2}:
                 BDE_BUILD_TARGET_SAFE_2
                 BDE_DONT_ALLOW_TRANSITIVE_INCLUDES
-                _STLP_EXTRA_OPERATORS_FOR_DEBUG=1
-            >
-
-            # Compiler specific definitions
-            $<$<CXX_COMPILER_ID:Clang>:
-                $<${bde_ufid_is_mt}:
-                    _POSIX_PTHREAD_SEMANTICS
-                    _REENTRANT
-                >
-            >
-            $<$<CXX_COMPILER_ID:GNU>:
-                $<${bde_ufid_is_mt}:
-                    _POSIX_PTHREAD_SEMANTICS
-                    _REENTRANT
-                >
-            >
-            $<$<CXX_COMPILER_ID:MSVC>:
-                NOGDI
-                NOMINMAX
-                _SCL_SECURE_NO_DEPRECATE
-                WIN32_LEAN_AND_MEAN
-                VC_EXTRALEAN
-                # Windows Server 2003 and later
-                _WIN32_WINNT=0x0502
-                WINVER=0x0502
-            >
-            $<$<CXX_COMPILER_ID:SunPro>:
-                $<${bde_ufid_is_mt}:
-                    _POSIX_PTHREAD_SEMANTICS
-                    _REENTRANT
-                    _PTHREADS
-                >
-                _RWSTD_COMPILE_INSTANTIATE=1
-                __FUNCTION__=__FILE__
-
-            >
-            $<$<CXX_COMPILER_ID:XL>:
-                $<${bde_ufid_is_mt}:
-                    _POSIX_PTHREAD_SEMANTICS
-                    _REENTRANT
-                    _PTHREADS
-                    _THREAD_SAFE
-                >
             >
     )
 
@@ -281,45 +220,48 @@ function(bde_set_common_target_properties)
                 >
             >
             $<$<CXX_COMPILER_ID:GNU>:
-                -fno-strict-aliasing
-                -fdiagnostics-show-option
-                --param ggc-min-expand=30
                 $<${bde_ufid_is_opt}:
+                    -fno-strict-aliasing
                     -fno-gcse
-                    # Warnings
-                    -Waddress
-                    -Wall
-                    -Wcast-align
-                    -Wcast-qual
-                    -Wconversion
-                    -Werror=cast-qual
-                    -Wextra
-                    -Wformat
-                    -Wformat-security
-                    -Wformat-y2k
-                    -Winit-self
-                    -Wlarger-than-100000
-                    -Wlogical-op
-                    -Wno-char-subscripts
-                    -Wno-long-long
-                    -Wno-sign-conversion
-                    -Wno-unknown-pragmas
-                    -Wno-unused-value
-                    -Woverflow
-                    -Wpacked
-                    -Wparentheses
-                    -Wpointer-arith
-                    -Wsign-compare
-                    -Wstrict-overflow=1
-                    -Wtype-limits
-                    -Wvla
-                    -Wvolatile-register-var
-                    -Wwrite-strings
                 >
+
                 $<IF:${bde_ufid_is_exc},
                     -fexceptions,
                     -fno-exceptions
                 >
+
+                -fdiagnostics-show-option
+                # Warnings
+                -Waddress
+                -Wall
+                -Wcast-align
+                -Wcast-qual
+                -Wconversion
+                -Werror=cast-qual
+                -Wextra
+                -Wformat
+                -Wformat-security
+                -Wformat-y2k
+                -Winit-self
+                -Wlarger-than-100000
+                -Wlogical-op
+                -Wno-char-subscripts
+                -Wno-long-long
+                -Wno-sign-conversion
+                -Wno-unknown-pragmas
+                -Wno-unused-value
+                -Woverflow
+                -Wpacked
+                -Wparentheses
+                -Wpointer-arith
+                -Wsign-compare
+                -Wstrict-overflow=1
+                -Wtype-limits
+                -Wvla
+                -Wvolatile-register-var
+                -Wwrite-strings
+
+                --param ggc-min-expand=30
             >
             $<$<CXX_COMPILER_ID:MSVC>:
                 /GS-
@@ -361,25 +303,23 @@ function(bde_set_common_target_properties)
                 >
             >
             $<$<CXX_COMPILER_ID:XL>:
-                -fno-strict-aliasing
                 -qalias=noansi
                 -qarch=pwr6
                 -qdebug=nparseasm
                 -qfuncsect
                 -qlanglvl=staticstoreoverlinkage
+                -qmaxmem=-1
                 -qnotempinc
                 -qrtti=all
                 -qsuppress=1500-029
                 -qsuppress=1540-2910
                 -qsuppress=1501-201
                 -qtbtable=small
-                -qtls
+                # -qtls
                 -qtune=pwr7
                 -qxflag=dircache:71,100
-                -qxflag=inlinewithdebug:stepOverInline
-                -qxflag=noautoinline
+                -qxflag=NoKeepDebugMetaTemplateType
                 -qxflag=tocrel
-                -qxflag=v6align
                 -qxflag=FunctionCVTmplArgDeduction2011
                 -qxflag=UnwindTypedefInClassDecl
 
@@ -395,6 +335,7 @@ function(bde_set_common_target_properties)
         bde_ufid_flags
         PRIVATE
             BDE_BUILD_TARGET_MT
+
             $<$<CONFIG:Release>:
                 BDE_BUILD_TARGET_OPT
             >
@@ -434,16 +375,37 @@ function(bde_set_common_target_properties)
             # Compiler specific defines
             $<$<CXX_COMPILER_ID:Clang>:
             >
+
             $<$<CXX_COMPILER_ID:GNU>:
+                $<${bde_ufid_is_mt}:
+                    _REENTRANT
+                    _POSIX_PTHREAD_SEMANTICS
+                >
             >
+
             $<$<CXX_COMPILER_ID:MSVC>:
+                NOGDI
+                NOMINMAX
+                _SCL_SECURE_NO_DEPRECATE
+                WIN32_LEAN_AND_MEAN
+                VC_EXTRALEAN
+                # Windows Server 2003 and later
+                _WIN32_WINNT=0x0502
+                WINVER=0x0502
             >
+
             $<$<CXX_COMPILER_ID:SunPro>:
-                _POSIX_PTHREAD_SEMANTICS
-                _PTHREADS
+                $<${bde_ufid_is_mt}:
+                    _POSIX_PTHREAD_SEMANTICS
+                >
             >
             $<$<CXX_COMPILER_ID:XL>:
-                $<${bde_ufid_is_mt}: _THREAD_SAFE>
+                __NOLOCK_ON_INPUT
+                __NOLOCK_ON_OUTPUT
+                $<${bde_ufid_is_mt}:
+                    _REENTRANT
+                    _THREAD_SAFE
+                >
             >
     )
     # target libraries and additional platfrom link flags
@@ -474,6 +436,7 @@ function(bde_set_common_target_properties)
                 $<IF:${bde_ufid_is_64}, -m64, -m32>
             >
             $<$<CXX_COMPILER_ID:XL>:
+                $<IF:${bde_ufid_is_64}, -q64, -q32>
             >
     )
 endfunction()
