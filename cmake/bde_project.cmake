@@ -10,103 +10,105 @@ include(bde_log)
 include(bde_process_with_default)
 include(bde_uor)
 
-set(
+bde_register_struct_type(
     BDE_PROJECT_TYPE
         DEPENDS
         TARGETS
         TEST_TARGET
 )
 
-function(internal_process_uor_list outAllInfoTargets uorList uorType intermediateDir)
+function(internal_process_uor_list retUORs uorRoots uorType intermediateDir)
     bde_assert_no_extra_args()
 
-    set(allInfoTargets)
-    foreach(uorRoot IN LISTS uorList)
+    set(allUORs)
+    foreach(uorRoot IN LISTS uorRoots)
         get_filename_component(uorName ${uorRoot} NAME)
         bde_log(NORMAL "Processing '${uorName}' as ${uorType} (${uorRoot})")
 
         set(uorFileName "${uorRoot}/${intermediateDir}/${uorName}.cmake")
-        unset(uorInfoTarget)
+        unset(uor)
         bde_process_with_default(
             ${uorFileName}
             defaults/bde_process_${uorType}
             # Arguments passed to the process() function:
-            uorInfoTarget
+            uor
             ${uorFileName}
         )
 
         bde_struct_check_return(
-            "${uorInfoTarget}" BDE_UOR_TYPE "${uorName}'s process()"
+            "${uor}" BDE_UOR_TYPE "${uorName}'s process()"
         )
 
-        list(APPEND allInfoTargets ${uorInfoTarget})
+        list(APPEND allUORs ${uor})
     endforeach()
-    set(${outAllInfoTargets} ${allInfoTargets} PARENT_SCOPE)
+
+    bde_return(${allUORs})
 endfunction()
 
-function(bde_process_project_uors projName)
+function(bde_process_project_uors proj)
     cmake_parse_arguments(
-        proj
+        ""
         ""
         ""
         "COMMON_INTERFACE_TARGETS;PACKAGE_GROUPS;APPLICATIONS;STANDALONE_PACKAGES"
         ${ARGN}
     )
-    bde_assert_no_unparsed_args(proj)
+    bde_assert_no_unparsed_args("")
 
     internal_process_uor_list(
-        groupInfoTargets "${proj_PACKAGE_GROUPS}" package_group group
+        groupUORs "${_PACKAGE_GROUPS}" package_group group
     )
     internal_process_uor_list(
-        pkgInfoTargets "${proj_STANDALONE_PACKAGES}" standalone_package package
+        packageUORs "${_STANDALONE_PACKAGES}" standalone_package package
     )
     internal_process_uor_list(
-        appInfoTargets "${proj_APPLICATIONS}" application package
+        applicationUORs "${_APPLICATIONS}" application package
     )
 
     # Join information from all UORs
     set(properties TARGET DEPENDS TEST_TARGETS)
 
-    foreach(infoTarget IN LISTS groupInfoTargets pkgInfoTargets appInfoTargets)
+    foreach(uor IN LISTS groupUORs packageUORs applicationUORs)
         foreach(prop IN LISTS properties)
-            bde_struct_get_field(value ${infoTarget} ${prop})
+            bde_struct_get_field(value ${uor} ${prop})
             list(APPEND all_${prop} ${value})
         endforeach()
 
         bde_struct_get_field(
-            interfaceTargets ${infoTarget} INTERFACE_TARGETS
+            interfaceTargets ${uor} INTERFACE_TARGETS
         )
 
-        foreach(commonInterfaceTarget IN LISTS proj_COMMON_INTERFACE_TARGETS)
+        foreach(commonInterfaceTarget IN LISTS _COMMON_INTERFACE_TARGETS)
             foreach(interfaceTarget IN LISTS interfaceTargets)
                 bde_interface_target_assimilate(
                     ${interfaceTarget} ${commonInterfaceTarget}
                 )
             endforeach()
             bde_struct_append_field(
-                ${infoTarget} INTERFACE_TARGETS ${commonInterfaceTarget}
+                ${uor} INTERFACE_TARGETS ${commonInterfaceTarget}
             )
         endforeach()
 
-        bde_install_uor(${infoTarget})
+        bde_install_uor(${uor})
     endforeach()
 
-    # Build project info target
-    bde_struct_append_field(${projName} TARGETS ${all_TARGET})
-    bde_struct_append_field(${projName} DEPENDS "${all_DEPENDS}")
+    # Build project struct
+    bde_struct_append_field(${proj} TARGETS ${all_TARGET})
+    bde_struct_append_field(${proj} DEPENDS "${all_DEPENDS}")
 
     if(all_TEST_TARGETS)
-        bde_struct_get_field(testTarget ${projName} TEST_TARGET)
+        bde_struct_get_field(testTarget ${proj} TEST_TARGET)
+        bde_struct_get_field(projName ${proj} NAME)
         if(NOT testTarget)
             set(testTarget ${projName}.t)
             add_custom_target(${testTarget})
-            bde_struct_set_field(${projName} TEST_TARGET ${testTarget})
+            bde_struct_set_field(${proj} TEST_TARGET ${testTarget})
         endif()
         add_dependencies(${testTarget} ${all_TEST_TARGETS})
     endif()
 endfunction()
 
-function(bde_process_project outInfoTarget listDir)
+function(bde_process_project retProject listDir)
     bde_assert_no_extra_args()
 
     macro(find_uors type)
@@ -120,10 +122,10 @@ function(bde_process_project outInfoTarget listDir)
 
     if (groups OR standalones OR applications)
         get_filename_component(projName ${listDir} NAME)
-        bde_struct_create(BDE_PROJECT_TYPE ${projName})
+        bde_struct_create(proj BDE_PROJECT_TYPE NAME ${projName})
 
         bde_process_project_uors(
-            ${projName}
+            ${proj}
             COMMON_INTERFACE_TARGETS
                 bde_ufid_flags
             PACKAGE_GROUPS
@@ -133,6 +135,8 @@ function(bde_process_project outInfoTarget listDir)
             APPLICATIONS
                 ${applications}
         )
-        set(${outInfoTarget} ${projName} PARENT_SCOPE)
+        bde_return(${proj})
     endif()
+
+    bde_return()
 endfunction()

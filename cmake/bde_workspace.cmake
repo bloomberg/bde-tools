@@ -15,21 +15,21 @@ macro(bde_process_workspace)
 
     enable_testing()
 
-    set(projInfoTargets)
+    set(projects)
     bde_process_ufid()
     foreach(rootDir ${ARGN})
-        set(projInfoTarget)
+        set(proj)
 
         bde_process_with_default(
             "${rootDir}/project.cmake"
             defaults/bde_process_project
             # Arguments passed to the process() function:
-            projInfoTarget
+            proj
             ${rootDir}
         )
 
-        if(projInfoTarget)
-            list(APPEND projInfoTargets ${projInfoTarget})
+        if(proj)
+            list(APPEND projects ${proj})
         else()
             bde_log(
                 NORMAL
@@ -38,17 +38,17 @@ macro(bde_process_workspace)
         endif()
     endforeach()
 
-    bde_finalize_workspace("${projInfoTargets}")
+    bde_finalize_workspace("${projects}")
 endmacro()
 
 # Resolve all external dependencies and add all.t test target
 # Takes in all project names
-function(bde_finalize_workspace projInfoTargets)
+function(bde_finalize_workspace projects)
     bde_assert_no_extra_args()
 
     set(properties TARGETS DEPENDS TEST_TARGET)
 
-    foreach(proj IN LISTS projInfoTargets)
+    foreach(proj IN LISTS projects)
         foreach(prop IN LISTS properties)
             bde_struct_get_field(value ${proj} ${prop})
             list(APPEND all_${prop} ${value})

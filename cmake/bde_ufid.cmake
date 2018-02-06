@@ -30,7 +30,7 @@ function(bde_ufid_filter target_ufid ufid_flags filter_list)
         endif()
     endforeach()
     string(REPLACE ";" "_" filtered_ufid "${filtered_ufid}")
-    set(${target_ufid} ${filtered_ufid} PARENT_SCOPE)
+    bde_return(${filtered_ufid})
 endfunction()
 
 # :: bde_parse_ufid ::

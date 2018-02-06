@@ -57,16 +57,16 @@ endfunction()
 # transitive dependencies.
 # The function returns a list of additional dependencies found in
 # the .pc file.
-function(bde_import_target_from_pc outDeps depName)
+function(bde_import_target_from_pc retDeps depName)
     bde_assert_no_extra_args()
 
     # The dependency was resolved already.
     if (TARGET ${depName})
-        return()
+        bde_return()
     endif()
 
     if(NOT ${PKG_CONFIG_FOUND})
-        return()
+        bde_return()
     endif()
 
     # TODO: Might add the hints for lookup path and .pc file patterns.
@@ -91,88 +91,88 @@ function(bde_import_target_from_pc outDeps depName)
         endif()
     endforeach()
 
-    set(staticDeps)
+    if(NOT ${depName}_pc_FOUND)
+        bde_return()
+    endif()
 
-    if(${depName}_pc_FOUND)
-        # STATIC_LIBRARIES contains transitive dependencies
-        set(staticDeps "${${depName}_pc_STATIC_LIBRARIES}")
+    # STATIC_LIBRARIES contains transitive dependencies
+    set(staticDeps "${${depName}_pc_STATIC_LIBRARIES}")
 
-        set(searchHints "NO_CMAKE_PATH;NO_CMAKE_ENVIRONMENT_PATH")
+    set(searchHints "NO_CMAKE_PATH;NO_CMAKE_ENVIRONMENT_PATH")
 
-        foreach(flag IN LISTS ${depName}_pc_LDFLAGS)
-            if(flag MATCHES "^-L(.*)")
-                # only look into the given paths from now on
-                set(searchHints HINTS ${CMAKE_MATCH_1} NO_DEFAULT_PATH)
+    foreach(flag IN LISTS ${depName}_pc_LDFLAGS)
+        if(flag MATCHES "^-L(.*)")
+            # only look into the given paths from now on
+            set(searchHints HINTS ${CMAKE_MATCH_1} NO_DEFAULT_PATH)
+            continue()
+        endif()
+        if(flag MATCHES "^-l(.*)")
+            set(pkgName "${CMAKE_MATCH_1}")
+            if(TARGET pkgName)
                 continue()
             endif()
-            if(flag MATCHES "^-l(.*)")
-                set(pkgName "${CMAKE_MATCH_1}")
-                if(TARGET pkgName)
-                    continue()
+        else()
+            message(WARNING "Unknown flag is found in .pc file ${${depName}_pc_LDFLAGS}")
+            continue()
+        endif()
+
+        # Searching raw library
+        if ((pkgName STREQUAL depName)
+            AND NOT TARGET ${depName})
+            find_library(
+                rawLib_${depName}
+                NAMES
+                    lib${depName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                    lib${depName}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                    ${searchHints}
+            )
+
+            if(rawLib_${depName})
+                list(REMOVE_ITEM staticDeps ${depName})
+
+                bde_log(VERBOSE "External dependency: ${depName}")
+                bde_log(VERBOSE "  Using: ${rawLib_${depName}}")
+                if (staticDeps)
+                    bde_log(VERBOSE "  Depends on: ${staticDeps}")
                 endif()
-            else()
-                message(WARNING "Unknown flag is found in .pc file ${${depName}_pc_LDFLAGS}")
-                continue()
-            endif()
 
-            # Searching raw library
-            if ((pkgName STREQUAL depName)
-                AND NOT TARGET ${depName})
-                find_library(
-                    rawLib_${depName}
-                    NAMES
-                        lib${depName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
-                        lib${depName}${CMAKE_STATIC_LIBRARY_SUFFIX}
-                        ${searchHints}
-                )
+                add_library(${depName} UNKNOWN IMPORTED)
 
-                if(rawLib_${depName})
-                    list(REMOVE_ITEM staticDeps ${depName})
-
-                    bde_log(VERBOSE "External dependency: ${depName}")
-                    bde_log(VERBOSE "  Using: ${rawLib_${depName}}")
-                    if (staticDeps)
-                        bde_log(VERBOSE "  Depends on: ${staticDeps}")
-                    endif()
-
-                    add_library(${depName} UNKNOWN IMPORTED)
-
-                    if(${depName}_pc_INCLUDE_DIRS)
-                        set_property(
-                            TARGET ${depName}
-                            PROPERTY
-                                INTERFACE_INCLUDE_DIRECTORIES "${${depName}_pc_INCLUDE_DIRS}"
-                        )
-                    endif()
-
+                if(${depName}_pc_INCLUDE_DIRS)
                     set_property(
                         TARGET ${depName}
                         PROPERTY
-                        IMPORTED_LOCATION "${rawLib_${depName}}"
+                            INTERFACE_INCLUDE_DIRECTORIES "${${depName}_pc_INCLUDE_DIRS}"
                     )
-
-                    if(staticDeps)
-                        set_property(
-                            TARGET ${depName}
-                            APPEND PROPERTY
-                                INTERFACE_LINK_LIBRARIES "${staticDeps}"
-                        )
-                    endif()
-
-                    if(${depName}_pc_FLAGS_OTHER)
-                        set_property(
-                            TARGET ${depName}
-                            PROPERTY
-                                INTERFACE_COMPILE_OPTIONS "${${depName}_pc_CFLAGS_OTHER}"
-                        )
-                    endif()
                 endif()
-                break()
-            endif()
-        endforeach()
 
-        set(${outDeps} ${staticDeps} PARENT_SCOPE)
-    endif()
+                set_property(
+                    TARGET ${depName}
+                    PROPERTY
+                    IMPORTED_LOCATION "${rawLib_${depName}}"
+                )
+
+                if(staticDeps)
+                    set_property(
+                        TARGET ${depName}
+                        APPEND PROPERTY
+                            INTERFACE_LINK_LIBRARIES "${staticDeps}"
+                    )
+                endif()
+
+                if(${depName}_pc_FLAGS_OTHER)
+                    set_property(
+                        TARGET ${depName}
+                        PROPERTY
+                            INTERFACE_COMPILE_OPTIONS "${${depName}_pc_CFLAGS_OTHER}"
+                    )
+                endif()
+            endif()
+            break()
+        endif()
+    endforeach()
+
+    bde_return(${staticDeps})
 endfunction()
 
 # :: bde_resolve_external_dependencies ::
