@@ -32,8 +32,8 @@ function(bde_import_target_raw_library libName)
     find_library(
         rawLib_${libName}
         NAMES
-            lib${libName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
-            lib${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${CMAKE_STATIC_LIBRARY_PREFIX}${libName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${CMAKE_STATIC_LIBRARY_PREFIX}${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}
         HINTS
             "${libraryPath}"
             NO_DEFAULT_PATH
@@ -79,10 +79,10 @@ function(bde_import_target_from_pc retDeps depName)
     set(ENV{PKG_CONFIG_PATH} "${libraryPath}/pkgconfig")
 
     foreach(pcName "${depName}.${bde_install_ufid}"
-                   "lib${depName}.${bde_install_ufid}"
+                   "${CMAKE_STATIC_LIBRARY_PREFIX}${depName}.${bde_install_ufid}"
                    "${depName}lib.${bde_install_ufid}"
                     "${depName}"
-                   "lib${depName}"
+                   "${CMAKE_STATIC_LIBRARY_PREFIX}${depName}"
                    "${depName}lib")
         pkg_check_modules(${depName}_pc QUIET "${pcName}")
 
@@ -122,8 +122,8 @@ function(bde_import_target_from_pc retDeps depName)
             find_library(
                 rawLib_${depName}
                 NAMES
-                    lib${depName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
-                    lib${depName}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                    ${CMAKE_STATIC_LIBRARY_PREFIX}${depName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                    ${CMAKE_STATIC_LIBRARY_PREFIX}${depName}${CMAKE_STATIC_LIBRARY_SUFFIX}
                     ${searchHints}
             )
 
