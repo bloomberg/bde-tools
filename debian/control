@@ -1,0 +1,12 @@
+Source: bde-tools
+Section: unknown
+Priority: extra
+Maintainer: Oleg Subbotin <osubbotin@bloomberg.net>
+Build-Depends: build-base
+Standards-Version: 3.8.4
+
+Package: bde-tools
+Architecture: all
+Depends: python,cmake,make,ninja
+Description: BDE Build Tools
+ Tools to build BDE-style repositories, including the BDE libraries.

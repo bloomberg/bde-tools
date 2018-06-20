@@ -1,0 +1,52 @@
+Non-comprehensive list of pending issues:
+
+Components listed with no further details indicate that support for that
+component is completely missing from the pretty printer.  Support is *not*
+really complete.  The pretty printer does not support non-polymorphic
+allocators.
+
+Issues are not listed in any particular order.
+
+Components                  Concerns
+--------------------------  ---------------------------------------------------
+bsl::bitset
+bsl::vector<bool>
+bsl::multiset
+bsl::multimap
+bsl::deque
+bsl::unordered_multiset
+bsl::unordered_multimap
+
+bsl::stack
+bsl::queue
+bsl::priority_queue
+
+bsl::shared_ptr
+bsl::weak_ptr
+bslma::managed_ptr
+
+bsl::complex
+bsl::valarray
+    <and related>
+
+variants
+
+<streams, stringstreams>
+
+Improvements                Concerns
+--------------------------  ---------------------------------------------------
+Usability                   Allow printing of the bslma::Allocator in the first
+                            (outer component) but skip it internally.
+
+                            Add 'terse' printing that will also skip capacity()
+                            (size()?)
+
+General                     Concerns
+--------------------------  ---------------------------------------------------
+Iterator support            Should we print the contents? How do we know if the
+                            iterator is dereferencable?
+
+Usability                   Provide functions that will inspect a concrete
+                            value, like:
+                            (gdb) bslprint myvector 5
+                            <print the 5th element in the container>

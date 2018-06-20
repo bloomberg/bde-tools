@@ -1,0 +1,31 @@
+[
+    {
+        "uplid": "unix-linux-",
+        "compilers": [
+            {
+                "type": "gcc",
+                "c_path": "/usr/bin/gcc",
+                "cxx_path": "/usr/bin/g++",
+                "version": "4.7.2"
+            },
+            {
+                "type": "gcc",
+                "c_path": "/usr/bin/gcc-4.1.2",
+                "cxx_path": "/usr/bin/g++-4.1.2",
+                "version": "4.1.2"
+            }
+        ]
+    },
+    {
+        "hostname": "sundev1",
+        "uplid": "unix-sunos-",
+        "compilers": [
+            {
+                "type": "cc",
+                "c_path": "/usr/sunstudio/cc",
+                "cxx_path": "/usr/sunstudio/CC",
+                "version": "5.12"
+            }
+        ]
+    }
+]

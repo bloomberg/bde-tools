@@ -1,0 +1,12 @@
+if(BDE_INCLUDE_GUARD_INCLUDED)
+    return()
+endif()
+set(BDE_INCLUDE_GUARD_INCLUDED 1)
+
+macro(bde_include_guard)
+    string(MAKE_C_IDENTIFIER ${CMAKE_CURRENT_LIST_FILE} guardVar)
+    if(${guardVar})
+        return()
+    endif()
+    set(${guardVar} ON)
+endmacro()

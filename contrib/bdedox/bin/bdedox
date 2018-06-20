@@ -1,0 +1,243 @@
+#!/bin/bash
+
+# ----------------------------------------------------------------------------
+# Copyright 2016 Bloomberg Finance L.P.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ----------------------------- END-OF-FILE ----------------------------------
+
+#==============================================================================
+# Syntax:  bdedox [-h] <cfgfile>
+#
+# Purpose: This script runs 'doxygen' in the 'bdedox' framework.
+#==============================================================================
+
+syntax="Syntax: bdedox [-h] <cfgfile>"
+
+#==============================================================================
+# Parameter Parsing
+#------------------------------------------------------------------------------
+
+progDir=${0%/*}
+
+while getopts ":hc:" opt; do
+    case $opt in
+     h )
+        echo "${syntax}"
+        exit 0;;
+     * )
+        echo >&2 "${syntax}"
+        exit 1;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+CFGFILE="$1"
+
+[ -r "$CFGFILE" ] || {
+    echo >&2 "$0: cannot read configuration file: $CFGFILE";
+    exit 1
+}
+
+#==============================================================================
+#  Functions
+#------------------------------------------------------------------------------
+function logBeg
+{
+    [ "${BDEDOX_VERBOSE}" ] && echo >&2  "BEG: $(date): $*"
+}
+
+function logEnd
+{
+    [ "${BDEDOX_VERBOSE}" ] && echo >&2  "END: $(date): $*"
+}
+
+function verbose
+{
+    [ "${BDEDOX_VERBOSE}" ] && echo >&2  "$*"
+}
+
+#==============================================================================
+# CONFIGURATION VALIDATION
+#------------------------------------------------------------------------------
+
+. $CFGFILE
+
+[ ${BDEDOX_DEBUG}   ] && BDEDOX_OPT_DEBUG=-d
+[ ${BDEDOX_VERBOSE} ] && BDEDOX_OPT_VERBOSE=-v
+verbose "BDEDOX_OPT_DEBUG  : $BDEDOX_OPT_DEBUG"
+verbose "BDEDOX_OPT_VERBOSE: $BDEDOX_OPT_VERBOSE"
+
+verbose "BDEDOX_FILELIST: $BDEDOX_FILELIST"
+: ${BDEDOX_FILELIST:?}
+[ -r ${BDEDOX_FILELIST} ] || {
+    echo >&2 "$0: cannot read: ${BDEDOX_FILELIST}"
+    exit 1;
+}
+
+verbose "BDEDOX_DOXYDIR: $BDEDOX_DOXYDIR"
+: ${BDEDOX_DOXYDIR:?}
+[ -d ${BDEDOX_DOXYDIR} ] || {
+    echo >&2 "$0: not a directory: ${BDEDOX_DOXYDIR}"
+    exit 1;
+}
+
+verbose "BDEDOX_HTMLDIR: $BDEDOX_HTMLDIR"
+: ${BDEDOX_HTMLDIR:?}
+[ -d ${BDEDOX_HTMLDIR} ] || {
+    echo >&2 "$0: not a directory: ${BDEDOX_HTMLDIR}"
+    exit 1;
+}
+
+: ${BDEDOX_OPT_DOXYGEN_CFGFILE:=$progDir/bdedox_doxygen.cfg}
+verbose "BDEDOX_OPT_DOXYGEN_CFGFILE: $BDEDOX_OPT_DOXYGEN_CFGFILE"
+[ -r ${BDEDOX_OPT_DOXYGEN_CFGFILE} ] || {
+    echo >&2 "$0: cannot read: ${BDEDOX_OPT_DOXYGEN_CFGFILE}"
+    exit 1;
+}
+
+if  [ -n "$BDEDOX_OPT_DOXYGEN_MAIN_PAGE" ]
+then
+    verbose  "BDEDOX_OPT_DOXYGEN_MAIN_PAGE: $BDEDOX_OPT_DOXYGEN_MAIN_PAGE";
+    [ -r "$BDEDOX_OPT_DOXYGEN_MAIN_PAGE" ] || {
+        echo >&2 "$0: cannot read: ${BDEDOX_OPT_DOXYGEN_MAIN_PAGE}"
+        exit 1;
+    }
+fi
+
+[ "${BDEDOX_OPT_FILTER}" ] && BDEDOX_OPT_FILTER="-p '$BDEDOX_OPT_FILTER'"
+verbose "BDEDOX_OPT_FILTER: $BDEDOX_OPT_FILTER"
+
+verbose "BDEDOX_HTML_BASE_TITLE: $BDEDOX_HTML_BASE_TITLE"
+
+#==============================================================================
+# MAIN
+#------------------------------------------------------------------------------
+
+# Generate files with doxygen markup from files with BDE markup.
+logBeg  "bdedox_gendox.pl"
+$progDir/bdedox_gendox.pl           \
+    "$BDEDOX_OPT_DEBUG"             \
+    "$BDEDOX_OPT_VERBOSE"           \
+    "$BDEDOX_OPT_FILTER"            \
+    --fileList "${BDEDOX_FILELIST}" \
+    --doxyDir  "${BDEDOX_DOXYDIR}"  || { echo >&2 \
+                                        "$0: Doxygen generation failed"
+                                         exit 1;
+                                       }
+logEnd  "bdedox_gendox.pl"
+
+# Generate HTML header used when 'doxygen' generates HTML files.
+logBeg  "bdedox_genhtmlheader.pl"
+$progDir/bdedox_genhtmlheader.pl    \
+    "$BDEDOX_OPT_DEBUG"             \
+    "$BDEDOX_OPT_VERBOSE"           \
+    --fileList "${BDEDOX_FILELIST}" \
+    --doxyDir  "${BDEDOX_DOXYDIR}"  || { echo >&2 \
+                                         "$0: HTML header generation failed"
+                                         exit 1;
+                                        }
+logEnd  "bdedox_genhtmlheader.pl";
+
+# Run 'doxygen' to convert files with doxygen markup to HTML
+logBeg  "bdedox_genhtml.sh"
+$progDir/bdedox_genhtml.sh                    \
+    -i "${BDEDOX_DOXYDIR}"                    \
+    -o "${BDEDOX_HTMLDIR}"                    \
+    -c "${BDEDOX_OPT_DOXYGEN_CFGFILE}"        \
+    -p "${BDEDOX_OPT_DOXYGEN_PROJECT}"        \
+    -n "${BDEDOX_OPT_DOXYGEN_PROJECT_NUMBER}" || { echo >&2 \
+                                                   "$0: HTML generation failed"
+                                                   exit 1;
+                                                 }
+logEnd  "bdedox_genhtml.sh";
+[ -r "$BDEDOX_OPT_DOXYGEN_MAIN_PAGE" ] && {
+    # Run 'doxygen' to create 'main.html'
+    logBeg  "bdedox_genhtmlmain.sh"
+    $progDir/bdedox_genhtmlmain.sh                \
+        -i "${BDEDOX_DOXYDIR}"                    \
+        -o "${BDEDOX_HTMLDIR}"                    \
+        -c "${BDEDOX_OPT_DOXYGEN_CFGFILE}"        \
+        -p "${BDEDOX_OPT_DOXYGEN_PROJECT}"        \
+        -n "${BDEDOX_OPT_DOXYGEN_PROJECT_NUMBER}" \
+        $BDEDOX_OPT_DOXYGEN_MAIN_PAGE             || { echo >&2 \
+                                            "$0: 'main.html' generation failed"
+                                                       exit 1;
+                                                     }
+logEnd  "bdedox_genhtmlmain.sh";
+}
+
+# Edit the generated HTML files
+logBeg  "bdedox_edithtml.pl"
+$progDir/bdedox_edithtml.pl                           \
+     "$BDEDOX_OPT_DEBUG"                              \
+     "$BDEDOX_OPT_VERBOSE"                            \
+    "${BDEDOX_OPT_DOXYGEN_MAIN_PAGE:+--userMainPage}" \
+    --htmlDir   "${BDEDOX_HTMLDIR}"                   \
+    --baseTitle "${BDEDOX_HTML_BASE_TITLE}" || { echo >&2 \
+                                                      "$0: edit of HTML failed"
+                                                 exit 1;
+                                               }
+logEnd  "bdedox_edithtml.pl"
+
+# Generate 'components.html' from 'files.html' and 'modules.html.'
+logBeg  "bdedox_gencomponentsfile.pl"
+$progDir/bdedox_gencomponentsfile.pl       \
+    -o "${BDEDOX_HTMLDIR}"                 \
+    --buttonTable                          \
+    -f "${BDEDOX_HTMLDIR}/files.html"      \
+    -m "${BDEDOX_HTMLDIR}/modules.html"    \
+    -c "${BDEDOX_HTMLDIR}/components.html" || { echo >&2 \
+                                     "$0: creation of 'components.html' failed"
+                                                exit 1;
+                               }
+logEnd  "bdedox_gencomponentsfile.pl"
+
+# Save 'files.html and tree.html' 
+logBeg  "Save 'files.html' and 'tree.html'"
+cp -p ${BDEDOX_HTMLDIR}/files.html \
+      ${BDEDOX_HTMLDIR}/filesORIG.html || { echo \
+                                              "$0: copy of 'files.html' failed"
+                                            exit 1;
+                               }
+cp -p ${BDEDOX_HTMLDIR}/tree.html \
+      ${BDEDOX_HTMLDIR}/treeORIG.html || { echo \
+                                               "$0: copy of 'tree.html' failed"
+                                           exit 1;
+                               }
+logEnd  "Save 'files.html' and 'tree.html'"
+
+# Edit 'files.html' and refered files to show '.txt' for pkgrps and pkgs.
+logBeg  "bdedox_editfilesandtreefiles.pl"
+$progDir/bdedox_editfilesandtreefiles.pl \
+    "$BDEDOX_OPT_DEBUG"                  \
+    "$BDEDOX_OPT_VERBOSE"                \
+    --htmlDir   "${BDEDOX_HTMLDIR}" || { echo >&2 \
+                              "$0: edit of 'files.html' or 'tree.html' failed"
+                                         exit 1;
+                                       }
+logEnd  "bdedox_editfilesandtreefiles.pl"
+
+# Restore HTML files for source (showing Doxygen markup) with originals.
+logBeg  "bdedox_restorehfiles.pl"
+$progDir/bdedox_restorehfiles.pl            \
+    "$BDEDOX_OPT_DEBUG"                     \
+    "$BDEDOX_OPT_VERBOSE"                   \
+    --fileList  "${BDEDOX_FILELIST}"        \
+    --htmlDir   "${BDEDOX_HTMLDIR}"         \
+    --baseTitle "${BDEDOX_HTML_BASE_TITLE}" || { echo >&2 \
+                                              "$0: restoring '.h' files failed"
+                                                 exit 1;
+                                               }
+logEnd  "bdedox_restorehfiles.pl"
+exit 0;

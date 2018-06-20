@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+include $(DISTRIBUTION_REFROOT)/bbsrc/build-base/build-base.mk
+
+clean:
+	rm -rf debian/tmp
+	rm -f debian/build-stamp
+	rm -f debian/binary-stamp
+	rm -f debian/files
+
+debian/build-stamp:
+	touch debian/build-stamp
+	mkdir -p debian/tmp/$(PREFIX)/libexec/bde-tools/
+	cp -r bin cmake lib debian/tmp/$(PREFIX)/libexec/bde-tools/
+
+debian/binary-stamp: debian/build-stamp
+	touch debian/binary-stamp
+	mkdir -p debian/tmp/DEBIAN
+	dpkg-gencontrol
+	dpkg-deb -b debian/tmp ../
+
+build: build-arch build-indep
+
+build-indep: debian/build-stamp
+
+build-arch:
+
+binary: binary-arch binary-indep
+
+binary-indep: debian/binary-stamp
+
+binary-arch:
