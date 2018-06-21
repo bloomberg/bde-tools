@@ -1,5 +1,5 @@
-bde-tools (1.0.0.0) unstable; urgency=low
+bde-tools (--version=3.10.0.0) unstable; urgency=low
 
+  * 031db43 Initial commit.
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 20 Jun 2018 09:12:32 -0400
-
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 20 Jun 2018 06:49:46 -0400
