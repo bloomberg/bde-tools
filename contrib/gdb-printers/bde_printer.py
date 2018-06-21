@@ -1196,4 +1196,4 @@ def reload():
 reload()
 
 # (gdb) python execfile(\
-#           "/bbshr/bde/bde-oss-tools/contrib/gdb-printers/bde_printer.py")
+#           "/bb/bde/bbshr/bde-tools/contrib/gdb-printers/bde_printer.py")
