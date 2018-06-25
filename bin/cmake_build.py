@@ -152,7 +152,7 @@ class Options:
         self.tests = args.tests
         self.jobs = JobsOptions(args.jobs)
         self.timeout = args.timeout
-        self.verbosity = Platform.cmake_verbosity(args.verbose)
+        self.verbose = args.verbose
 
         self.install_dir = replace_path_sep(args.install_dir)
 
@@ -324,7 +324,7 @@ def configure(options):
                      '-DCMAKE_MODULE_PATH:PATH=' + options.cmake_module_path,
                      '-DUFID:STRING=' + options.ufid,
                      '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
-                     '-DBDE_LOG_LEVEL=' + options.verbosity,
+                     '-DBDE_LOG_LEVEL=' + Platform.cmake_verbosity(options.verbose),
                      '-DBUILD_BITNESS=' + ('64' if '64' in options.ufid else '32')
                     ]
     if options.dpkg_build:
@@ -394,6 +394,9 @@ def build(options):
         extra_args += ['--config', cache_info.build_type]
     extra_args += ['--', Platform.generator_jobs_arg(options.generator, options)]
 
+    if options.verbose and options.generator == 'Ninja':
+        extra_args += [ '-v' ]
+
     target_list = options.targets if options.targets else ['all']
     for target in target_list:
         if options.tests and not target.endswith('.t'):
@@ -405,6 +408,7 @@ def build(options):
     if 'run' == options.tests:
         test_cmd = ['ctest',
                     '--output-on-failure',
+                    '--no-label-summary',
                     Platform.ctest_jobs_arg(options)
                     ]
         if cache_info.multiconfig:

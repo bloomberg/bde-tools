@@ -67,7 +67,7 @@ def get_cmdline_options():
     parser = optparse.OptionParser(usage)
     parser.add_option('--junit', type=str,
                       help='output to the specified junit xml file')
-    parser.add_option('--jobs', '-j', type="int", default=4,
+    parser.add_option('--jobs', '-j', type="int", default=2,
                       help='number of jobs to use')
     parser.add_option('--debug', '-d', action='store_true',
                       help='Print additional trace statements.')
