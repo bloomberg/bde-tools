@@ -281,7 +281,7 @@ def wrapper():
         group.add_argument('-G', choices=genChoices, dest='generator')
 
     group = parser.add_argument_group('build', 'Build options')
-    group.add_argument('--targets', nargs='+')
+    group.add_argument('--targets', type=lambda x: x.split(','))
     group.add_argument('--tests', choices=['build', 'run'])
 
     group = parser.add_argument_group('test', 'Test options')
@@ -417,8 +417,11 @@ def build(options):
         if options.timeout > 0:
             test_cmd += ['--timeout', str(options.timeout)]
 
-        if 'all' not in target_list:
-            test_pattern = "|".join(['(^)'+t+'($)' for t in options.targets])
+        # Test labels in cmake do not end with '.t'. 
+        strip_dott = lambda x: x[:-2] if x.endswith('.t') else x
+        test_list = [strip_dott(x) for x in target_list]
+        if 'all' not in test_list:
+            test_pattern = "|".join(['(^)'+t+'($)' for t in test_list])
             test_cmd += ['-L', test_pattern]
 
         subprocess.check_call(test_cmd, cwd = options.build_dir)
