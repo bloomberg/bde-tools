@@ -19,7 +19,7 @@ include(bde_utils)
 set(install_ufid_flags opt dbg exc mt safe safe2 pic shr)
 
 # These flags can appear in a valid ufid. The order of those flags is important.
-set(known_ufid_flags opt dbg exc mt 64 safe safe2 pic shr ndebug cpp11 cpp14 cpp17)
+set(known_ufid_flags opt dbg exc mt 64 safe safe2 stlport pic shr ndebug cpp11 cpp14 cpp17)
 
 #.rst:
 # bde_ufid_filter_flags
@@ -268,6 +268,8 @@ function(bde_ufid_setup_flags iface)
             $<${bde_ufid_is_cpp14}:BDE_BUILD_TARGET_CPP14>
             $<${bde_ufid_is_cpp17}:BDE_BUILD_TARGET_CPP17>
 
+            $<${bde_ufid_is_stlport}:BDE_BUILD_TARGET_STLPORT>
+
             $<${bde_ufid_is_ndebug}:
                 NDEBUG
                 BDE_BUILD_TARGET_NDEBUG
@@ -384,6 +386,10 @@ function(bde_ufid_setup_flags iface)
                     -features=except,
                     -features=no%except
                 >
+                $<${bde_ufid_is_stlport}:
+                    -library=stlport4
+                    -template=no%extdef
+                >
             >
             $<$<CXX_COMPILER_ID:XL>:
                 -qalias=noansi
@@ -434,6 +440,8 @@ function(bde_ufid_setup_flags iface)
             $<${bde_ufid_is_cpp11}:BDE_BUILD_TARGET_CPP11>
             $<${bde_ufid_is_cpp14}:BDE_BUILD_TARGET_CPP14>
             $<${bde_ufid_is_cpp17}:BDE_BUILD_TARGET_CPP17>
+
+            $<${bde_ufid_is_stlport}:BDE_BUILD_TARGET_STLPORT>
 
             $<${bde_ufid_is_ndebug}:
                 NDEBUG
@@ -539,6 +547,7 @@ function(bde_ufid_setup_flags iface)
                    m
                    sunmath
                 >
+                $<${bde_ufid_is_stlport}:-library=stlport4>
             >
             $<$<CXX_COMPILER_ID:XL>:
                 Threads::Threads
