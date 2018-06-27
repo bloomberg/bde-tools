@@ -14,12 +14,12 @@ except Exception as e:
 
 msg = ''
 if out:
-    out = out.decode(sys.stdout.encoding or 'iso8859-1')
+    out = out.decode(sys.stdout.encoding or 'iso8859-1', 'ignore')
     out = '\n'.join([l for l in out.split('\n') if not l.startswith('Note: including file:')])
     msg = msg + out
 
 if err:
-    err = err.decode(sys.stderr.encoding or 'iso8859-1')
+    err = err.decode(sys.stderr.encoding or 'iso8859-1', 'ignore')
     msg = msg + err
 
 if msg:
@@ -59,13 +59,23 @@ if msg:
         sys.exit(p.returncode)
 
     if p.returncode == 0:
-        status_str = 'WARNING'
+        marker_str = 'WARNING'
     else:
         if 'bde_runtest' in sys.argv[2]:
-            status_str = 'TEST'
+            marker_str = 'TEST'
         else:
-            status_str = 'ERROR'
+            marker_str = 'ERROR'
 
-    sys.stderr.write('[{} ({})] <<<<<<<<<<\n{}>>>>>>>>>>\n'.format(src_str, status_str, msg))
+    # This logic handles unicode in the output.
+    status_str = '[{} ({})] <<<<<<<<<<\n{}>>>>>>>>>>\n'.format(src_str, marker_str, msg))
+
+    try:
+        sys.stderr.write(status_str)
+    except UnicodeEncodeError:
+        status_bytes = text.encode(sys.stderr.encoding, 'replace')
+        if hasattr(sys.stdout, 'buffer'):
+            sys.stderr.buffer.write(status_bytes)
+        else:
+            sys.stderr.write(status_bytes.decode(sys.stderr.encoding))
 
 sys.exit(p.returncode)
