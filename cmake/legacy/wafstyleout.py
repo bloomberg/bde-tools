@@ -72,7 +72,7 @@ if msg:
     try:
         sys.stderr.write(status_str)
     except UnicodeEncodeError:
-        status_bytes = text.encode(sys.stderr.encoding, 'replace')
+        status_bytes = status_str.encode(sys.stderr.encoding, 'replace')
         if hasattr(sys.stdout, 'buffer'):
             sys.stderr.buffer.write(status_bytes)
         else:
