@@ -67,7 +67,7 @@ if msg:
             marker_str = 'ERROR'
 
     # This logic handles unicode in the output.
-    status_str = '[{} ({})] <<<<<<<<<<\n{}>>>>>>>>>>\n'.format(src_str, marker_str, msg))
+    status_str = '[{} ({})] <<<<<<<<<<\n{}>>>>>>>>>>\n'.format(src_str, marker_str, msg)
 
     try:
         sys.stderr.write(status_str)
