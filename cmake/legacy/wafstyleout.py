@@ -14,12 +14,12 @@ except Exception as e:
 
 msg = ''
 if out:
-    out = out.decode(sys.stdout.encoding or 'iso8859-1', 'ignore')
+    out = out.decode(sys.stdout.encoding or 'ascii', 'ignore')
     out = '\n'.join([l for l in out.split('\n') if not l.startswith('Note: including file:')])
     msg = msg + out
 
 if err:
-    err = err.decode(sys.stderr.encoding or 'iso8859-1', 'ignore')
+    err = err.decode(sys.stderr.encoding or 'ascii', 'ignore')
     msg = msg + err
 
 if msg:
@@ -72,10 +72,10 @@ if msg:
     try:
         sys.stderr.write(status_str)
     except UnicodeEncodeError:
-        status_bytes = status_str.encode(sys.stderr.encoding, 'replace')
+        status_bytes = status_str.encode(sys.stderr.encoding or 'ascii', 'replace')
         if hasattr(sys.stdout, 'buffer'):
             sys.stderr.buffer.write(status_bytes)
         else:
-            sys.stderr.write(status_bytes.decode(sys.stderr.encoding))
+            sys.stderr.write(status_bytes.decode(sys.stderr.encoding or 'ascii'))
 
 sys.exit(p.returncode)
