@@ -14,12 +14,12 @@ except Exception as e:
 
 msg = ''
 if out:
-    out = out.decode(sys.stdout.encoding or 'ascii', 'ignore')
+    out = out.decode(sys.stdout.encoding or 'ascii', 'replace')
     out = '\n'.join([l for l in out.split('\n') if not l.startswith('Note: including file:')])
     msg = msg + out
 
 if err:
-    err = err.decode(sys.stderr.encoding or 'ascii', 'ignore')
+    err = err.decode(sys.stderr.encoding or 'ascii', 'replace')
     msg = msg + err
 
 if msg:
@@ -76,6 +76,6 @@ if msg:
         if hasattr(sys.stdout, 'buffer'):
             sys.stderr.buffer.write(status_bytes)
         else:
-            sys.stderr.write(status_bytes.decode(sys.stderr.encoding or 'ascii'))
+            sys.stderr.write(status_bytes.decode(sys.stderr.encoding or 'ascii', 'replace'))
 
 sys.exit(p.returncode)
