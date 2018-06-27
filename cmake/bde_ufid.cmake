@@ -19,7 +19,7 @@ include(bde_utils)
 set(install_ufid_flags opt dbg exc mt safe safe2 pic shr)
 
 # These flags can appear in a valid ufid. The order of those flags is important.
-set(known_ufid_flags opt dbg exc mt 64 safe safe2 pic shr ndebug cpp11 cpp14)
+set(known_ufid_flags opt dbg exc mt 64 safe safe2 pic shr ndebug cpp11 cpp14 cpp17)
 
 #.rst:
 # bde_ufid_filter_flags
@@ -116,9 +116,13 @@ function(bde_parse_ufid UFID)
         endif()
     endforeach()
 
-    # Check for conflicts in standard
-    if (cpp11 IN_LIST ufid_flags AND cpp14 IN_LIST ufid_flags)
-        message(FATAL_ERROR "UFID ${UFID} both cpp11 and cpp14 flags.")
+    # Check for conflicts in cpp standards
+    bde_ufid_filter_flags(cppStds "${ufid_flags}" "cpp11;cpp14;cpp17")
+    string(REPLACE "_" ";" cppStds "${cppStds}")
+    list(LENGTH cppStds cppStdsLen)
+    if (cppStdsLen GREATER 1)
+        message(FATAL_ERROR
+                "UFID ${UFID} contains multiple cpp standards: ${cppStds}")
     endif()
 
     # Setting the flags in local...
@@ -210,6 +214,7 @@ function(bde_ufid_setup_flags iface)
         PUBLIC
             $<${bde_ufid_is_cpp11}:cxx_std_11>
             $<${bde_ufid_is_cpp14}:cxx_std_14>
+            $<${bde_ufid_is_cpp17}:cxx_std_17>
     )
 
     bde_interface_target_compile_options(
@@ -261,6 +266,7 @@ function(bde_ufid_setup_flags iface)
             $<${bde_ufid_is_shr}:BDE_BUILD_TARGET_SHR>
             $<${bde_ufid_is_cpp11}:BDE_BUILD_TARGET_CPP11>
             $<${bde_ufid_is_cpp14}:BDE_BUILD_TARGET_CPP14>
+            $<${bde_ufid_is_cpp17}:BDE_BUILD_TARGET_CPP17>
 
             $<${bde_ufid_is_ndebug}:
                 NDEBUG
@@ -427,6 +433,7 @@ function(bde_ufid_setup_flags iface)
             $<${bde_ufid_is_shr}:BDE_BUILD_TARGET_SHR>
             $<${bde_ufid_is_cpp11}:BDE_BUILD_TARGET_CPP11>
             $<${bde_ufid_is_cpp14}:BDE_BUILD_TARGET_CPP14>
+            $<${bde_ufid_is_cpp17}:BDE_BUILD_TARGET_CPP17>
 
             $<${bde_ufid_is_ndebug}:
                 NDEBUG
@@ -458,6 +465,9 @@ function(bde_ufid_setup_flags iface)
 
             $<$<CXX_COMPILER_ID:GNU>:
                 $<${bde_ufid_is_cpp14}:
+                    _FILE_OFFSET_BITS=64
+                >
+                $<${bde_ufid_is_cpp17}:
                     _FILE_OFFSET_BITS=64
                 >
                 $<${bde_ufid_is_mt}:
