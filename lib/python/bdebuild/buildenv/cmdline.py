@@ -14,8 +14,11 @@ def get_option_parser():
         OptionParser
     """
 
-    usage = """eval $(bde_build_env.py [set|list|unset] [-i INSTALL_DIR]
-                     [-c COMPILER] [-t UFID])
+    usage = """eval $(bde_build_env.py [set|list|unset]
+                     [-c COMPILER] 
+                     [-t UFID]
+                     [-b BUILD_DIR]
+                     [-i INSTALL_DIR])
 
 set:   set environment variables (default)
 list:  list available compilers
@@ -32,11 +35,10 @@ unset: unset environment variables"""
          {'type': 'string',
           'default': None,
           'help': 'install directory'}),
-        (('debug-opt-keys',),
+        (('b', 'build-dir'),
          {'type': 'string',
           'default': None,
-          'help': 'debug rules in the opts files for the specified '
-                  '(comma separated) list of opts keys'})
+          'help': 'build directory'})
     ]
     options += optionsutil.get_ufid_cmdline_options()
     cmdlineutil.add_options(parser, options)

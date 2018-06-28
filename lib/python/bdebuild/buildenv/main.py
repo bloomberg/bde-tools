@@ -149,7 +149,11 @@ def print_envs(options, info):
     print('export BDE_CMAKE_UPLID=%s' % uplid)
     print('export BDE_CMAKE_UFID=%s' % ufid)
     id_str = '%s-%s' % (uplid, ufid)
-    print('export BDE_CMAKE_BUILD_DIR="_build/%s"' % id_str)
+
+    if options.build_dir:
+        print('export BDE_CMAKE_BUILD_DIR="%s"' % options.build_dir)
+    else:
+        print('export BDE_CMAKE_BUILD_DIR="_build/%s"' % id_str)
 
     if os_type != 'windows':
         print('export CXX=%s' % info.cxx_path)

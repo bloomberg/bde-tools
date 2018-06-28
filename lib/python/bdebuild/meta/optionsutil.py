@@ -77,14 +77,14 @@ def get_ufid_cmdline_options():
          {'type': 'choice',
           'default': 'debug',
           'choices': ('release', 'debug'),
-          'help': 'the type of build to produce (debug/release) '
-          "[default: %default]"}),
+          'help': 'the type of build to produce (debug/release)   '
+          '[default: %default]'}),
         (('library-type',),
          {'type': 'choice',
           'default': 'static',
           'choices': ('static', 'shared'),
           'help': 'the type of libraries to build (shared/static) '
-          "[default: %default]"}),
+          '[default: %default]'}),
         (('noexception',),
          {'action': 'store_true',
           'default': False,
