@@ -126,12 +126,12 @@ Clone the repos into a workspace:
     $ git clone bbgithub:bde/bde-classic
     $ git clone bbgithub:bde/hsl
 
-Create the ``CmakeLists.txt`` file with the following content in the top level
+Create the ``CMakeLists.txt`` file with the following content in the top level
 directory:
 
   .. code-block:: cmake
 
-     # CmakeLists.txt
+     # CMakeLists.txt
      cmake_minimum_required(VERSION 3.8)
 
      project("BDE_ws")
