@@ -1,3 +1,20 @@
+## bde_uor.cmake
+
+#.rst:
+# bde_uor
+# -------
+#
+# This module provides methods to work with uors(Units Of Release).
+#
+# The main exposed functions are the following ones (refer to their individual
+# documentation for more information about each):
+#
+# * :command:`bde_uor_initialize`
+# * :command:`bde_uor_initialize_library`
+# * :command:`bde_uor_initialize_application`
+# * :command:`bde_uor_install_target`
+# * :command:`bde_uor_use_package`
+
 include(bde_include_guard)
 bde_include_guard()
 
@@ -20,6 +37,10 @@ bde_register_struct_type(
         TEST_DEPENDS
 )
 
+#.rst:
+# .. command:: bde_uor_initialize
+#
+# Create and initialize interface target for UOR.
 function(bde_uor_initialize retUor uorTarget)
     bde_assert_no_extra_args()
 
@@ -30,6 +51,10 @@ function(bde_uor_initialize retUor uorTarget)
     bde_return(${uor})
 endfunction()
 
+#.rst:
+# .. command:: bde_uor_initialize_library
+#
+# Create interface target for the library UOR.
 function(bde_uor_initialize_library retUor uorName)
     bde_assert_no_extra_args()
 
@@ -39,6 +64,10 @@ function(bde_uor_initialize_library retUor uorName)
     bde_return(${uor})
 endfunction()
 
+#.rst:
+# .. command:: bde_uor_initialize_application
+#
+# Create interface target for the application UOR.
 function(bde_uor_initialize_application retUor uorName)
     bde_assert_no_extra_args()
 
@@ -48,6 +77,10 @@ function(bde_uor_initialize_application retUor uorName)
     bde_return(${uor})
 endfunction()
 
+#.rst:
+# .. command:: bde_uor_use_package
+#
+# Link the interface target of the specified package to the specified UOR.
 function(bde_uor_use_package uor package)
     bde_assert_no_extra_args()
 
@@ -86,6 +119,10 @@ function(bde_uor_use_package uor package)
     bde_struct_append_field(${uor} TEST_TARGETS "${tests}")
 endfunction()
 
+#.rst:
+# .. command:: bde_uor_install_target
+#
+# Create an installation targets for for the UOR.
 function(bde_uor_install_target uor listFile installOpts)
     bde_assert_no_extra_args()
 

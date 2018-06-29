@@ -1,0 +1,16 @@
+/* Make the content area wide (originally 800px) */
+.wy-nav-content {
+    padding: 1em 2em;
+    max-width: 1000px !important;
+}
+
+.wy-menu-vertical a {
+    font-size: 90%;
+}
+
+.rst-content tt.literal, .rst-content code.literal {
+    color: #074268;
+    background: #e9f3fa;
+    font-size: 90%;
+    border-style: none;
+}
