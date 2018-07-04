@@ -539,6 +539,7 @@ function(bde_ufid_setup_flags iface)
             >
             $<$<CXX_COMPILER_ID:XL>:
                 Threads::Threads
+                $<IF:${bde_ufid_is_64}, -q64, -q32>
             >
     )
 endfunction()
