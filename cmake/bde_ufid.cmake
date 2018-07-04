@@ -221,23 +221,18 @@ function(bde_ufid_setup_flags iface)
         ${iface}
         PUBLIC
             $<$<CXX_COMPILER_ID:AppleClang>:
-                $<IF:${bde_ufid_is_64}, -m64, -m32>
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -fPIC>
             >
             $<$<CXX_COMPILER_ID:Clang>:
-                $<IF:${bde_ufid_is_64}, -m64, -m32>
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -fPIC>
             >
             $<$<CXX_COMPILER_ID:GNU>:
-                $<IF:${bde_ufid_is_64}, -m64, -m32>
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -fPIC>
             >
             $<$<CXX_COMPILER_ID:SunPro>:
-                $<IF:${bde_ufid_is_64}, -m64, -m32>
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -xcode=pic32>
             >
             $<$<CXX_COMPILER_ID:XL>:
-                $<IF:${bde_ufid_is_64}, -q64, -q32>
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -qpic>
                 $<${bde_ufid_is_mt}: -qthreaded>
 
@@ -294,22 +289,48 @@ function(bde_ufid_setup_flags iface)
         ${iface}
         PRIVATE
             $<$<CXX_COMPILER_ID:AppleClang>:
-                -fno-strict-aliasing
                 $<IF:${bde_ufid_is_exc},
                     -fexceptions,
                     -fno-exceptions
                 >
             >
             $<$<CXX_COMPILER_ID:Clang>:
-                -fno-strict-aliasing
                 $<IF:${bde_ufid_is_exc},
                     -fexceptions,
                     -fno-exceptions
                 >
+                # Warnings
+                -Waddress
+                -Wall
+                -Wcast-align
+                -Wcast-qual
+                -Wconversion
+                -Werror=cast-qual
+                -Wextra
+                -Wformat
+                -Wformat-security
+                -Wformat-y2k
+                -Winit-self
+                -Wlarger-than-100000
+                -Woverflow
+                -Wpacked
+                -Wparentheses
+                -Wpointer-arith
+                -Wsign-compare
+                -Wstrict-overflow=1
+                -Wtype-limits
+                -Wvla
+                -Wvolatile-register-var
+                -Wwrite-strings
+                -Wno-char-subscripts
+                -Wno-long-long
+                -Wno-sign-conversion
+                -Wno-string-conversion
+                -Wno-unknown-pragmas
+                -Wno-unused-value
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 $<${bde_ufid_is_opt}:
-                    -fno-strict-aliasing
                     -fno-gcse
                 >
 
@@ -317,8 +338,6 @@ function(bde_ufid_setup_flags iface)
                     -fexceptions,
                     -fno-exceptions
                 >
-
-                -fdiagnostics-show-option
                 # Warnings
                 -Waddress
                 -Wall
@@ -333,11 +352,6 @@ function(bde_ufid_setup_flags iface)
                 -Winit-self
                 -Wlarger-than-100000
                 -Wlogical-op
-                -Wno-char-subscripts
-                -Wno-long-long
-                -Wno-sign-conversion
-                -Wno-unknown-pragmas
-                -Wno-unused-value
                 -Woverflow
                 -Wpacked
                 -Wparentheses
@@ -348,8 +362,11 @@ function(bde_ufid_setup_flags iface)
                 -Wvla
                 -Wvolatile-register-var
                 -Wwrite-strings
-
-                --param ggc-min-expand=30
+                -Wno-char-subscripts
+                -Wno-long-long
+                -Wno-sign-conversion
+                -Wno-unknown-pragmas
+                -Wno-unused-value
             >
             $<$<CXX_COMPILER_ID:MSVC>:
                 /GS-
@@ -374,11 +391,6 @@ function(bde_ufid_setup_flags iface)
                 >
             >
             $<$<CXX_COMPILER_ID:SunPro>:
-                -library=no%rwtools7
-                -temp=/bb/data/tmp
-                -xannotate=no
-                -xtarget=generic
-                -xthreadvar=dynamic
                 $<${bde_ufid_is_mt}:
                     -mt
                 >
@@ -392,26 +404,6 @@ function(bde_ufid_setup_flags iface)
                 >
             >
             $<$<CXX_COMPILER_ID:XL>:
-                -qalias=noansi
-                -qarch=pwr6
-                -qdebug=nparseasm
-                -qfuncsect
-                -qlanglvl=staticstoreoverlinkage
-                -qmaxmem=-1
-                -qnotempinc
-                -qrtti=all
-                -qsuppress=1500-029
-                -qsuppress=1540-2910
-                -qsuppress=1501-201
-                -qtbtable=small
-                -qtls
-                -qtune=pwr7
-                -qxflag=dircache:71,100
-                -qxflag=NoKeepDebugMetaTemplateType
-                -qxflag=tocrel
-                -qxflag=FunctionCVTmplArgDeduction2011
-                -qxflag=UnwindTypedefInClassDecl
-
                 $<${bde_ufid_is_mt}: -qthreaded>
 
                 $<IF:${bde_ufid_is_exc},
@@ -520,18 +512,15 @@ function(bde_ufid_setup_flags iface)
             $<$<CXX_COMPILER_ID:AppleClang>:
                 stdc++
                 Threads::Threads
-                $<IF:${bde_ufid_is_64}, -m64, -m32>
             >
             $<$<CXX_COMPILER_ID:Clang>:
                 rt
                 stdc++
                 Threads::Threads
-                $<IF:${bde_ufid_is_64}, -m64, -m32>
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 rt
                 Threads::Threads
-                $<IF:${bde_ufid_is_64}, -m64, -m32>
             >
             $<$<CXX_COMPILER_ID:MSVC>:
                 Ws2_32
@@ -539,7 +528,6 @@ function(bde_ufid_setup_flags iface)
             $<$<CXX_COMPILER_ID:SunPro>:
                 rt
                 Threads::Threads
-                $<IF:${bde_ufid_is_64}, -m64, -m32>
                 $<${bde_ufid_is_shr}:
                    Cstd
                    Crun
@@ -551,7 +539,6 @@ function(bde_ufid_setup_flags iface)
             >
             $<$<CXX_COMPILER_ID:XL>:
                 Threads::Threads
-                $<IF:${bde_ufid_is_64}, -q64, -q32>
             >
     )
 endfunction()

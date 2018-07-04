@@ -1,1 +1,1 @@
-clang.cmake
+clang-default.cmake
