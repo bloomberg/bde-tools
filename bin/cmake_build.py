@@ -6,6 +6,7 @@ import argparse
 import errno
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import multiprocessing
@@ -128,6 +129,7 @@ class Options:
                              'Installation prefix'))
 
         self.dpkg_build = args.dpkg_build
+        self.clean = args.clean
         self.toolchain = value_or_env(args.toolchain,
                                       'BDE_CMAKE_TOOLCHAIN',
                                       'CMake toolchain file')
@@ -272,6 +274,7 @@ def wrapper():
     group.add_argument('--cmake-module-path', help='Path to the Cmake modules with BDE build system')
     group.add_argument('--dpkg-build', action='store_true', help='Flag set for dpkg builds')
     group.add_argument('--toolchain', help='Path to the CMake toolchain file')
+    group.add_argument('--clean', action='store_true', help='Clean target directory before configure')
     group.add_argument('--refroot', help='Path to the distribution refroot')
     group.add_argument('--prefix', help='Prefix within distribution refroot')
     group.add_argument('--compiler', help='Compiler to use')
@@ -306,6 +309,16 @@ def wrapper():
     return
 
 
+def remove_builddir(path):
+    real_path = os.path.realpath(path)
+    cmake_cache = os.path.join(real_path, "CMakeCache.txt")
+
+    if os.path.isdir(real_path) and os.path.exists(cmake_cache):
+        try:
+            shutil.rmtree(real_path)
+        except shutil.Error as exception:
+            raise
+
 def mkdir_if_not_present(path):
     try:
         os.makedirs(path)
@@ -316,6 +329,9 @@ def mkdir_if_not_present(path):
 def configure(options):
     """ Create build directory and generate build system.
     """
+    if (options.clean):
+        remove_builddir(options.build_dir)
+
     mkdir_if_not_present(options.build_dir)
     # todo - detect generator change
 
