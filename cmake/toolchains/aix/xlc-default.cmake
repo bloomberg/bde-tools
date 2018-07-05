@@ -34,25 +34,6 @@ set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
 string(CONCAT DEFAULT_C_FLAGS
        "-q${BUILD_BITNESS} "
-       "-qalias=noansi "
-       "-qarch=pwr6 "
-       "-qdebug=nparseasm "
-       "-qfuncsect "
-       "-qlanglvl=staticstoreoverlinkage "
-       "-qmaxmem=-1 "
-       "-qnotempinc "
-       "-qrtti=all "
-       "-qsuppress=1500-029 "
-       "-qsuppress=1540-2910 "
-       "-qsuppress=1501-201 "
-       "-qtbtable=small "
-       "-qtls "
-       "-qtune=pwr7 "
-       "-qxflag=dircache:71,100 "
-       "-qxflag=NoKeepDebugMetaTemplateType "
-       "-qxflag=tocrel "
-       "-qxflag=FunctionCVTmplArgDeduction2011 "
-       "-qxflag=UnwindTypedefInClassDecl "
       )
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 
