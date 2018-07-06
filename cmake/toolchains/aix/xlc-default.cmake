@@ -10,12 +10,14 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
 string(CONCAT DEFAULT_CXX_FLAGS
        "-q${BUILD_BITNESS} "
+       "-bmaxdata:0x50000000 "      # DRQS 13597546
        "-qalias=noansi "
        "-qarch=pwr6 "
        "-qdebug=nparseasm "
        "-qfuncsect "
+       "-qinline "
+       "-qlanglvl=newexcp "
        "-qlanglvl=staticstoreoverlinkage "
-       "-qmaxmem=-1 "
        "-qnotempinc "
        "-qrtti=all "
        "-qsuppress=1500-029 "
@@ -29,11 +31,15 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-qxflag=tocrel "
        "-qxflag=FunctionCVTmplArgDeduction2011 "
        "-qxflag=UnwindTypedefInClassDecl "
+       "-qxflag=inlinewithdebug:stepOverInline "
+       "-qxflag=noautoinline "
       )
 set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
 string(CONCAT DEFAULT_C_FLAGS
        "-q${BUILD_BITNESS} "
+       "-qtbtable=none "
+       "-qinline "
       )
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 
