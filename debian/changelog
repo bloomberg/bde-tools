@@ -1,5 +1,10 @@
-bde-tools (3.10.0.0) unstable; urgency=low
+bde-tools (3.11.0.0) unstable; urgency=low
 
-  * 031db43 Initial commit.
+  * 416cc57 Toolchain fix for AIX to allow big memory allocations. (#27)
+  * 1937f28 Merge pull request #9 from osubbotin/review/test-targets
+  * 97b93e6 Invalid version format in changelog. (#8)
+  * 9781d4b Merge pull request #7 from osubbotin/review/jobs-and-verbosity
+  * 7c8ca35 Merge pull request #3 from mgiroux/review/remove-bde-oss-tools-references
+  * 1af6cd6 Fixed changelog (#1)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 20 Jun 2018 06:49:46 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 16 Jul 2018 18:08:55 +0100
