@@ -164,6 +164,9 @@ def print_envs(options, info):
         else:
             print('export BDE_CMAKE_TOOLCHAIN=toolchains/%s/default'
                   % sysutil.unversioned_platform())
+    else:
+        print('export CXX=cl')
+        print('export CC=cl')
 
     if options.install_dir:
         install_dir = options.install_dir
