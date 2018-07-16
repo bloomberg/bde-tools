@@ -14,23 +14,19 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo "checking out repository"              //checkout current repository
-                sh "mkdir build"
-                dir("build") {
-                    checkout scm
-                }
+                checkout scm
             }
         }
         stage('Build') {
             steps {
-                dir("build") {
-                    sh """
-                        pwd
-                        echo $BRANCH_NAME
-                        source /bb/bde/documentation/sphinx_env/bin/activate
-                        (cd docs; make html)
-                        ls -l docs/build
-                    """
-                }
+                sh """
+                    pwd
+                    echo $BRANCH_NAME
+                    ls -l 
+                    source /bb/bde/documentation/sphinx_env/bin/activate
+                    (cd docs; make html)
+                    ls -l docs/build
+                """
             }
         }
         stage('Deploy') {

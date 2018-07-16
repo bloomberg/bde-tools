@@ -163,8 +163,8 @@ def print_envs(options, info):
         print('export CC=cl')
 
     if info.toolchain:
-        print('export BDE_CMAKE_TOOLCHAIN=toolchains/%s/%s' % 
-              (sysutil.unversioned_platform() , info.toolchain))
+        print('export BDE_CMAKE_TOOLCHAIN=toolchains/%s/%s' %
+              (sysutil.unversioned_platform(), info.toolchain))
     else:
         print('export BDE_CMAKE_TOOLCHAIN=toolchains/%s/default'
               % sysutil.unversioned_platform())
