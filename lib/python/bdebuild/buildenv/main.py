@@ -120,8 +120,8 @@ def get_compilerinfos():
         compiler_infos = []
         for v in msvcversions.versions:
             info = compilerinfo.CompilerInfo(
-                'cl', v.compiler_version, None, None, None,
-                'cl-%s -- %s (Version %s)' %
+                'cl', v.compiler_version, None, None, toolchain = "cl-default",
+                desc = 'cl-%s -- %s (Version %s)' %
                 (v.compiler_version, v.product_name, v.product_version))
             compiler_infos.append(info)
 
@@ -158,15 +158,16 @@ def print_envs(options, info):
     if os_type != 'windows':
         print('export CXX=%s' % info.cxx_path)
         print('export CC=%s' % info.c_path)
-        if info.toolchain:
-            print('export BDE_CMAKE_TOOLCHAIN=toolchains/%s/%s' % 
-                  (sysutil.unversioned_platform() , info.toolchain))
-        else:
-            print('export BDE_CMAKE_TOOLCHAIN=toolchains/%s/default'
-                  % sysutil.unversioned_platform())
     else:
         print('export CXX=cl')
         print('export CC=cl')
+
+    if info.toolchain:
+        print('export BDE_CMAKE_TOOLCHAIN=toolchains/%s/%s' % 
+              (sysutil.unversioned_platform() , info.toolchain))
+    else:
+        print('export BDE_CMAKE_TOOLCHAIN=toolchains/%s/default'
+              % sysutil.unversioned_platform())
 
     if options.install_dir:
         install_dir = options.install_dir

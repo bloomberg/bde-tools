@@ -369,15 +369,8 @@ function(bde_ufid_setup_flags iface)
                 -Wno-unused-value
             >
             $<$<CXX_COMPILER_ID:MSVC>:
-                /GS-
-                /GT
-                /GR
-                # Multiprocessor compilation
-                /MP
-                # Generate intrinsic functions
-                /Oi
                 # deletion of pointer to incomplete type
-                /wd4150
+                /we4150
                 # default constructor could not be generated
                 /wd4510
                 # default constructor could not be generated
@@ -386,7 +379,8 @@ function(bde_ufid_setup_flags iface)
                 /wd4661
                 # not all control paths return a value
                 /we4715
-                $<$<NOT:${bde_ufid_is_exc}>:
+                $<IF:${bde_ufid_is_exc},
+                    /EHsc,
                     /EHs-
                 >
             >
@@ -523,6 +517,10 @@ function(bde_ufid_setup_flags iface)
                 Threads::Threads
             >
             $<$<CXX_COMPILER_ID:MSVC>:
+                -nologo
+                -incremental:no
+                -subsystem:console 
+                $<IF:${bde_ufid_is_64}, -machine:X64, -machine:ix86>
                 Ws2_32
             >
             $<$<CXX_COMPILER_ID:SunPro>:
