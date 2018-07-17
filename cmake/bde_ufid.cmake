@@ -305,7 +305,6 @@ function(bde_ufid_setup_flags iface)
                 -Wcast-align
                 -Wcast-qual
                 -Wconversion
-                -Werror=cast-qual
                 -Wextra
                 -Wformat
                 -Wformat-security
@@ -344,7 +343,6 @@ function(bde_ufid_setup_flags iface)
                 -Wcast-align
                 -Wcast-qual
                 -Wconversion
-                -Werror=cast-qual
                 -Wextra
                 -Wformat
                 -Wformat-security

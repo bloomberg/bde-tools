@@ -25,14 +25,21 @@ function(bde_package_group_set_version uor listFile)
     set(file1  "${rootDir}/${groupName}scm/${groupName}scm_versiontag.h")
     # One of those file contain the patch version.
     set(file2a "${rootDir}/${groupName}scm/${groupName}scm_patchversion.h")
-    set(file2b "${rootDir}/${groupName}scm/${groupName}scm_version.cpp")
 
-    internal_read_version_tag(${file1})
+    # Depending on the component scm implementation, we must try here as well.
+    set(file2b "${rootDir}/${groupName}scm/${groupName}scm_version.cpp")
+    set(file2c "${rootDir}/${groupName}scm/${groupName}scm_version.c")
+
+    if (EXISTS ${file1})
+        internal_read_version_tag(${file1})
+    endif()
 
     if (EXISTS ${file2a})
         internal_read_version_tag(${file2a})
     elseif(EXISTS ${file2b})
         internal_read_version_tag(${file2b})
+    elseif(EXISTS ${file2c})
+        internal_read_version_tag(${file2c})
     endif()
 
     if (NOT DEFINED _v_MAJOR OR
