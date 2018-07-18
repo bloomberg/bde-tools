@@ -471,6 +471,7 @@ function(bde_ufid_setup_flags iface)
             $<$<CXX_COMPILER_ID:MSVC>:
                 NOGDI
                 NOMINMAX
+                _CRT_SECURE_NO_WARNINGS
                 _SCL_SECURE_NO_DEPRECATE
                 WIN32_LEAN_AND_MEAN
                 VC_EXTRALEAN

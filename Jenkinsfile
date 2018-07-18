@@ -15,13 +15,8 @@ pipeline {
             steps {
                 echo "checking out repository"              //checkout current repository
                 checkout scm
-            }
-        }
-        stage('Build') {
-            steps {
                 sh """
                     pwd
-                    echo $BRANCH_NAME
                     ls -l 
                     source /bb/bde/documentation/sphinx_env/bin/activate
                     (cd docs; make html)
