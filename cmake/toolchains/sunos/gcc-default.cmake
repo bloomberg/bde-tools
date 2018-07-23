@@ -15,6 +15,7 @@ string(CONCAT DEFAULT_C_FLAGS
       )
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,-z -Wl,relax=comdat" CACHE INTERNAL "" FORCE)
 
 set(CMAKE_CXX_FLAGS_RELEASE         "-O2"
     CACHE STRING "Release"        FORCE)
