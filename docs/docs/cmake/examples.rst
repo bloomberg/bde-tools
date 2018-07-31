@@ -1,8 +1,8 @@
 .. _build-examples-top:
 
-====================
-BDE Workfow Examples
-====================
+==============
+Build Examples
+==============
 
 All the examples below should be run from the top-level bde source tree::
 
@@ -55,6 +55,10 @@ for the package group:
   ::
 
     $ cmake_build.py --targets=bal --tests=build build
+
+  .. note::
+    ``--targets`` flag accepts multiple comma-separated targets
+     
 
 .. _build-examples-3:
 
@@ -225,5 +229,4 @@ Install the header files for ``bsl`` library:
 
   .. note:: 
   
-     See :ref:`Full list of install components
-     <build_system_design-install-components>` for more information.
+     See :ref:`build_system_design-install-components` for more information.

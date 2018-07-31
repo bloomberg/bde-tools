@@ -1,7 +1,8 @@
 .. _build_system-intro-top:
 
-BDE Build System
-****************
+========
+Overview
+========
 
 .. _build_system-intro-overview:
 
@@ -29,17 +30,6 @@ Test
 Install
   Installs the build artefacts (header files, libraries, application and
   supporting metadata) to the specified location.
-
-Prerequisites
--------------
-
-BDE CMake build system requires following software to be installed on the
-system:
-
- * `CMake <https://cmake.org/>`_ (version 3.10 or later)
- * `Ninja <https://ninja-build.org/>`_ or `GNU Make
-   <https://www.gnu.org/software/make/>`_
- * `Python <https://www.python.org>`_ (version 2.7+ or 3.x)
 
 .. _build_system-into-supported_platforms:
 

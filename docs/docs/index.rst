@@ -12,9 +12,10 @@ and applications, including the `BDE libraries
 
    cmake/intro
    cmake/design
-   cmake/workflow
+   cmake/config
+   cmake/examples
+   cmake/advanced
    cmake/customization
-   cmake/tutorial
 
 .. toctree::
    :caption:  Command Line Tools
@@ -35,8 +36,7 @@ and applications, including the `BDE libraries
 
    reference/bde_repo
 
-Indices and Tables
+Index
 ==================
 
 * :ref:`genindex`
-* :ref:`search`

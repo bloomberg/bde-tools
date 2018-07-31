@@ -123,7 +123,7 @@ Those parameters are used by ``configure`` command.
 .. option:: --compiler COMPILER
 
    Specifies the compiler from the list of the configured compilers. 
-   See :ref:`Configure system compilers <tutorial-compiler-config>` for more
+   See :ref:`Configure system compilers <build-compiler-config>` for more
    information.
 
 .. option:: --refroot REFROOT

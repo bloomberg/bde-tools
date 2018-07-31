@@ -1,8 +1,8 @@
 .. _customization-top:
 
-==============================
-BDE Build System Customization
-==============================
+=============
+Customization
+=============
 
 This section describes how to use BDE Build System with external
 projects.
