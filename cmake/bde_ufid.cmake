@@ -24,7 +24,7 @@ set(known_ufid_flags opt dbg exc mt 64 safe safe2 stlport pic shr ndebug cpp11 c
 #.rst:
 # bde_ufid_filter_flags
 # ---------------------
-# 
+#
 # This function retains all flags from the ``filter_flags`` in the
 # ``ufid_flags``.  The flags not found in the ``filter_flags`` are discarded.
 function(bde_ufid_filter_flags target_ufid ufid_flags filter_flags)
@@ -45,7 +45,7 @@ endfunction()
 #.rst:
 # bde_ufid_remove_flags
 # ---------------------
-# 
+#
 # This function removes all flags in the ``remove_flags`` from the
 # ``ufid_flags``.
 
@@ -68,7 +68,7 @@ endfunction()
 #.rst:
 # bde_ufid_add_flags
 # ------------------
-# 
+#
 # This function adds all flags in the ``extra_flags`` to the
 # ``ufid_flags``.
 
@@ -91,8 +91,8 @@ endfunction()
 #.rst:
 # bde_parse_ufid
 # --------------
-# 
-# This function validates the specified ``ufid`` and sets a set of flags for 
+#
+# This function validates the specified ``ufid`` and sets a set of flags for
 # the build system.
 function(bde_parse_ufid UFID)
     bde_assert_no_extra_args()
@@ -475,9 +475,6 @@ function(bde_ufid_setup_flags iface)
                 _SCL_SECURE_NO_DEPRECATE
                 WIN32_LEAN_AND_MEAN
                 VC_EXTRALEAN
-                # Windows Server 2003 and later
-                _WIN32_WINNT=0x0502
-                WINVER=0x0502
             >
 
             $<$<CXX_COMPILER_ID:SunPro>:
@@ -516,10 +513,6 @@ function(bde_ufid_setup_flags iface)
                 Threads::Threads
             >
             $<$<CXX_COMPILER_ID:MSVC>:
-                -nologo
-                -incremental:no
-                -subsystem:console 
-                $<IF:${bde_ufid_is_64}, -machine:X64, -machine:ix86>
                 Ws2_32
             >
             $<$<CXX_COMPILER_ID:SunPro>:

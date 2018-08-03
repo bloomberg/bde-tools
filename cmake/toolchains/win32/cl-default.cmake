@@ -25,21 +25,20 @@ string(CONCAT DEFAULT_C_FLAGS
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 
 
-set(CMAKE_CXX_FLAGS_RELEASE         "/O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /DNDEBUG"
+set(CMAKE_CXX_FLAGS_RELEASE         "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /DNDEBUG"
     CACHE STRING "Release"        FORCE)
-set(CMAKE_CXX_FLAGS_MINSIZEREL      "/O1 /Ob1 /Os /DNDEBUG"
+set(CMAKE_CXX_FLAGS_MINSIZEREL      "/MD /O1 /Ob1 /Os /DNDEBUG"
     CACHE STRING "MinSizeRel"     FORCE)
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /Zi /DNDEBUG"
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /Zi /DNDEBUG"
     CACHE STRING "RelWithDebInfo" FORCE)
-set(CMAKE_CXX_FLAGS_DEBUG           "/Zi"
+set(CMAKE_CXX_FLAGS_DEBUG           "/MDd /Zi"
     CACHE STRING "Debug"          FORCE)
 
-set(CMAKE_C_FLAGS_RELEASE         "/O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy -DNDEBUG"
+set(CMAKE_C_FLAGS_RELEASE         "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy -DNDEBUG"
     CACHE STRING "Release"        FORCE)
-set(CMAKE_C_FLAGS_MINSIZEREL      "/O1 /Ob1 /Os /DNDEBUG"
+set(CMAKE_C_FLAGS_MINSIZEREL      "/MD /O1 /Ob1 /Os /DNDEBUG"
     CACHE STRING "MinSizeRel"     FORCE)
-set(CMAKE_C_FLAGS_RELWITHDEBINFO  "/O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /Zi /DNDEBUG"
+set(CMAKE_C_FLAGS_RELWITHDEBINFO  "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /Zi /DNDEBUG"
     CACHE STRING "RelWithDebInfo" FORCE)
-set(CMAKE_C_FLAGS_DEBUG           "/Zi"
+set(CMAKE_C_FLAGS_DEBUG           "/MDd /Zi"
     CACHE STRING "Debug"          FORCE)
-

@@ -1,6 +1,8 @@
 include(bde_include_guard)
 bde_include_guard()
 
+include(GNUInstallDirs)
+
 # BDE CMake modules.
 include(bde_log)
 include(bde_virtual_function)
@@ -88,10 +90,11 @@ function(bde_project_setup_install_opts proj)
     bde_struct_create(
         installOpts
         BDE_INSTALL_OPTS_TYPE
-            INCLUDE_DIR "include"
-            LIBRARY_DIR "lib"              # todo - bitness?
-            PKGCONFIG_DIR "lib/pkgconfig"  # todo - bitness?
-            EXECUTABLE_DIR "bin"
+            INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}
+            LIBRARY_DIR ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE_DIR ${CMAKE_INSTALL_LIBDIR}
+            PKGCONFIG_DIR "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+            EXECUTABLE_DIR ${CMAKE_INSTALL_BINDIR}
     )
 
     bde_struct_set_field(${proj} INSTALL_OPTS ${installOpts})
