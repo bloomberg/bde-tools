@@ -31,7 +31,7 @@ set(CMAKE_CXX_FLAGS_MINSIZEREL      "/MD /O1 /Ob1 /Os /DNDEBUG"
     CACHE STRING "MinSizeRel"     FORCE)
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /Zi /DNDEBUG"
     CACHE STRING "RelWithDebInfo" FORCE)
-set(CMAKE_CXX_FLAGS_DEBUG           "/MDd /Zi"
+set(CMAKE_CXX_FLAGS_DEBUG           "/MDd /Od /Ob0 /Zi"
     CACHE STRING "Debug"          FORCE)
 
 set(CMAKE_C_FLAGS_RELEASE         "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy -DNDEBUG"
@@ -40,5 +40,5 @@ set(CMAKE_C_FLAGS_MINSIZEREL      "/MD /O1 /Ob1 /Os /DNDEBUG"
     CACHE STRING "MinSizeRel"     FORCE)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO  "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /Zi /DNDEBUG"
     CACHE STRING "RelWithDebInfo" FORCE)
-set(CMAKE_C_FLAGS_DEBUG           "/MDd /Zi"
+set(CMAKE_C_FLAGS_DEBUG           "/MDd /Od /Ob0 /Zi"
     CACHE STRING "Debug"          FORCE)
