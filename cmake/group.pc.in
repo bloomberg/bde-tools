@@ -7,5 +7,5 @@ Description: @uor_description@
 Version: @uor_version@
 Requires:
 Requires.private: @uor_pc_depends@
-Cflags: -I\${includedir} @uor_extra_defines@
-Libs: -L\${libdir} -l@uor_lib@ @uor_extra_link_libraries@
+Cflags: -I${includedir} @uor_extra_defines@
+Libs: -L${libdir} -l@uor_lib@ @uor_extra_link_libraries@
