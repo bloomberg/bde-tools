@@ -519,7 +519,8 @@ permissible:
 +--------+--------------------------------------------------------------+
 | cpp11  | Build with support for C++11 features                        |
 +--------+--------------------------------------------------------------+
-
+| cpp14  | Build with support for C++14 features                        |
++--------+--------------------------------------------------------------+
 .. note::
    ``mt`` flag is always enabled. It is still a valid UFID for historical
    reasons.
