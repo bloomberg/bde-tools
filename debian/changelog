@@ -1,5 +1,12 @@
-bde-tools (3.11.0.0) unstable; urgency=low
+bde-tools (3.11.0.1) unstable; urgency=low
 
+  * b428b81 Merge pull request #43 from mgiroux/pr/42-rebased-releases/3.11.x
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 7 Aug 2018 11:42:46 -0400
+
+bde-tools (3.11.0.0) git; urgency=low
+
+  * e6ffea1 Changelog for version 3.11.0.0
   * 416cc57 Toolchain fix for AIX to allow big memory allocations. (#27)
   * 1937f28 Merge pull request #9 from osubbotin/review/test-targets
   * 97b93e6 Invalid version format in changelog. (#8)
@@ -7,4 +14,4 @@ bde-tools (3.11.0.0) unstable; urgency=low
   * 7c8ca35 Merge pull request #3 from mgiroux/review/remove-bde-oss-tools-references
   * 1af6cd6 Fixed changelog (#1)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 16 Jul 2018 18:08:55 +0100
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 16 Jul 2018 13:31:49 -0400
