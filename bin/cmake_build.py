@@ -128,6 +128,9 @@ class Options:
                              'PREFIX',
                              'Installation prefix'))
 
+        if not self.prefix:
+            self.prefix = '/opt/bb'
+
         self.dpkg_build = args.dpkg_build
         self.clean = args.clean
         self.toolchain = value_or_env(args.toolchain,
@@ -164,6 +167,9 @@ class Options:
                              'PREFIX',
                              'Installation prefix',
                              required = 'install' in args.cmd))
+
+        if not self.install_prefix:
+            self.install_prefix = '/opt/bb'
 
         self.component = args.component
 
