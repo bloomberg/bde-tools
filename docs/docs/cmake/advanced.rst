@@ -41,7 +41,7 @@ do the following steps:
 
   ::
 
-    $ refroot-install --refroot-path=/bb/data/tmp/refroot --arch=amd64 --build-depends hsl --yes
+    $ refroot-install --refroot-path=/bb/data/tmp/${USER} --arch=amd64 --build-depends hsl --yes
 
   .. note::
     Note that this form of ``refroot-install`` command will extract and install all
@@ -59,7 +59,7 @@ do the following steps:
   ::
 
     $ eval `bde_build_env.py -t opt_exc_mt_64_cpp11`
-    $ cmake_build.py configure --refroot=/bb/data/tmp/refroot/ --prefix=/opt/bb -v
+    $ cmake_build.py configure --refroot=/bb/data/tmp/${USER} -v
 
 * Build the library and run all test drivers:
 
@@ -87,7 +87,7 @@ any other source repository with external dependencies.
 
   ::
 
-    $ refroot-install --refroot-path=//bb/data/tmp/refroot --arch=amd64 --build-depends a-cdb2 --yes
+    $ refroot-install --refroot-path=/bb/data/tmp/${USER} --arch=amd64 --build-depends a-cdb2 --yes
 
   .. note::
     Note the ``a-cdb2`` in the command line of the ``refroot-install`` command.
@@ -106,7 +106,7 @@ any other source repository with external dependencies.
   ::
 
     $ eval `bde_build_env.py -t opt_exc_mt_64_cpp11`
-    $ cmake_build.py configure --refroot=/bb/data/tmp/refroot/ --prefix=/opt/bb -v
+    $ cmake_build.py configure --refroot=/bb/data/tmp/${USER} -v
 
 * Build the library and run all test drivers:
 
