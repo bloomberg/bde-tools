@@ -356,7 +356,7 @@ def configure(options):
         if options.toolchain:
             if os.path.isfile(options.toolchain):
                 configure_cmd.append('-DCMAKE_TOOLCHAIN_FILE=' + options.toolchain)
-            elif os.path.isfile(os.path.join(options.cmake_module_path, options.toolchain + '.cmake')): 
+            elif os.path.isfile(os.path.join(options.cmake_module_path, options.toolchain + '.cmake')):
                 configure_cmd.append('-DCMAKE_TOOLCHAIN_FILE=' +
                     os.path.join(options.cmake_module_path, options.toolchain + '.cmake'))
             else:
@@ -439,7 +439,7 @@ def build(options):
         if options.timeout > 0:
             test_cmd += ['--timeout', str(options.timeout)]
 
-        # Test labels in cmake do not end with '.t'. 
+        # Test labels in cmake do not end with '.t'.
         strip_dott = lambda x: x[:-2] if x.endswith('.t') else x
         test_list = [strip_dott(x) for x in target_list]
         if 'all' not in test_list:
@@ -463,6 +463,10 @@ def install(options):
                    '-DCMAKE_INSTALL_PREFIX=' + install_path]
     if options.component:
         install_cmd += ['-DCOMPONENT=' + options.component]
+
+    cache_info = CacheInfo(options.build_dir)
+    if cache_info.multiconfig:
+        install_cmd.append += ['-DCMAKE_INSTALL_CONFIG_NAME=' + cache_info.build_type]
 
     install_cmd += ['-P', 'cmake_install.cmake']
 

@@ -5,6 +5,16 @@ import sys
 import os
 import argparse
 
+def unicodeWrite(out, str):
+    try:
+        out.write(str)
+    except UnicodeEncodeError:
+        bytes = str.encode(out.encoding or 'ascii', 'replace')
+        if hasattr(sys.stdout, 'buffer'):
+            out.buffer.write(bytes)
+        else:
+            out.write(bytes.decode(out.encoding or 'ascii', 'replace'))
+
 try:
     p = subprocess.Popen(sys.argv[1:], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out, err) = p.communicate()
@@ -12,11 +22,15 @@ except Exception as e:
     print('Execution failure: %s' % str(e))
     sys.exit(-1)
 
+includes = ''
 msg = ''
 if out:
     out = out.decode(sys.stdout.encoding or 'ascii', 'replace')
-    out = '\n'.join([l for l in out.split('\n') if not l.startswith('Note: including file:')])
+    includes = ''.join([l for l in out.split('\n') if l.startswith('Note: including file:')])
+    out = ''.join([l for l in out.split('\n') if not l.startswith('Note: including file:')])
     msg = msg + out
+
+unicodeWrite(sys.stdout, includes) # Ninja relies on result of /showIncludes when compiling with cl
 
 if err:
     err = err.decode(sys.stderr.encoding or 'ascii', 'replace')
@@ -69,13 +83,6 @@ if msg:
     # This logic handles unicode in the output.
     status_str = u'[{} ({})] <<<<<<<<<<\n{}>>>>>>>>>>\n'.format(src_str, marker_str, msg)
 
-    try:
-        sys.stderr.write(status_str)
-    except UnicodeEncodeError:
-        status_bytes = status_str.encode(sys.stderr.encoding or 'ascii', 'replace')
-        if hasattr(sys.stdout, 'buffer'):
-            sys.stderr.buffer.write(status_bytes)
-        else:
-            sys.stderr.write(status_bytes.decode(sys.stderr.encoding or 'ascii', 'replace'))
+    unicodeWrite(sys.stderr, status_str)
 
 sys.exit(p.returncode)
