@@ -26,8 +26,8 @@ includes = ''
 msg = ''
 if out:
     out = out.decode(sys.stdout.encoding or 'ascii', 'replace')
-    includes = ''.join([l for l in out.split('\n') if l.startswith('Note: including file:')])
-    out = ''.join([l for l in out.split('\n') if not l.startswith('Note: including file:')])
+    includes = '\n'.join([l for l in out.split(os.linesep) if l.startswith('Note: including file:')])
+    out = '\n'.join([l for l in out.split(os.linesep) if not l.startswith('Note: including file:')])
     msg = msg + out
 
 unicodeWrite(sys.stdout, includes) # Ninja relies on result of /showIncludes when compiling with cl
