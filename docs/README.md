@@ -34,3 +34,10 @@ make html
 ```
 
 The generated site can be found in the build/html folder.
+
+Developers in a Bloomberg environment can make a symbolic link to their 
+`public_html` directory using:
+
+```
+ln -s $PWD/build/html ~/public_html/bde-tools
+```
