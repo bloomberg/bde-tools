@@ -16,10 +16,17 @@ include(bde_interface_target)
 include(bde_utils)
 
 # These flags form potential installation prefix
-set(install_ufid_flags opt dbg exc mt safe safe2 pic shr)
+set(install_ufid_flags opt dbg exc mt safe safe2
+    aopt adbg asafe anone
+    ropt rdbg rsafe rnone
+    pic shr
+   )
 
 # These flags can appear in a valid ufid. The order of those flags is important.
-set(known_ufid_flags opt dbg exc mt 64 safe safe2 stlport pic shr ndebug cpp11 cpp14 cpp17)
+set(known_ufid_flags opt dbg exc mt 64 safe safe2
+    aopt adbg asafe anone
+    ropt rdbg rsafe rnone
+    stlport pic shr ndebug cpp11 cpp14 cpp17)
 
 #.rst:
 # bde_ufid_filter_flags
@@ -123,6 +130,24 @@ function(bde_parse_ufid UFID)
     if (cppStdsLen GREATER 1)
         message(FATAL_ERROR
                 "UFID ${UFID} contains multiple cpp standards: ${cppStds}")
+    endif()
+
+    # Check for conflicts in assert levels
+    bde_ufid_filter_flags(alevel "${ufid_flags}" "aopt;adbg;asafe;anone")
+    string(REPLACE "_" ";" alevel "${alevel}")
+    list(LENGTH alevel alevelLen)
+    if (alevelLen GREATER 1)
+        message(FATAL_ERROR
+                "UFID ${UFID} contains multiple assert levels: ${alevel}")
+    endif()
+
+    # Check for conflicts in review levels
+    bde_ufid_filter_flags(rlevel "${ufid_flags}" "ropt;rdbg;rsafe;rnone")
+    string(REPLACE "_" ";" rlevel "${rlevel}")
+    list(LENGTH rlevel rlevelLen)
+    if (rlevelLen GREATER 1)
+        message(FATAL_ERROR
+                "UFID ${UFID} contains multiple review levels: ${rlevel}")
     endif()
 
     # Setting the flags in local...
@@ -282,6 +307,32 @@ function(bde_ufid_setup_flags iface)
             $<${bde_ufid_is_safe2}:
                 BDE_BUILD_TARGET_SAFE_2
                 BDE_DONT_ALLOW_TRANSITIVE_INCLUDES
+            >
+
+            $<${bde_ufid_is_aopt}:
+                BSLS_ASSERT_LEVEL_ASSERT_OPT
+            >
+            $<${bde_ufid_is_adbg}:
+                BSLS_ASSERT_LEVEL_ASSERT
+            >
+            $<${bde_ufid_is_asafe}:
+                BSLS_ASSERT_LEVEL_ASSERT_SAFE
+            >
+            $<${bde_ufid_is_anone}:
+                BSLS_ASSERT_LEVEL_NONE
+            >
+
+            $<${bde_ufid_is_ropt}:
+                BSLS_REVIEW_LEVEL_REVIEW_OPT
+            >
+            $<${bde_ufid_is_rdbg}:
+                BSLS_REVIEW_LEVEL_REVIEW
+            >
+            $<${bde_ufid_is_rsafe}:
+                BSLS_REVIEW_LEVEL_REVIEW_SAFE
+            >
+            $<${bde_ufid_is_rnone}:
+                BSLS_REVIEW_LEVEL_NONE
             >
     )
 
@@ -446,6 +497,32 @@ function(bde_ufid_setup_flags iface)
                 BDE_BUILD_TARGET_SAFE_2
                 BDE_DONT_ALLOW_TRANSITIVE_INCLUDES
                 _STLP_EXTRA_OPERATORS_FOR_DEBUG=1
+            >
+
+            $<${bde_ufid_is_aopt}:
+                BSLS_ASSERT_LEVEL_ASSERT_OPT
+            >
+            $<${bde_ufid_is_adbg}:
+                BSLS_ASSERT_LEVEL_ASSERT
+            >
+            $<${bde_ufid_is_asafe}:
+                BSLS_ASSERT_LEVEL_ASSERT_SAFE
+            >
+            $<${bde_ufid_is_anone}:
+                BSLS_ASSERT_LEVEL_NONE
+            >
+
+            $<${bde_ufid_is_ropt}:
+                BSLS_REVIEW_LEVEL_REVIEW_OPT
+            >
+            $<${bde_ufid_is_rdbg}:
+                BSLS_REVIEW_LEVEL_REVIEW
+            >
+            $<${bde_ufid_is_rsafe}:
+                BSLS_REVIEW_LEVEL_REVIEW_SAFE
+            >
+            $<${bde_ufid_is_rnone}:
+                BSLS_REVIEW_LEVEL_NONE
             >
 
             # Compiler specific defines

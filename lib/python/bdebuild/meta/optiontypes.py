@@ -105,25 +105,44 @@ class Ufid(mixins.BasicEqualityMixin):
 
     # The following variables are copied from bde_build.pl to preserve the
     # display order of flags.
+
+    build_with_convert = "Set review level to \"{}\""
+    build_with_assert = "Set assert level to \"{}\""
+
     FRONT = 0
     MIDDLE = 50
     BACK = 100
+
     VALID_FLAGS = {
-        'dbg': (FRONT + 1, 'Build with debugging information'),
-        'opt': (FRONT, 'Build optimized'),
-        'exc': (MIDDLE, 'Exception support'),
-        'mt': (MIDDLE + 1, 'Multithread support'),
-        'ndebug': (MIDDLE + 2, 'Build with NDEBUG defined'),
-        '64': (BACK - 5, 'Build for 64-bit architecture'),
-        'safe2': (BACK - 4,
+        'opt': (FRONT + 0,  'Build optimized'),
+        'dbg': (FRONT + 1,  'Build with debugging information'),
+
+        'exc':   (MIDDLE + 0, 'Exception support'),
+        'mt':    (MIDDLE + 1, 'Multithread support'),
+        '64':    (MIDDLE + 2, 'Build for 64-bit architecture'),
+
+        'safe':  (MIDDLE + 5, 'Build safe (paranoid) libraries'),
+        'safe2': (MIDDLE + 6,
                   'Build safe2 (paranoid and binary-incompatible) libraries'),
-        'safe': (BACK - 3, 'Build safe (paranoid) libraries'),
-        'shr': (BACK - 2, 'Build dynamic libraries'),
-        'pic': (BACK - 1, 'Build static PIC libraries'),
-        'stlport': (BACK, 'Build with STLPort on Sun'),
-        'cpp11': (BACK + 12, 'Build with support for C++11 (C++0x) features'),
-        'cpp14': (BACK + 13, 'Build with support for C++14 features'),
-        'cpp17': (BACK + 14, 'Build with support for C++17 features')
+
+        'aopt':  (MIDDLE + 10, build_with_assert.format("OPT")),
+        'adbg':  (MIDDLE + 11, build_with_assert.format("DEBUG")),
+        'asafe': (MIDDLE + 12, build_with_assert.format("SAFE")),
+        'anone': (MIDDLE + 13, build_with_assert.format("NONE")),
+
+        'ropt':  (MIDDLE + 20, build_with_convert.format("OPT")),
+        'rdbg':  (MIDDLE + 21, build_with_convert.format("DEBUG")),
+        'rsafe': (MIDDLE + 22, build_with_convert.format("SAFE")),
+        'rnone': (MIDDLE + 23, build_with_convert.format("NONE")),
+
+        'stlport':(BACK + 0, 'Build with STLPort on Sun'),
+        'pic':    (BACK + 1, 'Build static PIC libraries'),
+        'shr':    (BACK + 2, 'Build dynamic libraries'),
+        'ndebug': (BACK + 3, 'Build with NDEBUG defined'),
+
+        'cpp11':  (BACK + 10, 'Build with support for C++11 (C++0x) features'),
+        'cpp14':  (BACK + 11, 'Build with support for C++14 features'),
+        'cpp17':  (BACK + 12, 'Build with support for C++17 features')
     }
 
     def __init__(self, flags=[]):
