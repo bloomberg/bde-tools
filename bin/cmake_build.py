@@ -150,6 +150,7 @@ class Options:
             uplid_comp = '-'.join(uplid.split('-')[-2:])
 
         self.compiler = args.compiler if args.compiler else uplid_comp
+        self.wafstyleout = args.wafstyleout
 
         self.generator = args.generator if hasattr(args, 'generator') else None
 
@@ -284,6 +285,7 @@ def wrapper():
     group.add_argument('--refroot', help='Path to the distribution refroot')
     group.add_argument('--prefix', help='Prefix within distribution refroot')
     group.add_argument('--compiler', help='Compiler to use')
+    group.add_argument('--wafstyleout', action='store_true', help='Use waf-style output wrapper')
 
     genChoices = Platform.generator_choices()
     if len(genChoices) > 1:
@@ -347,8 +349,10 @@ def configure(options):
                      '-DUFID:STRING=' + options.ufid,
                      '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
                      '-DBDE_LOG_LEVEL=' + Platform.cmake_verbosity(options.verbose),
-                     '-DBUILD_BITNESS=' + ('64' if '64' in options.ufid else '32')
+                     '-DBUILD_BITNESS=' + ('64' if '64' in options.ufid else '32'),
+                     '-DBDE_USE_WAFSTYLEOUT=' + ('ON' if options.wafstyleout else 'OFF' )
                     ]
+
     if options.dpkg_build:
         configure_cmd.append('-DCMAKE_TOOLCHAIN_FILE=' +
             os.path.join(options.cmake_module_path, 'toolchains/dpkg/production.cmake'))
