@@ -13,4 +13,8 @@ function(internal_setup_wafstyleout)
 	set_property(GLOBAL PROPERTY BDE_RULE_LAUNCH_TEST ${PYTHON_EXECUTABLE} ${absolutePyFilename})
         # The test launcher needs a list
 endfunction()
-internal_setup_wafstyleout() # Call immediately for correctness of ${CMAKE_CURRENT_LIST_DIR}
+
+option(BDE_USE_WAFSTYLEOUT "Use waf-style output wrapper" OFF)
+if (BDE_USE_WAFSTYLEOUT)
+    internal_setup_wafstyleout() # Call immediately for correctness of ${CMAKE_CURRENT_LIST_DIR}
+endif()
