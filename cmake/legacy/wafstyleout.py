@@ -4,6 +4,7 @@ import subprocess
 import sys
 import os
 import argparse
+import platform
 
 def unicodeWrite(out, str):
     try:
@@ -81,7 +82,7 @@ if msg:
             marker_str = 'ERROR'
 
     # This logic handles unicode in the output.
-    status_str = u'[{} ({})] <<<<<<<<<<\n{}>>>>>>>>>>\n'.format(src_str, marker_str, msg)
+    status_str = u'{}[{} ({})] <<<<<<<<<<\n{}>>>>>>>>>>\n'.format('\n' if platform.system() == 'Windows' else '', src_str, marker_str, msg)
 
     unicodeWrite(sys.stderr, status_str)
 
