@@ -89,6 +89,49 @@ def get_ufid_cmdline_options():
          {'action': 'store_true',
           'default': False,
           'help': 'disable exception support'}),
+
+        (('aopt',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BSLS_ASSERT_LEVEL_ASSERT_OPT" as described in '
+          'the component-level documentation of bsls_assert'}),
+        (('adbg',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BSLS_ASSERT_LEVEL_ASSERT" as described in '
+          'the component-level documentation of bsls_assert'}),
+        (('asafe',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BSLS_ASSERT_LEVEL_ASSERT_SAFE" as described in '
+          'the component-level documentation of bsls_assert'}),
+        (('anone',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BSLS_ASSERT_LEVEL_NONE" as described in '
+          'the component-level documentation of bsls_assert'}),
+
+        (('ropt',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BSLS_REVIEW_LEVEL_REVIEW_OPT" as described in '
+          'the component-level documentation of bsls_review'}),
+        (('rdbg',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BSLS_REVIEW_LEVEL_REVIEW" as described in '
+          'the component-level documentation of bsls_review'}),
+        (('rsafe',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BSLS_REVIEW_LEVEL_REVIEW_SAFE" as described in '
+          'the component-level documentation of bsls_review'}),
+        (('rnone',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'define the macro "BSLS_REVIEW_LEVEL_NONE" as described in '
+          'the component-level documentation of bsls_review'}),
+
         (('safe',),
          {'action': 'store_true',
           'default': False,
@@ -160,6 +203,8 @@ def make_ufid_from_cmdline_options(opts):
         'build_type': {'debug': 'dbg', 'release': 'opt'},
         'safe': {True: 'safe'},
         'safe2': {True: 'safe2'},
+        'assert_level': {'aopt': 'aopt', 'adbg': 'adbg', 'asafe': 'asafe', 'anone': 'anone'},
+        'review_level': {'ropt': 'ropt', 'rdbg': 'rdbg', 'rsafe': 'rsafe', 'rnone': 'rnone'},
         'cpp_std': {'11': 'cpp11', '14': 'cpp14', '17': 'cpp17'},
         'noexception': {False: 'exc'},
         'library_type': {'shared': 'shr'}

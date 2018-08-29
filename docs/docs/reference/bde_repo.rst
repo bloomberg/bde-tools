@@ -505,21 +505,33 @@ permissible:
 +--------+--------------------------------------------------------------+
 | mt     | Build with support for multi-threading (default no support)  |
 +--------+--------------------------------------------------------------+
-| ndebug | Build with NDEBUG defined                                    |
-+--------+--------------------------------------------------------------+
 | 64     | Build for 64-bit architecture (default is 32-bit)            |
 +--------+--------------------------------------------------------------+
 | safe   | Build assertion-checked libraries                            |
 +--------+--------------------------------------------------------------+
 | safe2  | Build assertion-checked, binary-incompatible libraries       |
 +--------+--------------------------------------------------------------+
-| shr    | Build dynamic libraries                                      |
+| aopt   | Set bsls assert level to opt/dbg/safe/none                   |
+| adbg   |                                                              |
+| asage  |                                                              |
+| anone  |                                                              |
++--------+--------------------------------------------------------------+
+| ropt   | Set bsls review level to opt/dbg/safe/none                   |
+| rdbg   |                                                              |
+| rsafe  |                                                              |
+| rnone  |                                                              |
 +--------+--------------------------------------------------------------+
 | pic    | Build static PIC libraries                                   |
++--------+--------------------------------------------------------------+
+| shr    | Build dynamic libraries                                      |
++--------+--------------------------------------------------------------+
+| ndebug | Build with NDEBUG defined                                    |
 +--------+--------------------------------------------------------------+
 | cpp11  | Build with support for C++11 features                        |
 +--------+--------------------------------------------------------------+
 | cpp14  | Build with support for C++14 features                        |
++--------+--------------------------------------------------------------+
+| cpp17  | Build with support for C++17 features (experimental)         |
 +--------+--------------------------------------------------------------+
 
 .. note::
