@@ -27,7 +27,7 @@ includes = ''
 msg = ''
 if out:
     out = out.decode(sys.stdout.encoding or 'ascii', 'replace')
-    includes = '\n'.join([l for l in out.split(os.linesep) if l.startswith('Note: including file:')])
+    includes = '\n'.join([l for l in out.split(os.linesep) if l.startswith('Note: including file:')])+'\n'
     out = '\n'.join([l for l in out.split(os.linesep) if not l.startswith('Note: including file:')])
     msg = msg + out
 
