@@ -6,7 +6,8 @@ using namespace BloombergLP;
 int main()
 {
     bdeut_NullableValue<int> vi;
-    vi = 0xFF775511;
+    bdeut_NullableValue<int> *volatile pvi = &vi;
+    *pvi = 0xFF775511;
 
     bdeut_NullableValue<bsl::string> vs;
     vs = "This is the string value";

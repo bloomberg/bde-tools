@@ -24,6 +24,8 @@
     bsl-eclipse       Controls output format, set to 'on' inside Eclipse
                       and leave as 'off' for plain gdb.
 
+    string-address    Controls whether string buffer address is printed
+
    Usage
    -----
     To use the pretty printers load the script into gdb, either manually
@@ -65,6 +67,7 @@
 #   being printed.
 
 import re
+import string
 import sys
 import gdb
 import gdb.printing
@@ -104,6 +107,28 @@ def valueIterator(arg):
         return RawValueIterator(arg)
     else:
         return ValueIterator(arg)
+
+def stringAddress(arg):
+    char_ptr_type = gdb.lookup_type('unsigned char').pointer()
+    c_str = arg.cast(char_ptr_type)
+    return '0x%x ' % c_str if gdb.parameter('print string-address') else ''
+
+def stringRep(arg, length):
+    print_len = gdb.parameter("print elements")
+    if not print_len or print_len + 4 > length:
+        print_len = length
+    print_str = ''
+    char_ptr_type = gdb.lookup_type('unsigned char').pointer()
+    c_str = arg.cast(char_ptr_type)
+    for i in xrange(print_len):
+        ci = (c_str + i).dereference()
+        cc = chr(ci)
+        if cc in string.printable:
+            print_str += cc
+        else:
+            print_str += "\{0:03o}".format(int(ci))
+    if print_len < length: print_str += '...'
+    return print_str
 
 ## Debug catch all pretty printer
 class CatchAll:
@@ -163,8 +188,12 @@ class BslStringImp:
     print a compact representation of the available information, encoding in
     the capitalization of the message whether the current object is using the
     small buffer ('size') or the dynamically allocated large buffer ('Size').
+    The 'print string-address' parameter controls whether the address of the
+    string buffer is printed.
 
-        data = [size:5,capacity:19] "short"
+        # With print string-address on
+        data = 0x0x8051074 [size:5,capacity:19] "short"
+        # With print string-address off
         data = [Size:24,capacity:34] "This is a long string!!!"
 
     The size of the internal buffer is detected at runtime.
@@ -183,6 +212,11 @@ class BslStringImp:
     already been deallocated*).  Note that this is a *best effort* with no
     guarantees, the object has been destroyed, the value may have already been
     reused.
+
+    If 'print elements' is set, the value will be used to limit the number of
+    characters printed, and the string will terminate with a "..." indicating
+    more characters are present.  Non-printable characters are written out as a
+    backslash and three octal digits.
 
     Note: This is not intended for direct use.
 
@@ -209,11 +243,12 @@ class BslStringImp:
         """Format the string"""
         str = None
         if not self.destroyed:
-            str = '[%s:%d,capacity:%d] "%s"' % (
-                                        'size' if self.isShort else 'Size',
-                                        self.length,
-                                        self.capacity,
-                                        self.buffer.string(length=self.length))
+            str = '%s[%s:%d,capacity:%d] "%s"' % (
+                                           stringAddress(self.buffer),
+                                           'size' if self.isShort else 'Size',
+                                           self.length,
+                                           self.capacity,
+                                           stringRep(self.buffer, self.length))
         else:
             if self.isShort:
                 str = '[DESTROYED, small buffer value]: %s' % self.buffer
@@ -432,7 +467,7 @@ class IPv4Address:
         return "%d.%d.%d.%d:%d" % (self.a, self.b, self.c, self.d, self.port)
 
 class Nullable:
-    """Pretty printer for 'bdeut_NullableValue<T>'
+    """Pretty printer for 'bdlb::NullableValue<T>'
 
     This pretty printer handles both the allocator aware and not allocator
     aware types internally.
@@ -493,7 +528,11 @@ class Time:
         return "%02d:%02d:%02d.%06d" % (hours, minutes, seconds, microseconds)
 
     def to_string(self):
-        return Time.toHMmS(self.val['d_milliseconds'])
+        us = long(self.val['d_value'])
+        mask = 0x4000000000
+        if (us < mask):
+            return "invalid time value %d" % us
+        return Time.toHMuS(us & ~mask)
 
 class Tz:
     """Utility to format a time zone offset."""
@@ -744,7 +783,9 @@ class StringRefData:
     def to_string(self):
         length = self.val['d_end_p'] - self.val['d_begin_p']
         buffer = self.val['d_begin_p']
-        return '[length:%d] "%s"' % (length, buffer.string(length = length))
+        return '%s[length:%d] "%s"' % (stringAddress(buffer),
+                                       length,
+                                       stringRep(buffer, length))
 
 class StringRef:
     """Printer for bslstl::StringRef
@@ -818,10 +859,10 @@ class BslMap:
 
     def to_string(self):
         # Locally handle the printing the allocator or not
-        return "map<%s,%s> [size%d%s]" % (self.keyArg,
-                                          self.valueArg,
-                                          self.size,
-                                          _optionalAllocator(self.alloc))
+        return "map<%s,%s> [size:%d%s]" % (self.keyArg,
+                                           self.valueArg,
+                                           self.size,
+                                           _optionalAllocator(self.alloc))
 
     def display_hint(self):
         return 'map'
@@ -1099,6 +1140,26 @@ class BslEclipseModeParameter(gdb.Parameter):
         return "Printing containers in eclipse mode is %s." % ('on' if svalue
                                                                else 'off')
 
+class BslStringAddressParameter(gdb.Parameter):
+    """Control whether string buffer addresses are printed.
+    """
+    set_doc  = "Controls printing string buffer address"
+    show_doc = "Print string buffer address"
+    value    = False
+    def __init__(self):
+        super(BslStringAddressParameter,self).__init__('print string-address',
+                                                       gdb.COMMAND_DATA,
+                                                       gdb.PARAM_BOOLEAN)
+    def get_set_string(self):
+        if self.value:
+            return "Printing string buffer addresses"
+        else:
+            return "Not printing string buffer addresses"
+
+    def get_show_string(self,svalue):
+        return "Printing string buffer addresses is %s." % ('on' if svalue
+                                                            else 'off')
+
 
 ###############################################################################
 ##
@@ -1128,7 +1189,7 @@ def add_printer(name, re, klass):
 def build_pretty_printer():
     add_printer('bteso_IPv4Address', '^BloombergLP::bteso_IPv4Address$',
                 IPv4Address)
-    add_printer('bdeut_NullableValue', 'BloombergLP::bdeut_NullableValue<.*>',
+    add_printer('bdlb::NullableValue', 'BloombergLP::bdlb::NullableValue<.*>',
                 Nullable)
 
     add_printer('bdlt::Date', '^BloombergLP::bdlt::Date$', Date)
@@ -1182,6 +1243,7 @@ def reload():
     BslShowAllocatorParameter ()
     BdeHelpCommand ()
     BslEclipseModeParameter ()
+    BslStringAddressParameter ()
 
     ## Remove the pretty printer if it exists
     for printer in gdb.pretty_printers:
