@@ -1,4 +1,5 @@
 # No include guard - may be reloaded
+include(bde_pkgconfig_utils)
 
 bde_prefixed_override(pkgconfig uor_install)
 function(pkgconfig_uor_install uor listFile installOpts)
@@ -42,14 +43,17 @@ function(pkgconfig_uor_install uor listFile installOpts)
 
     bde_struct_get_field(pc_depends ${uor} DEPENDS)
     string(REPLACE ";" " " uor_pc_depends "${pc_depends}")
+
+    bde_uor_to_pkgconfig_name(pkgconfig_name ${component})
+
     configure_file(
         ${pkgConfigFile}
-        "${PROJECT_BINARY_DIR}/${component}.pc"
+        "${PROJECT_BINARY_DIR}/${pkgconfig_name}.pc"
         @ONLY
     )
 
     install(
-        FILES "${PROJECT_BINARY_DIR}/${component}.pc"
+        FILES "${PROJECT_BINARY_DIR}/${pkgconfig_name}.pc"
         DESTINATION "${pkgConfigInstallDir}"
         COMPONENT "${component}-pkgconfig"
     )
