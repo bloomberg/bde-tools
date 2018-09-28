@@ -447,7 +447,7 @@ def build(options):
         strip_dott = lambda x: x[:-2] if x.endswith('.t') else x
         test_list = [strip_dott(x) for x in target_list]
         if 'all' not in test_list:
-            test_pattern = "|".join(['(^)'+t+'($)' for t in test_list])
+            test_pattern = "|".join(['^'+t+'$' for t in test_list])
             test_cmd += ['-L', test_pattern]
 
         subprocess.check_call(test_cmd, cwd = options.build_dir)
