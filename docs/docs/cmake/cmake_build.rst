@@ -60,40 +60,43 @@ Common parameters
 
 .. option:: --build_dir BUILD_DIR
 
-   Specifies the path to the build directory.
+   Path to the build directory.
 
    .. tip::
       If the parameter is not specfied, the value is taken from the
-      ``BDE_CMAKE_BUILD_DIR`` environment variable.
+      ``BDE_CMAKE_BUILD_DIR`` environment variable. If environment variable is
+      not set, the build system generates the name using the current platform,
+      compiler, and ufid. The generated build directory looks like:
+      ``./_build/unix-linux-x86_64-2.6.32-gcc-5.4.0-opt_exc_mt_cpp11``
 
 .. option:: -j N, --jobs N
 
-   Specifies the number of parallel jobs that can be spawned by the build system.
+   Specify number of jobs to run in parallel.
 
 .. option:: -v, --verbose
 
-   Increase the verbosity of the output.
+   Produce verbose output. 
 
 .. option:: -h, --help
 
    Print the help page.
 
-Configure parameters
---------------------
+Parameters for configure command
+--------------------------------
 
 Those parameters are used by ``configure`` command.
 
 .. option:: -u UFID, --ufid UFID
 
-   Specifies the build flavor of the BDE libraries.
+   Unified Flag IDentifier (e.g. "opt_exc_mt"). 
 
    .. tip::
-      If the parameter is not specfied, the value is taken from the
+      If the parameter is not specified, the value is taken from the
       ``BDE_CMAKE_UFID`` environment variable.
 
 .. option:: -G GENERATOR
 
-   Specifies the low-level build system that should be used by CMake.
+   Select the build system for compilation.
 
    .. tip::
       If the parameter is not specified, the script will choose the 
@@ -107,36 +110,51 @@ Those parameters are used by ``configure`` command.
    .. tip::
       This parameter overrides the ``--compiler`` and ``--toolchain`` 
       parameters.
+
+   .. warning::
+      This option should be used only when building release dpkg packages.
       
 .. option:: --toolchain TOOLCHAIN
 
-   Specifies the path to the CMake toolchain file. See `CMake Toolchains
-   <https://cmake.org/cmake/help/v3.10/manual/cmake-toolchains.7.html>`_
-   for more details on the format of the Cmake toolchain file.
+   Path to the CMake toolchain file. See `CMake Toolchains
+   <https://cmake.org/cmake/help/v3.10/manual/cmake-toolchains.7.html>`_ for
+   more details on the format of the Cmake toolchain file.
 
    .. tip::
       If the parameter is not specified, the script will try to find the
       generic compiler toolchain file or use the CMake defaults, if no 
       toolchain file is found.
 
-
 .. option:: --compiler COMPILER
 
-   Specifies the compiler from the list of the configured compilers. 
-   See :ref:`Configure system compilers <build-compiler-config>` for more
-   information.
+   Specifies the compiler (Windows only). Currently supported compilers are:
+   ``cl-18.00``, ``cl-19.00``, and ``cl-19.10``.
 
 .. option:: --refroot REFROOT
 
-   Specifies path to the distribution refroot.
+   Path to the distribution refroot.
+
+   .. tip::
+      If the parameter is not specified, the value is taken from the
+      ``DISTRIBUTION_REFROOT`` environment variable.
 
 .. option:: --prefix PREFIX
 
-   Specifies prefix within ether distribution refroot. Within Bloomberg 
-   development environment, this is normally set to ``/opt/bb/``.
+   The path prefix in which to look for dependencies for this buils. If
+   ``--refroot`` is specified, this prefix is relative to the refroot
+   (default="/opt/bb").
 
-Build parameters
-----------------
+.. option:: --clean
+
+   Clean the specified build directory before configuration.
+
+   .. important::
+      Compiler-specific configuration is generated only on initial
+      configuration and cached by the build system. User must use
+      empty (clean) build directory with switching compilers.
+
+Parameters for build command
+----------------------------
 
 .. option:: --targets TARGET_LIST
 
@@ -145,7 +163,7 @@ Build parameters
 
 .. option:: --test {build, run}
 
-   Instructs the build command build or run BDE test drivers as part of the
+   Selects whether to build or run the tests. Tests are not built by default.
    build step.
 
 .. option:: --timeout TIMEOUT
@@ -154,18 +172,18 @@ Build parameters
    terminated if it does not complete within the specified timeout (in
    seconds).
 
-Install parameters
-------------------
+Parameters for install command
+------------------------------
 
 .. option:: --component COMPONENT
 
-   Specifies the install component name. See :ref:`Install components
+   The name of the component to install. See :ref:`Install components
    <build_system_design-install-components>` for more information.
 
 .. option:: --install_dir INSTALL_DIR
 
-   Specifies the top level installation directory.
+   Path to the top level installation directory.
 
 .. option:: --install_prefix INSTALL_PREFIX
 
-   Specifies the intall prefix within the installation directory.
+   The install prefix within the installation directory.
