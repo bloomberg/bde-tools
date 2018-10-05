@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-include $(DISTRIBUTION_REFROOT)/bbsrc/build-base/build-base.mk
+include $(DISTRIBUTION_REFROOT)/opt/bb/share/build-base/build-base.mk
 
 clean:
 	rm -rf debian/tmp
