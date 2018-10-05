@@ -137,11 +137,10 @@ class Options:
                                       'BDE_CMAKE_TOOLCHAIN',
                                       'CMake toolchain file')
 
-        self.refroot = \
-            replace_path_sep( \
-                value_or_env(args.refroot,
-                             'DISTRIBUTION_REFROOT',
-                             'Distribution refroot'))
+        self.refroot = replace_path_sep( \
+                           value_or_env(args.refroot,
+                                        'DISTRIBUTION_REFROOT',
+                                        'Distribution refroot'))
 
         # Get the compiler from UPLID
         uplid = os.getenv('BDE_CMAKE_UPLID')
@@ -257,7 +256,10 @@ class Platform:
             return 'all'
 
 def run_command(cmd, cwd=None):
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
+    p = subprocess.Popen(cmd,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         cwd=cwd)
     (out, err) = p.communicate()
     ret = p.returncode
 
@@ -270,38 +272,87 @@ def run_command(cmd, cwd=None):
 
 def wrapper():
     parser = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]))
-    parser.add_argument('cmd', nargs='+', choices=['configure', 'build', 'install'])
+    parser.add_argument('cmd', nargs='+',
+                        choices=['configure', 'build', 'install'])
 
-    parser.add_argument('--build_dir')
-    parser.add_argument('-j', '--jobs', type=int, default=0)
-    parser.add_argument('-v', '--verbose', action='count', default=0)
+    parser.add_argument('--build_dir',
+                        help='Path to the build directory. If not specified, the build '
+                             'system generates the name using the current platform, compiler, '
+                             'and ufid. The generated build directory looks like this: '
+                             '"./_build/unix-linux-x86_64-2.6.32-gcc-5.4.0-opt_exc_mt_cpp11"')
 
-    group = parser.add_argument_group('configure', 'Configuration options')
-    group.add_argument('-u', '--ufid')
-    group.add_argument('--cmake-module-path', help='Path to the Cmake modules with BDE build system')
-    group.add_argument('--dpkg-build', action='store_true', help='Flag set for dpkg builds')
-    group.add_argument('--toolchain', help='Path to the CMake toolchain file')
-    group.add_argument('--clean', action='store_true', help='Clean target directory before configure')
-    group.add_argument('--refroot', help='Path to the distribution refroot')
-    group.add_argument('--prefix', help='Prefix within distribution refroot')
-    group.add_argument('--compiler', help='Compiler to use')
-    group.add_argument('--wafstyleout', action='store_true', help='Use waf-style output wrapper')
+    parser.add_argument('-j', '--jobs', type=int, default=0,
+                        help='Specify number of jobs to run in parallel.')
+
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+                        help='Produce verbose output (including compiler command lines).')
+
+    group = parser.add_argument_group('configure', 'Options for the "configure" command')
+    group.add_argument('-u', '--ufid',
+                       help='Unified Flag IDentifier (e.g. "opt_exc_mt"). See bde-tools documentation.')
+
+    group.add_argument('--cmake-module-path',
+                       help='Path to the Cmake modules defining the BDE build system.')
+
+    group.add_argument('--dpkg-build', action='store_true',
+                       help='Use the production compiler and install layout used by '
+                            ' Bloomberg\'s dpkg builds.')
+
+    group.add_argument('--toolchain', help='Path to the CMake toolchain file.')
+
+    group.add_argument('--clean', action='store_true',
+                       help='Clean target directory before configure.')
+
+    group.add_argument('--refroot',
+                       help='Path to the distribution refroot (default="/")')
+
+    group.add_argument('--prefix',
+                       default='/opt/bb',
+                       help='The path prefix in which to look for dependencies '
+                            'for this build. If "--refroot" is specified, this '
+                            'prefix is relative to the refroot (default="/opt/bb").')
+
+    group.add_argument('--compiler',
+                       help='Specify the compiler (Windows only). Currently supported'
+                            'compilers are: "cl-18.00", "cl-19.00", and "cl-19.10".')
+
+    group.add_argument('--wafstyleout', action='store_true',
+                       help='Generate build output in "waf-style" for parsing by automated build tools.')
 
     genChoices = Platform.generator_choices()
     if len(genChoices) > 1:
-        group.add_argument('-G', choices=genChoices, dest='generator')
+        group.add_argument('-G', choices=genChoices, dest='generator',
+                           help='Select the build system for compilation.')
 
-    group = parser.add_argument_group('build', 'Build options')
-    group.add_argument('--targets', type=lambda x: x.split(','))
-    group.add_argument('--tests', choices=['build', 'run'])
+    group = parser.add_argument_group('build', 'Options for the "build" command')
 
-    group = parser.add_argument_group('test', 'Test options')
-    group.add_argument('--timeout', type=int, default=120)
+    group.add_argument('--targets', type=lambda x: x.split(','),
+                      help='Comma-separated list of build targets (e.g. "bsl", '
+                           '"bslma", or "bslma_testallocator").')
 
-    group = parser.add_argument_group('install', 'Installation options')
-    group.add_argument('--install_dir', help='Top level installation directory')
-    group.add_argument('--install_prefix', help='Prefix withing installation directory')
-    group.add_argument('--component')
+    group.add_argument('--tests', choices=['build', 'run'],
+                       help='Select whether to build or run the tests. Tests are not built by default.')
+
+    group.add_argument('--timeout', type=int, default=120,
+                       help='Timeout for single test driver in seconds (default:120).')
+
+    group = parser.add_argument_group('install', 'Options for the "install" command')
+
+    group.add_argument('--install_dir',
+                       help='Specify the installation directory.')
+
+    group.add_argument('--install_prefix',
+                       default='/opt/bb',
+                       help='The path prefix in which to install components. '
+                            'This prefix is relative to the install_dir '
+                            '(default="/opt/bb").')
+
+    group.add_argument('--component',
+                       help='The name of the component. The build system creates following '
+                            'components for a package group or standalone package "X": '
+                            '"X", "X-headers", "X-meta", "X-pkgconfig", which install '
+                            'the library, headers, metadata, and pkg-config files respectively.'
+                            'See bde-tools documentation for more details.')
 
     args = parser.parse_args()
     options = Options(args)
