@@ -8,6 +8,12 @@
 # link step.
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
+# In order to simulate XLs behavior of implicitly extern "C" portions of
+# system header files, GNU compilers extern "C" *ALL* system header files.
+# This obviously doesn't work in the presence of C++, so turn off using
+# -isystem to avoid great hilarity.
+set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
+
 string(CONCAT DEFAULT_CXX_FLAGS
        "-maix${BUILD_BITNESS} "
       )
