@@ -5,7 +5,19 @@ include(bde_log)
 include(bde_utils)
 include(bde_pkgconfig_utils)
 
-# External packages
+# Set the program path for pkg-config.  Versions 0.29.1 and older without our
+# patch must be avoided since they do not scale to the size of our distribution.
+set(pkg_config_lib_path  "lib")
+if (${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+    string(APPEND pkg_config_lib_path "64")
+endif()
+
+find_program(PKG_CONFIG_EXECUTABLE pkg-config PATHS
+    ${CMAKE_PREFIX_PATH}/${pkg_config_lib_path}/bin
+    /opt/bb/${pkg_config_lib_path}/bin
+    NO_DEFAULT_PATH)
+
+# Initialize pkg config module
 find_package(PkgConfig)
 
 # :: bde_import_target_raw_library ::
@@ -71,6 +83,7 @@ function(bde_import_target_from_pc retDeps depName)
     # TODO: Might add the hints for lookup path and .pc file patterns.
     set(libraryPath "${CMAKE_PREFIX_PATH}/${bde_install_lib_suffix}")
 
+
     # The SYSROOT_DIR will be added by pkg config to the library and include pathes
     # by pkg-config.
     set(ENV{PKG_CONFIG_SYSROOT_DIR} "${DISTRIBUTION_REFROOT}")
@@ -85,6 +98,7 @@ function(bde_import_target_from_pc retDeps depName)
                    "${depPkgconfigName}lib.${bde_install_ufid}"
                    "lib${depPkgconfigName}"
                    "${depPkgconfigName}lib")
+
         pkg_check_modules(${depName}_pc
                           QUIET NO_CMAKE_PATH "${pcName}")
 
