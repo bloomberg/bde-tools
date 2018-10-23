@@ -16,7 +16,6 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-qdebug=nparseasm "
        "-qfuncsect "
        "-qinline "
-       "-qlanglvl=newexcp "
        "-qlanglvl=staticstoreoverlinkage "
        "-qnotempinc "
        "-qrtti=all "

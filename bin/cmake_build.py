@@ -83,7 +83,7 @@ def value_or_env(value, envVariableName, humanReadableName, required=False):
     return ret
 
 def cmake_module_path_or_env(value, envVariableName):
-    ''' Evaluate the cmake modules path that provided ether in the command
+    ''' Evaluate the cmake modules path that provided either in the command
     line, environment variable or guessed
     '''
     ret = value if value else os.getenv(envVariableName)

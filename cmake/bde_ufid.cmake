@@ -451,7 +451,7 @@ function(bde_ufid_setup_flags iface)
 
                 $<IF:${bde_ufid_is_exc},
                     -qeh -qlanglvl=newexcp,
-                    -qnoeh
+                    -qnoeh -qsuppress=1540-1090 -qsuppress=1540-1088
                 >
             >
     )
