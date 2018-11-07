@@ -2,7 +2,7 @@ Source: bde-tools
 Section: unknown
 Priority: extra
 Maintainer: Oleg Subbotin <osubbotin@bloomberg.net>
-Build-Depends: build-base
+Build-Depends: build-base,python,cmake,make,ninja
 Standards-Version: 3.8.4
 
 Package: bde-tools
