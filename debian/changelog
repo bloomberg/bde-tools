@@ -1,8 +1,9 @@
 bde-tools (3.14.0.1) unstable; urgency=low
 
+  * a2e7fa2 Changelog for version 3.14.0.1
   * 7cc4b6b Merge pull request #66 from mgiroux/pr/65-rebased-releases/3.14.x
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 7 Nov 2018 13:26:18 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 7 Nov 2018 13:36:34 -0500
 
 bde-tools (3.14.0.0) git; urgency=low
 
