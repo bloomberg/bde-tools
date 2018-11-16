@@ -42,10 +42,19 @@ function(bde_package_group_set_version uor listFile)
         internal_read_version_tag(${file2c})
     endif()
 
-    if (NOT DEFINED _v_MAJOR OR
-        NOT DEFINED _v_MINOR OR
-        NOT DEFINED _v_PATCH)
-        message(FATAL_ERROR "Missing scm version tags for ${groupName}")
+    if (NOT DEFINED _v_MAJOR)
+        set(_v_MAJOR "1")
+        bde_log(VERBOSE "Setting Major version: ${_v_MAJOR}")
+    endif()
+
+    if (NOT DEFINED _v_MINOR)
+        set(_v_MINOR "0")
+        bde_log(VERBOSE "Setting Minor version: ${_v_MINOR}")
+    endif()
+
+    if (NOT DEFINED _v_PATCH)
+        set(_v_PATCH "0")
+        bde_log(VERBOSE "Setting Patch version: ${_v_PATCH}")
     endif()
 
     set(versionTag "${_v_MAJOR}.${_v_MINOR}.${_v_PATCH}")
