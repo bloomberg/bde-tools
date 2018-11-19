@@ -13,14 +13,20 @@ function(pkgconfig_uor_install uor listFile installOpts)
     find_file(bdePkgConfigFile "group.pc.in" PATHS ${CMAKE_MODULE_PATH})
     mark_as_advanced(bdePkgConfigFile)
 
-    set(pkgConfigFile ${bdePkgConfigFile})
-
     bde_expand_list_file(${listFile} LISTDIR listDir FILENAME name)
+
+    set(customPkgConfigIn ${listDir}/${name}.pc.in)
+    if(EXISTS ${customPkgConfigIn})
+        set(pkgConfigFile ${customPkgConfigIn})
+        bde_log(VERBOSE "    CUSTOM pkgconfig input template from ${customPkgConfigIn}")
+    else()
+        set(pkgConfigFile ${bdePkgConfigFile})
+    endif()
+
     set(customPkgConfigDesc ${listDir}/${name}.pc.desc)
     if(EXISTS ${customPkgConfigDesc})
-        #set(pkgConfigFile ${customPkgConfigFile})
         include(${customPkgConfigDesc})
-        bde_log(VERBOSE "CUSTOM pkgconfig description from ${customPkgConfigDesc}")
+        bde_log(VERBOSE "    CUSTOM pkgconfig description from ${customPkgConfigDesc}")
     endif()
 
     if(NOT uor_name)
