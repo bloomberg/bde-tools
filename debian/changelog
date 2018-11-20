@@ -1,7 +1,14 @@
-bde-tools (3.14.0.0) unstable; urgency=low
+bde-tools (3.17.0.0) unstable; urgency=low
 
+  * 5aff59b Add failback for unsupported scm version formats. (#67)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 5 Oct 2018 13:14:10 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 20 Nov 2018 09:21:28 -0500
+
+bde-tools (3.14.0.0) git; urgency=low
+
+  * ff580db Changelog for version 3.14.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 5 Oct 2018 13:14:54 -0400
 
 bde-tools (3.11.0.0) git; urgency=low
 
