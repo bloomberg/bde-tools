@@ -159,17 +159,19 @@ class Options:
         self.timeout = args.timeout
         self.verbose = args.verbose
 
-        self.install_dir = replace_path_sep(args.install_dir)
+        self.install_dir = \
+            replace_path_sep( \
+                value_or_env(args.install_dir,
+                             'BDE_CMAKE_INSTALL_DIR',
+                             'Install directory',
+                             required= 'install' in args.cmd))
 
         self.install_prefix = \
             replace_path_sep( \
                 value_or_env(args.install_prefix,
                              'PREFIX',
                              'Installation prefix',
-                             required = 'install' in args.cmd))
-
-        if not self.install_prefix:
-            self.install_prefix = '/opt/bb'
+                             required = False))
 
         self.component = args.component
 
@@ -509,10 +511,10 @@ def install(options):
     if not options.install_dir:
         raise RuntimeError('The project install requires install_dir')
 
-    if not options.install_prefix:
-        raise RuntimeError('The project install requires install_prefix')
-
-    install_path = options.install_dir + options.install_prefix
+    if (options.install_prefix):
+        install_path = os.path.abspath(options.install_dir + options.install_prefix)
+    else:
+        install_path = os.path.abspath(options.install_dir)
 
     install_cmd = ['cmake',
                    '-DCMAKE_INSTALL_PREFIX=' + install_path]

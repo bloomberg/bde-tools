@@ -169,21 +169,11 @@ def print_envs(options, info):
         print('export BDE_CMAKE_TOOLCHAIN=toolchains/%s/default'
               % sysutil.unversioned_platform())
 
-    if options.install_dir:
-        install_dir = options.install_dir
-    else:
-        install_dir = _determine_installation_location(
-            os.environ.get('PREFIX'), uplid)
+    install_dir = options.install_dir if options.install_dir else '_install'
 
-    if install_dir:
-        print('Using install directory: %s' % install_dir, file=sys.stderr)
-        PREFIX = os.path.join(install_dir, id_str)
-        if sysutil.unversioned_platform() == 'cygwin':
-            PREFIX = sysutil.shell_command('cygpath -m "%s"' % PREFIX).rstrip()
-
-        print('export PREFIX="%s"' % PREFIX)
-        pkg_path = '%s/lib/pkgconfig' % PREFIX
-        print('export PKG_CONFIG_PATH="%s"' % pkg_path)
+    print('Using install directory: %s' % os.path.abspath(install_dir),
+          file=sys.stderr)
+    print('export BDE_CMAKE_INSTALL_DIR="%s"' % os.path.abspath(install_dir))
 
 
 def list_compilers(compiler_infos):
@@ -196,28 +186,3 @@ def list_compilers(compiler_infos):
         print('     CC : %s' % c.c_path, file=sys.stderr)
         print('     Toolchain: %s' % c.toolchain, file=sys.stderr)
 
-
-def _determine_installation_location(prefix, uplid):
-    """Return the installation location for BDE was previously encoded.
-
-    Return the installation location encoded in the specified 'prefix' for the
-    specified 'uplid', or None if a location cannot be determined.  If 'prefix'
-    matches the pattern of a PREFIX environment variable emitted by
-    'bde_setwafenv.py' -- i.e., it contains this cpu-architectures portions of
-    'uplid' as part of the last element of a directory location -- return the
-    installation directory previously used by 'bde_setwafenv.py'.
-
-    Args:
-        prefix (str): prefix
-    """
-    if (prefix is None):
-        return None
-
-    partialUplid = uplid.os_type + '-' + uplid.os_name + '-' + \
-        uplid.cpu_type + '-' + uplid.os_ver
-
-    pattern = "(.*/){0}(?:\-[\w\.]*)*".format(partialUplid)
-    match = re.match(pattern, prefix)
-    if (match):
-        return match.group(1)
-    return None
