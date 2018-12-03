@@ -157,6 +157,7 @@ class Options:
         self.tests = args.tests
         self.jobs = JobsOptions(args.jobs)
         self.timeout = args.timeout
+        self.keep_going = args.keep_going
         self.verbose = args.verbose
 
         self.install_dir = \
@@ -338,6 +339,9 @@ def wrapper():
     group.add_argument('--timeout', type=int, default=120,
                        help='Timeout for single test driver in seconds (default:120).')
 
+    group.add_argument('-k', '--keep-going', action='store_true',
+                       help='Keep going after an error.')
+
     group = parser.add_argument_group('install', 'Options for the "install" command')
 
     group.add_argument('--install_dir',
@@ -475,6 +479,12 @@ def build(options):
 
     if options.verbose and options.generator == 'Ninja':
         extra_args += [ '-v' ]
+
+    if options.keep_going:
+        if options.generator == 'Ninja':
+            extra_args += [ '-k', '100' ]
+        elif options.generator == 'Unix Makefiles':
+            extra_args += [ '-k' ]
 
     target_list = options.targets if options.targets else ['all']
     for target in target_list:

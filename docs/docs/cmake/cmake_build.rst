@@ -172,6 +172,13 @@ Parameters for build command
    terminated if it does not complete within the specified timeout (in
    seconds).
 
+.. option:: -k, --keep-going
+
+   Continues as much as possible after an error.
+
+   .. tip::
+      Supported by 'ninja' and 'make' build systems.
+
 Parameters for install command
 ------------------------------
 
