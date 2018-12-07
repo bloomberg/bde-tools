@@ -30,13 +30,13 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG"
 set(CMAKE_CXX_FLAGS_DEBUG           "-g"
     CACHE STRING "Debug"          FORCE)
 
-set(CMAKE_C_FLAGS_RELEASE         "-O2 -DNDEBUG"
+set(CMAKE_C_FLAGS_RELEASE           "-O2 -DNDEBUG"
     CACHE STRING "Release"        FORCE)
-set(CMAKE_C_FLAGS_MINSIZEREL      "-O2 -DNDEBUG"
+set(CMAKE_C_FLAGS_MINSIZEREL        "-O2 -DNDEBUG"
     CACHE STRING "MinSizeRel"     FORCE)
-set(CMAKE_C_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG"
+set(CMAKE_C_FLAGS_RELWITHDEBINFO    "-O2 -g -DNDEBUG"
     CACHE STRING "RelWithDebInfo" FORCE)
-set(CMAKE_C_FLAGS_DEBUG           "-g"
+set(CMAKE_C_FLAGS_DEBUG             "-g"
     CACHE STRING "Debug"          FORCE)
 
 # Disable GNU c++ extensions.
