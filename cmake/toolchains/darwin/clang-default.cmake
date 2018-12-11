@@ -4,13 +4,19 @@
 #
 # Darwin, clang
 
+set(DEFAULT_CXX_FLAGS_INIT "$ENV{CXXFLAGS}")
+
 string(CONCAT DEFAULT_CXX_FLAGS
+       "${DEFAULT_CXX_FLAGS_INIT} "
        "-m${BUILD_BITNESS} "
        "-fno-strict-aliasing "
       )
 set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
+set(DEFAULT_C_FLAGS_INIT "$ENV{CFLAGS}")
+
 string(CONCAT DEFAULT_C_FLAGS
+       "${DEFAULT_C_FLAGS_INIT} "
        "-m${BUILD_BITNESS} "
        "-fno-strict-aliasing "
       )

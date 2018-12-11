@@ -8,7 +8,10 @@
 # link step.
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
+set(DEFAULT_CXX_FLAGS_INIT "$ENV{CXXFLAGS}")
+
 string(CONCAT DEFAULT_CXX_FLAGS
+       "${DEFAULT_CXX_FLAGS_INIT} "
        "-q${BUILD_BITNESS} "
        "-bmaxdata:0x50000000 "      # DRQS 13597546
        "-qalias=noansi "
@@ -35,7 +38,10 @@ string(CONCAT DEFAULT_CXX_FLAGS
       )
 set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
+set(DEFAULT_C_FLAGS_INIT "$ENV{CFLAGS}")
+
 string(CONCAT DEFAULT_C_FLAGS
+       "${DEFAULT_C_FLAGS_INIT} "
        "-q${BUILD_BITNESS} "
        "-qtbtable=none "
        "-qinline "

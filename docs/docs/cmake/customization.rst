@@ -146,3 +146,24 @@ expression syntax to add compile option only for MSVC compiler):
              $<$<CXX_COMPILER_ID:MSVC>: /bigobj>
      )
 
+Additional Environment Variables
+--------------------------------
+
+In addition to the :ref:`bde_build_env-env`, BDE build system uses following
+evironment variables:
+
+.. option:: CXXFLAGS
+
+   Compile flags for **C++** source files.
+
+   .. note::
+      The flags are prepended to the compile flags set by the toolchain or
+      BDE build system.
+
+.. option:: CFLAGS
+
+   Compile flags for **C** source files.
+
+   .. note::
+      The flags are prepended to the compile flags set by the toolchain or
+      BDE build system.

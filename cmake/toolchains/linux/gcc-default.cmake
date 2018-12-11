@@ -4,7 +4,10 @@
 #
 # Linux, gcc
 
+set(DEFAULT_CXX_FLAGS_INIT "$ENV{CXXFLAGS}")
+
 string(CONCAT DEFAULT_CXX_FLAGS
+       "${DEFAULT_CXX_FLAGS_INIT} "
        "-m${BUILD_BITNESS} "
        "-mtune=opteron "
        "-fdiagnostics-show-option "
@@ -13,7 +16,10 @@ string(CONCAT DEFAULT_CXX_FLAGS
       )
 set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
+set(DEFAULT_C_FLAGS_INIT "$ENV{CFLAGS}")
+
 string(CONCAT DEFAULT_C_FLAGS
+       "${DEFAULT_C_FLAGS_INIT} "
        "-m${BUILD_BITNESS} "
        "-mtune=opteron "
        "-fdiagnostics-show-option "

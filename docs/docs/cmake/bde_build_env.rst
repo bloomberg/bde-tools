@@ -75,6 +75,8 @@ Usage Examples
    writable by a regular user.
 
 
+.. _bde_build_env-env:
+
 Environment Variables Set by bde_build_env.py
 ---------------------------------------------
 
