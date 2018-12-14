@@ -14,10 +14,10 @@ function(ufid_project_setup_install_opts proj)
     bde_struct_create(
         installOpts
         BDE_INSTALL_OPTS_TYPE
-            INCLUDE_DIR "include"
-            ARCHIVE_DIR "${bde_install_lib_suffix}/${bde_install_ufid}"
+            INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}"
+            ARCHIVE_DIR "${CMAKE_INSTALL_LIBDIR}/${bde_install_ufid}"
             LIBRARY_DIR ${libPath}
-            PKGCONFIG_DIR "${bde_install_lib_suffix}/pkgconfig"
+            PKGCONFIG_DIR "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
             EXECUTABLE_DIR "bin/${bde_install_ufid}"  # todo: bitness?
     )
 
@@ -64,6 +64,11 @@ function(bde_create_ufid_symlink uor installOpts)
         get_filename_component(symlinkDir ${archiveInstallDir} DIRECTORY)
         get_filename_component(symlinkRelativeTargetDir ${archiveInstallDir} NAME)
 
+        set(
+            symlinkPrefix
+            "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}"
+        )
+
         # This code will create a symlink to a corresponding "ufid" build.
         # Use with care.
         set(
@@ -78,7 +83,7 @@ function(bde_create_ufid_symlink uor installOpts)
         )
         set(
             symlinkFile
-            "\${CMAKE_INSTALL_PREFIX}/${symlinkDir}/${libLinkName}"
+            "${symlinkPrefix}/${symlinkDir}/${libLinkName}"
         )
 
         install(
@@ -86,7 +91,6 @@ function(bde_create_ufid_symlink uor installOpts)
                 "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \
                 ${symlinkVal} ${symlinkFile})"
             COMPONENT "${component}-symlinks"
-            EXCLUDE_FROM_ALL
         )
 
         # This code creates compatibility symlinks
@@ -104,7 +108,7 @@ function(bde_create_ufid_symlink uor installOpts)
 
             set(
                 symlinkFile
-                "\${CMAKE_INSTALL_PREFIX}/${symlinkDir}/${libLinkName}"
+                "${symlinkPrefix}/${symlinkDir}/${libLinkName}"
             )
 
             # IMPORTANT: symlinkFile is the same as above!
@@ -113,7 +117,6 @@ function(bde_create_ufid_symlink uor installOpts)
                     "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \
                     ${symlinkVal} ${symlinkFile})"
                 COMPONENT "${component}-symlinks"
-                EXCLUDE_FROM_ALL
             )
         endif()
 
@@ -129,7 +132,7 @@ function(bde_create_ufid_symlink uor installOpts)
 
             set(
                 symlinkFile
-                "\${CMAKE_INSTALL_PREFIX}/${symlinkDir}/${libLinkName}"
+                "${symlinkPrefix}/${symlinkDir}/${libLinkName}"
             )
 
             # IMPORTANT: symlinkFile is the same as above!
@@ -138,7 +141,6 @@ function(bde_create_ufid_symlink uor installOpts)
                     "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \
                     ${symlinkVal} ${symlinkFile})"
                 COMPONENT "${component}-symlinks"
-                EXCLUDE_FROM_ALL
             )
 
             # And another one with "64" AND "pic"
@@ -152,7 +154,7 @@ function(bde_create_ufid_symlink uor installOpts)
 
                 set(
                     symlinkFile
-                    "\${CMAKE_INSTALL_PREFIX}/${symlinkDir}/${libLinkName}"
+                    "${symlinkPrefix}/${symlinkDir}/${libLinkName}"
                 )
 
                 # IMPORTANT: symlinkFile is the same as above!
@@ -161,7 +163,6 @@ function(bde_create_ufid_symlink uor installOpts)
                         "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \
                         ${symlinkVal} ${symlinkFile})"
                     COMPONENT "${component}-symlinks"
-                    EXCLUDE_FROM_ALL
                 )
             endif()
         endif()
@@ -173,7 +174,7 @@ function(bde_create_ufid_symlink uor installOpts)
         )
         set(
             symlinkReleaseFile
-            "\${CMAKE_INSTALL_PREFIX}/${symlinkDir}/${libReleaseLinkName}"
+            "${symlinkPrefix}/${symlinkDir}/${libReleaseLinkName}"
         )
         install(
             CODE

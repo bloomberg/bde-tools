@@ -5,16 +5,9 @@ include(bde_log)
 include(bde_utils)
 include(bde_pkgconfig_utils)
 
-# Set the program path for pkg-config.  Versions 0.29.1 and older without our
-# patch must be avoided since they do not scale to the size of our distribution.
-set(pkg_config_lib_path  "lib")
-if (${CMAKE_SIZEOF_VOID_P} EQUAL 8)
-    string(APPEND pkg_config_lib_path "64")
-endif()
-
 find_program(PKG_CONFIG_EXECUTABLE pkg-config PATHS
-    ${CMAKE_PREFIX_PATH}/${pkg_config_lib_path}/bin
-    /opt/bb/${pkg_config_lib_path}/bin
+    ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}/bin
+    /opt/bb/${CMAKE_INSTALL_LIBDIR}/bin
     NO_DEFAULT_PATH)
 
 # Initialize pkg config module
@@ -38,7 +31,7 @@ function(bde_import_target_raw_library libName)
     # distribution refroot directory.
 
     # TODO: Might add the hints for lookup path.
-    set(libraryPath "${CMAKE_PREFIX_PATH}/${bde_install_lib_suffix}")
+    set(libraryPath "${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}")
 
     find_library(
         rawLib_${libName}
@@ -81,7 +74,7 @@ function(bde_import_target_from_pc retDeps depName)
     endif()
 
     # TODO: Might add the hints for lookup path and .pc file patterns.
-    set(libraryPath "${CMAKE_PREFIX_PATH}/${bde_install_lib_suffix}")
+    set(libraryPath "${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}")
 
 
     # The SYSROOT_DIR will be added by pkg config to the library and include pathes
@@ -232,15 +225,15 @@ function(bde_resolve_external_dependencies externalDeps)
             # Looking up CMake export for the external dependency.
             find_package(
                 ${depName} QUIET
-                PATH_SUFFIXES "${bde_install_lib_suffix}/${bde_install_ufid}/cmake"
+                PATH_SUFFIXES "${CMAKE_INSTALL_LIBDIR}/${bde_install_ufid}/cmake"
             )
 
             if(TARGET ${depName})
-                bde_log(VERY_VERBOSE "CMake config found for ${depName} in ${CMAKE_PREFIX_PATH}/${bde_install_lib_suffix}/${bde_install_ufid}/cmake")
+                bde_log(VERY_VERBOSE "CMake config found for ${depName} in ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}/${bde_install_ufid}/cmake")
                 continue()
             endif()
 
-            bde_log(VERY_VERBOSE "CMake config not found for ${depName} in ${CMAKE_PREFIX_PATH}/${bde_install_lib_suffix}/${bde_install_ufid}/cmake")
+            bde_log(VERY_VERBOSE "CMake config not found for ${depName} in ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}/${bde_install_ufid}/cmake")
 
             # CMake EXPORT set is not found. Trying pkg-config.
             set(newDeps)

@@ -1,8 +1,6 @@
 include(bde_include_guard)
 bde_include_guard()
 
-include(GNUInstallDirs)
-
 # BDE CMake modules.
 include(bde_log)
 include(bde_virtual_function)

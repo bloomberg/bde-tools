@@ -1,6 +1,8 @@
 include(bde_include_guard)
 bde_include_guard()
 
+include(GNUInstallDirs)
+
 include(bde_external_dependencies)
 include(bde_log)
 include(bde_virtual_function)
@@ -92,6 +94,6 @@ function(bde_workspace_summary)
     bde_log(NORMAL " UFID.............: ${UFID}")
     bde_log(NORMAL " Canonical UFID...: ${bde_canonical_ufid}")
     bde_log(NORMAL " Install UFID.....: ${bde_install_ufid}")
-    bde_log(NORMAL " Install lib path.: ${bde_install_lib_suffix}")
+    bde_log(NORMAL " Install lib path.: ${CMAKE_INSTALL_LIBDIR}")
     bde_log(NORMAL "=========================================")
 endfunction()
