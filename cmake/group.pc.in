@@ -1,6 +1,6 @@
-prefix=/opt/bb
-libdir=${prefix}/@bde_install_lib_suffix@
-includedir=${prefix}/include
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 
 Name: @uor_name@
 Description: @uor_description@

@@ -173,13 +173,6 @@ function(bde_parse_ufid UFID)
 
     bde_ufid_filter_flags(bde_install_ufid "${ufid_flags}" "${install_ufid_flags}")
     set(bde_install_ufid ${bde_install_ufid} CACHE INTERNAL "" FORCE)
-
-    # Setting install lib suffix based on build bitness.
-    set(bde_install_lib_suffix "lib")
-    if(${bde_ufid_is_64})
-        string(CONCAT bde_install_lib_suffix ${bde_install_lib_suffix} "64")
-    endif()
-    set(bde_install_lib_suffix ${bde_install_lib_suffix} CACHE INTERNAL "" FORCE)
 endfunction()
 
 # :: bde_ufid_add_library ::

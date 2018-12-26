@@ -167,13 +167,6 @@ class Options:
                              'Install directory',
                              required= 'install' in args.cmd))
 
-        self.install_prefix = \
-            replace_path_sep( \
-                value_or_env(args.install_prefix,
-                             'PREFIX',
-                             'Installation prefix',
-                             required = False))
-
         self.component = args.component
 
 class Platform:
@@ -290,6 +283,12 @@ def wrapper():
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='Produce verbose output (including compiler command lines).')
 
+    parser.add_argument('--prefix',
+                        default='/opt/bb',
+                        help='The path prefix in which to look for dependencies '
+                             'for this build. If "--refroot" is specified, this '
+                             'prefix is relative to the refroot (default="/opt/bb").')
+
     group = parser.add_argument_group('configure', 'Options for the "configure" command')
     group.add_argument('-u', '--ufid',
                        help='Unified Flag IDentifier (e.g. "opt_exc_mt"). See bde-tools documentation.')
@@ -308,12 +307,6 @@ def wrapper():
 
     group.add_argument('--refroot',
                        help='Path to the distribution refroot (default="/")')
-
-    group.add_argument('--prefix',
-                       default='/opt/bb',
-                       help='The path prefix in which to look for dependencies '
-                            'for this build. If "--refroot" is specified, this '
-                            'prefix is relative to the refroot (default="/opt/bb").')
 
     group.add_argument('--compiler',
                        help='Specify the compiler (Windows only). Currently supported'
@@ -346,12 +339,6 @@ def wrapper():
 
     group.add_argument('--install_dir',
                        help='Specify the installation directory.')
-
-    group.add_argument('--install_prefix',
-                       default='/opt/bb',
-                       help='The path prefix in which to install components. '
-                            'This prefix is relative to the install_dir '
-                            '(default="/opt/bb").')
 
     group.add_argument('--component',
                        help='The name of the component. The build system creates following '
@@ -407,7 +394,8 @@ def configure(options):
                      '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
                      '-DBDE_LOG_LEVEL=' + Platform.cmake_verbosity(options.verbose),
                      '-DBUILD_BITNESS=' + ('64' if '64' in options.ufid else '32'),
-                     '-DBDE_USE_WAFSTYLEOUT=' + ('ON' if options.wafstyleout else 'OFF' )
+                     '-DBDE_USE_WAFSTYLEOUT=' + ('ON' if options.wafstyleout else 'OFF' ),
+                     '-DCMAKE_INSTALL_PREFIX=' + options.prefix
                     ]
 
     if options.dpkg_build:
@@ -521,13 +509,11 @@ def install(options):
     if not options.install_dir:
         raise RuntimeError('The project install requires install_dir')
 
-    if (options.install_prefix):
-        install_path = os.path.abspath(options.install_dir + options.install_prefix)
-    else:
-        install_path = os.path.abspath(options.install_dir)
+    if not options.prefix:
+        options.prefix="/"
 
     install_cmd = ['cmake',
-                   '-DCMAKE_INSTALL_PREFIX=' + install_path]
+                   '-DCMAKE_INSTALL_PREFIX=' + options.prefix]
     if options.component:
         install_cmd += ['-DCOMPONENT=' + options.component]
 
@@ -537,7 +523,13 @@ def install(options):
 
     install_cmd += ['-P', 'cmake_install.cmake']
 
-    subprocess.check_call(install_cmd, cwd = options.build_dir)
+    environ = os.environ
+    environ['DESTDIR'] = os.path.abspath(options.install_dir)
+
+    print('Install cmd:')
+    print(' '.join(install_cmd))
+
+    subprocess.check_call(install_cmd, cwd = options.build_dir, env = environ)
 
 if __name__ == '__main__':
     try:

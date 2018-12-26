@@ -33,7 +33,7 @@ build system is supported <build_system-into-supported_platforms>`.
 
 On Windows, bde_build_env.py is **not supported** by the windows command
 prompt. Instead, you must use the tool through Cygwin or msysgit.  See the
-tutorial :ref:`TODO` for more details.
+tutorial for more details (TODO).
 
 How It Works
 ------------

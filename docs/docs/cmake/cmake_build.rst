@@ -62,7 +62,7 @@ Common parameters
 
    Path to the build directory.
 
-   .. tip::
+   .. note::
       If the parameter is not specfied, the value is taken from the
       ``BDE_CMAKE_BUILD_DIR`` environment variable. If environment variable is
       not set, the build system generates the name using the current platform,
@@ -90,7 +90,7 @@ Those parameters are used by ``configure`` command.
 
    Unified Flag IDentifier (e.g. "opt_exc_mt"). 
 
-   .. tip::
+   .. note::
       If the parameter is not specified, the value is taken from the
       ``BDE_CMAKE_UFID`` environment variable.
 
@@ -98,7 +98,7 @@ Those parameters are used by ``configure`` command.
 
    Select the build system for compilation.
 
-   .. tip::
+   .. note::
       If the parameter is not specified, the script will choose the 
       low-level build system (default is ``ninja``).
 
@@ -107,7 +107,7 @@ Those parameters are used by ``configure`` command.
    This option selects the toolchain that is used to produce production
    versions of the BDE libraries.
 
-   .. tip::
+   .. note::
       This parameter overrides the ``--compiler`` and ``--toolchain`` 
       parameters.
 
@@ -120,7 +120,7 @@ Those parameters are used by ``configure`` command.
    <https://cmake.org/cmake/help/v3.10/manual/cmake-toolchains.7.html>`_ for
    more details on the format of the Cmake toolchain file.
 
-   .. tip::
+   .. note::
       If the parameter is not specified, the script will try to find the
       generic compiler toolchain file or use the CMake defaults, if no 
       toolchain file is found.
@@ -134,7 +134,7 @@ Those parameters are used by ``configure`` command.
 
    Path to the distribution refroot.
 
-   .. tip::
+   .. note::
       If the parameter is not specified, the value is taken from the
       ``DISTRIBUTION_REFROOT`` environment variable.
 
@@ -142,7 +142,11 @@ Those parameters are used by ``configure`` command.
 
    The path prefix in which to look for dependencies for this buils. If
    ``--refroot`` is specified, this prefix is relative to the refroot
-   (default="/opt/bb").
+   (default="/opt/bb"). 
+   
+   .. note::
+      This parameter also defines the installation prefix for install 
+      command.
 
 .. option:: --clean
 
@@ -151,7 +155,7 @@ Those parameters are used by ``configure`` command.
    .. important::
       Compiler-specific configuration is generated only on initial
       configuration and cached by the build system. User must use
-      empty (clean) build directory with switching compilers.
+      empty (clean) build directory when switching compilers.
 
 Parameters for build command
 ----------------------------
@@ -176,7 +180,7 @@ Parameters for build command
 
    Continues as much as possible after an error.
 
-   .. tip::
+   .. note::
       Supported by 'ninja' and 'make' build systems.
 
 Parameters for install command
@@ -190,7 +194,3 @@ Parameters for install command
 .. option:: --install_dir INSTALL_DIR
 
    Path to the top level installation directory.
-
-.. option:: --install_prefix INSTALL_PREFIX
-
-   The install prefix within the installation directory.
