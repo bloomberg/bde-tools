@@ -1,8 +1,14 @@
-bde-tools (3.17.0.0) unstable; urgency=low
+bde-tools (3.19.0.0) unstable; urgency=low
 
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 26 Dec 2018 09:14:59 -0500
+
+bde-tools (3.17.0.0) git; urgency=low
+
+  * 0ae3e8f Changelog for version 3.17.0.0
   * 5aff59b Add failback for unsupported scm version formats. (#67)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 20 Nov 2018 09:21:28 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 20 Nov 2018 09:50:31 -0500
 
 bde-tools (3.14.0.0) git; urgency=low
 
