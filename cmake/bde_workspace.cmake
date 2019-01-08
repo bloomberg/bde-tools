@@ -3,6 +3,15 @@ bde_include_guard()
 
 include(GNUInstallDirs)
 
+# Must tune the CMAKE_INSTALL_LIBDIR for other platforms
+# as they are not GNU.
+# Other defaults are fine.
+if(CMAKE_SYSTEM_NAME MATCHES "^(AIX|SunOS)$")
+    if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+        set(CMAKE_INSTALL_LIBDIR "lib64" CACHE PATH "Object code libraries (${CMAKE_INSTALL_LIBDIR})" FORCE)
+    endif()
+endif()
+
 include(bde_external_dependencies)
 include(bde_log)
 include(bde_virtual_function)
