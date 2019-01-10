@@ -387,6 +387,8 @@ def configure(options):
     mkdir_if_not_present(options.build_dir)
     # todo - detect generator change
 
+    # Important: CMAKE_INSTALL_LIBDIR is passed here to accomodate
+    # default installation layout.
     configure_cmd = ['cmake', os.getcwd(),
                      '-G' + Platform.generator(options),
                      '-DCMAKE_MODULE_PATH:PATH=' + options.cmake_module_path,
@@ -395,7 +397,8 @@ def configure(options):
                      '-DBDE_LOG_LEVEL=' + Platform.cmake_verbosity(options.verbose),
                      '-DBUILD_BITNESS=' + ('64' if '64' in options.ufid else '32'),
                      '-DBDE_USE_WAFSTYLEOUT=' + ('ON' if options.wafstyleout else 'OFF' ),
-                     '-DCMAKE_INSTALL_PREFIX=' + options.prefix
+                     '-DCMAKE_INSTALL_PREFIX=' + options.prefix,
+                     '-DCMAKE_INSTALL_LIBDIR=' + ('lib64' if '64' in options.ufid else 'lib'),
                     ]
 
     if options.dpkg_build:
