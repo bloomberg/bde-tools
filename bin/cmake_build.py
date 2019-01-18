@@ -157,6 +157,7 @@ class Options:
         self.tests = args.tests
         self.jobs = JobsOptions(args.jobs)
         self.timeout = args.timeout
+        self.xml_report = args.xml_report
         self.keep_going = args.keep_going
         self.verbose = args.verbose
 
@@ -335,6 +336,9 @@ def wrapper():
     group.add_argument('-k', '--keep-going', action='store_true',
                        help='Keep going after an error.')
 
+    group.add_argument('--xml-report', action='store_true',
+                       help='Generate XML report when running tests.')
+
     group = parser.add_argument_group('install', 'Options for the "install" command')
 
     group.add_argument('--install_dir',
@@ -496,6 +500,9 @@ def build(options):
 
         if options.timeout > 0:
             test_cmd += ['--timeout', str(options.timeout)]
+
+        if options.xml_report:
+            test_cmd += ['--no-compress-output', '-T', 'Test']
 
         # Test labels in cmake do not end with '.t'.
         strip_dott = lambda x: x[:-2] if x.endswith('.t') else x

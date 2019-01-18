@@ -183,6 +183,11 @@ Parameters for build command
    .. note::
       Supported by 'ninja' and 'make' build systems.
 
+.. option:: --xml-report
+
+   Generate xml report when running tests. Reports can be found in the
+   ``<build_dir>/Testing`` folder.
+
 Parameters for install command
 ------------------------------
 
