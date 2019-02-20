@@ -253,7 +253,9 @@ function(bde_resolve_external_dependencies externalDeps)
             # The external dependancy is not found. Creating fake target to stop lookup.
             # Unresolved dependencies will be added as-is with '-l' flag to the link line.
             message(STATUS  "Not found (raw) external dependency '${depName}'")
-            add_custom_target(${depName})
+            bde_log(VERY_VERBOSE "Adding ${depName} as IMPORTED INTERFACE library")
+            add_library(${depName} INTERFACE IMPORTED)
+            target_link_options(${depName} INTERFACE "-l${depName}")
         endforeach()
     endwhile()
 endfunction()
