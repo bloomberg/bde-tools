@@ -39,7 +39,7 @@ set(CMAKE_CXX_FLAGS_MINSIZEREL      "-xO2"
     CACHE STRING "MinSizeRel"     FORCE)
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-xO2 -g0"
     CACHE STRING "RelWithDebInfo" FORCE)
-set(CMAKE_CXX_FLAGS_DEBUG           "-xO0"
+set(CMAKE_CXX_FLAGS_DEBUG           "-xO0 -g0"
     CACHE STRING "Debug"          FORCE)
 
 set(CMAKE_C_FLAGS_RELEASE           "-xO2"
@@ -48,5 +48,5 @@ set(CMAKE_C_FLAGS_MINSIZEREL        "-xO2"
     CACHE STRING "MinSizeRel"     FORCE)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO    "-xO2 -g0"
     CACHE STRING "RelWithDebInfo" FORCE)
-set(CMAKE_C_FLAGS_DEBUG             "-xO0"
+set(CMAKE_C_FLAGS_DEBUG             "-xO0 -g0"
     CACHE STRING "Debug"          FORCE)
