@@ -1,7 +1,14 @@
-bde-tools (3.22.0.0) unstable; urgency=low
+bde-tools (3.22.1.0) unstable; urgency=low
 
+  * No commits found
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 18 Jan 2019 16:49:22 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 19 Feb 2019 12:39:48 -0500
+
+bde-tools (3.22.0.0) git; urgency=low
+
+  * c0feb23 Changelog for version 3.22.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 19 Feb 2019 12:39:48 -0500
 
 bde-tools (3.19.0.1) git; urgency=low
 
