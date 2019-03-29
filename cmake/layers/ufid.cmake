@@ -120,10 +120,9 @@ function(bde_create_ufid_symlink uor installOpts)
             )
         endif()
 
-        # The case when the build system add the PIC flag silently, we create
-        # the symlink containing "pic".
-        if (${bde_ufid_is_pic} AND (NOT pic IN_LIST install_ufid_flags))
-            bde_ufid_add_flags(bde_alt_install_ufid "${install_ufid_flags}" "pic")
+        if (${bde_ufid_is_pic})
+            # This hack remove the 'pic' from the ufid name
+            bde_ufid_remove_flags(bde_alt_install_ufid "${install_ufid_flags}" "pic")
 
             set(
                 libLinkName
@@ -140,12 +139,14 @@ function(bde_create_ufid_symlink uor installOpts)
                 CODE
                     "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \
                     ${symlinkVal} ${symlinkFile})"
-                COMPONENT "${component}-symlinks"
+                COMPONENT "${component}-pic-symlink-hack"
             )
 
-            # And another one with "64" AND "pic"
+            # And another one for "64" - remove "pic", add "64"
             if (${bde_ufid_is_64})
-                bde_ufid_add_flags(bde_alt_install_ufid "${install_ufid_flags}" "64;pic")
+                set(temp_ufid_flags ${install_ufid_flags})
+                list(REMOVE_ITEM temp_ufid_flags "pic")
+                bde_ufid_add_flags(bde_alt_install_ufid "${temp_ufid_flags}" "64")
 
                 set(
                     libLinkName
@@ -162,7 +163,7 @@ function(bde_create_ufid_symlink uor installOpts)
                     CODE
                         "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \
                         ${symlinkVal} ${symlinkFile})"
-                    COMPONENT "${component}-symlinks"
+                    COMPONENT "${component}-pic-symlink-hack"
                 )
             endif()
         endif()

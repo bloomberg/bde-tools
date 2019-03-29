@@ -63,7 +63,7 @@ function(bde_ufid_remove_flags target_ufid ufid_flags remove_flags)
 
     # Outer loop retains the global sequence of the flags (canonical form).
     foreach(flag IN LISTS known_ufid_flags)
-        if((${flag} IN_LIST ufid_flags) AND (NOT ${flag} IN_LIST remove_list))
+        if((${flag} IN_LIST ufid_flags) AND (NOT ${flag} IN_LIST remove_flags))
             list(APPEND new_ufid "${flag}")
         endif()
     endforeach()
@@ -158,8 +158,8 @@ function(bde_parse_ufid UFID)
         endif()
     endforeach()
 
-    if(${bde_ufid_is_shr} OR ${bde_ufid_is_64})
-        # Shared libraries and 64bit builds must use PIC.
+    if(${bde_ufid_is_shr})
+        # Shared libraries must use PIC.
         set(bde_ufid_is_pic 1)
     endif()
 
