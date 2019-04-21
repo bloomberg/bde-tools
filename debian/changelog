@@ -1,7 +1,13 @@
-bde-tools (3.25.0.0) unstable; urgency=low
+bde-tools (3.27.0.0) unstable; urgency=low
 
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 29 Mar 2019 13:47:00 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 18 Apr 2019 14:19:27 -0400
+
+bde-tools (3.25.0.0) git; urgency=low
+
+  * 52535e1 Changelog for version 3.25.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 29 Mar 2019 15:08:36 -0400
 
 bde-tools (3.23.0.0) git; urgency=low
 
