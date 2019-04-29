@@ -175,6 +175,7 @@ class Platform:
         'cl-18.00': (12, 2013),
         'cl-19.00': (14, 2015),
         'cl-19.10': (15, 2017),
+        'cl-19.20': (16, 2019),
     }
 
     @staticmethod
@@ -182,14 +183,19 @@ class Platform:
         host_platform = platform.system()
         if 'Windows' == host_platform:
             if not options.generator or options.generator == 'Ninja':
-                return 'Ninja'
+                return ['Ninja']
 
             if options.compiler in Platform.msvcVersionMap:
-                bitness = ' Win64' if options.ufid and '64' in options.ufid else ''
-                return 'Visual Studio {0[0]} {0[1]}{1}'.format(
-                    Platform.msvcVersionMap[options.compiler], bitness)
+                versionInfo = Platform.msvcVersionMap[options.compiler]
+                generator = ['Visual Studio {0[0]} {0[1]}'.format(versionInfo)]
+                if options.ufid and '64' in options.ufid:
+                    if versionInfo[0] < 16:
+                        generator[0] += ' Win64'
+                    else:
+                        generator += ['-A', 'x64']
+                return generator
 
-        return options.generator if options.generator else 'Ninja'
+        return [options.generator] if options.generator else ['Ninja']
 
     @staticmethod
     def generator_env(options):
@@ -247,7 +253,7 @@ class Platform:
     @staticmethod
     def allBuildTarget(options):
         gen = Platform.generator(options)
-        if gen.startswith('Visual Studio'):
+        if gen[0].startswith('Visual Studio'):
             return 'ALL_BUILD'
         else:
             return 'all'
@@ -394,7 +400,7 @@ def configure(options):
     # Important: CMAKE_INSTALL_LIBDIR is passed here to accomodate
     # default installation layout.
     configure_cmd = ['cmake', os.getcwd(),
-                     '-G' + Platform.generator(options),
+                     '-G'] + Platform.generator(options) + [
                      '-DCMAKE_MODULE_PATH:PATH=' + options.cmake_module_path,
                      '-DUFID:STRING=' + options.ufid,
                      '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
