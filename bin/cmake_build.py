@@ -200,7 +200,7 @@ class Platform:
     @staticmethod
     def generator_env(options):
         host_platform = platform.system()
-        if 'Ninja' == Platform.generator(options) and 'Windows' == host_platform:
+        if 'Ninja' == Platform.generator(options)[0] and 'Windows' == host_platform:
             return get_msvc_env(
                 '{}.0'.format(Platform.msvcVersionMap[options.compiler][0]),
                 64 if options.ufid and '64' in options.ufid else 32)
