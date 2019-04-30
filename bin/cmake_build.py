@@ -149,6 +149,7 @@ class Options:
             uplid_comp = '-'.join(uplid.split('-')[-2:])
 
         self.compiler = args.compiler if args.compiler else uplid_comp
+        self.test_regex = args.regex
         self.wafstyleout = args.wafstyleout
 
         self.generator = args.generator if hasattr(args, 'generator') else None
@@ -319,6 +320,8 @@ def wrapper():
                        help='Specify the compiler (Windows only). Currently supported'
                             'compilers are: "cl-18.00", "cl-19.00", and "cl-19.10".')
 
+    group.add_argument('--regex', help='Regular expression for filtering test drivers')
+
     group.add_argument('--wafstyleout', action='store_true',
                        help='Generate build output in "waf-style" for parsing by automated build tools.')
 
@@ -409,6 +412,7 @@ def configure(options):
                      '-DBDE_USE_WAFSTYLEOUT=' + ('ON' if options.wafstyleout else 'OFF' ),
                      '-DCMAKE_INSTALL_PREFIX=' + options.prefix,
                      '-DCMAKE_INSTALL_LIBDIR=' + ('lib64' if '64' in options.ufid else 'lib'),
+                     '-DBDE_TEST_REGEX=' + (options.test_regex if options.test_regex else ''),
                     ]
 
     if options.dpkg_build:
