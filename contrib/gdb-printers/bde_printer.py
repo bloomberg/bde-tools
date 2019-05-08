@@ -147,36 +147,6 @@ class CatchAll:
         import code; code.interact(local=locals())
         return "<------>"
 
-class ContainerBaseBslma:
-    """Printer for the ContainerBase<bsl::allocator<T>> specializations.
-
-    The BDE library is mostly compatible with the C++03 standard containers,
-    but differs in the use of allocators.  In particular, the default allocator
-    used in containers is a wrapper, 'bsl::allocator<>' around a polymorphic
-    allocator, 'bslma::Allocator'.  To handle standard-compliant allocators and
-    polymorphic allocators, the real allocator is handled in a base template
-    'BloombergLP::bslalg::ContainerBase'.  Since polymorphic allocators are the
-    default, the pretty printer only handles this case.
-
-    The pretty printer for the 'ContainerBase' type will print the address of
-    the 'bslma::Allocator' ('mechanism') in use by the container.  GDB is kind
-    enough to print out the name of the instance if it refers to a variable
-    with static lifetime so the format may look like either of the following:
-
-        mechanism = <BloombergLP::g_newDeleteAllocatorSingleton>
-
-        mechanism = 0x87639180
-
-    Note: This is not intended for direct use.
-    Note: This pretty printer ignores the hint to print the allocator.
-    """
-
-    def __init__(self,val):
-        self.val            = val
-        self.bslmaAllocator = self.val['d_allocator']['d_mechanism']
-
-    def to_string(self):
-        return self.bslmaAllocator
 
 class BslStringImp:
     """Pretty printer for 'bsl::String_Imp<char>'
@@ -200,7 +170,7 @@ class BslStringImp:
 
     Note that the pretty printer only handles narrow character strings,
     'bsl::string', and not wide character strings 'bsl::wstring' or any other
-    specilization of the 'bsl::basic_string<>' template.
+    specialization of the 'bsl::basic_string<>' template.
 
     The current implementation in BDE will set the length value to
     'bsl::string::npos' on destruction.  The pretty printer detects this as a
@@ -257,10 +227,10 @@ class BslStringImp:
         return str
 
 class BslVectorImp:
-    """Printer for 'bsl::Vector_ImpBase<T>' specializations.
+    """Printer for 'bsl::vectorBase<T>' specializations.
 
     This pretty printer handles printing instances of the
-    'bsl::Vector_ImpBase<>' template used to hold the contents of
+    'bsl::vectorBase<>' template used to hold the contents of
     'bsl::vector<>'.  The printer will dump the size and capacity of the
     object followed by the sequence of values in the sequence.
 
@@ -742,28 +712,28 @@ class BslString:
     """Printer for 'bsl::string'.
 
     The pretty printer for 'bsl::string' ('bsl::basic_string<char>') uses the
-    pretty printers 'ContainerBase' and 'StringImp'.  See the documentation
-    below to interpret the printout.
+    pretty printer for 'StringImp'.  See the documentation below to interpret
+    the printout.
 
         string = {
-          mechanism = <BloombergLP::g_newDeleteAllocatorSingleton>,
+          alloc = 0x804fdf0 <BloombergLP::g_newDeleteAllocatorSingleton>,
           data = [size:11,capacity:19] "Hello there"
         }
 
     Note that while common pretty printers for 'std::string' will only dump
-    the contents ("Hello there"), printing out the 'mechanism'
+    the contents ("Hello there"), printing out the allocator
     ('bslma::Allocator*') helps detect bugs by which a member of a type might
     not be using the same allocator as the container.  The size and, to lesser
     extent, capacity and use of small string optimization can help detect other
     issues and do not add too much verbosity to the output.
 
-    See also: 'BslStringImp', 'ContainerBase'
+    See also: 'BslStringImp'
     """
     def __init__(self,val):
         self.val = val
-        self.cbase = val.cast(val.type.items()[1][1].type)
+        self.alloc   = val['d_allocator']['d_mechanism']
         self.simp  = val.cast(val.type.items()[0][1].type)
-        self.members = _createAllocatorList(self.cbase)
+        self.members = _createAllocatorList(self.alloc)
         self.members.append(('data', self.simp))
 
     def to_string(self):
@@ -807,23 +777,21 @@ class BslVector:
     """Printer for 'bsl::vector<T,bsl::allocator<T>>'
 
     The pretty printer for specializations of 'bsl::vector<>' is implemented
-    in terms of the 'ContainerBase' and 'VectorImp' pretty printers.
+    in terms of the 'VectorImp' pretty printer.
 
         vector = {
-          alloc = <BloombergLP::g_newDeleteAllocatorSingleton>,
+          alloc = 0x804fdf0 <BloombergLP::g_newDeleteAllocatorSingleton>,
           data = [size:10,capacity:16] = {5, 5, 5, 5, 5, 5, 5, 5, 5, 5}
         }
-
-    Note: There is no support for 'bsl::vector<bool>' printing.
 
     See also 'BslVectorImp'
     """
     def __init__(self, val):
         self.val     = val
-        vimp         = val.cast(val.type.items()[0][1].type)
-        self.members = _createAllocatorList(
-                                     vimp.cast(vimp.type.items()[1][1].type))
-        self.members.append(('data', vimp.cast(vimp.type.items()[0][1].type)))
+        self.alloc   = val['d_allocator']['d_mechanism']
+        self.vimp    = val.cast(val.type.items()[0][1].type)
+        self.members = _createAllocatorList(self.alloc)
+        self.members.append(('data', self.vimp))
 
     def to_string(self):
         return str(self.val.type)
@@ -1200,10 +1168,6 @@ def build_pretty_printer():
     add_printer('bdlt::Time', '^BloombergLP::bdlt::Time$', Time)
     add_printer('bdlt::TimeTz', '^BloombergLP::bdlt::TimeTz$', TimeTz)
 
-    add_printer('(internal)ContainerBase',
-                '^BloombergLP::bslalg::ContainerBase<bsl::allocator<.*> >$',
-                ContainerBaseBslma)
-
     add_printer('string', '^bsl::basic_string<char,.*>$', BslString)
     add_printer('(internal)StringImp', '^bsl::String_Imp<char,.*>$',
                 BslStringImp)
@@ -1214,7 +1178,7 @@ def build_pretty_printer():
                 '^BloombergLP::bslstl::StringRefData<char>$',
                 StringRefData)
 
-    add_printer('(internal)VectorImp', '^bsl::Vector_ImpBase<.*>',
+    add_printer('(internal)VectorImp', '^bsl::vectorBase<.*>',
                 BslVectorImp)
     add_printer('vector', '^bsl::vector<.*>$', BslVector)
 
