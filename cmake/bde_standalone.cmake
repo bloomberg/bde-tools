@@ -40,6 +40,8 @@ function(bde_create_application_main_package retPackage listFile)
         package_initialize(package ${appName}-main)
         list(REMOVE_DUPLICATES mainFiles)
         bde_struct_set_field(${package} SOURCES ${mainFiles})
+    else()
+        message(FATAL_ERROR "Cannot find ${appName}'s .m.cpp file.")
     endif()
 
     bde_return(${package})

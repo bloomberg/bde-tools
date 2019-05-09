@@ -5,13 +5,15 @@ include(bde_log)
 include(bde_utils)
 include(bde_pkgconfig_utils)
 
-find_program(PKG_CONFIG_EXECUTABLE pkg-config PATHS
-    ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}/bin
-    /opt/bb/${CMAKE_INSTALL_LIBDIR}/bin
-    NO_DEFAULT_PATH)
+if (NOT WIN32)
+    find_program(PKG_CONFIG_EXECUTABLE pkg-config PATHS
+        ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}/bin
+        /opt/bb/${CMAKE_INSTALL_LIBDIR}/bin
+        NO_DEFAULT_PATH)
 
-# Initialize pkg config module
-find_package(PkgConfig)
+    # Initialize pkg config module
+    find_package(PkgConfig)
+endif()
 
 # :: bde_import_target_raw_library ::
 # -----------------------------------------------------------------------------
