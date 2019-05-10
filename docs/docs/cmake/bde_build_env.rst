@@ -232,12 +232,25 @@ Set Command Options
 
   Specify the build configuration using a :ref:`bde_repo-ufid`.
 
+.. option:: --build-type
+
+  Specify the CMake native build type (Debug/Release/RelWithDebInfo).
+
+.. option:: --abi-bits
+
+  Specify the build bitness.
+
+.. note::
+   ``--ufid`` option superseds ``--build-type`` and ``--abit-bits`` options
+   (the latter will be ignored). Also note that the CMake build types are
+   translated into ufid for low level build system.
+
 .. option:: -b, --build-dir
 
   Specify the build directory.
 
-.. option:: -i
+.. option:: -i, --install-dir
 
-  Specify the "root installation directory". TODO ( currently ignored )
+  Specify the "root installation directory".
 
 Use the ``--help`` option for more information.

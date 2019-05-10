@@ -75,15 +75,15 @@ def get_ufid_cmdline_options():
           'help': 'ABI bits (32/64) [default: %default]'}),
         (('build-type',),
          {'type': 'choice',
-          'default': 'debug',
-          'choices': ('release', 'debug'),
-          'help': 'the type of build to produce (debug/release)   '
+          'default': 'Debug',
+          'choices': ('Debug', 'Release', 'RelWithDebInfo'),
+          'help': 'the type of build to produce (Debug/Release/RelWithDebInfo)'
           '[default: %default]'}),
         (('library-type',),
          {'type': 'choice',
           'default': 'static',
           'choices': ('static', 'shared'),
-          'help': 'the type of libraries to build (shared/static) '
+          'help': 'the type of libraries to build (shared/static)'
           '[default: %default]'}),
         (('noexception',),
          {'action': 'store_true',
@@ -169,9 +169,14 @@ def get_default_cpp_std(compiler_type, compiler_version):
         One of the choices for the option "cpp-std", "17", "14", "11" or "03".
     """
 
+    if (compiler_type == 'gcc' and compiler_version >= '5.3' or
+        compiler_type == 'clang' and compiler_version >= '6'):
+        return "14"
+
     if (compiler_type == 'gcc' and compiler_version >= '4.8' or
-            compiler_type == 'clang' and compiler_version >= '3.6'):
+        compiler_type == 'clang' and compiler_version >= '3.6'):
         return "11"
+
     return "03"
 
 
@@ -199,26 +204,32 @@ def make_ufid_from_cmdline_options(opts):
         return ufid
 
     ufid_map = {
-        'abi_bits': {'64': '64'},
-        'build_type': {'debug': 'dbg', 'release': 'opt'},
-        'safe': {True: 'safe'},
-        'safe2': {True: 'safe2'},
-        'assert_level': {'aopt': 'aopt', 'adbg': 'adbg', 'asafe': 'asafe', 'anone': 'anone'},
-        'review_level': {'ropt': 'ropt', 'rdbg': 'rdbg', 'rsafe': 'rsafe', 'rnone': 'rnone'},
-        'cpp_std': {'11': 'cpp11', '14': 'cpp14', '17': 'cpp17'},
-        'noexception': {False: 'exc'},
-        'library_type': {'shared': 'shr'}
+        'abi_bits': {'64': ['64']},
+        'build_type': {'Debug':          ['dbg'],
+                       'Release':        ['opt'],
+                       'RelWithDebInfo': ['opt', 'dbg' ]},
+        'safe': {True: ['safe']},
+        'safe2': {True: ['safe2']},
+        'assert_level': {'aopt':  ['aopt'],
+                         'adbg':  ['adbg'],
+                         'asafe': ['asafe'],
+                         'anone': ['anone']},
+        'review_level': {'ropt':  ['ropt'],
+                         'rdbg':  ['rdbg'],
+                         'rsafe': ['rsafe'],
+                         'rnone': ['rnone']},
+        'cpp_std': {'11': ['cpp11'], '14': ['cpp14'], '17': ['cpp17']},
+        'noexception': {False: ['exc']},
+        'library_type': {'shared': ['shr']}
         }
 
-    flags = []
+    # always use mt
+    flags = ['mt']
     for opt in ufid_map:
         attr = getattr(opts, opt, None)
         if attr is not None:
             if attr in ufid_map[opt]:
-                flags.append(ufid_map[opt][attr])
-
-    # always use mt
-    flags.append('mt')
+                flags.extend(ufid_map[opt][attr])
 
     return optiontypes.Ufid(flags)
 
