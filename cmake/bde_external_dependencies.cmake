@@ -133,7 +133,6 @@ function(bde_import_target_from_pc retDeps depName)
                 NAMES
                     lib${depName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
                     lib${depName}${CMAKE_STATIC_LIBRARY_SUFFIX}
-
                     ${searchHints}
             )
 
@@ -153,7 +152,6 @@ function(bde_import_target_from_pc retDeps depName)
                     PROPERTY
                     IMPORTED_LOCATION "${rawLib_${depName}}"
                 )
-
             endif()
             break()
         endif()
@@ -250,12 +248,9 @@ function(bde_resolve_external_dependencies externalDeps)
                 continue()
             endif()
 
-            # The external dependancy is not found. Creating fake target to stop lookup.
+            # The external dependancy is not found.
             # Unresolved dependencies will be added as-is with '-l' flag to the link line.
             message(STATUS  "Not found (raw) external dependency '${depName}'")
-            bde_log(VERY_VERBOSE "Adding ${depName} as IMPORTED INTERFACE library")
-            add_library(${depName} INTERFACE IMPORTED)
-            target_link_options(${depName} INTERFACE "-l${depName}")
         endforeach()
     endwhile()
 endfunction()
