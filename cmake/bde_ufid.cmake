@@ -413,6 +413,8 @@ function(bde_ufid_setup_flags iface)
             $<$<CXX_COMPILER_ID:MSVC>:
                 # deletion of pointer to incomplete type
                 /we4150
+                # elements of array will be default initialized
+                /wd4351
                 # default constructor could not be generated
                 /wd4510
                 # default constructor could not be generated
