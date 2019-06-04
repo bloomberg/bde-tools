@@ -18,7 +18,7 @@ function(ufid_project_setup_install_opts proj)
             ARCHIVE_DIR "${CMAKE_INSTALL_LIBDIR}/${bde_install_ufid}"
             LIBRARY_DIR ${libPath}
             PKGCONFIG_DIR "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
-            EXECUTABLE_DIR "bin/${bde_install_ufid}"  # todo: bitness?
+            EXECUTABLE_DIR "${CMAKE_INSTALL_BINDIR}"
     )
 
     bde_struct_set_field(${proj} INSTALL_OPTS ${installOpts})

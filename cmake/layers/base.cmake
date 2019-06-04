@@ -101,7 +101,7 @@ bde_create_virtual_function(standalone_package_install uor_install)
 bde_create_virtual_function(process_standalone_package base_process_standalone_package)
 
 # application
-#include(bde_standalone)
+include(bde_application)
 
 function(base_process_application retPackageGroup listFile installOpts)
     bde_assert_no_extra_args()
@@ -120,7 +120,7 @@ bde_create_virtual_function(application_initialize bde_uor_initialize_applicatio
 bde_create_virtual_function(application_process_packages bde_application_process_packages)
 bde_create_virtual_function(application_setup_interface bde_standalone_setup_interface)
 bde_create_virtual_function(application_setup_test_interface bde_standalone_setup_test_interface)
-bde_create_virtual_function(application_install uor_install)
+bde_create_virtual_function(application_install bde_application_install_target)
 bde_create_virtual_function(process_application base_process_application)
 
 # project
