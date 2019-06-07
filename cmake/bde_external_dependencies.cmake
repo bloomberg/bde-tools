@@ -222,8 +222,11 @@ function(bde_resolve_external_dependencies externalDeps)
 
             # Looking up CMake export for the external dependency.
             find_package(
-                ${depName} QUIET
-                PATH_SUFFIXES "${CMAKE_INSTALL_LIBDIR}/${bde_install_ufid}/cmake"
+                ${depName}
+                    NO_SYSTEM_ENVIRONMENT_PATH
+                    NO_CMAKE_PACKAGE_REGISTRY
+                    QUIET
+                    PATH_SUFFIXES "${CMAKE_INSTALL_LIBDIR}/${bde_install_ufid}/cmake"
             )
 
             if(TARGET ${depName})
