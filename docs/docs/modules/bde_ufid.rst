@@ -1,1 +1,1 @@
-.. cmake-module:: ../../../cmake/bde_ufid.cmake
+.. cmake-module:: ../../../../../cmake/bde_ufid.cmake

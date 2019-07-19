@@ -1,1 +1,1 @@
-.. cmake-module:: ../../../cmake/bde_uor.cmake
+.. cmake-module:: ../../../../../cmake/bde_uor.cmake
