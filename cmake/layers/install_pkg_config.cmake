@@ -47,10 +47,15 @@ function(pkgconfig_uor_install uor listFile installOpts)
         set(uor_version ${versionTag})
     endif()
 
-    bde_struct_get_field(pc_depends ${uor} DEPENDS)
-    string(REPLACE ";" " " uor_pc_depends "${pc_depends}")
-
     bde_uor_to_pkgconfig_name(pkgconfig_name ${component})
+
+    bde_struct_get_field(uor_depends ${uor} DEPENDS)
+    set(pc_depends "")
+    foreach(uorName IN LISTS uor_depends)
+        bde_uor_to_pkgconfig_name(pcName ${uorName})
+        list(APPEND pc_depends ${pcName})
+    endforeach()
+    string(REPLACE ";" " " uor_pc_depends "${pc_depends}")
 
     configure_file(
         ${pkgConfigFile}
