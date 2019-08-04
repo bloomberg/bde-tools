@@ -1,7 +1,14 @@
-bde-tools (3.31.0.0) unstable; urgency=low
+bde-tools (3.36.0.0) unstable; urgency=low
 
+  * 4185f9c Add conditional site generation for internal and OSS versions. (#106)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 7 Jun 2019 11:59:47 -0400
+ -- Alex Vasylenko <avasylenko@bloomberg.net>  Mon, 29 Jul 2019 09:46:48 -0400
+
+bde-tools (3.31.0.0) git; urgency=low
+
+  * 7aa5db8 Changelog for version 3.31.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 10 Jun 2019 14:39:14 -0400
 
 bde-tools (3.30.0.0) git; urgency=low
 
@@ -12,30 +19,41 @@ bde-tools (3.30.0.0) git; urgency=low
 bde-tools (3.29.0.0) git; urgency=low
 
   * cbeedb0 Changelog for version 3.29.0.0
+  * 2544689 Merge pull request #99 from osubbotin/review/native-cmake-build
+  * fdb9393 Merge pull request #97 from hrosen4/update-printers-142153903
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 17 May 2019 12:20:16 -0400
 
 bde-tools (3.28.0.0) git; urgency=low
 
   * 3b7dc88 Changelog for version 3.28.0.0
+  * 21829b9 Merge pull request #90 from osubbotin/review/msvc-2019-support
+  * c60e521 Merge pull request #89 from osubbotin/review/msvc-2019-support
+  * 972b970 Merge pull request #88 from osubbotin/review/cc-5.13-toolchain
+  * a639d7e Merge pull request #87 from osubbotin/review/typo-in-ufid-map
+  * 6eb3045 Merge pull request #86 from osubbotin/review/fix-test-targets
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 3 May 2019 10:46:45 -0400
 
 bde-tools (3.27.0.0) git; urgency=low
 
   * ce8f1b0 Changelog for version 3.27.0.0
+  * 7cf4641 Merge pull request #85 from osubbotin/review/support-cmake-build-types
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 21 Apr 2019 13:49:17 -0400
 
 bde-tools (3.25.0.0) git; urgency=low
 
   * 52535e1 Changelog for version 3.25.0.0
+  * cf67e45 Merge pull request #82 from osubbotin/review/remove-force-pic
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 29 Mar 2019 15:08:36 -0400
 
 bde-tools (3.23.0.0) git; urgency=low
 
   * d536c32 Changelog for version 3.23.0.0
+  * 54c53df Merge pull request #81 from osubbotin/review/sun-debug-flags
+  * 1f6f8ae Merge pull request #80 from osubbotin/review/imported-system-libs
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 4 Mar 2019 10:10:15 -0500
 
@@ -48,12 +66,14 @@ bde-tools (3.22.0.0) git; urgency=low
 bde-tools (3.19.0.1) git; urgency=low
 
   * 1cbe9e2 Changelog for version 3.19.0.1
+  * 6084184 Merge pull request #77 from osubbotin/review/fix-lib-path
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 8 Jan 2019 14:56:33 -0500
 
 bde-tools (3.19.0.0) git; urgency=low
 
   * 49156d3 Changelog for version 3.19.0.0
+  * 2aff6c3 Merge pull request #76 from osubbotin/review/installation-fixes
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 7 Jan 2019 11:48:53 -0500
 
@@ -61,19 +81,28 @@ bde-tools (3.17.0.0) git; urgency=low
 
   * 0ae3e8f Changelog for version 3.17.0.0
   * 5aff59b Add failback for unsupported scm version formats. (#67)
+  * 73a6f8b Merge pull request #65 from mgiroux/add-depends-to-build-depends-drqs132314790
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 20 Nov 2018 09:50:31 -0500
 
 bde-tools (3.14.0.0) git; urgency=low
 
   * ff580db Changelog for version 3.14.0.0
+  * 807e75c Merge pull request #59 from spackard/patch-1
+  * 1d1b403 Merge pull request #52 from rkhlebnikov/master
+  * bc155ae Merge pull request #51 from rkhlebnikov/master
+  * 17a1e14 Merge pull request #49 from osubbotin/review/add-assert-and-review-ufids-drqs127252169
+  * 64fef28 Merge pull request #44 from osubbotin/review/prefix-default
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 5 Oct 2018 13:14:54 -0400
 
 bde-tools (3.11.0.0) git; urgency=low
 
   * e6ffea1 Changelog for version 3.11.0.0
+  * 1937f28 Merge pull request #9 from osubbotin/review/test-targets
   * 97b93e6 Invalid version format in changelog. (#8)
+  * 9781d4b Merge pull request #7 from osubbotin/review/jobs-and-verbosity
+  * 7c8ca35 Merge pull request #3 from mgiroux/review/remove-bde-oss-tools-references
   * 1af6cd6 Fixed changelog (#1)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 16 Jul 2018 13:31:49 -0400
