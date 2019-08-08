@@ -339,8 +339,8 @@ def wrapper():
     group.add_argument('--tests', choices=['build', 'run'],
                        help='Select whether to build or run the tests. Tests are not built by default.')
 
-    group.add_argument('--timeout', type=int, default=120,
-                       help='Timeout for single test driver in seconds (default:120).')
+    group.add_argument('--timeout', type=int, default=600,
+                       help='Timeout for single test driver in seconds (default:600).')
 
     group.add_argument('-k', '--keep-going', action='store_true',
                        help='Keep going after an error.')

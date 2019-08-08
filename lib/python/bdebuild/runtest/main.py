@@ -86,7 +86,7 @@ def get_cmdline_options():
                       choices=('memcheck', 'helgrind', 'drd'),
                       help='use valgrind tool: memchk, helgrind, or drd '
                            '[default: %default]')
-    parser.add_option('--timeout', type="int", default=120,
+    parser.add_option('--timeout', type="int", default=600,
                       help='timeout the test driver after a specified '
                       'period in seconds')
     parser.add_option('--filter-host-type', choices=('VM', 'Physical'),
