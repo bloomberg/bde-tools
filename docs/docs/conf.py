@@ -48,7 +48,9 @@ release = ''
 # ones.
 sys.path.append(os.path.abspath('helpers'))
 primary_domain = 'cmake'
-extensions = ['cmake_domain']
+extensions = [ 'sphinx.ext.extlinks',
+               'sphinx.ext.githubpages',
+               'cmake_domain']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -69,6 +71,7 @@ master_doc = 'index'
 # The exclude patterns 
 if tags.has('oss'):
     exclude_patterns = ['cmake/bde_modules.rst',
+                        'cmake/advanced.rst',
                         'modules/*',
                         'misc/docs-howto.rst']
 else:

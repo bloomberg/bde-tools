@@ -185,7 +185,7 @@ Third-party packages are not BDE-style packages and do not contain any
 Customizing The Repository Layout 
 ---------------------------------
 
-  .. warning:: Waf-only
+.. warning:: Waf-only
 
 The layout of the repository can be customized using a JSON configuration file
 ``.bdelayoutconfig`` located in the root of the repository.
@@ -244,7 +244,7 @@ required:
 
    Define the dependencies of a package or package group.
 
-And four types of metadata are optional:
+And four types of metadata are optional (waf-only):
 
  - ``opts``
 
@@ -326,7 +326,7 @@ For example:
 Options File Format
 -------------------
 
-  .. warning:: Waf-only
+.. warning:: Waf-only
 
 ``opts``, ``defs``, and ``cap`` files are all written in the options
 file format.
@@ -607,6 +607,8 @@ override the value established by their containing group.
 Opts and Defs Files
 -------------------
 
+.. warning:: Waf-only
+
 An ``opts`` file defines internal build options, while a ``defs`` file
 defines exported (externally visible) build options.  Both of these file
 types use the options file format, which allows the specification of compiler
@@ -635,6 +637,8 @@ flags used by the build tool:
 Cap File
 --------
 
+.. warning:: Waf-only
+
 A ``cap`` file defines the combinations of platform and build
 configuration supported by a package or a package group.  This file type
 also uses the ``opts`` file format.  The capability of a package or package
@@ -649,6 +653,8 @@ package or package group is not supported.
 
 Pub File
 --------
+
+.. warning:: Waf-only
 
 A ``pub`` file defines the list of header file names, *not component names*,
 that should be installed for a package.  In a way, this is a method to provide

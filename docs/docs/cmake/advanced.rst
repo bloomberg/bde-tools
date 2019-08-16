@@ -51,7 +51,7 @@ do the following steps:
 
   ::
 
-    $ git clone https://bbgithub.dev.bloomberg.com/bde/hsl.git
+    $ git clone bbgithub:bde/hsl
     $ cd hsl
 
 * Configure the build system:
@@ -98,7 +98,7 @@ any other source repository with external dependencies.
 
   ::
 
-    $ git clone https://bbgithub.dev.bloomberg.com/bde/a_cdb2.git
+    $ git clone bbgithub:bde/a_cdb2
     $ cd a_cdb2
 
 * Configure the build system:

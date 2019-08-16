@@ -4,11 +4,20 @@
 Build Examples
 ==============
 
-All the examples below should be run from the top-level bde source tree::
+All the examples below should be run from the top-level bde source tree:
+
+{{{ internal
+  ::
 
     $ git clone bbgithub:bde/bde
     $ cd bde
+}}}
+{{{ oss
+  ::
 
+    $ git clone https://github.com/bloomberg/bde.git
+    $ cd bde
+}}}
 
 .. _build-examples-1:
 
@@ -122,6 +131,7 @@ Example 5. Building a workspace
 
 BDE build system supports building a workspace.
 
+{{{ internal
 Clone the repos into a workspace:
 
   .. code-block:: bash
@@ -143,20 +153,36 @@ directory:
      include(bde_workspace)
 
      bde_process_workspace(
-         ${CMAKE_CURRENT_LIST_DIR}
-     )
-
-
-Instead of ``${CMAKE_CURRENT_LIST_DIR}`` variable, you can explicitely list the
-directories you want to be part of your workspace:
-
-  .. code-block:: cmake
-
-     bde_process_workspace(
          ${CMAKE_CURRENT_LIST_DIR}/bde
          ${CMAKE_CURRENT_LIST_DIR}/bde-classic
          ${CMAKE_CURRENT_LIST_DIR}/hsl
      )
+}}}
+{{{ oss
+Clone the repos into a workspace:
+
+  .. code-block:: bash
+   
+    $ git clone https://github.com/bloomberg/bde.git
+    $ git clone https://github.com/<user_id>/bde_app.git
+
+Create the ``CMakeLists.txt`` file with the following content in the top level
+directory:
+
+  .. code-block:: cmake
+
+     # CMakeLists.txt
+     cmake_minimum_required(VERSION 3.8)
+
+     project("BDE_ws")
+
+     include(bde_workspace)
+
+     bde_process_workspace(
+         ${CMAKE_CURRENT_LIST_DIR}/bde
+         ${CMAKE_CURRENT_LIST_DIR}/bde_app
+     )
+}}}
 
 Proceed with the standard workflow.
 

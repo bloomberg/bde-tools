@@ -23,7 +23,9 @@ and applications, including the `BDE libraries
    cmake/design
    cmake/config
    cmake/examples
+{{{ internal
    cmake/advanced
+}}}
    cmake/customization
 
 .. toctree::
