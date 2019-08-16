@@ -1,0 +1,566 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cmake_build.py &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/bde.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="BDE-Style Repository" href="../reference/bde_repo.html" />
+    <link rel="prev" title="bde_build_env.py" href="bde_build_env.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">CMake Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#build-system-intro-overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#supported-platform-and-compilers">Supported Platform and Compilers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">CMake Build System Organization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="design.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design.html#build-targets">Build Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design.html#install-components">Install Components</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Installation And Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#download-bde-tools">Download BDE tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#configure-system-compilers">Configure system compilers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#download-bde-library">Download BDE library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#set-build-environment">Set build environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#configure-and-build-bde">Configure and build BDE</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Build Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-1-build-all">Example 1. Build all</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-2-component-development">Example 2. Component development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-3-component-development-no-env">Example 3. Component development (no env)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-4-working-with-low-level-build-system">Example 4. Working with low-level build system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-5-building-a-workspace">Example 5. Building a workspace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-6-installing-build-artefacts">Example 6. Installing build artefacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="customization.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customization.html#how-to-enable-bde-build-system-for-your-project">How to enable BDE build system for your project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customization.html#how-to-extend-package-processing">How to extend package processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customization.html#additional-environment-variables">Additional Environment Variables</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Command Line Tools</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bde_build_env.html">bde_build_env.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bde_build_env.html#introduction">Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#prerequisites-and-supported-platforms">Prerequisites and Supported Platforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#how-it-works">How It Works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#usage-examples">Usage Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#environment-variables-set-by-bde-build-env-py">Environment Variables Set by bde_build_env.py</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bde_build_env.html#configuring-the-available-compilers">Configuring the Available Compilers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bde_build_env.html#commands-and-options">Commands and Options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#commands">Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#set-command-options">Set Command Options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cmake_build.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#command-line">Command line</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#commands">Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#common-parameters">Common parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parameters-for-configure-command">Parameters for configure command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parameters-for-build-command">Parameters for build command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parameters-for-install-command">Parameters for install command</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Reference Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo.html">BDE-Style Repository</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/bde_repo.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/bde_repo.html#terminology">Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/bde_repo.html#bde-physical-code-organization">BDE Physical Code Organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#units-and-unique-names">Units and Unique Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#normal-components-packages-and-package-groups">Normal Components, Packages, and Package Groups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#stand-alone-and-application-packages">Stand-Alone and Application Packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#non-conforming-package-types">Non-Conforming Package Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#plus-packages">Plus Packages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#third-party-packages">Third-Party Packages</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#customizing-the-repository-layout">Customizing The Repository Layout</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/bde_repo.html#bde-metadata">BDE Metadata</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#mem-file">Mem File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#dep-file">Dep File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#options-file-format">Options File Format</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#rule-commands">Rule Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#uplid">UPLID</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#ufid">UFID</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#variable-expansion">Variable Expansion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#processing-order">Processing Order</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#opts-and-defs-files">Opts and Defs Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#cap-file">Cap File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#pub-file">Pub File</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>cmake_build.py</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="../reference/bde_repo.html" class="btn btn-neutral float-right" title="BDE-Style Repository" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="bde_build_env.html" class="btn btn-neutral" title="bde_build_env.py" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="cmake-build-py">
+<span id="cmake-build-top"></span><h1>cmake_build.py<a class="headerlink" href="#cmake-build-py" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">cmake_build.py</span></code> is a wrapper script that simplifies invocation of the
+<code class="docutils literal notranslate"><span class="pre">cmake</span></code> and provides simple command line interface to the BDE build
+system.</p>
+<p>More specifically, the tool handles the following aspects of the build process:</p>
+<ol class="arabic simple">
+<li>Creates/selects the build directory for current build configuration.</li>
+<li>Selects the compiler and sets up arguments passed to the compiler.</li>
+<li>Sets a compiler configuration under Windows OS.</li>
+<li>Sets/passes necesssary parameters to the <code class="docutils literal notranslate"><span class="pre">cmake</span></code>.</li>
+</ol>
+<p><code class="docutils literal notranslate"><span class="pre">cmake_build.py</span></code> knowns the environment variables set by the
+<a class="reference internal" href="bde_build_env.html#bde-build-env-top"><span class="std std-ref">bde_build_env.py</span></a> and will pick up those parameters
+from the environment if they are not specified in the command line.</p>
+</div>
+<div class="section" id="command-line">
+<h2>Command line<a class="headerlink" href="#command-line" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The code samples below assume that the path to the <code class="docutils literal notranslate"><span class="pre">cmake_build.py</span></code> script
+is added to the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable.</p>
+</div>
+<p>Full set of supported parameters can be listed by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake_build</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">help</span>
+</pre></div>
+</div>
+<div class="section" id="commands">
+<h3>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h3>
+<dl class="option">
+<dt id="cmdoption-arg-configure">
+<code class="descname">configure</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform Cmake configuration step. During this step the build directory is
+created and low-level build system make files are generated.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-build">
+<code class="descname">build</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform build step. During this step the BDE libraries and (optionally) test
+drivers are compiled, linked and (optionally) test drivers are executed.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-install">
+<code class="descname">install</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-install" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform installation step. During this step the build artefacts are
+installed into user specified location.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="common-parameters">
+<h3>Common parameters<a class="headerlink" href="#common-parameters" title="Permalink to this headline">¶</a></h3>
+<dl class="option">
+<dt id="cmdoption-build-dir">
+<code class="descname">--build_dir</code><code class="descclassname"> BUILD_DIR</code><a class="headerlink" href="#cmdoption-build-dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to the build directory.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the parameter is not specfied, the value is taken from the
+<code class="docutils literal notranslate"><span class="pre">BDE_CMAKE_BUILD_DIR</span></code> environment variable. If environment variable is
+not set, the build system generates the name using the current platform,
+compiler, and ufid. The generated build directory looks like:
+<code class="docutils literal notranslate"><span class="pre">./_build/unix-linux-x86_64-2.6.32-gcc-5.4.0-opt_exc_mt_cpp11</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-j">
+<code class="descname">-j</code><code class="descclassname"> N</code><code class="descclassname">, </code><code class="descname">--jobs</code><code class="descclassname"> N</code><a class="headerlink" href="#cmdoption-j" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify number of jobs to run in parallel.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-v">
+<code class="descname">-v</code><code class="descclassname"></code><code class="descclassname">, </code><code class="descname">--verbose</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce verbose output.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-h">
+<code class="descname">-h</code><code class="descclassname"></code><code class="descclassname">, </code><code class="descname">--help</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the help page.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="parameters-for-configure-command">
+<h3>Parameters for configure command<a class="headerlink" href="#parameters-for-configure-command" title="Permalink to this headline">¶</a></h3>
+<p>Those parameters are used by <code class="docutils literal notranslate"><span class="pre">configure</span></code> command.</p>
+<dl class="option">
+<dt id="cmdoption-u">
+<code class="descname">-u</code><code class="descclassname"> UFID</code><code class="descclassname">, </code><code class="descname">--ufid</code><code class="descclassname"> UFID</code><a class="headerlink" href="#cmdoption-u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unified Flag IDentifier (e.g. “opt_exc_mt”).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the parameter is not specified, the value is taken from the
+<code class="docutils literal notranslate"><span class="pre">BDE_CMAKE_UFID</span></code> environment variable.</p>
+</div>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-g">
+<code class="descname">-G</code><code class="descclassname"> GENERATOR</code><a class="headerlink" href="#cmdoption-g" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select the build system for compilation.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the parameter is not specified, the script will choose the
+low-level build system (default is <code class="docutils literal notranslate"><span class="pre">ninja</span></code>).</p>
+</div>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-dpkg-build">
+<code class="descname">--dpkg-build</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-dpkg-build" title="Permalink to this definition">¶</a></dt>
+<dd><p>This option selects the toolchain that is used to produce production
+versions of the BDE libraries.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This parameter overrides the <code class="docutils literal notranslate"><span class="pre">--compiler</span></code> and <code class="docutils literal notranslate"><span class="pre">--toolchain</span></code>
+parameters.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This option should be used only when building release dpkg packages.</p>
+</div>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-toolchain">
+<code class="descname">--toolchain</code><code class="descclassname"> TOOLCHAIN</code><a class="headerlink" href="#cmdoption-toolchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to the CMake toolchain file. See <a class="reference external" href="https://cmake.org/cmake/help/v3.10/manual/cmake-toolchains.7.html">CMake Toolchains</a> for
+more details on the format of the Cmake toolchain file.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the parameter is not specified, the script will try to find the
+generic compiler toolchain file or use the CMake defaults, if no
+toolchain file is found.</p>
+</div>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-compiler">
+<code class="descname">--compiler</code><code class="descclassname"> COMPILER</code><a class="headerlink" href="#cmdoption-compiler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the compiler (Windows only). Currently supported compilers are:
+<code class="docutils literal notranslate"><span class="pre">cl-18.00</span></code>, <code class="docutils literal notranslate"><span class="pre">cl-19.00</span></code>, and <code class="docutils literal notranslate"><span class="pre">cl-19.10</span></code>.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-refroot">
+<code class="descname">--refroot</code><code class="descclassname"> REFROOT</code><a class="headerlink" href="#cmdoption-refroot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to the distribution refroot.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the parameter is not specified, the value is taken from the
+<code class="docutils literal notranslate"><span class="pre">DISTRIBUTION_REFROOT</span></code> environment variable.</p>
+</div>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-prefix">
+<code class="descname">--prefix</code><code class="descclassname"> PREFIX</code><a class="headerlink" href="#cmdoption-prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path prefix in which to look for dependencies for this buils. If
+<code class="docutils literal notranslate"><span class="pre">--refroot</span></code> is specified, this prefix is relative to the refroot
+(default=”/opt/bb”).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This parameter also defines the installation prefix for install
+command.</p>
+</div>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-clean">
+<code class="descname">--clean</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean the specified build directory before configuration.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">Compiler-specific configuration is generated only on initial
+configuration and cached by the build system. User must use
+empty (clean) build directory when switching compilers.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="parameters-for-build-command">
+<h3>Parameters for build command<a class="headerlink" href="#parameters-for-build-command" title="Permalink to this headline">¶</a></h3>
+<dl class="option">
+<dt id="cmdoption-targets">
+<code class="descname">--targets</code><code class="descclassname"> TARGET_LIST</code><a class="headerlink" href="#cmdoption-targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the list of build targets. See <a class="reference internal" href="design.html#build-system-design-build-targets"><span class="std std-ref">Build targets</span></a> for more information.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-test">
+<code class="descname">--test</code><code class="descclassname"> {build</code><code class="descclassname">, </code><code class="descname">run}</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects whether to build or run the tests. Tests are not built by default.
+build step.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-timeout">
+<code class="descname">--timeout</code><code class="descclassname"> TIMEOUT</code><a class="headerlink" href="#cmdoption-timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the maximum time to run a single test driver. The test driver is
+terminated if it does not complete within the specified timeout (in
+seconds).</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-k">
+<code class="descname">-k</code><code class="descclassname"></code><code class="descclassname">, </code><code class="descname">--keep-going</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-k" title="Permalink to this definition">¶</a></dt>
+<dd><p>Continues as much as possible after an error.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Supported by ‘ninja’ and ‘make’ build systems.</p>
+</div>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-xml-report">
+<code class="descname">--xml-report</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-xml-report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate xml report when running tests. Reports can be found in the
+<code class="docutils literal notranslate"><span class="pre">&lt;build_dir&gt;/Testing</span></code> folder.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="parameters-for-install-command">
+<h3>Parameters for install command<a class="headerlink" href="#parameters-for-install-command" title="Permalink to this headline">¶</a></h3>
+<dl class="option">
+<dt id="cmdoption-component">
+<code class="descname">--component</code><code class="descclassname"> COMPONENT</code><a class="headerlink" href="#cmdoption-component" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the component to install. See <a class="reference internal" href="design.html#build-system-design-install-components"><span class="std std-ref">Install components</span></a> for more information.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-install-dir">
+<code class="descname">--install_dir</code><code class="descclassname"> INSTALL_DIR</code><a class="headerlink" href="#cmdoption-install-dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to the top level installation directory.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
+      });
+  </script> 
+
+</body>
+</html>

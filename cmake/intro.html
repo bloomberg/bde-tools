@@ -1,0 +1,377 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Overview &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/bde.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CMake Build System Organization" href="design.html" />
+    <link rel="prev" title="BDE Build Tools" href="../index.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">CMake Build System</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#build-system-intro-overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-platform-and-compilers">Supported Platform and Compilers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">CMake Build System Organization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="design.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design.html#build-targets">Build Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design.html#install-components">Install Components</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Installation And Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#download-bde-tools">Download BDE tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#configure-system-compilers">Configure system compilers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#download-bde-library">Download BDE library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#set-build-environment">Set build environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#configure-and-build-bde">Configure and build BDE</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Build Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-1-build-all">Example 1. Build all</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-2-component-development">Example 2. Component development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-3-component-development-no-env">Example 3. Component development (no env)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-4-working-with-low-level-build-system">Example 4. Working with low-level build system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-5-building-a-workspace">Example 5. Building a workspace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-6-installing-build-artefacts">Example 6. Installing build artefacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="customization.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customization.html#how-to-enable-bde-build-system-for-your-project">How to enable BDE build system for your project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customization.html#how-to-extend-package-processing">How to extend package processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customization.html#additional-environment-variables">Additional Environment Variables</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Command Line Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="bde_build_env.html">bde_build_env.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bde_build_env.html#introduction">Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#prerequisites-and-supported-platforms">Prerequisites and Supported Platforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#how-it-works">How It Works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#usage-examples">Usage Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#environment-variables-set-by-bde-build-env-py">Environment Variables Set by bde_build_env.py</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bde_build_env.html#configuring-the-available-compilers">Configuring the Available Compilers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bde_build_env.html#commands-and-options">Commands and Options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#commands">Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bde_build_env.html#set-command-options">Set Command Options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_build.html">cmake_build.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cmake_build.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_build.html#command-line">Command line</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cmake_build.html#commands">Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake_build.html#common-parameters">Common parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake_build.html#parameters-for-configure-command">Parameters for configure command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake_build.html#parameters-for-build-command">Parameters for build command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake_build.html#parameters-for-install-command">Parameters for install command</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Reference Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo.html">BDE-Style Repository</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/bde_repo.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/bde_repo.html#terminology">Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/bde_repo.html#bde-physical-code-organization">BDE Physical Code Organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#units-and-unique-names">Units and Unique Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#normal-components-packages-and-package-groups">Normal Components, Packages, and Package Groups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#stand-alone-and-application-packages">Stand-Alone and Application Packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#non-conforming-package-types">Non-Conforming Package Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#plus-packages">Plus Packages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#third-party-packages">Third-Party Packages</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#customizing-the-repository-layout">Customizing The Repository Layout</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/bde_repo.html#bde-metadata">BDE Metadata</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#mem-file">Mem File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#dep-file">Dep File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#options-file-format">Options File Format</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#rule-commands">Rule Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#uplid">UPLID</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#ufid">UFID</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#variable-expansion">Variable Expansion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/bde_repo.html#processing-order">Processing Order</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#opts-and-defs-files">Opts and Defs Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#cap-file">Cap File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/bde_repo.html#pub-file">Pub File</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Overview</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="design.html" class="btn btn-neutral float-right" title="CMake Build System Organization" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral" title="BDE Build Tools" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="overview">
+<span id="build-system-intro-top"></span><h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="build-system-intro-overview">
+<span id="id1"></span><h2>Overview<a class="headerlink" href="#build-system-intro-overview" title="Permalink to this headline">¶</a></h2>
+<p>BDE build system is a set of tools and configuration files that uses <code class="docutils literal notranslate"><span class="pre">cmake</span></code>
+generator to produce make files for the low level build system (like <code class="docutils literal notranslate"><span class="pre">ninja</span></code>
+or <code class="docutils literal notranslate"><span class="pre">make</span></code>) and invoke this low level system to  build, install and test
+the BDE libraries.</p>
+<p>The workflow consists of the following steps:</p>
+<dl class="docutils">
+<dt>Configuration</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">cmake</span></code> parses the build description files, resolves internal and external
+dependancies and produces build, test and install targets</dd>
+<dt>Build</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">cmake</span></code> invokes the low-level build system to compile and link the BDE
+libraries and unit tests.</dd>
+<dt>Test</dt>
+<dd>Runs unit tests and present the results.</dd>
+<dt>Install</dt>
+<dd>Installs the build artefacts (header files, libraries, application and
+supporting metadata) to the specified location.</dd>
+</dl>
+</div>
+<div class="section" id="supported-platform-and-compilers">
+<span id="build-system-into-supported-platforms"></span><h2>Supported Platform and Compilers<a class="headerlink" href="#supported-platform-and-compilers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">OS</th>
+<th class="head">Compilers</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Linux</td>
+<td>gcc 5+, clang 5.x+</td>
+</tr>
+<tr class="row-odd"><td>Darwin</td>
+<td>gcc 5+, clang 5.x+</td>
+</tr>
+<tr class="row-even"><td>Windows</td>
+<td>Visual Studio 2013, 2015, 2017, 2019</td>
+</tr>
+<tr class="row-odd"><td>Solaris</td>
+<td>Sun Studio 11, Sun Studio 12. gcc 4.1+</td>
+</tr>
+<tr class="row-even"><td>AIX</td>
+<td>Xlc 9, Xlc 10, Xlc 11, gcc 4.1+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
+      });
+  </script> 
+
+</body>
+</html>
