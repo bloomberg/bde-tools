@@ -1,8 +1,14 @@
-bde-tools (3.36.0.0) unstable; urgency=low
+bde-tools (3.37.0.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 16 Aug 2019 13:28:22 -0400
+
+bde-tools (3.36.0.0) git; urgency=low
+
+  * 336a989 Changelog for version 3.36.0.0
   * 4185f9c Add conditional site generation for internal and OSS versions. (#106)
 
- -- Alex Vasylenko <avasylenko@bloomberg.net>  Mon, 29 Jul 2019 09:46:48 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 4 Aug 2019 08:33:00 -0400
 
 bde-tools (3.31.0.0) git; urgency=low
 
