@@ -121,7 +121,7 @@ def get_compilerinfos(hostname, uplid, file_):
         break
 
     if not matched_obj:
-        return None
+        return []
 
     infos = []
 
@@ -217,7 +217,7 @@ def detect_installed_compilers(uplid):
         break
 
     if not matched_obj:
-        return None
+        return []
 
     infos = []
 
