@@ -80,10 +80,10 @@ def program():
         if idx < len(compiler_infos):
             info = compiler_infos[idx]
     else:
-
         for c in compiler_infos:
             if c.key() == options.compiler:
                 info = c
+                break
 
     if not info:
         print("Invalid compiler: %s" % options.compiler, file=sys.stderr)
@@ -91,7 +91,8 @@ def program():
         sys.exit(1)
 
     if options.cpp_std is None:
-        options.cpp_std = optionsutil.get_default_cpp_std(info.type_, info.version)
+        options.cpp_std = optionsutil.get_default_cpp_std(
+                                                      info.type_, info.version)
     print_envs(options, info)
 
 
@@ -110,12 +111,22 @@ def get_compilerinfos():
     os_type, os_name, cpu_type, os_ver = get_os_info()
     if os_type != 'windows':
         uplid = optiontypes.Uplid(os_type, os_name, cpu_type, os_ver)
-        compilerconfig_path = compilerinfo.get_config_path()
 
-        with open(compilerconfig_path, 'r') as f:
-            compiler_infos = compilerinfo.get_compilerinfos(platform.node(),
-                                                            uplid, f)
-        return compiler_infos
+        config_path = compilerinfo.get_user_config_path()
+        user_compiler_infos = []
+        if config_path:
+            with open(config_path, 'r') as f:
+                user_compiler_infos = compilerinfo.get_compilerinfos(
+                                                     platform.node(), uplid, f)
+
+        config_path = compilerinfo.get_system_config_path()
+        system_compiler_infos = []
+        if config_path:
+            with open(config_path, 'r') as f:
+                system_compiler_infos = compilerinfo.get_compilerinfos(
+                                                     platform.node(), uplid, f)
+
+        return user_compiler_infos + system_compiler_infos + compilerinfo.detect_installed_compilers(uplid)
     else:
         compiler_infos = []
         for v in msvcversions.versions:
@@ -126,7 +137,6 @@ def get_compilerinfos():
             compiler_infos.append(info)
 
         return compiler_infos
-
 
 def get_os_info():
     platform_str = sysutil.unversioned_platform()

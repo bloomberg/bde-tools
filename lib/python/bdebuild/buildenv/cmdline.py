@@ -20,9 +20,13 @@ def get_option_parser():
                      [-b BUILD_DIR]
                      [-i INSTALL_DIR])
 
-set:   set environment variables (default)
-list:  list available compilers
-unset: unset environment variables"""
+set  : set environment variables (default)
+unset: unset environment variables
+
+list : list available compilers in the following order:
+    1. Compilers found in the user configuration file ($HOME/.bdecompilerconfig)
+    2. Compilers found in the system configuration file ($BDE_ROOT/etc/bdecompilerconfig)
+    3. gcc and clang compilers detected on $PATH"""
 
     parser = optparse.OptionParser(usage=usage)
 

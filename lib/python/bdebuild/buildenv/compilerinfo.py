@@ -6,7 +6,9 @@ from __future__ import print_function
 import json
 import re
 import os
+import string
 import sys
+import subprocess
 
 from bdebuild.common import blderror
 from bdebuild.common import mixins
@@ -48,45 +50,48 @@ class CompilerInfo(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
             return self.key()
 
 
-def get_config_path():
+def get_system_config_path():
     """Return the path to the compiler configuration file.
 
-    This is either ~/.bdecompilerconfig if it exists, or
-    $BDE_ROOT/bdecompilerconfig.
+    This is $BDE_ROOT/bdecompilerconfig.
 
     Returns:
-       Path to the config file.
-
-    Raises:
-       MissingFileError if no valid configuration file is found.
+       Path to the system config file if it exists or None
     """
-    localconfig_path = os.path.join(os.path.expanduser('~'),
-                                    '.bdecompilerconfig')
+    path = None
+
+    bde_root = os.environ.get('BDE_ROOT')
+
+    if bde_root:
+        config_path = os.path.join(bde_root, 'etc', 'bdecompilerconfig')
+        if (os.path.isfile(config_path) and
+            os.access(config_path, os.R_OK)):
+            path = config_path
+            print('Using system configuration: %s' % path, file=sys.stderr)
+
+    return path
+
+
+def get_user_config_path():
+    """Return the path to the user compiler configuration file.
+
+    This is ~/.bdecompilerconfig if it exists or None.
+
+    Returns:
+       Path to the user config file.
+
+    """
+    config_path = os.path.join(os.path.expanduser('~'),
+                               '.bdecompilerconfig')
 
     path = None
 
-    if (os.path.isfile(localconfig_path) and
-            os.access(localconfig_path, os.R_OK)):
-        path = localconfig_path
-    bde_root = os.environ.get('BDE_ROOT')
+    if (os.path.isfile(config_path) and
+            os.access(config_path, os.R_OK)):
+        path = config_path
+        print('Using user configuration: %s' % path, file=sys.stderr)
 
-    if not path and bde_root:
-        defaultconfig_path = os.path.join(bde_root,
-                                          'etc', 'bdecompilerconfig')
-        if (os.path.isfile(defaultconfig_path) and
-                os.access(defaultconfig_path, os.R_OK)):
-            path = defaultconfig_path
-
-    if not path:
-        raise blderror.MissingFileError(
-            'Cannot find a compiler configuration file at %s '
-            'or $BDE_ROOT/etc/bdecompilerconfig (BDE_ROOT is %s)' %
-            (localconfig_path, bde_root))
-
-    if path:
-        print('Using configuration: %s' % path, file=sys.stderr)
-        return path
-
+    return path
 
 def get_compilerinfos(hostname, uplid, file_):
     """Get the list of applicable compilers from a compiler config file.
@@ -139,6 +144,99 @@ def get_compilerinfos(hostname, uplid, file_):
 
     return infos
 
+
+def get_command_output(args):
+    try:
+        output = subprocess.check_output(args).translate(None, '\n')
+        return output
+    except Exception as e:
+        pass
+    return None
+
+
+def get_compiler_version(compiler_type, cxx_path):
+    version = None
+    if 'gcc' == compiler_type:
+        version = get_command_output([cxx_path, '-dumpfullversion', '-dumpversion'])
+
+    if 'clang' == compiler_type:
+        version = get_command_output([cxx_path, '--version'])
+        version = version.split()[2]
+
+    return version
+
+
+def detect_installed_compilers(uplid):
+    """Find installed system compilers. This function is expected to work
+       primarily on Linux/Darwin in OSS environment.
+
+    Args:
+        uplid (str): UPLID of the machine to be matched.
+
+    Returns:
+        list of matched CompilerInfo objects.
+    """
+
+    default_config=''' [ { "uplid": "unix-linux-",
+                           "compilers": [
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc",
+                                   "cxx_name":  "g++",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang",
+                                   "cxx_name":  "clang++",
+                                   "toolchain": "clang-default"
+                                }
+                            ]
+                          },
+                          { "uplid": "unix-darwin-",
+                            "compilers": [
+                                {
+                                   "type":      "clang",
+                                   "c_name":    "clang",
+                                   "cxx_name":  "clang++",
+                                   "toolchain": "clang-default"
+                                }
+                            ]
+                          }
+                        ]
+    '''
+
+    loaded_value = json.loads(default_config)
+    matched_obj = None
+    for obj in loaded_value:
+        uplid_mask = optiontypes.Uplid.from_str(obj['uplid'])
+        if not optionsutil.match_uplid(uplid, uplid_mask):
+            continue
+
+        matched_obj = obj
+        break
+
+    if not matched_obj:
+        return None
+
+    infos = []
+
+    for compiler in matched_obj['compilers']:
+        c_path = get_command_output(['which', compiler['c_name'] ])
+        cxx_path = get_command_output(['which', compiler['cxx_name'] ])
+
+        if (os.path.exists(c_path) and os.path.isfile(cxx_path)):
+            version = get_compiler_version(compiler['type'], cxx_path)
+
+            if 'toolchain' in compiler:
+                toolchain = compiler['toolchain']
+            else:
+                toolchain = None
+
+            info = CompilerInfo(compiler['type'], version, c_path, cxx_path, toolchain, None)
+            infos.append(info)
+
+    return infos
 
 # -----------------------------------------------------------------------------
 # Copyright 2018 Bloomberg Finance L.P.
