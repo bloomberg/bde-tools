@@ -128,7 +128,8 @@ Those parameters are used by ``configure`` command.
 .. option:: --compiler COMPILER
 
    Specifies the compiler (Windows only). Currently supported compilers are:
-   ``cl-18.00``, ``cl-19.00``, and ``cl-19.10``.
+   ``msvc-2019``, ``msvc-2017``, ``msvc-2015``, and ``msvc-2013``. Latest
+   detected version will be set as a default.
 
 .. option:: --refroot REFROOT
 

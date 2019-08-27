@@ -3,7 +3,9 @@
 from __future__ import print_function
 
 import argparse
+import collections
 import errno
+import json
 import os
 import platform
 import shutil
@@ -20,15 +22,21 @@ if "Windows" == platform.system():
         import _winreg as winreg # Python 2
 
 def find_installdir(version):
-    regLocation = '''SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7'''
-    with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, regLocation) as key:
-        value, _ = winreg.QueryValueEx(key, version)
-        return value
+    vswhere_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'vswhere.exe')
+    output = subprocess.check_output([vswhere_path, '-legacy', '-format', 'json'])
+    compilers = json.loads(output)
+    for cl in compilers:
+        if cl['installationVersion'].startswith(str(version)):
+            return cl['installationPath']
+    return None
 
 def find_vcvars(version):
     installdir = find_installdir(version)
+    if not installdir:
+        raise FileNotFoundError('Could not find MSVC {}.'.format(version))
+
     batpath = os.path.join(installdir, "VC")
-    if float(version) >= 15:
+    if version >= 15:
         batpath = os.path.join(batpath, "Auxiliary", "Build")
     batpath = os.path.join(batpath, "vcvarsall.bat")
 
@@ -58,6 +66,7 @@ def get_msvc_env(version, bitness):
         result[key] = value
 
     return result
+
 ####################################################################
 
 def enum(*sequential, **named):
@@ -172,11 +181,15 @@ class Options:
         self.component = args.component
 
 class Platform:
+    MsvcVersion = collections.namedtuple(
+     'MsvcVersion',
+     [ 'year', 'version' ])
+    
     msvcVersionMap = {
-        'cl-18.00': (12, 2013),
-        'cl-19.00': (14, 2015),
-        'cl-19.10': (15, 2017),
-        'cl-19.20': (16, 2019),
+        'msvc-2019': MsvcVersion(2019, 16),
+        'msvc-2017': MsvcVersion(2017, 15),
+        'msvc-2015': MsvcVersion(2015, 14),
+        'msvc-2013': MsvcVersion(2013, 12)
     }
 
     @staticmethod
@@ -187,8 +200,8 @@ class Platform:
                 return ['Ninja']
 
             if options.compiler in Platform.msvcVersionMap:
-                versionInfo = Platform.msvcVersionMap[options.compiler]
-                generator = ['Visual Studio {0[0]} {0[1]}'.format(versionInfo)]
+                msvcInfo = Platform.msvcVersionMap[options.compiler]
+                generator = ['Visual Studio {} {}'.format(msvcInfo.version, msvcInfo.year)]
                 if options.ufid and '64' in options.ufid:
                     if versionInfo[0] < 16:
                         generator[0] += ' Win64'
@@ -202,8 +215,7 @@ class Platform:
     def generator_env(options):
         host_platform = platform.system()
         if 'Ninja' == Platform.generator(options)[0] and 'Windows' == host_platform:
-            return get_msvc_env(
-                '{}.0'.format(Platform.msvcVersionMap[options.compiler][0]),
+            return get_msvc_env(Platform.msvcVersionMap[options.compiler].version,
                 64 if options.ufid and '64' in options.ufid else 32)
         else:
             return os.environ
@@ -317,13 +329,15 @@ def wrapper():
                        help='Path to the distribution refroot (default="/")')
 
     group.add_argument('--compiler',
-                       help='Specify the compiler (Windows only). Currently supported'
-                            'compilers are: "cl-18.00", "cl-19.00", and "cl-19.10".')
+                       help='Specify version of MSVC (Windows only). Currently supported '
+                            'versions are: "msvc-2019", "msvc-2017", "msvc-2015", and '
+                            '"msvc-2013".  Latest installed version will be default.')
 
     group.add_argument('--regex', help='Regular expression for filtering test drivers')
 
     group.add_argument('--wafstyleout', action='store_true',
-                       help='Generate build output in "waf-style" for parsing by automated build tools.')
+                       help='Generate build output in "waf-style" for parsing by automated '
+                            'build tools.')
 
     genChoices = Platform.generator_choices()
     if len(genChoices) > 1:
@@ -337,7 +351,8 @@ def wrapper():
                            '"bslma", or "bslma_testallocator").')
 
     group.add_argument('--tests', choices=['build', 'run'],
-                       help='Select whether to build or run the tests. Tests are not built by default.')
+                       help='Select whether to build or run the tests. Tests are not '
+                            'built by default.')
 
     group.add_argument('--timeout', type=int, default=600,
                        help='Timeout for single test driver in seconds (default:600).')

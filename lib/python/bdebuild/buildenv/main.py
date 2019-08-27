@@ -1,7 +1,9 @@
 from __future__ import print_function
 
 import platform
+import json
 import re
+import subprocess
 import sys
 import os
 
@@ -106,6 +108,14 @@ def unset_command():
     print('unset PREFIX')
     print('unset PKG_CONFIG_PATH')
 
+def find_installdir(version):
+    vswhere_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', '..', 'bin', 'vswhere.exe')
+    output = subprocess.check_output([vswhere_path, '-legacy', '-format', 'json'])
+    compilers = json.loads(output)
+    for cl in compilers:
+        if cl['installationVersion'].startswith(version):
+            return cl['installationPath']
+    return None
 
 def get_compilerinfos():
     os_type, os_name, cpu_type, os_ver = get_os_info()
@@ -130,10 +140,13 @@ def get_compilerinfos():
     else:
         compiler_infos = []
         for v in msvcversions.versions:
+            if not find_installdir(v.product_version):
+                continue
+
             info = compilerinfo.CompilerInfo(
-                'cl', v.compiler_version, None, None, toolchain = "cl-default",
-                desc = 'cl-%s -- %s (Version %s)' %
-                (v.compiler_version, v.product_name, v.product_version))
+                'msvc', v.product_name.split()[-1], None, None, toolchain = "cl-default",
+                desc = 'msvc-%s -- %s (Version %s)' %
+                (v.product_name.split()[-1], v.product_name, v.product_version))
             compiler_infos.append(info)
 
         return compiler_infos
