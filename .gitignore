@@ -1,3 +1,4 @@
 doc
 bin/.waf*
 bin/waf-*
+_sources
