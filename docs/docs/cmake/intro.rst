@@ -28,7 +28,7 @@ Test
   Runs unit tests and present the results.
 
 Install
-  Installs the build artefacts (header files, libraries, application and
+  Installs the build artifacts (header files, libraries, applications and
   supporting metadata) to the specified location.
 
 .. _build_system-into-supported_platforms:
