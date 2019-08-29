@@ -140,9 +140,10 @@ class Ufid(mixins.BasicEqualityMixin):
         'shr':    (BACK + 2, 'Build dynamic libraries'),
         'ndebug': (BACK + 3, 'Build with NDEBUG defined'),
 
-        'cpp11':  (BACK + 10, 'Build with support for C++11 (C++0x) features'),
-        'cpp14':  (BACK + 11, 'Build with support for C++14 features'),
-        'cpp17':  (BACK + 12, 'Build with support for C++17 features')
+        'cpp03':  (BACK + 10, 'Build with support for C++03 features'),
+        'cpp11':  (BACK + 11, 'Build with support for C++11 features'),
+        'cpp14':  (BACK + 12, 'Build with support for C++14 features'),
+        'cpp17':  (BACK + 13, 'Build with support for C++17 features')
     }
 
     def __init__(self, flags=[]):

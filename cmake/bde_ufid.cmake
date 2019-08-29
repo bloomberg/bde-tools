@@ -26,7 +26,7 @@ set(install_ufid_flags opt dbg exc mt safe safe2
 set(known_ufid_flags opt dbg exc mt 64 safe safe2
     aopt adbg asafe anone
     ropt rdbg rsafe rnone
-    stlport pic shr ndebug cpp11 cpp14 cpp17)
+    stlport pic shr ndebug cpp03 cpp11 cpp14 cpp17)
 
 #.rst:
 # bde_ufid_filter_flags
@@ -124,7 +124,7 @@ function(bde_parse_ufid UFID)
     endforeach()
 
     # Check for conflicts in cpp standards
-    bde_ufid_filter_flags(cppStds "${ufid_flags}" "cpp11;cpp14;cpp17")
+    bde_ufid_filter_flags(cppStds "${ufid_flags}" "cpp03;cpp11;cpp14;cpp17")
     string(REPLACE "_" ";" cppStds "${cppStds}")
     list(LENGTH cppStds cppStdsLen)
     if (cppStdsLen GREATER 1)
@@ -230,6 +230,7 @@ function(bde_ufid_setup_flags iface)
     bde_interface_target_compile_features(
         ${iface}
         PUBLIC
+            $<${bde_ufid_is_cpp03}:cxx_std_98>
             $<${bde_ufid_is_cpp11}:cxx_std_11>
             $<${bde_ufid_is_cpp14}:cxx_std_14>
             $<${bde_ufid_is_cpp17}:cxx_std_17>
