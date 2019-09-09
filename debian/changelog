@@ -1,8 +1,15 @@
-bde-tools (3.38.0.0) unstable; urgency=low
+bde-tools (3.38.0.1) unstable; urgency=low
 
+  * No commits found
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 6 Sep 2019 14:41:46 -0400
+
+bde-tools (3.38.0.0) git; urgency=low
+
+  * 4a978ff Changelog for version 3.38.0.0
   * c91a4ba Merge pull request #116 from osubbotin/review/add-cpp03-drqs147749381
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 29 Aug 2019 12:27:41 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 6 Sep 2019 14:41:46 -0400
 
 bde-tools (3.37.1.0) git; urgency=low
 
