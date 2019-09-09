@@ -24,7 +24,7 @@ if "Windows" == platform.system():
 def find_installdir(version):
     vswhere_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'vswhere.exe')
     output = subprocess.check_output([vswhere_path, '-legacy', '-format', 'json'])
-    compilers = json.loads(output)
+    compilers = json.loads(output.decode('ascii'))
     for cl in compilers:
         if cl['installationVersion'].startswith(str(version)):
             return cl['installationPath']
