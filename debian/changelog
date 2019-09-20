@@ -1,8 +1,13 @@
-bde-tools (3.38.0.1) unstable; urgency=low
+bde-tools (3.39.0.0) unstable; urgency=low
 
-  * No commits found
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 6 Sep 2019 14:41:46 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 9 Sep 2019 15:44:25 -0400
+
+bde-tools (3.38.0.1) git; urgency=low
+
+  * 682ce0e Changelog for version 3.38.0.1
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 9 Sep 2019 09:39:40 -0400
 
 bde-tools (3.38.0.0) git; urgency=low
 
