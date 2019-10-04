@@ -1,7 +1,14 @@
-bde-tools (3.39.0.0) unstable; urgency=low
+bde-tools (3.40.0.0) unstable; urgency=low
 
+  * 5cccb63 Remove obsolete versioned clang toolchains (#118)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 9 Sep 2019 15:44:25 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 24 Sep 2019 16:08:37 -0400
+
+bde-tools (3.39.0.0) git; urgency=low
+
+  * 20d06cf Changelog for version 3.39.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 20 Sep 2019 13:01:58 -0400
 
 bde-tools (3.38.0.1) git; urgency=low
 
