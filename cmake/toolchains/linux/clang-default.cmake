@@ -10,6 +10,7 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "${DEFAULT_CXX_FLAGS_INIT} "
        "-m${BUILD_BITNESS} "
        "-march=westmere "
+       "-mstackrealign "
        "-fno-strict-aliasing "
        "-fdiagnostics-show-option "
       )
