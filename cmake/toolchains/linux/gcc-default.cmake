@@ -10,12 +10,10 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "${DEFAULT_CXX_FLAGS_INIT} "
        "-m${BUILD_BITNESS} "
        "-march=westmere "
-       "-mstackrealign "
        "-fdiagnostics-show-option "
        "-fno-strict-aliasing "
        "--param ggc-min-expand=30 "
       )
-set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
 set(DEFAULT_C_FLAGS_INIT "$ENV{CFLAGS}")
 
@@ -26,6 +24,19 @@ string(CONCAT DEFAULT_C_FLAGS
        "-fdiagnostics-show-option "
        "-fno-strict-aliasing "
       )
+
+if(BUILD_BITNESS EQUAL "32")
+    string(CONCAT DEFAULT_CXX_FLAGS
+           "${DEFAULT_CXX_FLAGS} "
+           "-mstackrealign "
+          )
+    string(CONCAT DEFAULT_C_FLAGS
+           "${DEFAULT_C_FLAGS} "
+           "-mstackrealign "
+          )
+endif()
+
+set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 
 
