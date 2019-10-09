@@ -1,8 +1,15 @@
-bde-tools (3.40.0.0) unstable; urgency=low
+bde-tools (3.40.0.1) unstable; urgency=low
 
+  * 1083ad0 Merge pull request #120 from mgiroux/add-mstackrealign-flag-to-linux
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 9 Oct 2019 15:48:44 -0400
+
+bde-tools (3.40.0.0) git; urgency=low
+
+  * ae9c27d Changelog for version 3.40.0.0
   * 5cccb63 Remove obsolete versioned clang toolchains (#118)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 24 Sep 2019 16:08:37 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 4 Oct 2019 13:04:47 -0400
 
 bde-tools (3.39.0.0) git; urgency=low
 
