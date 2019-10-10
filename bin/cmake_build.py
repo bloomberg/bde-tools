@@ -184,7 +184,7 @@ class Platform:
     MsvcVersion = collections.namedtuple(
      'MsvcVersion',
      [ 'year', 'version' ])
-    
+
     msvcVersionMap = {
         'msvc-2019': MsvcVersion(2019, 16),
         'msvc-2017': MsvcVersion(2017, 15),
@@ -203,7 +203,7 @@ class Platform:
                 msvcInfo = Platform.msvcVersionMap[options.compiler]
                 generator = ['Visual Studio {} {}'.format(msvcInfo.version, msvcInfo.year)]
                 if options.ufid and '64' in options.ufid:
-                    if versionInfo[0] < 16:
+                    if msvcInfo.version < 16:
                         generator[0] += ' Win64'
                     else:
                         generator += ['-A', 'x64']
