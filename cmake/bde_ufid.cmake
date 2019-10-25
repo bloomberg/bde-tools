@@ -227,14 +227,30 @@ function(bde_ufid_setup_flags iface)
 
     set(CMAKE_BUILD_TYPE ${build_type} CACHE STRING "Build type" FORCE)
 
-    bde_interface_target_compile_features(
-        ${iface}
-        PUBLIC
-            $<${bde_ufid_is_cpp03}:cxx_std_98>
-            $<${bde_ufid_is_cpp11}:cxx_std_11>
-            $<${bde_ufid_is_cpp14}:cxx_std_14>
-            $<${bde_ufid_is_cpp17}:cxx_std_17>
-    )
+    # Force specific c++ standard when a requested.
+    if(${bde_ufid_is_cpp03})
+        set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
+        set(CMAKE_CXX_STANDARD 98 CACHE STRING "C++ standard" FORCE)
+    elseif(${bde_ufid_is_cpp11})
+        set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
+        set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ standard" FORCE)
+    elseif(${bde_ufid_is_cpp14})
+        set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
+        set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ standard" FORCE)
+    elseif(${bde_ufid_is_cpp17})
+        set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
+        set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard" FORCE)
+    endif()
+
+    # Since CMake 3.15 this does not work 
+    #bde_interface_target_compile_features(
+    #    ${iface}
+    #    PUBLIC
+    #        $<${bde_ufid_is_cpp03}:cxx_std_98>
+    #        $<${bde_ufid_is_cpp11}:cxx_std_11>
+    #        $<${bde_ufid_is_cpp14}:cxx_std_14>
+    #        $<${bde_ufid_is_cpp17}:cxx_std_17>
+    #)
 
     bde_interface_target_compile_options(
         ${iface}
