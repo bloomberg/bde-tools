@@ -1,8 +1,15 @@
-bde-tools (3.40.0.1) unstable; urgency=low
+bde-tools (3.41.0.0) unstable; urgency=low
 
+  * b860ce9 Fix version access (#121)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 25 Oct 2019 10:25:40 -0400
+
+bde-tools (3.40.0.1) git; urgency=low
+
+  * 211e536 Changelog for version 3.40.0.1
   * 1083ad0 Merge pull request #120 from mgiroux/add-mstackrealign-flag-to-linux
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 9 Oct 2019 15:48:44 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 9 Oct 2019 15:55:35 -0400
 
 bde-tools (3.40.0.0) git; urgency=low
 
