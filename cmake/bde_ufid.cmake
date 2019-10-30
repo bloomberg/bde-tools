@@ -287,6 +287,7 @@ function(bde_ufid_setup_flags iface)
             >
             $<$<CONFIG:RelWithDebInfo>:
                 BDE_BUILD_TARGET_OPT
+                BDE_BUILD_TARGET_DBG
             >
             $<$<CONFIG:Debug>:
                 BDE_BUILD_TARGET_DBG
