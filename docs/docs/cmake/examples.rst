@@ -114,7 +114,7 @@ Build specific targets:
 
   ::
 
-    $ ninja decnumber
+    $ ninja inteldfp
     $ ninja bdlb
     $ ninja bdlb.t
     $ ninja bdld_datum.t
