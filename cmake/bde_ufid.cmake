@@ -173,34 +173,6 @@ function(bde_parse_ufid UFID)
 
     bde_ufid_filter_flags(bde_install_ufid "${ufid_flags}" "${install_ufid_flags}")
     set(bde_install_ufid ${bde_install_ufid} CACHE INTERNAL "" FORCE)
-endfunction()
-
-# :: bde_ufid_add_library ::
-# -----------------------------------------------------------------------------
-function(bde_ufid_add_library name)
-    # Set up shared/static library build
-    if(${bde_ufid_is_shr})
-        set(libType SHARED)
-    else()
-        set(libType STATIC)
-    endif()
-    add_library(${name} ${libType} "${ARGN}")
-endfunction()
-
-# :: bde_ufid_setup_flags ::
-# -----------------------------------------------------------------------------
-function(bde_ufid_setup_flags iface)
-    bde_assert_no_extra_args()
-
-    # Set up PIC
-    # This code does not work in 3.8, but will be fixed in later versions.
-    # The -fPIC flag is set explicitely in the compile options for now.
-    if(${bde_ufid_is_shr} OR ${bde_ufid_is_pic})
-        bde_interface_target_set_property(
-            ${iface}
-                POSITION_INDEPENDENT_CODE PUBLIC 1
-        )
-    endif()
 
     # Reset global properties to prohibit implicit paths for library lookup and
     # set the global custom lib suffix.
@@ -241,16 +213,35 @@ function(bde_ufid_setup_flags iface)
         set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
         set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard" FORCE)
     endif()
+endfunction()
 
-    # Since CMake 3.15 this does not work 
-    #bde_interface_target_compile_features(
-    #    ${iface}
-    #    PUBLIC
-    #        $<${bde_ufid_is_cpp03}:cxx_std_98>
-    #        $<${bde_ufid_is_cpp11}:cxx_std_11>
-    #        $<${bde_ufid_is_cpp14}:cxx_std_14>
-    #        $<${bde_ufid_is_cpp17}:cxx_std_17>
-    #)
+# :: bde_ufid_add_library ::
+# -----------------------------------------------------------------------------
+function(bde_ufid_add_library name)
+    # Set up shared/static library build
+    if(${bde_ufid_is_shr})
+        set(libType SHARED)
+    else()
+        set(libType STATIC)
+    endif()
+    add_library(${name} ${libType} "${ARGN}")
+endfunction()
+
+# :: bde_ufid_setup_flags ::
+# -----------------------------------------------------------------------------
+function(bde_ufid_setup_flags iface)
+    bde_assert_no_extra_args()
+
+    # Set up PIC
+    # This code does not work in 3.8, but will be fixed in later versions.
+    # The -fPIC flag is set explicitely in the compile options for now.
+    if(${bde_ufid_is_shr} OR ${bde_ufid_is_pic})
+        bde_interface_target_set_property(
+            ${iface}
+                POSITION_INDEPENDENT_CODE PUBLIC 1
+        )
+    endif()
+
 
     bde_interface_target_compile_options(
         ${iface}
