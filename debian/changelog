@@ -1,8 +1,16 @@
-bde-tools (3.41.0.0) unstable; urgency=low
+bde-tools (3.42.0.0) unstable; urgency=low
 
+  * c57e4e9 Merge pull request #127 from osubbotin/review/pc-file-lookup-fix
+  * 38cfa54 Merge pull request #124 from osubbotin/review/missing-dbg-flag
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 8 Nov 2019 10:27:32 -0500
+
+bde-tools (3.41.0.0) git; urgency=low
+
+  * f7a2b1e Changelog for version 3.41.0.0
   * b860ce9 Fix version access (#121)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 25 Oct 2019 10:25:40 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 26 Oct 2019 16:22:09 -0400
 
 bde-tools (3.40.0.1) git; urgency=low
 
