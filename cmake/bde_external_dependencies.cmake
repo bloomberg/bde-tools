@@ -89,8 +89,7 @@ function(bde_import_target_from_pc retDeps depName)
                    "${depPkgconfigName}"
                    "lib${depPkgconfigName}.${bde_install_ufid}"
                    "${depPkgconfigName}lib.${bde_install_ufid}"
-                   "lib${depPkgconfigName}"
-                   "${depPkgconfigName}lib")
+            )
 
         pkg_check_modules(${depName}_pc
                           QUIET NO_CMAKE_PATH "${pcName}")
