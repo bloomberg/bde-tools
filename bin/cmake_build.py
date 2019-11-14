@@ -554,7 +554,7 @@ def install(options):
 
     cache_info = CacheInfo(options.build_dir)
     if cache_info.multiconfig:
-        install_cmd.append += ['-DCMAKE_INSTALL_CONFIG_NAME=' + cache_info.build_type]
+        install_cmd += ['-DCMAKE_INSTALL_CONFIG_NAME=' + cache_info.build_type]
 
     install_cmd += ['-P', 'cmake_install.cmake']
 
