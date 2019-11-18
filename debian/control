@@ -10,3 +10,7 @@ Architecture: all
 Depends: python,cmake,make,ninja
 Description: BDE Build Tools
  Tools to build BDE-style repositories, including the BDE libraries.
+
+Package: bde-gdb-printers
+Architecture: all
+Description: GDB Pretty printers for Bloomberg components

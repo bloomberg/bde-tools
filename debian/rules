@@ -11,14 +11,20 @@ clean:
 
 debian/build-stamp:
 	touch debian/build-stamp
-	mkdir -p debian/tmp/$(PREFIX)/libexec/bde-tools/
-	cp -r bin cmake lib debian/tmp/$(PREFIX)/libexec/bde-tools/
+	mkdir -p debian/tmp/bde-tools/$(PREFIX)/libexec/bde-tools/
+	cp -r bin cmake lib debian/tmp/bde-tools/$(PREFIX)/libexec/bde-tools/
+	mkdir -p debian/tmp/bde-gdb-printers/$(PREFIX)/libexec/bde-gdb-printers
+	cp contrib/gdb-printers/bde_printer.py debian/tmp/bde-gdb-printers/$(PREFIX)/libexec/bde-gdb-printers/
+	cp contrib/gdb-printers/gdbinit.dpkg debian/tmp/bde-gdb-printers/$(PREFIX)/libexec/bde-gdb-printers/gdbinit
 
 debian/binary-stamp: debian/build-stamp
 	touch debian/binary-stamp
-	mkdir -p debian/tmp/DEBIAN
-	dpkg-gencontrol
-	dpkg-deb -b debian/tmp ../
+	mkdir -p debian/tmp/bde-tools/DEBIAN
+	dpkg-gencontrol -pbde-tools -Pdebian/tmp/bde-tools
+	dpkg-deb -b debian/tmp/bde-tools ../
+	mkdir -p debian/tmp/bde-gdb-printers/DEBIAN
+	dpkg-gencontrol -pbde-gdb-printers -Pdebian/tmp/bde-gdb-printers
+	dpkg-deb -b debian/tmp/bde-gdb-printers ../
 
 build: build-arch build-indep
 
