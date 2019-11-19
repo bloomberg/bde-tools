@@ -202,11 +202,13 @@ class Platform:
             if options.compiler in Platform.msvcVersionMap:
                 msvcInfo = Platform.msvcVersionMap[options.compiler]
                 generator = ['Visual Studio {} {}'.format(msvcInfo.version, msvcInfo.year)]
-                if options.ufid and '64' in options.ufid:
-                    if msvcInfo.version < 16:
+
+                is64 = options.ufid and '64' in options.ufid
+                if msvcInfo.version < 16:
+                    if is64:
                         generator[0] += ' Win64'
-                    else:
-                        generator += ['-A', 'x64']
+                else:
+                    generator += ['-A', 'x64' if is64 else 'Win32']
                 return generator
 
         return [options.generator] if options.generator else ['Ninja']
