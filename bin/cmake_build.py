@@ -514,7 +514,13 @@ def build(options):
             full_target = target + '.t'
         else:
             full_target = None if target == 'all' else target
-        build_target(full_target, options.build_dir, extra_args, env)
+
+        try:
+            build_target(full_target, options.build_dir, extra_args, env)
+        except:
+            if not options.keep_going:
+                raise
+
 
     if 'run' == options.tests:
         test_cmd = ['ctest',
@@ -538,7 +544,11 @@ def build(options):
             test_pattern = "|".join(['^'+t+'$' for t in test_list])
             test_cmd += ['-L', test_pattern]
 
-        subprocess.check_call(test_cmd, cwd = options.build_dir)
+        try:
+            subprocess.check_call(test_cmd, cwd = options.build_dir)
+        except:
+            if not options.keep_going:
+                raise
 
 def install(options):
     """ Install
