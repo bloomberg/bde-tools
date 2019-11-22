@@ -1,9 +1,19 @@
-bde-tools (3.42.0.0) unstable; urgency=low
+bde-tools (3.43.0.0) unstable; urgency=low
 
+  * 34cf77e Merge pull request #133 from osubbotin/review/toolchain-update-sun
+  * 811df89 Merge pull request #132 from osubbotin/review/run-test-after-build
+  * a62589c Merge pull request #131 from rkhlebnikov/master
+  * 9298609 Merge pull request #129 from cteubner/patch-1
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 21 Nov 2019 11:45:20 -0500
+
+bde-tools (3.42.0.0) git; urgency=low
+
+  * 9e377d0 Changelog for version 3.42.0.0
   * c57e4e9 Merge pull request #127 from osubbotin/review/pc-file-lookup-fix
   * 38cfa54 Merge pull request #124 from osubbotin/review/missing-dbg-flag
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 8 Nov 2019 10:27:32 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 8 Nov 2019 11:57:16 -0500
 
 bde-tools (3.41.0.0) git; urgency=low
 
