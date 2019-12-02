@@ -1,4 +1,5 @@
 #include <bsl_iostream.h>
+#include <bsl_string.h>
 #include <bsl_utility.h>
 
 int main() {

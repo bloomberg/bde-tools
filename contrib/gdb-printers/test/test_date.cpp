@@ -12,7 +12,8 @@ int main()
 
     bdlt::Date leap1(2012, 2, 27);
     bdlt::Date leap2(2012, 2, 28);
-    bdlt::Date leap3(2012, 3, 1);
+    bdlt::Date leap3(2012, 2, 29);
+    bdlt::Date leap4(2012, 3, 1);
 
     bsl::cout << def << "\n";
     bsl::cout << pre1752 << "\n";
@@ -20,6 +21,7 @@ int main()
     bsl::cout << leap1 << "\n";
     bsl::cout << leap2 << "\n";
     bsl::cout << leap3 << "\n";
+    bsl::cout << leap4 << "\n";
 
     bsl::cout << "Done\n";
 }

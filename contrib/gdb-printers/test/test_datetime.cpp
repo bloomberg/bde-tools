@@ -12,7 +12,8 @@ int main()
 
     bdlt::Datetime leap1(2012, 2, 27);
     bdlt::Datetime leap2(2012, 2, 28);
-    bdlt::Datetime leap3(2012, 3, 1);
+    bdlt::Datetime leap3(2012, 2, 29);
+    bdlt::Datetime leap4(2012, 3, 1);
 
     bdlt::Datetime full(2016, 10, 7, 15, 52, 27, 99, 400);
 
@@ -22,6 +23,7 @@ int main()
     bsl::cout << leap1 << "\n";
     bsl::cout << leap2 << "\n";
     bsl::cout << leap3 << "\n";
+    bsl::cout << leap4 << "\n";
     bsl::cout << full << "\n";
 
     bsl::cout << "Done\n";

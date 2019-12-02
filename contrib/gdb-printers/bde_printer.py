@@ -451,7 +451,7 @@ class Nullable:
         self.members = []
         if val['d_imp'].type.has_key('d_allocator_p'):
             alloc = val['d_imp']['d_allocator_p']
-            self.members.append(('alloc',alloc))
+            self.members = _createAllocatorList(alloc)
 
         self.members.append(('null', val['d_imp']['d_isNull']))
         if not val['d_imp']['d_isNull']:
@@ -666,10 +666,10 @@ class Datetime:
     
     The value is shown in 'YYYYY-MM-DDTHH:MM:SS.SSSSSS' format.
     """
-    REP_MASK  = 0x08000000000000000L
-    DATE_MASK = 0x0ffffffe000000000L
-    TIME_MASK = 0x00000001fffffffffL
-    MASK_32   = 0x000000000ffffffffL
+    REP_MASK  = 0x08000000000000000
+    DATE_MASK = 0x0ffffffe000000000
+    TIME_MASK = 0x00000001fffffffff
+    MASK_32   = 0x000000000ffffffff
     SHIFT_32  = 32
     TIME_BITS = 37
 
@@ -679,7 +679,7 @@ class Datetime:
     def to_string(self):
         value = long(self.val['d_value'])
         if value < 0:
-            value += 2L ** 64
+            value += 2 ** 64
         invalid = (value & Datetime.REP_MASK) == 0
         if invalid:
             if sys.byteorder == "little":
@@ -688,7 +688,7 @@ class Datetime:
             else:
                 days = (value >> Datetime.SHIFT_32) - 1
                 milliseconds = value & Datetime.MASK_32
-            value = (days << Datetime.TIME_BITS) | (1000L * milliseconds)
+            value = (days << Datetime.TIME_BITS) | (1000 * milliseconds)
         else:
             value ^= Datetime.REP_MASK
         date = Date.toYMD((value >> Datetime.TIME_BITS) + 1)
