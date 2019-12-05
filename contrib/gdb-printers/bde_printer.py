@@ -308,10 +308,11 @@ class BslRbTreeIterator:
         This function implements the equivalent in C++ of:
             return pointer->name & ~1
         """
-        next = pointer.dereference()[name]
-        if int(next) & 1:
-            next = gdb.Value(int(next)&~1).reinterpret_cast(next.type)
-        return next
+        np = pointer.dereference()[name]
+        npi = int(np.cast(gdb.lookup_type('int')))
+        if npi & 1:
+            np = gdb.Value(npi & ~1).reinterpret_cast(np.type)
+        return np
 
     def nextNode(self, pointer):
         if (pointer['d_right_p'] != 0):
@@ -524,7 +525,7 @@ class Tz:
     """Utility to format a time zone offset."""
     @classmethod
     def toHM(cls, offset):
-        sign = '-' if offset < 0 else '+'
+        offset = int(offset)
         if offset < 0:
             offset = -offset
             sign = '-'
@@ -576,6 +577,7 @@ class Date:
     def serialToYearDate(cls, serialDay):
         """Extract the year and day of the year from the value in 'serialDay'.
         """
+        serialDay = int(serialDay)
         if serialDay > Date.JAN_01_1753:
             y = Date.YEAR_1601                 # base year
             n = serialDay - Date.JAN_01_1601   # num actual days since 1601/1/1
