@@ -120,7 +120,7 @@ def stringRep(arg, length):
     print_str = ''
     char_ptr_type = gdb.lookup_type('unsigned char').pointer()
     c_str = arg.cast(char_ptr_type)
-    for i in xrange(print_len):
+    for i in range(print_len):
         ci = (c_str + i).dereference()
         cc = chr(ci)
         if cc in string.printable:
