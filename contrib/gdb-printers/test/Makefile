@@ -15,4 +15,4 @@ $(TARGETS) : % : %.linux.tsk
 
 .PHONY : clean
 clean:
-	rm -f *.o *.tsk
+	rm -rf 00* *.o *.tsk

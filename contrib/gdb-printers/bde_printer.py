@@ -120,7 +120,7 @@ def stringRep(arg, length):
     print_str = ''
     char_ptr_type = gdb.lookup_type('unsigned char').pointer()
     c_str = arg.cast(char_ptr_type)
-    for i in xrange(print_len):
+    for i in range(print_len):
         ci = (c_str + i).dereference()
         cc = chr(ci)
         if cc in string.printable:
@@ -262,7 +262,7 @@ class BslVectorImp:
             def __iter__(s):
                 return s
 
-            def next(s):
+            def __next__(s):
                 if self.current == self.end:
                     raise StopIteration
 
@@ -272,6 +272,8 @@ class BslVectorImp:
                 self.current += 1
 
                 return (name, value)
+
+            next = __next__
 
         return keyValueIterator(VectorContentsIterator(self.begin, self.end))
 
@@ -291,12 +293,14 @@ class BslRbTreeIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if (self.current == self.sentinel.address):
             raise StopIteration
         treeNode = self.current.dereference().cast(self.nodeType)
         self.current = self.nextNode(self.current)
         return treeNode['d_value']
+
+    next = __next__
 
     def followPointer(self, pointer, name):
         """Follow the pointer specified by 'name' in the specified 'object'.
@@ -304,10 +308,11 @@ class BslRbTreeIterator:
         This function implements the equivalent in C++ of:
             return pointer->name & ~1
         """
-        next = pointer.dereference()[name]
-        if long(next) & 1:
-            next = gdb.Value(long(next)&~1).reinterpret_cast(next.type)
-        return next
+        np = pointer.dereference()[name]
+        npi = int(np.cast(gdb.lookup_type('int')))
+        if npi & 1:
+            np = gdb.Value(npi & ~1).reinterpret_cast(np.type)
+        return np
 
     def nextNode(self, pointer):
         if (pointer['d_right_p'] != 0):
@@ -335,12 +340,14 @@ class HashTableIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if self.current == 0:
             raise StopIteration
         value = self.current.dereference()['d_value']
         self.current = self.current['d_next_p'].cast(self.nodeType.pointer())
         return value
+
+    next = __next__
 
 class PairTupleIterator:
     """Helper class to convert bsl::pair to a tuple as an iterator"""
@@ -351,9 +358,11 @@ class PairTupleIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         nextPair = self.iter.next()
         return (nextPair['first'],nextPair['second'])
+
+    next = __next__
 
 class KeyValueIterator:
     """This iterator converts an iterator of pairs into 2 alternating tuples.
@@ -365,7 +374,7 @@ class KeyValueIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if not self.value:
             next = self.iter.next()
             result     = ('key',   next[0])
@@ -376,6 +385,8 @@ class KeyValueIterator:
             self.value = None
             return result
 
+    next = __next__
+
 class ValueIterator:
     """This iterator returns a ('value',value) tuple from an iterator."""
     def __init__(self,iter):
@@ -384,9 +395,11 @@ class ValueIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         value = self.iter.next()
         return ('value',value)
+
+    next = __next__
 
 class RawKeyValueIterator:
     """This iterator returns a (str(key),value) tuple from an iterator."""
@@ -396,9 +409,11 @@ class RawKeyValueIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         next = self.iter.next()
         return (str(next[0]),next[1])
+
+    next = __next__
 
 class RawValueIterator:
     """This iterator returns a (str(value),value) tuple from an iterator."""
@@ -408,9 +423,11 @@ class RawValueIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         value = self.iter.next()
         return (str(value),value)
+
+    next = __next__
 
 
 ###############################################################################
@@ -476,11 +493,11 @@ class Time:
     @classmethod
     def toHMmS(cls, value):
         milliseconds  = value % 1000
-        value        /= 1000
+        value       //= 1000
         seconds       = value % 60
-        value        /= 60
+        value       //= 60
         minutes       = value % 60
-        value        /= 60
+        value       //= 60
         hours         = value
 
         return "%02d:%02d:%02d.%03d" % (hours, minutes, seconds, milliseconds)
@@ -488,17 +505,17 @@ class Time:
     @classmethod
     def toHMuS(cls, value):
         microseconds  = value % 1000000
-        value        /= 1000000
+        value       //= 1000000
         seconds       = value % 60
-        value        /= 60
+        value       //= 60
         minutes       = value % 60
-        value        /= 60
+        value       //= 60
         hours         = value
 
         return "%02d:%02d:%02d.%06d" % (hours, minutes, seconds, microseconds)
 
     def to_string(self):
-        us = long(self.val['d_value'])
+        us = int(self.val['d_value'])
         mask = 0x4000000000
         if (us < mask):
             return "invalid time value %d" % us
@@ -508,13 +525,13 @@ class Tz:
     """Utility to format a time zone offset."""
     @classmethod
     def toHM(cls, offset):
-        sign = '-' if offset < 0 else '+'
+        offset = int(offset)
         if offset < 0:
             offset = -offset
             sign = '-'
         else:
             sign = '+'
-        return '%s%02d:%02d' % (sign, offset / 60, offset % 60)
+        return '%s%02d:%02d' % (sign, offset // 60, offset % 60)
 
 class TimeTz:
     """Pretty printer for 'bdlt::TimeTz'
@@ -560,6 +577,7 @@ class Date:
     def serialToYearDate(cls, serialDay):
         """Extract the year and day of the year from the value in 'serialDay'.
         """
+        serialDay = int(serialDay)
         if serialDay > Date.JAN_01_1753:
             y = Date.YEAR_1601                 # base year
             n = serialDay - Date.JAN_01_1601   # num actual days since 1601/1/1
@@ -568,19 +586,19 @@ class Date:
                 # Compensate for the 11 missing days in September of 1752, and
                 # the additional leap day in 1700.
 
-            z400 = m / Date.DAYS_IN_400_YEARS     # num 400-year blocks
+            z400 = m // Date.DAYS_IN_400_YEARS    # num 400-year blocks
             y += z400 * 400
             m -= z400 * Date.DAYS_IN_400_YEARS    # num days since y/1/1 (400)
 
-            z100 = m / Date.DAYS_IN_100_YEARS     # num 100-year blocks
+            z100 = m // Date.DAYS_IN_100_YEARS    # num 100-year blocks
             y += z100 * 100
             m -= z100 * Date.DAYS_IN_100_YEARS    # num days since y/1/1 (100)
 
-            z4 = m / Date.DAYS_IN_4_YEARS         # num 4-year blocks
+            z4 = m // Date.DAYS_IN_4_YEARS        # num 4-year blocks
             y += z4 * 4
             m -= z4 * Date.DAYS_IN_4_YEARS        # num days since y/1/1 (4)
 
-            z = m / Date.DAYS_IN_NON_LEAP_YEAR    # num whole years
+            z = m // Date.DAYS_IN_NON_LEAP_YEAR   # num whole years
             y += z
             m -= z * Date.DAYS_IN_NON_LEAP_YEAR   # num days since y/1/1 (1)
 
@@ -597,11 +615,11 @@ class Date:
             y = 1                                 # base year
             n = serialDay - 1                     # num actual days since 1/1/1
 
-            z4 = n / Date.DAYS_IN_4_YEARS         # num 4-year blocks
+            z4 = n // Date.DAYS_IN_4_YEARS        # num 4-year blocks
             y += z4 * 4
             n -= z4 * Date.DAYS_IN_4_YEARS        # num days since y/1/1 (4)
 
-            z = n / Date.DAYS_IN_NON_LEAP_YEAR    # num whole years
+            z = n // Date.DAYS_IN_NON_LEAP_YEAR   # num whole years
             y += z
             n -= z * Date.DAYS_IN_NON_LEAP_YEAR   # num days since y/1/1 (1)
 
@@ -677,7 +695,7 @@ class Datetime:
         self.val = val
 
     def to_string(self):
-        value = long(self.val['d_value'])
+        value = int(self.val['d_value'])
         if value < 0:
             value += 2 ** 64
         invalid = (value & Datetime.REP_MASK) == 0
@@ -989,10 +1007,10 @@ class BslSharedPtr:
         else:
             # adjusted shared count holds 2*count + X
             # where X == 1 if at least 1 weak ptr was created
-            self.shared = BslAtomic(rep['d_adjustedSharedCount']).to_int() / 2
+            self.shared = BslAtomic(rep['d_adjustedSharedCount']).to_int() // 2
             # adjusted weak count holds 2*count + X
             # where X == 1 if there are outstanding shared ptrs
-            self.weak = BslAtomic(rep['d_adjustedWeakCount']).to_int() / 2
+            self.weak = BslAtomic(rep['d_adjustedWeakCount']).to_int() // 2
         if ptr == 0:
             self.members = [('d_ptr_p', ptr)]
         else:
@@ -1041,14 +1059,15 @@ class BdeHelpCommand(gdb.Command):
         global docs
         args = gdb.string_to_argv(arg)
         if len(args) == 0:
-            print __doc__
-            print "The following pretty-printers are documented:"
+            print(__doc__)
+            print("The following pretty-printers are documented:")
             for d in sorted(docs.keys()):
-                print d
+                print(d)
         elif len(args) == 1 and args[0] in docs:
-            print docs[args[0]]
+            print(docs[args[0]])
         else:
-            print """
+            print(
+"""
     Usage: bde-help [element]
 
         Prints the documentation for 'element'.
@@ -1056,6 +1075,7 @@ class BdeHelpCommand(gdb.Command):
         bde-help            -- show documentation for the whole module
         bde-help BslString  -- show documentation for the BslString printer
 """
+            )
 
 class BslShowAllocatorParameter(gdb.Parameter):
     """Control whether the bslma::Allocator is printed in each object.
