@@ -262,6 +262,9 @@ class BslVectorImp:
             def __iter__(s):
                 return s
 
+            def __next__(s):
+                return s.next()
+
             def next(s):
                 if self.current == self.end:
                     raise StopIteration
@@ -290,6 +293,9 @@ class BslRbTreeIterator:
 
     def __iter__(self):
         return self
+
+    def __next__(self):
+        return self.next()
 
     def next(self):
         if (self.current == self.sentinel.address):
@@ -335,6 +341,9 @@ class HashTableIterator:
     def __iter__(self):
         return self
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         if self.current == 0:
             raise StopIteration
@@ -351,6 +360,9 @@ class PairTupleIterator:
     def __iter__(self):
         return self
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         nextPair = self.iter.next()
         return (nextPair['first'],nextPair['second'])
@@ -364,6 +376,9 @@ class KeyValueIterator:
 
     def __iter__(self):
         return self
+
+    def __next__(self):
+        return self.next()
 
     def next(self):
         if not self.value:
@@ -384,6 +399,9 @@ class ValueIterator:
     def __iter__(self):
         return self
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         value = self.iter.next()
         return ('value',value)
@@ -396,6 +414,9 @@ class RawKeyValueIterator:
     def __iter__(self):
         return self
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         next = self.iter.next()
         return (str(next[0]),next[1])
@@ -407,6 +428,9 @@ class RawValueIterator:
 
     def __iter__(self):
         return self
+
+    def __next__(self):
+        return self.next()
 
     def next(self):
         value = self.iter.next()
