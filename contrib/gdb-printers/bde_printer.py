@@ -1041,14 +1041,15 @@ class BdeHelpCommand(gdb.Command):
         global docs
         args = gdb.string_to_argv(arg)
         if len(args) == 0:
-            print __doc__
-            print "The following pretty-printers are documented:"
+            print(__doc__)
+            print("The following pretty-printers are documented:")
             for d in sorted(docs.keys()):
-                print d
+                print(d)
         elif len(args) == 1 and args[0] in docs:
-            print docs[args[0]]
+            print(docs[args[0]])
         else:
-            print """
+            print(
+"""
     Usage: bde-help [element]
 
         Prints the documentation for 'element'.
@@ -1056,6 +1057,7 @@ class BdeHelpCommand(gdb.Command):
         bde-help            -- show documentation for the whole module
         bde-help BslString  -- show documentation for the BslString printer
 """
+            )
 
 class BslShowAllocatorParameter(gdb.Parameter):
     """Control whether the bslma::Allocator is printed in each object.
