@@ -1,11 +1,19 @@
-bde-tools (3.43.0.0) unstable; urgency=low
+bde-tools (3.44.0.0) unstable; urgency=low
 
+  * b3ca77e Merge pull request #135 from hrosen4/paren-print-python3_drqs-152620782
+  * 453d663 Merge pull request #134 from hrosen4/no-L-python3
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 5 Dec 2019 15:36:19 -0500
+
+bde-tools (3.43.0.0) git; urgency=low
+
+  * bfcd395 Changelog for version 3.43.0.0
   * 34cf77e Merge pull request #133 from osubbotin/review/toolchain-update-sun
   * 811df89 Merge pull request #132 from osubbotin/review/run-test-after-build
   * a62589c Merge pull request #131 from rkhlebnikov/master
   * 9298609 Merge pull request #129 from cteubner/patch-1
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 21 Nov 2019 11:45:20 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 22 Nov 2019 15:39:44 -0500
 
 bde-tools (3.42.0.0) git; urgency=low
 
