@@ -83,7 +83,7 @@ def program():
             info = compiler_infos[idx]
     else:
         for c in compiler_infos:
-            if c.key() == options.compiler:
+            if c.key().startswith(options.compiler):
                 info = c
                 break
 
