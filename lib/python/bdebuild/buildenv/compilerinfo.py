@@ -147,7 +147,7 @@ def get_compilerinfos(hostname, uplid, file_):
 
 def get_command_output(args):
     try:
-        output = subprocess.check_output(args).translate(None, '\n')
+        output = subprocess.check_output(args, stderr=subprocess.STDOUT).translate(None, '\n')
         return output
     except Exception as e:
         pass
