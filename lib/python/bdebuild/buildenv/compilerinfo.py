@@ -186,11 +186,59 @@ def detect_installed_compilers(uplid):
                                    "toolchain": "gcc-default"
                                },
                                {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-5",
+                                   "cxx_name":  "g++-5",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-6",
+                                   "cxx_name":  "g++-6",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-7",
+                                   "cxx_name":  "g++-7",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-8",
+                                   "cxx_name":  "g++-8",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-9",
+                                   "cxx_name":  "g++-9",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
                                    "type":      "clang",
                                    "c_name":    "clang",
                                    "cxx_name":  "clang++",
                                    "toolchain": "clang-default"
-                                }
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-7",
+                                   "cxx_name":  "clang++-7",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-8",
+                                   "cxx_name":  "clang++-8",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-9",
+                                   "cxx_name":  "clang++-9",
+                                   "toolchain": "clang-default"
+                               }
                             ]
                           },
                           { "uplid": "unix-darwin-",
