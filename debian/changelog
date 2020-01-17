@@ -1,9 +1,17 @@
-bde-tools (3.44.0.0) unstable; urgency=low
+bde-tools (3.47.0.0) unstable; urgency=low
 
+  * 3d8a4d0 Merge pull request #137 from osubbotin/review/add-compilers-to-autodetect
+  * b0e26fe Add versioned compilers to auto-detect list.
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 9 Jan 2020 10:54:27 -0500
+
+bde-tools (3.44.0.0) git; urgency=low
+
+  * 7246795 Changelog for version 3.44.0.0
   * b3ca77e Merge pull request #135 from hrosen4/paren-print-python3_drqs-152620782
   * 453d663 Merge pull request #134 from hrosen4/no-L-python3
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 5 Dec 2019 15:36:19 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 6 Dec 2019 14:04:28 -0500
 
 bde-tools (3.43.0.0) git; urgency=low
 
