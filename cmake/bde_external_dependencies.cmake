@@ -76,7 +76,6 @@ function(bde_import_target_from_pc retDeps depName)
     # TODO: Might add the hints for lookup path and .pc file patterns.
     set(libraryPath "${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}")
 
-
     # The SYSROOT_DIR will be added by pkg config to the library and include pathes
     # by pkg-config.
     set(ENV{PKG_CONFIG_SYSROOT_DIR} "${DISTRIBUTION_REFROOT}")
@@ -106,83 +105,91 @@ function(bde_import_target_from_pc retDeps depName)
     # STATIC_LIBRARIES contains transitive dependencies
     set(staticDeps "${${depName}_pc_STATIC_LIBRARIES}")
 
-    set(searchHints NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH)
+    set(searchHints)
 
     foreach(flag IN LISTS ${depName}_pc_LDFLAGS)
         if(flag MATCHES "^-L(.*)")
             # only look into the given paths from now on
-            set(searchHints PATHS ${CMAKE_MATCH_1} NO_DEFAULT_PATH)
+            list(APPEND searchHints PATHS ${CMAKE_MATCH_1})
             continue()
-        endif()
-        if(flag MATCHES "^-l(.*)")
-            set(pkgName "${CMAKE_MATCH_1}")
-            if(TARGET pkgName)
-                continue()
-            endif()
-        else()
-            message(WARNING "Unknown flag is found in .pc file ${${depName}_pc_LDFLAGS}")
-            continue()
-        endif()
-
-        # Searching raw library
-        if ((pkgName STREQUAL depName)
-            AND NOT TARGET ${depName})
-            find_library(
-                rawLib_${depName}
-                NAMES
-                    lib${depName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
-                    lib${depName}${CMAKE_STATIC_LIBRARY_SUFFIX}
-                    ${searchHints}
-            )
-
-            if(rawLib_${depName})
-                list(REMOVE_ITEM staticDeps ${depName})
-
-                bde_log(VERBOSE "External dependency: ${depName}")
-                bde_log(VERBOSE "  Using: ${rawLib_${depName}}")
-                if (staticDeps)
-                    bde_log(VERBOSE "  Depends on: ${staticDeps}")
-                endif()
-
-                add_library(${depName} UNKNOWN IMPORTED)
-
-                set_property(
-                    TARGET ${depName}
-                    PROPERTY
-                    IMPORTED_LOCATION "${rawLib_${depName}}"
-                )
-            endif()
-            break()
         endif()
     endforeach()
 
-    if(NOT TARGET ${depName})
-        add_library(${depName} INTERFACE IMPORTED)
+    if(searchHints)
+        list(APPEND searchHints NO_DEFAULT_PATH)
+    else()
+        set(searchHints NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH)
     endif()
 
-    if(${depName}_pc_INCLUDE_DIRS)
-        set_property(
-            TARGET ${depName}
-            PROPERTY
-                INTERFACE_INCLUDE_DIRECTORIES "${${depName}_pc_INCLUDE_DIRS}"
-        )
-    endif()
+    #bde_log(VERY_VERBOSE "Search hints: ${searchHints}")
 
-    if(staticDeps)
-        set_property(
-            TARGET ${depName}
-            APPEND PROPERTY
-                INTERFACE_LINK_LIBRARIES "${staticDeps}"
-        )
-    endif()
+    foreach(flag IN LISTS ${depName}_pc_LDFLAGS)
+        if(flag MATCHES "^-l(.*)")
+            set(pkgName "${CMAKE_MATCH_1}")
+            if(TARGET pkgName)
+                bde_log(VERY_VERBOSE "Skipping : ${pkgName}")
+                continue()
+            endif()
 
-    if(${depName}_pc_FLAGS_OTHER)
-        set_property(
-            TARGET ${depName}
-            PROPERTY
-                INTERFACE_COMPILE_OPTIONS "${${depName}_pc_CFLAGS_OTHER}"
-        )
-    endif()
+            if (pkgName STREQUAL depName)
+                find_library(
+                    rawLib_${depName}
+                    NAMES
+                        lib${depName}.${bde_install_ufid}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                        lib${depName}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                        ${searchHints}
+                )
+
+                if(rawLib_${depName})
+                    list(REMOVE_ITEM staticDeps ${depName})
+
+                    bde_log(VERBOSE "External dependency: ${depName}")
+                    bde_log(VERBOSE "  Using: ${rawLib_${depName}}")
+                    if (staticDeps)
+                        bde_log(VERBOSE "  Depends on: ${staticDeps}")
+                    endif()
+
+                    add_library(${depName} UNKNOWN IMPORTED)
+
+                    set_property(
+                        TARGET ${depName}
+                        PROPERTY
+                        IMPORTED_LOCATION "${rawLib_${depName}}"
+                    )
+                endif()
+
+                if(NOT TARGET ${depName})
+                    add_library(${depName} INTERFACE IMPORTED)
+                endif()
+
+                if(${depName}_pc_INCLUDE_DIRS)
+                    set_property(
+                        TARGET ${depName}
+                        PROPERTY
+                            INTERFACE_INCLUDE_DIRECTORIES "${${depName}_pc_INCLUDE_DIRS}"
+                    )
+                endif()
+
+                if(staticDeps)
+                    set_property(
+                        TARGET ${depName}
+                        APPEND PROPERTY
+                            INTERFACE_LINK_LIBRARIES "${staticDeps}"
+                    )
+                endif()
+
+                if(${depName}_pc_FLAGS_OTHER)
+                    set_property(
+                        TARGET ${depName}
+                        PROPERTY
+                            INTERFACE_COMPILE_OPTIONS "${${depName}_pc_CFLAGS_OTHER}"
+                    )
+                endif()
+                break()
+            endif()
+        endif()
+    endforeach()
+
 
     bde_return(${staticDeps})
 endfunction()
@@ -208,6 +215,13 @@ function(bde_resolve_external_dependencies externalDeps)
     while(deps)
         list(REMOVE_DUPLICATES deps)
         set(currentDeps "${deps}")
+
+        foreach(depName IN LISTS currentDeps)
+            if(depName AND TARGET ${depName})
+                list(REMOVE_ITEM currentDeps ${depName})
+            endif()
+        endforeach()
+
         set(deps)
 
         bde_log(VERBOSE "Active dependencies: ${currentDeps}")

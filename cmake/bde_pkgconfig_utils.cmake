@@ -20,6 +20,8 @@ _pkgconfig_map_insert(svm            libsvm)
 _pkgconfig_map_insert(event          libevent)
 _pkgconfig_map_insert(event_pthreads libevent_pthreads)
 _pkgconfig_map_insert(event_openssl  libevent_openssl)
+_pkgconfig_map_insert(ssl            libssl)
+_pkgconfig_map_insert(crypto         libcrypto)
 
 function(bde_uor_to_pkgconfig_name retPkgconfigName uorName)
     bde_assert_no_extra_args()
