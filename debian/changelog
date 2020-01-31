@@ -1,9 +1,15 @@
-bde-tools (3.47.0.0) unstable; urgency=low
+bde-tools (3.48.1.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 30 Jan 2020 16:54:49 -0500
+
+bde-tools (3.47.0.0) git; urgency=low
+
+  * 99b81a7 Changelog for version 3.47.0.0
   * 3d8a4d0 Merge pull request #137 from osubbotin/review/add-compilers-to-autodetect
   * b0e26fe Add versioned compilers to auto-detect list.
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 9 Jan 2020 10:54:27 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 17 Jan 2020 16:17:23 -0500
 
 bde-tools (3.44.0.0) git; urgency=low
 
