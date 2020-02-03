@@ -157,39 +157,39 @@ function(bde_import_target_from_pc retDeps depName)
                         IMPORTED_LOCATION "${rawLib_${depName}}"
                     )
                 endif()
-
-                if(NOT TARGET ${depName})
-                    add_library(${depName} INTERFACE IMPORTED)
-                endif()
-
-                if(${depName}_pc_INCLUDE_DIRS)
-                    set_property(
-                        TARGET ${depName}
-                        PROPERTY
-                            INTERFACE_INCLUDE_DIRECTORIES "${${depName}_pc_INCLUDE_DIRS}"
-                    )
-                endif()
-
-                if(staticDeps)
-                    set_property(
-                        TARGET ${depName}
-                        APPEND PROPERTY
-                            INTERFACE_LINK_LIBRARIES "${staticDeps}"
-                    )
-                endif()
-
-                if(${depName}_pc_FLAGS_OTHER)
-                    set_property(
-                        TARGET ${depName}
-                        PROPERTY
-                            INTERFACE_COMPILE_OPTIONS "${${depName}_pc_CFLAGS_OTHER}"
-                    )
-                endif()
                 break()
             endif()
         endif()
     endforeach()
 
+    # Handle headers-only library that does not have -L/-l
+    if(NOT TARGET ${depName})
+        add_library(${depName} INTERFACE IMPORTED)
+    endif()
+
+    if(${depName}_pc_INCLUDE_DIRS)
+        set_property(
+            TARGET ${depName}
+            PROPERTY
+                INTERFACE_INCLUDE_DIRECTORIES "${${depName}_pc_INCLUDE_DIRS}"
+        )
+    endif()
+
+    if(staticDeps)
+        set_property(
+            TARGET ${depName}
+            APPEND PROPERTY
+                INTERFACE_LINK_LIBRARIES "${staticDeps}"
+        )
+    endif()
+
+    if(${depName}_pc_FLAGS_OTHER)
+        set_property(
+            TARGET ${depName}
+            PROPERTY
+                INTERFACE_COMPILE_OPTIONS "${${depName}_pc_CFLAGS_OTHER}"
+        )
+    endif()
 
     bde_return(${staticDeps})
 endfunction()
