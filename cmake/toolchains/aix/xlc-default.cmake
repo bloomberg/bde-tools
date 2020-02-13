@@ -16,7 +16,6 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-bmaxdata:0x50000000 "      # DRQS 13597546
        "-qalias=noansi "
        "-qarch=pwr6 "
-       "-qdebug=nparseasm "
        "-qfuncsect "
        "-qinline "
        "-qlanglvl=staticstoreoverlinkage "
