@@ -1,3 +1,15 @@
+bde-tools (3.49.0.0) unstable; urgency=low
+
+  * 6caf34f Remove junk entries from debian/changelog.
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 13 Feb 2020 14:09:48 -0500
+
+bde-tools (3.48.1.0) git; urgency=low
+
+  * 123e636 Changelog for version 3.48.1.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 31 Jan 2020 16:13:45 -0500
+
 bde-tools (3.47.0.0) git; urgency=low
 
   * 99b81a7 Changelog for version 3.47.0.0
