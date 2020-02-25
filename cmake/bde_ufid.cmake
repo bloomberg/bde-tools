@@ -346,6 +346,34 @@ function(bde_ufid_setup_flags iface)
                     -fexceptions,
                     -fno-exceptions
                 >
+                # Warnings
+                -Waddress
+                -Wall
+                -Wcast-align
+                -Wcast-qual
+                -Wconversion
+                -Wextra
+                -Wformat
+                -Wformat-security
+                -Wformat-y2k
+                -Winit-self
+                -Wlarger-than-100000
+                -Woverflow
+                -Wpacked
+                -Wparentheses
+                -Wpointer-arith
+                -Wsign-compare
+                -Wstrict-overflow=1
+                -Wtype-limits
+                -Wvla
+                -Wvolatile-register-var
+                -Wwrite-strings
+                -Wno-char-subscripts
+                -Wno-long-long
+                -Wno-sign-conversion
+                -Wno-string-conversion
+                -Wno-unknown-pragmas
+                -Wno-unused-value
             >
             $<$<CXX_COMPILER_ID:Clang>:
                 $<IF:${bde_ufid_is_exc},

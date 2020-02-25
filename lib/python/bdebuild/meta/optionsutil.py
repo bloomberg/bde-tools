@@ -168,6 +168,9 @@ def get_default_cpp_std(compiler_type, compiler_version):
     Returns:
         One of the choices for the option "cpp-std", "17", "14", "11" or "03".
     """
+    if (compiler_type == 'gcc' and compiler_version >= '7.3' or
+        compiler_type == 'clang' and compiler_version >= '7'):
+        return "17"
 
     if (compiler_type == 'gcc' and compiler_version >= '5.3' or
         compiler_type == 'clang' and compiler_version >= '6'):
