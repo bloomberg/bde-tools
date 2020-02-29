@@ -1,8 +1,15 @@
-bde-tools (3.49.0.0) unstable; urgency=low
+bde-tools (3.50.0.0) unstable; urgency=low
 
+  * d6e76e5 Merge pull request #144 from osubbotin/review/cpp17-fixes
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 25 Feb 2020 07:29:27 -0500
+
+bde-tools (3.49.0.0) git; urgency=low
+
+  * c067e45 Changelog for version 3.49.0.0
   * 6caf34f Remove junk entries from debian/changelog.
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 13 Feb 2020 14:09:48 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 14 Feb 2020 12:30:52 -0500
 
 bde-tools (3.48.1.0) git; urgency=low
 
