@@ -29,10 +29,12 @@ if(BUILD_BITNESS EQUAL "32")
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
            "-mstackrealign "
+           "-mfpmath=sse "
           )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
            "-mstackrealign "
+           "-mfpmath=sse "
           )
 endif()
 
