@@ -619,7 +619,7 @@ function(bde_ufid_setup_flags iface)
                 Threads::Threads
             >
             $<$<CXX_COMPILER_ID:GNU>:
-                rt
+                $<$<PLATFORM_ID:Linux>:rt>
                 Threads::Threads
             >
             $<$<CXX_COMPILER_ID:MSVC>:
