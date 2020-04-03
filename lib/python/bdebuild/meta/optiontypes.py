@@ -143,7 +143,8 @@ class Ufid(mixins.BasicEqualityMixin):
         'cpp03':  (BACK + 10, 'Build with support for C++03 features'),
         'cpp11':  (BACK + 11, 'Build with support for C++11 features'),
         'cpp14':  (BACK + 12, 'Build with support for C++14 features'),
-        'cpp17':  (BACK + 13, 'Build with support for C++17 features')
+        'cpp17':  (BACK + 13, 'Build with support for C++17 features'),
+        'cpp20':  (BACK + 14, 'Build with support for C++20 features')
     }
 
     def __init__(self, flags=[]):

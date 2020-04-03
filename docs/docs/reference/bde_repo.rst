@@ -535,6 +535,8 @@ permissible:
 +--------+--------------------------------------------------------------+
 | cpp17  | Build with support for C++17 features                        |
 +--------+--------------------------------------------------------------+
+| cpp20  | Build with support for C++20 features                        |
++--------+--------------------------------------------------------------+
 
 .. note::
    ``mt`` flag is always enabled. It is still a valid UFID for historical

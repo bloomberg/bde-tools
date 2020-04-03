@@ -221,7 +221,11 @@ def make_ufid_from_cmdline_options(opts):
                          'rdbg':  ['rdbg'],
                          'rsafe': ['rsafe'],
                          'rnone': ['rnone']},
-        'cpp_std': {'03': ['cpp03'], '11': ['cpp11'], '14': ['cpp14'], '17': ['cpp17']},
+        'cpp_std': {'03': ['cpp03'],
+                    '11': ['cpp11'],
+                    '14': ['cpp14'],
+                    '17': ['cpp17'],
+                    '20': ['cpp20']},
         'noexception': {False: ['exc']},
         'library_type': {'shared': ['shr']}
         }
