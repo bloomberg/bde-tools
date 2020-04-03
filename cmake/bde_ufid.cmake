@@ -26,7 +26,7 @@ set(install_ufid_flags opt dbg exc mt safe safe2
 set(known_ufid_flags opt dbg exc mt 64 safe safe2
     aopt adbg asafe anone
     ropt rdbg rsafe rnone
-    stlport pic shr ndebug cpp03 cpp11 cpp14 cpp17)
+    stlport pic shr ndebug cpp03 cpp11 cpp14 cpp17 cpp20)
 
 #.rst:
 # bde_ufid_filter_flags
@@ -124,7 +124,7 @@ function(bde_parse_ufid UFID)
     endforeach()
 
     # Check for conflicts in cpp standards
-    bde_ufid_filter_flags(cppStds "${ufid_flags}" "cpp03;cpp11;cpp14;cpp17")
+    bde_ufid_filter_flags(cppStds "${ufid_flags}" "cpp03;cpp11;cpp14;cpp17;cpp20")
     string(REPLACE "_" ";" cppStds "${cppStds}")
     list(LENGTH cppStds cppStdsLen)
     if (cppStdsLen GREATER 1)
@@ -212,6 +212,9 @@ function(bde_parse_ufid UFID)
     elseif(${bde_ufid_is_cpp17})
         set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
         set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard" FORCE)
+    elseif(${bde_ufid_is_cpp20})
+        set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
+        set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ standard" FORCE)
     endif()
 endfunction()
 
@@ -289,6 +292,7 @@ function(bde_ufid_setup_flags iface)
             $<${bde_ufid_is_cpp11}:BDE_BUILD_TARGET_CPP11>
             $<${bde_ufid_is_cpp14}:BDE_BUILD_TARGET_CPP14>
             $<${bde_ufid_is_cpp17}:BDE_BUILD_TARGET_CPP17>
+            $<${bde_ufid_is_cpp20}:BDE_BUILD_TARGET_CPP20>
 
             $<${bde_ufid_is_stlport}:BDE_BUILD_TARGET_STLPORT>
 
@@ -508,6 +512,7 @@ function(bde_ufid_setup_flags iface)
             $<${bde_ufid_is_cpp11}:BDE_BUILD_TARGET_CPP11>
             $<${bde_ufid_is_cpp14}:BDE_BUILD_TARGET_CPP14>
             $<${bde_ufid_is_cpp17}:BDE_BUILD_TARGET_CPP17>
+            $<${bde_ufid_is_cpp20}:BDE_BUILD_TARGET_CPP20>
 
             $<${bde_ufid_is_stlport}:BDE_BUILD_TARGET_STLPORT>
 
@@ -570,6 +575,9 @@ function(bde_ufid_setup_flags iface)
                     _FILE_OFFSET_BITS=64
                 >
                 $<${bde_ufid_is_cpp17}:
+                    _FILE_OFFSET_BITS=64
+                >
+                $<${bde_ufid_is_cpp20}:
                     _FILE_OFFSET_BITS=64
                 >
                 $<${bde_ufid_is_mt}:
