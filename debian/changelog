@@ -1,8 +1,14 @@
-bde-tools (3.51.0.0) unstable; urgency=low
+bde-tools (3.52.0.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 31 Mar 2020 16:39:55 -0400
+
+bde-tools (3.51.0.0) git; urgency=low
+
+  * 1112345 Changelog for version 3.51.0.0
   * 7ef0ba5 Merge pull request #145 from osubbotin/review/fpmath-flag
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 9 Mar 2020 17:36:21 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 13 Mar 2020 11:34:57 -0400
 
 bde-tools (3.50.0.0) git; urgency=low
 
