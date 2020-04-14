@@ -199,10 +199,14 @@ function(bde_parse_ufid UFID)
 
     set(CMAKE_BUILD_TYPE ${build_type} CACHE STRING "Build type" FORCE)
 
-    # Force specific c++ standard when a requested.
+    # Force specific c++ standard when a requested explicitely.
     if(${bde_ufid_is_cpp03})
-        set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
-        set(CMAKE_CXX_STANDARD 98 CACHE STRING "C++ standard" FORCE)
+        if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "SunPro")
+            # Sun Studio 12.4 uses incompatible ABI when passed -std=c++03.
+            # We do not set anything here relying on default behaviour.
+            set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
+            set(CMAKE_CXX_STANDARD 98 CACHE STRING "C++ standard" FORCE)
+        endif()
     elseif(${bde_ufid_is_cpp11})
         set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "Force c++ standard" FORCE)
         set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ standard" FORCE)
