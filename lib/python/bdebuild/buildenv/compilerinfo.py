@@ -238,6 +238,12 @@ def detect_installed_compilers(uplid):
                                    "c_name":    "clang-9",
                                    "cxx_name":  "clang++-9",
                                    "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-10",
+                                   "cxx_name":  "clang++-10",
+                                   "toolchain": "clang-default"
                                }
                             ]
                           },
