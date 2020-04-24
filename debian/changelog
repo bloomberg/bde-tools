@@ -1,7 +1,14 @@
-bde-tools (3.52.0.0) unstable; urgency=low
+bde-tools (3.53.0.0) unstable; urgency=low
 
+  * 2d0cac2 Merge pull request #148 from osubbotin/review/add-cpp20
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 31 Mar 2020 16:39:55 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 17 Apr 2020 13:39:08 -0400
+
+bde-tools (3.52.0.0) git; urgency=low
+
+  * 45e2d33 Changelog for version 3.52.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 3 Apr 2020 11:16:42 -0400
 
 bde-tools (3.51.0.0) git; urgency=low
 
