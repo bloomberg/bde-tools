@@ -24,9 +24,7 @@ use strict;
 use 5.010;
 
 use FindBin;
-use lib "$FindBin::Bin";
-use lib "$FindBin::Bin/../lib/perl";
-use lib "$FindBin::Bin/../lib/perl/site-perl";
+use lib "$FindBin::RealBin/../bdedox/lib/perl";
 
 use common::sense;
 use Getopt::Long;
