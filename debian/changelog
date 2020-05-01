@@ -1,8 +1,15 @@
-bde-tools (3.53.0.0) unstable; urgency=low
+bde-tools (3.54.0.0) unstable; urgency=low
 
+  * 66d5e57 Merge pull request #152 from phalpern/phalpern/sim_cpp-lib-path
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 30 Apr 2020 06:33:41 -0400
+
+bde-tools (3.53.0.0) git; urgency=low
+
+  * 0fbe4cd Changelog for version 3.53.0.0
   * 2d0cac2 Merge pull request #148 from osubbotin/review/add-cpp20
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 17 Apr 2020 13:39:08 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 24 Apr 2020 11:34:26 -0400
 
 bde-tools (3.52.0.0) git; urgency=low
 
