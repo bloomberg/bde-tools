@@ -162,7 +162,7 @@ def get_compiler_version(compiler_type, cxx_path):
     if 'clang' == compiler_type:
         version = get_command_output([cxx_path, '--version'])
         m = re.search('version\s+(\S+)\s+', version)
-        version = m.group(0) if m else '0.0.0'
+        version = m.group(1) if m else '0.0.0'
 
     return version
 
@@ -290,6 +290,7 @@ def detect_installed_compilers(uplid):
                 toolchain = None
 
             info = CompilerInfo(compiler['type'], version, c_path, cxx_path, toolchain, None)
+
             infos.append(info)
 
     return infos

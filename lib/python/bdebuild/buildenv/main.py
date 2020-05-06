@@ -200,7 +200,7 @@ def print_envs(options, info):
 
 
 def list_compilers(compiler_infos):
-    print('Avaliable compilers:', file=sys.stderr)
+    print('Available compilers:', file=sys.stderr)
 
     for idx, c in enumerate(compiler_infos[0:]):
         print(' %d:' % (idx), c.description(),
