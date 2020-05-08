@@ -510,17 +510,31 @@ def build(options):
 
     target_list = options.targets if options.targets else ['all']
     for target in target_list:
-        if options.tests and not target.endswith('.t'):
-            full_target = target + '.t'
+        main_target = None
+        test_target = None
+
+        if target.endswith('.t'):
+            main_target = None
+            test_target = target
         else:
-            full_target = None if target == 'all' else target
+            main_target = target
+            test_target = target + '.t' if options.tests else None
 
-        try:
-            build_target(full_target, options.build_dir, extra_args, env)
-        except:
-            if not options.keep_going:
-                raise
+        if main_target:
+            if main_target == 'all':
+                main_target = None
+            try:
+                build_target(main_target, options.build_dir, extra_args, env)
+            except:
+                if not options.keep_going:
+                    raise
 
+        if test_target:
+            try:
+                build_target(test_target, options.build_dir, extra_args, env)
+            except:
+                if not options.keep_going:
+                    raise
 
     if 'run' == options.tests:
         test_cmd = ['ctest',
