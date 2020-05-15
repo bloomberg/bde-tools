@@ -1,8 +1,18 @@
-bde-tools (3.54.0.0) unstable; urgency=low
+bde-tools (3.55.0.0) unstable; urgency=low
 
+  * 533c3c4 Merge pull request #154 from mgiroux/fix-darwin-version
+  * ac1eabb Fix darwin clang version detection
+  * 0e0fc7d Merge pull request #153 from osubbotin/review/fix-apple-clang-detection
+  * 2c20f8f Fix clang version parsing.
+
+ -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Fri, 8 May 2020 10:39:24 -0400
+
+bde-tools (3.54.0.0) git; urgency=low
+
+  * 17fe8de Changelog for version 3.54.0.0
   * 66d5e57 Merge pull request #152 from phalpern/phalpern/sim_cpp-lib-path
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 30 Apr 2020 06:33:41 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 1 May 2020 10:51:45 -0400
 
 bde-tools (3.53.0.0) git; urgency=low
 
