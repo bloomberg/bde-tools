@@ -35,18 +35,18 @@ pretty-printers for a number of BDE components.
 
 ### Open Source
 
-[BDE build tools](https://bloomberg.github.io/bde-tools).
-[BDE libraries](https://github.com/bloomberg/bde).
-[bdedox](https://github.com/bloomberg/bde-tools/blob/master/contrib/bdedox).
-[gdb-printers](https://github.com/bloomberg/bde-tools/tree/master/contrib/gdb-printers).
+* [BDE build tools](https://bloomberg.github.io/bde-tools)
+* [BDE libraries](https://github.com/bloomberg/bde)
+* [bdedox](https://github.com/bloomberg/bde-tools/blob/master/contrib/bdedox)
+* [gdb-printers](https://github.com/bloomberg/bde-tools/tree/master/contrib/gdb-printers)
 
 
 ### Bloomberg LP (internal)
 
-[BDE build tools](https://bde.bloomberg.com/bde-tools)
-[BDE librarlies](https://bbgithub.dev.bloomberg.com/bde/bde).
-[bdedox](https://bbgithub.dev.bloomberg.com/bde/bde-tools/blob/master/contrib/bdedox)
-[gdb-printers](https://bbgithub.dev.bloomberg.com/bde/bde-tools/tree/master/contrib/gdb-printers)
+* [BDE build tools](https://bde.bloomberg.com/bde-tools)
+* [BDE librarlies](https://bbgithub.dev.bloomberg.com/bde/bde)
+* [bdedox](https://bbgithub.dev.bloomberg.com/bde/bde-tools/blob/master/contrib/bdedox)
+* [gdb-printers](https://bbgithub.dev.bloomberg.com/bde/bde-tools/tree/master/contrib/gdb-printers)
 
 ## License
 
