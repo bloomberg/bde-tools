@@ -526,7 +526,7 @@ def build(options):
             try:
                 build_target(main_target, options.build_dir, extra_args, env)
             except:
-                if not options.keep_going:
+                if not test_target and not options.keep_going:
                     raise
 
         if test_target:
