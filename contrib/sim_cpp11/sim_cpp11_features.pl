@@ -54,21 +54,6 @@ specified, then the C++11 output is written to I<filename.ext> and the C++03
 output is written to I<filename_cpp03.ext>.  If I<filename> is a single dash
 (-), then output is written to standard out (C<--inplace> mode only).
 
-=head3 C<--var-args=>I<max-args>
-
-The maximum number of variadic template expansions to generate (default
-10). This value is written into the C++11 file so that future runs do not need
-to specify this option again.
-
-=head3 C<--debug=>I<level>
-
-Turns on debugging at the specified level. The higher the level, the more
-verbose the output.
-
-=head3 C<--trace=>I<subroutine>:I<level>
-
-Turns on tracing for the specified subroutine (for debugging).
-
 =head3 C<--[no-]inplace>
 
 The C<--inplace> option causes the C++11 and C++03 code to be intermixed
@@ -86,20 +71,35 @@ modifying code. After a successful build using C++11, this tool is typically
 run again without C<--clean> to produce release code that can be tested
 with C++03.
 
+=head3 C<--var-args=>I<max-args>
+
+The maximum number of variadic template expansions to generate (default
+10). This value is written into the C++11 file as an embedded option (see
+below) so that future runs do not need to specify this option again.
+
 =head3 C<--test>
 
 Runs the tool on a built-in test file, producing a C<diff> of the original and
 modified file if changes were detected. Usually used with C<--inplace>
 
-=head3 I<input-file...>
+=head3 C<--debug=>I<level>
+
+Turns on debugging at the specified level. The higher the level, the more
+verbose the output.
+
+=head3 C<--trace=>I<subroutine>:I<level>
+
+Turns on tracing for the specified subroutine (for debugging).
+
+=head3 I<input-file-name...>
 
 One or more input file names.  If the input file is a single dash (-), then
 read from standard input.
 
 =head2 Embedded options
 
-Two options can be embedded directly into the input file at the end of the
-C<#if> directive introducing a region to be emulated:
+A few options can be embedded directly into the input file at the end of an
+C<#if> directive that introduces a region to be emulated:
 
 =head3 C<// $var-args=>I<n>
 
