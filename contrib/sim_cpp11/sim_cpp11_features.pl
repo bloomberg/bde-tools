@@ -2087,7 +2087,6 @@ int main() {
 EOT
 
 my $masterPrefix = <<EOT;
-
 #if $simCpp11Macro
 // Include version that can be compiled with C++03
 // <timestampComment>
@@ -2146,7 +2145,7 @@ sub segmentFiledata($) {
 
     if ($ifStart) {
         # Found Cpp03 region markers.  Assume
-        # '#include <bsls_compilerfeatures.h>' was exists in the prologue.
+        # '#include <bsls_compilerfeatures.h>' exists in the prologue.
         $includesBslCompilerFeatures = 1;
     }
     else {
@@ -2204,11 +2203,15 @@ sub segmentFiledata($) {
     my $unexpandedCode = substr($fileData, $elseEnd, $endifStart - $elseEnd);
     my $epilogue = substr($fileData, $endifEnd);
 
-    # Remove extra newlines around the segments
-    $prologue       =~ s{\n*$}{\n};  # Exactly one newline at end
-    $unexpandedCode =~ s{^\n*}{};    # No newlines at begining
-    $unexpandedCode =~ s{\n*$}{\n};  # Exactly one newline at end
-    $epilogue       =~ s{^\n*}{};    # No newlines at begining
+    # Adjust newlines around the segments
+    $prologue       =~ s{\n*$}{\n\n}; # Exactly two newlines at end
+    $unexpandedCode =~ s{^\n*}{};     # No newlines at begining
+    $unexpandedCode =~ s{\n*$}{\n};   # Exactly one newline at end
+    $epilogue       =~ s{^\n*}{\n};   # Exactly one newline at begining
+
+    # Remove newlines from otherwise-empty prologue or epilogue
+    $prologue = "" if ($prologue eq "\n\n");
+    $epilogue = "" if ($epilogue eq "\n");
 
     trace("segmentFiledata",
           "prologue size = %d, code size = %d, epilog size = %d",
@@ -2378,18 +2381,18 @@ sub processFile($$)
         # There were no expansions in the code.  Write unexpanded code with no
         # boilerplate surrounding it.
         writeMaster($inputFilename, $outputFilename, $fileData,
-                    $prologue."\n".$unexpandedCode."\n".$epilogue);
+                    $prologue.$unexpandedCode.$epilogue);
     }
     elsif ($inplace) {
         # Write the expanded code with with no boilerplate surrounding it.
         writeMaster($inputFilename, $outputFilename, $fileData,
-                    $prologue."\n".$output."\n".$epilogue);
+                    $prologue.$output.$epilogue);
     }
     else {
         # Write master file with boilerplate surrounding the expanded code.
         my ($boilerBeg, $boilerEnd) = filenameToBoilerplate($outputFilename);
 
-        $prologue .= "\n#include <bsls_compilerfeatures.h>\n"
+        $prologue .= "#include <bsls_compilerfeatures.h>\n\n"
             unless ($includesBslCompilerfeatures);
 
         writeMaster($inputFilename, $outputFilename, $fileData,
