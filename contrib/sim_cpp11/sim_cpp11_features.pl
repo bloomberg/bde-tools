@@ -1,4 +1,5 @@
-#!/usr/bin/env perl                                                # -*-perl-*-
+#!/usr/bin/env perl
+#                                                                     -*-perl-*-
 
 =pod
 
@@ -126,7 +127,7 @@ pattern matching. Known limitations are:
 =item * All parameter packs for a given instantiation of a variadic template
 must be the same length.
 
-=item * Prefect-forwarding emulation does not recognize prvalues as rvalues.
+=item * Perfect-forwarding emulation does not recognize prvalues as rvalues.
 
 =item * There is limited support for partial specialization of variadic class
 templates. In particular, specializing on the empty parameter pack is not
@@ -451,7 +452,7 @@ sub stripComments($;$)
 }
 
 # Sets the '$input' string to the argument and resets and populates the
-# '$shoudedInput' string.
+# '$shroudedInput' string.
 sub setInput($)
 {
     $input = shift;
@@ -2126,7 +2127,7 @@ my @extToBoilerplateMap = (
 # contains '#include <bsls_compilerfeatures.h>', which is needed to correctly
 # interpret the simulation macros.
 #
-# Concatonating the three segments does NOT necessarily produce the original
+# Concatenating the three segments does NOT necessarily produce the original
 # input string; conditional directives to #include an external expansion file
 # are omitted.  If no such directive are found, the three segments are
 # computed such that such the conditional #include would occur between the
