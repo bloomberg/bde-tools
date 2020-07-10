@@ -135,6 +135,10 @@ class Ufid(mixins.BasicEqualityMixin):
         'rsafe': (MIDDLE + 22, build_with_convert.format("SAFE")),
         'rnone': (MIDDLE + 23, build_with_convert.format("NONE")),
 
+        'asan':  (MIDDLE + 30, 'Enable address sanitizer'),
+        'tsan':  (MIDDLE + 31, 'Enable thread sanitizer'),
+        'ubsan': (MIDDLE + 32, 'Enable undefined behavior sanitizer'),
+
         'stlport':(BACK + 0, 'Build with STLPort on Sun'),
         'pic':    (BACK + 1, 'Build static PIC libraries'),
         'shr':    (BACK + 2, 'Build dynamic libraries'),
