@@ -90,60 +90,32 @@ def get_ufid_cmdline_options():
           'default': False,
           'help': 'disable exception support'}),
 
-        (('aopt',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'define the macro "BSLS_ASSERT_LEVEL_ASSERT_OPT" as described in '
-          'the component-level documentation of bsls_assert'}),
-        (('adbg',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'define the macro "BSLS_ASSERT_LEVEL_ASSERT" as described in '
-          'the component-level documentation of bsls_assert'}),
-        (('asafe',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'define the macro "BSLS_ASSERT_LEVEL_ASSERT_SAFE" as described in '
-          'the component-level documentation of bsls_assert'}),
-        (('anone',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'define the macro "BSLS_ASSERT_LEVEL_NONE" as described in '
-          'the component-level documentation of bsls_assert'}),
+        (('assert_level',),
+         {'type': 'choice',
+          'default': None,
+          'choices': (None, 'aopt', 'adbg', 'asafe', 'anone'),
+          'help': 'define the macros BSLS_ASSERT_LEVEL_ASSERT_OPT,\n'
+                  'BSLS_ASSERT_LEVEL_ASSERT, BSLS_ASSERT_LEVEL_ASSERT_SAFE,\n'
+                  'BSLS_ASSERT_LEVEL_NONE respectively as described\n'
+                  'in the component-level documentation of bsls_assert\n'
+                  '("aopt", "adbg", "asafe", "anone")'}),
 
-        (('ropt',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'define the macro "BSLS_REVIEW_LEVEL_REVIEW_OPT" as described in '
-          'the component-level documentation of bsls_review'}),
-        (('rdbg',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'define the macro "BSLS_REVIEW_LEVEL_REVIEW" as described in '
-          'the component-level documentation of bsls_review'}),
-        (('rsafe',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'define the macro "BSLS_REVIEW_LEVEL_REVIEW_SAFE" as described in '
-          'the component-level documentation of bsls_review'}),
-        (('rnone',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'define the macro "BSLS_REVIEW_LEVEL_NONE" as described in '
-          'the component-level documentation of bsls_review'}),
+        (('review_level',),
+         {'type': 'choice',
+          'default': None,
+          'choices': (None, 'ropt', 'rdbg', 'rsafe', 'rnone'),
+          'help': 'define the macros BSLS_REVIEW_LEVEL_REVIEW_OPT,\n'
+                  'BSLS_REVIEW_LEVEL_REVIEW, BSLS_REVIEW_LEVEL_REVIEW_SAFE,\n'
+                  'BSLS_REVIEW_LEVEL_NONE respectively as described\n'
+                  'in the component-level documentation of bsls_assert\n'
+                  '("ropt", "rdbg", "rsafe", "rnone")'}),
 
-        (('asan',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'enable address sanitizer'}),
-        (('tsan',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'enable thread sanitizer'}),
-        (('ubsan',),
-         {'action': 'store_true',
-          'default': False,
-          'help': 'enable undefined behavior sanitizer'}),
+        (('sanitizer',),
+         {'type': 'choice',
+          'default': None,
+          'choices': (None, 'asan', 'tsan', 'ubsan'),
+          'help': 'enable address, thread or undefined behaviour sanitizer\n'
+                  '("asan", "tsan", "ubsan")'}),
 
         (('safe',),
          {'action': 'store_true',
@@ -234,9 +206,9 @@ def make_ufid_from_cmdline_options(opts):
                          'rdbg':  ['rdbg'],
                          'rsafe': ['rsafe'],
                          'rnone': ['rnone']},
-        'sanitize': {'asan': ['asan'],
-                     'tsan': ['tsan'],
-                     'ubsan': ['ubsan']},
+        'sanitizer': {'asan': ['asan'],
+                      'tsan': ['tsan'],
+                      'ubsan': ['ubsan']},
         'cpp_std': {'03': ['cpp03'],
                     '11': ['cpp11'],
                     '14': ['cpp14'],
