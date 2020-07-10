@@ -19,6 +19,7 @@ include(bde_utils)
 set(install_ufid_flags opt dbg exc mt safe safe2
     aopt adbg asafe anone
     ropt rdbg rsafe rnone
+    asan tsan ubsan
     pic shr
    )
 
@@ -26,7 +27,10 @@ set(install_ufid_flags opt dbg exc mt safe safe2
 set(known_ufid_flags opt dbg exc mt 64 safe safe2
     aopt adbg asafe anone
     ropt rdbg rsafe rnone
-    stlport pic shr ndebug cpp03 cpp11 cpp14 cpp17 cpp20)
+    asan tsan ubsan
+    stlport pic shr ndebug
+    cpp03 cpp11 cpp14 cpp17 cpp20
+   )
 
 #.rst:
 # bde_ufid_filter_flags
@@ -150,6 +154,15 @@ function(bde_parse_ufid UFID)
                 "UFID ${UFID} contains multiple review levels: ${rlevel}")
     endif()
 
+    # Check for conflicts in sanitizers
+    bde_ufid_filter_flags(sanitize "${ufid_flags}" "asan;tsan;ubsan")
+    string(REPLACE "_" ";" sanitize "${sanitize}")
+    list(LENGTH sanitize sanitizeLen)
+    if (sanitizeLen GREATER 1)
+        message(FATAL_ERROR
+                "UFID ${UFID} contains multiple sanitizers: ${sanitize}")
+    endif()
+
     # Setting the flags in local...
     foreach(flag IN LISTS known_ufid_flags)
         set(bde_ufid_is_${flag} 0)
@@ -258,9 +271,15 @@ function(bde_ufid_setup_flags iface)
             >
             $<$<CXX_COMPILER_ID:Clang>:
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -fPIC>
+                $<${bde_ufid_is_asan}:  -fsanitize=address>
+                $<${bde_ufid_is_tsan}:  -fsanitize=thread>
+                $<${bde_ufid_is_ubsan}: -fsanitize=undefined>
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -fPIC>
+                $<${bde_ufid_is_asan}:  -fsanitize=address>
+                $<${bde_ufid_is_tsan}:  -fsanitize=thread>
+                $<${bde_ufid_is_ubsan}: -fsanitize=undefined>
             >
             $<$<CXX_COMPILER_ID:SunPro>:
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -xcode=pic32>
@@ -629,10 +648,16 @@ function(bde_ufid_setup_flags iface)
                 rt
                 stdc++
                 Threads::Threads
+                $<${bde_ufid_is_asan}:  -fsanitize=address   -static-libasan>
+                $<${bde_ufid_is_tsan}:  -fsanitize=thread    -static-libtsan>
+                $<${bde_ufid_is_ubsan}: -fsanitize=undefined -static-libubsan>
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 $<$<PLATFORM_ID:Linux>:rt>
                 Threads::Threads
+                $<${bde_ufid_is_asan}:  -fsanitize=address   -static-libasan>
+                $<${bde_ufid_is_tsan}:  -fsanitize=thread    -static-libtsan>
+                $<${bde_ufid_is_ubsan}: -fsanitize=undefined -static-libubsan>
             >
             $<$<CXX_COMPILER_ID:MSVC>:
                 Ws2_32
