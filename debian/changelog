@@ -1,8 +1,15 @@
-bde-tools (3.56.0.0) unstable; urgency=low
+bde-tools (3.58.0.0) unstable; urgency=low
 
+  * 649d99c Merge pull request #159 from osubbotin/review/sanitizers-drqs-131178185
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 10 Jul 2020 11:04:06 -0400
+
+bde-tools (3.56.0.0) git; urgency=low
+
+  * 36127c8 Changelog for version 3.56.0.0
   * e6faada Merge pull request #156 from osubbotin/review/fix-readme
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 19 May 2020 10:13:33 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 7 Jun 2020 11:00:05 -0400
 
 bde-tools (3.55.0.0) git; urgency=low
 
