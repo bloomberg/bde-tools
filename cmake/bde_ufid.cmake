@@ -648,9 +648,9 @@ function(bde_ufid_setup_flags iface)
                 rt
                 stdc++
                 Threads::Threads
-                $<${bde_ufid_is_asan}:  -fsanitize=address   -static-libasan>
-                $<${bde_ufid_is_tsan}:  -fsanitize=thread    -static-libtsan>
-                $<${bde_ufid_is_ubsan}: -fsanitize=undefined -static-libubsan>
+                $<${bde_ufid_is_asan}:  -fsanitize=address   -static-libsan>
+                $<${bde_ufid_is_tsan}:  -fsanitize=thread    -static-libsan>
+                $<${bde_ufid_is_ubsan}: -fsanitize=undefined -static-libsan>
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 $<$<PLATFORM_ID:Linux>:rt>
