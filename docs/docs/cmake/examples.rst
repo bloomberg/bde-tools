@@ -28,7 +28,7 @@ Configure the build system for the specified ufid:
 
   ::
    
-    $ eval `bde_build_env.py -t dbg_exc_mt_64_cpp11`
+    $ eval `bde_build_env.py -t dbg_exc_mt_64_cpp17`
     $ cmake_build.py configure build
 
 
@@ -41,7 +41,7 @@ Configure the build system for the specified ufid:
 
   ::
    
-    $ eval `bde_build_env.py -t dbg_exc_mt_64_cpp11`
+    $ eval `bde_build_env.py -t dbg_exc_mt_64_cpp17`
     $ cmake_build.py configure 
 
 Build and run component test driver:
@@ -91,7 +91,36 @@ Build and run component test driver:
 
 .. _build-examples-4:
 
-Example 4. Working with low-level build system
+Example 4. Using sanitizers
+---------------------------
+
+BDE libraries and test drivers can be built and linked with compiler sanitizer's
+modules (for the compilers that support them).
+
+Sanitizer module is specified via ufid flag:
+
++-----------+---------------------------------+
+| Ufid Flag | Sanitizer module                |
++===========+=================================+
+|  asan     | Address Sanitizer               |
++-----------+---------------------------------+
+|  tsan     | Thread Sanitizer                |
++-----------+---------------------------------+
+|  ubsan    | Undefined Behaviour Sanitizer   |
++-----------+---------------------------------+
+
+Configure the build flavor with sanitizer support:
+  ::
+   
+    $ eval `bde_build_env.py -t dbg_exc_mt_64_asan_cpp17`
+    $ eval `bde_build_env.py --sanitizer=tsan`
+
+  .. note::
+     Sanitizers can significantly increase build time of the BDE libraries.
+
+.. _build-examples-5:
+
+Example 5. Working with low-level build system
 ----------------------------------------------
 
 After configuration step, the build directory contains fully configured
@@ -99,7 +128,7 @@ low-level build system that can be invoked directly.
 
 Configure the build system for the specified ufid:
 
-  :: 
+  ::
    
     $ cmake_build.py configure --ufid opt_exc_mt --build_dir ./_build/bld
     $ cd ./_build/bld
@@ -124,9 +153,9 @@ Build specific targets:
      that ``.t`` target for package group and package will build all tests
      drivers for this package group or packages.
 
-.. _build-examples-5:
+.. _build-examples-6:
 
-Example 5. Building a workspace
+Example 6. Building a workspace
 -------------------------------
 
 BDE build system supports building a workspace.
@@ -186,9 +215,9 @@ directory:
 
 Proceed with the standard workflow.
 
-.. _build-examples-6:
+.. _build-examples-7:
 
-Example 6. Installing build artefacts
+Example 7. Installing build artefacts
 -------------------------------------
 
 Configure and build BDE libraries using your preferred workflow.
