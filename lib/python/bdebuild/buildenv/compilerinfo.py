@@ -217,6 +217,12 @@ def detect_installed_compilers(uplid):
                                    "toolchain": "gcc-default"
                                },
                                {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-10",
+                                   "cxx_name":  "g++-10",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
                                    "type":      "clang",
                                    "c_name":    "clang",
                                    "cxx_name":  "clang++",
