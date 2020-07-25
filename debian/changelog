@@ -1,8 +1,15 @@
-bde-tools (3.58.0.0) unstable; urgency=low
+bde-tools (3.59.0.0) unstable; urgency=low
 
+  * ff79fe3 Merge pull request #161 from osubbotin/review/fix-ufid-parameters
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 16 Jul 2020 11:20:31 -0400
+
+bde-tools (3.58.0.0) git; urgency=low
+
+  * 6118645 Changelog for version 3.58.0.0
   * 649d99c Merge pull request #159 from osubbotin/review/sanitizers-drqs-131178185
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 10 Jul 2020 11:04:06 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 10 Jul 2020 13:06:44 -0400
 
 bde-tools (3.56.0.0) git; urgency=low
 
