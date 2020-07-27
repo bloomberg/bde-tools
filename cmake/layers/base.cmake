@@ -17,6 +17,8 @@ endfunction()
 bde_create_virtual_function(component_initialize bde_component_initialize)
 bde_create_virtual_function(component_find_sources bde_component_find_sources)
 bde_create_virtual_function(component_find_tests bde_component_find_tests)
+#Hack to fix bus builds. the above virtual function must be used in the code.
+bde_create_virtual_function(component_find_test bde_component_find_tests)
 bde_create_virtual_function(process_component base_process_component)
 
 # package
