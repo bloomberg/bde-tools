@@ -120,6 +120,17 @@ function(bde_utils_find_file_extension retFullName baseName extensions)
     bde_return("")
 endfunction()
 
+function(bde_utils_glob_files retFoundFiles baseName patterns)
+    bde_assert_no_extra_args()
+
+    set(found_files)
+    foreach(pattern IN LISTS patterns)
+        file(GLOB found ${baseName}${pattern})
+        list(APPEND found_files ${found})
+    endforeach()
+    bde_return(${found_files})
+endfunction()
+
 function(bde_append_test_labels test)
     set_property(
         TEST ${test}

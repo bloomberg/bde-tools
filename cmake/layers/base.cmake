@@ -9,14 +9,14 @@ function(base_process_component retComponent rootDir componentName)
 
     component_initialize(component ${componentName})
     component_find_sources(${component} ${rootDir})
-    component_find_test(${component} ${rootDir})
+    component_find_tests(${component} ${rootDir})
 
     bde_return(${component})
 endfunction()
 
 bde_create_virtual_function(component_initialize bde_component_initialize)
 bde_create_virtual_function(component_find_sources bde_component_find_sources)
-bde_create_virtual_function(component_find_test bde_component_find_test)
+bde_create_virtual_function(component_find_tests bde_component_find_tests)
 bde_create_virtual_function(process_component base_process_component)
 
 # package

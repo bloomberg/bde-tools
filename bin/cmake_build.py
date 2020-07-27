@@ -513,12 +513,13 @@ def build(options):
         main_target = None
         test_target = None
 
-        if target.endswith('.t'):
-            main_target = None
-            test_target = target
+        if options.tests:
+            main_target = target if target.endswith('.t') else target + '.t'
         else:
-            main_target = target
-            test_target = target + '.t' if options.tests else None
+            if target.endswith('.t'):
+                test_target = target
+            else:
+                main_target = target
 
         if main_target:
             if main_target == 'all':
@@ -526,7 +527,7 @@ def build(options):
             try:
                 build_target(main_target, options.build_dir, extra_args, env)
             except:
-                if not test_target and not options.keep_going:
+                if not options.keep_going:
                     raise
 
         if test_target:
