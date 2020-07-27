@@ -1,7 +1,7 @@
 # No include guard - may be reloaded
 
-bde_prefixed_override(gtest component_find_test)
-function(gtest_component_find_test component rootDir)
+bde_prefixed_override(gtest component_find_tests)
+function(gtest_component_find_tests component rootDir)
     component_find_test_base(gtest_component_find_test ${ARGV})
 
     bde_struct_get_field(componentName ${component} NAME)

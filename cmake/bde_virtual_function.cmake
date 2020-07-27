@@ -137,5 +137,11 @@ endfunction()
 
 # Convenience functions
 macro(bde_prefixed_override uniquePrefix fn)
-    bde_override(${fn} ${uniquePrefix}_${fn})
+
+    # Hack to change interface name "component_find_test" to "component_find_tests"
+    if("${fn}" STREQUAL "component_find_test")
+        bde_override("${fn}s" "${uniquePrefix}_${fn}")
+    else()
+        bde_override(${fn} ${uniquePrefix}_${fn})
+    endif()
 endmacro()
