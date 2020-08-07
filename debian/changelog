@@ -1,8 +1,14 @@
-bde-tools (3.59.0.0) unstable; urgency=low
+bde-tools (3.60.0.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 27 Jul 2020 16:03:17 -0400
+
+bde-tools (3.59.0.0) git; urgency=low
+
+  * 330db02 Changelog for version 3.59.0.0
   * ff79fe3 Merge pull request #161 from osubbotin/review/fix-ufid-parameters
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 16 Jul 2020 11:20:31 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 25 Jul 2020 16:47:08 -0400
 
 bde-tools (3.58.0.0) git; urgency=low
 
