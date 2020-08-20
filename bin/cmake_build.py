@@ -513,13 +513,17 @@ def build(options):
         main_target = None
         test_target = None
 
-        if options.tests:
-            main_target = target if target.endswith('.t') else target + '.t'
+        if target.endswith('.t'):
+            # If 'target.t' is specified on command line, then only build the
+            # test target
+            main_target = None
+            test_target = target
         else:
-            if target.endswith('.t'):
-                test_target = target
-            else:
-                main_target = target
+            # 'target' without '.t' was specified.  If '--test' was specified,
+            # still try to build 'target' (e.g., for matrix build to try
+            # building application targets)
+            main_target = target
+            test_target = target + '.t' if options.tests else None
 
         if main_target:
             if main_target == 'all':
@@ -527,7 +531,9 @@ def build(options):
             try:
                 build_target(main_target, options.build_dir, extra_args, env)
             except:
-                if not options.keep_going:
+                # Continue if the 'target' without '.t' was specified, and
+                # '--test' was specified since the main target might not exist
+                if not options.tests and not options.keep_going:
                     raise
 
         if test_target:
