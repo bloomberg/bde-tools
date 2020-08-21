@@ -1,7 +1,13 @@
-bde-tools (3.60.0.0) unstable; urgency=low
+bde-tools (3.61.0.0) unstable; urgency=low
 
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 27 Jul 2020 16:03:17 -0400
+ -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Thu, 20 Aug 2020 13:52:33 -0400
+
+bde-tools (3.60.0.0) git; urgency=low
+
+  * 930a79e Changelog for version 3.60.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 7 Aug 2020 11:20:29 -0400
 
 bde-tools (3.59.0.0) git; urgency=low
 
