@@ -31,6 +31,10 @@ string(CONCAT DEFAULT_C_FLAGS
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 
 
+# cmake 3.15+ MSVC Runtime library support. We control the setting via our toolchain.
+# https://cmake.org/cmake/help/v3.15/variable/CMAKE_MSVC_RUNTIME_LIBRARY.html
+set(CMAKE_MSVC_RUNTIME_LIBRARY "")
+
 set(CMAKE_CXX_FLAGS_RELEASE         "/MT /O2 /Ob3 /Oi /Ot /GS- /Gs /GF /Gy /DNDEBUG"
     CACHE STRING "Release"        FORCE)
 set(CMAKE_CXX_FLAGS_MINSIZEREL      "/MT /O1 /Ob1 /Os /DNDEBUG"
