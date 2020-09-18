@@ -1,7 +1,14 @@
-bde-tools (3.62.0.0) unstable; urgency=low
+bde-tools (3.63.0.0) unstable; urgency=low
 
+  * No commits found
 
- -- Hillel Y. Sims <hsims1@bloomberg.net>  Mon, 24 Aug 2020 14:42:57 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 11 Sep 2020 10:19:48 -0400
+
+bde-tools (3.62.0.0) git; urgency=low
+
+  * 4fdc2cc Changelog for version 3.62.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 11 Sep 2020 10:19:48 -0400
 
 bde-tools (3.61.0.0) git; urgency=low
 
