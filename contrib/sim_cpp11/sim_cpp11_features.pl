@@ -2160,6 +2160,14 @@ sub segmentFiledata($) {
             # Set $lastInclude to position (after the newline) following the
             # latest #include directive.
             $lastInclude = $cppMatchEnd[0] + 1;
+
+            # Special case: This is an atomic pattern:
+            #   #include <bsls_ident.h>
+            #   BSLS_IDENT("$Id$ $CSID$")
+            if ($cppMatch[1] eq "bsls_ident.h" and
+                cppSearch(qr{^\h*BSLS_IDENT(.*).*$}m, $lastInclude)) {
+                $lastInclude = $cppMatchEnd[0] + 1;
+            }
         }
 
         $ifStart = $elseEnd = $lastInclude;
@@ -2187,10 +2195,22 @@ sub segmentFiledata($) {
                 # Move insertion point to after #endif
                 $ifStart = $elseEnd = $cppMatchEnd[0];
 
-                # Search again
+                # Search again for the #endif we actually care about, if any.
                 if (cppFindMatchingPPDirective($elseEnd, "endif")) {
                     $endifStart = $endifEnd = $cppMatchStart[0];
                 }
+            }
+        }
+
+        if ($endifStart == $inputEnd) {
+            # Move insertion postion of '#endif' to be before any closing
+            # comments and whitespace. Find a string of "whitespace"
+            # characters starting with a newline at the end of the file.  Note
+            # that "whitespace" in 'cppSearch' includes anything in a comment.
+            # To avoid excessive processing, we assume no more than 1000
+            # characters of trailing comment.
+            if (cppSearch(qr/\n\s*$/, $inputEnd - 1000)) {
+                $endifStart = $endifEnd = $cppMatchStart[0];
             }
         }
     }
@@ -2327,6 +2347,36 @@ sub writeMaster($$$$) {
     }
 }
 
+sub writeExpansion($$)
+{
+    my ($outputFilename, $output) = @_;
+
+    trace("writeExpansion", "outputName = %s, outputLen = %d",
+          $outputFilename, length($output));
+
+    if (open OLD_FILE, "<$outputFilename") {
+        # Read previous contents of output file
+        local $/ = undef; # Slurp mode
+        my $originalFileData = <OLD_FILE>;
+        close OLD_FILE;
+
+        # Replace old timestamp with new timestamp.  If the original
+        # string and the new output string differ only in their
+        # timestamps, they will compare equal after this replacement.
+        $originalFileData =~ s/$timestampPrefix.*$/$timestampComment/mg;
+
+        # Don't modify output file if it's identical to previous version
+        if ($output eq $originalFileData) {
+            trace("writeExpansion",
+                  "Generated file is unchanged. No file written.");
+            return;
+        }
+    }
+
+    # Create read-only file with generated output.
+    writeOutput($output, $outputFilename, 0444);
+}
+
 # Process the specified input filename to the specified output filename.
 sub processFile($$)
 {
@@ -2362,7 +2412,7 @@ sub processFile($$)
     }
     close INPUT;
 
-    # Replace old timestamp with new timestamp.  Thus, if the original
+    # Replace old timestamp with new timestamp.  If the original
     # string and the post-processed string differ only in their
     # timestamps, they will compare equal after this replacement.
     $fileData =~ s/$timestampPrefix.*$/$timestampComment/mg;
@@ -2418,8 +2468,8 @@ sub processFile($$)
         # Generate the boilerplate to surround the expanded code.
         my ($boilerBeg, $boilerEnd) = filenameToBoilerplate($outputFilename);
 
-        # Write expansion with read-only permissions
-        writeOutput($boilerBeg.$output.$boilerEnd, $outputFilename, 0444);
+        # Save expansion to file
+        writeExpansion($outputFilename, $boilerBeg.$output.$boilerEnd);
     }
 
     return 0;
@@ -2811,15 +2861,15 @@ int bar(int a, T&& v)
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
-// Generator command line: sim_cpp11_features.pl --inplace --test
+// Command line: sim_cpp11_features.pl --inplace --test
 #ifndef TEST_VARIADIC_LIMIT
 #define TEST_VARIADIC_LIMIT 3
 #endif
-#ifndef TEST_VARIADIC_LIMIT_0
-#define TEST_VARIADIC_LIMIT_0 TEST_VARIADIC_LIMIT
+#ifndef TEST_VARIADIC_LIMIT_A
+#define TEST_VARIADIC_LIMIT_A TEST_VARIADIC_LIMIT
 #endif
 #  ifdef NESTED
-#if TEST_VARIADIC_LIMIT_0 >= 0
+#if TEST_VARIADIC_LIMIT_A >= 0
 void foo(C<> *c)
 {
     D<> d();
@@ -2829,9 +2879,9 @@ void foo(C<> *c)
     f(); g(
                                               );
 }
-#endif  // TEST_VARIADIC_LIMIT_0 >= 0
+#endif  // TEST_VARIADIC_LIMIT_A >= 0
 
-#if TEST_VARIADIC_LIMIT_0 >= 1
+#if TEST_VARIADIC_LIMIT_A >= 1
 template <int B_1, class A_1>
 void foo(C<B_1> *c, BSLS_COMPILERFEATURES_FORWARD_REF(A_1) a_1)
 {
@@ -2843,9 +2893,9 @@ void foo(C<B_1> *c, BSLS_COMPILERFEATURES_FORWARD_REF(A_1) a_1)
                                              BSLS_COMPILERFEATURES_FORWARD(A_1,
                                              a_1));
 }
-#endif  // TEST_VARIADIC_LIMIT_0 >= 1
+#endif  // TEST_VARIADIC_LIMIT_A >= 1
 
-#if TEST_VARIADIC_LIMIT_0 >= 2
+#if TEST_VARIADIC_LIMIT_A >= 2
 template <int B_1,
           int B_2, class A_1,
                    class A_2>
@@ -2866,9 +2916,9 @@ void foo(C<B_1,
                                              BSLS_COMPILERFEATURES_FORWARD(A_2,
                                              a_2));
 }
-#endif  // TEST_VARIADIC_LIMIT_0 >= 2
+#endif  // TEST_VARIADIC_LIMIT_A >= 2
 
-#if TEST_VARIADIC_LIMIT_0 >= 3
+#if TEST_VARIADIC_LIMIT_A >= 3
 template <int B_1,
           int B_2,
           int B_3, class A_1,
@@ -2898,7 +2948,7 @@ void foo(C<B_1,
                                              BSLS_COMPILERFEATURES_FORWARD(A_3,
                                              a_3));
 }
-#endif  // TEST_VARIADIC_LIMIT_0 >= 3
+#endif  // TEST_VARIADIC_LIMIT_A >= 3
 
 #  endif
 
@@ -2985,14 +3035,14 @@ template <typename T>
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
-// Generator command line: sim_cpp11_features.pl --inplace --test
+// Command line: sim_cpp11_features.pl --inplace --test
 #ifndef TEST_VARIADIC_LIMIT
 #define TEST_VARIADIC_LIMIT 3
 #endif
-#ifndef TEST_VARIADIC_LIMIT_1
-#define TEST_VARIADIC_LIMIT_1 TEST_VARIADIC_LIMIT
+#ifndef TEST_VARIADIC_LIMIT_B
+#define TEST_VARIADIC_LIMIT_B TEST_VARIADIC_LIMIT
 #endif
-#if TEST_VARIADIC_LIMIT_1 >= 0
+#if TEST_VARIADIC_LIMIT_B >= 0
 void g()
     {
         if (q()) {
@@ -3000,9 +3050,9 @@ void g()
                 );
         }
     }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 0
+#endif  // TEST_VARIADIC_LIMIT_B >= 0
 
-#if TEST_VARIADIC_LIMIT_1 >= 1
+#if TEST_VARIADIC_LIMIT_B >= 1
 template <typename A_1>
     void g(const vector<A_1>& a_1)
     {
@@ -3011,9 +3061,9 @@ template <typename A_1>
                 );
         }
     }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 1
+#endif  // TEST_VARIADIC_LIMIT_B >= 1
 
-#if TEST_VARIADIC_LIMIT_1 >= 2
+#if TEST_VARIADIC_LIMIT_B >= 2
 template <typename A_1,
           typename A_2>
     void g(const vector<A_1>& a_1,
@@ -3025,9 +3075,9 @@ template <typename A_1,
                 );
         }
     }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 2
+#endif  // TEST_VARIADIC_LIMIT_B >= 2
 
-#if TEST_VARIADIC_LIMIT_1 >= 3
+#if TEST_VARIADIC_LIMIT_B >= 3
 template <typename A_1,
           typename A_2,
           typename A_3>
@@ -3042,25 +3092,25 @@ template <typename A_1,
                 );
         }
     }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 3
+#endif  // TEST_VARIADIC_LIMIT_B >= 3
 
 
 template <int X
-#if TEST_VARIADIC_LIMIT_1 >= 0
+#if TEST_VARIADIC_LIMIT_B >= 0
         , class T_0 = BSLS_COMPILERFEATURES_NILT
-#endif  // TEST_VARIADIC_LIMIT_1 >= 0
+#endif  // TEST_VARIADIC_LIMIT_B >= 0
 
-#if TEST_VARIADIC_LIMIT_1 >= 1
+#if TEST_VARIADIC_LIMIT_B >= 1
         , class T_1 = BSLS_COMPILERFEATURES_NILT
-#endif  // TEST_VARIADIC_LIMIT_1 >= 1
+#endif  // TEST_VARIADIC_LIMIT_B >= 1
 
-#if TEST_VARIADIC_LIMIT_1 >= 2
+#if TEST_VARIADIC_LIMIT_B >= 2
         , class T_2 = BSLS_COMPILERFEATURES_NILT
-#endif  // TEST_VARIADIC_LIMIT_1 >= 2
+#endif  // TEST_VARIADIC_LIMIT_B >= 2
         , class = BSLS_COMPILERFEATURES_NILT>
 class C;
 
-#if TEST_VARIADIC_LIMIT_1 >= 0
+#if TEST_VARIADIC_LIMIT_B >= 0
 template <int X>
 class C<X>
 {
@@ -3069,9 +3119,9 @@ public:
 
     template <class U> void member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v);
 };
-#endif  // TEST_VARIADIC_LIMIT_1 >= 0
+#endif  // TEST_VARIADIC_LIMIT_B >= 0
 
-#if TEST_VARIADIC_LIMIT_1 >= 1
+#if TEST_VARIADIC_LIMIT_B >= 1
 template <int X, class T_1>
 class C<X, T_1>
 {
@@ -3080,9 +3130,9 @@ public:
 
     template <class U> void member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v);
 };
-#endif  // TEST_VARIADIC_LIMIT_1 >= 1
+#endif  // TEST_VARIADIC_LIMIT_B >= 1
 
-#if TEST_VARIADIC_LIMIT_1 >= 2
+#if TEST_VARIADIC_LIMIT_B >= 2
 template <int X, class T_1,
                  class T_2>
 class C<X, T_1,
@@ -3094,9 +3144,9 @@ public:
 
     template <class U> void member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v);
 };
-#endif  // TEST_VARIADIC_LIMIT_1 >= 2
+#endif  // TEST_VARIADIC_LIMIT_B >= 2
 
-#if TEST_VARIADIC_LIMIT_1 >= 3
+#if TEST_VARIADIC_LIMIT_B >= 3
 template <int X, class T_1,
                  class T_2,
                  class T_3>
@@ -3111,26 +3161,26 @@ public:
 
     template <class U> void member2(BSLS_COMPILERFEATURES_FORWARD_REF(U) v);
 };
-#endif  // TEST_VARIADIC_LIMIT_1 >= 3
+#endif  // TEST_VARIADIC_LIMIT_B >= 3
 
 
-#if TEST_VARIADIC_LIMIT_1 >= 0
+#if TEST_VARIADIC_LIMIT_B >= 0
 template <int X>
 typename mf<X>::type C<X, BSLS_COMPILERFEATURES_FILLT(3)>::member()
 {
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 0
+#endif  // TEST_VARIADIC_LIMIT_B >= 0
 
-#if TEST_VARIADIC_LIMIT_1 >= 1
+#if TEST_VARIADIC_LIMIT_B >= 1
 template <int X, class T_1>
 typename mf<X>::type C<X, T_1,
                           BSLS_COMPILERFEATURES_FILLT(2)>::member(
                                                                 const T_1& z_1)
 {
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 1
+#endif  // TEST_VARIADIC_LIMIT_B >= 1
 
-#if TEST_VARIADIC_LIMIT_1 >= 2
+#if TEST_VARIADIC_LIMIT_B >= 2
 template <int X, class T_1,
                  class T_2>
 typename mf<X>::type C<X, T_1,
@@ -3140,9 +3190,9 @@ typename mf<X>::type C<X, T_1,
                                                                 const T_2& z_2)
 {
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 2
+#endif  // TEST_VARIADIC_LIMIT_B >= 2
 
-#if TEST_VARIADIC_LIMIT_1 >= 3
+#if TEST_VARIADIC_LIMIT_B >= 3
 template <int X, class T_1,
                  class T_2,
                  class T_3>
@@ -3155,10 +3205,10 @@ typename mf<X>::type C<X, T_1,
                                                                 const T_3& z_3)
 {
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 3
+#endif  // TEST_VARIADIC_LIMIT_B >= 3
 
 
-#if TEST_VARIADIC_LIMIT_1 >= 0
+#if TEST_VARIADIC_LIMIT_B >= 0
 template <int X>
     template <class U>
 void C<X, BSLS_COMPILERFEATURES_FILLT(3)
@@ -3166,9 +3216,9 @@ void C<X, BSLS_COMPILERFEATURES_FILLT(3)
 {
     q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 0
+#endif  // TEST_VARIADIC_LIMIT_B >= 0
 
-#if TEST_VARIADIC_LIMIT_1 >= 1
+#if TEST_VARIADIC_LIMIT_B >= 1
 template <int X, class T_1>
     template <class U>
 void C<X, T_1,
@@ -3177,9 +3227,9 @@ void C<X, T_1,
 {
     q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 1
+#endif  // TEST_VARIADIC_LIMIT_B >= 1
 
-#if TEST_VARIADIC_LIMIT_1 >= 2
+#if TEST_VARIADIC_LIMIT_B >= 2
 template <int X, class T_1,
                  class T_2>
     template <class U>
@@ -3190,9 +3240,9 @@ void C<X, T_1,
 {
     q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 2
+#endif  // TEST_VARIADIC_LIMIT_B >= 2
 
-#if TEST_VARIADIC_LIMIT_1 >= 3
+#if TEST_VARIADIC_LIMIT_B >= 3
 template <int X, class T_1,
                  class T_2,
                  class T_3>
@@ -3205,41 +3255,41 @@ void C<X, T_1,
 {
     q(BSLS_COMPILERFEATURES_FORWARD(U,  v ));
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 3
+#endif  // TEST_VARIADIC_LIMIT_B >= 3
 
 
 template <int X
-#if TEST_VARIADIC_LIMIT_1 >= 0
+#if TEST_VARIADIC_LIMIT_B >= 0
         , unsigned V_0 = BSLS_COMPILERFEATURES_NILV
-#endif  // TEST_VARIADIC_LIMIT_1 >= 0
+#endif  // TEST_VARIADIC_LIMIT_B >= 0
 
-#if TEST_VARIADIC_LIMIT_1 >= 1
+#if TEST_VARIADIC_LIMIT_B >= 1
         , unsigned V_1 = BSLS_COMPILERFEATURES_NILV
-#endif  // TEST_VARIADIC_LIMIT_1 >= 1
+#endif  // TEST_VARIADIC_LIMIT_B >= 1
 
-#if TEST_VARIADIC_LIMIT_1 >= 2
+#if TEST_VARIADIC_LIMIT_B >= 2
         , unsigned V_2 = BSLS_COMPILERFEATURES_NILV
-#endif  // TEST_VARIADIC_LIMIT_1 >= 2
+#endif  // TEST_VARIADIC_LIMIT_B >= 2
         , unsigned = BSLS_COMPILERFEATURES_NILV>
 struct D;
 
-#if TEST_VARIADIC_LIMIT_1 >= 0
+#if TEST_VARIADIC_LIMIT_B >= 0
 template <int X>
 struct D<X>
 {
     typename mf<X>::type member();
 };
-#endif  // TEST_VARIADIC_LIMIT_1 >= 0
+#endif  // TEST_VARIADIC_LIMIT_B >= 0
 
-#if TEST_VARIADIC_LIMIT_1 >= 1
+#if TEST_VARIADIC_LIMIT_B >= 1
 template <int X, unsigned V_1>
 struct D<X, V_1>
 {
     typename mf<X>::type member();
 };
-#endif  // TEST_VARIADIC_LIMIT_1 >= 1
+#endif  // TEST_VARIADIC_LIMIT_B >= 1
 
-#if TEST_VARIADIC_LIMIT_1 >= 2
+#if TEST_VARIADIC_LIMIT_B >= 2
 template <int X, unsigned V_1,
                  unsigned V_2>
 struct D<X, V_1,
@@ -3247,9 +3297,9 @@ struct D<X, V_1,
 {
     typename mf<X>::type member();
 };
-#endif  // TEST_VARIADIC_LIMIT_1 >= 2
+#endif  // TEST_VARIADIC_LIMIT_B >= 2
 
-#if TEST_VARIADIC_LIMIT_1 >= 3
+#if TEST_VARIADIC_LIMIT_B >= 3
 template <int X, unsigned V_1,
                  unsigned V_2,
                  unsigned V_3>
@@ -3259,25 +3309,25 @@ struct D<X, V_1,
 {
     typename mf<X>::type member();
 };
-#endif  // TEST_VARIADIC_LIMIT_1 >= 3
+#endif  // TEST_VARIADIC_LIMIT_B >= 3
 
 
-#if TEST_VARIADIC_LIMIT_1 >= 0
+#if TEST_VARIADIC_LIMIT_B >= 0
 template <int X>
 typename mf<X>::type D<BSLS_COMPILERFEATURES_FILLV(3)>::member()
 {
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 0
+#endif  // TEST_VARIADIC_LIMIT_B >= 0
 
-#if TEST_VARIADIC_LIMIT_1 >= 1
+#if TEST_VARIADIC_LIMIT_B >= 1
 template <int X, unsigned V_1>
 typename mf<X>::type D<V_1,
                        BSLS_COMPILERFEATURES_FILLV(2)>::member()
 {
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 1
+#endif  // TEST_VARIADIC_LIMIT_B >= 1
 
-#if TEST_VARIADIC_LIMIT_1 >= 2
+#if TEST_VARIADIC_LIMIT_B >= 2
 template <int X, unsigned V_1,
                  unsigned V_2>
 typename mf<X>::type D<V_1,
@@ -3285,9 +3335,9 @@ typename mf<X>::type D<V_1,
                        BSLS_COMPILERFEATURES_FILLV(1)>::member()
 {
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 2
+#endif  // TEST_VARIADIC_LIMIT_B >= 2
 
-#if TEST_VARIADIC_LIMIT_1 >= 3
+#if TEST_VARIADIC_LIMIT_B >= 3
 template <int X, unsigned V_1,
                  unsigned V_2,
                  unsigned V_3>
@@ -3297,27 +3347,27 @@ typename mf<X>::type D<V_1,
                        BSLS_COMPILERFEATURES_FILLV(0)>::member()
 {
 }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 3
+#endif  // TEST_VARIADIC_LIMIT_B >= 3
 
 
-#if TEST_VARIADIC_LIMIT_1 >= 0
+#if TEST_VARIADIC_LIMIT_B >= 0
 X::X() { }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 0
+#endif  // TEST_VARIADIC_LIMIT_B >= 0
 
-#if TEST_VARIADIC_LIMIT_1 >= 1
+#if TEST_VARIADIC_LIMIT_B >= 1
 template <class T_1>
     X::X(const T_1& args_1) : v(args_1) { }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 1
+#endif  // TEST_VARIADIC_LIMIT_B >= 1
 
-#if TEST_VARIADIC_LIMIT_1 >= 2
+#if TEST_VARIADIC_LIMIT_B >= 2
 template <class T_1,
           class T_2>
     X::X(const T_1& args_1,
          const T_2& args_2) : v(args_1),
                               v(args_2) { }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 2
+#endif  // TEST_VARIADIC_LIMIT_B >= 2
 
-#if TEST_VARIADIC_LIMIT_1 >= 3
+#if TEST_VARIADIC_LIMIT_B >= 3
 template <class T_1,
           class T_2,
           class T_3>
@@ -3326,7 +3376,7 @@ template <class T_1,
          const T_3& args_3) : v(args_1),
                               v(args_2),
                               v(args_3) { }
-#endif  // TEST_VARIADIC_LIMIT_1 >= 3
+#endif  // TEST_VARIADIC_LIMIT_B >= 3
 
 
 template <typename T>
@@ -3394,39 +3444,39 @@ class NonVaridadicClassWithVariadicMember
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
-// Generator command line: sim_cpp11_features.pl --inplace --test
+// Command line: sim_cpp11_features.pl --inplace --test
 #ifndef TEST_VARIADIC_LIMIT
 #define TEST_VARIADIC_LIMIT 3
 #endif
-#ifndef TEST_VARIADIC_LIMIT_2
-#define TEST_VARIADIC_LIMIT_2 TEST_VARIADIC_LIMIT
+#ifndef TEST_VARIADIC_LIMIT_C
+#define TEST_VARIADIC_LIMIT_C TEST_VARIADIC_LIMIT
 #endif
-#if TEST_VARIADIC_LIMIT_2 >= 0
+#if TEST_VARIADIC_LIMIT_C >= 0
     NonVaridadicClassWithVariadicMember();
-#endif  // TEST_VARIADIC_LIMIT_2 >= 0
+#endif  // TEST_VARIADIC_LIMIT_C >= 0
 
-#if TEST_VARIADIC_LIMIT_2 >= 1
+#if TEST_VARIADIC_LIMIT_C >= 1
     template <class U_1>
         NonVaridadicClassWithVariadicMember(const U_1& u_1);
-#endif  // TEST_VARIADIC_LIMIT_2 >= 1
+#endif  // TEST_VARIADIC_LIMIT_C >= 1
 
-#if TEST_VARIADIC_LIMIT_2 >= 2
+#if TEST_VARIADIC_LIMIT_C >= 2
     template <class U_1,
               class U_2>
         NonVaridadicClassWithVariadicMember(const U_1& u_1,
                                             const U_2& u_2);
-#endif  // TEST_VARIADIC_LIMIT_2 >= 2
+#endif  // TEST_VARIADIC_LIMIT_C >= 2
 
-#if TEST_VARIADIC_LIMIT_2 >= 3
+#if TEST_VARIADIC_LIMIT_C >= 3
     template <class U_1,
               class U_2,
               class U_3>
         NonVaridadicClassWithVariadicMember(const U_1& u_1,
                                             const U_2& u_2,
                                             const U_3& u_3);
-#endif  // TEST_VARIADIC_LIMIT_2 >= 3
+#endif  // TEST_VARIADIC_LIMIT_C >= 3
 
-#if TEST_VARIADIC_LIMIT_2 >= 4
+#if TEST_VARIADIC_LIMIT_C >= 4
     template <class U_1,
               class U_2,
               class U_3,
@@ -3435,7 +3485,7 @@ class NonVaridadicClassWithVariadicMember
                                             const U_2& u_2,
                                             const U_3& u_3,
                                             const U_4& u_4);
-#endif  // TEST_VARIADIC_LIMIT_2 >= 4
+#endif  // TEST_VARIADIC_LIMIT_C >= 4
 
 #else
 // The generated code below is a workaround for the absence of perfect
@@ -3459,36 +3509,36 @@ void Cls<TYPE...>::functionWithLongExpansion79Columns(TYPE&&... a, double b);
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
-// Generator command line: sim_cpp11_features.pl --inplace --test
+// Command line: sim_cpp11_features.pl --inplace --test
 #ifndef TEST_VARIADIC_LIMIT
 #define TEST_VARIADIC_LIMIT 3
 #endif
-#ifndef TEST_VARIADIC_LIMIT_3
-#define TEST_VARIADIC_LIMIT_3 TEST_VARIADIC_LIMIT
+#ifndef TEST_VARIADIC_LIMIT_D
+#define TEST_VARIADIC_LIMIT_D TEST_VARIADIC_LIMIT
 #endif
-#if TEST_VARIADIC_LIMIT_3 >= 0
+#if TEST_VARIADIC_LIMIT_D >= 0
 template <class T>
     NonVaridadicClassWithVariadicMember<T>::
     NonVaridadicClassWithVariadicMember();
-#endif  // TEST_VARIADIC_LIMIT_3 >= 0
+#endif  // TEST_VARIADIC_LIMIT_D >= 0
 
-#if TEST_VARIADIC_LIMIT_3 >= 1
+#if TEST_VARIADIC_LIMIT_D >= 1
 template <class T>
     template <class U_1>
 NonVaridadicClassWithVariadicMember<T>::
     NonVaridadicClassWithVariadicMember(const U_1& u_1);
-#endif  // TEST_VARIADIC_LIMIT_3 >= 1
+#endif  // TEST_VARIADIC_LIMIT_D >= 1
 
-#if TEST_VARIADIC_LIMIT_3 >= 2
+#if TEST_VARIADIC_LIMIT_D >= 2
 template <class T>
     template <class U_1,
               class U_2>
 NonVaridadicClassWithVariadicMember<T>::
     NonVaridadicClassWithVariadicMember(const U_1& u_1,
                                         const U_2& u_2);
-#endif  // TEST_VARIADIC_LIMIT_3 >= 2
+#endif  // TEST_VARIADIC_LIMIT_D >= 2
 
-#if TEST_VARIADIC_LIMIT_3 >= 3
+#if TEST_VARIADIC_LIMIT_D >= 3
 template <class T>
     template <class U_1,
               class U_2,
@@ -3497,23 +3547,23 @@ NonVaridadicClassWithVariadicMember<T>::
     NonVaridadicClassWithVariadicMember(const U_1& u_1,
                                         const U_2& u_2,
                                         const U_3& u_3);
-#endif  // TEST_VARIADIC_LIMIT_3 >= 3
+#endif  // TEST_VARIADIC_LIMIT_D >= 3
 
 
-#if TEST_VARIADIC_LIMIT_3 >= 0
+#if TEST_VARIADIC_LIMIT_D >= 0
 void Cls<BSLS_COMPILERFEATURES_FILLT(3)>::functionWithLongExpansion79Columns(
                                   double b);
-#endif  // TEST_VARIADIC_LIMIT_3 >= 0
+#endif  // TEST_VARIADIC_LIMIT_D >= 0
 
-#if TEST_VARIADIC_LIMIT_3 >= 1
+#if TEST_VARIADIC_LIMIT_D >= 1
 template <class TYPE_1>
 void Cls<TYPE_1,
          BSLS_COMPILERFEATURES_FILLT(2)>::functionWithLongExpansion79Columns(
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_1) a_1,
                                   double b);
-#endif  // TEST_VARIADIC_LIMIT_3 >= 1
+#endif  // TEST_VARIADIC_LIMIT_D >= 1
 
-#if TEST_VARIADIC_LIMIT_3 >= 2
+#if TEST_VARIADIC_LIMIT_D >= 2
 template <class TYPE_1,
           class TYPE_2>
 void Cls<TYPE_1,
@@ -3522,9 +3572,9 @@ void Cls<TYPE_1,
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_1) a_1,
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_2) a_2,
                                   double b);
-#endif  // TEST_VARIADIC_LIMIT_3 >= 2
+#endif  // TEST_VARIADIC_LIMIT_D >= 2
 
-#if TEST_VARIADIC_LIMIT_3 >= 3
+#if TEST_VARIADIC_LIMIT_D >= 3
 template <class TYPE_1,
           class TYPE_2,
           class TYPE_3>
@@ -3536,7 +3586,7 @@ void Cls<TYPE_1,
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_2) a_2,
                                  BSLS_COMPILERFEATURES_FORWARD_REF(TYPE_3) a_3,
                                   double b);
-#endif  // TEST_VARIADIC_LIMIT_3 >= 3
+#endif  // TEST_VARIADIC_LIMIT_D >= 3
 
 #else
 // The generated code below is a workaround for the absence of perfect
@@ -3574,14 +3624,14 @@ allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
-// Generator command line: sim_cpp11_features.pl --inplace --test
+// Command line: sim_cpp11_features.pl --inplace --test
 #ifndef TEST_VARIADIC_LIMIT
 #define TEST_VARIADIC_LIMIT 3
 #endif
-#ifndef TEST_VARIADIC_LIMIT_4
-#define TEST_VARIADIC_LIMIT_4 TEST_VARIADIC_LIMIT
+#ifndef TEST_VARIADIC_LIMIT_E
+#define TEST_VARIADIC_LIMIT_E TEST_VARIADIC_LIMIT
 #endif
-#if TEST_VARIADIC_LIMIT_4 >= 0
+#if TEST_VARIADIC_LIMIT_E >= 0
 template <class ALLOCATOR_TYPE>
 template <class ELEMENT_TYPE, class CTOR_ARG>
 inline void
@@ -3594,9 +3644,9 @@ allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
         BSLS_COMPILERFEATURES_FORWARD(CTOR_ARG, ctorArg),
         mechanism(allocator, IsBslma()));
 }
-#endif  // TEST_VARIADIC_LIMIT_4 >= 0
+#endif  // TEST_VARIADIC_LIMIT_E >= 0
 
-#if TEST_VARIADIC_LIMIT_4 >= 1
+#if TEST_VARIADIC_LIMIT_E >= 1
 template <class ALLOCATOR_TYPE>
 template <class ELEMENT_TYPE, class CTOR_ARG, class CTOR_ARGS_1>
 inline void
@@ -3611,9 +3661,9 @@ allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
         BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS_1, ctorArgs_1),
         mechanism(allocator, IsBslma()));
 }
-#endif  // TEST_VARIADIC_LIMIT_4 >= 1
+#endif  // TEST_VARIADIC_LIMIT_E >= 1
 
-#if TEST_VARIADIC_LIMIT_4 >= 2
+#if TEST_VARIADIC_LIMIT_E >= 2
 template <class ALLOCATOR_TYPE>
 template <class ELEMENT_TYPE, class CTOR_ARG, class CTOR_ARGS_1,
                                               class CTOR_ARGS_2>
@@ -3631,9 +3681,9 @@ allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
         BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS_2, ctorArgs_2),
         mechanism(allocator, IsBslma()));
 }
-#endif  // TEST_VARIADIC_LIMIT_4 >= 2
+#endif  // TEST_VARIADIC_LIMIT_E >= 2
 
-#if TEST_VARIADIC_LIMIT_4 >= 3
+#if TEST_VARIADIC_LIMIT_E >= 3
 template <class ALLOCATOR_TYPE>
 template <class ELEMENT_TYPE, class CTOR_ARG, class CTOR_ARGS_1,
                                               class CTOR_ARGS_2,
@@ -3654,7 +3704,7 @@ allocator_traits<ALLOCATOR_TYPE>::construct(ALLOCATOR_TYPE&  allocator,
         BSLS_COMPILERFEATURES_FORWARD(CTOR_ARGS_3, ctorArgs_3),
         mechanism(allocator, IsBslma()));
 }
-#endif  // TEST_VARIADIC_LIMIT_4 >= 3
+#endif  // TEST_VARIADIC_LIMIT_E >= 3
 
 #else
 // The generated code below is a workaround for the absence of perfect
@@ -3726,53 +3776,53 @@ class Q
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
-// Generator command line: sim_cpp11_features.pl --inplace --test
+// Command line: sim_cpp11_features.pl --inplace --test
 #ifndef TEST_VARIADIC_LIMIT
 #define TEST_VARIADIC_LIMIT 3
 #endif
-#ifndef TEST_VARIADIC_LIMIT_7
-#define TEST_VARIADIC_LIMIT_7 TEST_VARIADIC_LIMIT
+#ifndef TEST_VARIADIC_LIMIT_H
+#define TEST_VARIADIC_LIMIT_H TEST_VARIADIC_LIMIT
 #endif
 template <class T,
           class U
-#if TEST_VARIADIC_LIMIT_7 >= 0
+#if TEST_VARIADIC_LIMIT_H >= 0
         , class X_0 = BSLS_COMPILERFEATURES_NILT
-#endif  // TEST_VARIADIC_LIMIT_7 >= 0
+#endif  // TEST_VARIADIC_LIMIT_H >= 0
 
-#if TEST_VARIADIC_LIMIT_7 >= 1
+#if TEST_VARIADIC_LIMIT_H >= 1
         , class X_1 = BSLS_COMPILERFEATURES_NILT
-#endif  // TEST_VARIADIC_LIMIT_7 >= 1
+#endif  // TEST_VARIADIC_LIMIT_H >= 1
 
-#if TEST_VARIADIC_LIMIT_7 >= 2
+#if TEST_VARIADIC_LIMIT_H >= 2
         , class X_2 = BSLS_COMPILERFEATURES_NILT
-#endif  // TEST_VARIADIC_LIMIT_7 >= 2
+#endif  // TEST_VARIADIC_LIMIT_H >= 2
         , class = BSLS_COMPILERFEATURES_NILT>
 class P;
 
-#if TEST_VARIADIC_LIMIT_7 >= 0
+#if TEST_VARIADIC_LIMIT_H >= 0
 template <class T, class U>
 class P<T, U>
 {
 };
-#endif  // TEST_VARIADIC_LIMIT_7 >= 0
+#endif  // TEST_VARIADIC_LIMIT_H >= 0
 
-#if TEST_VARIADIC_LIMIT_7 >= 1
+#if TEST_VARIADIC_LIMIT_H >= 1
 template <class T, class U, class X_1>
 class P<T, U, X_1>
 {
 };
-#endif  // TEST_VARIADIC_LIMIT_7 >= 1
+#endif  // TEST_VARIADIC_LIMIT_H >= 1
 
-#if TEST_VARIADIC_LIMIT_7 >= 2
+#if TEST_VARIADIC_LIMIT_H >= 2
 template <class T, class U, class X_1,
                             class X_2>
 class P<T, U, X_1,
               X_2>
 {
 };
-#endif  // TEST_VARIADIC_LIMIT_7 >= 2
+#endif  // TEST_VARIADIC_LIMIT_H >= 2
 
-#if TEST_VARIADIC_LIMIT_7 >= 3
+#if TEST_VARIADIC_LIMIT_H >= 3
 template <class T, class U, class X_1,
                             class X_2,
                             class X_3>
@@ -3781,42 +3831,42 @@ class P<T, U, X_1,
               X_3>
 {
 };
-#endif  // TEST_VARIADIC_LIMIT_7 >= 3
+#endif  // TEST_VARIADIC_LIMIT_H >= 3
 
 
 template <class A_very_long_template_parameter_name_that_will_force_wrapping,
           class T
-#if TEST_VARIADIC_LIMIT_7 >= 0
+#if TEST_VARIADIC_LIMIT_H >= 0
         , class X_0 = BSLS_COMPILERFEATURES_NILT
-#endif  // TEST_VARIADIC_LIMIT_7 >= 0
+#endif  // TEST_VARIADIC_LIMIT_H >= 0
 
-#if TEST_VARIADIC_LIMIT_7 >= 1
+#if TEST_VARIADIC_LIMIT_H >= 1
         , class X_1 = BSLS_COMPILERFEATURES_NILT
-#endif  // TEST_VARIADIC_LIMIT_7 >= 1
+#endif  // TEST_VARIADIC_LIMIT_H >= 1
 
-#if TEST_VARIADIC_LIMIT_7 >= 2
+#if TEST_VARIADIC_LIMIT_H >= 2
         , class X_2 = BSLS_COMPILERFEATURES_NILT
-#endif  // TEST_VARIADIC_LIMIT_7 >= 2
+#endif  // TEST_VARIADIC_LIMIT_H >= 2
         , class = BSLS_COMPILERFEATURES_NILT>
 class Q;
 
-#if TEST_VARIADIC_LIMIT_7 >= 0
+#if TEST_VARIADIC_LIMIT_H >= 0
 template <class A_very_long_template_parameter_name_that_will_force_wrapping,
           class T>
 class Q<A_very_long_template_parameter_name_that_will_force_wrapping, T>
 {
 };
-#endif  // TEST_VARIADIC_LIMIT_7 >= 0
+#endif  // TEST_VARIADIC_LIMIT_H >= 0
 
-#if TEST_VARIADIC_LIMIT_7 >= 1
+#if TEST_VARIADIC_LIMIT_H >= 1
 template <class A_very_long_template_parameter_name_that_will_force_wrapping,
           class T, class X_1>
 class Q<A_very_long_template_parameter_name_that_will_force_wrapping, T, X_1>
 {
 };
-#endif  // TEST_VARIADIC_LIMIT_7 >= 1
+#endif  // TEST_VARIADIC_LIMIT_H >= 1
 
-#if TEST_VARIADIC_LIMIT_7 >= 2
+#if TEST_VARIADIC_LIMIT_H >= 2
 template <class A_very_long_template_parameter_name_that_will_force_wrapping,
           class T, class X_1,
                    class X_2>
@@ -3824,9 +3874,9 @@ class Q<A_very_long_template_parameter_name_that_will_force_wrapping, T, X_1,
                                                                          X_2>
 {
 };
-#endif  // TEST_VARIADIC_LIMIT_7 >= 2
+#endif  // TEST_VARIADIC_LIMIT_H >= 2
 
-#if TEST_VARIADIC_LIMIT_7 >= 3
+#if TEST_VARIADIC_LIMIT_H >= 3
 template <class A_very_long_template_parameter_name_that_will_force_wrapping,
           class T, class X_1,
                    class X_2,
@@ -3836,7 +3886,7 @@ class Q<A_very_long_template_parameter_name_that_will_force_wrapping, T, X_1,
                                                                          X_3>
 {
 };
-#endif  // TEST_VARIADIC_LIMIT_7 >= 3
+#endif  // TEST_VARIADIC_LIMIT_H >= 3
 
 #else
 // The generated code below is a workaround for the absence of perfect
