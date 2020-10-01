@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-#                                                                     -*-perl-*-
+#                                                                    -*-perl-*-
 
 =pod
 
@@ -62,6 +62,13 @@ within the same output file, separated by conditional compilation
 directives. This option, which was the only operating mode prior to June 2020,
 tends to produce a verbose source file that is difficult to maintain. The
 default is C<--no-inplace>.
+
+=head3 C<--verify-no-change>
+
+Verify that nothing has changed in the master file that would result in a
+change in generated code (including any generated code within the master file
+itself).  If any output (including the master file) would change, do not write
+any output and abort with an error.
 
 =head3 C<--clean>
 
@@ -217,6 +224,7 @@ Util::Message::set_prog("");  # Don't prefix each debug line with prog name
 my $debug = 0;
 my $clean = 0;
 my $inplace = 0;
+my $verifyNoChange = 0;
 my $selfTest = 0;
 my $defaultMaxArgs = 10;
 my $fileMaxArgs = $defaultMaxArgs;
@@ -2305,6 +2313,9 @@ sub writeOutput($$;$)
 
     trace("writeOutput", "Writing %d to %s", length($output), $outputFilename);
 
+    fatal("--verify-no-change error: Would modify $outputFilename")
+        if ($verifyNoChange);
+
     if ($outputFilename eq "-") {
         print $output;
     }
@@ -2496,7 +2507,9 @@ EOT
 }
 
 # Return the minimal string of command-line options, excluding the file
-# name(s), needed to reliably regenerate this script's output.
+# name(s), needed to reliably regenerate this script's output.  Options that
+# don't affect the output (e.g., debugging options and default options) are
+# excluded from returned string.
 sub getCommandLine {
     my $ret = basename($0);
 
@@ -2511,13 +2524,14 @@ sub main() {
     my $outputOption;
     my @traceLabels;
 
-    GetOptions("output=s"      => \$outputOption,
-               "debug=i"       => \$debug,
-               "trace=s"       => \@traceLabels,
-               "inplace!"      => \$inplace,
-               "clean"         => \$clean,
-               "test"          => \$selfTest,
-               "var-args=i"    => \$maxArgsOpt) or usage("Invalid option");
+    GetOptions("output=s"         => \$outputOption,
+               "debug=i"          => \$debug,
+               "trace=s"          => \@traceLabels,
+               "inplace!"         => \$inplace,
+               "verify-no-change" => \$verifyNoChange,
+               "clean"            => \$clean,
+               "test"             => \$selfTest,
+               "var-args=i"       => \$maxArgsOpt) or usage("Invalid option");
 
     $commandLine = getCommandLine();
 
