@@ -1,8 +1,15 @@
-bde-tools (3.63.0.0) unstable; urgency=low
+bde-tools (3.64.0.0) unstable; urgency=low
 
-  * No commits found
+  * 0f0d0b8 Merge pull request #170 from phalpern/sim_cpp11-verify-no-change
+  * f8480e8 Merge pull request #157 from phalpern/phalpern/sim_cpp11-non-implace
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 11 Sep 2020 10:19:48 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 1 Oct 2020 06:57:08 -0400
+
+bde-tools (3.63.0.0) git; urgency=low
+
+  * 83a7c4d Changelog for version 3.63.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 18 Sep 2020 12:19:34 -0400
 
 bde-tools (3.62.0.0) git; urgency=low
 
