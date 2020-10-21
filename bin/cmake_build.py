@@ -419,6 +419,8 @@ def configure(options):
 
     # Important: CMAKE_INSTALL_LIBDIR is passed here to accomodate
     # default installation layout.
+    # Update: Darwin/MacOS uses lib for default 64 bit installs.
+    host_platform = platform.system()
     configure_cmd = ['cmake', os.getcwd(),
                      '-G'] + Platform.generator(options) + [
                      '-DCMAKE_MODULE_PATH:PATH=' + options.cmake_module_path,
@@ -428,7 +430,7 @@ def configure(options):
                      '-DBUILD_BITNESS=' + ('64' if '64' in options.ufid else '32'),
                      '-DBDE_USE_WAFSTYLEOUT=' + ('ON' if options.wafstyleout else 'OFF' ),
                      '-DCMAKE_INSTALL_PREFIX=' + options.prefix,
-                     '-DCMAKE_INSTALL_LIBDIR=' + ('lib64' if '64' in options.ufid else 'lib'),
+                     '-DCMAKE_INSTALL_LIBDIR=' + ('lib64' if ('64' in options.ufid and 'Darwin' != host_platform) else 'lib'),
                      '-DBDE_TEST_REGEX=' + (options.test_regex if options.test_regex else ''),
                     ]
 
