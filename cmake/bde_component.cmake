@@ -4,6 +4,7 @@ bde_include_guard()
 include(bde_struct)
 include(bde_utils)
 include(bde_runtest)
+include(bde_log)
 
 bde_register_struct_type(
     BDE_COMPONENT_TYPE
@@ -11,6 +12,27 @@ bde_register_struct_type(
         HEADER
         TEST_TARGET
 )
+
+# Find perl, but it's ok if it's missing
+find_package(Perl)
+
+# Find sim_cpp11_features.pl.  It's ok if it's missing, as it will be during
+# dpkg builds.
+if(PERL_FOUND AND NOT MSVC)
+    bde_log(VERBOSE
+            "Found perl version ${PERL_VERSION_STRING} at ${PERL_EXECUTABLE}")
+    find_program(SIM_CPP11
+                 "sim_cpp11_features.pl"
+                 PATHS ${CMAKE_MODULE_PATH}/../contrib/sim_cpp11
+                 )
+    if(SIM_CPP11)
+        bde_log(QUIET "Found sim_cpp11_features.pl in ${SIM_CPP11}")
+
+        option(BDE_CPP11_VERIFY_NO_CHANGE "Verify that sim_cpp11_features generates no changes" OFF)
+    endif()
+else()
+    bde_log(QUIET "Perl not found and/or on Windows - sim_cpp11_features.pl disabled")
+endif()
 
 # :: add_test_executable ::
 # This function adds a target for test identified by 'name' and with the source
@@ -47,6 +69,30 @@ function(bde_component_initialize retComponent componentName)
     bde_return(${component})
 endfunction()
 
+function(bde_component_generate_cpp03 srcFile)
+    if(SIM_CPP11)
+        if(${srcFile} MATCHES "_cpp03\.")
+            set(cpp11VerifyOption "")
+            set(cpp11Operation "generation")
+
+            if(BDE_CPP11_VERIFY_NO_CHANGE)
+                set(cpp11VerifyOption "--cpp11-verify-no-change")
+                set(cpp11Operation "validation")
+            endif()
+
+            string(REPLACE "_cpp03." "." cpp11SrcFile ${srcFile})
+            bde_log(VERBOSE "sim_cpp11 ${cpp11Operation}: ${cpp11SrcFile} -> ${srcFile}")
+            message(STATUS "sim_cpp11 ${cpp11Operation}: ${cpp11SrcFile} -> ${srcFile}")
+
+            add_custom_command(
+                OUTPUT    "${srcFile}"
+                COMMAND   "${PERL_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}"
+                DEPENDS   "${cpp11SrcFile}"
+                )
+        endif()
+    endif()
+endfunction()
+
 function(bde_component_find_sources component rootDir)
     bde_assert_no_extra_args()
 
@@ -66,6 +112,9 @@ function(bde_component_find_sources component rootDir)
         message(FATAL_ERROR "Header for ${componentName} not found.")
     endif()
     bde_struct_set_field(${component} HEADER "${header}")
+
+    bde_component_generate_cpp03("${source}")
+    bde_component_generate_cpp03("${header}")
 endfunction()
 
 function(bde_component_find_tests component rootDir)
@@ -81,6 +130,7 @@ function(bde_component_find_tests component rootDir)
             get_filename_component(testName ${test} NAME_WLE)
             bde_add_test_executable(${testName} ${testName} ${test})
             bde_struct_append_field(${component} TEST_TARGET ${testName})
+            bde_component_generate_cpp03("${test}")
         endforeach()
         bde_struct_get_field(componentTestTargets ${component} TEST_TARGET)
         bde_create_test_metatarget(componentT "${componentTestTargets}" ${componentName})

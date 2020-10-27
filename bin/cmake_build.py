@@ -160,6 +160,7 @@ class Options:
         self.compiler = args.compiler if args.compiler else uplid_comp
         self.test_regex = args.regex
         self.wafstyleout = args.wafstyleout
+        self.cpp11_verify_no_change = args.cpp11_verify_no_change
 
         self.generator = args.generator if hasattr(args, 'generator') else None
 
@@ -294,33 +295,39 @@ def wrapper():
                         choices=['configure', 'build', 'install'])
 
     parser.add_argument('--build_dir',
-                        help='Path to the build directory. If not specified, the build '
-                             'system generates the name using the current platform, compiler, '
-                             'and ufid. The generated build directory looks like this: '
-                             '"./_build/unix-linux-x86_64-2.6.32-gcc-5.4.0-opt_exc_mt_cpp11"')
+                        help='Path to the build directory. If not specified, '
+                        'the build system generates the name using the '
+                        'current platform, compiler, and ufid. The generated '
+                        'build directory looks like this: '
+             '"./_build/unix-linux-x86_64-2.6.32-gcc-5.4.0-opt_exc_mt_cpp11"')
 
     parser.add_argument('-j', '--jobs', type=int, default=0,
                         help='Specify number of jobs to run in parallel.')
 
     parser.add_argument('-v', '--verbose', action='count', default=0,
-                        help='Produce verbose output (including compiler command lines).')
+                        help='Produce verbose output (including compiler '
+                        'command lines).')
 
     parser.add_argument('--prefix',
                         default='/opt/bb',
-                        help='The path prefix in which to look for dependencies '
-                             'for this build. If "--refroot" is specified, this '
-                             'prefix is relative to the refroot (default="/opt/bb").')
+                        help='The path prefix in which to look for '
+                             'dependencies for this build. If "--refroot" is '
+                             'specified, this prefix is relative to the '
+                             'refroot (default="/opt/bb").')
 
-    group = parser.add_argument_group('configure', 'Options for the "configure" command')
+    group = parser.add_argument_group('configure',
+                                      'Options for the "configure" command')
     group.add_argument('-u', '--ufid',
-                       help='Unified Flag IDentifier (e.g. "opt_exc_mt"). See bde-tools documentation.')
+                       help='Unified Flag IDentifier (e.g. "opt_exc_mt"). See '
+                       'bde-tools documentation.')
 
     group.add_argument('--cmake-module-path',
-                       help='Path to the Cmake modules defining the BDE build system.')
+                       help='Path to the Cmake modules defining the BDE build '
+                       'system.')
 
     group.add_argument('--dpkg-build', action='store_true',
-                       help='Use the production compiler and install layout used by '
-                            ' Bloomberg\'s dpkg builds.')
+                       help='Use the production compiler and install layout '
+                            'used by  Bloomberg\'s dpkg builds.')
 
     group.add_argument('--toolchain', help='Path to the CMake toolchain file.')
 
@@ -331,33 +338,44 @@ def wrapper():
                        help='Path to the distribution refroot (default="/")')
 
     group.add_argument('--compiler',
-                       help='Specify version of MSVC (Windows only). Currently supported '
-                            'versions are: "msvc-2019", "msvc-2017", "msvc-2015", and '
-                            '"msvc-2013".  Latest installed version will be default.')
+                       help='Specify version of MSVC (Windows only). '
+                       'Currently supported versions are: "msvc-2019", '
+                       '"msvc-2017", "msvc-2015", and "msvc-2013".  Latest '
+                       'installed version will be default.')
 
-    group.add_argument('--regex', help='Regular expression for filtering test drivers')
+    group.add_argument('--regex',
+                       help='Regular expression for filtering test drivers')
 
     group.add_argument('--wafstyleout', action='store_true',
-                       help='Generate build output in "waf-style" for parsing by automated '
-                            'build tools.')
+                       help='Generate build output in "waf-style" for parsing '
+                            'by automated build tools.')
+
+    group.add_argument('--cpp11-verify-no-change',
+                       action='store_true',
+                       default=False,
+                       help='Verify that none of the generated _cpp03 '
+                       'components change when the generator is run (i.e., '
+                       'the components are up-to-date).')
 
     genChoices = Platform.generator_choices()
     if len(genChoices) > 1:
         group.add_argument('-G', choices=genChoices, dest='generator',
                            help='Select the build system for compilation.')
 
-    group = parser.add_argument_group('build', 'Options for the "build" command')
+    group = parser.add_argument_group('build',
+                                      'Options for the "build" command')
 
     group.add_argument('--targets', type=lambda x: x.split(','),
-                      help='Comma-separated list of build targets (e.g. "bsl", '
-                           '"bslma", or "bslma_testallocator").')
+                      help='Comma-separated list of build targets (e.g. '
+                           '"bsl", "bslma", or "bslma_testallocator").')
 
     group.add_argument('--tests', choices=['build', 'run'],
-                       help='Select whether to build or run the tests. Tests are not '
-                            'built by default.')
+                       help='Select whether to build or run the tests. Tests '
+                            'are not built by default.')
 
     group.add_argument('--timeout', type=int, default=600,
-                       help='Timeout for single test driver in seconds (default:600).')
+                       help='Timeout for single test driver in seconds '
+                       '(default:600).')
 
     group.add_argument('-k', '--keep-going', action='store_true',
                        help='Keep going after an error.')
@@ -365,17 +383,19 @@ def wrapper():
     group.add_argument('--xml-report', action='store_true',
                        help='Generate XML report when running tests.')
 
-    group = parser.add_argument_group('install', 'Options for the "install" command')
+    group = parser.add_argument_group('install',
+                                      'Options for the "install" command')
 
     group.add_argument('--install_dir',
                        help='Specify the installation directory.')
 
     group.add_argument('--component',
-                       help='The name of the component. The build system creates following '
-                            'components for a package group or standalone package "X": '
-                            '"X", "X-headers", "X-meta", "X-pkgconfig", which install '
-                            'the library, headers, metadata, and pkg-config files respectively.'
-                            'See bde-tools documentation for more details.')
+                       help='The name of the component. The build system '
+                       'creates following components for a package group or '
+                       'standalone package "X": "X", "X-headers", "X-meta", '
+                       '"X-pkgconfig", which install the library, headers, '
+                       'metadata, and pkg-config files respectively.  See '
+                       'bde-tools documentation for more details.')
 
     args = parser.parse_args()
     options = Options(args)
@@ -429,6 +449,7 @@ def configure(options):
                      '-DBDE_LOG_LEVEL=' + Platform.cmake_verbosity(options.verbose),
                      '-DBUILD_BITNESS=' + ('64' if '64' in options.ufid else '32'),
                      '-DBDE_USE_WAFSTYLEOUT=' + ('ON' if options.wafstyleout else 'OFF' ),
+                     '-DBDE_CPP11_VERIFY_NO_CHANGE=' + ('ON' if options.cpp11_verify_no_change else 'OFF' ),
                      '-DCMAKE_INSTALL_PREFIX=' + options.prefix,
                      '-DCMAKE_INSTALL_LIBDIR=' + ('lib64' if ('64' in options.ufid and 'Darwin' != host_platform) else 'lib'),
                      '-DBDE_TEST_REGEX=' + (options.test_regex if options.test_regex else ''),
