@@ -209,7 +209,13 @@ use 5.010;
 use FindBin;
 use lib "$FindBin::RealBin/../bdedox/lib/perl";
 
-use common::sense;
+# These using decl's replace the use of 'common::sense' which is not installed
+# by default.
+use utf8;
+use strict qw(vars subs);
+use feature qw(unicode_eval evalbytes);
+use warnings;
+
 use Getopt::Long;
 use File::Basename;
 use Fcntl;  # For sysopen modes
@@ -1231,7 +1237,7 @@ sub markPackExpansions()
         my $pattern = $cppMatch[2];
         $PACKR =~ s/__PACK_V/__PACK_T/ if (exists($typeNames{$pattern}));
         my $replacement = $cppMatch[1] . $PACKR . $cppMatch[4];
-        my $packIdent;
+        my $packIdent="";
         if ($cppMatch[3]) {
             # Save identifier after the elipsis and append it to the
             # pattern.
@@ -1791,7 +1797,8 @@ sub findSimCpp11Directive($)
                        \h*\(?$simCpp11Macro\b.*\n}mx;
 
     if (cppSearch($searchStr, $pos)) {
-        return ($cppMatch[1] eq "ifndef" or $cppMatch[2] eq '!') ?
+        return ($cppMatch[1] eq "ifndef" or (defined $cppMatch[2]
+                                             and $cppMatch[2] eq '!')) ?
             "ifndef" : "ifdef";
     }
     else {
