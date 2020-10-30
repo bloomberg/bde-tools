@@ -1,9 +1,16 @@
-bde-tools (3.64.0.0) unstable; urgency=low
+bde-tools (3.66.0.0) unstable; urgency=low
 
+  * 6384d44 Merge pull request #176 from osubbotin/review/fix-darwin-install
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 29 Oct 2020 06:37:43 -0400
+
+bde-tools (3.64.0.0) git; urgency=low
+
+  * 2e2a3f4 Changelog for version 3.64.0.0
   * 0f0d0b8 Merge pull request #170 from phalpern/sim_cpp11-verify-no-change
   * f8480e8 Merge pull request #157 from phalpern/phalpern/sim_cpp11-non-implace
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 1 Oct 2020 06:57:08 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 4 Oct 2020 07:19:14 -0400
 
 bde-tools (3.63.0.0) git; urgency=low
 
