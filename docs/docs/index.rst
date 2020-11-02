@@ -56,6 +56,16 @@ and applications, including the `BDE libraries
    :hidden:
 
    misc/docs-howto
+   misc/sim_cpp11_features
+}}}
+
+{{{ oss
+.. toctree::
+   :caption: Misc
+   :maxdepth: 1
+   :hidden:
+
+   misc/sim_cpp11_features
 }}}
 
 Index
