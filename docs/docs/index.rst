@@ -23,6 +23,7 @@ and applications, including the `BDE libraries
    cmake/design
    cmake/config
    cmake/examples
+   cmake/fuzz_testing
 {{{ internal
    cmake/advanced
 }}}

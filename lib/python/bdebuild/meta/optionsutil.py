@@ -113,9 +113,15 @@ def get_ufid_cmdline_options():
         (('sanitizer',),
          {'type': 'choice',
           'default': None,
-          'choices': (None, 'asan', 'tsan', 'ubsan'),
-          'help': 'enable address, thread or undefined behaviour sanitizer\n'
-                  '("asan", "tsan", "ubsan")'}),
+          'choices': (None, 'asan', 'msan', 'tsan', 'ubsan'),
+          'help': 'enable address, memory, thread or undefined behaviour\n'
+                  'sanitizer\n'
+                  '("asan", "msan", "tsan", "ubsan")'}),
+
+        (('fuzz',),
+         {'action': 'store_true',
+          'default': False,
+          'help': 'Build with fuzz testing (requires test driver change)'}),
 
         (('safe',),
          {'action': 'store_true',
@@ -207,8 +213,10 @@ def make_ufid_from_cmdline_options(opts):
                          'rsafe': ['rsafe'],
                          'rnone': ['rnone']},
         'sanitizer': {'asan': ['asan'],
+                      'msan': ['msan'],
                       'tsan': ['tsan'],
                       'ubsan': ['ubsan']},
+        'fuzz': {True: ['fuzz']},
         'cpp_std': {'03': ['cpp03'],
                     '11': ['cpp11'],
                     '14': ['cpp14'],

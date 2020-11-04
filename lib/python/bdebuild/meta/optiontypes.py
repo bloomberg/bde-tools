@@ -136,8 +136,11 @@ class Ufid(mixins.BasicEqualityMixin):
         'rnone': (MIDDLE + 23, build_with_convert.format("NONE")),
 
         'asan':  (MIDDLE + 30, 'Enable address sanitizer'),
-        'tsan':  (MIDDLE + 31, 'Enable thread sanitizer'),
-        'ubsan': (MIDDLE + 32, 'Enable undefined behavior sanitizer'),
+        'msan':  (MIDDLE + 31, 'Enable memory sanitizer'),
+        'tsan':  (MIDDLE + 32, 'Enable thread sanitizer'),
+        'ubsan': (MIDDLE + 33, 'Enable undefined behavior sanitizer'),
+
+        'fuzz':  (MIDDLE + 34, 'Enable fuzz testing'),
 
         'stlport':(BACK + 0, 'Build with STLPort on Sun'),
         'pic':    (BACK + 1, 'Build static PIC libraries'),

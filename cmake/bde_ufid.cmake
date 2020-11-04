@@ -19,7 +19,8 @@ include(bde_utils)
 set(install_ufid_flags opt dbg exc mt safe safe2
     aopt adbg asafe anone
     ropt rdbg rsafe rnone
-    asan tsan ubsan
+    asan msan tsan ubsan
+    fuzz
     pic shr
    )
 
@@ -27,7 +28,8 @@ set(install_ufid_flags opt dbg exc mt safe safe2
 set(known_ufid_flags opt dbg exc mt 64 safe safe2
     aopt adbg asafe anone
     ropt rdbg rsafe rnone
-    asan tsan ubsan
+    asan msan tsan ubsan
+    fuzz
     stlport pic shr ndebug
     cpp03 cpp11 cpp14 cpp17 cpp20
    )
@@ -155,7 +157,7 @@ function(bde_parse_ufid UFID)
     endif()
 
     # Check for conflicts in sanitizers
-    bde_ufid_filter_flags(sanitize "${ufid_flags}" "asan;tsan;ubsan")
+    bde_ufid_filter_flags(sanitize "${ufid_flags}" "asan;msan;tsan;ubsan")
     string(REPLACE "_" ";" sanitize "${sanitize}")
     list(LENGTH sanitize sanitizeLen)
     if (sanitizeLen GREATER 1)
@@ -272,8 +274,13 @@ function(bde_ufid_setup_flags iface)
             $<$<CXX_COMPILER_ID:Clang>:
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -fPIC>
                 $<${bde_ufid_is_asan}:  -fsanitize=address>
+                $<${bde_ufid_is_msan}:  -fsanitize=memory>
                 $<${bde_ufid_is_tsan}:  -fsanitize=thread>
                 $<${bde_ufid_is_ubsan}: -fsanitize=undefined>
+                $<${bde_ufid_is_fuzz}:
+                                     -DBDE_ACTIVATE_FUZZ_TESTING
+                                     -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+                                     -fsanitize=fuzzer-no-link>
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -fPIC>
@@ -445,6 +452,7 @@ function(bde_ufid_setup_flags iface)
                     -fexceptions,
                     -fno-exceptions
                 >
+                --param ggc-min-expand=30
                 # Warnings
                 -Waddress
                 -Wall
@@ -645,10 +653,10 @@ function(bde_ufid_setup_flags iface)
                 Threads::Threads
             >
             $<$<CXX_COMPILER_ID:Clang>:
-                rt
-                stdc++
                 Threads::Threads
+                $<${bde_ufid_is_fuzz}:  -nostdlib++ -fsanitize=fuzzer -lstdc++>
                 $<${bde_ufid_is_asan}:  -fsanitize=address   -static-libsan>
+                $<${bde_ufid_is_msan}:  -fsanitize=memory    -static-libsan>
                 $<${bde_ufid_is_tsan}:  -fsanitize=thread    -static-libsan>
                 $<${bde_ufid_is_ubsan}: -fsanitize=undefined -static-libsan>
             >

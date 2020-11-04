@@ -104,6 +104,8 @@ Sanitizer module is specified via ufid flag:
 +===========+=================================+
 |  asan     | Address Sanitizer               |
 +-----------+---------------------------------+
+|  msan     | Memory Sanitizer                |
++-----------+---------------------------------+
 |  tsan     | Thread Sanitizer                |
 +-----------+---------------------------------+
 |  ubsan    | Undefined Behaviour Sanitizer   |
@@ -285,3 +287,4 @@ Install the header files for ``bsl`` library:
   .. note:: 
   
      See :ref:`build_system_design-install-components` for more information.
+

@@ -60,7 +60,7 @@ To verify the visual appearence of the generated site (internal version):
 
   ::
 
-    $ mkdir -p ~/public_html/bde-docs
+    $ mkdir -p ~/public_html/bde-tools
     $ cp -R build/internal/html/* ~/public_html/bde-tools/
 
 
@@ -68,7 +68,7 @@ To verify the visual appearence of the generated site (OSS version):
 
   ::
 
-    $ mkdir -p ~/public_html/bde-docs
+    $ mkdir -p ~/public_html/bde-tools
     $ cp -R build/oss/html/* ~/public_html/bde-tools/
 
 In the browser, open the following URL to view the generated site (``<USER>``

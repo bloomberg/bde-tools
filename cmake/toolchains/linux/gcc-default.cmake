@@ -12,7 +12,6 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-march=westmere "
        "-fdiagnostics-show-option "
        "-fno-strict-aliasing "
-       "--param ggc-min-expand=30 "
       )
 
 set(DEFAULT_C_FLAGS_INIT "$ENV{CFLAGS}")
