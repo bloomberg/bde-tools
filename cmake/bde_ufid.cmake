@@ -653,8 +653,10 @@ function(bde_ufid_setup_flags iface)
                 Threads::Threads
             >
             $<$<CXX_COMPILER_ID:Clang>:
+                rt
+                stdc++
                 Threads::Threads
-                $<${bde_ufid_is_fuzz}:  -nostdlib++ -fsanitize=fuzzer -lstdc++>
+                $<${bde_ufid_is_fuzz}:  -nostdlib++ -fsanitize=fuzzer>
                 $<${bde_ufid_is_asan}:  -fsanitize=address   -static-libsan>
                 $<${bde_ufid_is_msan}:  -fsanitize=memory    -static-libsan>
                 $<${bde_ufid_is_tsan}:  -fsanitize=thread    -static-libsan>
