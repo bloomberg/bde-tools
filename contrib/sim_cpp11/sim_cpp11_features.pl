@@ -2528,8 +2528,8 @@ sub writeExpansion($$)
         }
     }
 
-    # Create read-only file with generated output.
-    writeOutput($output, $outputFilename, 0444);
+    # Create file with generated output.
+    writeOutput($output, $outputFilename, 0666);
 }
 
 # Process the specified input filename to the specified output filename.
