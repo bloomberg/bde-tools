@@ -76,7 +76,7 @@ function(bde_component_generate_cpp03 srcFile)
             set(cpp11Operation "generation")
 
             if(BDE_CPP11_VERIFY_NO_CHANGE)
-                set(cpp11VerifyOption "--cpp11-verify-no-change")
+                set(cpp11VerifyOption "--verify-no-change")
                 set(cpp11Operation "validation")
             endif()
 
