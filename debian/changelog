@@ -1,7 +1,8 @@
 bde-tools (3.67.0.0) unstable; urgency=low
 
+  * 6e0d641 Changelog for version 3.67.0.0
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 9 Nov 2020 12:48:00 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 13 Nov 2020 15:04:44 -0500
 
 bde-tools (3.66.0.0) git; urgency=low
 
