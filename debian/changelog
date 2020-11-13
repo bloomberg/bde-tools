@@ -1,10 +1,16 @@
-bde-tools (3.66.0.0) unstable; urgency=low
+bde-tools (3.67.0.0) unstable; urgency=low
 
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 9 Nov 2020 12:48:00 -0500
+
+bde-tools (3.66.0.0) git; urgency=low
+
+  * 5b7ecc2 Changelog for version 3.66.0.0
   * 3f0b4c5 Changelog for version 3.66.0.0
   * 59534dc Changelog for version 3.66.0.0
   * 6384d44 Merge pull request #176 from osubbotin/review/fix-darwin-install
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 30 Oct 2020 17:14:49 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 30 Oct 2020 17:15:45 -0400
 
 bde-tools (3.64.0.0) git; urgency=low
 
