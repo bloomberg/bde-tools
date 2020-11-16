@@ -24,7 +24,7 @@ if "Windows" == platform.system():
 def find_installdir(version):
     vswhere_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'vswhere.exe')
     output = subprocess.check_output([vswhere_path, '-legacy', '-format', 'json'])
-    compilers = json.loads(output.decode('ascii'))
+    compilers = json.loads(output.decode('ascii', errors='ignore'))
     for cl in compilers:
         if cl['installationVersion'].startswith(str(version)):
             return cl['installationPath']
@@ -56,7 +56,7 @@ def get_msvc_env(version, bitness):
     (out, err) = process.communicate()
 
     if (sys.version_info > (3, 0)):
-        out = out.decode('ascii')
+        out = out.decode('ascii', errors='ignore')
 
     for line in out.split("\n"):
         if '=' not in line:
