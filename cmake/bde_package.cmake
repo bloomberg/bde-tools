@@ -93,9 +93,11 @@ function(bde_package_install_meta package listFile installOpts)
     string(REGEX MATCH "^([az]_)" packagePrefix "${packageName}")
 
     if ( packagePrefix STREQUAL "a_" )
-      set(packagePartition "adapters")
+        set(packagePartition "adapters")
     elseif ( packagePrefix STREQUAL "z_" )
-      set(packagePartition "wrappers")
+        set(packagePartition "wrappers")
+    else()
+        return()
     endif()
 
     # Install meta files
