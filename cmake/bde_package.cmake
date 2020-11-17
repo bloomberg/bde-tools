@@ -83,6 +83,30 @@ function(bde_package_install package listFile installOpts)
     )
 endfunction()
 
+function(bde_package_install_meta package listFile installOpts)
+    bde_assert_no_extra_args()
+
+    bde_expand_list_file(
+        ${listFile} FILENAME packageName LISTDIR listDir
+    )
+
+    string(REGEX MATCH "^([az]_)" packagePrefix "${packageName}")
+
+    if ( packagePrefix STREQUAL "a_" )
+      set(packagePartition "adapters")
+    elseif ( packagePrefix STREQUAL "z_" )
+      set(packagePartition "wrappers")
+    endif()
+
+    # Install meta files
+    bde_struct_get_field(component ${installOpts} COMPONENT)
+    install(
+        DIRECTORY ${listDir}
+        DESTINATION "share/bdemeta/${packagePartition}/${component}"
+        COMPONENT ${component}-meta
+    )
+endfunction()
+
 function(bde_package_setup_test_interface package listFile)
     bde_assert_no_extra_args()
 

@@ -91,6 +91,7 @@ function(base_process_standalone_package retPackageGroup listFile installOpts)
     standalone_package_setup_interface(${uor} ${listFile})
     standalone_package_setup_test_interface(${uor} ${listFile})
     standalone_package_install(${uor} ${listFile} ${installOpts})
+    standalone_package_install_meta(${uor} ${listFile} ${installOpts})
 
     bde_return(${uor})
 endfunction()
@@ -100,6 +101,7 @@ bde_create_virtual_function(standalone_package_process_packages bde_standalone_p
 bde_create_virtual_function(standalone_package_setup_interface bde_standalone_setup_interface)
 bde_create_virtual_function(standalone_package_setup_test_interface bde_standalone_setup_test_interface)
 bde_create_virtual_function(standalone_package_install uor_install)
+bde_create_virtual_function(standalone_package_install_meta bde_package_install_meta)
 bde_create_virtual_function(process_standalone_package base_process_standalone_package)
 
 # application
