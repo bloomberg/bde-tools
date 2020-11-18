@@ -36,11 +36,13 @@ ordinary test driver, we use a macro to rename ``main`` when building for fuzz
 testing.  The build system will define ``BDE_ACTIVATE_FUZZ_TESTING`` when
 building for fuzz testing to enable this.
 
-A fuzz test is expected to crash on the first failure detected.  This might be
-a "natural" crash, perhaps because the program indirects through bad pointers,
-or a deliberate crash via an unhandled exception or a call to ``abort``.  In
-BDE fuzz tests, a deliberate crash is invoked through the assertion system, as
-seen below.
+A fuzz test is expected to attempt to crash on the first failure detected.
+This might be a "natural" crash, perhaps because the program indirects through
+bad pointers, or a deliberate crash via an unhandled exception or a call to
+``abort``.  In BDE fuzz tests, a deliberate crash is invoked through the
+assertion system, as seen below.  The fuzz testing infrastructure intercepts
+such crash attempts, saves the problematic input, reports the failure, and
+exits.
 
 A BDE test driver adapted for fuzz testing will include code similar to the
 following template, just before ``main()``.  The BDE code base has several
@@ -156,7 +158,7 @@ caused a failure.
             processes in-contract data and does not invoke the handler.  If
             there is a crash or other detectable undefined behavior, that too
             will be caught in either case.  Once again, we are not testing if
-            the result if the method is correct.
+            the result of the method is correct.
 
             .. code-block:: cpp
 
@@ -231,11 +233,13 @@ installed locally before use, as shown below.
 
 First, set up the build environment.  In this example, we are requesting a
 64-bit fuzz testing build with address sanitizer included, and that version 10
-of the ``clang`` compiler be used.
+of the ``clang`` compiler be used.  We request safe mode to enable all of the
+contract assertions, and optimization in the hope of exposing more possible bad
+behavior.
 
   ::
 
-    $ eval `bde_build_env.py -t opt_exc_mt_64_asan_fuzz_cpp17 -c clang-10`
+    $ eval `bde_build_env.py -t dbg_opt_safe_exc_mt_64_asan_fuzz_cpp17 -c clang-10`
 
 {{{ internal
 
@@ -272,4 +276,148 @@ argument ``-max_total_time=N`` will limit the running time to N seconds, and
   ::
 
     $ ./_build/*/ball_patternutil.t -max_total_time=120
+
+If a fuzz test stops due to hitting a specified limit, it exits with a normal
+status (0).  If it stops dues to a detected error causing a crash, it exits
+with a failed status (1).  Thus, for automated testing, the test can be run
+with its output redircted to a discarding device and a time limit specified,
+checking the exit status once it's done.
+
+Fuzz testing may also be run incrementally, with initial inputs specified.  If
+the test driver is supplied with one or more directories on the command line,
+it treats files in those directories as the initial input corpus for fuzz
+testing, and will mutate those inputs to derive further test cases, writing
+interesting ones back to the first directory.  Providing such a set of initial
+inputs can be useful when correct input is highly structured, such that the
+fuzz testing procedure may take a long time to find its way there if left
+unguided.  (Although in that case, we suggest that a better, or at least
+alternate, option is to write test cases that generate structured input using
+the fuzz data as a base.)  The corpus directory may start off empty, in which
+case fuzz testing will generate and save its data from scratch.
+
+
+Interpreting Fuzz Test Results
+------------------------------
+For comprehensive details on the output produced by fuzz testing, see the
+documentation `here <https://llvm.org/docs/LibFuzzer.html#output>`__.
+
+The fuzz tester writes output describing what it's doing as it does it, which
+id generally not useful or interesting.  On failure (that is, when the test
+machinery intercepts an attempt to crash), depending on the nature of the crash
+and the sanitizers that are built into the program, the fuzz test will write
+additional output to the standard error channel describing what it believes to
+be the problem, and whatever data it can provide as to its location.  It will
+write the fuzz data that caused the problem to a file named ``crash-...``.
+
+Here is some sample output for a one-line fuzz test that treats the fuzz data
+as a pointer and tries to indirect it, which causes an immediate failure.
+
+  .. code-block:: cpp
+
+     extern "C" int LLVMFuzzerTestOneInput(int **f) { return **f == 0; }
+
+  ::
+
+     INFO: Seed: 1428378131
+     INFO: Loaded 1 modules   (1 inline 8-bit counters): 1 [0x78d128, 0x78d129), 
+     INFO: Loaded 1 PC tables (1 PCs): 1 [0x560bc0,0x560bd0), 
+     INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+     =================================================================
+     ==194626==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x602000000050 at pc 0x000000539e25 bp 0x7ffcae0dc970 sp 0x7ffcae0dc968
+     READ of size 8 at 0x602000000050 thread T0
+         #0 0x539e24  (./ft.t+0x539e24)
+         #1 0x440131  (./ft.t+0x440131)
+         #2 0x446c91  (./ft.t+0x446c91)
+         #3 0x448936  (./ft.t+0x448936)
+         #4 0x4309d5  (./ft.t+0x4309d5)
+         #5 0x41f4c2  (./ft.t+0x41f4c2)
+         #6 0x3dcc01ed1c  (/lib64/libc.so.6+0x3dcc01ed1c)
+         #7 0x41f574  (./ft.t+0x41f574)
+     
+     0x602000000051 is located 0 bytes to the right of 1-byte region [0x602000000050,0x602000000051)
+     allocated by thread T0 here:
+         #0 0x5366b8  (./ft.t+0x5366b8)
+         #1 0x44003b  (./ft.t+0x44003b)
+         #2 0x446c91  (./ft.t+0x446c91)
+         #3 0x448936  (./ft.t+0x448936)
+         #4 0x4309d5  (./ft.t+0x4309d5)
+         #5 0x41f4c2  (./ft.t+0x41f4c2)
+         #6 0x3dcc01ed1c  (/lib64/libc.so.6+0x3dcc01ed1c)
+     
+     SUMMARY: AddressSanitizer: heap-buffer-overflow (./ft.t+0x539e24) 
+     Shadow bytes around the buggy address:
+       0x0c047fff7fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+       0x0c047fff7fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+       0x0c047fff7fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+       0x0c047fff7fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+       0x0c047fff7ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+     =>0x0c047fff8000: fa fa 00 fa fa fa 00 fa fa fa[01]fa fa fa fa fa
+       0x0c047fff8010: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+       0x0c047fff8020: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+       0x0c047fff8030: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+       0x0c047fff8040: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+       0x0c047fff8050: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+     Shadow byte legend (one shadow byte represents 8 application bytes):
+       Addressable:           00
+       Partially addressable: 01 02 03 04 05 06 07 
+       Heap left redzone:       fa
+       Freed heap region:       fd
+       Stack left redzone:      f1
+       Stack mid redzone:       f2
+       Stack right redzone:     f3
+       Stack after return:      f5
+       Stack use after scope:   f8
+       Global redzone:          f9
+       Global init order:       f6
+       Poisoned by user:        f7
+       Container overflow:      fc
+       Array cookie:            ac
+       Intra object redzone:    bb
+       ASan internal:           fe
+       Left alloca redzone:     ca
+       Right alloca redzone:    cb
+       Shadow gap:              cc
+     ==194626==ABORTING
+     MS: 0 ; base unit: 0000000000000000000000000000000000000000
+     
+     
+     artifact_prefix='./'; Test unit written to ./crash-da39a3ee5e6b4b0d3255bfef95601890afd80709
+     Base64: 
+
+
+Debugging Failed Fuzz Tests
+---------------------------
+Generally speaking, once a problem is detected, testing needs to fall back to
+ordinary debugging; fuzz testing tells you that a problem exists with a
+specified input, and it is then up to you to locate the problem.  Depending on
+the nature of the problem, there may be output from the test program that will
+provide clues.  In the sample output above, we see that a memory overflow has
+been detected, and the program provides stack traces for where the memory was
+allocated, where the overflow happened, and the contents of memory around the
+problematic area.  Near the end, we see that the test program has written the
+bad input to a file named ``crash-da39a3ee5e6b4b0d3255bfef95601890afd80709``.
+
+The test program can be rerun supplying that file as a command-line argument.
+When this is done, only the contents of that file are supplied as input data to
+the fuzz testing subroutine, making it easy to repeat the failure.
+
+The sanitizer infrastructure provides some support for debugging; see, for
+example, `AddressSanitizerAndDebugger
+<https://github.com/google/sanitizers/wiki/AddressSanitizerAndDebugger>`__.
+There is a well-known program location, ``__sanitizer::Die``, that is called
+after the program prints its report and before it exits; setting a breakpoint
+there allows for tracing back to where the error occurred.  A debugging session
+for the above failure might begin as follows::
+
+    $ gdb ./ft.t
+    (gdb) break __sanitizer::Die
+    (gdb) run crash-da39a3ee5e6b4b0d3255bfef95601890afd80709
+    ...
+    Thread 1 "ft.t" hit Breakpoint 1, __sanitizer::Die ()
+    ...
+    (gdb) where
+    ...
+    #4  0x0000000000539e25 in LLVMFuzzerTestOneInput (f=0x7fffffffc830)
+    at ft.t.cpp:1
+    ...
 
