@@ -110,6 +110,63 @@ The following is an empty example template for a fuzz testing function.
          return 0;
      }
 
+Generating Fuzz Test Inputs
+---------------------------
+In BDE testing methodology, there are often table-driven tests where the author
+has generated interesting test data by hand, and calls methods with that data,
+perhaps varying some other parameter along the way.  It might look something
+like the following.
+
+  .. code-block:: cpp
+
+     const char *DATA[] = {
+         "Hello",
+         "World!",
+         "",
+         "------------------------------------------------------------",
+         "123 123 123 123 123",
+     };
+     size_t NUM_DATA = sizeof(DATA) / sizeof(*DATA);
+
+     const uint8_t LIMITS[] = { 0, 1, 2, 3, 11, 21, 255 };
+     size_t NUM_LIMITS = sizeof(LIMITS) / sizeof(*LIMITS);
+
+     for (size_t i = 0; i < NUM_DATA; ++i) {
+         for (size_t j = 0; j < NUM_LIMITS; ++j) {
+             int result = obj.method(DATA[i], strlen(DATA[i]), LIMITS[j]);
+             ASSERTV(0 == result);
+         }
+     }
+
+In fuzz testing, we generally don't want to do this.  The intent of fuzz
+testing is to have "surprising" inputs, so we want to use the fuzz data as much
+as we can, in order to eliminate hidden assumptions in the test data that might
+prevent errors from being noticed.  So, if we are writing a fuzz test with the
+intent of paralleling the normal test above, we might write it like this.
+
+  .. code-block:: cpp
+
+     // ,,,
+     switch (test) {
+       case 1: {
+         uint8_t limit = 0;
+         if (LENGTH > 0) {
+             limit = *FUZZ++ & 0xFF;
+             --LENGTH;
+         }
+
+         int result = obj.method(FUZZ, strnlen(FUZZ, LENGTH), limit);
+         ASSERTV(0 == result);
+       } break;
+       // ...
+
+Rather than keeping tables of strings and limits, we allow the fuzz data to
+supply both a limit and a string, and we only test a single case rather than
+looping through a set of cases.  The fuzz testing infrastructure will do the
+looping for us, and it will come up with combinations of strings and limits
+that we might not see in the hand-written data, and that we might miss if we
+used the fuzz data only for the string but not for the limit.
+
 What Does A Fuzz Test Test?
 ---------------------------
 Fuzz testing involves a variety of approaches depending on the nature of the
