@@ -24,6 +24,7 @@ and applications, including the `BDE libraries
    cmake/config
    cmake/examples
    cmake/fuzz_testing
+   cmake/code_generation
 {{{ internal
    cmake/advanced
 }}}
@@ -35,6 +36,7 @@ and applications, including the `BDE libraries
 
    cmake/bde_build_env
    cmake/cmake_build
+   misc/sim_cpp11_features
 
 {{{ internal
 .. toctree::
@@ -57,16 +59,6 @@ and applications, including the `BDE libraries
    :hidden:
 
    misc/docs-howto
-   misc/sim_cpp11_features
-}}}
-
-{{{ oss
-.. toctree::
-   :caption: Misc
-   :maxdepth: 1
-   :hidden:
-
-   misc/sim_cpp11_features
 }}}
 
 Index

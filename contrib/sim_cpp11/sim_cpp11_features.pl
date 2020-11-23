@@ -2523,9 +2523,14 @@ sub writeExpansion($$)
         if ($output eq $originalFileData) {
             trace("writeExpansion",
                   "Generated file is unchanged. No file written.");
-            print("  -- sim_cpp11_features.pl: - $outputFilename not updated\n");
+            print("  - sim_cpp11_features.pl did not need to update\n");
             return;
         }
+	else {
+            trace("writeExpansion",
+                  "Generated file is changed. File written.");
+            print("  - sim_cpp11_features.pl updated file\n");
+	}
     }
 
     # Create read-only file with generated output.

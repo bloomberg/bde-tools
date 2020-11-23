@@ -1,11 +1,13 @@
-###########################
-Simulate Variadic Templates
-###########################
+.. _sim_cpp11_features:
+
+=====================
+sim_cpp11_features.pl
+=====================
 
 
-*******
+-------
 Purpose
-*******
+-------
 
 
 The \ **sim_cpp11_features.pl**\  program converts a file with specially delimited
@@ -14,8 +16,7 @@ emulates the C++11 features. By default, the C++03 expansions are placed
 in a separate file with an extra "\ ``_cpp03``\ " delimiter before the extension.
 Currently, this program emulates two constructs:
 
-
-        * Variadic templates are emulated by creating multiple copies of the template code, starting with zero template arguments and adding an argument with each repetition (up to 10 arguments by default).
+        * Variadic templates (a.k.a. parameter packs) are emulated by creating multiple copies of the template code, starting with zero template arguments and adding an argument with each repetition (up to 10 arguments by default).
         * Forwarding references in function arguments are emulated by surrounding the argument declaration in a \ ``BSLS_COMPILERFEATURES_FORWARD_REF``\ macro invocation and replacing \ ``std::forward``\  calls with \ ``BSLS_COMPILERFEATURES_FORWARD``\ .
 
 
@@ -24,9 +25,9 @@ extremely useful.
 
 The program is located in the ``bde-tools`` repo as ``contrib/sim_cpp11/sim_cpp11_features.pl``.
 
-*****
+-----
 Usage
-*****
+-----
 
 
 \ **Usage:**\  \ ``sim_cpp11_features.pl``\  [ \ *option...*\  ] \ *input-file-name...*\ 
@@ -166,9 +167,9 @@ closing \ ``#endif``\ .
 
 
 
-***********
+===========
 Limitations
-***********
+===========
 
 
 The C++11 emulation provided by this tool is incomplete at best. It does not
@@ -181,9 +182,9 @@ pattern matching. Known limitations are:
         * There is limited support for partial specialization of variadic class templates. In particular, specializing on the empty parameter pack is not currently supported.
 
 
-*******
+=======
 Example
-*******
+=======
 
 
 The following input file (let's call it "\ ``foo.h``\ "):
