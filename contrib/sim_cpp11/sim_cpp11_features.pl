@@ -685,12 +685,14 @@ sub cppSubstitute($$$)
         shroudCommentsAndStrings($subst);
 
     for my $matchPos (@cppMatchStart) {
+        $matchPos //= 0;
         if ($matchPos >= $end) {
             $matchPos += $lengthChange;
         }
     }
 
     for my $matchPos (@cppMatchEnd) {
+        $matchPos //= 0;
         if ($matchPos >= $end) {
             $matchPos += $lengthChange;
         }
