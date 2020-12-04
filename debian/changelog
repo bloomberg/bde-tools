@@ -1,8 +1,15 @@
-bde-tools (3.67.0.0) unstable; urgency=low
+bde-tools (3.68.0.0) unstable; urgency=low
 
+  * 807489f Merge pull request #183 from osubbotin/review/github-PR34
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 24 Nov 2020 08:56:54 -0500
+
+bde-tools (3.67.0.0) git; urgency=low
+
+  * 14a3e89 Changelog for version 3.67.0.0
   * 6e0d641 Changelog for version 3.67.0.0
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 13 Nov 2020 15:04:44 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 13 Nov 2020 15:05:50 -0500
 
 bde-tools (3.66.0.0) git; urgency=low
 
