@@ -1,8 +1,15 @@
-bde-tools (3.68.0.0) unstable; urgency=low
+bde-tools (3.69.0.0) unstable; urgency=low
 
+  * 940bafb Add single install target to make release symlinks. (#186)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 8 Dec 2020 13:54:18 -0500
+
+bde-tools (3.68.0.0) git; urgency=low
+
+  * bb80121 Changelog for version 3.68.0.0
   * 807489f Merge pull request #183 from osubbotin/review/github-PR34
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 24 Nov 2020 08:56:54 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 4 Dec 2020 10:13:30 -0500
 
 bde-tools (3.67.0.0) git; urgency=low
 
