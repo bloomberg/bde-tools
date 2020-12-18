@@ -1,8 +1,9 @@
 bde-tools (3.69.0.0) unstable; urgency=low
 
+  * 7393917 Changelog for version 3.69.0.0
   * 940bafb Add single install target to make release symlinks. (#186)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 8 Dec 2020 13:54:18 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 18 Dec 2020 11:16:33 -0500
 
 bde-tools (3.68.0.0) git; urgency=low
 
