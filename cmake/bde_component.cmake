@@ -82,7 +82,6 @@ function(bde_component_generate_cpp03 srcFile)
 
             string(REPLACE "_cpp03." "." cpp11SrcFile ${srcFile})
             bde_log(VERBOSE "sim_cpp11 ${cpp11Operation}: ${cpp11SrcFile} -> ${srcFile}")
-            message(STATUS "sim_cpp11 ${cpp11Operation}: ${cpp11SrcFile} -> ${srcFile}")
 
             add_custom_command(
                 OUTPUT    "${srcFile}"
