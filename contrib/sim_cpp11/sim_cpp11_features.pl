@@ -2516,9 +2516,6 @@ sub writeExpansion($$)
         my $originalFileData = <OLD_FILE>;
         close OLD_FILE;
 
-        $output=~m{(// Copyright \d+)};
-        my $new_copyright = $1;
-
         # Replace old timestamp with new timestamp.  If the original
         # string and the new output string differ only in their
         # timestamps, they will compare equal after this replacement.
@@ -2526,7 +2523,10 @@ sub writeExpansion($$)
 
         # 2021-01-03: replace old copyright with new.  This can also cause
         # a spurious difference.
-        $originalFileData =~ s{// Copyright \d+}{$new_copyright};
+        if ($output=~m{(^// Copyright \d+)}m) {
+            my $new_copyright = $1;
+            $originalFileData =~ s{^// Copyright \d+}{$new_copyright}m;
+        }
 
         # Don't modify output file if it's identical to previous version
         if ($output eq $originalFileData) {
