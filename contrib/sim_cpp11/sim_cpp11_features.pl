@@ -175,10 +175,10 @@ gets rewritten into the same input file ("C<foo.h>") as:
 
     #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=3
 
-	    template <class... ARG>
-	    void j(ARG&&... arg) {
-		g(std::forward<ARG>(arg)...);
-	    }
+            template <class... ARG>
+            void j(ARG&&... arg) {
+                g(std::forward<ARG>(arg)...);
+            }
 
     #endif
 
@@ -226,49 +226,49 @@ expansions ("C<foo_cpp03.h>"):
     #endif
 
     #if FOO_VARIADIC_LIMIT_A >= 0
-	    void j() {
-		g();
-	    }
+            void j() {
+                g();
+            }
     #endif  // FOO_VARIADIC_LIMIT_A >= 0
 
     #if FOO_VARIADIC_LIMIT_A >= 1
-	    template <class ARG_1>
-	    void j(BSLS_COMPILERFEATURES_FORWARD_REF(ARG_1) arg_1) {
-		g(BSLS_COMPILERFEATURES_FORWARD(ARG_1, arg_1));
-	    }
+            template <class ARG_1>
+            void j(BSLS_COMPILERFEATURES_FORWARD_REF(ARG_1) arg_1) {
+                g(BSLS_COMPILERFEATURES_FORWARD(ARG_1, arg_1));
+            }
     #endif  // FOO_VARIADIC_LIMIT_A >= 1
 
     #if FOO_VARIADIC_LIMIT_A >= 2
-	    template <class ARG_1,
-		      class ARG_2>
-	    void j(BSLS_COMPILERFEATURES_FORWARD_REF(ARG_1) arg_1,
-		   BSLS_COMPILERFEATURES_FORWARD_REF(ARG_2) arg_2) {
-		g(BSLS_COMPILERFEATURES_FORWARD(ARG_1, arg_1),
-		  BSLS_COMPILERFEATURES_FORWARD(ARG_2, arg_2));
-	    }
+            template <class ARG_1,
+                      class ARG_2>
+            void j(BSLS_COMPILERFEATURES_FORWARD_REF(ARG_1) arg_1,
+                   BSLS_COMPILERFEATURES_FORWARD_REF(ARG_2) arg_2) {
+                g(BSLS_COMPILERFEATURES_FORWARD(ARG_1, arg_1),
+                  BSLS_COMPILERFEATURES_FORWARD(ARG_2, arg_2));
+            }
     #endif  // FOO_VARIADIC_LIMIT_A >= 2
 
     #if FOO_VARIADIC_LIMIT_A >= 3
-	    template <class ARG_1,
-		      class ARG_2,
-		      class ARG_3>
-	    void j(BSLS_COMPILERFEATURES_FORWARD_REF(ARG_1) arg_1,
-		   BSLS_COMPILERFEATURES_FORWARD_REF(ARG_2) arg_2,
-		   BSLS_COMPILERFEATURES_FORWARD_REF(ARG_3) arg_3) {
-		g(BSLS_COMPILERFEATURES_FORWARD(ARG_1, arg_1),
-		  BSLS_COMPILERFEATURES_FORWARD(ARG_2, arg_2),
-		  BSLS_COMPILERFEATURES_FORWARD(ARG_3, arg_3));
-	    }
+            template <class ARG_1,
+                      class ARG_2,
+                      class ARG_3>
+            void j(BSLS_COMPILERFEATURES_FORWARD_REF(ARG_1) arg_1,
+                   BSLS_COMPILERFEATURES_FORWARD_REF(ARG_2) arg_2,
+                   BSLS_COMPILERFEATURES_FORWARD_REF(ARG_3) arg_3) {
+                g(BSLS_COMPILERFEATURES_FORWARD(ARG_1, arg_1),
+                  BSLS_COMPILERFEATURES_FORWARD(ARG_2, arg_2),
+                  BSLS_COMPILERFEATURES_FORWARD(ARG_3, arg_3));
+            }
     #endif  // FOO_VARIADIC_LIMIT_A >= 3
 
     #else
     // The generated code below is a workaround for the absence of perfect
     // forwarding in some compilers.
 
-	    template <class... ARG>
-	    void j(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)... arg) {
-		g(BSLS_COMPILERFEATURES_FORWARD(ARG, arg)...);
-	    }
+            template <class... ARG>
+            void j(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)... arg) {
+                g(BSLS_COMPILERFEATURES_FORWARD(ARG, arg)...);
+            }
 
     // }}} END GENERATED CODE
     #endif
@@ -2516,10 +2516,17 @@ sub writeExpansion($$)
         my $originalFileData = <OLD_FILE>;
         close OLD_FILE;
 
+        $output=~m{(// Copyright \d+)};
+        my $new_copyright = $1;
+
         # Replace old timestamp with new timestamp.  If the original
         # string and the new output string differ only in their
         # timestamps, they will compare equal after this replacement.
         $originalFileData =~ s/$timestampPrefix.*$/$timestampComment/mg;
+
+        # 2021-01-03: replace old copyright with new.  This can also cause
+        # a spurious difference.
+        $originalFileData =~ s{// Copyright \d+}{$new_copyright};
 
         # Don't modify output file if it's identical to previous version
         if ($output eq $originalFileData) {
@@ -2528,11 +2535,11 @@ sub writeExpansion($$)
             print("  - sim_cpp11_features.pl did not need to update\n");
             return;
         }
-	else {
+        else {
             trace("writeExpansion",
                   "Generated file is changed. File written.");
             print("  - sim_cpp11_features.pl updated file\n");
-	}
+        }
     }
 
     # Create read-only file with generated output.
