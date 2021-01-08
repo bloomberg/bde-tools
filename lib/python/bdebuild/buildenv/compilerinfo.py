@@ -254,14 +254,106 @@ def detect_installed_compilers(uplid):
                                }
                             ]
                           },
-                          { "uplid": "unix-darwin-",
+                          { "uplid": "unix-sunos-",
                             "compilers": [
-                                {
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc",
+                                   "cxx_name":  "g++",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-7",
+                                   "cxx_name":  "g++-7",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-8",
+                                   "cxx_name":  "g++-8",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-9",
+                                   "cxx_name":  "g++-9",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
                                    "type":      "clang",
                                    "c_name":    "clang",
                                    "cxx_name":  "clang++",
                                    "toolchain": "clang-default"
-                                }
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-9",
+                                   "cxx_name":  "clang++-9",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-10",
+                                   "cxx_name":  "clang++-10",
+                                   "toolchain": "clang-default"
+                               }
+                            ]
+                          },
+                          { "uplid": "unix-aix-",
+                            "compilers": [
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc",
+                                   "cxx_name":  "g++",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-7",
+                                   "cxx_name":  "g++-7",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-8",
+                                   "cxx_name":  "g++-8",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-9",
+                                   "cxx_name":  "g++-9",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang",
+                                   "cxx_name":  "clang++",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-9",
+                                   "cxx_name":  "clang++-9",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-10",
+                                   "cxx_name":  "clang++-10",
+                                   "toolchain": "clang-default"
+                               }
+                            ]
+                          },
+                          { "uplid": "unix-darwin-",
+                            "compilers": [
+                               {
+                                  "type":      "clang",
+                                  "c_name":    "clang",
+                                  "cxx_name":  "clang++",
+                                  "toolchain": "clang-default"
+                               }
                             ]
                           }
                         ]
@@ -289,6 +381,9 @@ def detect_installed_compilers(uplid):
         if (c_path and os.path.exists(c_path) 
             and cxx_path and os.path.isfile(cxx_path)):
             version = get_compiler_version(compiler['type'], cxx_path)
+
+            if not version:
+                continue
 
             if 'toolchain' in compiler:
                 toolchain = compiler['toolchain']
