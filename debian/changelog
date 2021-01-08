@@ -1,9 +1,15 @@
-bde-tools (3.69.0.0) unstable; urgency=low
+bde-tools (3.71.0.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 8 Jan 2021 12:04:40 -0500
+
+bde-tools (3.69.0.0) git; urgency=low
+
+  * d3e8d17 Changelog for version 3.69.0.0
   * 7393917 Changelog for version 3.69.0.0
   * 940bafb Add single install target to make release symlinks. (#186)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 18 Dec 2020 11:16:33 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 18 Dec 2020 11:18:36 -0500
 
 bde-tools (3.68.0.0) git; urgency=low
 
