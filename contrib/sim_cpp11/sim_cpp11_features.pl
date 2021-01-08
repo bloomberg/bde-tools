@@ -365,10 +365,10 @@ sub getTraceLevel($)
     my $debugLevel = Util::Message::get_debug();
 
     if ($debugLevel > $traceLevel) {
-        return $debugLevel;
+        return $debugLevel;                                            # RETURN
     }
     else {
-        return $traceLevel;
+        return $traceLevel;                                            # RETURN
     }
 }
 
@@ -376,7 +376,7 @@ sub doTrace($$$@) {
     my ($traceLabel, $debugLevel, $msgfunc, $message, @args) = @_;
 
     my $traceLevel = getTraceLevel($traceLabel);
-    return unless ($traceLevel >= $debugLevel);
+    return unless ($traceLevel >= $debugLevel);                        # RETURN
 
     my $oldDebugLevel = Util::Message::get_debug();
     my $oldMsgPrefix = Util::Message::get_prefix();
@@ -654,10 +654,10 @@ sub cppSearch($;$$)
         pos($input) = $cppMatchEnd[0];
         pos($shroudedInput) = $cppMatchEnd[0];
         if (! wantarray()) {
-            return 1;
+            return 1;                                                  # RETURN
         }
         else {
-            return ($cppMatchAll);
+            return ($cppMatchAll);                                     # RETURN
         }
     }
 
@@ -732,7 +732,7 @@ sub cppFindMatchingPPDirective($;$)
             if ($ppDirective =~ /^($what)$/ ) {
                 trace("cppFindMatchingPPDirective",
                       "Found match '%s' at %d", $ppDirective, $pos);
-                return 1;
+                return 1;                                              # RETURN
             }
             elsif ($ppDirective eq "endif") {
                 trace("cppFindMatchingPPDirective", "No match");
@@ -797,7 +797,7 @@ sub displayPos($)
     my $pos = shift;
 
     if ($pos == $inputEnd) {
-        return "\n^\n";
+        return "\n^\n";                                                # RETURN
     }
 
     my ($lineNum, $col) = lineAndColumn($pos);
@@ -845,7 +845,7 @@ sub bracketDepth($$$) {
 
     my @parens = ($inputLine =~ /([$openBrackets$closeBrackets])/g);
 
-    return $depth unless (@parens);
+    return $depth unless (@parens);                                    # RETURN
 
     $depth = $depth || 0; # Don't allow $depth to remain undef
     for my $paren (@parens) {
@@ -902,7 +902,7 @@ sub findMatchingBrace($$)
             # brace that was passed in.
             if (0 == @matchingBraceStack && $foundBrace ne $brace) {
                 # Fail: No match.
-                return $startPos;
+                return $startPos;                                      # RETURN
             }
 
             # push matching brace onto the brace stack
@@ -1144,13 +1144,13 @@ sub replaceAndFitOnLine($$$$) {
     if ($shroudedInput && $workingBuffer eq $shroudedInput) {
         cppSubstitute($packStart, $packLen, $replacement);
         trace("replaceAndFitOnLine", "RETURN SHROUDED = [%s]", $shroudedInput);
-        return $shroudedInput;
+        return $shroudedInput;                                         # RETURN
     }
     else {
         substr($workingBuffer,
                $packStart, $packLen, $replacement);
         trace("replaceAndFitOnLine", "RETURN WORKING = [%s]", $workingBuffer);
-        return $workingBuffer;
+        return $workingBuffer;                                         # RETURN
     }
 }
 
@@ -1527,7 +1527,7 @@ sub transformVariadicFunction($$$;$)
     my $buffer = stripComments(substr($input, $templateBegin,
                                       $templateEnd - $templateBegin));
 
-    return $buffer unless ($isVariadic);
+    return $buffer unless ($isVariadic);                               # RETURN
 
     pushInput($buffer);
     my @packExpansions = markPackExpansions();
@@ -1580,7 +1580,7 @@ sub transformVariadicClass($$$)
 
     return noopTemplateTransform($templateBegin,
                                  $templateHeadEnd,
-                                 $templateEnd) unless ($isVariadic);
+                                 $templateEnd) unless ($isVariadic);   # RETURN
 
     trace("transformVariadicClass", "TEMPLATE = [%s]",
           substr($input, $templateBegin, $templateEnd - $templateBegin));
@@ -1895,10 +1895,10 @@ sub findSimCpp11Directive($)
     if (cppSearch($searchStr, $pos)) {
         return ($cppMatch[1] eq "ifndef" or (defined $cppMatch[2]
                                              and $cppMatch[2] eq '!')) ?
-            "ifndef" : "ifdef";
+            "ifndef" : "ifdef";                                        # RETURN
     }
     else {
-        return "";
+        return "";                                                     # RETURN
     }
 }
 
@@ -1925,6 +1925,7 @@ sub findCpp03RegionMarkers()
     # See if #include even exists
     return () unless
         cppSearch(qr{^\h*\#\h*include\h*[<"].*_cpp03(\.[^">]*)?[">]}m);
+                                                                       # RETURN
 
     my $includeStart     = $cppMatchStart[0];
     my $includeEnd       = $cppMatchEnd[0];
@@ -1984,7 +1985,7 @@ sub transformFile($$)
 
     my $simVariadicsMacro ="BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES";
 
-    my $startVerbetim = $pos;
+    my $startVerbatim = $pos;
 
     # Iterate over regions delimited by simulation markers.
     # Each region gets a unique name by advancing through the alphabet.
@@ -2000,8 +2001,8 @@ sub transformFile($$)
 
         # Output code before the #if
         my $endVerbetim = $cppMatchStart[0];
-        $output .= substr($input, $startVerbetim,
-                          $endVerbetim - $startVerbetim);
+        $output .= substr($input, $startVerbatim,
+                          $endVerbetim - $startVerbatim);
 
         my $startCpp11Segment = $pos;  # start C++11 code segment
 
@@ -2023,7 +2024,7 @@ sub transformFile($$)
         }
 
         pos($input) = $pos;
-        $startVerbetim = $pos;
+        $startVerbatim = $pos;
 
         my $cpp11Segment = substr($input, $startCpp11Segment,
                                   $endCpp11Segment - $startCpp11Segment);
@@ -2097,10 +2098,10 @@ EOT
     } # End while each region
 
     # If there were no expansion regions found, then return an empty string.
-    return "" if (0 == $regionCount);
+    return "" if (0 == $regionCount);                                  # RETURN
 
     # Output remaining part of output file
-    $output .= substr($input, $startVerbetim, $inputEnd - $startVerbetim);
+    $output .= substr($input, $startVerbatim, $inputEnd - $startVerbatim);
     return $output;
 }
 
@@ -2443,7 +2444,7 @@ sub filenameToBoilerplate($) {
             $boilerplateEnd =~ s/$match/$replacement/g;
         }
 
-        return ($boilerplateBegin, $boilerplateEnd);
+        return ($boilerplateBegin, $boilerplateEnd);                   # RETURN
     }
 
     die "Shouldn't get here";
@@ -2532,13 +2533,11 @@ sub writeExpansion($$)
         if ($output eq $originalFileData) {
             trace("writeExpansion",
                   "Generated file is unchanged. No file written.");
-            print("  - sim_cpp11_features.pl did not need to update\n");
-            return;
+            return;                                                    # RETURN
         }
         else {
             trace("writeExpansion",
                   "Generated file is changed. File written.");
-            print("  - sim_cpp11_features.pl updated file\n");
         }
     }
 

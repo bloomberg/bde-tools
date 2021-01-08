@@ -83,11 +83,21 @@ function(bde_component_generate_cpp03 srcFile)
             string(REPLACE "_cpp03." "." cpp11SrcFile ${srcFile})
             bde_log(VERY_VERBOSE "sim_cpp11 ${cpp11Operation}: ${cpp11SrcFile} -> ${srcFile}")
 
-            add_custom_command(
-                OUTPUT    "${srcFile}"
-                COMMAND   "${PERL_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}"
-                DEPENDS   "${cpp11SrcFile}"
-                )
+            if (BDE_USE_WAFSTYLEOUT)
+                get_property(wafstyleout GLOBAL PROPERTY WAFSTYLEOUT_PATH)
+
+                add_custom_command(
+                    OUTPUT    "${srcFile}"
+                    COMMAND   "${PYTHON_EXECUTABLE}" "${wafstyleout}" "${PERL_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}"
+                    DEPENDS   "${cpp11SrcFile}"
+                    )
+            else()
+                add_custom_command(
+                    OUTPUT    "${srcFile}"
+                    COMMAND   "${PERL_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}"
+                    DEPENDS   "${cpp11SrcFile}"
+                    )
+            endif()
         endif()
     endif()
 endfunction()
