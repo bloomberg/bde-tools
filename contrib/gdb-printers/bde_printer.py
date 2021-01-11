@@ -309,7 +309,7 @@ class BslRbTreeIterator:
             return pointer->name & ~1
         """
         np = pointer.dereference()[name]
-        npi = int(np.cast(gdb.lookup_type('int')))
+        npi = np.cast(gdb.lookup_type('long long'))
         if npi & 1:
             np = gdb.Value(npi & ~1).reinterpret_cast(np.type)
         return np
@@ -368,36 +368,40 @@ class KeyValueIterator:
     """This iterator converts an iterator of pairs into 2 alternating tuples.
     """
     def __init__(self,iter):
-        self.value  = None
         self.iter = iter
+        self.item = None
+        self.count = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if not self.value:
-            next = self.iter.next()
-            result     = ('key',   next[0])
-            self.value = ('value', next[1])
-            return result
+        val = None
+        if self.count % 2 == 0:
+            self.item = self.iter.next()
+            val = self.item[0]
         else:
-            result     = self.value
-            self.value = None
-            return result
+            val = self.item[1]
+        ret = ('[%d]' % self.count, val)
+        self.count = self.count + 1
+        return ret
 
     next = __next__
 
 class ValueIterator:
-    """This iterator returns a ('value',value) tuple from an iterator."""
+    """This iterator returns a ('[i]',value) tuple from an iterator."""
     def __init__(self,iter):
         self.iter = iter
+        self.count = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
         value = self.iter.next()
-        return ('value',value)
+        ret = ('[%d]' % self.count, value)
+        self.count = self.count + 1
+        return ret
 
     next = __next__
 
