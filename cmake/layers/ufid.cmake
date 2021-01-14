@@ -181,8 +181,7 @@ function(bde_create_ufid_symlink uor installOpts)
             CODE
                 "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \
                 ${symlinkVal} ${symlinkReleaseFile})"
-            COMPONENT "${uorName}-release-symlink"
-            EXCLUDE_FROM_ALL
+            COMPONENT "${component}-release-symlink"
         )
         install(
             CODE
