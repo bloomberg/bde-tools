@@ -1,7 +1,14 @@
-bde-tools (3.71.0.0) unstable; urgency=low
+bde-tools (3.72.0.0) unstable; urgency=low
 
+  * 8e57c81 Make release symlink by default. (#190)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 8 Jan 2021 12:04:40 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 14 Jan 2021 15:27:41 -0500
+
+bde-tools (3.71.0.0) git; urgency=low
+
+  * 9f8753b Changelog for version 3.71.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 8 Jan 2021 15:14:28 -0500
 
 bde-tools (3.69.0.0) git; urgency=low
 
