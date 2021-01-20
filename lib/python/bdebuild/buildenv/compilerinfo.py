@@ -264,6 +264,18 @@ def detect_installed_compilers(uplid):
                                },
                                {
                                    "type":      "gcc",
+                                   "c_name":    "gcc-5",
+                                   "cxx_name":  "g++-5",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-6",
+                                   "cxx_name":  "g++-6",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
                                    "c_name":    "gcc-7",
                                    "cxx_name":  "g++-7",
                                    "toolchain": "gcc-default"
@@ -306,6 +318,18 @@ def detect_installed_compilers(uplid):
                                    "type":      "gcc",
                                    "c_name":    "gcc",
                                    "cxx_name":  "g++",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-5",
+                                   "cxx_name":  "g++-5",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-6",
+                                   "cxx_name":  "g++-6",
                                    "toolchain": "gcc-default"
                                },
                                {
