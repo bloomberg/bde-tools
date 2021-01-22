@@ -2,6 +2,7 @@ import logging
 import sys
 import threading
 import time
+import traceback
 import xml.etree.ElementTree as ET
 
 
@@ -190,6 +191,9 @@ class Log(object):
 
     def record_exception(self, case, e):
         self._logger.info('CASE %2d: PYTHON EXCEPTION (%s)' % (case, str(e)))
+        self._logger.info('Traceback:')
+        for line in traceback.format_exception(*sys.exc_info()):
+            self._logger.info(line.rstrip())
 
     def info(self, msg):
         self._logger.info(msg)

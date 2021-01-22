@@ -1,7 +1,8 @@
-import threading
-import subprocess
+import os
 import signal
+import subprocess
 import sys
+import threading
 import time
 
 
@@ -48,6 +49,7 @@ class _Status(object):
 class _Worker(threading.Thread):
     """Worker thread to run test cases."""
 
+
     def __init__(self, ctx, status):
         """Initialize a test runner object.
 
@@ -61,7 +63,22 @@ class _Worker(threading.Thread):
         self._proc = None
         self._case = 0
 
-    def _get_test_run_cmd(self):
+    def _platform_needs_limited_output(self):
+        """Determine whether this platform is one of those needing limited
+           output size to avoid hangs. {DRQS 164928733<GO>}
+        """
+        platform = sys.platform
+
+        if platform.find("sun", 0) != -1:
+            return True
+
+        if platform.find("aix", 0) != -1:
+            return True
+
+        return False
+
+    def _get_full_test_run_cmd(self):
+        """Get list of command and arguments for current test case."""
         options = self._ctx.options
 
         cmd = []
@@ -78,6 +95,32 @@ class _Worker(threading.Thread):
 
         return cmd
 
+    def _get_limited_test_run_cmd(self):
+        """Get string of command and arguments for current test case, piping
+           the output to 'bde_input_limiter.py' to limit it to 5000 lines.
+        """
+        limiter_command = os.path.dirname(os.path.realpath(sys.argv[0])) \
+                              + os.sep + "bde_input_limiter.py";
+
+        cmd = self._get_full_test_run_cmd()
+        cmd = " ".join(cmd)
+        cmd = 'bash -c \'set -o pipefail; ' + cmd
+        cmd += ' | ' + limiter_command + "'"
+
+        self._ctx.log.debug_case(self._case, 'COMMAND %s' % cmd)
+
+        return cmd
+
+    def _get_test_run_cmd(self):
+        """Return a tuple containing the command to run (either as a list or
+           as a string) and a boolean flag indicating whether the command
+           is in string form or not.
+        """
+        if self._platform_needs_limited_output():
+            return (self._get_limited_test_run_cmd(), True)
+        else:
+            return (self._get_full_test_run_cmd(), False)
+
     def run(self):
         while True:
             self._case = self._status.next_test_case()
@@ -85,13 +128,13 @@ class _Worker(threading.Thread):
             if self._case <= 0:
                 return
 
-            cmd = self._get_test_run_cmd()
+            (cmd, use_shell) = self._get_test_run_cmd()
             self._ctx.log.record_start(self._case)
-            self._ctx.log.debug_case(self._case, 'COMMAND %s' % cmd)
-
             try:
-                self._proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                              stderr=subprocess.STDOUT)
+                self._proc = subprocess.Popen(cmd,
+                                              stdout=subprocess.PIPE,
+                                              stderr=subprocess.STDOUT,
+                                              shell=use_shell)
                 (out, err) = self._proc.communicate()
                 rc = self._proc.returncode
             except Exception as e:
