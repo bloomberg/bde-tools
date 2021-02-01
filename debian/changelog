@@ -1,7 +1,14 @@
-bde-tools (3.73.0.0) unstable; urgency=low
+bde-tools (3.73.0.1) unstable; urgency=low
 
+  * No commits found
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 22 Jan 2021 11:14:43 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 29 Jan 2021 12:49:24 -0500
+
+bde-tools (3.73.0.0) git; urgency=low
+
+  * eb97faf Changelog for version 3.73.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 29 Jan 2021 12:49:24 -0500
 
 bde-tools (3.72.0.0) git; urgency=low
 
