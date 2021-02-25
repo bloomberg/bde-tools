@@ -13,7 +13,6 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-m${BUILD_BITNESS} "
        "-xtarget=generic "
        "-xbuiltin=%all "
-       "-library=no%rwtools7 "
        "-temp=/bb/data/tmp "
        "-xannotate=no "
        "-xthreadvar=dynamic "
