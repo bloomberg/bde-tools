@@ -16,6 +16,8 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-temp=/bb/data/tmp "
        "-xannotate=no "
        "-xthreadvar=dynamic "
+       "-features=rtti "
+       "-Qoption ccfe -xglobalstatic "
       )
 set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
@@ -28,6 +30,7 @@ string(CONCAT DEFAULT_C_FLAGS
        "-temp=/bb/data/tmp "
        "-xannotate=no "
        "-xthreadvar=dynamic "
+       "-W0,-xglobalstatic "
       )
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 

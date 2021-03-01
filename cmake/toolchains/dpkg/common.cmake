@@ -19,7 +19,7 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
     set(CMAKE_CXX_COMPILER ${root}/CC)
     set(CMAKE_C_COMPILER ${root}/cc)
 
-    include("toolchains/sunos/cc-default")
+    include("toolchains/sunos/dpkg")
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
