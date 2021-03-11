@@ -359,7 +359,7 @@ For comprehensive details on the output produced by fuzz testing, see the
 documentation `here <https://llvm.org/docs/LibFuzzer.html#output>`__.
 
 The fuzz tester writes output describing what it's doing as it does it, which
-id generally not useful or interesting.  On failure (that is, when the test
+is generally not useful or interesting.  On failure (that is, when the test
 machinery intercepts an attempt to crash), depending on the nature of the crash
 and the sanitizers that are built into the program, the fuzz test will write
 additional output to the standard error channel describing what it believes to
