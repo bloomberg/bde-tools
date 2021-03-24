@@ -148,6 +148,8 @@ def get_ufid_cmdline_options():
           'configuration options such as --library_type'})
     ]
 
+def is_version_higher(v1, v2):
+    return tuple(map(int,v1.split("."))) >= tuple(map(int, v2.split(".")))
 
 def get_default_cpp_std(compiler_type, compiler_version):
     """Determine the default C++ standard for a particular compiler.
@@ -159,16 +161,16 @@ def get_default_cpp_std(compiler_type, compiler_version):
     Returns:
         One of the choices for the option "cpp-std", "17", "14", "11" or "03".
     """
-    if (compiler_type == 'gcc' and compiler_version >= '7.3' or
-        compiler_type == 'clang' and compiler_version >= '7'):
+    if (compiler_type == 'gcc' and is_version_higher(compiler_version, '7.3') or
+        compiler_type == 'clang' and is_version_higher(compiler_version,  '7') ):
         return "17"
 
-    if (compiler_type == 'gcc' and compiler_version >= '5.3' or
-        compiler_type == 'clang' and compiler_version >= '6'):
+    if (compiler_type == 'gcc' and is_version_higher(compiler_version, '5.3') or
+        compiler_type == 'clang' and is_version_higher(compiler_version,  '6') ):
         return "14"
 
-    if (compiler_type == 'gcc' and compiler_version >= '4.8' or
-        compiler_type == 'clang' and compiler_version >= '3.6'):
+    if (compiler_type == 'gcc' and is_version_higher(compiler_version, '4.8') or
+        compiler_type == 'clang' and is_version_higher(compiler_version,  '3.6') ):
         return "11"
 
     return "03"
