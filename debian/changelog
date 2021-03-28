@@ -1,7 +1,14 @@
-bde-tools (3.76.0.0) unstable; urgency=low
+bde-tools (3.77.0.0) unstable; urgency=low
 
+  * 67b2fa0 Fix compiler version compare and default std flags. (#201)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 1 Mar 2021 11:10:03 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 24 Mar 2021 11:12:02 -0400
+
+bde-tools (3.76.0.0) git; urgency=low
+
+  * 565b339 Changelog for version 3.76.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 5 Mar 2021 12:20:25 -0500
 
 bde-tools (3.73.0.1) git; urgency=low
 
