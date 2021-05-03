@@ -53,6 +53,48 @@ function(bde_import_target_raw_library libName)
     endif()
 endfunction()
 
+# :: bde_load_conan_build_info ::
+# -----------------------------------------------------------------------------
+# The function tries to detect the use of conan and loads the
+# 'conan_build_info.cmake' file into memory
+function(bde_load_conan_build_info)
+    if (TARGET "CONAN_PKG::bde-tools")
+        message(STATUS "Conan package already loaded")
+        return()
+    endif()
+
+    set(CONAN_BUILD_INFO ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    if (EXISTS ${CONAN_BUILD_INFO})
+        message(STATUS "Found ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+        include(${CONAN_BLD_INFO})
+        conan_basic_setup(TARGETS)
+    endif()
+endfunction()
+
+# :: bde_resolve_external_dependency_conan ::
+# -----------------------------------------------------------------------------
+# The function tries to resolve a single dependency using conan targets.  The
+# main purpose of the function is to resolve the disparity of target names, and
+# work around the current limitation in the conan cmake generator creating
+# non-global targets that cannot be aliased
+function(bde_resolve_external_dependency_conan depName)
+    bde_assert_no_extra_args()
+
+    set(conanDep "CONAN_PKG::${depName}")
+    if (TARGET ${conanDep})
+        bde_log(VERBOSE "Found dependency ${depName} in conan")
+
+        # After https://github.com/conan-io/conan/issues/3482 is resolved this
+        # should be just an alias
+        add_library(${depName} INTERFACE IMPORTED)
+        target_link_libraries(${depName} INTERFACE ${conanDep})
+        foreach(prop INTERFACE_LINK_LIBRARIES INTERFACE_INCLUDE_DIRECTORIES INTERFACE_COMPILE_DEFINITIONS INTERFACE_COMPILE_OPTIONS)
+            get_property(tmpProp TARGET ${conanDep} PROPERTY ${prop})
+            set_property(TARGET ${conanDep} PROPERTY ${prop} ${tmpProp})
+        endforeach()
+    endif()
+endfunction()
+
 # :: bde_import_target_from_pc ::
 # -----------------------------------------------------------------------------
 # The function tries to find the static library using the pkg-config file(s)
@@ -199,8 +241,9 @@ endfunction()
 # The function tries to resolve all external dependencies in the following
 # order:
 # 1. CMake config
-# 2. .pc file
-# 3. Raw static library.
+# 2. Conan generated cmake target
+# 3. .pc file
+# 4. Raw static library.
 #
 # If the dependency (library) is found, the library is added to the link
 # line (the order is maintained using dependency information found in the
@@ -209,6 +252,8 @@ endfunction()
 # to the link line.
 function(bde_resolve_external_dependencies externalDeps)
     bde_assert_no_extra_args()
+
+    bde_load_conan_build_info()
 
     set(deps ${externalDeps})
 
@@ -232,6 +277,12 @@ function(bde_resolve_external_dependencies externalDeps)
             endif()
 
             bde_log(VERBOSE "Processing ${depName}")
+
+            # Checking if defined in conanfile
+            bde_resolve_external_dependency_conan(${depName})
+            if (NOT depName OR TARGET ${depName})
+                continue()
+            endif()
 
             # Looking up CMake export for the external dependency.
             find_package(
