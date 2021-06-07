@@ -133,7 +133,7 @@ function(bde_component_find_tests component rootDir)
     set(baseName "${rootDir}/${componentName}")
 
     # Test driver
-    if (NOT BDE_TEST_REGEX OR ${baseName} MATCHES "${BDE_TEST_REGEX}")
+    if (NOT BDE_TEST_REGEX OR ${componentName} MATCHES "${BDE_TEST_REGEX}")
         bde_utils_glob_files(tests ${baseName} ".t.cpp;.*.t.cpp;.t.c;.*.t.c")
         foreach(test IN LISTS tests)
             get_filename_component(testName ${test} NAME_WLE)

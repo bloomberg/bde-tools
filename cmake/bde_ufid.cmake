@@ -300,6 +300,9 @@ function(bde_ufid_setup_flags iface)
                     -qnoeh
                 >
             >
+            $<$<CXX_COMPILER_ID:MSVC>:
+                $<${bde_ufid_is_asan}:  /fsanitize=address>
+            >
     )
 
     bde_interface_target_compile_definitions(

@@ -452,7 +452,7 @@ def configure(options):
                      '-DBDE_CPP11_VERIFY_NO_CHANGE=' + ('ON' if options.cpp11_verify_no_change else 'OFF' ),
                      '-DCMAKE_INSTALL_PREFIX=' + options.prefix,
                      '-DCMAKE_INSTALL_LIBDIR=' + ('lib64' if ('64' in options.ufid and 'Darwin' != host_platform) else 'lib'),
-                     '-DBDE_TEST_REGEX=' + (options.test_regex if options.test_regex else ''),
+                     '-DBDE_TEST_REGEX:STRING=' + (options.test_regex if options.test_regex else ''),
                     ]
 
     if options.dpkg_build:
