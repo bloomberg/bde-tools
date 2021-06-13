@@ -1,7 +1,13 @@
-bde-tools (3.81.0.0) unstable; urgency=low
+bde-tools (3.83.0.0) unstable; urgency=low
 
 
- -- drodrig1 <dribeas@bloomberg.net>  Mon, 3 May 2021 17:15:25 +0100
+ -- hbott1 <hbott1@bloomberg.net>  Mon, 7 Jun 2021 10:59:57 -0400
+
+bde-tools (3.81.0.0) git; urgency=low
+
+  * d31faf4 Changelog for version 3.81.0.0
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 7 May 2021 10:54:58 -0400
 
 bde-tools (3.77.0.0) git; urgency=low
 
