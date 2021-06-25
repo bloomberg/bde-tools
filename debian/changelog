@@ -1,6 +1,6 @@
-bde-tools (3.83.0.1) unstable; urgency=low
+bde-tools (3.84.0.0) unstable; urgency=low
 
-  * 763ea4c Backfill changelog
+  * 265ddd8 Backfill changelog (bumping patch version)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 20 Jun 2021 08:39:44 -0400
 
