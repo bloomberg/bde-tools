@@ -270,6 +270,8 @@ function(bde_process_dependencies targetStruct listFile)
     bde_struct_append_field(${targetStruct} DEPENDS "${depends}")
 
     bde_struct_get_field(interfaceTarget ${targetStruct} INTERFACE_TARGET)
+    bde_struct_get_field(depends ${targetStruct} DEPENDS)
+
     if(NOT _NO_LINK)
         bde_interface_target_link_libraries(${interfaceTarget} PUBLIC "${depends}")
         bde_struct_mark_field_const(${targetStruct} DEPENDS)
@@ -288,6 +290,8 @@ function(bde_process_test_dependencies targetStruct listFile)
     bde_struct_append_field(${targetStruct} TEST_DEPENDS "${depends}")
 
     bde_struct_get_field(testInterfaceTarget ${targetStruct} TEST_INTERFACE_TARGET)
+    bde_struct_get_field(depends "${targetStruct}" TEST_DEPENDS)
+
     bde_interface_target_link_libraries(${testInterfaceTarget} PRIVATE "${depends}")
     bde_struct_mark_field_const(${targetStruct} TEST_DEPENDS)
 
