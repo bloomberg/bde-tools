@@ -161,9 +161,9 @@ class _Worker(threading.Thread):
             #   * On Cygwin, -1 becomes 127!
             #
             # To handle malformed test drivers, stop when there are more
-            # than 99 test cases.
+            # than 499 test cases.
             if (rc == 255 or rc == -1 or rc == 127 or rc == 4294967295
-                    or self._case > 99):
+                    or self._case > 499):
                 self._ctx.log.debug_case(self._case, 'DOES NOT EXIST')
                 self._status.notify_done()
                 return
