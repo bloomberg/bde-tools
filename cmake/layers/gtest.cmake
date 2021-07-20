@@ -2,7 +2,7 @@
 
 bde_prefixed_override(gtest component_find_tests)
 function(gtest_component_find_tests component rootDir)
-    component_find_test_base(gtest_component_find_test ${ARGV})
+    component_find_tests_base(gtest_component_find_tests ${ARGV})
 
     bde_struct_get_field(componentName ${component} NAME)
     bde_utils_find_file_extension(test "${rootDir}/${componentName}" ".g.cpp")
