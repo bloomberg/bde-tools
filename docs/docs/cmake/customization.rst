@@ -49,7 +49,7 @@ repository:
   .. code-block:: cmake
 
      # CmakeLists.txt
-     cmake_minimum_required(VERSION 3.8)
+     cmake_minimum_required(VERSION 3.15)
 
      get_filename_component(repoName ${CMAKE_CURRENT_LIST_DIR} NAME)
 
