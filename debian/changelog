@@ -1,8 +1,16 @@
-bde-tools (3.85.0.0) unstable; urgency=low
+bde-tools (3.86.0.0) unstable; urgency=low
 
+  * 9ff7005 fix a bug in cmake/layers/gtest.cmake. (#206)
+  * 872dec1 Increase test limit from 99 to 499 (#205)
+
+ -- osubbotin <osubbotin@bloomberg.net>  Thu, 29 Jul 2021 12:05:56 -0400
+
+bde-tools (3.85.0.0) git; urgency=low
+
+  * 4293961 Changelog for version 3.85.0.0
   * 85943ba Allow adding additional dependencies before processing *dep files (#204)
 
- -- rkhlebnikov <rkhlebnikov@bloomberg.net>  Tue, 29 Jun 2021 10:56:08 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 9 Jul 2021 13:43:59 -0400
 
 bde-tools (3.84.0.0) git; urgency=low
 
