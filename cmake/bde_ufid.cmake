@@ -300,6 +300,15 @@ function(bde_ufid_setup_flags iface)
                     -qnoeh
                 >
             >
+            $<$<CXX_COMPILER_ID:XLClang>:
+                $<$<OR:${bde_ufid_is_shr},${bde_ufid_is_pic}>: -qpic>
+                $<${bde_ufid_is_mt}: -qthreaded>
+
+                $<IF:${bde_ufid_is_exc},
+                    -qeh,
+                    -qnoeh
+                >
+            >
             $<$<CXX_COMPILER_ID:MSVC>:
                 $<${bde_ufid_is_asan}:  /fsanitize=address>
             >
@@ -524,6 +533,14 @@ function(bde_ufid_setup_flags iface)
                     -qnoeh -qsuppress=1540-1090 -qsuppress=1540-1088
                 >
             >
+            $<$<CXX_COMPILER_ID:XLClang>:
+                $<${bde_ufid_is_mt}: -qthreaded>
+
+                $<IF:${bde_ufid_is_exc},
+                    -qeh,
+                    -qnoeh -qsuppress=1540-1090 -qsuppress=1540-1088
+                >
+            >
     )
     bde_interface_target_compile_definitions(
         ${iface}
@@ -687,7 +704,7 @@ function(bde_ufid_setup_flags iface)
                 >
                 $<${bde_ufid_is_stlport}:-library=stlport4>
             >
-            $<$<CXX_COMPILER_ID:XL>:
+            $<$<CXX_COMPILER_ID:XL,XLClang>:
                 Threads::Threads
                 $<IF:${bde_ufid_is_64}, -q64, -q32>
             >

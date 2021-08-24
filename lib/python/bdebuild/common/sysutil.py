@@ -171,7 +171,8 @@ CXX_C_COMP_MAP = {
     'g++': 'gcc',
     'clang++': 'clang',
     'CC': 'cc',
-    'xlC_r': 'xlc_r'
+    'xlC_r': 'xlc_r',
+    'xlclang++': 'xlclang'
 }
 
 C_CXX_COMP_MAP = {}
