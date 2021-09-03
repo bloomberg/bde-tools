@@ -1,9 +1,16 @@
-bde-tools (3.86.0.0) unstable; urgency=low
+bde-tools (3.89.0.0) unstable; urgency=low
 
+  * 99d5812 Add support for xlclang compiler. (#207)
+
+ -- osubbotin <osubbotin@bloomberg.net>  Tue, 24 Aug 2021 16:08:29 -0400
+
+bde-tools (3.86.0.0) git; urgency=low
+
+  * 88629e8 Changelog for version 3.86.0.0
   * 9ff7005 fix a bug in cmake/layers/gtest.cmake. (#206)
   * 872dec1 Increase test limit from 99 to 499 (#205)
 
- -- osubbotin <osubbotin@bloomberg.net>  Thu, 29 Jul 2021 12:05:56 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 30 Jul 2021 17:15:13 -0400
 
 bde-tools (3.85.0.0) git; urgency=low
 
