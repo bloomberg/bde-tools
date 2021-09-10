@@ -1591,8 +1591,8 @@ sub transformVariadicClass($$$)
               $templateHeadEnd);
     my $classOrStruct    = $cppMatch[1];
     my $className        = $cppMatch[2];
-    my $isSpecialization = $cppMatch[3] eq '<';
-    my $isForwardDecl    = $cppMatch[3] eq ';';
+    my $isSpecialization = (defined $cppMatch[3]) && $cppMatch[3] eq '<';
+    my $isForwardDecl    = (defined $cppMatch[3]) && $cppMatch[3] eq ';';
     my $classHdrEnd      = $cppMatchEnd[2];
 
     my $buffer;
