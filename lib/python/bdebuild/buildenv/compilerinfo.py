@@ -93,6 +93,7 @@ def get_user_config_path():
 
     return path
 
+
 def get_compilerinfos(hostname, uplid, file_):
     """Get the list of applicable compilers from a compiler config file.
 
@@ -425,7 +426,7 @@ def detect_installed_compilers(uplid):
         c_path = get_command_output(['which', compiler['c_name'] ])
         cxx_path = get_command_output(['which', compiler['cxx_name'] ])
 
-        if (c_path and os.path.exists(c_path) 
+        if (c_path and os.path.exists(c_path)
             and cxx_path and os.path.isfile(cxx_path)):
             version = get_compiler_version(compiler['type'], cxx_path)
 

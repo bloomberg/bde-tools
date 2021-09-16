@@ -23,7 +23,7 @@ if "Windows" == platform.system():
 
 def find_installdir(version):
     vswhere_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'vswhere.exe')
-    output = subprocess.check_output([vswhere_path, '-legacy', '-format', 'json'])
+    output = subprocess.check_output([vswhere_path, '-prerelease', '-legacy', '-format', 'json'])
     compilers = json.loads(output.decode('ascii', errors='ignore'))
     for cl in compilers:
         if cl['installationVersion'].startswith(str(version)):
@@ -187,6 +187,7 @@ class Platform:
      [ 'year', 'version' ])
 
     msvcVersionMap = {
+        'msvc-2022': MsvcVersion(2022, 17),
         'msvc-2019': MsvcVersion(2019, 16),
         'msvc-2017': MsvcVersion(2017, 15),
         'msvc-2015': MsvcVersion(2015, 14),
