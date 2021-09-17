@@ -1,8 +1,15 @@
-bde-tools (3.89.0.0) unstable; urgency=low
+bde-tools (3.90.0.0) unstable; urgency=low
 
+  * 36e2ce9 Enabling MSVS 2022 Preview (#209)
+
+ -- afeher <afeher@bloomberg.net>  Thu, 16 Sep 2021 11:22:05 -0400
+
+bde-tools (3.89.0.0) git; urgency=low
+
+  * aaf1ab8 Changelog for version 3.89.0.0
   * 99d5812 Add support for xlclang compiler. (#207)
 
- -- osubbotin <osubbotin@bloomberg.net>  Tue, 24 Aug 2021 16:08:29 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 3 Sep 2021 11:05:57 -0400
 
 bde-tools (3.86.0.0) git; urgency=low
 
