@@ -455,7 +455,7 @@ function bdedox_eapButtonOnClick(eapButtonObj, tableId)
 function bdedox_grpButtonOnClick(grpButtonObj)
     // Expand (collapse) the package rows following the row containing the
     // specified 'grpButtonObj' if the current state of that object shows that
-    // it is collapsed (expanded).  Return the the highest indexed row object
+    // it is collapsed (expanded).  Return the highest indexed row object
     // expanded (collapsed) or 'null'.  When a group is expanded (collapsed)
     // the rows are made visible (invisible) from top-to-bottom
     // (bottom-to-top).
@@ -526,7 +526,7 @@ function bdedox_grpButtonOnClick(grpButtonObj)
 function bdedox_pkgButtonOnClick(pkgButtonObj)
     // Expand (collapse) the component rows following the row containing the
     // specified 'pkgButtonObj' if the current state of that object shows that
-    // it is collapsed (expanded).  Return the the highest indexed row object
+    // it is collapsed (expanded).  Return the highest indexed row object
     // expanded (collapsed) or 'null'.  When a package is expanded (collapsed)
     // the rows are made visible (invisible) from top-to-bottom
     // (bottom-to-top).
