@@ -1,8 +1,17 @@
-bde-tools (3.90.0.0) unstable; urgency=low
+bde-tools (3.93.0.0) unstable; urgency=low
 
+  * 9a815f0 Run Python executable from CMake package (#211)
+  * eb68f77 Simcpp11 fix split test driver guard macros drqs166312437 (#210)
+  * c3d4ba0 Fix typos. (#195)
+
+ -- osubbotin <osubbotin@bloomberg.net>  Mon, 25 Oct 2021 09:21:12 -0400
+
+bde-tools (3.90.0.0) git; urgency=low
+
+  * d1616b9 Changelog for version 3.90.0.0
   * 36e2ce9 Enabling MSVS 2022 Preview (#209)
 
- -- afeher <afeher@bloomberg.net>  Thu, 16 Sep 2021 11:22:05 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 17 Sep 2021 17:11:47 -0400
 
 bde-tools (3.89.0.0) git; urgency=low
 
