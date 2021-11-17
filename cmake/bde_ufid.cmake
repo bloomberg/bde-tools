@@ -357,6 +357,13 @@ function(bde_ufid_setup_flags iface)
                 BDE_DONT_ALLOW_TRANSITIVE_INCLUDES
             >
 
+            $<${bde_ufid_is_asan}:
+                BDE_BUILD_TARGET_ASAN
+            >
+            $<${bde_ufid_is_tsan}:
+                BDE_BUILD_TARGET_TSAN
+            >
+
             $<${bde_ufid_is_aopt}:
                 BSLS_ASSERT_LEVEL_ASSERT_OPT
             >
@@ -586,6 +593,13 @@ function(bde_ufid_setup_flags iface)
                 BDE_BUILD_TARGET_SAFE_2
                 BDE_DONT_ALLOW_TRANSITIVE_INCLUDES
                 _STLP_EXTRA_OPERATORS_FOR_DEBUG=1
+            >
+
+            $<${bde_ufid_is_asan}:
+                BDE_BUILD_TARGET_ASAN
+            >
+            $<${bde_ufid_is_tsan}:
+                BDE_BUILD_TARGET_TSAN
             >
 
             $<${bde_ufid_is_aopt}:
