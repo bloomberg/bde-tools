@@ -7,8 +7,7 @@ import xml.etree.ElementTree as ET
 
 
 class _TextRecorder(object):
-    """Record test result to stdout.
-    """
+    """Record test result to stdout."""
 
     def __init__(self, opts, logger):
         self._opts = opts
@@ -16,34 +15,35 @@ class _TextRecorder(object):
 
     def start(self, case):
         if case == 1:
-            self._logger.info('TEST START')
-        self._logger.debug('CASE %2d: START' % case)
+            self._logger.info("TEST START")
+        self._logger.debug("CASE %2d: START" % case)
 
     def success(self, case, rc, out):
         if self._opts.is_verbose:
-            self._logger.info('CASE %2d: SUCCESS (rc %s)\n%s' %
-                              (case, rc, out))
+            self._logger.info(
+                "CASE %2d: SUCCESS (rc %s)\n%s" % (case, rc, out)
+            )
         else:
-            self._logger.info('CASE %2d: SUCCESS' % case)
+            self._logger.info("CASE %2d: SUCCESS" % case)
 
     def failure(self, case, rc, out):
-        self._logger.info('CASE %2d: FAILURE (rc %s)\n%s' % (case, rc, out))
+        self._logger.info("CASE %2d: FAILURE (rc %s)\n%s" % (case, rc, out))
 
     def skip(self, case):
-        self._logger.info('CASE %2d: SKIP' % case)
+        self._logger.info("CASE %2d: SKIP" % case)
 
     def timeout(self, case, pid):
-        self._logger.info('CASE %2d: TIMEOUT '
-                          '(after %ds, pid: %d)' %
-                          (case, self._opts.timeout, pid))
+        self._logger.info(
+            "CASE %2d: TIMEOUT "
+            "(after %ds, pid: %d)" % (case, self._opts.timeout, pid)
+        )
 
     def flush(self):
         pass
 
 
 class _JunitRecorder(object):
-    """Record test results to Junit xml.
-    """
+    """Record test results to Junit xml."""
 
     def __init__(self, opts):
         self._opts = opts
@@ -65,17 +65,21 @@ class _JunitRecorder(object):
 
     def success(self, case, rc, out):
         with self._lock:
-            self._results[case] = {'start': self._start_times[case],
-                                   'end': time.time(),
-                                   'rc': rc,
-                                   'out': out}
+            self._results[case] = {
+                "start": self._start_times[case],
+                "end": time.time(),
+                "rc": rc,
+                "out": out,
+            }
 
     def failure(self, case, rc, out):
         with self._lock:
-            self._results[case] = {'start': self._start_times[case],
-                                   'end': time.time(),
-                                   'rc': rc,
-                                   'out': out}
+            self._results[case] = {
+                "start": self._start_times[case],
+                "end": time.time(),
+                "rc": rc,
+                "out": out,
+            }
 
     def timeout(self, case, pid):
         with self._lock:
@@ -89,42 +93,42 @@ class _JunitRecorder(object):
         # Some helpful information on the Junit format:
         # http://stackoverflow.com/questions/4922867/
         # junit-xml-format-specification-that-hudson-supports
-        suite = ET.Element('testsuite')
-        ET.SubElement(suite, 'properties')
-        suite.set('name', self._opts.component_name)
+        suite = ET.Element("testsuite")
+        ET.SubElement(suite, "properties")
+        suite.set("name", self._opts.component_name)
 
-        properties = suite.find('properties')
-        verbosityProperty = ET.SubElement(properties, 'property')
-        verbosityProperty.set('name', 'verbosity')
-        verbosityProperty.set('value', '%d' % self._opts.verbosity)
+        properties = suite.find("properties")
+        verbosityProperty = ET.SubElement(properties, "property")
+        verbosityProperty.set("name", "verbosity")
+        verbosityProperty.set("value", "%d" % self._opts.verbosity)
 
-        timeoutProperty = ET.SubElement(properties, 'property')
-        timeoutProperty.set('name', 'timeout')
-        timeoutProperty.set('value', '%d' % self._opts.timeout)
+        timeoutProperty = ET.SubElement(properties, "property")
+        timeoutProperty.set("name", "timeout")
+        timeoutProperty.set("value", "%d" % self._opts.timeout)
 
         cases = sorted(self._skipped + list(self._results.keys()))
 
         for case in cases:
-            testcase = ET.SubElement(suite, 'testcase')
-            testcase.set('name', '%d' % case)
+            testcase = ET.SubElement(suite, "testcase")
+            testcase.set("name", "%d" % case)
             if case in self._results:
                 case_result = self._results[case]
-                delta = case_result['end'] - case_result['start']
-                testcase.set('time', '%.6f' % delta)
-                systemout = ET.SubElement(testcase, 'system-out')
-                systemout.text = case_result['out']
-                if case_result['rc'] == 0:
-                    testcase.set('status', 'passed')
+                delta = case_result["end"] - case_result["start"]
+                testcase.set("time", "%.6f" % delta)
+                systemout = ET.SubElement(testcase, "system-out")
+                systemout.text = case_result["out"]
+                if case_result["rc"] == 0:
+                    testcase.set("status", "passed")
                 else:
-                    testcase.set('status', 'failed')
-                    failure = ET.SubElement(testcase, 'failure')
+                    testcase.set("status", "failed")
+                    failure = ET.SubElement(testcase, "failure")
                     if case in self._timedout:
-                        failure.set('type', 'timeout')
+                        failure.set("type", "timeout")
                     else:
-                        failure.set('type', 'test failure')
-                    failure.set('message', 'rc: %d' % case_result['rc'])
+                        failure.set("type", "test failure")
+                    failure.set("message", "rc: %d" % case_result["rc"])
             else:
-                ET.SubElement(testcase, 'skipped')
+                ET.SubElement(testcase, "skipped")
 
         tree = ET.ElementTree(suite)
         tree.write(self._opts.junit_file_path)
@@ -160,13 +164,13 @@ class Log(object):
 
     def _configure_logger(self):
         self._logger = logging.getLogger()
-        datefmt = '%H:%M:%S'
+        datefmt = "%H:%M:%S"
         if self._opts.is_debug:
             level = logging.DEBUG
-            format_ = '[%(asctime)s] [%(threadName)s] %(message)s'
+            format_ = "[%(asctime)s] [%(threadName)s] %(message)s"
         else:
             level = logging.INFO
-            format_ = '[%(asctime)s] %(message)s'
+            format_ = "[%(asctime)s] %(message)s"
 
         handler = logging.StreamHandler(sys.stdout)
         formatter = logging.Formatter(format_, datefmt)
@@ -190,8 +194,8 @@ class Log(object):
         self._recorder.failure(case, rc, out)
 
     def record_exception(self, case, e):
-        self._logger.info('CASE %2d: PYTHON EXCEPTION (%s)' % (case, str(e)))
-        self._logger.info('Traceback:')
+        self._logger.info("CASE %2d: PYTHON EXCEPTION (%s)" % (case, str(e)))
+        self._logger.info("Traceback:")
         for line in traceback.format_exception(*sys.exc_info()):
             self._logger.info(line.rstrip())
 
@@ -199,16 +203,17 @@ class Log(object):
         self._logger.info(msg)
 
     def info_case(self, case, msg):
-        self._logger.info('CASE %2d: %s' % (case, msg))
+        self._logger.info("CASE %2d: %s" % (case, msg))
 
     def debug(self, msg):
         self._logger.debug(msg)
 
     def debug_case(self, case, msg):
-        self._logger.debug('CASE %2d: %s' % (case, msg))
+        self._logger.debug("CASE %2d: %s" % (case, msg))
 
     def flush(self):
         self._recorder.flush()
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

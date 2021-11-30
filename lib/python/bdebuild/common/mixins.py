@@ -8,11 +8,13 @@ except ImportError:
 
 
 class BasicEqualityMixin(object):
-    """This class serves as a common base to provide the equality operator.
-    """
+    """This class serves as a common base to provide the equality operator."""
+
     def __eq__(self, other):
-        return (isinstance(other, self.__class__)
-                and self.__dict__ == other.__dict__)
+        return (
+            isinstance(other, self.__class__)
+            and self.__dict__ == other.__dict__
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -23,13 +25,13 @@ class BasicReprMixin(object):
 
     Note that this implementation is not roundtrip-able.
     """
+
     def __repr__(self):
-        return '%s' % (vars(self))
+        return "%s" % (vars(self))
 
 
 class BasicSerializeMixin(object):
-    """This class serves as a common base to provide pickle serialization.
-    """
+    """This class serves as a common base to provide pickle serialization."""
 
     def to_pickle_str(self):
         return pickle.dumps(self)
@@ -37,6 +39,7 @@ class BasicSerializeMixin(object):
     @classmethod
     def from_pickle_str(cls, s):
         return pickle.loads(s)
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

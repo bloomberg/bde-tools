@@ -37,15 +37,15 @@ class Policy(object):
         """Return whether a test case should be skipped"""
 
         if case_number in self._policy:
-            return self._policy[case_number] == 'skip'
+            return self._policy[case_number] == "skip"
 
     def _determine_policy(self):
         def get_policy_table():
             if os.path.isfile(self._opts.policy_path):
-                with open(self._opts.policy_path, 'r') as f:
+                with open(self._opts.policy_path, "r") as f:
                     # Evaluate the filter dictionary but do not allow the
                     # execution of any methods.
-                    policy_table = eval(f.read(), {'__builtins__': None}, {})
+                    policy_table = eval(f.read(), {"__builtins__": None}, {})
                 return policy_table
             else:
                 return {}
@@ -53,10 +53,13 @@ class Policy(object):
         def get_current_config():
             config = {}
 
-            config['os'] = platform.uname()[0]
-            config['host_type'] = (self._opts.filter_host_type or
-                                   os.environ.get('HOST', 'Physical'))
-            config['abi_bits'] = self._opts.filter_abi_bits
+            config["os"] = platform.uname()[0]
+            config[
+                "host_type"
+            ] = self._opts.filter_host_type or os.environ.get(
+                "HOST", "Physical"
+            )
+            config["abi_bits"] = self._opts.filter_abi_bits
 
             return config
 
@@ -77,8 +80,9 @@ class Policy(object):
             component_policy = policy_table[self._opts.component_name]
             for case_policy in component_policy:
                 if match_policy(config, case_policy):
-                    policy[case_policy['case']] = case_policy['policy']
+                    policy[case_policy["case"]] = case_policy["policy"]
         return policy
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

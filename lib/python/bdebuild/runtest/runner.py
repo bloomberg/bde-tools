@@ -14,6 +14,7 @@ class _Status(object):
                         test has been terminated.
         is_success (bool): Whether all test cases have passed.
     """
+
     def __init__(self, ctx, status_cond):
         self._status_cond = status_cond
         self._case_num = 0
@@ -49,7 +50,6 @@ class _Status(object):
 class _Worker(threading.Thread):
     """Worker thread to run test cases."""
 
-
     def __init__(self, ctx, status):
         """Initialize a test runner object.
 
@@ -65,7 +65,7 @@ class _Worker(threading.Thread):
 
     def _platform_needs_limited_output(self):
         """Determine whether this platform is one of those needing limited
-           output size to avoid hangs. {DRQS 164928733<GO>}
+        output size to avoid hangs. {DRQS 164928733<GO>}
         """
         platform = sys.platform
 
@@ -83,38 +83,44 @@ class _Worker(threading.Thread):
 
         cmd = []
         if options.valgrind_tool:
-            cmd += ['valgrind', '--error-exitcode=1',
-                    '--tool=%s' % options.valgrind_tool]
-            if options.valgrind_tool == 'memcheck':
-                cmd += ['--leak-check=full']
+            cmd += [
+                "valgrind",
+                "--error-exitcode=1",
+                "--tool=%s" % options.valgrind_tool,
+            ]
+            if options.valgrind_tool == "memcheck":
+                cmd += ["--leak-check=full"]
 
         cmd += [options.test_path, str(self._case)]
 
         if self._ctx.options.verbosity > 0:
-            cmd.extend(['v' for n in range(options.verbosity)])
+            cmd.extend(["v" for n in range(options.verbosity)])
 
         return cmd
 
     def _get_limited_test_run_cmd(self):
         """Get string of command and arguments for current test case, piping
-           the output to 'bde_input_limiter.py' to limit it to 5000 lines.
+        the output to 'bde_input_limiter.py' to limit it to 5000 lines.
         """
-        limiter_command = os.path.dirname(os.path.realpath(sys.argv[0])) \
-                              + os.sep + "bde_input_limiter.py";
+        limiter_command = (
+            os.path.dirname(os.path.realpath(sys.argv[0]))
+            + os.sep
+            + "bde_input_limiter.py"
+        )
 
         cmd = self._get_full_test_run_cmd()
         cmd = " ".join(cmd)
-        cmd = 'bash -c \'set -o pipefail; ' + cmd
-        cmd += ' | ' + limiter_command + "'"
+        cmd = "bash -c 'set -o pipefail; " + cmd
+        cmd += " | " + limiter_command + "'"
 
-        self._ctx.log.debug_case(self._case, 'COMMAND %s' % cmd)
+        self._ctx.log.debug_case(self._case, "COMMAND %s" % cmd)
 
         return cmd
 
     def _get_test_run_cmd(self):
         """Return a tuple containing the command to run (either as a list or
-           as a string) and a boolean flag indicating whether the command
-           is in string form or not.
+        as a string) and a boolean flag indicating whether the command
+        is in string form or not.
         """
         if self._platform_needs_limited_output():
             return (self._get_limited_test_run_cmd(), True)
@@ -131,10 +137,12 @@ class _Worker(threading.Thread):
             (cmd, use_shell) = self._get_test_run_cmd()
             self._ctx.log.record_start(self._case)
             try:
-                self._proc = subprocess.Popen(cmd,
-                                              stdout=subprocess.PIPE,
-                                              stderr=subprocess.STDOUT,
-                                              shell=use_shell)
+                self._proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    shell=use_shell,
+                )
                 (out, err) = self._proc.communicate()
                 rc = self._proc.returncode
             except Exception as e:
@@ -146,8 +154,8 @@ class _Worker(threading.Thread):
             def decode_text(txt):
                 if txt:
                     if not isinstance(out, str):
-                        return txt.decode(sys.stdout.encoding or 'iso8859-1')
-                return txt if txt else ''
+                        return txt.decode(sys.stdout.encoding or "iso8859-1")
+                return txt if txt else ""
 
             # BDE uses the -1 return code to indicate that no more tests are
             # left to run:
@@ -162,9 +170,14 @@ class _Worker(threading.Thread):
             #
             # To handle malformed test drivers, stop when there are more
             # than 499 test cases.
-            if (rc == 255 or rc == -1 or rc == 127 or rc == 4294967295
-                    or self._case > 499):
-                self._ctx.log.debug_case(self._case, 'DOES NOT EXIST')
+            if (
+                rc == 255
+                or rc == -1
+                or rc == 127
+                or rc == 4294967295
+                or self._case > 499
+            ):
+                self._ctx.log.debug_case(self._case, "DOES NOT EXIST")
                 self._status.notify_done()
                 return
             elif rc == 0:
@@ -189,22 +202,31 @@ class Runner(object):
         self._ctx = ctx
         self._status_cond = threading.Condition()
         self._status = _Status(self._ctx, self._status_cond)
-        self._workers = [_Worker(self._ctx, self._status)
-                         for j in range(self._ctx.options.num_jobs)]
+        self._workers = [
+            _Worker(self._ctx, self._status)
+            for j in range(self._ctx.options.num_jobs)
+        ]
 
     def _count_live_workers(self, context):
         # Extra "or False" converts any "None" entries to "False".
-        filtered_workers = [((worker is not None \
-                  and worker.is_alive()  \
-                  and worker._proc       \
-                  and worker._case > 0)
-                  or False)
-                      for worker in self._workers]
+        filtered_workers = [
+            (
+                (
+                    worker is not None
+                    and worker.is_alive()
+                    and worker._proc
+                    and worker._case > 0
+                )
+                or False
+            )
+            for worker in self._workers
+        ]
 
         count = sum(filtered_workers)
 
-        self._ctx.log.debug("There are %d live workers in context '%s'"
-                                % (count, context))
+        self._ctx.log.debug(
+            "There are %d live workers in context '%s'" % (count, context)
+        )
 
         return count
 
@@ -257,8 +279,9 @@ class Runner(object):
             worker.start()
 
         def timeout_handler():
-            self._ctx.log.debug("TIMED OUT AFTER %ss" %
-                                self._ctx.options.timeout)
+            self._ctx.log.debug(
+                "TIMED OUT AFTER %ss" % self._ctx.options.timeout
+            )
             self._terminate(self._ctx.log.record_timeout)
 
         def sigint_handler(signal, frame):
@@ -286,6 +309,7 @@ class Runner(object):
         self._ctx.log.flush()
 
         return self._status.is_success
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

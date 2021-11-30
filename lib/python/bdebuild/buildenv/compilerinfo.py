@@ -30,8 +30,17 @@ class CompilerInfo(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
         desc (str, optional): Custom description, by default, the description()
             method returns type_ + '-' + version.
     """
-    def __init__(self, type_, version, c_path, cxx_path, toolchain=None,
-                 flags=None, desc=None):
+
+    def __init__(
+        self,
+        type_,
+        version,
+        c_path,
+        cxx_path,
+        toolchain=None,
+        flags=None,
+        desc=None,
+    ):
         self.type_ = type_
         self.version = version
         self.c_path = c_path
@@ -41,7 +50,7 @@ class CompilerInfo(mixins.BasicEqualityMixin, mixins.BasicReprMixin):
         self.desc = desc
 
     def key(self):
-        return self.type_ + '-' + self.version
+        return self.type_ + "-" + self.version
 
     def description(self):
         if self.desc:
@@ -60,14 +69,13 @@ def get_system_config_path():
     """
     path = None
 
-    bde_root = os.environ.get('BDE_ROOT')
+    bde_root = os.environ.get("BDE_ROOT")
 
     if bde_root:
-        config_path = os.path.join(bde_root, 'etc', 'bdecompilerconfig')
-        if (os.path.isfile(config_path) and
-            os.access(config_path, os.R_OK)):
+        config_path = os.path.join(bde_root, "etc", "bdecompilerconfig")
+        if os.path.isfile(config_path) and os.access(config_path, os.R_OK):
             path = config_path
-            print('Using system configuration: %s' % path, file=sys.stderr)
+            print("Using system configuration: %s" % path, file=sys.stderr)
 
     return path
 
@@ -81,15 +89,13 @@ def get_user_config_path():
        Path to the user config file.
 
     """
-    config_path = os.path.join(os.path.expanduser('~'),
-                               '.bdecompilerconfig')
+    config_path = os.path.join(os.path.expanduser("~"), ".bdecompilerconfig")
 
     path = None
 
-    if (os.path.isfile(config_path) and
-            os.access(config_path, os.R_OK)):
+    if os.path.isfile(config_path) and os.access(config_path, os.R_OK):
         path = config_path
-        print('Using user configuration: %s' % path, file=sys.stderr)
+        print("Using user configuration: %s" % path, file=sys.stderr)
 
     return path
 
@@ -109,12 +115,12 @@ def get_compilerinfos(hostname, uplid, file_):
     loaded_value = json.load(file_)
     matched_obj = None
     for obj in loaded_value:
-        if 'hostname' in obj:
-            m = re.match(obj['hostname'], hostname)
+        if "hostname" in obj:
+            m = re.match(obj["hostname"], hostname)
             if not m:
                 continue
 
-        uplid_mask = optiontypes.Uplid.from_str(obj['uplid'])
+        uplid_mask = optiontypes.Uplid.from_str(obj["uplid"])
         if not optionsutil.match_uplid(uplid, uplid_mask):
             continue
 
@@ -126,18 +132,18 @@ def get_compilerinfos(hostname, uplid, file_):
 
     infos = []
 
-    for compiler in matched_obj['compilers']:
-        type_ = compiler['type']
-        version = compiler['version']
-        c_path = compiler['c_path']
-        cxx_path = compiler['cxx_path']
-        if 'toolchain' in compiler:
-            toolchain = compiler['toolchain']
+    for compiler in matched_obj["compilers"]:
+        type_ = compiler["type"]
+        version = compiler["version"]
+        c_path = compiler["c_path"]
+        cxx_path = compiler["cxx_path"]
+        if "toolchain" in compiler:
+            toolchain = compiler["toolchain"]
         else:
             toolchain = None
 
-        if 'flags' in compiler:
-            flags = compiler['flags']
+        if "flags" in compiler:
+            flags = compiler["flags"]
         else:
             flags = None
         info = CompilerInfo(type_, version, c_path, cxx_path, toolchain, flags)
@@ -148,7 +154,11 @@ def get_compilerinfos(hostname, uplid, file_):
 
 def get_command_output(args):
     try:
-        output = subprocess.check_output(args, stderr=subprocess.STDOUT).decode('utf8').replace('\n', '')
+        output = (
+            subprocess.check_output(args, stderr=subprocess.STDOUT)
+            .decode("utf8")
+            .replace("\n", "")
+        )
         return output
     except Exception as e:
         pass
@@ -157,13 +167,15 @@ def get_command_output(args):
 
 def get_compiler_version(compiler_type, cxx_path):
     version = None
-    if 'gcc' == compiler_type:
-        version = get_command_output([cxx_path, '-dumpfullversion', '-dumpversion'])
+    if "gcc" == compiler_type:
+        version = get_command_output(
+            [cxx_path, "-dumpfullversion", "-dumpversion"]
+        )
 
-    if 'clang' == compiler_type:
-        version = get_command_output([cxx_path, '--version'])
-        m = re.search('version\s+([0-9\.]+)', version)
-        version = m.group(1) if m else '0.0.0'
+    if "clang" == compiler_type:
+        version = get_command_output([cxx_path, "--version"])
+        m = re.search("version\s+([0-9\.]+)", version)
+        version = m.group(1) if m else "0.0.0"
 
     return version
 
@@ -179,7 +191,7 @@ def detect_installed_compilers(uplid):
         list of matched CompilerInfo objects.
     """
 
-    default_config=''' [ { "uplid": "unix-linux-",
+    default_config = """ [ { "uplid": "unix-linux-",
                            "compilers": [
                                {
                                    "type":      "gcc",
@@ -405,12 +417,12 @@ def detect_installed_compilers(uplid):
                             ]
                           }
                         ]
-    '''
+    """
 
     loaded_value = json.loads(default_config)
     matched_obj = None
     for obj in loaded_value:
-        uplid_mask = optiontypes.Uplid.from_str(obj['uplid'])
+        uplid_mask = optiontypes.Uplid.from_str(obj["uplid"])
         if not optionsutil.match_uplid(uplid, uplid_mask):
             continue
 
@@ -422,26 +434,33 @@ def detect_installed_compilers(uplid):
 
     infos = []
 
-    for compiler in matched_obj['compilers']:
-        c_path = get_command_output(['which', compiler['c_name'] ])
-        cxx_path = get_command_output(['which', compiler['cxx_name'] ])
+    for compiler in matched_obj["compilers"]:
+        c_path = get_command_output(["which", compiler["c_name"]])
+        cxx_path = get_command_output(["which", compiler["cxx_name"]])
 
-        if (c_path and os.path.exists(c_path)
-            and cxx_path and os.path.isfile(cxx_path)):
-            version = get_compiler_version(compiler['type'], cxx_path)
+        if (
+            c_path
+            and os.path.exists(c_path)
+            and cxx_path
+            and os.path.isfile(cxx_path)
+        ):
+            version = get_compiler_version(compiler["type"], cxx_path)
 
             if not version:
                 continue
 
-            if 'toolchain' in compiler:
-                toolchain = compiler['toolchain']
+            if "toolchain" in compiler:
+                toolchain = compiler["toolchain"]
             else:
                 toolchain = None
 
-            info = CompilerInfo(compiler['type'], version, c_path, cxx_path, toolchain, None)
+            info = CompilerInfo(
+                compiler["type"], version, c_path, cxx_path, toolchain, None
+            )
             infos.append(info)
 
     return infos
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2018 Bloomberg Finance L.P.

@@ -53,18 +53,21 @@ class OptionsParser(object):
         all_lines (list of (str, OptionRule)): List of line and associated
             option rule, which may be None for a particular line.
     """
-    _OPT_LINE_RE = re.compile(r'''^\s*(?P<command>!!|--|\+\+|>>|<<)?
+
+    _OPT_LINE_RE = re.compile(
+        r"""^\s*(?P<command>!!|--|\+\+|>>|<<)?
                                  \s* (?P<uplid>\S+)
                                  \s+ (?P<ufid>\S+)
                                  \s+ (?P<key>\S+)
                                  \s*=\s* (?P<value>.*?)
                                  (?P<cont>\\)?
-                                 $''',
-                              re.VERBOSE)
+                                 $""",
+        re.VERBOSE,
+    )
 
-    _OPT_COMMENT_OR_EMTPY_RE = re.compile(r'^\s*([#].*)?$')
+    _OPT_COMMENT_OR_EMTPY_RE = re.compile(r"^\s*([#].*)?$")
 
-    _OPT_CONTINUE_RE = re.compile(r'^(?P<value>.*?)(?P<cont>\\)?$')
+    _OPT_CONTINUE_RE = re.compile(r"^(?P<value>.*?)(?P<cont>\\)?$")
 
     is_verbose = False
 
@@ -90,7 +93,7 @@ class OptionsParser(object):
         line_num = 0
         for line in self.opts_file:
             line_num += 1
-            line = line.rstrip('\n')
+            line = line.rstrip("\n")
             if not continuation:
                 rule = optiontypes.OptionRule()
                 if self._OPT_COMMENT_OR_EMTPY_RE.match(line):
@@ -100,44 +103,53 @@ class OptionsParser(object):
                     m = self._OPT_LINE_RE.match(line)
                     if m:
                         got_line = True
-                        if m.group('command'):
+                        if m.group("command"):
                             rule.command = optiontypes.OptionCommand.from_str(
-                                m.group('command'))
+                                m.group("command")
+                            )
                         else:
                             rule.command = optiontypes.OptionCommand.ADD
 
                         try:
                             rule.uplid = optiontypes.Uplid.from_str(
-                                m.group('uplid'))
+                                m.group("uplid")
+                            )
                             if log and not optiontypes.Uplid.is_valid(
-                                    rule.uplid):
-                                log(line_num, 'Encountered unsupported Uplid, '
-                                    '"%s", in "%s"' % (rule.uplid, line))
+                                rule.uplid
+                            ):
+                                log(
+                                    line_num,
+                                    "Encountered unsupported Uplid, "
+                                    '"%s", in "%s"' % (rule.uplid, line),
+                                )
 
                         except blderror.InvalidUplidError:
                             raise blderror.InvalidOptionRuleError(
-                                line_num, line, "invalid UPLID")
-                        rule.ufid = optiontypes.Ufid.from_str(m.group('ufid'))
-                        rule.key = m.group('key')
-                        rule.value = m.group('value')
-                        continuation = not m.group('cont') is None
+                                line_num, line, "invalid UPLID"
+                            )
+                        rule.ufid = optiontypes.Ufid.from_str(m.group("ufid"))
+                        rule.key = m.group("key")
+                        rule.value = m.group("value")
+                        continuation = not m.group("cont") is None
                     else:
                         raise blderror.InvalidOptionRuleError(
-                            line_num, line, "invalid format")
+                            line_num, line, "invalid format"
+                        )
             else:
                 # The previous line continues.
 
                 m = self._OPT_CONTINUE_RE.match(line)
-                assert(m)
-                assert(got_line)
+                assert m
+                assert got_line
 
-                rule.value += m.group('value')
-                continuation = not m.group('cont') is None
+                rule.value += m.group("value")
+                continuation = not m.group("cont") is None
 
             if got_line and not continuation:
                 rule.value = rule.value.strip()
                 self.option_rules.append(rule)
                 self.all_lines.append((line, rule))
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

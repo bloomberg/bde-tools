@@ -19,6 +19,7 @@ class OptionCommand(object):
         PREPEND: Add to start of value directly, no following space.
         OVERRIDE: Completely replace the prior value.
     """
+
     ADD = 0
     INSERT = 1
     APPEND = 2
@@ -26,11 +27,11 @@ class OptionCommand(object):
     OVERRIDE = 4
 
     COMMAND_STR_MAP = {
-        ADD: '++',
-        INSERT: '--',
-        APPEND: '>>',
-        PREPEND: '<<',
-        OVERRIDE: '!!'
+        ADD: "++",
+        INSERT: "--",
+        APPEND: ">>",
+        PREPEND: "<<",
+        OVERRIDE: "!!",
     }
     STR_COMMAND_MAP = {}
     for k, v in COMMAND_STR_MAP.items():
@@ -38,8 +39,7 @@ class OptionCommand(object):
 
     @classmethod
     def to_str(cls, command):
-        """Convert an option command to its string representation.
-        """
+        """Convert an option command to its string representation."""
         if command not in cls.COMMAND_STR_MAP:
             raise LookupError()
 
@@ -47,8 +47,7 @@ class OptionCommand(object):
 
     @classmethod
     def from_str(cls, str_):
-        """Convert a string back to an option command.
-        """
+        """Convert a string back to an option command."""
 
         if str_ not in cls.STR_COMMAND_MAP:
             raise LookupError()
@@ -71,8 +70,9 @@ class OptionRule(mixins.BasicEqualityMixin):
         value (str): The value contributed by the rule.
     """
 
-    def __init__(self, command=None, uplid=None, ufid=None, key=None,
-                 value=None):
+    def __init__(
+        self, command=None, uplid=None, ufid=None, key=None, value=None
+    ):
         """Initialize the object with the specified arguments.
 
         Args:
@@ -89,9 +89,13 @@ class OptionRule(mixins.BasicEqualityMixin):
         self.value = value
 
     def __repr__(self):
-        return '%s %s %s %s %s' % (OptionCommand.to_str(self.command),
-                                   self.uplid,
-                                   self.ufid, self.key, self.value)
+        return "%s %s %s %s %s" % (
+            OptionCommand.to_str(self.command),
+            self.uplid,
+            self.ufid,
+            self.key,
+            self.value,
+        )
 
 
 class Ufid(mixins.BasicEqualityMixin):
@@ -106,52 +110,46 @@ class Ufid(mixins.BasicEqualityMixin):
     # The following variables are copied from bde_build.pl to preserve the
     # display order of flags.
 
-    build_with_convert = "Set review level to \"{}\""
-    build_with_assert = "Set assert level to \"{}\""
+    build_with_convert = 'Set review level to "{}"'
+    build_with_assert = 'Set assert level to "{}"'
 
     FRONT = 0
     MIDDLE = 50
     BACK = 100
 
     VALID_FLAGS = {
-        'opt': (FRONT + 0,  'Build optimized'),
-        'dbg': (FRONT + 1,  'Build with debugging information'),
-
-        'exc':   (MIDDLE + 0, 'Exception support'),
-        'mt':    (MIDDLE + 1, 'Multithread support'),
-        '64':    (MIDDLE + 2, 'Build for 64-bit architecture'),
-
-        'safe':  (MIDDLE + 5, 'Build safe (paranoid) libraries'),
-        'safe2': (MIDDLE + 6,
-                  'Build safe2 (paranoid and binary-incompatible) libraries'),
-
-        'aopt':  (MIDDLE + 10, build_with_assert.format("OPT")),
-        'adbg':  (MIDDLE + 11, build_with_assert.format("DEBUG")),
-        'asafe': (MIDDLE + 12, build_with_assert.format("SAFE")),
-        'anone': (MIDDLE + 13, build_with_assert.format("NONE")),
-
-        'ropt':  (MIDDLE + 20, build_with_convert.format("OPT")),
-        'rdbg':  (MIDDLE + 21, build_with_convert.format("DEBUG")),
-        'rsafe': (MIDDLE + 22, build_with_convert.format("SAFE")),
-        'rnone': (MIDDLE + 23, build_with_convert.format("NONE")),
-
-        'asan':  (MIDDLE + 30, 'Enable address sanitizer'),
-        'msan':  (MIDDLE + 31, 'Enable memory sanitizer'),
-        'tsan':  (MIDDLE + 32, 'Enable thread sanitizer'),
-        'ubsan': (MIDDLE + 33, 'Enable undefined behavior sanitizer'),
-
-        'fuzz':  (MIDDLE + 34, 'Enable fuzz testing'),
-
-        'stlport':(BACK + 0, 'Build with STLPort on Sun'),
-        'pic':    (BACK + 1, 'Build static PIC libraries'),
-        'shr':    (BACK + 2, 'Build dynamic libraries'),
-        'ndebug': (BACK + 3, 'Build with NDEBUG defined'),
-
-        'cpp03':  (BACK + 10, 'Build with support for C++03 features'),
-        'cpp11':  (BACK + 11, 'Build with support for C++11 features'),
-        'cpp14':  (BACK + 12, 'Build with support for C++14 features'),
-        'cpp17':  (BACK + 13, 'Build with support for C++17 features'),
-        'cpp20':  (BACK + 14, 'Build with support for C++20 features')
+        "opt": (FRONT + 0, "Build optimized"),
+        "dbg": (FRONT + 1, "Build with debugging information"),
+        "exc": (MIDDLE + 0, "Exception support"),
+        "mt": (MIDDLE + 1, "Multithread support"),
+        "64": (MIDDLE + 2, "Build for 64-bit architecture"),
+        "safe": (MIDDLE + 5, "Build safe (paranoid) libraries"),
+        "safe2": (
+            MIDDLE + 6,
+            "Build safe2 (paranoid and binary-incompatible) libraries",
+        ),
+        "aopt": (MIDDLE + 10, build_with_assert.format("OPT")),
+        "adbg": (MIDDLE + 11, build_with_assert.format("DEBUG")),
+        "asafe": (MIDDLE + 12, build_with_assert.format("SAFE")),
+        "anone": (MIDDLE + 13, build_with_assert.format("NONE")),
+        "ropt": (MIDDLE + 20, build_with_convert.format("OPT")),
+        "rdbg": (MIDDLE + 21, build_with_convert.format("DEBUG")),
+        "rsafe": (MIDDLE + 22, build_with_convert.format("SAFE")),
+        "rnone": (MIDDLE + 23, build_with_convert.format("NONE")),
+        "asan": (MIDDLE + 30, "Enable address sanitizer"),
+        "msan": (MIDDLE + 31, "Enable memory sanitizer"),
+        "tsan": (MIDDLE + 32, "Enable thread sanitizer"),
+        "ubsan": (MIDDLE + 33, "Enable undefined behavior sanitizer"),
+        "fuzz": (MIDDLE + 34, "Enable fuzz testing"),
+        "stlport": (BACK + 0, "Build with STLPort on Sun"),
+        "pic": (BACK + 1, "Build static PIC libraries"),
+        "shr": (BACK + 2, "Build dynamic libraries"),
+        "ndebug": (BACK + 3, "Build with NDEBUG defined"),
+        "cpp03": (BACK + 10, "Build with support for C++03 features"),
+        "cpp11": (BACK + 11, "Build with support for C++11 features"),
+        "cpp14": (BACK + 12, "Build with support for C++14 features"),
+        "cpp17": (BACK + 13, "Build with support for C++17 features"),
+        "cpp20": (BACK + 14, "Build with support for C++20 features"),
     }
 
     def __init__(self, flags=[]):
@@ -171,7 +169,7 @@ class Ufid(mixins.BasicEqualityMixin):
         flags = []
 
         # Properly handle the case when config_str == '_'.
-        for f in config_str.split('_'):
+        for f in config_str.split("_"):
             if f:
                 flags.append(f)
         return cls(flags)
@@ -191,7 +189,7 @@ class Ufid(mixins.BasicEqualityMixin):
 
     def __repr__(self):
         if len(self.flags) == 0:
-            return '_'
+            return "_"
 
         def get_rank(key):
             if key in self.VALID_FLAGS:
@@ -199,9 +197,8 @@ class Ufid(mixins.BasicEqualityMixin):
             else:
                 return self.BACK - 100
 
-        sorted_flags = sorted(self.flags,
-                              key=get_rank)
-        return '_'.join(sorted_flags)
+        sorted_flags = sorted(self.flags, key=get_rank)
+        return "_".join(sorted_flags)
 
 
 class Uplid(mixins.BasicEqualityMixin):
@@ -210,12 +207,19 @@ class Uplid(mixins.BasicEqualityMixin):
     Uplids are used to identify the platform and toolchain used for a build.
     """
 
-    VALID_OS_TYPES = ('*', 'unix', 'windows')
-    VALID_OS_NAMES = ('*', 'linux', 'darwin', 'aix', 'sunos', 'windows_nt')
-    VALID_COMP_TYPES = ('*', 'gcc', 'clang', 'xlc', 'cc', 'cl')
+    VALID_OS_TYPES = ("*", "unix", "windows")
+    VALID_OS_NAMES = ("*", "linux", "darwin", "aix", "sunos", "windows_nt")
+    VALID_COMP_TYPES = ("*", "gcc", "clang", "xlc", "cc", "cl")
 
-    def __init__(self, os_type='*', os_name='*', cpu_type='*', os_ver='*',
-                 comp_type='*', comp_ver='*'):
+    def __init__(
+        self,
+        os_type="*",
+        os_name="*",
+        cpu_type="*",
+        os_ver="*",
+        comp_type="*",
+        comp_ver="*",
+    ):
         self.os_type = os_type
         self.os_name = os_name
         self.cpu_type = cpu_type
@@ -252,27 +256,34 @@ class Uplid(mixins.BasicEqualityMixin):
         Raises:
             InvalidUplidError
         """
-        parts = platform_str.split('-')
+        parts = platform_str.split("-")
 
         if len(parts) > 6:
-            raise blderror.InvalidUplidError('Invalid UPLID string: %s'
-                                             % platform_str)
+            raise blderror.InvalidUplidError(
+                "Invalid UPLID string: %s" % platform_str
+            )
 
-        parts = ['*' if p == '' else p for p in parts]
-        parts.extend(['*'] * (6 - len(parts)))
-        (os_type,
-         os_name,
-         cpu_type,
-         os_ver,
-         comp_type,
-         comp_ver) = (p.lower() for p in parts)
+        parts = ["*" if p == "" else p for p in parts]
+        parts.extend(["*"] * (6 - len(parts)))
+        (os_type, os_name, cpu_type, os_ver, comp_type, comp_ver) = (
+            p.lower() for p in parts
+        )
 
         uplid = cls(os_type, os_name, cpu_type, os_ver, comp_type, comp_ver)
         return uplid
 
     def __repr__(self):
-        return '-'.join([self.os_type, self.os_name, self.cpu_type,
-                         self.os_ver, self.comp_type, self.comp_ver])
+        return "-".join(
+            [
+                self.os_type,
+                self.os_name,
+                self.cpu_type,
+                self.os_ver,
+                self.comp_type,
+                self.comp_ver,
+            ]
+        )
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

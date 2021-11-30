@@ -34,15 +34,16 @@ def fatal(msg, **kw):
 
 
 def msg(start, end, **kw):
-    print('%s: %s' % (start, end))
+    print("%s: %s" % (start, end))
 
 
 def start_msg(msg, **kw):
-    print(msg + ': ')
+    print(msg + ": ")
 
 
 def end_msg(msg, **kw):
     print(msg)
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

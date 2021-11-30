@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 from pylibinit import addlibpath
+
 addlibpath.add_lib_path()
 
 from bdebuild.buildenv import main
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main.main()
 
 # -----------------------------------------------------------------------------

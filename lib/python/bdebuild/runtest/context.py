@@ -13,10 +13,12 @@ class Context(object):
         policy (Policy): Test runner policy mechanism.
 
     """
+
     def __init__(self, **kw):
-        self.options = kw['options']
-        self.log = kw['log']
-        self.policy = kw['policy']
+        self.options = kw["options"]
+        self.log = kw["log"]
+        self.policy = kw["policy"]
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

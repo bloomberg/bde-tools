@@ -26,9 +26,12 @@ class InvalidOptionFileError(BldError):
         self.rule_error = invalid_rule_error
 
     def __str__(self):
-        return ('Invalid option rule in %s at line %s (%s):\n "%s"' %
-                (self.file_path, self.rule_error.line_num,
-                 self.rule_error.message, self.rule_error.rule))
+        return 'Invalid option rule in %s at line %s (%s):\n "%s"' % (
+            self.file_path,
+            self.rule_error.line_num,
+            self.rule_error.message,
+            self.rule_error.rule,
+        )
 
 
 class CycleError(BldError):
@@ -57,6 +60,7 @@ class UnsupportedPlatformError(BldError):
 
 class InvalidConfigFileError(BldError):
     pass
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

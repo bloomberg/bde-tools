@@ -31,18 +31,18 @@ list : list available compilers in the following order:
     parser = optparse.OptionParser(usage=usage)
 
     options = [
-        (('c', 'compiler'),
-         {'type': 'string',
-          'default': None,
-          'help': 'compiler'}),
-        (('i', 'install-dir'),
-         {'type': 'string',
-          'default': None,
-          'help': 'install directory'}),
-        (('b', 'build-dir'),
-         {'type': 'string',
-          'default': None,
-          'help': 'build directory'})
+        (
+            ("c", "compiler"),
+            {"type": "string", "default": None, "help": "compiler"},
+        ),
+        (
+            ("i", "install-dir"),
+            {"type": "string", "default": None, "help": "install directory"},
+        ),
+        (
+            ("b", "build-dir"),
+            {"type": "string", "default": None, "help": "build directory"},
+        ),
     ]
     options += optionsutil.get_ufid_cmdline_options()
     cmdlineutil.add_options(parser, options)

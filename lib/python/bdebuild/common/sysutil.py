@@ -11,20 +11,19 @@ from bdebuild.common import blderror
 
 
 def shell_command(cmd):
-    """Execute and return the output of a shell command.
-    """
+    """Execute and return the output of a shell command."""
     kw = {}
-    kw['shell'] = isinstance(cmd, str)
-    kw['stdout'] = kw['stderr'] = subprocess.PIPE
+    kw["shell"] = isinstance(cmd, str)
+    kw["stdout"] = kw["stderr"] = subprocess.PIPE
     (out, err) = subprocess.Popen(cmd, **kw).communicate()
     if not isinstance(out, str):
-        out = out.decode(sys.stdout.encoding or 'iso8859-1')
+        out = out.decode(sys.stdout.encoding or "iso8859-1")
     return out
 
 
 def find_program(program):
-    """Return the path to a executable file on the PATH.
-    """
+    """Return the path to a executable file on the PATH."""
+
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -38,8 +37,7 @@ def find_program(program):
 
 
 def is_int_string(str_):
-    """Is a string a representation of a integer value.
-    """
+    """Is a string a representation of a integer value."""
     try:
         int(str_)
         return True
@@ -56,16 +54,14 @@ def is_64bit_system():
     machine types.
     """
 
-    if sys.maxsize > 2**32:
+    if sys.maxsize > 2 ** 32:
         return True
 
-    return platform.machine().lower()  \
-        in ('amd64', 'x86_64', 'sun4v', 'ppc64')
+    return platform.machine().lower() in ("amd64", "x86_64", "sun4v", "ppc64")
 
 
 def repo_root_path():
-    """Return the root path of this tools repository.
-    """
+    """Return the root path of this tools repository."""
     upd = os.path.dirname
     tools_repo_root = upd(upd(upd(upd(upd(os.path.realpath(__file__))))))
     return tools_repo_root
@@ -79,13 +75,13 @@ def unversioned_platform():
     """
     s = sys.platform
 
-    if s == 'powerpc':
-        return 'darwin'
+    if s == "powerpc":
+        return "darwin"
 
-    if s == 'win32' or s == 'os2':
+    if s == "win32" or s == "os2":
         return s
 
-    return re.split('\d+$', s)[0]
+    return re.split("\d+$", s)[0]
 
 
 def is_mingw_environment():
@@ -95,11 +91,11 @@ def is_mingw_environment():
     'unversioned_platform')
     """
     try:
-        uname = shell_command('uname')
+        uname = shell_command("uname")
     except Exception:
         return False
 
-    return -1 != uname.find('MINGW') or -1 != uname.find('MSYS_NT')
+    return -1 != uname.find("MINGW") or -1 != uname.find("MSYS_NT")
 
 
 def match_version_strs(comp_str, match_min_str, match_max_str=None):
@@ -114,20 +110,20 @@ def match_version_strs(comp_str, match_min_str, match_max_str=None):
     Returns:
         True if the version being checked is in the specified range.
     """
-    comp_ver = comp_str.split('.')
+    comp_ver = comp_str.split(".")
     if match_min_str:
-        min_ver = match_min_str.split('.')
+        min_ver = match_min_str.split(".")
     else:
         min_ver = comp_ver
 
     if match_max_str:
-        max_ver = match_max_str.split('.')
+        max_ver = match_max_str.split(".")
     else:
         max_ver = comp_ver
 
     ver_len = max(len(comp_ver), len(min_ver), len(max_ver))
     for v in (comp_ver, min_ver, max_ver):
-        v.extend(['0'] * (ver_len - len(v)))
+        v.extend(["0"] * (ver_len - len(v)))
 
     def gen_subvers():
         i = 0
@@ -137,8 +133,7 @@ def match_version_strs(comp_str, match_min_str, match_max_str=None):
 
     if match_min_str:
         for (comp_subv, min_subv, max_subv) in gen_subvers():
-            if any(not is_int_string(v) for v in
-                   (comp_subv, min_subv)):
+            if any(not is_int_string(v) for v in (comp_subv, min_subv)):
                 if comp_subv != min_subv:
                     return False
             else:
@@ -149,8 +144,7 @@ def match_version_strs(comp_str, match_min_str, match_max_str=None):
 
     if match_max_str:
         for (comp_subv, min_subv, max_subv) in gen_subvers():
-            if any(not is_int_string(v) for v in
-                   (comp_subv, max_subv)):
+            if any(not is_int_string(v) for v in (comp_subv, max_subv)):
                 if comp_subv != max_subv:
                     return False
             else:
@@ -163,23 +157,23 @@ def match_version_strs(comp_str, match_min_str, match_max_str=None):
 
 
 class CompilerType:
-    C = 0,
+    C = (0,)
     CXX = 1
 
 
 CXX_C_COMP_MAP = {
-    'g++': 'gcc',
-    'clang++': 'clang',
-    'CC': 'cc',
-    'xlC_r': 'xlc_r',
-    'xlclang++': 'xlclang'
+    "g++": "gcc",
+    "clang++": "clang",
+    "CC": "cc",
+    "xlC_r": "xlc_r",
+    "xlclang++": "xlclang",
 }
 
 C_CXX_COMP_MAP = {}
 for k, v in CXX_C_COMP_MAP.items():
     C_CXX_COMP_MAP[v] = k
 
-COMP_VER_RE = re.compile(r'^([^-]+)(-\d+(\.\d+)?(\.\d+)?)?$')
+COMP_VER_RE = re.compile(r"^([^-]+)(-\d+(\.\d+)?(\.\d+)?)?$")
 
 
 def get_other_compiler(comp_path, comp_type):
@@ -202,9 +196,10 @@ def get_other_compiler(comp_path, comp_type):
         return None
 
     name = m.group(1)
-    tail = m.group(2) if m.group(2) else ''
-    comp_map = CXX_C_COMP_MAP if comp_type == CompilerType.CXX else \
-        C_CXX_COMP_MAP
+    tail = m.group(2) if m.group(2) else ""
+    comp_map = (
+        CXX_C_COMP_MAP if comp_type == CompilerType.CXX else C_CXX_COMP_MAP
+    )
 
     if name not in comp_map:
         return None
@@ -213,30 +208,32 @@ def get_other_compiler(comp_path, comp_type):
 
 
 def get_win32_os_info_from_cygwin():
-    """Get operating system information for windows from cygwin.
-    """
+    """Get operating system information for windows from cygwin."""
 
     platform_str = unversioned_platform()
-    if platform_str != 'cygwin':
+    if platform_str != "cygwin":
         raise blderror.UnsupportedPlatformError(
-            'Function can only be called in a cygwin environment.')
+            "Function can only be called in a cygwin environment."
+        )
 
-    os_type = 'windows'
-    os_name = 'windows_nt'
-    out = shell_command('echo $(cmd /c ver)')
+    os_type = "windows"
+    os_name = "windows_nt"
+    out = shell_command("echo $(cmd /c ver)")
 
-    m = re.match(r'\s*Microsoft\s+Windows\s+\[Version\s+(\d+\.\d+)[^\]]+\]',
-                 out)
+    m = re.match(
+        r"\s*Microsoft\s+Windows\s+\[Version\s+(\d+\.\d+)[^\]]+\]", out
+    )
     if not m:
         raise blderror.UnsupportedPlatformError(
-            'Invalid Windows version string "%s".' % out)
+            'Invalid Windows version string "%s".' % out
+        )
     os_ver = m.group(1)
 
     # Make the assumption that we are on a X86 system.
     if is_64bit_system():
-        cpu_type = 'x86_64'
+        cpu_type = "x86_64"
     else:
-        cpu_type = 'x86'
+        cpu_type = "x86"
 
     return os_type, os_name, cpu_type, os_ver
 
@@ -249,87 +246,95 @@ def get_os_info():
     """
 
     def get_linux_os_info():
-        os_type = 'unix'
-        os_name = 'linux'
+        os_type = "unix"
+        os_name = "linux"
         uname = os.uname()
         cpu_type = uname[4]
         os_ver = uname[2]
         # os_ver can contain a '-flavor' part, strip it
-        os_ver = os_ver.split('-', 1)[0]
+        os_ver = os_ver.split("-", 1)[0]
 
-        if cpu_type == 'ppc64':
-            cpu_type = 'powerpc'
+        if cpu_type == "ppc64":
+            cpu_type = "powerpc"
 
         return os_type, os_name, cpu_type, os_ver
 
     def get_aix_os_info():
-        os_type = 'unix'
-        os_name = 'aix'
-        cpu_type = shell_command(['/bin/uname', '-p']).rstrip()
+        os_type = "unix"
+        os_name = "aix"
+        cpu_type = shell_command(["/bin/uname", "-p"]).rstrip()
         uname = os.uname()
-        os_ver = '%s.%s' % (uname[3], uname[2])
+        os_ver = "%s.%s" % (uname[3], uname[2])
 
         return os_type, os_name, cpu_type, os_ver
 
     def get_sunos_os_info():
-        os_type = 'unix'
-        os_name = 'sunos'
-        cpu_type = shell_command(['/bin/uname', '-p']).rstrip()
+        os_type = "unix"
+        os_name = "sunos"
+        cpu_type = shell_command(["/bin/uname", "-p"]).rstrip()
         uname = os.uname()
         os_ver = uname[2]
 
         return os_type, os_name, cpu_type, os_ver
 
     def get_darwin_os_info():
-        os_type = 'unix'
-        os_name = 'darwin'
+        os_type = "unix"
+        os_name = "darwin"
         uname = os.uname()
         cpu_type = uname[4]
         os_ver = uname[2]
         # os_ver can contain a '-flavor' part, strip it
-        os_ver = os_ver.split('-', 1)[0]
+        os_ver = os_ver.split("-", 1)[0]
 
         return os_type, os_name, cpu_type, os_ver
 
     def get_windows_os_info():
-        os_type = 'windows'
-        os_name = 'windows_nt'
+        os_type = "windows"
+        os_name = "windows_nt"
         import platform
+
         uname = platform.uname()
-        os_ver = '.'.join(uname[3].split('.')[0:2])
+        os_ver = ".".join(uname[3].split(".")[0:2])
 
         # Make the assumption that we are on a X86 system.
         if is_64bit_system():
-            cpu_type = 'x86_64'
+            cpu_type = "x86_64"
         else:
-            cpu_type = 'x86'
+            cpu_type = "x86"
 
         return os_type, os_name, cpu_type, os_ver
 
     def get_freebsd_os_info():
-        os_type = 'unix'
-        os_name = 'freebsd'
+        os_type = "unix"
+        os_name = "freebsd"
         uname = os.uname()
-        cpu_type = 'x86_64' if uname[4] == 'amd64' else \
-                   'x86' if uname[4] == 'i386' else uname[4]
-        os_ver = uname[2].split('-', 1)[0]
+        cpu_type = (
+            "x86_64"
+            if uname[4] == "amd64"
+            else "x86"
+            if uname[4] == "i386"
+            else uname[4]
+        )
+        os_ver = uname[2].split("-", 1)[0]
         return os_type, os_name, cpu_type, os_ver
 
     platform_str = unversioned_platform()
     os_info_getters = {
-        'linux': get_linux_os_info,
-        'aix': get_aix_os_info,
-        'sunos': get_sunos_os_info,
-        'darwin': get_darwin_os_info,
-        'win32': get_windows_os_info,
-        'freebsd': get_freebsd_os_info
-        }
+        "linux": get_linux_os_info,
+        "aix": get_aix_os_info,
+        "sunos": get_sunos_os_info,
+        "darwin": get_darwin_os_info,
+        "win32": get_windows_os_info,
+        "freebsd": get_freebsd_os_info,
+    }
 
     if platform_str not in os_info_getters:
         raise blderror.UnsupportedPlatformError(
-            'Unsupported platform %s' % platform_str)
+            "Unsupported platform %s" % platform_str
+        )
 
     return os_info_getters[platform_str]()
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.

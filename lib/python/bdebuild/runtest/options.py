@@ -22,20 +22,23 @@ class Options(object):
         filter_host_type (str): Override host_type filter for test policy.
 
     """
+
     def __init__(self, **kw):
-        self.test_path = kw['test_path']
-        self.component_name = os.path.basename(
-            self.test_path).partition('.')[0]
-        self.policy_path = kw['policy_path']
-        self.junit_file_path = kw['junit_file_path']
-        self.is_debug = kw['is_debug']
-        self.verbosity = kw['verbosity']
+        self.test_path = kw["test_path"]
+        self.component_name = os.path.basename(self.test_path).partition(".")[
+            0
+        ]
+        self.policy_path = kw["policy_path"]
+        self.junit_file_path = kw["junit_file_path"]
+        self.is_debug = kw["is_debug"]
+        self.verbosity = kw["verbosity"]
         self.is_verbose = self.verbosity > 0
-        self.num_jobs = kw['num_jobs']
-        self.timeout = kw['timeout']
-        self.valgrind_tool = kw['valgrind_tool']
-        self.filter_abi_bits = kw['filter_abi_bits']
-        self.filter_host_type = kw['filter_host_type']
+        self.num_jobs = kw["num_jobs"]
+        self.timeout = kw["timeout"]
+        self.valgrind_tool = kw["valgrind_tool"]
+        self.filter_abi_bits = kw["filter_abi_bits"]
+        self.filter_host_type = kw["filter_host_type"]
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Bloomberg Finance L.P.
