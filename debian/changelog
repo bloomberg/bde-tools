@@ -1,8 +1,15 @@
-bde-tools (3.94.0.0) unstable; urgency=low
+bde-tools (3.95.0.0) unstable; urgency=low
 
+  * 188ccfc Apply black formatter to all python files (#214)
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 30 Nov 2021 09:54:42 -0500
+
+bde-tools (3.94.0.0) git; urgency=low
+
+  * 814a240 Changelog for version 3.94.0.0
   * 2c93ad1 Add defines for asan/tsan builds. (#212)
 
- -- osubbotin <osubbotin@bloomberg.net>  Wed, 17 Nov 2021 11:43:57 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 20 Nov 2021 22:28:37 -0500
 
 bde-tools (3.93.0.0) git; urgency=low
 
