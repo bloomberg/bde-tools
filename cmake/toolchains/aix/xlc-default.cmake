@@ -35,6 +35,7 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-qxflag=UnwindTypedefInClassDecl "
        "-qxflag=inlinewithdebug:stepOverInline "
        "-qxflag=noautoinline "
+       "-qxflag=TolerateIncorrectUncaughtEHState "
       )
 set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
