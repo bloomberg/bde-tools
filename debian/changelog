@@ -1,8 +1,15 @@
-bde-tools (3.95.0.0) unstable; urgency=low
+bde-tools (3.96.0.0) unstable; urgency=low
 
+  * 5b251b6 Fix uncaught exception handling (#215)
+
+ -- osubbotin <osubbotin@bloomberg.net>  Wed, 15 Dec 2021 10:28:35 -0500
+
+bde-tools (3.95.0.0) git; urgency=low
+
+  * d9ab822 Changelog for version 3.95.0.0
   * 188ccfc Apply black formatter to all python files (#214)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 30 Nov 2021 09:54:42 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 3 Dec 2021 20:05:39 -0500
 
 bde-tools (3.94.0.0) git; urgency=low
 
