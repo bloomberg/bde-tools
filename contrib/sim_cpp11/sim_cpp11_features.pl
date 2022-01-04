@@ -564,7 +564,8 @@ sub stripComments($;$)
 # '$shroudedInput' string.
 sub setInput($)
 {
-    $input = shift;
+    my $instr = shift;          # Work around a Perl bug?
+    $input = $instr;
     $input =~ s:\r\n:\n:g;      # Normalize newlines
     $input .= "\n" if ("\n" ne substr($input, -1, 1));
     $inputEnd = length($input);
