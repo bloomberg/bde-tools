@@ -1,8 +1,15 @@
-bde-tools (3.96.0.0) unstable; urgency=low
+bde-tools (3.97.0.0) unstable; urgency=low
 
+  * d95bdfe Mysterious fix for DRQS 168041707 (#217)
+
+ -- Pablo Halpern <phalpern@halpernwightsoftware.com>  Tue, 4 Jan 2022 09:33:52 -0500
+
+bde-tools (3.96.0.0) git; urgency=low
+
+  * 3ff5226 Changelog for version 3.96.0.0
   * 5b251b6 Fix uncaught exception handling (#215)
 
- -- osubbotin <osubbotin@bloomberg.net>  Wed, 15 Dec 2021 10:28:35 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 17 Dec 2021 10:20:06 -0500
 
 bde-tools (3.95.0.0) git; urgency=low
 
