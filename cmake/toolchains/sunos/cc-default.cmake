@@ -1,5 +1,5 @@
 # Default compiler-less toolchains for BDE build system.
-# The actual compiler for this toolchain is passed via CXX and CC 
+# The actual compiler for this toolchain is passed via CXX and CC
 # environment variables.
 #
 # SunOS, cc
@@ -16,6 +16,7 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-temp=/bb/data/tmp "
        "-xannotate=no "
        "-xthreadvar=dynamic "
+       "-errtags=yes "
       )
 set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
@@ -28,6 +29,7 @@ string(CONCAT DEFAULT_C_FLAGS
        "-temp=/bb/data/tmp "
        "-xannotate=no "
        "-xthreadvar=dynamic "
+       "-errtags=yes "
       )
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 

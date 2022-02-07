@@ -1,5 +1,5 @@
 # Default compiler-less toolchains for BDE build system.
-# The actual compiler for this toolchain is passed via CXX and CC 
+# The actual compiler for this toolchain is passed via CXX and CC
 # environment variables.
 #
 # SunOS, gcc
