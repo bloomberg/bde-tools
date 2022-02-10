@@ -418,6 +418,7 @@ function(bde_ufid_setup_flags iface)
                 -Wsign-compare
                 -Wstrict-overflow=1
                 -Wtype-limits
+                -Wunused-result
                 -Wvla
                 -Wvolatile-register-var
                 -Wwrite-strings
@@ -452,6 +453,7 @@ function(bde_ufid_setup_flags iface)
                 -Wsign-compare
                 -Wstrict-overflow=1
                 -Wtype-limits
+                -Wunused-result
                 -Wvla
                 -Wvolatile-register-var
                 -Wwrite-strings
