@@ -418,7 +418,6 @@ function(bde_ufid_setup_flags iface)
                 -Wsign-compare
                 -Wstrict-overflow=1
                 -Wtype-limits
-                -Wunused-result
                 -Wvla
                 -Wvolatile-register-var
                 -Wwrite-strings
@@ -428,6 +427,7 @@ function(bde_ufid_setup_flags iface)
                 -Wno-string-conversion
                 -Wno-unknown-pragmas
                 -Wno-unused-value
+                -Wunused-result
             >
             $<$<CXX_COMPILER_ID:Clang>:
                 $<IF:${bde_ufid_is_exc},
@@ -453,7 +453,6 @@ function(bde_ufid_setup_flags iface)
                 -Wsign-compare
                 -Wstrict-overflow=1
                 -Wtype-limits
-                -Wunused-result
                 -Wvla
                 -Wvolatile-register-var
                 -Wwrite-strings
@@ -463,6 +462,7 @@ function(bde_ufid_setup_flags iface)
                 -Wno-string-conversion
                 -Wno-unknown-pragmas
                 -Wno-unused-value
+                -Wunused-result
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 $<${bde_ufid_is_opt}:
