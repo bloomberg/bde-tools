@@ -426,8 +426,8 @@ function(bde_ufid_setup_flags iface)
                 -Wno-sign-conversion
                 -Wno-string-conversion
                 -Wno-unknown-pragmas
-                -Wno-unused-value
-                -Wunused-result
+                -Wno-unevaluated-expression
+                -Wno-unused-comparison
             >
             $<$<CXX_COMPILER_ID:Clang>:
                 $<IF:${bde_ufid_is_exc},
@@ -461,8 +461,8 @@ function(bde_ufid_setup_flags iface)
                 -Wno-sign-conversion
                 -Wno-string-conversion
                 -Wno-unknown-pragmas
-                -Wno-unused-value
-                -Wunused-result
+                -Wno-unevaluated-expression
+                -Wno-unused-comparison
             >
             $<$<CXX_COMPILER_ID:GNU>:
                 $<${bde_ufid_is_opt}:
