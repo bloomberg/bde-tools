@@ -264,6 +264,24 @@ def detect_installed_compilers(uplid):
                                    "c_name":    "clang-10",
                                    "cxx_name":  "clang++-10",
                                    "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-11",
+                                   "cxx_name":  "clang++-11",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-12",
+                                   "cxx_name":  "clang++-12",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-13",
+                                   "cxx_name":  "clang++-13",
+                                   "toolchain": "clang-default"
                                }
                             ]
                           },
@@ -310,7 +328,8 @@ def detect_installed_compilers(uplid):
                                    "c_name":    "gcc-10",
                                    "cxx_name":  "g++-10",
                                    "toolchain": "gcc-default"
-                               },{
+                               },
+                               {
                                    "type":      "gcc",
                                    "c_name":    "gcc-11",
                                    "cxx_name":  "g++-11",
@@ -332,6 +351,24 @@ def detect_installed_compilers(uplid):
                                    "type":      "clang",
                                    "c_name":    "clang-10",
                                    "cxx_name":  "clang++-10",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-11",
+                                   "cxx_name":  "clang++-11",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-12",
+                                   "cxx_name":  "clang++-12",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-13",
+                                   "cxx_name":  "clang++-13",
                                    "toolchain": "clang-default"
                                }
                             ]
@@ -402,6 +439,24 @@ def detect_installed_compilers(uplid):
                                    "type":      "clang",
                                    "c_name":    "clang-10",
                                    "cxx_name":  "clang++-10",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-11",
+                                   "cxx_name":  "clang++-11",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-12",
+                                   "cxx_name":  "clang++-12",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-13",
+                                   "cxx_name":  "clang++-13",
                                    "toolchain": "clang-default"
                                }
                             ]
