@@ -6,16 +6,83 @@ import argparse
 import collections
 import errno
 import json
+import multiprocessing
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
-import multiprocessing
 
-####################################################################
-# MSVC environment setup routines
-if "Windows" == platform.system():
+PLATFORM_SYSTEM = platform.system()
+
+
+def is_gnu_windows_shell():
+    return PLATFORM_SYSTEM.startswith(
+        "CYGWIN_NT"
+    ) or PLATFORM_SYSTEM.startswith("MSYS_NT")
+
+
+GNU_WINDOWS_HOST = is_gnu_windows_shell()
+
+WINDOWS_HOST = "Windows" == PLATFORM_SYSTEM
+
+LINUX_HOST = "Linux" == PLATFORM_SYSTEM
+
+SUNOS_HOST = "SunOS" == PLATFORM_SYSTEM
+
+AIX_HOST = "AIX" == PLATFORM_SYSTEM
+
+APPLE_HOST = "Darwin" == PLATFORM_SYSTEM
+
+
+def static_vars(**kwargs):
+    def decorate(func):
+        for k in kwargs:
+            setattr(func, k, kwargs[k])
+        return func
+
+    return decorate
+
+
+@static_vars(memoized=None)
+def get_host_bits():
+
+    if get_host_bits.memoized:
+        return get_host_bits.memoized
+
+    # If Python itself is 64 bits, we are
+    if sys.maxsize > 2**32:
+        get_host_bits.memoized = 64
+    elif WINDOWS_HOST or GNU_WINDOWS_HOST or LINUX_HOST:
+        machine = platform.machine().lower()
+        print("Machine: {}".format(machine))
+        get_host_bits.memoized = (
+            64 if machine in ["amd64", "x86_64", "arm64"] else 32
+        )
+
+    elif APPLE_HOST:  # All supported host Apple operating systems are 64 bit
+        get_host_bits.memoized = 64
+    else:
+        pp = platform.platform()
+        re64 = re.compile(r"(-|^)64bit(-|$)", re.IGNORECASE)
+
+        if SUNOS_HOST or AIX_HOST:
+            get_host_bits.memoized = 64 if re64.search(pp) else 32
+
+        elif re64.search(pp):
+            # We assume unknown OS will have good `platform.platform()`
+            get_host_bits.memoized = 64
+
+        else:
+            sys.stderr.write(
+                "WARNING: Could not determine host bitness, will use 32.\n"
+            )
+            get_host_bits.memoized = 32
+    return get_host_bits.memoized
+
+
+if WINDOWS_HOST:
     try:
         import winreg  # Python 3
     except ImportError:
@@ -56,7 +123,10 @@ def get_msvc_env(version, bitness):
     result = {}
 
     bat_file = find_vcvars(version)
-    arch = "x86" if bitness == 32 else "x86_amd64"
+    if get_host_bits() == 64:
+        arch = "amd64" if bitness == 64 else "amd64_x86"
+    else:
+        arch = "x86" if bitness == 32 else "x86_amd64"
     process = subprocess.Popen(
         [bat_file, arch, "&&", "set"], stdout=subprocess.PIPE, shell=True
     )
@@ -218,7 +288,7 @@ class Platform:
     @staticmethod
     def generator(options):
         host_platform = platform.system()
-        if "Windows" == host_platform:
+        if WINDOWS_HOST:
             if not options.generator or options.generator == "Ninja":
                 return ["Ninja"]
 
@@ -242,11 +312,7 @@ class Platform:
 
     @staticmethod
     def generator_env(options):
-        host_platform = platform.system()
-        if (
-            "Ninja" == Platform.generator(options)[0]
-            and "Windows" == host_platform
-        ):
+        if WINDOWS_HOST and "Ninja" == Platform.generator(options)[0]:
             return get_msvc_env(
                 Platform.msvcVersionMap[options.compiler].version,
                 64 if options.ufid and "64" in options.ufid else 32,
@@ -256,8 +322,7 @@ class Platform:
 
     @staticmethod
     def generator_choices():
-        host_platform = platform.system()
-        if "Windows" == host_platform:
+        if WINDOWS_HOST:
             return ["msvc", "Ninja"]
         else:
             return ["Ninja", "Unix Makefiles"]
