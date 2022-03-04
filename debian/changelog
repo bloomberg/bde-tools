@@ -1,8 +1,19 @@
-bde-tools (3.97.0.0) unstable; urgency=low
+bde-tools (3.100.0.0) unstable; urgency=low
 
+  * 629df4b Use amd64 msvc cl.exe when available. (#222)
+  * 24c5c71 adding clang11-13, gcc10-11 (#223)
+  * 65123e1 Fix nodiscard types unnamed variable again (#220)
+  * f4cddae clang add -Wunused-result to enable [[nodiscard]]. (#219)
+  * eb97cb9 Set -errtags=yes for SunStudio. (#218)
+
+ -- Attila Feher <afeher@bloomberg.net>  Wed, 2 Mar 2022 14:17:58 -0500
+
+bde-tools (3.97.0.0) git; urgency=low
+
+  * 094885b Changelog for version 3.97.0.0
   * d95bdfe Mysterious fix for DRQS 168041707 (#217)
 
- -- Pablo Halpern <phalpern@halpernwightsoftware.com>  Tue, 4 Jan 2022 09:33:52 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 9 Jan 2022 08:59:00 -0500
 
 bde-tools (3.96.0.0) git; urgency=low
 
