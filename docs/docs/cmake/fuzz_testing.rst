@@ -167,6 +167,41 @@ looping for us, and it will come up with combinations of strings and limits
 that we might not see in the hand-written data, and that we might miss if we
 used the fuzz data only for the string but not for the limit.
 
+BDE Fuzz Components
+-------------------
+The components `bslim_fuzzdataview <https://bbgithub.dev.bloomberg.com/bde/bde/blob/master/groups/bsl/bslim/bslim_fuzzdataview.h>`__
+and `bslim_fuzzutil <https://bbgithub.dev.bloomberg.com/bde/bde/blob/master/groups/bsl/bslim/bslim_fuzzutil.h>`__
+can simplify the creation of function input from raw fuzz data. 
+``FuzzDataView`` provides a view to a non-modifiable buffer of fuzz data
+obtained from a fuzz testing harness such as LLVM's ``libFuzzer``. The 
+``FuzzDataView`` component is passed as an argument to ``FuzzUtil``, which
+contains functions that create fundamental and standard library types from
+the fuzz data.
+
+For example, imagine we are fuzzing a parser and want to use fuzz data to populate
+a configuration object:
+
+  .. code-block:: cpp
+  
+     switch (test) {
+       typedef bslim::FuzzUtil FuzzUtil;
+       case 1: {
+         bslim::FuzzDataView fuzzData(FUZZ, LENGTH)
+         Options options;
+         options.setMaxDepth(FuzzUtil::consumeNumberInRange<int>(&fuzzData, 1, 128));
+         options.setSkipUnknownElements(FuzzUtil::consumeBool(&fuzzData));
+         options.setValidateSchema(FuzzUtil::consumeBool(&fuzzData));
+
+         Obj mX;
+         mX.parse(fuzzData.data(), fuzzData.length(), options);
+       } break;
+       // ...
+
+Additional fuzz utilities may be created at higher levels to simplify the
+process of creating higher level types (e.g., a fuzz utility could be created
+for generating date and time values for testing functions that accept dates and
+times as parameters).
+
 What Does A Fuzz Test Test?
 ---------------------------
 Fuzz testing involves a variety of approaches depending on the nature of the
