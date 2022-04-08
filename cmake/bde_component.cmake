@@ -13,6 +13,8 @@ bde_register_struct_type(
         TEST_TARGET
 )
 
+find_package(Python3)
+
 # Find perl, but it's ok if it's missing
 find_package(Perl)
 
@@ -88,7 +90,7 @@ function(bde_component_generate_cpp03 srcFile)
 
                 add_custom_command(
                     OUTPUT    "${srcFile}"
-                    COMMAND   "${PYTHON_EXECUTABLE}" "${wafstyleout}" "${PERL_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}"
+                    COMMAND   "${Python3_EXECUTABLE}" "${wafstyleout}" "${PERL_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}"
                     DEPENDS   "${cpp11SrcFile}"
                     )
             else()

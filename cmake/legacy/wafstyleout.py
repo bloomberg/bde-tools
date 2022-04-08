@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.8
 
 import subprocess
 import sys
@@ -24,7 +24,7 @@ try:
     )
     (out, err) = p.communicate()
 except Exception as e:
-    print("Execution failure: %s" % str(e))
+    print(("Execution failure: %s" % str(e)))
     sys.exit(-1)
 
 includes = ""
@@ -103,7 +103,7 @@ if msg:
             marker_str = "ERROR"
 
     # This logic handles unicode in the output.
-    status_str = u"{}[{} ({})] <<<<<<<<<<\n{}>>>>>>>>>>\n".format(
+    status_str = "{}[{} ({})] <<<<<<<<<<\n{}>>>>>>>>>>\n".format(
         "\n" if platform.system() == "Windows" else "",
         src_str,
         marker_str,

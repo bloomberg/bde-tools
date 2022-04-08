@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.8
 
-from __future__ import print_function
+
 
 import argparse
 import collections
@@ -86,7 +86,7 @@ if WINDOWS_HOST:
     try:
         import winreg  # Python 3
     except ImportError:
-        import _winreg as winreg  # Python 2
+        import winreg as winreg  # Python 2
 
 
 def find_installdir(version):
@@ -149,7 +149,7 @@ def get_msvc_env(version, bitness):
 
 
 def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
+    enums = dict(list(zip(sequential, list(range(len(sequential))))), **named)
     return type("Enum", (), enums)
 
 

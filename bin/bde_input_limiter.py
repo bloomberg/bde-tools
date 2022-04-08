@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.8
 
 import sys
 
@@ -13,9 +13,9 @@ for line in sys.stdin:
     line_count += 1
 
 if line_count > max_count:
-    print "###############################\n"
-    print "#### OUTPUT LIMIT EXCEEDED ####\n"
-    print "###############################\n"
+    print("###############################\n")
+    print("#### OUTPUT LIMIT EXCEEDED ####\n")
+    print("###############################\n")
 
     # get rid of any remaining input, without causing SIGPIPE upstream
     for line in sys.stdin:
