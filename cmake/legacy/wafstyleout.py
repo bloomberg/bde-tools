@@ -97,7 +97,7 @@ if msg:
     if p.returncode == 0:
         marker_str = "WARNING"
     else:
-        if "bde_runtest" in sys.argv[2]:
+        if any("bde_runtest" in arg for arg in sys.argv):
             marker_str = "TEST"
         else:
             marker_str = "ERROR"
