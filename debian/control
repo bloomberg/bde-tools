@@ -7,7 +7,7 @@ Standards-Version: 3.8.4
 
 Package: bde-tools
 Architecture: all
-Depends: python,cmake,make,ninja
+Depends: python3.8,cmake,make,ninja
 Description: BDE Build Tools
  Tools to build BDE-style repositories, including the BDE libraries.
 
