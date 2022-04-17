@@ -1,8 +1,14 @@
-bde-tools (3.99.4.0) unstable; urgency=low
+bde-tools (3.99.5.0) unstable; urgency=low
 
+
+ -- osubbotin <osubbotin@bloomberg.net>  Sun, 17 Apr 2022 13:34:55 -0400
+
+bde-tools (3.99.4.0) git; urgency=low
+
+  * 07a940d Changelog for version 3.99.4.0
   * 4ed9f8d Switch to Python 3.8 (#226)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 11 Apr 2022 11:04:05 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 14 Apr 2022 19:34:31 -0400
 
 bde-tools (3.99.2.0) git; urgency=low
 
