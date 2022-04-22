@@ -8,7 +8,7 @@ virtualenv environement:
 ```
 pip install --upgrade pip
 pip install -U --pre sphinx
-pip install recommonmark
+pip install myst_parser
 pip install pygments-markdown-lexer
 ```
 

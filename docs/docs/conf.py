@@ -17,7 +17,6 @@ import os
 
 # import shlex
 
-from recommonmark.parser import CommonMarkParser
 import sphinx
 import distutils.version
 
@@ -49,17 +48,21 @@ release = ""
 # ones.
 sys.path.append(os.path.abspath("helpers"))
 primary_domain = "cmake"
-extensions = ["sphinx.ext.extlinks", "sphinx.ext.githubpages", "cmake_domain"]
+extensions = ["sphinx.ext.extlinks",
+              "sphinx.ext.githubpages",
+              "myst_parser",
+              "cmake_domain"
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-source_parsers = {
-    ".md": CommonMarkParser,
-}
 source_suffix = [".rst", ".md"]
+
+# -- Options for MyST Parser (Markdown)
+myst_heading_anchors = 2
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -134,4 +137,4 @@ html_show_sourcelink = False
 
 # -- Extension configuration -------------------------------------------------
 def setup(app):
-    app.add_stylesheet("bde.css")
+    app.add_css_file("bde.css")
