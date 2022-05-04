@@ -1,9 +1,16 @@
-bde-tools (3.99.5.0.1.test-promotion) unstable; urgency=low
+bde-tools (3.99.5.0.1.testpromotion) unstable; urgency=low
 
+  * No commits found
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 4 May 2022 16:35:12 -0400
+
+bde-tools (3.99.5.0.1.test-promotion) git; urgency=low
+
+  * 5dbcbf1 Changelog for version 3.99.5.0.1.test-promotion
   * 318b57a Update RTD theme for docs (#228)
   * 4a8111e Updates for Sphinx 4.5 (#227)
 
- -- osubbotin <osubbotin@bloomberg.net>  Fri, 29 Apr 2022 11:35:37 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 4 May 2022 16:35:12 -0400
 
 bde-tools (3.99.5.0) git; urgency=low
 
