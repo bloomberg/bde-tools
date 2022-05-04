@@ -1,7 +1,15 @@
-bde-tools (3.99.5.0) unstable; urgency=low
+bde-tools (3.99.5.0.1.test-promotion) unstable; urgency=low
 
+  * 318b57a Update RTD theme for docs (#228)
+  * 4a8111e Updates for Sphinx 4.5 (#227)
 
- -- osubbotin <osubbotin@bloomberg.net>  Sun, 17 Apr 2022 13:34:55 -0400
+ -- osubbotin <osubbotin@bloomberg.net>  Fri, 29 Apr 2022 11:35:37 -0400
+
+bde-tools (3.99.5.0) git; urgency=low
+
+  * c589895 Changelog for version 3.99.5.0
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Sun, 17 Apr 2022 13:58:40 -0400
 
 bde-tools (3.99.4.0) git; urgency=low
 
