@@ -1,8 +1,14 @@
-bde-tools (3.99.5.0.1.testpromotion) unstable; urgency=low
+bde-tools (3.99.5.0.2.testpromotion) unstable; urgency=low
 
   * No commits found
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 4 May 2022 16:35:12 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 4 May 2022 16:43:13 -0400
+
+bde-tools (3.99.5.0.1.testpromotion) git; urgency=low
+
+  * 5eefd17 Changelog for version 3.99.5.0.1.testpromotion
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 4 May 2022 16:43:13 -0400
 
 bde-tools (3.99.5.0.1.test-promotion) git; urgency=low
 
