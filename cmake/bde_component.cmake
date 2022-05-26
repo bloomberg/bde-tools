@@ -13,7 +13,7 @@ bde_register_struct_type(
         TEST_TARGET
 )
 
-find_package(Python3)
+find_package(Python3 3.8...<4 REQUIRED)
 
 # Find perl, but it's ok if it's missing
 find_package(Perl)

@@ -3,7 +3,7 @@ if(WAFSTYLEOUT_INCLUDED)
 endif()
 set(WAFSTYLEOUT_INCLUDED true)
 
-find_package(Python3)
+find_package(Python3 3.8...<4 REQUIRED)
 
 function(internal_setup_wafstyleout)
     set(absolutePyFilename ${CMAKE_CURRENT_LIST_DIR}/wafstyleout.py)
