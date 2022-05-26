@@ -3,7 +3,7 @@ if(BDE_RUNTEST_INCLUDED)
 endif()
 set(BDE_RUNTEST_INCLUDED true)
 
-find_package(Python3 3.8...<4 REQUIRED)
+find_package(Python3)
 
 function(internal_setup_bde_test_runner)
     get_filename_component(dir ${CMAKE_CURRENT_LIST_DIR} DIRECTORY)
