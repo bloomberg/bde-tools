@@ -7,7 +7,7 @@ find_package(Python3)
 
 function(internal_setup_bde_test_runner)
     get_filename_component(dir ${CMAKE_CURRENT_LIST_DIR} DIRECTORY)
-    set_property(GLOBAL PROPERTY BDE_RUNTEST_COMMAND ${Python_EXECUTABLE} ${dir}/bin/bde_runtest.py)
+    set_property(GLOBAL PROPERTY BDE_RUNTEST_COMMAND ${Python3_EXECUTABLE} ${dir}/bin/bde_runtest.py)
 endfunction()
 internal_setup_bde_test_runner() # Call immediately for correctness of ${CMAKE_CURRENT_LIST_DIR}
 
