@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import sys
 
 
 # If BDE_TOOLS_DIR is not specified, try finding it via 'which' and default
@@ -17,15 +18,19 @@ if not bdeToolsDir:
     except:
         bdeToolsDir = "/bb/bde/bbshr/bde-tools"
 
-bdeCmakeBuildDir = os.environ["BDE_CMAKE_BUILD_DIR"]
-bdeCmakeToolchain = os.environ["BDE_CMAKE_TOOLCHAIN"]
-bdeCmakeUfid = os.environ["BDE_CMAKE_UFID"]
+bdeCmakeBuildDir = os.getenv("BDE_CMAKE_BUILD_DIR")
+bdeCmakeToolchain = os.getenv("BDE_CMAKE_TOOLCHAIN")
+bdeCmakeUfid = os.getenv("BDE_CMAKE_UFID")
 
-print(f'Generating .vscode folder...')
-print(f'  BDE tools directory: {bdeToolsDir}')
-print(f'  Build directory:     {bdeCmakeBuildDir}')
-print(f'  Toolchain:           {bdeCmakeToolchain}')
-print(f'  UFID:                {bdeCmakeUfid}')
+if not bdeCmakeBuildDir or not bdeCmakeToolchain or not bdeCmakeUfid:
+    print("Please set the BDE build environment using 'bde_build_env.py'.")
+    sys.exit(1)
+
+print(f"Generating .vscode folder...")
+print(f"  BDE tools directory: {bdeToolsDir}")
+print(f"  Build directory:     {bdeCmakeBuildDir}")
+print(f"  Toolchain:           {bdeCmakeToolchain}")
+print(f"  UFID:                {bdeCmakeUfid}")
 
 os.makedirs(".vscode", exist_ok=True)
 
