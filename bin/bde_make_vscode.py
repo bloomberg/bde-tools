@@ -53,7 +53,8 @@ with open(".vscode/settings.json", "wt") as settings:
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {{
         "*.ipp": "cpp"
-    }}
+    }},
+    "terminal.integrated.defaultProfile.linux": "bash"
 }}
 """
     )
