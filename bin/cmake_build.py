@@ -1,7 +1,6 @@
 #!/usr/bin/env python3.8
 
 
-
 import argparse
 import collections
 import errno
@@ -52,7 +51,7 @@ def get_host_bits():
         return get_host_bits.memoized
 
     # If Python itself is 64 bits, we are
-    if sys.maxsize > 2**32:
+    if sys.maxsize > 2 ** 32:
         get_host_bits.memoized = 64
     elif WINDOWS_HOST or GNU_WINDOWS_HOST or LINUX_HOST:
         machine = platform.machine().lower()
