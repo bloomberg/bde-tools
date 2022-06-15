@@ -4,7 +4,7 @@
 Fuzz Testing
 ============
 
-What is fuzz testing?
+What Is Fuzz Testing?
 ---------------------
 Fuzz testing consists of exercising component methods using data that is more
 unusual than the hand-crafted cases test writers tend to provide, with a goal
@@ -22,7 +22,7 @@ When fuzz testing, it is helpful to also specify a sanitizer option in the
 ufid, such as ``asan`` (the address sanitizer), so that more errors are
 detected.
 
-Writing a Fuzz test
+Writing a Fuzz Test
 -------------------
 A fuzz test is simply a ``C`` function with a special name,
 ``LLVMFuzzerTestOneInput``.  The fuzz testing system calls this function
@@ -40,9 +40,9 @@ A fuzz test is expected to attempt to crash on the first failure detected.
 This might be a "natural" crash, perhaps because the program indirects through
 bad pointers, or a deliberate crash via an unhandled exception or a call to
 ``abort``.  In BDE fuzz tests, a deliberate crash is invoked through the
-assertion system, as seen below.  The fuzz testing infrastructure intercepts
-such crash attempts, saves the problematic input, reports the failure, and
-exits.
+assertion system, as seen below in the call to ``BSLS_ASSERT_INVOKE``.  The
+fuzz testing infrastructure intercepts such crash attempts, saves the
+problematic input, reports the failure, and exits.
 
 A BDE test driver adapted for fuzz testing will include code similar to the
 following template, just before ``main()``.  The BDE code base has several
@@ -95,7 +95,7 @@ The following is an empty example template for a fuzz testing function.
              // Testing:
              //   static void myFunction(arg1 value, ...);
              // --------------------------------------------------------------------
-         
+
              // ...  Test myFunction using ASSERT or in other ways ...
            } break;
            // ... other cases ...
@@ -171,9 +171,9 @@ BDE Fuzz Components
 -------------------
 The components `bslim_fuzzdataview <https://bbgithub.dev.bloomberg.com/bde/bde/blob/master/groups/bsl/bslim/bslim_fuzzdataview.h>`__
 and `bslim_fuzzutil <https://bbgithub.dev.bloomberg.com/bde/bde/blob/master/groups/bsl/bslim/bslim_fuzzutil.h>`__
-can simplify the creation of function input from raw fuzz data. 
+can simplify the creation of function input from raw fuzz data.
 ``FuzzDataView`` provides a view to a non-modifiable buffer of fuzz data
-obtained from a fuzz testing harness such as LLVM's ``libFuzzer``. The 
+obtained from a fuzz testing harness such as LLVM's ``libFuzzer``. The
 ``FuzzDataView`` component is passed as an argument to ``FuzzUtil``, which
 contains functions that create fundamental and standard library types from
 the fuzz data.
@@ -182,7 +182,7 @@ For example, imagine we are fuzzing a parser and want to use fuzz data to popula
 a configuration object:
 
   .. code-block:: cpp
-  
+
      switch (test) {
        typedef bslim::FuzzUtil FuzzUtil;
        case 1: {
@@ -202,7 +202,7 @@ process of creating higher level types (e.g., a fuzz utility could be created
 for generating date and time values for testing functions that accept dates and
 times as parameters).
 
-What Does A Fuzz Test Test?
+What Does a Fuzz Test Test?
 ---------------------------
 Fuzz testing involves a variety of approaches depending on the nature of the
 methods to be tested.  It is up to the author of the fuzz test to decide which
@@ -298,7 +298,7 @@ using ``clang`` compilers.  It is best to use the most recent version of the
 compiler available, as the fuzz testing system is frequently updated.
 
 {{{ internal
-Version 10 of ``clang`` is available in the Bloomberg environment as of this
+Version 13 of ``clang`` is available in the Bloomberg environment as of this
 writing.
 }}}
 
@@ -324,14 +324,14 @@ installed locally before use, as shown below.
 }}}
 
 First, set up the build environment.  In this example, we are requesting a
-64-bit fuzz testing build with address sanitizer included, and that version 10
+64-bit fuzz testing build with address sanitizer included, and that version 13
 of the ``clang`` compiler be used.  We request safe mode to enable all of the
 contract assertions, and optimization in the hope of exposing more possible bad
 behavior.
 
   ::
 
-    $ eval `bde_build_env.py -t dbg_opt_safe_exc_mt_64_asan_fuzz_cpp17 -c clang-10`
+    $ eval `bde_build_env.py -t dbg_opt_safe_exc_mt_64_asan_fuzz_cpp17 -c clang-13`
 
 {{{ internal
 
@@ -345,10 +345,10 @@ installed.)
   ::
 
     $ refroot-install --distribution=unstable --yes --arch amd64 \
-      --package clang-10.0 --package compiler-rt-10.0 \
+      --package clang-13.0 --package compiler-rt-13.0 \
       --refroot-path=/bb/bde/$USER/myclang
-    $ export CXX=/bb/bde/$USER/myclang/opt/bb/lib/llvm-10.0/bin/clang++
-    $ export  CC=/bb/bde/$USER/myclang/opt/bb/lib/llvm-10.0/bin/clang
+    $ export CXX=/bb/bde/$USER/myclang/opt/bb/lib/llvm-13.0/bin/clang++
+    $ export  CC=/bb/bde/$USER/myclang/opt/bb/lib/llvm-13.0/bin/clang
 
 }}}
 
@@ -411,8 +411,8 @@ as a pointer and tries to indirect it, which causes an immediate failure.
   ::
 
      INFO: Seed: 1428378131
-     INFO: Loaded 1 modules   (1 inline 8-bit counters): 1 [0x78d128, 0x78d129), 
-     INFO: Loaded 1 PC tables (1 PCs): 1 [0x560bc0,0x560bd0), 
+     INFO: Loaded 1 modules   (1 inline 8-bit counters): 1 [0x78d128, 0x78d129),
+     INFO: Loaded 1 PC tables (1 PCs): 1 [0x560bc0,0x560bd0),
      INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
      =================================================================
      ==194626==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x602000000050 at pc 0x000000539e25 bp 0x7ffcae0dc970 sp 0x7ffcae0dc968
@@ -425,7 +425,7 @@ as a pointer and tries to indirect it, which causes an immediate failure.
          #5 0x41f4c2  (./ft.t+0x41f4c2)
          #6 0x3dcc01ed1c  (/lib64/libc.so.6+0x3dcc01ed1c)
          #7 0x41f574  (./ft.t+0x41f574)
-     
+
      0x602000000051 is located 0 bytes to the right of 1-byte region [0x602000000050,0x602000000051)
      allocated by thread T0 here:
          #0 0x5366b8  (./ft.t+0x5366b8)
@@ -435,8 +435,8 @@ as a pointer and tries to indirect it, which causes an immediate failure.
          #4 0x4309d5  (./ft.t+0x4309d5)
          #5 0x41f4c2  (./ft.t+0x41f4c2)
          #6 0x3dcc01ed1c  (/lib64/libc.so.6+0x3dcc01ed1c)
-     
-     SUMMARY: AddressSanitizer: heap-buffer-overflow (./ft.t+0x539e24) 
+
+     SUMMARY: AddressSanitizer: heap-buffer-overflow (./ft.t+0x539e24)
      Shadow bytes around the buggy address:
        0x0c047fff7fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
        0x0c047fff7fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -451,7 +451,7 @@ as a pointer and tries to indirect it, which causes an immediate failure.
        0x0c047fff8050: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
      Shadow byte legend (one shadow byte represents 8 application bytes):
        Addressable:           00
-       Partially addressable: 01 02 03 04 05 06 07 
+       Partially addressable: 01 02 03 04 05 06 07
        Heap left redzone:       fa
        Freed heap region:       fd
        Stack left redzone:      f1
@@ -471,10 +471,10 @@ as a pointer and tries to indirect it, which causes an immediate failure.
        Shadow gap:              cc
      ==194626==ABORTING
      MS: 0 ; base unit: 0000000000000000000000000000000000000000
-     
-     
+
+
      artifact_prefix='./'; Test unit written to ./crash-da39a3ee5e6b4b0d3255bfef95601890afd80709
-     Base64: 
+     Base64:
 
 
 Debugging Failed Fuzz Tests

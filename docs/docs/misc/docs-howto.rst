@@ -13,19 +13,19 @@ Source files for BDE documentation can be found in the `bde/bde-docs
 Clone repository:
 
   ::
-    
+
     $ git clone bbgithub:bde/bde-tools
     $ cd bde-tools/docs
 
 Enable Sphinx virtualenv
 ------------------------
 
-BDE documentation is generated with Sphinx generator. 
+BDE documentation is generated with Sphinx generator.
 
 To load pre-configured virtualenv for Sphinx:
 
   ::
-    
+
     $ source /bb/bde/documentation/sphinx_env/bin/activate
 
 Modify the source code
@@ -75,13 +75,13 @@ In the browser, open the following URL to view the generated site (``<USER>``
 is your UNIX login ):
 
   ::
-    
+
     http://devhtml.dev.bloomberg.com/~<USER>/bde-tools/
 
 
-When you happy with the content and the rendering of the site, create a Pull
-Request to the master repository. BDE documentation site will be updated on
-the regular basis to reflect changes.
+When you are happy with the content and the rendering of the site, create a
+Pull Request to the master repository. BDE documentation site will be updated
+on the regular basis to reflect changes.
 
 Deactivate Sphinx virtualenv
 ----------------------------
