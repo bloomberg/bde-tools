@@ -1,10 +1,20 @@
-bde-tools (3.102.0.0) unstable; urgency=low
+bde-tools (3.103.0.0) unstable; urgency=low
 
+  * 51718aa updating fuzz docs; small typo fix in 'howto' (#236)
+  * 62c91d0 Set default linux shell to bash (#235)
+  * d889523 Better error handling (#234)
+  * bcc7dcf Create bde_make_vscode.py (#233)
+
+ -- Harold Bott <hbott1@bloomberg.net>  Wed, 15 Jun 2022 09:46:40 -0400
+
+bde-tools (3.102.0.0) git; urgency=low
+
+  * 5fc5a7a Changelog for version 3.102.0.0
   * 9f44c81 Use Python3_EXECUTABLE, not Python_EXECUTABLE (#232)
   * e0f7f77 Revert "Find python version 3.8+ (#230)" (#231)
   * 0f7b22d Find python version 3.8+ (#230)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 31 May 2022 09:48:43 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 2 Jun 2022 15:04:43 -0400
 
 bde-tools (3.100.0.4) git; urgency=low
 
