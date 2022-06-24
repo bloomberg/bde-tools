@@ -1589,7 +1589,7 @@ sub transformVariadicClass($$$)
 
     my @templateParams = getTemplateParams($templateBegin);
 
-    cppSearch(qr/\G\s*(class|struct)\s*([[:word:]]+)\b(.)?/,
+    cppSearch(qr/\G\s*(class|struct|union)\s*([[:word:]]+)\b(.)?/,
               $templateHeadEnd);
     my $classOrStruct    = $cppMatch[1];
     my $className        = $cppMatch[2];
@@ -1675,7 +1675,7 @@ sub transformVariadicClass($$$)
         for my $param (@templateParams) {
             my ($paramType, $paramName, $paramDflt) = @$param;
             if ($paramType =~ s/\.\.\.//) {
-                my $paramNil = ($paramType =~ m/(struct|class)/ ?
+                my $paramNil = ($paramType =~ m/(class|struct|union)/ ?
                                 "BSLS_COMPILERFEATURES_NILT" :
                                 "BSLS_COMPILERFEATURES_NILV");
                 for (my $i = 0; $i < $maxArgs; ++$i) {
@@ -1749,9 +1749,10 @@ sub transformTemplates($$$)
         trace2("transformTemplates",
                "Template header ends at line %d", $templateHeadLine);
 
-        # If the next word is "class" or "struct", then this is a class
-        # template.
-        $isClass = cppSearch(qr/\G\s*(?:class|struct)\s*[[:word:]]+\b/, $pos);
+        # If the next word is "class", "struct", or "union", then this is a
+        # class template.
+        $isClass = cppSearch(qr/\G\s*(?:class|struct|union)\s*[[:word:]]+\b/,
+                             $pos);
 
         # Saw start of template, now look for end of template: either a
         # semicolon or a matched set of curly braces, whichever comes first.
