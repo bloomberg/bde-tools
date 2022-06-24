@@ -513,7 +513,7 @@ permissible:
 +--------+--------------------------------------------------------------+
 | aopt   | Set bsls assert level to opt/dbg/safe/none                   |
 | adbg   |                                                              |
-| asage  |                                                              |
+| asafe  |                                                              |
 | anone  |                                                              |
 +--------+--------------------------------------------------------------+
 | ropt   | Set bsls review level to opt/dbg/safe/none                   |
