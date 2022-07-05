@@ -103,6 +103,34 @@ with open(".vscode/launch.json", "wt") as settings:
                 }}
             ]
         }},
+        {{
+            "name": "(UDB) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${{command:cmake.launchTargetPath}}",
+            "args": ["${{input:args}}"],
+            "stopAtEntry": true,
+            "cwd": "${{command:cmake.getLaunchTargetDirectory}}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {{
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }}
+            ],
+            "miDebuggerPath": "udb",
+            "miDebuggerArgs": "--max-event-log-size 4G",
+            "logging": {{
+                "trace": false,
+                "traceResponse": false,
+                "engineLogging": false
+            }},
+            "udb": "live",
+            "timezone": ""
+        }},
     ],
     "inputs": [
         {{
