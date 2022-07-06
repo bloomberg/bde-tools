@@ -1,11 +1,20 @@
-bde-tools (3.103.0.0) unstable; urgency=low
+bde-tools (3.104.0.0) unstable; urgency=low
 
+  * 198581c Add UDB launch config (#239)
+  * e8e7df9 Normalize and force LF (#238)
+  * 73dee3c Added support for variadic union templates to sim_cpp11_features.pl (#237)
+
+ -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Tue, 5 Jul 2022 08:55:54 -0400
+
+bde-tools (3.103.0.0) git; urgency=low
+
+  * cc5202c Changelog for version 3.103.0.0
   * 51718aa updating fuzz docs; small typo fix in 'howto' (#236)
   * 62c91d0 Set default linux shell to bash (#235)
   * d889523 Better error handling (#234)
   * bcc7dcf Create bde_make_vscode.py (#233)
 
- -- Harold Bott <hbott1@bloomberg.net>  Wed, 15 Jun 2022 09:46:40 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 16 Jun 2022 11:57:10 -0400
 
 bde-tools (3.102.0.0) git; urgency=low
 
