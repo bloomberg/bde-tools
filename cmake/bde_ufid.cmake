@@ -689,7 +689,7 @@ function(bde_ufid_setup_flags iface)
                 Threads::Threads
             >
             $<$<CXX_COMPILER_ID:Clang>:
-                rt
+                $<$<PLATFORM_ID:Linux>:rt>
                 stdc++
                 Threads::Threads
                 $<${bde_ufid_is_fuzz}:  -nostdlib++ -fsanitize=fuzzer>
