@@ -1,10 +1,16 @@
-bde-tools (3.104.0.0) unstable; urgency=low
+bde-tools (3.105.0.0) unstable; urgency=low
 
+
+ -- osubbotin <osubbotin@bloomberg.net>  Thu, 21 Jul 2022 17:11:18 -0400
+
+bde-tools (3.104.0.0) git; urgency=low
+
+  * 213a710 Changelog for version 3.104.0.0
   * 198581c Add UDB launch config (#239)
   * e8e7df9 Normalize and force LF (#238)
   * 73dee3c Added support for variadic union templates to sim_cpp11_features.pl (#237)
 
- -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Tue, 5 Jul 2022 08:55:54 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 6 Jul 2022 13:07:34 -0400
 
 bde-tools (3.103.0.0) git; urgency=low
 
