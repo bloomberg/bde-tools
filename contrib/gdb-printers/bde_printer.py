@@ -1321,13 +1321,26 @@ def init_globals():
     except:
         pass
 
+def makeReferenceUnwrappingPrinter(cls):
+
+    def unwrapReference(val):
+        if val.type.code == gdb.TYPE_CODE_REF:
+            return val.referenced_value()
+        return val
+
+    class ReferenceUnwrappingPrinter(cls):
+        def __init__(self, val):
+            super().__init__(unwrapReference(val))
+
+    return ReferenceUnwrappingPrinter
+
 
 def add_printer(name, re, klass):
     global docs
     docs[name] = klass.__doc__
     # docs[klass.__name__] = klass.__doc__
     global pp
-    pp.add_printer(name, re, klass)
+    pp.add_printer(name, re, makeReferenceUnwrappingPrinter(klass))
 
 
 def build_pretty_printer():
