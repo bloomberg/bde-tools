@@ -1186,6 +1186,96 @@ class BslmaManagedPtr:
             return "ManagedPtr<%s> = %s" % (self.type, self.ptr.dereference())
 
 
+class BdldfpDecimal64:
+    """Pretty prihter for 'bdldfp::Decimal64' type
+
+    This pretty printer will print the scientific notation of the decimal.
+    """
+    SIGN_MASK = 0x8000000000000000
+    SPECIAL_ENCODING_MASK = 0x6000000000000000
+    INFINITY_MASK = 0x7800000000000000
+    NAN_MASK = 0x7c00000000000000
+    SMALL_COEFF_MASK = 0x0007ffffffffffff
+    LARGE_COEFF_MASK = 0x001fffffffffffff
+    LARGE_COEFF_HIGH_BIT = 0x0020000000000000
+    EXPONENT_MASK = 0x3ff
+    EXPONENT_SHIFT_LARGE = 51
+    EXPONENT_SHIFT_SMALL = 53
+    DECIMAL_EXPONENT_BIAS = 398
+
+    def __init__(self, val):
+        self.val = val
+        self.type = val.type
+        self.members = [('d_value', val['d_value'])]
+        self.raw = val['d_value']['d_raw']
+
+        if (self.raw & BdldfpDecimal64.SIGN_MASK) == 0:
+            self.sign = ""
+        else:
+            self.sign = "-"
+
+        self.is_nan = (
+            self.raw & BdldfpDecimal64.NAN_MASK) == BdldfpDecimal64.NAN_MASK
+        self.is_inf = (
+            self.raw & BdldfpDecimal64.INFINITY_MASK) == BdldfpDecimal64.INFINITY_MASK
+        if (self.raw & BdldfpDecimal64.SPECIAL_ENCODING_MASK) == BdldfpDecimal64.SPECIAL_ENCODING_MASK:
+            if self.is_inf:
+                self.significand = (
+                    self.raw & BdldfpDecimal64.SMALL_COEFF_MASK) | BdldfpDecimal64.LARGE_COEFF_HIGH_BIT
+                tmp = self.raw >> BdldfpDecimal64.EXPONENT_SHIFT_LARGE
+                self.exponent = tmp & BdldfpDecimal64.EXPONENT_MASK
+            else:
+                self.significand = (
+                    self.raw & BdldfpDecimal64.SMALL_COEFF_MASK) | BdldfpDecimal64.LARGE_COEFF_HIGH_BIT
+                tmp = self.raw >> BdldfpDecimal64.EXPONENT_SHIFT_LARGE
+                self.exponent = (
+                    tmp & BdldfpDecimal64.EXPONENT_MASK) - BdldfpDecimal64.DECIMAL_EXPONENT_BIAS
+        else:
+            tmp = self.raw >> BdldfpDecimal64.EXPONENT_SHIFT_SMALL
+            self.exponent = (tmp & BdldfpDecimal64.EXPONENT_MASK) - \
+                BdldfpDecimal64.DECIMAL_EXPONENT_BIAS
+            self.significand = self.raw & BdldfpDecimal64.LARGE_COEFF_MASK
+
+    def to_string(self):
+        if self.is_nan:
+            return "sNaN" if self.sign == "-" else "NaN"
+        elif self.is_inf:
+            return self.sign + "Inf"
+        elif self.significand == 0:
+            return self.sign + "0"
+
+        approximate_field_width = 16
+
+        significand = str(self.significand)
+        exponent = int(self.exponent)
+
+        # Try to print the number naturally
+        if exponent >= 0:
+            if len(significand) + exponent <= approximate_field_width:
+                return significand + ("0" * exponent)
+        elif -exponent < len(significand):
+            return significand[:exponent] + "." + significand[exponent:]
+        elif -exponent == len(significand):
+            return "0." + significand
+        elif -exponent < approximate_field_width:
+            return "0." + ("0" * (-exponent - len(significand))) + significand
+
+        # If the exponent is too big, print in scientific notation.
+        exponent = int(self.exponent + len(significand) - 1)
+        digit = significand[0]
+        fraction = significand[1:].rstrip("0")
+        if len(fraction) == 0:
+            fraction = "0"
+
+        return "{}{}.{}e{:+}".format(self.sign, digit, fraction, exponent)
+
+    def children(self):
+        printMembers = gdb.parameter('print ria-members')
+        if printMembers:
+            return iter(self.members)
+        return []
+
+
 ###############################################################################
 ##  Commands and functions
 ###############################################################################
@@ -1395,6 +1485,10 @@ def build_pretty_printer():
         "^BloombergLP::bslma::ManagedPtr<.*>$",
         BslmaManagedPtr,
     )
+    add_printer(
+        "bdldfp::Decimal64",
+        "^BloombergLP::bdldfp::Decimal_Type64$",
+        BdldfpDecimal64)
 
     # add_printer('catchall', '.*', CatchAll)
     global pp
