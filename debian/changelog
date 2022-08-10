@@ -1,7 +1,15 @@
-bde-tools (3.105.0.0) unstable; urgency=low
+bde-tools (3.106.0.0) unstable; urgency=low
 
+  * 09cbf2b DRQS 168732407 - Add pretty printer for bdldfp::Decimal64 (#225)
+  * 135d765 Fix IndexError when printing references (#240)
 
- -- osubbotin <osubbotin@bloomberg.net>  Thu, 21 Jul 2022 17:11:18 -0400
+ -- Lazar Sumar <lsumar@bloomberg.net>  Wed, 27 Jul 2022 21:17:59 +0100
+
+bde-tools (3.105.0.0) git; urgency=low
+
+  * 40344d3 Changelog for version 3.105.0.0
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 22 Jul 2022 11:25:09 -0400
 
 bde-tools (3.104.0.0) git; urgency=low
 
