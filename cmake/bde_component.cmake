@@ -49,7 +49,9 @@ function(bde_add_test_executable retTestName testName src)
         COMMAND ${cmd} $<TARGET_FILE:${testName}>
     )
 
-    # Adding 2 labels - without .t and without .*.t 
+    # Adding 3 labels - test, test without .t and test without .*.t
+    bde_append_test_labels(${testName} ${testName})
+
     get_filename_component(labelName ${testName} NAME_WLE)
     bde_append_test_labels(${testName} ${labelName})
 
