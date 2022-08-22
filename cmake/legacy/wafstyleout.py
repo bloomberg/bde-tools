@@ -18,6 +18,22 @@ def unicodeWrite(out, str):
             out.write(bytes.decode(out.encoding or "ascii", "replace"))
 
 
+def limitListLines(stringAsList, limit, name):
+    if len(stringAsList) > limit:
+        string = "\n".join(stringAsList[:limit])
+        string += f"\n###################################################################\n####### Too many {name} lines ({len(stringAsList)}) - truncating to {limit}\n###################################################################\n"
+    else:
+        string = "\n".join(stringAsList)
+
+    return string
+
+
+def limitLines(string, limit, name):
+    lines = string.split(os.linesep)
+
+    return limitListLines(lines, limit, name)
+
+
 try:
     p = subprocess.Popen(
         sys.argv[1:], stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -31,23 +47,20 @@ includes = ""
 msg = ""
 if out:
     out = out.decode(sys.stdout.encoding or "ascii", "replace")
+    outlines = out.split(os.linesep)
+
     includes = (
         "\n".join(
-            [
-                l
-                for l in out.split(os.linesep)
-                if l.startswith("Note: including file:")
-            ]
+            [l for l in outlines if l.startswith("Note: including file:")]
         )
         + "\n"
     )
-    out = "\n".join(
-        [
-            l
-            for l in out.split(os.linesep)
-            if not l.startswith("Note: including file:")
-        ]
-    )
+    outlines = [
+        l for l in outlines if not l.startswith("Note: including file:")
+    ]
+
+    out = limitListLines(outlines, 5000, "output")
+
     msg = msg + out
 
 unicodeWrite(
@@ -56,6 +69,9 @@ unicodeWrite(
 
 if err:
     err = err.decode(sys.stderr.encoding or "ascii", "replace")
+
+    err = limitLines(err, 5000, "error")
+
     msg = msg + err
 
 if msg:
