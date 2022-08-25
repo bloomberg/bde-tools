@@ -1,9 +1,19 @@
-bde-tools (3.106.0.0) unstable; urgency=low
+bde-tools (3.107.0.0) unstable; urgency=low
 
+  * 688cf29 Rename bde_input_limiter.py->.pl (#244)
+  * b0033b6 Limit wafstyleout.py to 5000 lines each of out/err (#243)
+  * e81de12 Handle all bytes in bde input limiter.py drqs170140938 (#242)
+  * 72c3d36 Better vscode ctest stuport (#241)
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 24 Aug 2022 15:16:47 -0400
+
+bde-tools (3.106.0.0) git; urgency=low
+
+  * c56259e Changelog for version 3.106.0.0
   * 09cbf2b DRQS 168732407 - Add pretty printer for bdldfp::Decimal64 (#225)
   * 135d765 Fix IndexError when printing references (#240)
 
- -- Lazar Sumar <lsumar@bloomberg.net>  Wed, 27 Jul 2022 21:17:59 +0100
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 10 Aug 2022 14:33:52 -0400
 
 bde-tools (3.105.0.0) git; urgency=low
 
