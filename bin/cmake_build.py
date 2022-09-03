@@ -400,6 +400,14 @@ def wrapper():
     )
 
     parser.add_argument(
+        "--no_force_group_writes",
+        action="store_true",
+        help="Do not use umask to allow group writes."
+        "The default is to allow group writes to simplify group build area"
+        "cleanups.",
+    )
+
+    parser.add_argument(
         "-j",
         "--jobs",
         type=int,
@@ -553,6 +561,10 @@ def wrapper():
 
     args = parser.parse_args()
     options = Options(args)
+
+    # Allow group writes to simplify cleanup of common build areas
+    if not args.no_force_group_writes:
+        os.umask(0o002)
 
     if "configure" in args.cmd:
         configure(options)
