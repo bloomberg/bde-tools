@@ -27,6 +27,8 @@ string(CONCAT DEFAULT_C_FLAGS
        "/MP "
        "/GT "
        "/nologo "
+       "/D_WIN32_WINNT=0x0502 "
+       "/DWINVER=0x0502 "
       )
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 
