@@ -236,6 +236,12 @@ def detect_installed_compilers(uplid):
                                    "toolchain": "gcc-default"
                                },
                                {
+                                   "type":      "gcc",
+                                   "c_name":    "gcc-12",
+                                   "cxx_name":  "g++-12",
+                                   "toolchain": "gcc-default"
+                               },
+                               {
                                    "type":      "clang",
                                    "c_name":    "clang",
                                    "cxx_name":  "clang++",
@@ -281,6 +287,12 @@ def detect_installed_compilers(uplid):
                                    "type":      "clang",
                                    "c_name":    "clang-13",
                                    "cxx_name":  "clang++-13",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-14",
+                                   "cxx_name":  "clang++-14",
                                    "toolchain": "clang-default"
                                }
                             ]
@@ -369,6 +381,12 @@ def detect_installed_compilers(uplid):
                                    "type":      "clang",
                                    "c_name":    "clang-13",
                                    "cxx_name":  "clang++-13",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-14",
+                                   "cxx_name":  "clang++-14",
                                    "toolchain": "clang-default"
                                }
                             ]
