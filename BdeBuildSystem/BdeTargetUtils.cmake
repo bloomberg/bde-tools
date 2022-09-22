@@ -307,7 +307,7 @@ endfunction()
 function(bbs_setup_target_uor target)
     cmake_parse_arguments(PARSE_ARGV 1
                           ""
-                          "SKIP_TESTS NO_GEN_BDE_METADATA NO_EMIT_PKG_CONFIG_FILE"
+                          "SKIP_TESTS;NO_GEN_BDE_METADATA;NO_EMIT_PKG_CONFIG_FILE"
                           "SOURCE_DIR"
                           "CUSTOM_PACKAGES")
     bbs_assert_no_unparsed_args("")
