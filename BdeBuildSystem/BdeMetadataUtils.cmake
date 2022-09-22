@@ -70,6 +70,8 @@ macro(bbs_read_package_metadata pkg dir)
     set(_meta_dir ${dir}/package)
     set(${pkg}_METADATA_DIRS ${_meta_dir})
 
+    unset(mems)
+
     _bbs_read_bde_metadata(${_meta_dir}/${pkg}.mem mems)
     _bbs_set_bde_component_lists(${dir} ${pkg} mems)
 
@@ -108,6 +110,8 @@ macro(bbs_read_group_metadata group dir)
 
     set(_meta_dir ${dir}/group)
     list(APPEND ${group}_METADATA_DIRS ${_meta_dir})
+
+    unset(pkgs)
 
     _bbs_read_bde_metadata(${_meta_dir}/${group}.mem pkgs)
 
