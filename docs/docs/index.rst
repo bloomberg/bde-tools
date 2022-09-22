@@ -16,7 +16,14 @@ and applications, including the `BDE libraries
 }}}
 
 .. toctree::
-   :caption:  CMake Build System
+   :caption:  Bde Build System(BBS)
+   :maxdepth: 1
+
+   bbs/intro
+   bbs/config
+
+.. toctree::
+   :caption:  CMake Build System(old)
    :maxdepth: 1
 
    cmake/intro

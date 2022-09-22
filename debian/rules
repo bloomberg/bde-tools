@@ -1,39 +1,19 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
+include $(DISTRIBUTION_REFROOT)/opt/bb/share/bbtoolchain-cmake-debhelper/bbtoolchain-cmake-debhelper-macros.mk
 
-include $(DISTRIBUTION_REFROOT)/opt/bb/share/build-base/build-base.mk
+DEBHELPER_CMAKE_ARGS=-DBUILD_TESTING=OFF
 
-clean:
-	rm -rf debian/tmp
-	rm -f debian/build-stamp
-	rm -f debian/binary-stamp
-	rm -f debian/files
+# Build
+$(eval $(call BB_DEBHELPER_BIARCH_BUILD,64))
 
-debian/build-stamp:
-	touch debian/build-stamp
-	mkdir -p debian/tmp/bde-tools/$(PREFIX)/libexec/bde-tools/
-	cp -r bin cmake lib debian/tmp/bde-tools/$(PREFIX)/libexec/bde-tools/
-	mkdir -p debian/tmp/bde-gdb-printers/$(PREFIX)/libexec/bde-gdb-printers
-	cp contrib/gdb-printers/bde_printer.py debian/tmp/bde-gdb-printers/$(PREFIX)/libexec/bde-gdb-printers/
-	cp contrib/gdb-printers/gdbinit.dpkg debian/tmp/bde-gdb-printers/$(PREFIX)/libexec/bde-gdb-printers/gdbinit
+$(eval $(call BB_DEBHELPER_PACKAGE,bde-tools,bde-tools))
+$(eval $(call BB_DEBHELPER_PACKAGE,bde-gdb-printers,bde-gdb-printers))
+$(eval $(call BB_DEBHELPER_PACKAGE,bbs-cmake-module,bbs-cmake-module))
 
-debian/binary-stamp: debian/build-stamp
-	touch debian/binary-stamp
-	mkdir -p debian/tmp/bde-tools/DEBIAN
-	dpkg-gencontrol -pbde-tools -Pdebian/tmp/bde-tools
-	dpkg-deb -b debian/tmp/bde-tools ../
-	mkdir -p debian/tmp/bde-gdb-printers/DEBIAN
-	dpkg-gencontrol -pbde-gdb-printers -Pdebian/tmp/bde-gdb-printers
-	dpkg-deb -b debian/tmp/bde-gdb-printers ../
+# Test
+# DEBHELPER_CTEST_ARGS=-j 8
+# $(eval $(call BB_DEBHELPER_RUN_TESTS))
 
-build: build-arch build-indep
+include $(DISTRIBUTION_REFROOT)/opt/bb/share/bbtoolchain-cmake-debhelper/bbtoolchain-cmake-debhelper-rules.mk
 
-build-indep: debian/build-stamp
-
-build-arch:
-
-binary: binary-arch binary-indep
-
-binary-indep: debian/binary-stamp
-
-binary-arch:

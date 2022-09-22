@@ -1,0 +1,1 @@
+void support_foo();

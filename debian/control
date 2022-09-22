@@ -2,15 +2,35 @@ Source: bde-tools
 Section: unknown
 Priority: extra
 Maintainer: Oleg Subbotin <osubbotin@bloomberg.net>
-Build-Depends: build-base,python,cmake,make,ninja
+Build-Depends: 
+    bbtoolchain-cmake-debhelper,
+    build-base,
+    cmake-emit-pkgconfig-file,
+    cmake-import-pkgconfig-targets,
+    cmake,
+    make,
+    ninja,
+    python3.8
 Standards-Version: 3.8.4
 
 Package: bde-tools
 Architecture: all
-Depends: python3.8,cmake,make,ninja
+Depends: 
+    cmake,
+    make,
+    ninja,
+    python3.8
 Description: BDE Build Tools
- Tools to build BDE-style repositories, including the BDE libraries.
+ Old tools to build BDE-style repositories, including the BDE libraries.
 
 Package: bde-gdb-printers
 Architecture: all
 Description: GDB Pretty printers for Bloomberg components
+
+Package: bbs-cmake-module
+Architecture: all
+Depends:
+    cmake-emit-pkgconfig-file,
+    cmake-import-pkgconfig-targets
+Description: BdeBuildSystem CMake module
+ CMake module to process metadata in BDE-style repositories.

@@ -1,0 +1,35 @@
+[
+    {
+        "uplid": "unix-",
+        "profiles": [
+            {
+                "name": "BBToolchain64",
+                "description": "Production toolchain for dpkg builds, 64-bit.",
+                "toolchain": "opt/bb/share/plink/BBToolchain64.cmake",
+                "properties": {
+                    "exc": true,
+                    "bitness": 64,
+                    "standard": "cpp17",
+                    "asan": false,
+                    "tsan": false,
+                    "msan": false,
+                    "ubsan": false
+                }
+            },
+            {
+                "name": "BBToolchain32",
+                "description": "Production toolchain for dpkg builds, 32-bit.",
+                "toolchain": "opt/bb/share/plink/BBToolchain32.cmake",
+                "properties": {
+                    "exc": true,
+                    "bitness": 32,
+                    "standard" : "cpp17",
+                    "asan": false,
+                    "tsan": false,
+                    "msan": false,
+                    "ubsan": false
+                }
+            }
+        ]
+    }
+]
