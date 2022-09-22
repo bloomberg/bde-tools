@@ -456,7 +456,7 @@ function(bbs_setup_target_uor target)
         endif()
 
         # Generating .pc file. This will be a noop in non-Bloomberg build env.
-        if (NOT NO_EMIT_PKG_CONFIG_FILE)
+        if (NOT _NO_EMIT_PKG_CONFIG_FILE)
             bbs_emit_pkg_config(${target})
         endif()
 
