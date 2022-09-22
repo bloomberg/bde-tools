@@ -307,7 +307,7 @@ endfunction()
 function(bbs_setup_target_uor target)
     cmake_parse_arguments(PARSE_ARGV 1
                           ""
-                          "SKIP_TESTS NO_GEN_BDE_METADATA"
+                          "SKIP_TESTS NO_GEN_BDE_METADATA NO_EMIT_PKG_CONFIG_FILE"
                           "SOURCE_DIR"
                           "CUSTOM_PACKAGES")
     bbs_assert_no_unparsed_args("")
@@ -456,7 +456,9 @@ function(bbs_setup_target_uor target)
         endif()
 
         # Generating .pc file. This will be a noop in non-Bloomberg build env.
-        bbs_emit_pkg_config(${target})
+        if (NOT NO_EMIT_PKG_CONFIG_FILE)
+            bbs_emit_pkg_config(${target})
+        endif()
 
         # Create an alias library with the pkgconfig name, if it is different from
         # the uor name and such a target doesn't exist yet.
