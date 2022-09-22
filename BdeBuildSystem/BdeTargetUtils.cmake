@@ -546,3 +546,31 @@ function(bbs_setup_target_uor target)
         bbs_install_library(${target})
     endif()
 endfunction()
+
+function(bbs_setup_header_only_pkg pkg)
+    cmake_parse_arguments(PARSE_ARGV 1
+                          ""
+                          ""
+                          "SOURCE_DIR"
+                          "")
+    bbs_assert_no_unparsed_args("")
+
+    bbs_read_package_metadata(${pkg} ${CMAKE_CURRENT_SOURCE_DIR})
+
+    # Create package interface library with include folder.
+    add_library(${pkg}-iface INTERFACE)
+    bbs_add_target_include_dirs(${pkg}-iface INTERFACE ${${pkg}_INCLUDE_DIRS})
+
+    # Create package library with transitive dependency on interface.
+    add_library(${pkg} INTERFACE)
+    target_link_libraries(${pkg} INTERFACE ${pkg}-iface)
+
+    # Add inter-package dependencies for interface and package libraries.
+    foreach(p ${${pkg}_PCDEPS})
+        target_link_libraries(${pkg}-iface INTERFACE ${p}-iface)
+        target_link_libraries(${pkg} INTERFACE ${p})
+    endforeach()
+
+    list(APPEND bsl_INCLUDE_FILES ${${pkg}_INCLUDE_FILES})
+    set(bsl_INCLUDE_FILES  ${bsl_INCLUDE_FILES}  PARENT_SCOPE)
+endfunction()
