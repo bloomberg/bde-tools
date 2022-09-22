@@ -125,7 +125,7 @@ function(bbs_add_component_tests target)
                 add_custom_target(${test_name}.t)
             endif()
 
-            message(STATUS "Adding ${test_name}.t -> ${test_target_name}.t")
+            message(TRACE "Adding ${test_name}.t -> ${test_target_name}.t")
             add_dependencies(${test_name}.t ${test_target_name}.t)
         endif()
     endforeach()
