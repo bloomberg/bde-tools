@@ -49,13 +49,8 @@ function(bbs_add_bde_style_test target)
              COMMAND ${test_runner} -v ${_TEST_VERBOSITY} ${_EXTRA_ARGS} $<TARGET_FILE:${target}>
              WORKING_DIRECTORY ${_WORKING_DIRECTORY})
 
-    # In addition to the package and group lables, add name of the component
-    # with stripped extension.
-    get_filename_component(labelName ${target} NAME_WLE)
-    list(APPEND _LABELS ${labelName})
-
     foreach (label ${_LABELS})
-        set_property(TEST ${target} APPEND PROPERTY LABELS ${label})
+        set_property(TEST ${target} APPEND PROPERTY LABELS ${label} "${label}.t")
     endforeach()
 endfunction()
 
@@ -82,7 +77,7 @@ function(bbs_add_component_tests target)
     set(test_targets)
 
     foreach(test_src ${_SOURCES})
-        # Stripping all extentions from the test source ( including numbers 
+        # Stripping all extentions from the test source ( including numbers
         # from the numbered tests )
         get_filename_component(test_name ${test_src} NAME_WE)
         if (BDE_TEST_REGEX AND NOT ${test_name} MATCHES "${BDE_TEST_REGEX}")
@@ -97,16 +92,17 @@ function(bbs_add_component_tests target)
 
         target_link_libraries(${test_target_name}.t PUBLIC ${target} ${_TEST_PCDEPS})
 
+        set(test_src_labels ${test_name})
         if (NOT test_name STREQUAL test_target_name)
-            message(DEBUG "Adding ${test_target_name}.t with labels '${_LABELS};${test_name}'")
-            list(APPEND _LABELS "${test_name}")
+            list(APPEND test_src_labels ${test_target_name})
         endif()
 
         bbs_add_bde_style_test(${test_target_name}.t
                                    WORKING_DIRECTORY "${_WORKING_DIRECTORY}"
                                    TEST_VERBOSITY    "${_TEST_VERBOSITY}"
                                    EXTRA_ARGS        "${_EXTRA_ARGS}"
-                                   LABELS            "${_LABELS}")
+                                   LABELS            "${_LABELS}"
+                                                     "${test_src_labels}")
 
         # Adding package test target
         if (NOT TARGET ${target}.t)
@@ -132,4 +128,3 @@ function(bbs_add_component_tests target)
 
     set(${target}_TEST_TARGETS "${test_targets}" PARENT_SCOPE)
 endfunction()
-

@@ -236,7 +236,7 @@ function (bbs_emit_pkg_config target)
     if (EmitPkgConfigFile_FOUND)
         emit_pkgconfig_file(TARGET ${target}
                             PREFIX "${CMAKE_INSTALL_PREFIX}"
-                            VERSION "${BB_BUILDID_PKG_VERSION}" # todo: add real version 
+                            VERSION "${BB_BUILDID_PKG_VERSION}" # todo: add real version
                             INSTALL_COMPONENT "${_COMPONENT}-pkgconfig")
     endif()
 endfunction()
@@ -368,7 +368,7 @@ function(bbs_setup_target_uor target)
                     add_subdirectory(${_SOURCE_DIR}/${pkg})
 
                     # Custom package can "export" ether OBJECT library target (if it contains
-                    # compilable sources) or INTERFACE library target if it is header-only 
+                    # compilable sources) or INTERFACE library target if it is header-only
                     # package. All we do here is to add group dependencies to the package
                     # and add it as a dependency to the group.
                     if (TARGET ${pkg}-obj)
@@ -413,7 +413,7 @@ function(bbs_setup_target_uor target)
                                                                ${${pkg}_TEST_PCDEPS}
                                                                ${${uor_name}_PCDEPS}
                                                                ${${uor_name}_TEST_PCDEPS}
-                                                   LABELS      ${pkg} ${target})
+                                                   LABELS      "all" ${target} ${pkg})
                     endif()
                 endif()
             endforeach()
@@ -451,7 +451,7 @@ function(bbs_setup_target_uor target)
                                            SOURCES     ${${uor_name}_TEST_SOURCES}
                                            TEST_PCDEPS ${${uor_name}_PCDEPS}
                                                        ${${uor_name}_TEST_PCDEPS}
-                                           LABELS      ${target})
+                                           LABELS      "all" ${target})
             endif()
         endif()
 
@@ -541,7 +541,7 @@ function(bbs_setup_target_uor target)
         message( FATAL_ERROR "Invalid target type for BDE target: ${_TARGET_TYPE}")
     endif()
 
-    # Installation 
+    # Installation
     if (_target_type STREQUAL "STATIC_LIBRARY")
         bbs_install_library(${target})
     endif()

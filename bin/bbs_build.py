@@ -179,6 +179,7 @@ class Options:
         self.test_regex = args.regex
         self.wafstyleout = args.wafstyleout
         self.cpp11_verify_no_change = args.cpp11_verify_no_change
+        self.dump_cmake_flags = args.dump_cmake_flags
 
         self.generator = args.generator if hasattr(args, "generator") else None
 
@@ -416,6 +417,13 @@ def wrapper():
         "the components are up-to-date).",
     )
 
+    group.add_argument(
+        "--dump-cmake-flags",
+        action="store_true",
+        default=False,
+        help="Dump CMake flags and exit.",
+    )
+
     genChoices = Platform.generator_choices()
     if len(genChoices) > 1:
         group.add_argument(
@@ -482,7 +490,7 @@ def wrapper():
     )
 
     args = parser.parse_args()
-    
+
     if not os.getenv("BBS_ENV_MARKER"):
         raise RuntimeError(
             f"BBS_ENV_MARKER is not set in the environment!\n"
@@ -521,8 +529,6 @@ def mkdir_if_not_present(path):
 
 def ufid_to_cmake_flags(ufid_str):
     cmake_flags = []
-
-    print("Ufid:" + ufid_str)
 
     ufid = Ufid.from_str(ufid_str)
 
@@ -627,11 +633,8 @@ def configure(options):
     # default installation layout.
     # Update: Darwin/MacOS uses lib for default 64 bit installs.
     host_platform = platform.system()
-    configure_cmd = (
-        ["cmake", os.getcwd(), "-G"]
-        + Platform.generator(options)
-        + ufid_to_cmake_flags(options.ufid)
-        + [
+
+    flags = ufid_to_cmake_flags(options.ufid) + [
             "-DBdeBuildSystem_DIR:PATH=" + str(options.bbs_module_path),
             "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
             "-DBBS_BUILD_SYSTEM=ON",
@@ -645,29 +648,27 @@ def configure(options):
                 "lib64"
                 if ("64" in options.ufid and "Darwin" != host_platform)
                 else "lib"
-            ),
-            "--log-level=" + Platform.cmake_verbosity(options.verbose)
+            )
         ]
-    )
 
     if options.test_regex:
-        configure_cmd.append(
+        flags.append(
             "-DBDE_TEST_REGEX:STRING=" + options.test_regex
         )
 
     if options.dpkg_version:
-        configure_cmd.append(
+        flags.append(
             "-DBB_BUILDID_PKG_VERSION=" + options.dpkg_version
         )
 
     if options.toolchain:
         p = Path(options.toolchain)
         if p.is_file():
-            configure_cmd.append("-DCMAKE_TOOLCHAIN_FILE=" + str(p))
+            flags.append("-DCMAKE_TOOLCHAIN_FILE=" + str(p))
         else:
             p = options.bbs_module_path / (options.toolchain + ".cmake")
             if p.is_file():
-                configure_cmd.append("-DCMAKE_TOOLCHAIN_FILE=" + str(p))
+                flags.append("-DCMAKE_TOOLCHAIN_FILE=" + str(p))
             else:
                 raise RuntimeError(
                     "Invalid toolchain file is specified: " + options.toolchain
@@ -677,10 +678,21 @@ def configure(options):
     cmakePrefixPath = os.path.join(
         str(options.refroot or "/") + "/" + str(options.prefix or "")
     )
-    configure_cmd.append("-DCMAKE_PREFIX_PATH:PATH=" + cmakePrefixPath)
+    flags.append("-DCMAKE_PREFIX_PATH:PATH=" + cmakePrefixPath)
 
     if options.refroot:
-        configure_cmd.append("-DDISTRIBUTION_REFROOT:PATH=" + options.refroot)
+        flags.append("-DDISTRIBUTION_REFROOT:PATH=" + options.refroot)
+
+    if options.dump_cmake_flags:
+        print(*flags, sep = "\n")
+        return
+
+    configure_cmd = (
+        ["cmake", os.getcwd(), "-G"]
+        + Platform.generator(options)
+        + flags
+        + ["--log-level=" + Platform.cmake_verbosity(options.verbose)]
+    )
 
     print("Configuration cmd:")
     print(" ".join(configure_cmd))
