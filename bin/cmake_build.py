@@ -403,8 +403,8 @@ def wrapper():
         "--force_group_writable",
         action="store_true",
         help="Set umask to allow group writes."
-        "This flag make the build/install folders group-writable to simplify
-        group build area cleanups."
+        "This flag make the build/install folders group-writable to simplify "
+        "group build area cleanups."
     )
 
     parser.add_argument(
