@@ -16,14 +16,6 @@ install(PROGRAMS bin/bbs_build.py
         DESTINATION libexec/bde-tools/bin
         COMPONENT bde-tools)
 
-include(CTest)
-if(BUILD_TESTING)
-  find_package(ModuleTestHelpers REQUIRED)
-
-  add_subdirectory(tests/MetadataTests)
-  add_subdirectory(tests/TargetUorTests)
-endif()
-
 # bde-tools
 # keep pylibinit when removing old bde-tools install rules(!)
 install(PROGRAMS bin/bde_build_env.py
