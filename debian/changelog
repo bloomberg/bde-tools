@@ -1,11 +1,25 @@
-bde-tools (3.107.0.0) unstable; urgency=low
+bde-tools (3.109.0.0) unstable; urgency=low
 
+  * e8bfbc2 Add missing "'s (#255)
+  * d9e4125 Change the flag to set group writable bit (#254)
+  * e6a5de3 Add bbs_make_vscode, fix test labels (#253)
+  * 83140ff Add NO_EMIT_PKG_CONFIG_FILE flag (#251)
+  * a83405a Bde build system v2 ( aka BBS ) (#246)
+  * 45383a6 Update _WIN32_WINNT version macros for C and C++ flags to 0x600 (#249)
+  * 07a553a add _WIN32_WINNT version macro to C flags (#247)
+  * 9a402f5 cmake_build.py default umask to 002 (#245)
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 29 Sep 2022 12:59:26 -0400
+
+bde-tools (3.107.0.0) git; urgency=low
+
+  * 9932ac5 Changelog for version 3.107.0.0
   * 688cf29 Rename bde_input_limiter.py->.pl (#244)
   * b0033b6 Limit wafstyleout.py to 5000 lines each of out/err (#243)
   * e81de12 Handle all bytes in bde input limiter.py drqs170140938 (#242)
   * 72c3d36 Better vscode ctest stuport (#241)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 24 Aug 2022 15:16:47 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 25 Aug 2022 15:10:49 -0400
 
 bde-tools (3.106.0.0) git; urgency=low
 
