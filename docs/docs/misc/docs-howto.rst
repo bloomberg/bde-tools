@@ -80,8 +80,8 @@ is your UNIX login ):
 
 
 When you are happy with the content and the rendering of the site, create a
-Pull Request to the master repository. BDE documentation site will be updated
-on the regular basis to reflect changes.
+Pull Request to the main repository.  The BDE documentation site will be
+updated on the regular basis to reflect changes.
 
 Deactivate Sphinx virtualenv
 ----------------------------

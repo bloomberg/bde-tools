@@ -169,8 +169,8 @@ used the fuzz data only for the string but not for the limit.
 
 BDE Fuzz Components
 -------------------
-The components `bslim_fuzzdataview <https://bbgithub.dev.bloomberg.com/bde/bde/blob/master/groups/bsl/bslim/bslim_fuzzdataview.h>`__
-and `bslim_fuzzutil <https://bbgithub.dev.bloomberg.com/bde/bde/blob/master/groups/bsl/bslim/bslim_fuzzutil.h>`__
+The components `bslim_fuzzdataview <https://bbgithub.dev.bloomberg.com/bde/bde/blob/main/groups/bsl/bslim/bslim_fuzzdataview.h>`__
+and `bslim_fuzzutil <https://bbgithub.dev.bloomberg.com/bde/bde/blob/main/groups/bsl/bslim/bslim_fuzzutil.h>`__
 can simplify the creation of function input from raw fuzz data.
 ``FuzzDataView`` provides a view to a non-modifiable buffer of fuzz data
 obtained from a fuzz testing harness such as LLVM's ``libFuzzer``. The

@@ -265,7 +265,7 @@ L<"set_default_category">.
 
 =item *
 
-Logging to a master logfile, controlled by L<"open_log"> and L<"close_log">.
+Logging to a main logfile, controlled by L<"open_log"> and L<"close_log">.
 
 In addition, L<"fatal"> is a special case of L<"error"> which logs an error
 and then dies. Optionally, it can also generate a backtrace.

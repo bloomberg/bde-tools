@@ -11,7 +11,7 @@
  * \section license License
  *
  * Apache License.  See license text in
- * <A HREF="https://github.com/bloomberg/bde/blob/master/LICENSE" target="_top">LICENSE</A>.
+ * <A HREF="https://github.com/bloomberg/bde/blob/main/LICENSE" target="_top">LICENSE</A>.
  */
 
  /* ---------------------------------------------------------------------------

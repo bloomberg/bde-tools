@@ -69,9 +69,9 @@ default is C<--no-inplace>.
 
 =head3 C<--verify-no-change>
 
-Verify that nothing has changed in the master file that would result in a
-change in generated code (including any generated code within the master file
-itself).  If any output (including the master file) would change, do not write
+Verify that nothing has changed in the main file that would result in a
+change in generated code (including any generated code within the main file
+itself).  If any output (including the main file) would change, do not write
 any output and abort with an error.
 
 =head3 C<--clean>
@@ -1961,8 +1961,8 @@ sub findCpp03RegionMarkers()
 
 # Transform the '$initialData' from annotated C++11 into C++03.  If the global
 # '$inplace' flag is false, then 'transformFile' is invoked twice, once to
-# update the file that will be compiled (the "master" file) and again to
-# generate the C++03 expansion (the "expansion" file), where the master file
+# update the file that will be compiled (the "main" file) and again to
+# generate the C++03 expansion (the "expansion" file), where the main file
 # #includes the expansion file.  The '$genMaster' flag is set when generating
 # the latter file; it should always be true if '$inplace' is true.  Returns
 # output of transformation.
@@ -2501,7 +2501,7 @@ sub writeMaster($$$$) {
             print INPUTDATA $originalFileData;
             close INPUTDATA;
 
-            # Dump test diff if new master doesn't match old master
+            # Dump test diff if new main doesn't match old main
             system("diff -c TEST $outputFilename");
         }
     }
@@ -2598,7 +2598,7 @@ sub processFile($$)
     my ($prologue, $unexpandedCode, $epilogue, $includesBslCompilerfeatures) =
         segmentFiledata($fileData);
 
-    # Generate the master file.  If there are no sections to expand, returns
+    # Generate the main file.  If there are no sections to expand, returns
     # an empty string.
     my $output = transformFile($unexpandedCode, 1);
 
@@ -2614,7 +2614,7 @@ sub processFile($$)
                     $prologue.$output.$epilogue);
     }
     else {
-        # Write master file with boilerplate surrounding the expanded code.
+        # Write main file with boilerplate surrounding the expanded code.
         my ($boilerBeg, $boilerEnd) = filenameToBoilerplate($outputFilename);
 
         $prologue .= "#include <bsls_compilerfeatures.h>\n\n"
@@ -2629,7 +2629,7 @@ sub processFile($$)
         # file extension.
         $outputFilename =~ s{([^.])(\.[^/\\]*)?$}{$1_cpp03$2};
 
-        # Take the recently-generated master file and use as input
+        # Take the recently-generated main file and use as input
         # to a second call to 'transformFile' to generate the expansion.
         if ($output) {
             $output = transformFile($output, 0);

@@ -290,9 +290,9 @@ comment.
 
 For example:
 
-* the ``mem`` file for the ``bsl`` group `bsl.mem <https://github.com/bloomberg/bde/blob/master/groups/bsl/group/bsl.mem>`_
+* the ``mem`` file for the ``bsl`` group `bsl.mem <https://github.com/bloomberg/bde/blob/main/groups/bsl/group/bsl.mem>`_
 
-* the ``mem`` file for the ``bslma`` package `bslma.mem <https://github.com/bloomberg/bde/blob/master/groups/bsl/bslma/package/bslma.mem>`_
+* the ``mem`` file for the ``bslma`` package `bslma.mem <https://github.com/bloomberg/bde/blob/main/groups/bsl/bslma/package/bslma.mem>`_
 
 .. index::
    single: dep file
@@ -317,9 +317,9 @@ as a comment.
 
 For example:
 
-* The ``dep`` file for the ``bdl`` group `bdl.dep <https://github.com/bloomberg/bde/blob/master/groups/bdl/group/bdl.dep>`_
+* The ``dep`` file for the ``bdl`` group `bdl.dep <https://github.com/bloomberg/bde/blob/main/groups/bdl/group/bdl.dep>`_
 
-* The ``dep`` file for the ``bslma`` package `bslma.dep <https://github.com/bloomberg/bde/blob/master/groups/bsl/bslma/package/bslma.dep>`_
+* The ``dep`` file for the ``bslma`` package `bslma.dep <https://github.com/bloomberg/bde/blob/main/groups/bsl/bslma/package/bslma.dep>`_
 
 .. _bde_repo-options_format:
 

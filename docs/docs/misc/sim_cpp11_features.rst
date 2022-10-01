@@ -80,9 +80,9 @@ default is \ ``--no-inplace``\ .
 --------------------------
 
 
-Verify that nothing has changed in the master file that would result in a
-change in generated code (including any generated code within the master file
-itself).  If any output (including the master file) would change, do not write
+Verify that nothing has changed in the main file that would result in a
+change in generated code (including any generated code within the main file
+itself).  If any output (including the main file) would change, do not write
 any output and abort with an error.
 
 

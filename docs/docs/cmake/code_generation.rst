@@ -20,7 +20,7 @@ done to simulate variadic templates for code being built with a C++03 compiler
 automatically as part of the configuration of a project (see `User Interaction`_
 below). The code generation step generates code into the source tree of the
 repository, which differs from how many CMake projects are structured. This
-code is checked into our repositories, both for release labels and our master
+code is checked into our repositories, both for release labels and our main
 branch.
 
 We generate the code in the source tree for 2 principal reasons:
