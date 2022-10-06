@@ -11,15 +11,23 @@ def get_args_parser():
     """
 
     usage = """
-eval $(bbs_build_env.py [options] [command]
+eval `bbs_build_env.py [options] [command]`
 
 set  : set environment variables (default)
 unset: unset environment variables
-
 list : list available toolchains in the following order:
     1. Toolchains found in the user configuration file ($HOME/.bdecompilerconfig)
     2. Toolchains found in the system configuration file ($BDE_ROOT/etc/bdecompilerconfig)
     3. gcc and clang compilers detected on $PATH
+
+For example:
+eval `bbs_build_env.py -u dbg_exc_mt_64_cpp20`   # set the environment
+                                                 # (debug, 64-bit, C++20 build)
+
+eval `bbs_build_env.py unset`                    # unset the environment
+
+bbs_build_env.py list                            # list available compilers
+
 """
 
     parser = argparse.ArgumentParser(usage=usage)
@@ -55,7 +63,7 @@ list : list available toolchains in the following order:
                 "type": str,
                 "default": "dbg",
                 "help": "the Unified Platform ID (UFID) identifying the build "
-                "configuration (default: %(default)s). "
+                "configuration (default: %(default)s)."
             }
         ),
     ]
