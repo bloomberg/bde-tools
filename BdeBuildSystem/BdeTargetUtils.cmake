@@ -28,17 +28,18 @@ endif()
 
 option(BBS_USE_WAFSTYLEOUT "Use waf-style output wrapper" OFF)
 if (BBS_USE_WAFSTYLEOUT)
-    find_package(Python3 REQUIRED)
+    find_file(WAF_STYLE_OUT
+              "wafstyleout.py"
+              PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
+              )
 
-    find_program(WAF_STYLE_OUT
-                 "wafstyleout.py"
-                 PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
-                )
     if(WAF_STYLE_OUT)
+        find_package(Python3 3.6 REQUIRED)
+
         # The compiler/linker launchers need a string
         set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${Python3_EXECUTABLE} ${WAF_STYLE_OUT}")
         set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${Python3_EXECUTABLE} ${WAF_STYLE_OUT}")
-        # Generic waf wrapper ( for test and sim_cpp11 and other scripts ) need a list
+        # Generic waf wrapper (for compilation and tests) needs a list
         set_property(GLOBAL PROPERTY BBS_CMD_WRAPPER "${Python3_EXECUTABLE}" "${WAF_STYLE_OUT}")
     else()
         message(FATAL_ERROR "waf style wrapper is not found")

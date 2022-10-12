@@ -5,14 +5,21 @@ project(bde-tools NONE)
 # bbs-tools 
 install(DIRECTORY BdeBuildSystem
         DESTINATION share/cmake
-        COMPONENT bbs-cmake-module
-        PATTERN "sim_cpp11_features.pl|bbs_runtest.py|wafstyleout.py" 
-            PERMISSIONS OWNER_READ OWNER_EXECUTE
-                        GROUP_READ GROUP_EXECUTE
-                        WORLD_READ WORLD_EXECUTE)
+        COMPONENT bbs-cmake-module)
 
-install(PROGRAMS bin/bbs_build.py
-                 bin/bbs_build_env.py
+install(PROGRAMS BdeBuildSystem/scripts/sim_cpp11_features.pl
+        DESTINATION share/cmake/BdeBuildSystem/scripts
+        COMPONENT bbs-cmake-module)
+
+# bbs shell wrappers
+install(PROGRAMS bin/bbs_build
+                 bin/bbs_build_env
+        DESTINATION libexec/bde-tools/bin
+        COMPONENT bde-tools)
+
+# bbs tools implementation
+install(FILES bin/bbs_build.py
+              bin/bbs_build_env.py
         DESTINATION libexec/bde-tools/bin
         COMPONENT bde-tools)
 

@@ -1,20 +1,21 @@
 include_guard()
 
-find_package(Python3 REQUIRED)
-find_program(BBS_RUNTEST bbs_runtest.py
-                 PATHS "${CMAKE_CURRENT_LIST_DIR}/scripts/")
+# On windows we will invoke the python script directly
+# On unix - the shell wrapper will find the interperter and 
+# invoke the implementation file.
+find_file(BBS_RUNTEST bbs_runtest.py
+             PATHS "${CMAKE_CURRENT_LIST_DIR}/scripts/")
 
 if (NOT BBS_RUNTEST)
-    message(FATAL_ERROR "Failed to find bbs_runtest.py")
+    message(FATAL_ERROR "Failed to find bbs_runtest")
 endif()
+
+find_package(Python3 3.6 REQUIRED)
+set(BBS_RUNTEST ${Python3_EXECUTABLE} ${BBS_RUNTEST})
 
 if (BBS_USE_WAFSTYLEOUT)
     get_property(cmd_wrapper GLOBAL PROPERTY BBS_CMD_WRAPPER)
     set(BBS_RUNTEST ${cmd_wrapper} ${BBS_RUNTEST})
-endif()
-
-if (WIN32)
-    set(BBS_RUNTEST ${Python3_EXECUTABLE} ${BBS_RUNTEST})
 endif()
 
 # bbs_add_bde_style_test(target
@@ -40,13 +41,8 @@ function(bbs_add_bde_style_test target)
         set(_TEST_VERBOSITY 0)
     endif()
 
-    set(test_runner ${BBS_RUNTEST})
-    if (WIN32)
-        set(test_runner ${Python3_EXECUTABLE} ${BBS_RUNTEST})
-    endif()
-
     add_test(NAME ${target}
-             COMMAND ${test_runner} -v ${_TEST_VERBOSITY} ${_EXTRA_ARGS} $<TARGET_FILE:${target}>
+             COMMAND ${BBS_RUNTEST} -v ${_TEST_VERBOSITY} ${_EXTRA_ARGS} $<TARGET_FILE:${target}>
              WORKING_DIRECTORY ${_WORKING_DIRECTORY})
 
     foreach (label ${_LABELS})

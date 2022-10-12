@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.8
-
 import subprocess
 import sys
 import os

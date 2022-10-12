@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.8
-
 from pylibinit import addlibpath
 
 addlibpath.add_lib_path()

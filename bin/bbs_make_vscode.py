@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-
 import os
 import subprocess
 import sys
-
 
 def quotedCMakeArgValue(value):
     if value in ["0", "OFF", "NO", "FALSE", "N"]:
@@ -20,7 +17,7 @@ bdeToolsDir = os.getenv("BDE_TOOLS_DIR")
 if not bdeToolsDir:
     try:
         whichBuildEnv = subprocess.run(
-            ["which", "bbs_build.py"], stdout=subprocess.PIPE, text=True
+            ["which", "bbs_build"], stdout=subprocess.PIPE, text=True
         ).stdout
         bdeToolsDir = os.path.dirname(os.path.dirname(whichBuildEnv))
     except:
@@ -29,7 +26,7 @@ if not bdeToolsDir:
 bdeCmakeBuildDir = os.getenv("BDE_CMAKE_BUILD_DIR")
 
 if not bdeCmakeBuildDir:
-    print("Please set the BBS build environment using 'bbs_build_env.py'.")
+    print("Please set the BBS build environment using 'bbs_build_env'.")
     sys.exit(1)
 
 bdeCmakeBuildDir = (
@@ -40,7 +37,7 @@ bdeCmakeBuildDir = (
 # Parse CMake flags
 cmake_flags_list = subprocess.run(
     [
-        os.path.join(bdeToolsDir, "bin", "bbs_build.py"),
+        os.path.join(bdeToolsDir, "bin", "bbs_build"),
         "configure",
         "--dump-cmake-flags",
     ],

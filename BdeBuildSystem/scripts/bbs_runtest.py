@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.8
-
 from runtest import main
 
 if __name__ == "__main__":
