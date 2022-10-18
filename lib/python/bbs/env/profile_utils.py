@@ -454,19 +454,19 @@ def get_build_profiles():
 
         prod_profiles = get_production_profiles(uplid)
 
-        config_path = get_user_profile_path()
-        user_profiles = []
-        if config_path:
-            with open(config_path, "r") as f:
-                user_profiles = get_config_profiles(uplid, f)
-
         config_path = get_system_profile_path()
         system_profiles = []
         if config_path:
             with open(config_path, "r") as f:
                 system_profiles = get_config_profiles(uplid, f)
 
-        return prod_profiles + user_profiles + system_profiles + detect_installed_compilers(uplid)
+        config_path = get_user_profile_path()
+        user_profiles = []
+        if config_path:
+            with open(config_path, "r") as f:
+                user_profiles = get_config_profiles(uplid, f)
+
+        return prod_profiles + system_profiles + detect_installed_compilers(uplid) + user_profiles 
     else:
         build_profiles = []
         for v in msvcversions.versions:
