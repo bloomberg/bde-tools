@@ -1,5 +1,16 @@
-bde-tools (3.109.0.0) unstable; urgency=low
+bde-tools (3.110.0.0) unstable; urgency=low
 
+  * b5d2504 Add gcc BBS toolchains on Darwin (#259)
+  * fb9d4cd Add multi-version python shebang (#257)
+  * 7bad031 Adjust usage documentation for bbs_build_env (#258)
+  * 96a446e DRQS 170435960: Switch from master to main (#252)
+  * 9d33bcc Temporarily remove tests to unblock the promotion (#256)
+
+ -- osubbotin <osubbotin@bloomberg.net>  Thu, 20 Oct 2022 11:35:27 -0400
+
+bde-tools (3.109.0.0) git; urgency=low
+
+  * 0fc355f Changelog for version 3.109.0.0
   * e8bfbc2 Add missing "'s (#255)
   * d9e4125 Change the flag to set group writable bit (#254)
   * e6a5de3 Add bbs_make_vscode, fix test labels (#253)
@@ -9,7 +20,7 @@ bde-tools (3.109.0.0) unstable; urgency=low
   * 07a553a add _WIN32_WINNT version macro to C flags (#247)
   * 9a402f5 cmake_build.py default umask to 002 (#245)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 29 Sep 2022 12:59:26 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 29 Sep 2022 14:46:41 -0400
 
 bde-tools (3.107.0.0) git; urgency=low
 
