@@ -17,11 +17,12 @@ Package: bde-tools
 Architecture: all
 Depends: 
     cmake,
+    coreutils,
     make,
     ninja,
     python3.8
 Description: BDE Build Tools
- Old tools to build BDE-style repositories, including the BDE libraries.
+ Tools to build BDE-style repositories.
 
 Package: bde-gdb-printers
 Architecture: all
