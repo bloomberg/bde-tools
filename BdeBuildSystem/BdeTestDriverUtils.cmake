@@ -55,7 +55,7 @@ endfunction()
 #                         [ TEST_VERBOSITY         verbosity      ]
 #                         [ EXTRA_ARGS             test_arg   ... ]
 #                         [ PROPERTIES             prop value ... ]
-#                         [ TEST_PCDEPS            lib1 lib2  ... ]
+#                         [ TEST_DEPS              lib1 lib2  ... ]
 #                         [ TEST_TARGET_PROPERTIES prop value ... ]
 #                        )
 function(bbs_add_component_tests target)
@@ -63,7 +63,7 @@ function(bbs_add_component_tests target)
                           ""
                           ""
                           "TEST_VERBOSITY;TEST_REGEX"
-                          "EXTRA_ARGS;LABELS;SOURCES;TEST_PCDEPS")
+                          "EXTRA_ARGS;LABELS;SOURCES;TEST_DEPS")
     bbs_assert_no_unparsed_args("")
 
     if (NOT _SOURCES)
@@ -86,7 +86,7 @@ function(bbs_add_component_tests target)
         get_filename_component(test_target_name ${test_target_name} NAME_WLE)
         add_executable(${test_target_name}.t EXCLUDE_FROM_ALL ${test_src})
 
-        target_link_libraries(${test_target_name}.t PUBLIC ${target} ${_TEST_PCDEPS})
+        target_link_libraries(${test_target_name}.t PUBLIC ${target} ${_TEST_DEPS})
 
         set(test_src_labels ${test_name})
         if (NOT test_name STREQUAL test_target_name)

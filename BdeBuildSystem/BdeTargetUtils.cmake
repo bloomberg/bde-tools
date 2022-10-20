@@ -115,7 +115,7 @@ function(bbs_configure_target_tests target)
     cmake_parse_arguments(""
                           ""
                           ""
-                          "SOURCES;TEST_PCDEPS;LABELS"
+                          "SOURCES;TEST_DEPS;LABELS"
                           ${ARGN})
     bbs_assert_no_unparsed_args("")
 
@@ -129,9 +129,9 @@ function(bbs_configure_target_tests target)
 
     if (_SOURCES)
         bbs_add_component_tests(${target}
-                                    SOURCES     ${_SOURCES}
-                                    TEST_PCDEPS ${_TEST_PCDEPS}
-                                    LABELS      ${_LABELS})
+                                    SOURCES   ${_SOURCES}
+                                    TEST_DEPS ${_TEST_DEPS}
+                                    LABELS    ${_LABELS})
         set(${target}_TEST_TARGETS "${${target}_TEST_TARGETS}" PARENT_SCOPE)
     endif()
 endfunction()
@@ -385,7 +385,6 @@ function(bbs_setup_target_uor target)
                     add_library(${pkg}-obj OBJECT ${${pkg}_SOURCE_FILES} ${${pkg}_INCLUDE_FILES})
                     set_target_properties(${pkg}-obj PROPERTIES LINKER_LANGUAGE CXX)
                     bbs_add_target_include_dirs(${pkg}-obj PUBLIC ${${pkg}_INCLUDE_DIRS})
-                    message(TRACE "Add ${${pkg}_INCLUDE_DIRS} to ${pkg}-obj")
                     target_link_libraries(${pkg}-obj PUBLIC bbs_bde_flags)
 
                     add_library(${pkg}-iface INTERFACE)
@@ -394,8 +393,15 @@ function(bbs_setup_target_uor target)
                     add_library(${pkg} STATIC)
                     target_link_libraries(${pkg} PUBLIC ${pkg}-obj)
 
-                    foreach(p ${${pkg}_PCDEPS})
+                    # Important: link with DEPENDS and not PCDEPS for packages
+                    # in a groups. For groups with underscores (z_bae) we do
+                    # not want to use pc-fied name like z-baelu.
+                    # For the group's dependencies (external) we use PCDEPS.
+                    # This is different from a standalone packages that can
+                    # have only external PC dependencies.
+                    foreach(p ${${pkg}_DEPENDS})
                         target_link_libraries(${pkg}-obj PUBLIC ${p}-iface)
+
                         target_link_libraries(${pkg} PUBLIC ${p})
                     endforeach()
 
@@ -409,12 +415,12 @@ function(bbs_setup_target_uor target)
 
                     if (NOT _SKIP_TESTS)
                         bbs_configure_target_tests(${pkg}
-                                                   SOURCES     ${${pkg}_TEST_SOURCES}
-                                                   TEST_PCDEPS ${${pkg}_PCDEPS}
-                                                               ${${pkg}_TEST_PCDEPS}
-                                                               ${${uor_name}_PCDEPS}
-                                                               ${${uor_name}_TEST_PCDEPS}
-                                                   LABELS      "all" ${target} ${pkg})
+                                                   SOURCES   ${${pkg}_TEST_SOURCES}
+                                                   TEST_DEPS ${${pkg}_DEPENDS}
+                                                             ${${pkg}_TEST_DEPENDS}
+                                                             ${${uor_name}_PCDEPS}
+                                                             ${${uor_name}_TEST_PCDEPS}
+                                                   LABELS    "all" ${target} ${pkg})
                     endif()
                 endif()
             endforeach()
@@ -449,10 +455,10 @@ function(bbs_setup_target_uor target)
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
             if (NOT _SKIP_TESTS)
                 bbs_configure_target_tests(${target}
-                                           SOURCES     ${${uor_name}_TEST_SOURCES}
-                                           TEST_PCDEPS ${${uor_name}_PCDEPS}
-                                                       ${${uor_name}_TEST_PCDEPS}
-                                           LABELS      "all" ${target})
+                                           SOURCES    ${${uor_name}_TEST_SOURCES}
+                                           TEST_DEPS  ${${uor_name}_PCDEPS}
+                                                      ${${uor_name}_TEST_PCDEPS}
+                                           LABELS     "all" ${target})
             endif()
         endif()
 
