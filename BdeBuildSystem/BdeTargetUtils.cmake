@@ -433,6 +433,7 @@ function(bbs_setup_target_uor target)
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
 
             if (NOT _SKIP_TESTS)
+                bbs_import_target_dependencies(${target} ${${uor_name}_TEST_PCDEPS})
                 if (NOT TARGET ${target}.t)
                     add_custom_target(${target}.t)
                 endif()
@@ -454,6 +455,7 @@ function(bbs_setup_target_uor target)
 
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
             if (NOT _SKIP_TESTS)
+                bbs_import_target_dependencies(${target} ${${uor_name}_TEST_PCDEPS})
                 bbs_configure_target_tests(${target}
                                            SOURCES    ${${uor_name}_TEST_SOURCES}
                                            TEST_DEPS  ${${uor_name}_PCDEPS}
