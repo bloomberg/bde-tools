@@ -27,6 +27,7 @@ install(FILES bin/bbs_build.py
 # keep pylibinit when removing old bde-tools install rules(!)
 install(PROGRAMS bin/bde_build_env.py
                  bin/bde_runtest.py
+                 bin/bde_input_limiter.pl
                  bin/cmake_build.py
         DESTINATION libexec/bde-tools/bin
         COMPONENT bde-tools)
