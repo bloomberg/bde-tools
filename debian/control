@@ -20,6 +20,7 @@ Depends:
     coreutils,
     make,
     ninja,
+    perl,
     python3.8
 Description: BDE Build Tools
  Tools to build BDE-style repositories.
