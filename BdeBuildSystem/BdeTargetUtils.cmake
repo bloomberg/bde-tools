@@ -516,8 +516,6 @@ function(bbs_setup_target_uor target)
         else()
             add_library(${lib_target} INTERFACE)
 
-            bbs_import_target_dependencies(${lib_target} "${${uor_name}_PCDEPS}")
-
             target_link_libraries(${lib_target} INTERFACE ${${uor_name}_PCDEPS})
             bbs_add_target_include_dirs(${lib_target} INTERFACE ${${uor_name}_INCLUDE_DIRS})
 
@@ -532,6 +530,8 @@ function(bbs_setup_target_uor target)
                 endif()
             endforeach()
         endif()
+
+        bbs_import_target_dependencies(${lib_target} "${${uor_name}_PCDEPS}")
 
         # Build the main source and link against the private library
         set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
