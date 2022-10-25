@@ -4,7 +4,7 @@ include_guard()
 # On unix - the shell wrapper will find the interperter and 
 # invoke the implementation file.
 find_file(BBS_RUNTEST bbs_runtest.py
-             PATHS "${CMAKE_CURRENT_LIST_DIR}/scripts/")
+          PATHS "${CMAKE_CURRENT_LIST_DIR}/scripts")
 
 if (NOT BBS_RUNTEST)
     message(FATAL_ERROR "Failed to find bbs_runtest")

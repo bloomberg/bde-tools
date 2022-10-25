@@ -69,16 +69,13 @@ function(_bbs_defer_target_import target)
     endforeach()
 
     if (_deferred_deps)
-        find_package(ImportPkgConfigTargets QUIET)
-
-        if (NOT ImportPkgConfigTargets_FOUND)
-            message(WARNING "ImportPkgConfigTargets module not found")
-            return()
+        if (NOT WIN32)
+            message(VERBOSE "Resolving required link libraries for ${target} : ${_deferred_deps}")
+            bbs_import_pkgconfig_targets(${_deferred_deps})
+            bbs_target_pkgconfig_in_path_order(${target})
+        else()
+            message(FATAL_ERROR "Unresolved external dependancies: ${_deferred_deps}")
         endif()
-
-        message(VERBOSE "Resolving required link libraries for ${target} : ${_deferred_deps}")
-        import_pkgconfig_targets(${_deferred_deps})
-        target_pkgconfig_in_path_order(${target})
     endif()
 endfunction()
 

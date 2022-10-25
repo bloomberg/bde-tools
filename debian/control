@@ -6,7 +6,6 @@ Build-Depends:
     bbtoolchain-cmake-debhelper,
     build-base,
     cmake-emit-pkgconfig-file,
-    cmake-import-pkgconfig-targets,
     cmake,
     make,
     ninja,
@@ -32,7 +31,6 @@ Description: GDB Pretty printers for Bloomberg components
 Package: bbs-cmake-module
 Architecture: all
 Depends:
-    cmake-emit-pkgconfig-file,
-    cmake-import-pkgconfig-targets
+    cmake-emit-pkgconfig-file
 Description: BdeBuildSystem CMake module
  CMake module to process metadata in BDE-style repositories.
