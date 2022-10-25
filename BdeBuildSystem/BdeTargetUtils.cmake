@@ -540,7 +540,11 @@ function(bbs_setup_target_uor target)
 
         # Set up tests and link against the private library
         if (NOT _SKIP_TESTS)
-            bbs_configure_target_tests(${lib_target})
+            bbs_configure_target_tests(${lib_target}
+                                       SOURCES    ${${uor_name}_TEST_SOURCES}
+                                       TEST_DEPS  ${${uor_name}_PCDEPS}
+                                                  ${${uor_name}_TEST_PCDEPS}
+                                       LABELS     "all" ${target})
         endif()
     else()
         # Not a library or an application
