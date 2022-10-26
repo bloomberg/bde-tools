@@ -489,17 +489,17 @@ function(bbs_setup_target_uor target)
 
         set(lib_target "${uor_name}_lib")
 
-        # Create an object or interface library that can be reused by both the
-        # executable and its test drivers. An object library must have sources and
+        # Create a static or interface library that can be reused by both the
+        # executable and its test drivers. An static library must have sources and
         # is used if this package contains component files, otherwise an interface
         # library is created.
         if (${uor_name}_SOURCE_FILES)
-            add_library(${lib_target} OBJECT)
+            add_library(${lib_target} STATIC)
 
             set_target_properties(${lib_target} PROPERTIES LINKER_LANGUAGE CXX)
-            target_sources(${lib_target} PRIVATE ${${uor_name}_SOURCE_FILES})
-            bbs_add_target_include_dirs(${lib_target} PUBLIC ${${uor_name}_INCLUDE_DIRS})
-            target_link_libraries(${lib_target} PUBLIC ${${uor_name}_PCDEPS})
+            target_sources(${lib_target} PRIVATE "${${uor_name}_SOURCE_FILES}")
+            bbs_add_target_include_dirs(${lib_target} PUBLIC "${${uor_name}_INCLUDE_DIRS}")
+            target_link_libraries(${lib_target} PUBLIC "${${uor_name}_PCDEPS}")
 
             # Copy properties from executable target to corresponding properties
             # of created ${lib_target} target. This will correctly set compiler/linker
@@ -516,8 +516,8 @@ function(bbs_setup_target_uor target)
         else()
             add_library(${lib_target} INTERFACE)
 
-            target_link_libraries(${lib_target} INTERFACE ${${uor_name}_PCDEPS})
-            bbs_add_target_include_dirs(${lib_target} INTERFACE ${${uor_name}_INCLUDE_DIRS})
+            target_link_libraries(${lib_target} INTERFACE "${${uor_name}_PCDEPS}")
+            bbs_add_target_include_dirs(${lib_target} INTERFACE "${${uor_name}_INCLUDE_DIRS}")
 
             # Copy properties from executable target to corresponding INTERFACE_* properties
             # of created ${lib_target} target. This will correctly set compiler/linker
@@ -545,6 +545,7 @@ function(bbs_setup_target_uor target)
                                        TEST_DEPS  ${${uor_name}_PCDEPS}
                                                   ${${uor_name}_TEST_PCDEPS}
                                        LABELS     "all" ${target})
+            bbs_import_target_dependencies(${lib_target} "${${uor_name}_TEST_PCDEPS}")
         endif()
     else()
         # Not a library or an application
