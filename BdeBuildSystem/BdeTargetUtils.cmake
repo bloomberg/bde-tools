@@ -417,6 +417,9 @@ function(bbs_setup_target_uor target)
                                                              ${${uor_name}_PCDEPS}
                                                              ${${uor_name}_TEST_PCDEPS}
                                                    LABELS    "all" ${target} ${pkg})
+                        if (${pkg}_TEST_TARGETS)
+                            bbs_import_target_dependencies(${target} ${${uor_name}_TEST_PCDEPS})
+                        endif()
                     endif()
                 endif()
             endforeach()
@@ -429,7 +432,6 @@ function(bbs_setup_target_uor target)
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
 
             if (NOT _SKIP_TESTS)
-                bbs_import_target_dependencies(${target} ${${uor_name}_TEST_PCDEPS})
                 if (NOT TARGET ${target}.t)
                     add_custom_target(${target}.t)
                 endif()
@@ -451,12 +453,14 @@ function(bbs_setup_target_uor target)
 
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
             if (NOT _SKIP_TESTS)
-                bbs_import_target_dependencies(${target} ${${uor_name}_TEST_PCDEPS})
                 bbs_configure_target_tests(${target}
                                            SOURCES    ${${uor_name}_TEST_SOURCES}
                                            TEST_DEPS  ${${uor_name}_PCDEPS}
                                                       ${${uor_name}_TEST_PCDEPS}
                                            LABELS     "all" ${target})
+                if (${target}_TEST_TARGETS)
+                    bbs_import_target_dependencies(${target} ${${uor_name}_TEST_PCDEPS})
+                endif()
             endif()
         endif()
 
@@ -544,7 +548,9 @@ function(bbs_setup_target_uor target)
                                        TEST_DEPS  ${${uor_name}_PCDEPS}
                                                   ${${uor_name}_TEST_PCDEPS}
                                        LABELS     "all" ${target})
-            bbs_import_target_dependencies(${lib_target} "${${uor_name}_TEST_PCDEPS}")
+            if (${lib_target}_TEST_TARGETS)
+                bbs_import_target_dependencies(${lib_target} ${${uor_name}_TEST_PCDEPS})
+            endif()
         endif()
     else()
         # Not a library or an application
