@@ -8,7 +8,6 @@ install(DIRECTORY BdeBuildSystem
         COMPONENT bbs-cmake-module)
 
 install(PROGRAMS BdeBuildSystem/scripts/sim_cpp11_features.pl
-                 BdeBuildSystem/scripts/pkgconfig_in_path_order.pl
         DESTINATION share/cmake/BdeBuildSystem/scripts
         COMPONENT bbs-cmake-module)
 

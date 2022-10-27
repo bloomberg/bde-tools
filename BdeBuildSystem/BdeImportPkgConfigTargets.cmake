@@ -215,33 +215,6 @@ function( _bbs_pcimport_get_pcfile pkgname result pkgcallchain )
 endfunction()
 
 #
-# Reorder the link libraries grouped by pkg-config paths
-#
-function ( bbs_target_pkgconfig_in_path_order target )
-  get_property( library_list TARGET ${target} PROPERTY LINK_LIBRARIES )
-  set( script "pkgconfig_in_path_order.pl" )
-  find_program( PKG_CONFIG_IN_PATH_ORDER ${script}
-                PATHS ${BdeBuildSystem_DIR}/scripts )
-  if ( NOT PKG_CONFIG_IN_PATH_ORDER )
-    message( FATAL_ERROR "Failed to find ${script}" )
-  endif()
-  execute_process(
-    COMMAND ${PKG_CONFIG_IN_PATH_ORDER} ${library_list}
-    RESULT_VARIABLE result_var
-    OUTPUT_VARIABLE reordered_list
-    ERROR_VARIABLE error_var
-    OUTPUT_STRIP_TRAILING_WHITESPACE )
-  if( result_var EQUAL 0 )
-    set_property( TARGET ${target} PROPERTY LINK_LIBRARIES ${reordered_list} )
-  else()
-    message( WARNING "Failed to run ${script}: ${result_var}" )
-  endif()
-  if( error_var )
-    message( WARNING "stderr output when running ${script}: ${error_var}" )
-  endif()
-endfunction()
-
-#
 # Extract the Libs, Cflags and Require lines from the given pcfile into the resultlists
 #
 macro( _bbs_pcimport_get_flags_from_pcfile pkgname pcfile libs-resultlist cflags-resultlist required-resultlist version-result )
@@ -329,13 +302,16 @@ endmacro()
 #   - [optional] ${targetname}_location
 #
 macro( _bbs_pcimport_deduce_libs targetname libflags )
+
+  set (_bbs_static_blacklist "-ldl;-lrt;-lpthread")
+
   #split the flags into dirs, libraries and other flags
   set(${targetname}_libdirs "")
   set(${targetname}_misclinklibs "")
   foreach( ${targetname}_libflag ${${libflags}} )
     if( ${targetname}_libflag MATCHES "^-L(.+)$" )
       list( APPEND ${targetname}_libdirs $ENV{PKG_CONFIG_SYSROOT_DIR}${CMAKE_MATCH_1} )
-    elseif( ${targetname}_libflag MATCHES "^-l(.+)$" )
+    elseif( ${targetname}_libflag MATCHES "^-l(.+)$" AND NOT ${targetname}_libflag IN_LIST _bbs_static_blacklist )
       list( APPEND ${targetname}_libs ${CMAKE_MATCH_1} )
     elseif( ${targetname}_libflag MATCHES "^-(.+)$" )
       # add miscellaneous flags to the link line for the target
