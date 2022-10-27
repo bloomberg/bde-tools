@@ -73,7 +73,7 @@ with open(".vscode/settings.json", "wt") as settings:
     settings.write(
         f"""
 {{
-    "cmake.configureOnOpen": false,
+    "cmake.configureOnOpen": true,
     "cmake.buildDirectory": "${{workspaceFolder}}/{bdeCmakeBuildDir}",
     "cmake.generator": "Ninja",
     "cmake.parallelJobs": 0,
@@ -85,7 +85,11 @@ with open(".vscode/settings.json", "wt") as settings:
     "files.associations": {{
         "*.ipp": "cpp"
     }},
-    "terminal.integrated.defaultProfile.linux": "bash"
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "files.exclude": {{
+        "**/.git": true,
+        "**/_build": true
+    }}
 }}
 """
     )
