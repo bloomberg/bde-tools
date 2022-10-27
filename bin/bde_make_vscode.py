@@ -49,7 +49,7 @@ with open(".vscode/settings.json", "wt") as settings:
         "BUILD_BITNESS": "64",
         "UFID": "{bdeCmakeUfid}"
     }},
-    "cmake.ctestArgs": ["-L", "${{command:cmake.buildTargetName}}"],
+    "cmake.ctestArgs": ["-L", "^${{command:cmake.buildTargetName}}$"],
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {{
         "*.ipp": "cpp"

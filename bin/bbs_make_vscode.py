@@ -80,7 +80,7 @@ with open(".vscode/settings.json", "wt") as settings:
     "cmake.configureSettings": {{
 {cmake_flags_string}
     }},
-    "cmake.ctestArgs": ["-L", "${{command:cmake.buildTargetName}}"],
+    "cmake.ctestArgs": ["-L", "^${{command:cmake.buildTargetName}}$"],
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {{
         "*.ipp": "cpp"
