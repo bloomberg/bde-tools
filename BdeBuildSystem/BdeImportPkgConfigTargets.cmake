@@ -64,9 +64,15 @@ macro( _bbs_pcimport_initialize )
   set( PKG_CONFIG_INSTALLATION_NAMES ${installation_names} CACHE STRING "Which pkg-config installations to use")
 endmacro()
 
-_bbs_pcimport_initialize()
+if( NOT WIN32)
+  _bbs_pcimport_initialize()
+endif()
 
 function( bbs_import_pkgconfig_targets )
+  if (WIN32)
+    message(STATUS "Skipping pkg-config dependency resolution")
+  endif()
+
   _bbs_import_pkgconfig_targets( "${ARGV}" "" )
   if ( TARGET peutil )
      # WORKAROUND: Generally it's not a good idea to hardcode specific
