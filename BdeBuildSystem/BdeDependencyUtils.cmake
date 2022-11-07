@@ -12,14 +12,15 @@ function(_bbs_import_threads)
 
     # add OS specific compilation definitions for multithreaded code
     if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
-        set_property(TARGET bbs_threads 
-                     APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS 
-                        _POSIX_PTHREAD_SEMANTICS
-                        _REENTRANT)
+        target_compile_definitions(bbs_threads
+            INTERFACE
+                _POSIX_PTHREAD_SEMANTICS
+                _REENTRANT)
     elseif(CMAKE_SYSTEM_NAME STREQUAL "AIX")
         target_compile_definitions(
             bbs_threads
             INTERFACE
+                _POSIX_PTHREAD_SEMANTICS
                 _REENTRANT
                 _THREAD_SAFE
                 __VACPP_MULTI__)
@@ -38,6 +39,11 @@ function(_bbs_import_bsl_rt)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "SunPro")
         target_link_libraries(bbs_bsl_rt INTERFACE -lrt)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "XL")
+        target_compile_definitions(
+            bbs_bsl_rt
+            INTERFACE 
+                __NOLOCK_ON_INPUT
+                __NOLOCK_ON_OUTPUT)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
             target_link_libraries(bbs_bsl_rt INTERFACE -lrt)
