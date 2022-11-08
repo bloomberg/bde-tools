@@ -100,12 +100,12 @@ class _Worker(threading.Thread):
 
     def _get_limited_test_run_cmd(self):
         """Get string of command and arguments for current test case, piping
-        the output to 'bde_input_limiter.py' to limit it to 5000 lines.
+        the output to 'bbs_input_limiter.pl' to limit it to 5000 lines.
         """
         limiter_command = (
             os.path.dirname(os.path.realpath(sys.argv[0]))
             + os.sep
-            + "bde_input_limiter.py"
+            + "bbs_input_limiter.pl"
         )
 
         cmd = self._get_full_test_run_cmd()
