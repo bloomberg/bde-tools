@@ -1,27 +1,37 @@
 import os
 import subprocess
 import sys
+import shutil
+import pathlib
+from string import Template
+
 
 def quotedCMakeArgValue(value):
     if value in ["0", "OFF", "NO", "FALSE", "N"]:
         return "false"
     if value in ["1", "ON", "YES", "TRUE", "Y"]:
         return "true"
-    return f'"{value}"'
+    return '"{}"'.format(value.replace("\\", "/"))
 
 
-# If BDE_TOOLS_DIR is not specified, try finding it via 'which' and default
-# to '/bb/bde/bbshr/bde-tools'
-bdeToolsDir = os.getenv("BDE_TOOLS_DIR")
+binDir = pathlib.Path(__file__).parent
+bdeToolsDir = binDir.parent
 
-if not bdeToolsDir:
-    try:
-        whichBuildEnv = subprocess.run(
-            ["which", "bbs_build"], stdout=subprocess.PIPE, text=True
-        ).stdout
-        bdeToolsDir = os.path.dirname(os.path.dirname(whichBuildEnv))
-    except:
-        bdeToolsDir = "/bb/bde/bbshr/bde-tools"
+isGitBash = shutil.which("cygpath") is not None
+
+if not isGitBash:
+    bbsBuildExecutable = [binDir / "bbs_build"]
+else:
+    # Use the same interpreter that is interpreting this script to run the
+    # 'bbs_build_env.py' using its Windows path (as opposed to its cygwin path)
+    bbsBuildExecutable = [
+        sys.executable,
+        subprocess.run(
+            ["cygpath", "-w", binDir / "bbs_build.py"],
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.strip(),
+    ]
 
 bdeCmakeBuildDir = os.getenv("BDE_CMAKE_BUILD_DIR")
 
@@ -35,17 +45,17 @@ bdeCmakeBuildDir = (
 )
 
 # Parse CMake flags
-cmake_flags_list = subprocess.run(
+cmakeFlagsList = subprocess.run(
     [
-        os.path.join(bdeToolsDir, "bin", "bbs_build"),
+        *bbsBuildExecutable,
         "configure",
         "--dump-cmake-flags",
     ],
     capture_output=True,
 ).stdout.decode()
 
-cmake_flags = {}
-for arg in cmake_flags_list.split():
+cmakeFlags = {}
+for arg in cmakeFlagsList.split():
     key, value = arg.split("=")
 
     # Remove -D and the type
@@ -54,12 +64,12 @@ for arg in cmake_flags_list.split():
     if key == "CMAKE_BUILD_TYPE":
         continue
 
-    cmake_flags[key] = value
+    cmakeFlags[key] = value
 
-cmake_flags_string = ",\n".join(
+cmakeFlagsString = ",\n".join(
     (
         f'        "{key}": {quotedCMakeArgValue(value)}'
-        for key, value in cmake_flags.items()
+        for key, value in cmakeFlags.items()
     )
 )
 
@@ -69,115 +79,34 @@ print(f"  Build directory:     {bdeCmakeBuildDir}")
 
 os.makedirs(".vscode", exist_ok=True)
 
-with open(".vscode/settings.json", "wt") as settings:
-    settings.write(
-        f"""
-{{
-    "cmake.configureOnOpen": true,
-    "cmake.buildDirectory": "${{workspaceFolder}}/{bdeCmakeBuildDir}",
-    "cmake.generator": "Ninja",
-    "cmake.parallelJobs": 0,
-    "cmake.configureSettings": {{
-{cmake_flags_string}
-    }},
-    "cmake.ctestArgs": ["-L", "^${{command:cmake.buildTargetName}}$"],
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "files.associations": {{
-        "*.ipp": "cpp"
-    }},
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "files.exclude": {{
-        "**/.git": true,
-        "**/_build": true
-    }}
-}}
-"""
-    )
+templatesPath = binDir / "vscode_templates"
 
-with open(".vscode/c_cpp_properties.json", "wt") as settings:
-    settings.write(
-        f"""
-{{
-    "configurations": [
-        {{
-            "name": "CMake",
-            "configurationProvider": "ms-vscode.cmake-tools"
-        }}
-    ],
-    "version": 4
-}}
-"""
+# settings.json
+settingsTemplate = Template((templatesPath / "settings.json.in").read_text())
+pathlib.Path(".vscode/settings.json").write_text(
+    settingsTemplate.substitute(
+        buildDir=bdeCmakeBuildDir, cmakeFlags=cmakeFlagsString
     )
+)
 
-with open(".vscode/launch.json", "wt") as settings:
-    settings.write(
-        f"""
-{{
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {{
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${{command:cmake.launchTargetPath}}",
-            "args": ["${{input:args}}"],
-            "stopAtEntry": true,
-            "cwd": "${{command:cmake.getLaunchTargetDirectory}}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {{
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }}
-            ]
-        }},
-        {{
-            "name": "(UDB) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${{command:cmake.launchTargetPath}}",
-            "args": ["${{input:args}}"],
-            "stopAtEntry": true,
-            "cwd": "${{command:cmake.getLaunchTargetDirectory}}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {{
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }}
-            ],
-            "miDebuggerPath": "udb",
-            "miDebuggerArgs": "--max-event-log-size 4G",
-            "logging": {{
-                "trace": false,
-                "traceResponse": false,
-                "engineLogging": false
-            }},
-            "udb": "live",
-            "timezone": ""
-        }},
-    ],
-    "inputs": [
-        {{
-            "id": "args",
-            "type":"promptString",
-            "description": "Program Args",
-            "default": "0"
-        }}
-    ]
-}}
-"""
+# c_cpp_properties.json
+shutil.copy(templatesPath / "c_cpp_properties.json", ".vscode")
+
+# launch.json
+if not isGitBash:
+    launchConfigs = ",\n".join(
+        [
+            (templatesPath / "gdb_launch.json").read_text(),
+            (templatesPath / "udb_launch.json").read_text(),
+        ]
     )
+else:
+    launchConfigs = (templatesPath / "cppvsdbg_launch.json").read_text()
 
+launchTemplate = Template((templatesPath / "launch.json.in").read_text())
+pathlib.Path(".vscode/launch.json").write_text(
+    launchTemplate.substitute(launchConfigs=launchConfigs)
+)
 
 # -----------------------------------------------------------------------------
 # Copyright 2022 Bloomberg Finance L.P.
