@@ -13,6 +13,8 @@ def quotedCMakeArgValue(value):
         return "true"
     return '"{}"'.format(value.replace("\\", "/"))
 
+def removeBuildType(ufid: str):
+    return "_".join([x for x in ufid.split("_") if not x in ["opt", "dbg"]])
 
 binDir = pathlib.Path(__file__).parent
 bdeToolsDir = binDir.parent
@@ -33,16 +35,14 @@ else:
         ).stdout.strip(),
     ]
 
-bdeCmakeBuildDir = os.getenv("BDE_CMAKE_BUILD_DIR")
+uplid = os.getenv("BDE_CMAKE_UPLID")
+ufid = os.getenv("BDE_CMAKE_UFID")
 
-if not bdeCmakeBuildDir:
+if not uplid or not ufid:
     print("Please set the BBS build environment using 'bbs_build_env'.")
     sys.exit(1)
 
-bdeCmakeBuildDir = (
-    bdeCmakeBuildDir.replace("opt_", "").replace("dbg_", "")
-    + "-vscode-${buildType}"
-)
+buildDir = f"_build/{uplid}-{removeBuildType(ufid)}-vscode-${{buildType}}"
 
 # Parse CMake flags
 cmakeFlagsList = subprocess.run(
@@ -75,7 +75,7 @@ cmakeFlagsString = ",\n".join(
 
 print(f"Generating .vscode folder...")
 print(f"  BDE tools directory: {bdeToolsDir}")
-print(f"  Build directory:     {bdeCmakeBuildDir}")
+print(f"  Build directory:     {buildDir}")
 
 os.makedirs(".vscode", exist_ok=True)
 
@@ -85,7 +85,7 @@ templatesPath = binDir / "vscode_templates"
 settingsTemplate = Template((templatesPath / "settings.json.in").read_text())
 pathlib.Path(".vscode/settings.json").write_text(
     settingsTemplate.substitute(
-        buildDir=bdeCmakeBuildDir, cmakeFlags=cmakeFlagsString
+        buildDir=buildDir, cmakeFlags=cmakeFlagsString
     )
 )
 
