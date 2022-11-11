@@ -3,18 +3,12 @@ import subprocess
 import sys
 import shutil
 import pathlib
-from string import Template
+import json
 
-
-def quotedCMakeArgValue(value):
-    if value in ["0", "OFF", "NO", "FALSE", "N"]:
-        return "false"
-    if value in ["1", "ON", "YES", "TRUE", "Y"]:
-        return "true"
-    return '"{}"'.format(value.replace("\\", "/"))
 
 def removeBuildType(ufid: str):
     return "_".join([x for x in ufid.split("_") if not x in ["opt", "dbg"]])
+
 
 binDir = pathlib.Path(__file__).parent
 bdeToolsDir = binDir.parent
@@ -50,7 +44,8 @@ cmakeFlagsList = subprocess.run(
         *bbsBuildExecutable,
         "configure",
         "--dump-cmake-flags",
-    ],
+    ]
+    + sys.argv[1:],
     capture_output=True,
 ).stdout.decode()
 
@@ -61,17 +56,9 @@ for arg in cmakeFlagsList.split():
     # Remove -D and the type
     key = key.replace("-D", "").split(":")[0]
 
-    if key == "CMAKE_BUILD_TYPE":
-        continue
-
     cmakeFlags[key] = value
 
-cmakeFlagsString = ",\n".join(
-    (
-        f'        "{key}": {quotedCMakeArgValue(value)}'
-        for key, value in cmakeFlags.items()
-    )
-)
+cmakeFlags.pop("CMAKE_BUILD_TYPE")
 
 print(f"Generating .vscode folder...")
 print(f"  BDE tools directory: {bdeToolsDir}")
@@ -82,31 +69,35 @@ os.makedirs(".vscode", exist_ok=True)
 templatesPath = binDir / "vscode_templates"
 
 # settings.json
-settingsTemplate = Template((templatesPath / "settings.json.in").read_text())
+settings = json.loads((templatesPath / "settings.json").read_text())
+settings["cmake.buildDirectory"] = "${workspaceFolder}/" + buildDir
+settings["cmake.configureSettings"] = cmakeFlags
 pathlib.Path(".vscode/settings.json").write_text(
-    settingsTemplate.substitute(
-        buildDir=buildDir, cmakeFlags=cmakeFlagsString
-    )
+    json.dumps(settings, indent=4)
 )
 
 # c_cpp_properties.json
 shutil.copy(templatesPath / "c_cpp_properties.json", ".vscode")
 
 # launch.json
-if not isGitBash:
-    launchConfigs = ",\n".join(
-        [
-            (templatesPath / "gdb_launch.json").read_text(),
-            (templatesPath / "udb_launch.json").read_text(),
-        ]
-    )
-else:
-    launchConfigs = (templatesPath / "cppvsdbg_launch.json").read_text()
-
-launchTemplate = Template((templatesPath / "launch.json.in").read_text())
-pathlib.Path(".vscode/launch.json").write_text(
-    launchTemplate.substitute(launchConfigs=launchConfigs)
+commonLaunchArgs = json.loads(
+    (templatesPath / "common_launch_args.json").read_text()
 )
+
+launchConfigNames = (
+    ["gdb_launch", "udb_launch"] if not isGitBash else ["cppvsdbg_launch"]
+)
+
+launchConfigs = []
+for configName in launchConfigNames:
+    config = json.loads((templatesPath / f"{configName}.json").read_text())
+    config.update(commonLaunchArgs)
+    launchConfigs.append(config)
+
+launch = json.loads((templatesPath / "launch.json").read_text())
+launch["configurations"] = launchConfigs
+pathlib.Path(".vscode/launch.json").write_text(json.dumps(launch, indent=4))
+
 
 # -----------------------------------------------------------------------------
 # Copyright 2022 Bloomberg Finance L.P.

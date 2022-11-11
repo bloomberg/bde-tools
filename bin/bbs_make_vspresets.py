@@ -10,6 +10,10 @@ def removeBuildType(ufid: str):
     return "_".join([x for x in ufid.split("_") if not x in ["opt", "dbg"]])
 
 
+def addBuildType(buildType: str, ufid: str):
+    return buildType if len(ufid) == 0 else buildType + "_" + ufid
+
+
 binDir = pathlib.Path(__file__).parent
 bdeToolsDir = binDir.parent
 
@@ -40,8 +44,6 @@ if not uplid or not ufid:
 
 ufid = removeBuildType(ufid)
 
-buildDirBase = f"${{workspaceRoot}}/_build/{uplid}-{ufid}"
-
 if not os.path.exists("CMakeLists.txt"):
     print("Error: CMakeLists.txt not found.")
     sys.exit(1)
@@ -52,7 +54,8 @@ cmakeFlagsList = subprocess.run(
         *bbsBuildExecutable,
         "configure",
         "--dump-cmake-flags",
-    ],
+    ]
+    + sys.argv[1:],
     capture_output=True,
 ).stdout.decode()
 
@@ -66,33 +69,35 @@ for arg in cmakeFlagsList.split():
     cmakeFlags[key] = value
 
 cmakeFlags.pop("CMAKE_BUILD_TYPE")
-toolchain = cmakeFlags.pop("CMAKE_TOOLCHAIN_FILE")
 
-print(f"Generating CMakeSettings.json...")
-print(f"  BDE tools directory: {bdeToolsDir}")
-print(f"  Build directory:     {buildDirBase}")
+print("Generating CMakePresets.json...")
 
-variables = [{"name": key, "value": value}
-             for key, value in cmakeFlags.items()]
+presets = {"version": 4}
 
-settings = {"environments": []}
+arch = "x64" if "BDE_BUILD_TARGET_64" in cmakeFlags else "x86"
 
-inheritEnv = "msvc_x64_x64" if "BDE_BUILD_TARGET_64" in cmakeFlags else "msvc_x86_x64"
+presets["configurePresets"] = []
+for buildType, cmakeBuildType in {
+    "dbg": "Debug",
+    "opt": "Release",
+    "opt_dbg": "RelWithDebInfo",
+}.items():
+    buildUfid = addBuildType(buildType, ufid)
+    presets["configurePresets"].append(
+        {
+            "name": buildType,
+            "displayName": f"{buildUfid} ({cmakeBuildType})",
+            "generator": "Ninja",
+            "binaryDir": f"${{sourceDir}}/_build/{uplid}-{buildUfid}",
+            "architecture": {"value": arch, "strategy": "external"},
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": cmakeBuildType,
+                **cmakeFlags,
+            },
+        }
+    )
 
-settings["configurations"] = []
-for config in ["Debug", "Release", "RelWithDebInfo"]:
-    settings["configurations"].append({
-        "name": f"{config} ({ufid})",
-        "inheritEnvironments": [inheritEnv],
-        "generator": "Ninja",
-        "configurationType": config,
-        "buildRoot": f"{buildDirBase}-{config}",
-        "cmakeToolchain": toolchain,
-        "variables": variables
-    })
-
-with open("CMakeSettings.json", "wt") as out:
-    json.dump(settings, out, indent=4)
+pathlib.Path("CMakeUserPresets.json").write_text(json.dumps(presets, indent=4))
 
 
 # -----------------------------------------------------------------------------

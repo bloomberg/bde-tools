@@ -1,13 +1,10 @@
-
 {
     "version": "0.2.0",
-    "configurations": [
-$launchConfigs
-    ],
+    "configurations": [],
     "inputs": [
         {
             "id": "args",
-            "type":"promptString",
+            "type": "promptString",
             "description": "Program Args",
             "default": "0"
         }

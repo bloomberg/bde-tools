@@ -1,5 +1,6 @@
 # Set various Windows specific defines
 string(CONCAT DEFAULT_CXX_FLAGS
+       "${DEFAULT_CXX_FLAGS} "
        "-DNOGDI "
        "-DNOMINMAX "
        "-D_CRT_SECURE_NO_WARNINGS "

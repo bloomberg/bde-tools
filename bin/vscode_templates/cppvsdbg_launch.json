@@ -1,11 +1,5 @@
-        {
-            "name": "(Windows) Launch",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${command:cmake.launchTargetPath}",
-            "args": ["${input:args}"],
-            "stopAtEntry": true,
-            "cwd": "${command:cmake.getLaunchTargetDirectory}",
-            "environment": [],
-            "console": "externalTerminal"
-        }
+{
+    "name": "(Windows) Launch",
+    "type": "cppvsdbg",
+    "console": "externalTerminal"
+}
