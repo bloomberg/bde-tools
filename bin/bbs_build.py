@@ -564,6 +564,9 @@ def ufid_to_cmake_flags(ufid_str):
     if ufid.is_set("safe2"):
         cmake_flags.append("-DBDE_BUILD_TARGET_SAFE2=1")
 
+    if ufid.is_set("stlport"):
+        cmake_flags.append("-DBDE_BUILD_TARGET_STLPORT=1")
+
     if ufid.is_set("asan"):
         cmake_flags.append("-DBDE_BUILD_TARGET_ASAN=1")
 

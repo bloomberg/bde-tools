@@ -86,6 +86,11 @@ else()
     # c++03 is default on AIX
 endif()
 
+# Stlport library selector
+if(BDE_BUILD_TARGET_STLPORT)
+    message(FATAL_ERROR "Stlport is not available for xlc.")
+endif()
+
 # Sanitizers
 if(BDE_BUILD_TARGET_ASAN)
     message(FATAL_ERROR "Address sanitizer is not available for xlc.")

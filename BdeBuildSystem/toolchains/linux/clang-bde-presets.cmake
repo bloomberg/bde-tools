@@ -62,6 +62,11 @@ endif()
 # Disable GNU c++ extensions.
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Stlport library selector
+if(BDE_BUILD_TARGET_STLPORT)
+    message(FATAL_ERROR "Stlport is not available on Linux.")
+endif()
+
 # Sanitizers
 if(BDE_BUILD_TARGET_ASAN)
     string(CONCAT DEFAULT_CXX_FLAGS

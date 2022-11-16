@@ -51,6 +51,20 @@ else()
     # c++03 is default for Sun CC (see above)
 endif()
 
+# Stlport library selector
+if(BDE_BUILD_TARGET_STLPORT)
+    string(CONCAT DEFAULT_CXX_FLAGS
+           "${DEFAULT_CXX_FLAGS} "
+           "-DBDE_BUILD_TARGET_STLPORT "
+           "-library=stlport4 "
+           "-template=no%extdef "
+           )
+    string(CONCAT DEFAULT_EXE_LINKER_FLAGS
+           "${DEFAULT_EXE_LINKER_FLAGS} "
+           "-library=stlport4 "
+          )
+endif()
+
 # Sanitizers
 if(BDE_BUILD_TARGET_ASAN)
     message(FATAL_ERROR "Address sanitizer is not available for cc.")

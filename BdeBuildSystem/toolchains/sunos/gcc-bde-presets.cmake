@@ -61,6 +61,11 @@ endif()
 # Disable GNU c++ extensions.
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Stlport library selector
+if(BDE_BUILD_TARGET_STLPORT)
+    message(FATAL_ERROR "Stlport is not available for gcc.")
+endif()
+
 # Sanitizers
 if(BDE_BUILD_TARGET_ASAN)
     message(FATAL_ERROR "Address sanitizer is not available for gcc.")
