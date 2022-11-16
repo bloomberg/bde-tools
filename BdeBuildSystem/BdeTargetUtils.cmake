@@ -405,9 +405,10 @@ function(bbs_setup_target_uor target)
 
                     target_link_libraries(${target} PUBLIC ${pkg}-obj)
 
-                    # Generating cpp03 header and implementation files if any
+                    # Generating cpp03 headers, implementation and test files if any
                     bbs_generate_cpp03_sources("${${pkg}_INCLUDE_FILES}")
                     bbs_generate_cpp03_sources("${${pkg}_SOURCE_FILES}")
+                    bbs_generate_cpp03_sources("${${pkg}_TEST_SOURCES}")
 
                     if (NOT _SKIP_TESTS)
                         bbs_configure_target_tests(${pkg}
