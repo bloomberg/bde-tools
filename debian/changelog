@@ -1,12 +1,27 @@
-bde-tools (3.110.0.0) unstable; urgency=low
+bde-tools (3.111.0.0) unstable; urgency=low
 
+  * 24b8911 Restore stlport UFID flag (#270)
+  * de7344d use CMakePresets instead of CMakeSettings for MS Visual Studio (#269)
+  * bbb7df7 Add bbs_make_vssettings for generating CMakeSettings.json consumable by Visual Studio. (#268)
+  * cce49d9 Improvements for make_vscode in Windows (Git Bash) (#267)
+  * cd367be Add conditional tests dependency resolution (#265)
+  * f755460 improve ctest regex (#264)
+  * 6312cc3 configure on open, ignore .git and _build (#263)
+  * 14de9a0 Skip some dynamic system libraries from [static] import (#262)
+  * 81dcbcd Add import pkgconfig (#261)
+
+ -- osubbotin <osubbotin@bloomberg.net>  Wed, 16 Nov 2022 12:59:33 -0500
+
+bde-tools (3.110.0.0) git; urgency=low
+
+  * bf8a7d1 Changelog for version 3.110.0.0
   * b5d2504 Add gcc BBS toolchains on Darwin (#259)
   * fb9d4cd Add multi-version python shebang (#257)
   * 7bad031 Adjust usage documentation for bbs_build_env (#258)
   * 96a446e DRQS 170435960: Switch from master to main (#252)
   * 9d33bcc Temporarily remove tests to unblock the promotion (#256)
 
- -- osubbotin <osubbotin@bloomberg.net>  Thu, 20 Oct 2022 11:35:27 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 20 Oct 2022 12:56:32 -0400
 
 bde-tools (3.109.0.0) git; urgency=low
 
