@@ -439,7 +439,7 @@ def wrapper():
         "--targets",
         type=lambda x: x.split(","),
         help="Comma-separated list of build targets (e.g. "
-        '"bsl", "bslma", or "bslma_testallocator").',
+        '"bsl", "bslma", or "bslma_testallocator.t").',
     )
 
     group.add_argument(
