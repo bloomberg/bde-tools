@@ -105,6 +105,10 @@ function(bbs_add_component_tests target)
             add_custom_target(${target}.t)
         endif()
 
+        if (NOT TARGET all.t)
+            add_custom_target(all.t)
+        endif()
+
         add_dependencies(${target}.t ${test_target_name}.t)
         add_dependencies(all.t ${test_target_name}.t)
 

@@ -115,14 +115,6 @@ function(bbs_configure_target_tests target)
                           ${ARGN})
     bbs_assert_no_unparsed_args("")
 
-    if (NOT TARGET ${target}.t)
-        add_custom_target(${target}.t)
-    endif()
-
-    if (NOT TARGET all.t)
-        add_custom_target(all.t)
-    endif()
-
     if (_SOURCES)
         bbs_add_component_tests(${target}
                                     SOURCES   ${_SOURCES}
@@ -173,10 +165,10 @@ function (bbs_install_target_headers target)
 endfunction()
 
 #.rst:
-# .. command:: bbs_install_library
+# .. command:: bbs_install_target
 #
 # Generate installation command for target.
-function (bbs_install_library target)
+function (bbs_install_target target)
     cmake_parse_arguments(PARSE_ARGV 1
                           ""
                           ""
@@ -205,6 +197,22 @@ function (bbs_install_library target)
             TARGETS ${target}
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
             COMPONENT ${_COMPONENT})
+    endif()
+endfunction()
+
+# Forwarding wrapper
+function (bbs_install_library target)
+    cmake_parse_arguments(PARSE_ARGV 1
+                          ""
+                          ""
+                          "COMPONENT"
+                          ""
+    )
+    bbs_assert_no_unparsed_args("")
+    if (NOT _COMPONENT)
+        bbs_install_target(${target})
+    else()
+        bbs_install_target(${target} COMPONENT ${_COMPONENT})
     endif()
 endfunction()
 
@@ -430,12 +438,12 @@ function(bbs_setup_target_uor target)
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
 
             if (NOT _SKIP_TESTS)
-                if (NOT TARGET ${target}.t)
-                    add_custom_target(${target}.t)
-                endif()
                 set(import_test_deps ON)
                 foreach(pkg ${${uor_name}_PACKAGES})
                     if (${pkg}_TEST_TARGETS)
+                        if (NOT TARGET ${target}.t)
+                            add_custom_target(${target}.t)
+                        endif()
                         add_dependencies(${target}.t ${${pkg}_TEST_TARGETS})
                         if (import_test_deps)
                             # Import UOR test dependencies only once and only if we have at least
@@ -563,8 +571,9 @@ function(bbs_setup_target_uor target)
     endif()
 
     # Installation
-    if (_target_type STREQUAL "STATIC_LIBRARY")
-        bbs_install_library(${target})
+    if (_target_type STREQUAL "STATIC_LIBRARY" OR
+        _target_type STREQUAL "EXECUTABLE")
+        bbs_install_target(${target})
     endif()
 endfunction()
 
