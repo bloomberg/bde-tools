@@ -72,6 +72,15 @@ templatesPath = binDir / "vscode_templates"
 settings = json.loads((templatesPath / "settings.json").read_text())
 settings["cmake.buildDirectory"] = "${workspaceFolder}/" + buildDir
 settings["cmake.configureSettings"] = cmakeFlags
+
+def setCompiler(envVar, cmakeVar):
+    compiler = os.getenv(envVar)
+    if compiler:
+        settings["cmake.configureSettings"][cmakeVar] = compiler
+
+setCompiler("CC", "CMAKE_C_COMPILER")
+setCompiler("CXX", "CMAKE_CXX_COMPILER")
+
 pathlib.Path(".vscode/settings.json").write_text(
     json.dumps(settings, indent=4)
 )
