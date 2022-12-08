@@ -82,6 +82,11 @@ def program():
                     profile = p
                     break
 
+    if not profile:
+        print(f"Invalid compiler profile: {args.profile}", file=sys.stderr)
+        list_build_profiles(build_profiles)
+        sys.exit(1)
+
     ufid = populate_ufid(args.ufid, profile)
     if ufid:
         print_envs(args, ufid, profile)
