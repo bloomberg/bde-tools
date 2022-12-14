@@ -393,7 +393,7 @@ def detect_installed_compilers(uplid):
     profiles = []
 
     for profile in matched_obj["profiles"]:
-        for version in [ "" ] + [ str(n) for n in range(7, 15) ]:
+        for version in [ "" ] + [ str(n) for n in range(7, 17) ]:
             c_name = profile["c_name"]
             cxx_name = profile["cxx_name"]
 
