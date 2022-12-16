@@ -88,7 +88,7 @@ def program():
         sys.exit(1)
 
     if not args.ufid:
-        arg.ufid="dbg_64"
+        args.ufid="dbg_64"
 
     ufid = populate_ufid(args.ufid, profile)
     if ufid:
