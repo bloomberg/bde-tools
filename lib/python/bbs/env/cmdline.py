@@ -21,12 +21,12 @@ list : list available toolchains in the following order:
     3. gcc and clang compilers detected on $PATH
 
 For example:
-eval `bbs_build_env.py -u dbg_64_cpp20 -p gcc-10`   # set the environment
-                                                    # (debug, 64-bit, C++20 build, gcc-10)
+eval `bbs_build_env -u dbg_64_cpp20 -p gcc-10`   # set the environment
+                                                 # (debug, 64-bit, C++20 build, gcc-10)
 
-eval `bbs_build_env.py unset`                       # unset the environment
+eval `bbs_build_env unset`                       # unset the environment
 
-bbs_build_env.py list                               # list available compilers
+bbs_build_env list                               # list available compilers
 
 """
 
@@ -61,7 +61,7 @@ bbs_build_env.py list                               # list available compilers
             ("u", "ufid"),
             {
                 "type": str,
-                "default": "dbg",
+                "default": "dbg_64",
                 "help": "the Unified Platform ID (UFID) identifying the build "
                 "configuration (default: %(default)s)."
             }
