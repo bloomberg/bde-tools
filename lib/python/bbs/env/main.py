@@ -87,6 +87,9 @@ def program():
         list_build_profiles(build_profiles)
         sys.exit(1)
 
+    if not args.ufid:
+        arg.ufid="dbg_64"
+
     ufid = populate_ufid(args.ufid, profile)
     if ufid:
         print_envs(args, ufid, profile)
