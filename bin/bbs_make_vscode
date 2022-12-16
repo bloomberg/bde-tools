@@ -1,9 +1,20 @@
 #!/bin/sh
 
-# Find suitable python version and invoke the tool
+realpath() (
+    OURPWD=$PWD
+    cd "$(dirname "$1")"
+    LINK=$(readlink "$(basename "$1")")
+    while [ "$LINK" ]; do
+        cd "$(dirname "$LINK")"
+        LINK=$(readlink "$(basename "$1")")
+    done
+    REALPATH="$PWD/$(basename "$1")"
+    cd "$OURPWD"
+    echo "$REALPATH"
+)
 
 SCRIPT=$(realpath "$0")
-
+# Find suitable python version and invoke the tool
 for pyver in 3.10 3.9 3.8 3.7 3.6 3 ""; do
     python$pyver -V > /dev/null 2>&1 && exec python$pyver "${SCRIPT}.py" "$@"
 done
