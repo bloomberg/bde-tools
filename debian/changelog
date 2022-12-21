@@ -1,5 +1,15 @@
-bde-tools (3.111.0.0) unstable; urgency=low
+bde-tools (3.112.0.0) unstable; urgency=low
 
+  * 24b7eae Add newest compiler versions
+  * 3bd851e Set the compilers in settings.json (#273)
+  * c5f5730 Limit test targets to non-empty ones (#272)
+  * 0ca6da4 add .t to --targets doc (#271)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 7 Dec 2022 15:50:23 -0500
+
+bde-tools (3.111.0.0) git; urgency=low
+
+  * d2a2d55 Changelog for version 3.111.0.0
   * 24b8911 Restore stlport UFID flag (#270)
   * de7344d use CMakePresets instead of CMakeSettings for MS Visual Studio (#269)
   * bbb7df7 Add bbs_make_vssettings for generating CMakeSettings.json consumable by Visual Studio. (#268)
@@ -10,7 +20,7 @@ bde-tools (3.111.0.0) unstable; urgency=low
   * 14de9a0 Skip some dynamic system libraries from [static] import (#262)
   * 81dcbcd Add import pkgconfig (#261)
 
- -- osubbotin <osubbotin@bloomberg.net>  Wed, 16 Nov 2022 12:59:33 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 22 Nov 2022 14:44:08 -0500
 
 bde-tools (3.110.0.0) git; urgency=low
 
