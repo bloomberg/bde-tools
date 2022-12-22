@@ -1,42 +1,69 @@
 include_guard()
 
-#.rst:
-# .. command:: bbs_read_metadata(PACKAGE <package> [SOURCE_DIR <dir>])
-# .. command:: bbs_read_metadata(GROUP   <group>   [SOURCE_DIR <dir>])
-#
-# PACKAGE mode reads the bde metadata files from the package dir and sets the following list variables in the parent scope
-#  package_COMPONENTS
-#  package_DEPENDS
-#  package_PCDEPS
-#  package_INCLUDE_DIRS
-#  package_INCLUDE_FILES
-#  package_SOURCE_DIRS
-#  package_SOURCE_FILES
-#  package_MAIN_SOURCE
-#  package_TEST_DEPENDS
-#  package_TEST_PCDEPS
-#  package_TEST_SOURCES
-#  package_G_TEST_SOURCES
-#  package_METADATA_DIR
-#
-# GROUP mode will set the above variables for each package in the group.
-# Additionally it will set the following list variables for the group:
-#  group_PACKAGES
-#  group_COMPONENTS
-#  group_DEPENDS
-#  group_PCDEPS
-#  group_INCLUDE_DIRS
-#  group_INCLUDE_FILES
-#  group_SOURCE_DIRS
-#  group_SOURCE_FILES
-#  group_TEST_DEPENDS
-#  group_TEST_PCDEPS
-#  group_TEST_SOURCES
-#  group_G_TEST_SOURCES
-#  group_METADATA_DIRS
-#
-# SOURCE_DIR is optional and defaults to CMAKE_CURRENT_SOURCE_DIR
-#
+#[[.rst:
+BdeMetadataUtils
+----------------
+This module provide a set of function to parse BDE metadata files.
+#]]
+
+#[[.rst:
+.. command:: bbs_read_metadata
+
+This command reads BDE group or package level metadata files and populates a
+set of list variables that describe the content of the groups and/pr package(s)
+respectively.
+
+.. code-block:: cmake
+
+   bbs_read_metadata(PACKAGE <package> 
+                     [SOURCE_DIR <dir>])
+
+PACKAGE mode reads the bde metadata file for a single package from the
+optionally specified ``SOURCE_DIR`` (if not specified, the value of
+``CMAKE_CURRENT_SOURCE_DIR`` is used) and sets the following list variables in
+the parent scope:
+
+    * <package>_COMPONENTS
+    * <package>_DEPENDS
+    * <package>_PCDEPS
+    * <package>_INCLUDE_DIRS
+    * <package>_INCLUDE_FILES
+    * <package>_SOURCE_DIRS
+    * <package>_SOURCE_FILES
+    * <package>_MAIN_SOURCE
+    * <package>_TEST_DEPENDS
+    * <package>_TEST_PCDEPS
+    * <package>_TEST_SOURCES
+    * <package>_G_TEST_SOURCES
+    * <package>_METADATA_DIR
+
+.. code-block:: cmake
+
+   bbs_read_metadata(GROUP <group>
+                     [SOURCE_DIR <dir>]
+                     [CUSTOM_PACKAGES <pkg list>])
+
+GROUP mode reads the bde group metadata files from the optionally specified
+``SOURCE_DIR`` (if not specified, the value of ``CMAKE_CURRENT_SOURCE_DIR`` is
+used) skipping the optionally specified ``CUSTOM_PACKAGES`` folders. Each
+subfolder in the ``SOURCE_DIR`` s treatead as a folder containing a package.
+In addition to package list variables, it sets the following group list
+variables in the parent scope:
+
+    * <group>_PACKAGES
+    * <group>_COMPONENTS
+    * <group>_DEPENDS
+    * <group>_PCDEPS
+    * <group>_INCLUDE_DIRS
+    * <group>_INCLUDE_FILES
+    * <group>_SOURCE_DIRS
+    * <group>_SOURCE_FILES
+    * <group>_TEST_DEPENDS
+    * <group>_TEST_PCDEPS
+    * <group>_TEST_SOURCES
+    * <group>_G_TEST_SOURCES
+    * <group>_METADATA_DIRS
+#]]
 function(bbs_read_metadata)
     cmake_parse_arguments(PARSE_ARGV 0
                           ""
@@ -95,11 +122,6 @@ macro(bbs_read_package_metadata pkg dir)
     set(${pkg}_METADATA_DIRS ${${pkg}_METADATA_DIRS} PARENT_SCOPE)
 endmacro()
 
-#.rst:
-# .. command:: bbs_read_group_metadata(dir group)
-#
-# Reads the package group metadata in the given directory and set the group's
-# and packages' variable in the parent scope.
 macro(bbs_read_group_metadata group dir)
     cmake_parse_arguments(""
                           ""

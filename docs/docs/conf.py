@@ -25,7 +25,7 @@ sphinx_version = distutils.version.LooseVersion(sphinx.__version__)
 # -- Project information -----------------------------------------------------
 
 project = u"BDE Build Tools"
-copyright = u"2019, Bloomberg Finance L.P."
+copyright = u"2022, Bloomberg Finance L.P."
 author = u"BDE"
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -51,7 +51,7 @@ primary_domain = "cmake"
 extensions = ["sphinx.ext.extlinks",
               "sphinx.ext.githubpages",
               "myst_parser",
-              "cmake_domain"
+              "sphinxcontrib.moderncmakedomain"
               ]
 
 # Add any paths that contain templates here, relative to this directory.

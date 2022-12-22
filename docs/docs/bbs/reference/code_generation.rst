@@ -1,5 +1,3 @@
-.. _code_generation:
-
 .. _code_generation-top:
 
 ===============
@@ -24,11 +22,12 @@ code is checked into our repositories, both for release labels and our main
 branch.
 
 We generate the code in the source tree for 2 principal reasons:
- * Debuggability
+
+  * Debuggability
     At debug time, the generated code is what has to be visible to the
     debugger.  If it's a transient artifact, it won't be available when
     developers are trying to diagnose issues.
- * Build reproducibility
+  * Build reproducibility
     Generating the code in-tree makes sure our releases can be reproduced
     trivially.
 
@@ -44,13 +43,14 @@ User Interaction
 After the generation templates are written and the initial code generation is
 done (e.g., `Writing Parameter Packs`_ and `Initial simulation tool usage`_,
 below), the ongoing use of the code generators is transparent to any user of
-the ``cmake_build.py`` tool.
+the ``bbs_build`` tool.
 
-Users set up their environment as usual, then run the ``cmake_build.py configure`` step, which sets up the rules for re-generating the target files if necessary:
+Users set up their environment as usual, then run the ``bbs_build configure``
+step, which sets up the rules for re-generating the target files if necessary:
 
   .. code-block:: shell
 
-    $ cmake_build.py configure
+    $ bbs_build configure
         ...
         -- Looking for pthread_create in pthread - found
         -- Found Threads: TRUE  
@@ -63,27 +63,24 @@ Users set up their environment as usual, then run the ``cmake_build.py configure
 Afterwards, during the build phase, the generated files are re-generated only
 if necessary:
 
-  .. code-block:: shell
+.. code-block:: shell
 
-    $ cmake_build.py build
-        ...
-        [99/328] Generating ../../groups/bsl/bslmf/bslmf_functionpointertraits_cpp03.h - sim_cpp11_features.pl updated file
-        [100/328] Generating ../../groups/bsl/bslmf/bslmf_nthparameter_cpp03.cpp - sim_cpp11_features.pl did not need to update
-        ...
-
-
+   $ bbs_build build
+       ...
+       [99/328] Generating ../../groups/bsl/bslmf/bslmf_functionpointertraits_cpp03.h - sim_cpp11_features.pl updated file
+       [100/328] Generating ../../groups/bsl/bslmf/bslmf_nthparameter_cpp03.cpp - sim_cpp11_features.pl did not need to update
+       ...
 
 In this example, ``bslmf_functionpointertraits_cpp03.h`` needed to be
 regenerated, but ``bslmf_nthparameter_cpp03.cpp`` did not.  Unless you are
 working directly on a component with generated code, the latter is the much
 more common occurence.
 
-
 .. _parameter_packs-top:
 
-=========================
+-------------------------
 Expanding Parameter Packs
-=========================
+-------------------------
 
 This section describes how BDE simulates
 `parameter packs <https://en.cppreference.com/w/cpp/language/parameter_pack>`_
@@ -91,9 +88,8 @@ This section describes how BDE simulates
 
 .. _parameter_packs-1:
 
---------
-Overview
---------
+Overview of Parameter Packs
+---------------------------
 
 Parameter packs are a feature that was added in C++11, allowing for template
 expansions with a variable number of parameters.  For example:
@@ -101,24 +97,24 @@ expansions with a variable number of parameters.  For example:
 .. _parameter_packs-example-1:
 
 Unexpanded (source) code
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
-  .. code-block:: C++
+.. code-block:: C++
 
-        #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
-        template <class VALUE, class ALLOCATOR>
-        template <class... ARGS>
-        inline
-        typename list<VALUE, ALLOCATOR>::reference
-        list<VALUE, ALLOCATOR>::emplace_front(ARGS&&... arguments)
-        {
-            emplace(cbegin(), BSLS_COMPILERFEATURES_FORWARD(ARGS, arguments)...);
-            return front();
-        }
-        #endif
+   #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
+   template <class VALUE, class ALLOCATOR>
+   template <class... ARGS>
+   inline
+   typename list<VALUE, ALLOCATOR>::reference
+   list<VALUE, ALLOCATOR>::emplace_front(ARGS&&... arguments)
+   {
+       emplace(cbegin(), BSLS_COMPILERFEATURES_FORWARD(ARGS, arguments)...);
+       return front();
+   }
+   #endif
 
 We simulate the variadic expansions in C++03 using
-``bde-tools/contrib/sim_cpp11/sim_cpp11_features.pl``.
+``bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl``.
 
 This tool can be applied to any source file (e.g., ``bslstl_list.h``) and
 generates an ``_cpp03`` file (e.g. ``bslstl_list_cpp03.h``) alongside it, as
@@ -134,78 +130,78 @@ one method.
 .. _parameter_packs-example-2:
 
 Expanded (generated) code
-^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
-  .. code-block:: C++
+.. code-block:: C++
 
-        #if BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
-        // {{{ BEGIN GENERATED CODE
-        // Command line: sim_cpp11_features.pl bslstl_list.h
-        #ifndef BSLSTL_LIST_VARIADIC_LIMIT
-        #define BSLSTL_LIST_VARIADIC_LIMIT 10
-        #endif
-        #ifndef BSLSTL_LIST_VARIADIC_LIMIT_E
-        #define BSLSTL_LIST_VARIADIC_LIMIT_E BSLSTL_LIST_VARIADIC_LIMIT
-        #endif
-        #if BSLSTL_LIST_VARIADIC_LIMIT_E >= 0
-        template <class VALUE, class ALLOCATOR>
-        inline
-        typename list<VALUE, ALLOCATOR>::reference
-        list<VALUE, ALLOCATOR>::emplace_front(
-                                  )
-        {
-            emplace(cbegin());
-            return front();
-        }
-        #endif  // BSLSTL_LIST_VARIADIC_LIMIT_E >= 0
+   #if BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
+   // {{{ BEGIN GENERATED CODE
+   // Command line: sim_cpp11_features.pl bslstl_list.h
+   #ifndef BSLSTL_LIST_VARIADIC_LIMIT
+   #define BSLSTL_LIST_VARIADIC_LIMIT 10
+   #endif
+   #ifndef BSLSTL_LIST_VARIADIC_LIMIT_E
+   #define BSLSTL_LIST_VARIADIC_LIMIT_E BSLSTL_LIST_VARIADIC_LIMIT
+   #endif
+   #if BSLSTL_LIST_VARIADIC_LIMIT_E >= 0
+   template <class VALUE, class ALLOCATOR>
+   inline
+   typename list<VALUE, ALLOCATOR>::reference
+   list<VALUE, ALLOCATOR>::emplace_front(
+                             )
+   {
+       emplace(cbegin());
+       return front();
+   }
+   #endif  // BSLSTL_LIST_VARIADIC_LIMIT_E >= 0
 
-        #if BSLSTL_LIST_VARIADIC_LIMIT_E >= 1
-        template <class VALUE, class ALLOCATOR>
-        template <class ARGS_01>
-        inline
-        typename list<VALUE, ALLOCATOR>::reference
-        list<VALUE, ALLOCATOR>::emplace_front(
-                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) arguments_01)
-        {
-            emplace(cbegin(), BSLS_COMPILERFEATURES_FORWARD(ARGS_01, arguments_01));
-            return front();
-        }
-        #endif  // BSLSTL_LIST_VARIADIC_LIMIT_E >= 1
+   #if BSLSTL_LIST_VARIADIC_LIMIT_E >= 1
+   template <class VALUE, class ALLOCATOR>
+   template <class ARGS_01>
+   inline
+   typename list<VALUE, ALLOCATOR>::reference
+   list<VALUE, ALLOCATOR>::emplace_front(
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) arguments_01)
+   {
+       emplace(cbegin(), BSLS_COMPILERFEATURES_FORWARD(ARGS_01, arguments_01));
+       return front();
+   }
+   #endif  // BSLSTL_LIST_VARIADIC_LIMIT_E >= 1
 
-        #if BSLSTL_LIST_VARIADIC_LIMIT_E >= 2
-        template <class VALUE, class ALLOCATOR>
-        template <class ARGS_01,
-                  class ARGS_02>
-        inline
-        typename list<VALUE, ALLOCATOR>::reference
-        list<VALUE, ALLOCATOR>::emplace_front(
-                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) arguments_01,
-                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) arguments_02)
-        {
-            emplace(cbegin(), BSLS_COMPILERFEATURES_FORWARD(ARGS_01, arguments_01),
-                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, arguments_02));
-            return front();
-        }
-        #endif  // BSLSTL_LIST_VARIADIC_LIMIT_E >= 2
+   #if BSLSTL_LIST_VARIADIC_LIMIT_E >= 2
+   template <class VALUE, class ALLOCATOR>
+   template <class ARGS_01,
+             class ARGS_02>
+   inline
+   typename list<VALUE, ALLOCATOR>::reference
+   list<VALUE, ALLOCATOR>::emplace_front(
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) arguments_01,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) arguments_02)
+   {
+       emplace(cbegin(), BSLS_COMPILERFEATURES_FORWARD(ARGS_01, arguments_01),
+                         BSLS_COMPILERFEATURES_FORWARD(ARGS_02, arguments_02));
+       return front();
+   }
+   #endif  // BSLSTL_LIST_VARIADIC_LIMIT_E >= 2
 
-        #if BSLSTL_LIST_VARIADIC_LIMIT_E >= 3
-        template <class VALUE, class ALLOCATOR>
-        template <class ARGS_01,
-                  class ARGS_02,
-                  class ARGS_03>
-        inline
-        typename list<VALUE, ALLOCATOR>::reference
-        list<VALUE, ALLOCATOR>::emplace_front(
-                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) arguments_01,
-                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) arguments_02,
-                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) arguments_03)
-        {
-            emplace(cbegin(), BSLS_COMPILERFEATURES_FORWARD(ARGS_01, arguments_01),
-                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, arguments_02),
-                              BSLS_COMPILERFEATURES_FORWARD(ARGS_03, arguments_03));
-            return front();
-        }
-        #endif  // BSLSTL_LIST_VARIADIC_LIMIT_E >= 3
+   #if BSLSTL_LIST_VARIADIC_LIMIT_E >= 3
+   template <class VALUE, class ALLOCATOR>
+   template <class ARGS_01,
+             class ARGS_02,
+             class ARGS_03>
+   inline
+   typename list<VALUE, ALLOCATOR>::reference
+   list<VALUE, ALLOCATOR>::emplace_front(
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) arguments_01,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) arguments_02,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) arguments_03)
+   {
+       emplace(cbegin(), BSLS_COMPILERFEATURES_FORWARD(ARGS_01, arguments_01),
+                         BSLS_COMPILERFEATURES_FORWARD(ARGS_02, arguments_02),
+                         BSLS_COMPILERFEATURES_FORWARD(ARGS_03, arguments_03));
+       return front();
+   }
+   #endif  // BSLSTL_LIST_VARIADIC_LIMIT_E >= 3
 
 
 As you can see, manually maintaining such expanded code is a nightmare.
@@ -218,11 +214,11 @@ Parameter pack templates are written as normal C++11 code in the header, source
 file, and test driver of the component. Each template member is surrounded by a
 specific ``#if`` block:
 
-  .. code-block:: C++
+.. code-block:: C++
 
-        #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
-        //...
-        #endif
+   #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
+   //...
+   #endif
 
 Also, anywhere that ``bsl::forward`` would be used,
 ``BSLS_COMPILERFEATURES_FORWARD`` is used instead (see
@@ -242,29 +238,29 @@ for the first time, the developer adds a ``<component>_cpp03`` sub-component to
 componets to run the variadic simulation expansion by looking for subordinate
 components with ``_cpp03`` extensions.
 
-  .. code-block:: shell
+.. code-block:: shell
 
-        .../bde-tools/contrib/sim_cpp11/sim_cpp11_features.pl bsl_list.h
-        .../bde-tools/contrib/sim_cpp11/sim_cpp11_features.pl bsl_list.cpp
-        .../bde-tools/contrib/sim_cpp11/sim_cpp11_features.pl bsl_list.t.cpp
-        echo bslstl_list_cpp03 >> package/bslstl.mem
-        sort -o package/bslstl.mem package/bslstl.mem
-        git add bsl_list_cpp03.{h,cpp,t.cpp} package/bslstl.mem
-        git commit -m'Adding cpp03 files'
+   .../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl bsl_list.h
+   .../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl bsl_list.cpp
+   .../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl bsl_list.t.cpp
+   echo bslstl_list_cpp03 >> package/bslstl.mem
+   sort -o package/bslstl.mem package/bslstl.mem
+   git add bsl_list_cpp03.{h,cpp,t.cpp} package/bslstl.mem
+   git commit -m'Adding cpp03 files'
 
 
 -------------------------------------------
 Ongoing synchronization of the _cpp03 files
 -------------------------------------------
 
-The ``cmake_build.py`` tool automatically generates rules to re-run
+The ``bbs_build`` tool automatically generates rules to re-run
 ``sim_cpp11_features.pl`` if the source files have changed.
 
-A different option is passed to ``cmake_build.py`` by the nightly and feature
-branch test builds which causes the build to fail if the source and ``_cpp03``
-files are out of sync, allowing us to make sure that the state of committed
-code is in sync.
+A different option is passed to ``bbs_build`` by the nightly and feature branch
+test builds which causes the build to fail if the source and ``_cpp03`` files
+are out of sync, allowing us to make sure that the state of committed code is
+in sync.
 
-  .. code-block:: shell
+.. code-block:: shell
         
-        cmake_build.py build --cpp11-verify-no-change
+   bbs_build build --cpp11-verify-no-change

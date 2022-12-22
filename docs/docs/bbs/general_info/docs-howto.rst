@@ -12,10 +12,10 @@ Source files for BDE documentation can be found in the `bde/bde-docs
 
 Clone repository:
 
-  ::
+.. code-block:: shell
 
-    $ git clone bbgithub:bde/bde-tools
-    $ cd bde-tools/docs
+   $ git clone bbgithub:bde/bde-tools
+   $ cd bde-tools/docs
 
 Enable Sphinx virtualenv
 ------------------------
@@ -24,9 +24,9 @@ BDE documentation is generated with Sphinx generator.
 
 To load pre-configured virtualenv for Sphinx:
 
-  ::
+.. code-block:: shell
 
-    $ source /bb/bde/documentation/sphinx_env/bin/activate
+   $ source /bb/bde/documentation/sphinx_env/bin/activate
 
 Modify the source code
 ----------------------
@@ -43,43 +43,42 @@ Render the BDE documentation html
 
 To render BDE documentation site (internal version):
 
-  ::
+.. code-block:: shell
 
-    $ make internal
+   $ make internal
 
 To render BDE documentation site (OSS version):
 
-  ::
+.. code-block:: shell
 
-    $ make oss
+   $ make oss
 
 Verify the content
 ------------------
 
 To verify the visual appearence of the generated site (internal version):
 
-  ::
+.. code-block:: shell
 
-    $ mkdir -p ~/public_html/bde-tools
-    $ cp -R build/internal/html/* ~/public_html/bde-tools/
+   $ mkdir -p ~/public_html/bde-tools
+   $ cp -R build/internal/html/* ~/public_html/bde-tools/
 
 
 To verify the visual appearence of the generated site (OSS version):
 
-  ::
+.. code-block:: shell
 
-    $ mkdir -p ~/public_html/bde-tools
-    $ cp -R build/oss/html/* ~/public_html/bde-tools/
+   $ mkdir -p ~/public_html/bde-tools
+   $ cp -R build/oss/html/* ~/public_html/bde-tools/
 
 In the browser, open the following URL to view the generated site (``<USER>``
 is your UNIX login ):
 
-  ::
+.. code-block::
 
-    http://devhtml.dev.bloomberg.com/~<USER>/bde-tools/
+   http://devhtml.dev.bloomberg.com/~<USER>/bde-tools/
 
-
-When you are happy with the content and the rendering of the site, create a
+When you are sutisfied with the content and the rendering of the site, create a
 Pull Request to the main repository.  The BDE documentation site will be
 updated on the regular basis to reflect changes.
 
@@ -88,6 +87,6 @@ Deactivate Sphinx virtualenv
 
 To deactivate the Sphinx virtualenv:
 
-  ::
+.. code-block:: shell
 
     $ deactivate

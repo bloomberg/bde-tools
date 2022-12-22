@@ -1,8 +1,8 @@
-.. _fuzz-testing-top:
+.. _fuzz_testing-top:
 
-============
+------------
 Fuzz Testing
-============
+------------
 
 What Is Fuzz Testing?
 ---------------------
@@ -53,7 +53,7 @@ A Fuzz Testing Template
 -----------------------
 The following is an empty example template for a fuzz testing function.
 
-  .. code-block:: cpp
+.. code-block:: cpp
 
      // ============================================================================
      //                              FUZZ TESTING
@@ -117,7 +117,7 @@ has generated interesting test data by hand, and calls methods with that data,
 perhaps varying some other parameter along the way.  It might look something
 like the following.
 
-  .. code-block:: cpp
+.. code-block:: cpp
 
      const char *DATA[] = {
          "Hello",
@@ -144,7 +144,7 @@ as we can, in order to eliminate hidden assumptions in the test data that might
 prevent errors from being noticed.  So, if we are writing a fuzz test with the
 intent of paralleling the normal test above, we might write it like this.
 
-  .. code-block:: cpp
+.. code-block:: cpp
 
      // ,,,
      switch (test) {
@@ -169,6 +169,7 @@ used the fuzz data only for the string but not for the limit.
 
 BDE Fuzz Components
 -------------------
+
 The components `bslim_fuzzdataview <https://bbgithub.dev.bloomberg.com/bde/bde/blob/main/groups/bsl/bslim/bslim_fuzzdataview.h>`__
 and `bslim_fuzzutil <https://bbgithub.dev.bloomberg.com/bde/bde/blob/main/groups/bsl/bslim/bslim_fuzzutil.h>`__
 can simplify the creation of function input from raw fuzz data.
@@ -211,7 +212,6 @@ skeleton above, fuzz tests may include the usual invocations of ``ASSERTV`` and
 related test macros, and any failure will result in the test driver aborting
 and thus notifying the fuzz testing machinery that the supplied input has
 caused a failure.
-
 
     - Acceptance Testing Functions with Wide Contracts:
         Functions with wide contracts claim to accept any input.  Thus, the
@@ -331,7 +331,7 @@ behavior.
 
   ::
 
-    $ eval `bde_build_env.py -t dbg_opt_safe_exc_mt_64_asan_fuzz_cpp17 -c clang-13`
+    $ eval `bbs_build_env -u opt_dbg_safe_64_asan_fuzz_cpp17 -p clang-13`
 
 {{{ internal
 
@@ -356,7 +356,7 @@ Then configure and build the fuzz test.
 
   ::
 
-    $ cmake_build.py configure build --targets=ball_patternutil.t --tests=build
+    $ bbs_build configure build --targets=ball_patternutil.t --tests=build
 
 Finally, run the fuzz test.  When not invoked with command-line arguments, a
 fuzz testing test driver will run forever or until it crashes.  There are a
@@ -404,11 +404,11 @@ write the fuzz data that caused the problem to a file named ``crash-...``.
 Here is some sample output for a one-line fuzz test that treats the fuzz data
 as a pointer and tries to indirect it, which causes an immediate failure.
 
-  .. code-block:: cpp
+.. code-block:: cpp
 
      extern "C" int LLVMFuzzerTestOneInput(int **f) { return **f == 0; }
 
-  ::
+.. code-block:: text
 
      INFO: Seed: 1428378131
      INFO: Loaded 1 modules   (1 inline 8-bit counters): 1 [0x78d128, 0x78d129),
@@ -499,7 +499,9 @@ example, `AddressSanitizerAndDebugger
 There is a well-known program location, ``__sanitizer::Die``, that is called
 after the program prints its report and before it exits; setting a breakpoint
 there allows for tracing back to where the error occurred.  A debugging session
-for the above failure might begin as follows::
+for the above failure might begin as follows:
+
+.. code-block:: text
 
     $ gdb ./ft.t
     (gdb) break __sanitizer::Die

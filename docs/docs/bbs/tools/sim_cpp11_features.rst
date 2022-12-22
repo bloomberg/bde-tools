@@ -1,34 +1,39 @@
-.. _sim_cpp11_features:
+.. _sim_cpp11_features-top:
 
 =====================
 sim_cpp11_features.pl
 =====================
 
-
 -------
 Purpose
 -------
 
-
-The \ **sim_cpp11_features.pl**\  program converts a file with specially delimited
-regions of C++11 code and generates a C++03 version of that code that
-emulates the C++11 features. By default, the C++03 expansions are placed
-in a separate file with an extra "\ ``_cpp03``\ " delimiter before the extension.
+The \ **sim_cpp11_features.pl**\  program converts a file with specially
+delimited regions of C++11 code and generates a C++03 version of that code that
+emulates the C++11 features. By default, the C++03 expansions are placed in a
+separate file with an extra "\ ``_cpp03``\ " delimiter before the extension.
 Currently, this program emulates two constructs:
 
-        * Variadic templates (a.k.a. parameter packs) are emulated by creating multiple copies of the template code, starting with zero template arguments and adding an argument with each repetition (up to 10 arguments by default).
-        * Forwarding references in function arguments are emulated by surrounding the argument declaration in a \ ``BSLS_COMPILERFEATURES_FORWARD_REF``\ macro invocation and replacing \ ``std::forward``\  calls with \ ``BSLS_COMPILERFEATURES_FORWARD``\ .
+        * Variadic templates (a.k.a. parameter packs) are emulated by creating
+          multiple copies of the template code, starting with zero template
+          arguments and adding an argument with each repetition (up to 10
+          arguments by default).
+        * Forwarding references in function arguments are emulated by
+          surrounding the argument declaration in a 
+          ``BSLS_COMPILERFEATURES_FORWARD_REF`` macro invocation and replacing
+          ``std::forward`` calls with ``BSLS_COMPILERFEATURES_FORWARD``.
 
 
 Both emulations are approximate, at best, but experience has found them to be
 extremely useful.
 
-The program is located in the ``bde-tools`` repo as ``contrib/sim_cpp11/sim_cpp11_features.pl``.
+The program is located in the ``bde-tools`` repo as
+``BdeBuildSystem/scripts/sim_cpp11_features.pl`` and is intended to be invoked
+by the BBS build system.
 
 -----
 Usage
 -----
-
 
 \ **Usage:**\  \ ``sim_cpp11_features.pl``\  [ \ *option...*\  ] \ *input-file-name...*\ 
 
@@ -51,89 +56,70 @@ Options
 =======
 
 
-\ ``--output=``\ \ *filename.ext*\ 
------------------------------------
-
-
+``--output=`` *filename.ext* 
+----------------------------
 Specifies the name of the output file. By default, the C++11 output overwrites
-the input file and the C++03 output is written to a file whose name is the
-same as the input filename except with a "\ ``_cpp03``\ " inserted before the
-filename extension. For example, if the input file is "\ ``bxxy_useful.h``\ ", then
-the C++03 expansion is written to "\ ``bxxy_useful_cpp03.h``\ ". If \ ``--output``\  is
-specified, then the C++11 output is written to \ *filename.ext*\  and the C++03
-output is written to \ *filename_cpp03.ext*\ .  If \ *filename*\  is a single dash
-(-), then output is written to standard out (\ ``--inplace``\  mode only).
+the input file and the C++03 output is written to a file whose name is the same
+as the input filename except with a "``_cpp03``" inserted before the filename
+extension. For example, if the input file is "``bxxy_useful.h``", then the
+C++03 expansion is written to "``bxxy_useful_cpp03.h``". If ``--output``  is
+specified, then the C++11 output is written to *filename.ext*  and the C++03
+output is written to *filename_cpp03.ext*.  If *filename* is a single dash (-),
+then output is written to standard out (``--inplace`` mode only).
 
 
-\ ``--[no-]inplace``\ 
-----------------------
-
-
-The \ ``--inplace``\  option causes the C++11 and C++03 code to be intermixed
-within the same output file, separated by conditional compilation
-directives. This option, which was the only operating mode prior to June 2020,
-tends to produce a verbose source file that is difficult to maintain. The
-default is \ ``--no-inplace``\ .
+``--[no-]inplace``
+------------------
+The ``--inplace``  option causes the C++11 and C++03 code to be intermixed
+within the same output file, separated by conditional compilation directives.
+This option, which was the only operating mode prior to June 2020, tends to
+produce a verbose source file that is difficult to maintain. The default is
+``--no-inplace``.
 
 
 \ ``--verify-no-change``\ 
 --------------------------
+Verify that nothing has changed in the main file that would result in a change
+in generated code (including any generated code within the main file itself).
+If any output (including the main file) would change, do not write any output
+and abort with an error.
 
 
-Verify that nothing has changed in the main file that would result in a
-change in generated code (including any generated code within the main file
-itself).  If any output (including the main file) would change, do not write
-any output and abort with an error.
+``--clean`` 
+-----------
+When used with ``--inplace``, removes all C++03 emulation code, leaving a
+C++11-only file that is more convenient to maintain during development.
+Typically, this option is used once just before adding or modifying code. After
+a successful build using C++11, this tool is typically run again without
+``--clean`` to produce release code that can be tested with C++03.
 
 
-\ ``--clean``\ 
----------------
+``--var-args=`` *max-args* 
+--------------------------
+The maximum number of variadic template expansions to generate (default 10).
+This value is written into the C++11 file as an embedded option (see below) so
+that future runs do not need to specify this option again.
 
 
-When used with \ ``--inplace``\ , removes all C++03 emulation code, leaving a
-C++11-only file that is more convenient to maintain during
-development. Typically, this option is used once just before adding or
-modifying code. After a successful build using C++11, this tool is typically
-run again without \ ``--clean``\  to produce release code that can be tested
-with C++03.
+``--test``
+----------
+Runs the tool on a built-in test file, producing a ``diff``  of the original
+and modified file if changes were detected. Usually used with ``--inplace``.
 
 
-\ ``--var-args=``\ \ *max-args*\ 
----------------------------------
-
-
-The maximum number of variadic template expansions to generate (default
-10). This value is written into the C++11 file as an embedded option (see
-below) so that future runs do not need to specify this option again.
-
-
-\ ``--test``\ 
---------------
-
-
-Runs the tool on a built-in test file, producing a \ ``diff``\  of the original and
-modified file if changes were detected. Usually used with \ ``--inplace``\ 
-
-
-\ ``--debug=``\ \ *level*\ 
----------------------------
-
-
+``--debug=`` *level* 
+--------------------
 Turns on debugging at the specified level. The higher the level, the more
 verbose the output.
 
 
-\ ``--trace=``\ \ *subroutine*\ :\ *level*\ 
---------------------------------------------
-
-
+``--trace=`` *subroutine*:*level* 
+---------------------------------
 Turns on tracing for the specified subroutine (for debugging).
 
 
-\ *input-file-name...*\ 
-------------------------
-
-
+*input-file-name...* 
+--------------------
 One or more input file names.  If the input file is a single dash (-), then
 read from standard input.
 
@@ -141,54 +127,42 @@ read from standard input.
 
 Embedded options
 ================
-
-
 A few options can be embedded directly into the input file at the end of an
-\ ``#if``\  directive that introduces a region to be emulated:
+``#if``  directive that introduces a region to be emulated:
 
-\ ``// $var-args=``\ \ *n*\ 
-----------------------------
-
-
-Globally sets the maximum number of variadic template expansions to \ *n*\ . A
-value specified using the command-line \ ``--var-args``\  option overrides the
-value of \ *n*\  specified using this embedded option and overwrites \ *n*\  in the
+``// $var-args=`` *n* 
+---------------------
+Globally sets the maximum number of variadic template expansions to *n* . A
+value specified using the command-line ``--var-args`` option overrides the
+value of *n* specified using this embedded option and overwrites *n* in the
 generated output.
 
 
-\ ``// $local-var-args=``\ \ *n*\ 
-----------------------------------
-
-
-Sets the maximum number of variadic template expansions to \ *n*\  only for the
+``// $local-var-args=`` *n* 
+---------------------------
+Sets the maximum number of variadic template expansions to *n*  only for the
 current region. The number of expansions returns to the file default after the
-closing \ ``#endif``\ .
+closing ``#endif``.
 
-
-
-
-===========
+-----------
 Limitations
-===========
-
-
+-----------
 The C++11 emulation provided by this tool is incomplete at best. It does not
 produce a semantic interpretation of the input code and is limited to basic
 pattern matching. Known limitations are:
 
 
-        * All parameter packs for a given instantiation of a variadic template must be the same length.
-        * Perfect-forwarding emulation does not recognize prvalues as rvalues.
-        * There is limited support for partial specialization of variadic class templates. In particular, specializing on the empty parameter pack is not currently supported.
+  * All parameter packs for a given instantiation of a variadic template must
+    be the same length.
+  * Perfect-forwarding emulation does not recognize prvalues as rvalues.
+  * There is limited support for partial specialization of variadic class
+    templates. In particular, specializing on the empty parameter pack is not
+    currently supported.
 
-
-=======
+-------
 Example
-=======
-
-
-The following input file (let's call it "\ ``foo.h``\ "):
-
+-------
+The following input file (let's call it "``foo.h``"):
 
 .. code-block:: cpp
 
@@ -201,9 +175,7 @@ The following input file (let's call it "\ ``foo.h``\ "):
 
      #endif
 
-
-gets rewritten into the same input file ("\ ``foo.h``\ ") as:
-
+gets rewritten into the same input file ("``foo.h``") as:
 
 .. code-block:: cpp
 
@@ -229,9 +201,8 @@ gets rewritten into the same input file ("\ ``foo.h``\ ") as:
 
      #endif // End C++11 code
 
-
-and a new "\ ``_cpp03``\ " header file is created with the C++03 equivalent
-expansions ("\ ``foo_cpp03.h``\ "):
+and a new "``_cpp03``" header file is created with the C++03 equivalent
+expansions ("``foo_cpp03.h``"):
 
 
 .. code-block:: cpp
@@ -343,5 +314,4 @@ expansions ("\ ``foo_cpp03.h``\ "):
      // See the License for the specific language governing permissions and
      // limitations under the License.
      // ----------------------------- END-OF-FILE ----------------------------------
-
 

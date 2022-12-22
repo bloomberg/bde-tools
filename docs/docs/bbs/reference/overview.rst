@@ -1,14 +1,15 @@
 .. _bbs-overview-top:
 
-Overview
-========
+------------
+BBS Overview
+------------
+The ``BDE Build System`` (BBS) is a set of CMake modules, tools, and
+configuration files that automate the configuration, build, and installation of
+the code that use a :doc:`BDE-style physical code
+organization<bde_repo_layout>`.
 
-BBS build system is a set of CMake modules, tools and configuration files that
-simplify development of the libraries that adhere to the BDE physical code
-organization methodology.
-
-BBS CMake Modules
-=================
+CMake Modules
+-------------
 BBS CMake modules provide functions for:
 
   * Parsing BDE metadata files that provide the list of sources and
@@ -20,9 +21,8 @@ BBS CMake modules provide functions for:
   * Generating and labeling test targets
   * Generating install target and components
 
-BBS Tools
-=========
-
+Tools
+-----
 BBS tools provide a set of scripts that simplify common developer tasks such
 as:
 
@@ -31,4 +31,4 @@ as:
 
 Effectively, BBS tools shield users from various mundane tasks associated with
 build process - creating various folders, generating cmake command line and
-invoking cmake and low level build system. 
+invoking cmake and low level build system.

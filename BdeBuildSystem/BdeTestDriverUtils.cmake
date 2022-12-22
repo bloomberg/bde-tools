@@ -1,5 +1,11 @@
 include_guard()
 
+#[[.rst:
+BdeTestDriverUtils
+------------------
+This module provide a set of function to generate BDE tests
+#]]
+
 # On windows we will invoke the python script directly
 # On unix - the shell wrapper will find the interperter and 
 # invoke the implementation file.
@@ -18,13 +24,22 @@ if (BBS_USE_WAFSTYLEOUT)
     set(BBS_RUNTEST ${cmd_wrapper} ${BBS_RUNTEST})
 endif()
 
-# bbs_add_bde_style_test(target
-#                        [ WORKING_DIRECTORY     dir       ]
-#                        [ TEST_VERBOSITY        verbosity ]
-#                        [ EXTRA_ARGS            args ...  ]
-#                        [ LABELS                prop value ... ]
-#                       )
-# adds the target as a test using the bde test driver script
+#[[.rst:
+.. command:: bbs_add_bde_style_test
+
+Add the [executable] ``target`` as a BDE test and create ctest labels for it.
+
+.. code-block:: cmake
+
+   bbs_add_bde_style_test(target
+                          [ WORKING_DIRECTORY     dir       ]
+                          [ TEST_VERBOSITY        verbosity ]
+                          [ EXTRA_ARGS            args ...  ]
+                          [ LABELS                prop value ... ]
+                         )
+
+#]]
+
 function(bbs_add_bde_style_test target)
     cmake_parse_arguments(""
                           ""
@@ -50,14 +65,24 @@ function(bbs_add_bde_style_test target)
     endforeach()
 endfunction()
 
-# bbs_add_component_tests(target SOURCES source1.t.cpp [source2.t.cpp ...]
-#                         [ WORKING_DIRECTORY      dir            ]
-#                         [ TEST_VERBOSITY         verbosity      ]
-#                         [ EXTRA_ARGS             test_arg   ... ]
-#                         [ PROPERTIES             prop value ... ]
-#                         [ TEST_DEPS              lib1 lib2  ... ]
-#                         [ TEST_TARGET_PROPERTIES prop value ... ]
-#                        )
+#[[.rst:
+.. command:: bbs_add_component_tests
+
+Generate build targets [executables] for the specified ``SOURCES``, add them as
+BDE tests and generate necessary build dependencies and test labels.
+
+.. code-block:: cmake
+
+   bbs_add_component_tests(target SOURCES source1.t.cpp [source2.t.cpp ...]
+                           [ WORKING_DIRECTORY      dir            ]
+                           [ TEST_VERBOSITY         verbosity      ]
+                           [ EXTRA_ARGS             test_arg   ... ]
+                           [ PROPERTIES             prop value ... ]
+                           [ TEST_DEPS              lib1 lib2  ... ]
+                           [ TEST_TARGET_PROPERTIES prop value ... ]
+                          )
+
+#]]
 function(bbs_add_component_tests target)
     cmake_parse_arguments(PARSE_ARGV 1
                           ""

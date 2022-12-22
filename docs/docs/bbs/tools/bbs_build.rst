@@ -1,15 +1,14 @@
-.. _cmake_build-top:
+.. _bbs_build-top:
 
-==============
-cmake_build.py
-==============
+=========
+bbs_build
+=========
 
 Introduction
 ============
 
-``cmake_build.py`` is a wrapper script that simplifies invocation of the
-``cmake`` and provides simple command line interface to the BDE build
-system.
+``bbs_build`` is a wrapper script that simplifies invocation of the ``cmake``
+and provides simple command line interface to the BBS build system.
 
 More specifically, the tool handles the following aspects of the build process:
 
@@ -21,20 +20,20 @@ More specifically, the tool handles the following aspects of the build process:
 
 4. Sets/passes necesssary parameters to the ``cmake``.
 
-``cmake_build.py`` knowns the environment variables set by the
-:ref:`bde_build_env.py <bde_build_env-top>` and will pick up those parameters
+``bbs_build`` knowns the environment variables set by the
+:ref:`bbs_build_env <bbs_build_env-top>` and will pick up those parameters
 from the environment if they are not specified in the command line.
 
 Command line 
 ============
 
 .. note::
-   The code samples below assume that the path to the ``cmake_build.py`` script
+   The code samples below assume that the path to the ``bbs_build`` script
    is added to the ``PATH`` environment variable.
 
 Full set of supported parameters can be listed by running::
 
-  cmake_build.py --help
+  bbs_build --help
 
 Commands
 --------
@@ -88,7 +87,7 @@ Those parameters are used by ``configure`` command.
 
 .. option:: -u UFID, --ufid UFID
 
-   Unified Flag IDentifier (e.g. "opt_exc_mt"). 
+   Unified Flag IDentifier (e.g. "opt_64_cpp17"). 
 
    .. note::
       If the parameter is not specified, the value is taken from the
@@ -102,18 +101,6 @@ Those parameters are used by ``configure`` command.
       If the parameter is not specified, the script will choose the 
       low-level build system (default is ``ninja``).
 
-.. option:: --dpkg-build
-
-   This option selects the toolchain that is used to produce production
-   versions of the BDE libraries.
-
-   .. note::
-      This parameter overrides the ``--compiler`` and ``--toolchain`` 
-      parameters.
-
-   .. warning::
-      This option should be used only when building release dpkg packages.
-      
 .. option:: --toolchain TOOLCHAIN
 
    Path to the CMake toolchain file. See `CMake Toolchains
@@ -163,8 +150,10 @@ Parameters for build command
 
 .. option:: --targets TARGET_LIST
 
-   Specifies the list of build targets. See :ref:`Build targets
-   <build_system_design-build-targets>` for more information.
+   Specifies the list of comma separated build targets. There are targets for
+   package groups (bsl/bsl.t), packages (bdlt/bdlt.t) and individual components
+   (ball_log/ball_log.t) and well as high-level target for building everything
+   (all/all.t)
 
 .. option:: --test {build, run}
 
@@ -194,8 +183,9 @@ Parameters for install command
 
 .. option:: --component COMPONENT
 
-   The name of the component to install. See :ref:`Install components
-   <build_system_design-install-components>` for more information.
+   The name of the component to install. This flag should be used only by the
+   builds helper that do BDE library packaging. When not specified, the command
+   installs headers and libraries for all UORs defined in the repo.
 
 .. option:: --install_dir INSTALL_DIR
 

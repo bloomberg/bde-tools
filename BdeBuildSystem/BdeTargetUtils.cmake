@@ -1,6 +1,10 @@
 include_guard()
 
-include(CMakePrintHelpers)
+#[[.rst:
+BdeTargetUtils
+--------------
+This module provide a set of function to create and populate bde targets.
+#]]
 
 # Find perl, but it's ok if it's missing
 find_package(Perl)
@@ -48,10 +52,11 @@ else()
     set_property(GLOBAL PROPERTY BBS_CMD_WRAPPER "")
 endif()
 
-#.rst:
-# .. command:: bbs_add_target_include_dirs
-#
-# Add include directories for this target.
+#[[.rst:
+.. command:: bbs_add_target_include_dirs
+
+  Add include directories for this target.
+#]]
 function(bbs_add_target_include_dirs target scope)
     foreach(arg ${ARGN})
         get_filename_component(dir ${arg} ABSOLUTE)
@@ -78,10 +83,12 @@ function(_bbs_defer_target_import target)
     endif()
 endfunction()
 
-#.rst:
-# .. command:: bbs_import_target_dependencies
-#
-# Import dependencies of the target
+#[[.rst:
+.. command:: bbs_import_target_dependencies
+
+  Import dependencies of the target
+#]]
+
 function(bbs_import_target_dependencies target)
     if (WIN32)
         return()
@@ -102,11 +109,12 @@ function(bbs_import_target_dependencies target)
 
 endfunction()
 
-#.rst:
-# .. command:: bbs_configure_target_tests
-#
-# Configure tests from the specified sources and
-# add the target as their main build dependency.
+#[[.rst:
+.. command:: bbs_configure_target_tests
+
+  Configure tests from the specified sources and
+  add the target as their main build dependency.
+#]]
 function(bbs_configure_target_tests target)
     cmake_parse_arguments(""
                           ""
@@ -126,10 +134,11 @@ endfunction()
 
 
 
-#.rst:
-# .. command:: bbs_install_target_headers
-#
-# Generate installation command for target headers.
+#[[.rst:
+.. command:: bbs_install_target_headers
+
+  Generate installation command for target headers.
+#]]
 function (bbs_install_target_headers target)
     get_target_property(uor_name ${target} NAME)
 
@@ -200,26 +209,11 @@ function (bbs_install_target target)
     endif()
 endfunction()
 
-# Forwarding wrapper
-function (bbs_install_library target)
-    cmake_parse_arguments(PARSE_ARGV 1
-                          ""
-                          ""
-                          "COMPONENT"
-                          ""
-    )
-    bbs_assert_no_unparsed_args("")
-    if (NOT _COMPONENT)
-        bbs_install_target(${target})
-    else()
-        bbs_install_target(${target} COMPONENT ${_COMPONENT})
-    endif()
-endfunction()
+#[[.rst:
+.. command:: bbs_emit_pkg_config
 
-#.rst:
-# .. command:: bbs_emit_pkg_config
-#
-# Emit package config for the target
+  Emit package config for the target
+#]]
 function (bbs_emit_pkg_config target)
     cmake_parse_arguments(PARSE_ARGV 1
                           ""
@@ -249,7 +243,7 @@ endfunction()
 #.rst:
 # .. command:: bbs_emit_bde_metadata
 #
-# Emit bde metadata for the target
+# Emit bde metadata for the target.
 # OBSOLETE
 function (bbs_emit_bde_metadata target)
     cmake_parse_arguments(PARSE_ARGV 1
@@ -309,6 +303,7 @@ endfunction()
 # .. command:: bbs_setup_target_uor
 #
 # Parse metadata and populate UOR target.
+# This command is a bbs equivalent of configure_bb_target().
 function(bbs_setup_target_uor target)
     cmake_parse_arguments(PARSE_ARGV 1
                           ""
