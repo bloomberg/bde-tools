@@ -38,6 +38,10 @@ if not uplid or not ufid:
 
 buildDir = f"_build/{uplid}-{removeBuildType(ufid)}-vscode-${{buildType}}"
 
+if not os.path.exists("CMakeLists.txt"):
+    print("Error: CMakeLists.txt not found.")
+    sys.exit(1)
+
 # Parse CMake flags
 cmakeFlagsList = subprocess.run(
     [
