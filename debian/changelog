@@ -1,11 +1,20 @@
-bde-tools (3.112.0.0) unstable; urgency=low
+bde-tools (3.112.1.0) unstable; urgency=low
 
+  * 4537932 Fix SunOS flags for 32 bit, non-PIC dpkg build (TLS) (#277)
+  * 66a7ee2 check for CMakeLists.txt (#276)
+  * 6197121 Add BBS documentation (#274)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 5 Jan 2023 19:41:57 -0500
+
+bde-tools (3.112.0.0) git; urgency=low
+
+  * d08ec6e Changelog for version 3.112.0.0
   * 24b7eae Add newest compiler versions
   * 3bd851e Set the compilers in settings.json (#273)
   * c5f5730 Limit test targets to non-empty ones (#272)
   * 0ca6da4 add .t to --targets doc (#271)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 7 Dec 2022 15:50:23 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 21 Dec 2022 13:40:04 -0500
 
 bde-tools (3.111.0.0) git; urgency=low
 
