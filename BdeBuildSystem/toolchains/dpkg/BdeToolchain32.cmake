@@ -44,7 +44,14 @@ endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain32.cmake")
-    # Nothing to adjust  on Sun.
+
+    string(APPEND CMAKE_C_FLAGS " -xthreadvar=dynamic")
+    remove_duplicates(CMAKE_C_FLAGS _tmp_C_FLAGS)
+    set(CMAKE_C_FLAGS ${_tmp_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
+
+    string(APPEND CMAKE_CXX_FLAGS " -xthreadvar=dynamic")
+    remove_duplicates(CMAKE_CXX_FLAGS _tmp_CXX_FLAGS)
+    set(CMAKE_CXX_FLAGS ${_tmp_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
