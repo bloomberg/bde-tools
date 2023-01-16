@@ -1,4 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+from checkversion import checkversion
+checkversion()
 
 import os
 import subprocess
