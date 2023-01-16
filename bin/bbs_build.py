@@ -1,4 +1,7 @@
-#!/usr/bin/env python3.8
+#!/usr/bin/env python3
+
+from checkversion import checkversion
+checkversion()
 
 from pylibinit import addlibpath
 addlibpath.add_lib_path()

@@ -1,9 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+from checkversion import checkversion
+checkversion()
 
 import os
 import subprocess
 import sys
-
 
 def quotedCMakeArgValue(value):
     if value in ["0", "OFF", "NO", "FALSE", "N"]:

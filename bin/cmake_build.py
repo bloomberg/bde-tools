@@ -1,5 +1,7 @@
-#!/usr/bin/env python3.8
+#!/usr/bin/env python3
 
+from checkversion import checkversion
+checkversion()
 
 import argparse
 import collections
