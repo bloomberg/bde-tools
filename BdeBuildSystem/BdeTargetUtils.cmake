@@ -472,9 +472,14 @@ function(bbs_setup_target_uor target)
             endif()
         endif()
 
-        # Generating .pc file. This will be a noop in non-Bloomberg build env.
+        # Generating .pc file. This will be a noop in non-Bloomberg build env (TODO:fix)
         if (NOT _NO_EMIT_PKG_CONFIG_FILE)
             bbs_emit_pkg_config(${target})
+        endif()
+
+        # Generate/install bdemetadata files. This will be a noop in non-Bloomberg build env.
+        if (NOT _NO_GEN_BDE_METADATA)
+            bbs_emit_bde_metadata(${target})
         endif()
 
         # Create an alias library with the pkgconfig name, if it is different from

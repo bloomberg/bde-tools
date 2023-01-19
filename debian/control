@@ -31,6 +31,7 @@ Description: GDB Pretty printers for Bloomberg components
 Package: bbs-cmake-module
 Architecture: all
 Depends:
-    cmake-emit-pkgconfig-file
+    cmake-emit-pkgconfig-file,
+    cmake-gen-bde-metadata
 Description: BdeBuildSystem CMake module
  CMake module to process metadata in BDE-style repositories.
