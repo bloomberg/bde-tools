@@ -31,7 +31,7 @@
     To use the pretty printers load the script into gdb, either manually
     through:
 
-        (gdb) python execfile('/path/to/this/script.py')
+        (gdb) source /path/to/this/folder/gdbinit
 
     or automatically at start up.  See the gdb documentation on how to setup
     automatic loading of pretty printers.
