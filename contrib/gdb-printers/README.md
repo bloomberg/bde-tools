@@ -81,11 +81,10 @@ Running the pretty printers
 The pretty printers can be loaded manually inside gdb or they can be loaded
 automatically on startup. To load the pretty printers manually run:
 
-    (gdb) python execfile(\
-          '/bb/bde/bbshr/bde-tools/contrib/gdb-printers/bde_printer.py')
+    (gdb) source /bb/bde/bbshr/bde-tools/contrib/gdb-printers/gdbinit
 
 To load the pretty printers automatically at gdb startup you can copy the file
-'gdbinit' into the '.gdbinit' file in your home directory.
+'gdbinit' (gdbinit.dpkg) into the '.gdbinit' file in your home directory.
 
 Once the pretty printers are loaded, you can list the supported types by
 running:
