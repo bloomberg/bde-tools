@@ -1,10 +1,18 @@
-bde-tools (3.112.1.0) unstable; urgency=low
+bde-tools (3.113.0.0) unstable; urgency=low
 
+  * e249e9b Add bde metadata generation. (#279)
+  * b898dc3 Do not de-duplicate options from dpkg toolchains (#278)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 20 Jan 2023 10:55:40 -0500
+
+bde-tools (3.112.1.0) git; urgency=low
+
+  * 2e7cadc Changelog for version 3.112.1.0
   * 4537932 Fix SunOS flags for 32 bit, non-PIC dpkg build (TLS) (#277)
   * 66a7ee2 check for CMakeLists.txt (#276)
   * 6197121 Add BBS documentation (#274)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 5 Jan 2023 19:41:57 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 5 Jan 2023 19:46:09 -0500
 
 bde-tools (3.112.0.0) git; urgency=low
 
