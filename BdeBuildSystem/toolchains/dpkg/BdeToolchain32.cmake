@@ -13,30 +13,30 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain32.cmake")
 
     string(APPEND CMAKE_C_FLAGS   " -fno-strict-aliasing")
-    set(CMAKE_C_FLAGS ${_tmp_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
+    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
 
     string(APPEND CMAKE_CXX_FLAGS " -fno-strict-aliasing")
-    set(CMAKE_CXX_FLAGS ${_tmp_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "AIX")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain32.cmake")
 
     string(APPEND CMAKE_C_FLAGS   " -qalias=noansi")
-    set(CMAKE_C_FLAGS ${_tmp_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
+    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
 
     string(APPEND CMAKE_CXX_FLAGS " -qalias=noansi")
-    set(CMAKE_CXX_FLAGS ${_tmp_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain32.cmake")
 
     string(APPEND CMAKE_C_FLAGS " -xthreadvar=dynamic")
-    set(CMAKE_C_FLAGS ${_tmp_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
+    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
 
     string(APPEND CMAKE_CXX_FLAGS " -xthreadvar=dynamic")
-    set(CMAKE_CXX_FLAGS ${_tmp_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
