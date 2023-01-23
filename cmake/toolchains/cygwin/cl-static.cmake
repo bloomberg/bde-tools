@@ -13,8 +13,8 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "/GR "
        "/GT "
        "/nologo "
-       "/D_WIN32_WINNT=0x0502 "
-       "/DWINVER=0x0502 "
+       "/D_WIN32_WINNT=0x0600 "
+       "/DWINVER=0x0600 "
       )
 set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
