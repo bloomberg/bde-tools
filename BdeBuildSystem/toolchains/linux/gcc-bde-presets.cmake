@@ -34,11 +34,6 @@ if(BDE_BUILD_TARGET_32)
            )
 endif()
 
-string(CONCAT DEFAULT_CXX_FLAGS
-       "${DEFAULT_CXX_FLAGS} "
-       "-D_GLIBCXX_USE_CXX11_ABI=0 "
-       )
-
 # NOTE: all c++ compilers support exception by default
 # and BDE will by default define BDE_BUILD_TARGET_EXC
 if (BDE_BUILD_TARGET_NO_EXC)
