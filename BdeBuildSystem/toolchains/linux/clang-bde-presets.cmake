@@ -142,6 +142,6 @@ if(BDE_BUILD_TARGET_FUZZ)
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
            "-fsanitize=undefined "
-           "-static-libubsan "
+           "-static-libsan "
            )
 endif()
