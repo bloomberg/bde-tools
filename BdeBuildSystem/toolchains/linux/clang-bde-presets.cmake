@@ -135,9 +135,9 @@ endif()
 if(BDE_BUILD_TARGET_FUZZ)
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
-           "-fsanitize=fuzzer-no-link"
-           "-DBDE_ACTIVATE_FUZZ_TESTING"
-           "-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION"
+           "-fsanitize=fuzzer-no-link "
+           "-DBDE_ACTIVATE_FUZZ_TESTING "
+           "-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION "
            )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
