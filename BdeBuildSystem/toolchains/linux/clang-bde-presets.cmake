@@ -139,9 +139,12 @@ if(BDE_BUILD_TARGET_FUZZ)
            "-DBDE_ACTIVATE_FUZZ_TESTING "
            "-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION "
            )
+    string(CONCAT DEFAULT_C_FLAGS
+           "${DEFAULT_C_FLAGS} "
+           "-fsanitize=fuzzer-no-link "
+           )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
-           "-fsanitize=undefined "
            "-static-libsan "
            )
 endif()

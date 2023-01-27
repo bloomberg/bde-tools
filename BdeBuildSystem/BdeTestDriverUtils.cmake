@@ -113,6 +113,10 @@ function(bbs_add_component_tests target)
 
         target_link_libraries(${test_target_name}.t PUBLIC ${target} ${_TEST_DEPS})
 
+        if (BDE_BUILD_TARGET_FUZZ)
+            target_link_libraries(${test_target_name}.t PRIVATE "-fsanitize=fuzzer")
+        endif()
+
         set(test_src_labels ${test_name})
         if (NOT test_name STREQUAL test_target_name)
             list(APPEND test_src_labels ${test_target_name})
