@@ -16,6 +16,10 @@ function(_bbs_import_threads)
             INTERFACE
                 _POSIX_PTHREAD_SEMANTICS
                 _REENTRANT)
+        target_compile_options(
+            bbs_threads
+            INTERFACE
+                -mt)
     elseif(CMAKE_SYSTEM_NAME STREQUAL "AIX")
         target_compile_definitions(
             bbs_threads
@@ -24,12 +28,20 @@ function(_bbs_import_threads)
                 _REENTRANT
                 _THREAD_SAFE
                 __VACPP_MULTI__)
+        target_compile_options(
+            bbs_threads
+            INTERFACE
+                -qthreaded)
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         target_compile_definitions(
             bbs_threads
             INTERFACE
                 _POSIX_PTHREAD_SEMANTICS
                 _REENTRANT)
+        target_compile_options(
+            bbs_threads
+            INTERFACE
+                -pthread)
     endif()
 endfunction()
 

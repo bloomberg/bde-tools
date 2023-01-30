@@ -386,6 +386,10 @@ function(bbs_setup_target_uor target)
                     bbs_add_target_include_dirs(${pkg}-obj PUBLIC ${${pkg}_INCLUDE_DIRS})
                     target_link_libraries(${pkg}-obj PUBLIC bbs_bde_flags)
 
+                    if (NOT BDE_BUILD_TARGET_NO_MT)
+                        target_link_libraries(${pkg}-obj PUBLIC bbs_threads)
+                    endif()
+
                     add_library(${pkg}-iface INTERFACE)
                     target_link_libraries(${pkg}-iface INTERFACE ${pkg}-obj)
 
@@ -428,7 +432,11 @@ function(bbs_setup_target_uor target)
             set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
 
             target_link_libraries(${target} PUBLIC ${${uor_name}_PCDEPS}
-                                            INTERFACE bbs_threads bbs_bde_flags)
+                                            INTERFACE bbs_bde_flags)
+
+            if (NOT BDE_BUILD_TARGET_NO_MT)
+                target_link_libraries(${target} INTERFACE bbs_threads)
+            endif()
 
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
 
@@ -457,7 +465,11 @@ function(bbs_setup_target_uor target)
             bbs_add_target_include_dirs(${target} PUBLIC ${${uor_name}_INCLUDE_DIRS})
 
             target_link_libraries(${target} PUBLIC    ${${uor_name}_PCDEPS}
-                                            INTERFACE bbs_threads bbs_bde_flags)
+                                            INTERFACE bbs_bde_flags)
+
+            if (NOT BDE_BUILD_TARGET_NO_MT)
+                target_link_libraries(${target} INTERFACE bbs_threads)
+            endif()
 
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
             if (NOT _SKIP_TESTS)
@@ -516,6 +528,10 @@ function(bbs_setup_target_uor target)
             target_sources(${lib_target} PRIVATE "${${uor_name}_SOURCE_FILES}")
             bbs_add_target_include_dirs(${lib_target} PUBLIC "${${uor_name}_INCLUDE_DIRS}")
             target_link_libraries(${lib_target} PUBLIC "${${uor_name}_PCDEPS}")
+
+            if (NOT BDE_BUILD_TARGET_NO_MT)
+                target_link_libraries(${lib_target} INTERFACE bbs_threads)
+            endif()
 
             # Copy properties from executable target to corresponding properties
             # of created ${lib_target} target. This will correctly set compiler/linker
