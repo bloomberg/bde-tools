@@ -1,9 +1,16 @@
-bde-tools (3.113.0.0) unstable; urgency=low
+bde-tools (3.114.0.0) unstable; urgency=low
 
+  * 072e902 Change minimum Windows version to Windows 7
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 31 Jan 2023 11:35:55 -0500
+
+bde-tools (3.113.0.0) git; urgency=low
+
+  * 0fd88a4 Changelog for version 3.113.0.0
   * e249e9b Add bde metadata generation. (#279)
   * b898dc3 Do not de-duplicate options from dpkg toolchains (#278)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 20 Jan 2023 10:55:40 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 20 Jan 2023 12:15:47 -0500
 
 bde-tools (3.112.1.0) git; urgency=low
 
