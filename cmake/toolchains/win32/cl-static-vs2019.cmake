@@ -13,8 +13,8 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "/GR "
        "/GT "
        "/nologo "
-       "/D_WIN32_WINNT=0x0600 "
-       "/DWINVER=0x0600 "
+       "/D_WIN32_WINNT=0x0601 "
+       "/DWINVER=0x0601 "
       )
 set(CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} CACHE STRING "Default" FORCE)
 
@@ -27,8 +27,8 @@ string(CONCAT DEFAULT_C_FLAGS
        "/MP "
        "/GT "
        "/nologo "
-       "/D_WIN32_WINNT=0x0600 "
-       "/DWINVER=0x0600 "
+       "/D_WIN32_WINNT=0x0601 "
+       "/DWINVER=0x0601 "
       )
 set(CMAKE_C_FLAGS   ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 

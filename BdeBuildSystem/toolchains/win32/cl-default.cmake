@@ -30,8 +30,8 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "/GR "
        "/GT "
        "/nologo "
-       "/D_WIN32_WINNT=0x0600 "
-       "/DWINVER=0x0600 "
+       "/D_WIN32_WINNT=0x0601 "
+       "/DWINVER=0x0601 "
        ${CXX_WARNINGS}
       )
 
@@ -43,8 +43,8 @@ string(CONCAT DEFAULT_C_FLAGS
        "/MP "
        "/GT "
        "/nologo "
-       "/D_WIN32_WINNT=0x0600 "
-       "/DWINVER=0x0600 "
+       "/D_WIN32_WINNT=0x0601 "
+       "/DWINVER=0x0601 "
       )
 
 # Include BDE ufid presets
