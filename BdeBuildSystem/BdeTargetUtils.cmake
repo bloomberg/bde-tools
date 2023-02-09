@@ -132,15 +132,24 @@ function(bbs_configure_target_tests target)
     endif()
 endfunction()
 
-
-
 #[[.rst:
 .. command:: bbs_install_target_headers
 
   Generate installation command for target headers.
 #]]
 function (bbs_install_target_headers target)
+    cmake_parse_arguments(PARSE_ARGV 1
+                          ""
+                          ""
+                          "COMPONENT"
+                          "")
+    bbs_assert_no_unparsed_args("")
+
     get_target_property(uor_name ${target} NAME)
+
+    if (NOT _COMPONENT)
+        string(REPLACE "_" "-" _COMPONENT ${uor_name})
+    endif()
 
     set(_install_include_dir "include") # the default.
 
@@ -170,7 +179,7 @@ function (bbs_install_target_headers target)
 
     install(FILES ${${target}_INCLUDE_FILES}
             DESTINATION ${_install_include_dir}
-            COMPONENT ${uor_name}-headers)
+            COMPONENT ${_COMPONENT}-headers)
 endfunction()
 
 #.rst:
@@ -182,8 +191,7 @@ function (bbs_install_target target)
                           ""
                           ""
                           "COMPONENT"
-                          ""
-    )
+                          "")
     bbs_assert_no_unparsed_args("")
 
     get_target_property(uor_name ${target} NAME)
@@ -219,8 +227,7 @@ function (bbs_emit_pkg_config target)
                           ""
                           ""
                           "COMPONENT"
-                          ""
-    )
+                          "")
     bbs_assert_no_unparsed_args("")
 
     get_target_property(uor_name ${target} NAME)
@@ -250,8 +257,7 @@ function (bbs_emit_bde_metadata target)
                           ""
                           ""
                           "COMPONENT"
-                          ""
-    )
+                          "")
     bbs_assert_no_unparsed_args("")
 
     get_target_property(uor_name ${target} NAME)
