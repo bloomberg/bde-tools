@@ -1,7 +1,8 @@
-bde-tools (3.114.0.0) unstable; urgency=low
+bde-tools (3.114.0.1) unstable; urgency=low
 
+  * d25906d Changelog for version 3.114.0.0
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 9 Feb 2023 13:27:52 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 15 Feb 2023 17:18:09 -0500
 
 bde-tools (3.114.0.0) git; urgency=low
 
