@@ -16,10 +16,18 @@ function(_bbs_import_threads)
             INTERFACE
                 _POSIX_PTHREAD_SEMANTICS
                 _REENTRANT)
-        target_compile_options(
-            bbs_threads
-            INTERFACE
-                -mt)
+
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "SunPro")
+            target_compile_options(
+                bbs_threads
+                INTERFACE
+                    -mt)
+        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            target_compile_options(
+                bbs_threads
+                INTERFACE
+                    -pthread)
+        endif()
     elseif(CMAKE_SYSTEM_NAME STREQUAL "AIX")
         target_compile_definitions(
             bbs_threads
