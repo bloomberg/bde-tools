@@ -16,6 +16,7 @@
     "terminal.integrated.defaultProfile.linux": "bash",
     "files.exclude": {
         "**/.git": true,
-        "**/_build": true
+        "**/_build": true,
+        ".vscode/.cache": true
     }
 }
