@@ -310,12 +310,15 @@ endfunction()
 #
 # Parse metadata and populate UOR target.
 # This command is a bbs equivalent of configure_bb_target().
+# CUSTOM_PACKAGES - list of packages that provide their custom CML
+# PRIVATE_PACKAGES - list of packages that provide implementation details
+#                    headers for those packages should not be installed.
 function(bbs_setup_target_uor target)
     cmake_parse_arguments(PARSE_ARGV 1
                           ""
                           "SKIP_TESTS;NO_GEN_BDE_METADATA;NO_EMIT_PKG_CONFIG_FILE"
                           "SOURCE_DIR"
-                          "CUSTOM_PACKAGES")
+                          "CUSTOM_PACKAGES;PRIVATE_PACKAGES")
     bbs_assert_no_unparsed_args("")
 
     # Get the name of the unit from the target
@@ -336,7 +339,8 @@ function(bbs_setup_target_uor target)
     if (EXISTS ${_SOURCE_DIR}/group)
         bbs_read_metadata(GROUP ${uor_name}
                           SOURCE_DIR ${_SOURCE_DIR}
-                          CUSTOM_PACKAGES "${_CUSTOM_PACKAGES}")
+                          CUSTOM_PACKAGES "${_CUSTOM_PACKAGES}"
+                          PRIVATE_PACKAGES "${_PRIVATE_PACKAGES}")
     else()
         if (EXISTS ${_SOURCE_DIR}/package)
             bbs_read_metadata(PACKAGE ${uor_name}
@@ -625,4 +629,32 @@ function(bbs_setup_header_only_pkg pkg)
 
     list(APPEND bsl_INCLUDE_FILES ${${pkg}_INCLUDE_FILES})
     set(bsl_INCLUDE_FILES  ${bsl_INCLUDE_FILES}  PARENT_SCOPE)
+endfunction()
+
+function(bbs_setup_header_only_pkg2 target pkg)
+    cmake_parse_arguments(PARSE_ARGV 1
+                          ""
+                          ""
+                          "SOURCE_DIR"
+                          "")
+    bbs_assert_no_unparsed_args("")
+
+    bbs_read_package_metadata(${pkg} ${CMAKE_CURRENT_SOURCE_DIR})
+
+    # Create package interface library with include folder.
+    add_library(${pkg}-iface INTERFACE)
+    bbs_add_target_include_dirs(${pkg}-iface INTERFACE ${${pkg}_INCLUDE_DIRS})
+
+    # Create package library with transitive dependency on interface.
+    add_library(${pkg} INTERFACE)
+    target_link_libraries(${pkg} INTERFACE ${pkg}-iface)
+
+    # Add inter-package dependencies for interface and package libraries.
+    foreach(p ${${pkg}_PCDEPS})
+        target_link_libraries(${pkg}-iface INTERFACE ${p}-iface)
+        target_link_libraries(${pkg} INTERFACE ${p})
+    endforeach()
+
+    list(APPEND ${target}_INCLUDE_FILES ${${pkg}_INCLUDE_FILES})
+    set(${target}_INCLUDE_FILES  ${${target}_INCLUDE_FILES}  PARENT_SCOPE)
 endfunction()

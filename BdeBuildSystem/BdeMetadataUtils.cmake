@@ -41,12 +41,15 @@ the parent scope:
 
    bbs_read_metadata(GROUP <group>
                      [SOURCE_DIR <dir>]
-                     [CUSTOM_PACKAGES <pkg list>])
+                     [CUSTOM_PACKAGES <pkg list>]
+                     [PRIVATE_PACKAGES <pkg list>])
 
 GROUP mode reads the bde group metadata files from the optionally specified
 ``SOURCE_DIR`` (if not specified, the value of ``CMAKE_CURRENT_SOURCE_DIR`` is
-used) skipping the optionally specified ``CUSTOM_PACKAGES`` folders. Each
-subfolder in the ``SOURCE_DIR`` s treatead as a folder containing a package.
+used) skipping the optionally specified ``CUSTOM_PACKAGES`` folders.
+Additionally for all ``PRIVATE`` packages the include files will not be added 
+to the  ``INCLUDE_FILES`` variable for the group.
+Subfolder in the ``SOURCE_DIR`` s treatead as a folder containing a package.
 In addition to package list variables, it sets the following group list
 variables in the parent scope:
 
@@ -69,7 +72,7 @@ function(bbs_read_metadata)
                           ""
                           ""
                           "PACKAGE;GROUP;SOURCE_DIR"
-                          "CUSTOM_PACKAGES")
+                          "CUSTOM_PACKAGES;PRIVATE_PACKAGES")
     bbs_assert_no_unparsed_args("")
 
     if (_PACKAGE AND _GROUP)
@@ -87,7 +90,8 @@ function(bbs_read_metadata)
     elseif (_GROUP)
         bbs_read_group_metadata(${_GROUP}
                                 ${_SOURCE_DIR}
-                                CUSTOM_PACKAGES "${_CUSTOM_PACKAGES}")
+                                CUSTOM_PACKAGES "${_CUSTOM_PACKAGES}"
+                                PRIVATE_PACKAGES "${_PRIVATE_PACKAGES}")
     endif()
 
 endfunction()
@@ -126,7 +130,7 @@ macro(bbs_read_group_metadata group dir)
     cmake_parse_arguments(""
                           ""
                           ""
-                          "CUSTOM_PACKAGES"
+                          "CUSTOM_PACKAGES;PRIVATE_PACKAGES"
                           ${ARGN})
     bbs_assert_no_unparsed_args("")
 
@@ -160,11 +164,20 @@ macro(bbs_read_group_metadata group dir)
         if (${pkg} IN_LIST _CUSTOM_PACKAGES)
             message(TRACE "Skipping metadata for custom ${pkg}")
         else()
+            message(TRACE "Parsing metadata for package ${pkg}")
             bbs_read_package_metadata(${pkg} ${_SOURCE_DIR}/${pkg})
-            foreach(var COMPONENTS INCLUDE_DIRS INCLUDE_FILES
-                        SOURCE_DIRS SOURCE_FILES
-                        TEST_SOURCES G_TEST_SOURCES METADATA_DIRS)
-               list(APPEND ${group}_${var}     ${${pkg}_${var}})
+            set(propagate_properties COMPONENTS INCLUDE_DIRS INCLUDE_FILES
+                                     SOURCE_DIRS SOURCE_FILES
+                                     TEST_SOURCES G_TEST_SOURCES METADATA_DIRS)
+
+            # Private packages do not propagate their include files to the group
+            if (${pkg} IN_LIST _PRIVATE_PACKAGES)
+                message (TRACE "Package ${pkg} is private: skipping headers")
+                list(REMOVE_ITEM propagate_properties INCLUDE_FILES)
+            endif()
+
+            foreach(var ${propagate_properties})
+                list(APPEND ${group}_${var}     ${${pkg}_${var}})
             endforeach()
 
             foreach(dep ${${pkg}_DEPENDS})
