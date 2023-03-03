@@ -52,7 +52,7 @@ Here are a few good staring points.
    :maxdepth: 1
    :hidden:
 
-   bbs/general_info/requirements      
+   bbs/general_info/requirements
    bbs/general_info/installation
 
 
@@ -73,17 +73,16 @@ Here are a few good staring points.
    bbs/howtos/configure_profile
    bbs/howtos/build_instrumented
    bbs/howtos/build_different_compiler
-   
+
 .. toctree::
    :caption: Reference
    :maxdepth: 1
    :hidden:
-      
+
    bbs/reference/overview
    bbs/reference/bde_repo_layout
    bbs/reference/bbs_build_configuration
    bbs/reference/code_generation
-   bbs/reference/fuzz_testing
    bbs/reference/bbs_compiler_profile
 
 .. toctree::
