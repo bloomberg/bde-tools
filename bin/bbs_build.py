@@ -29,7 +29,7 @@ def find_installdir(version):
     vswhere_path = Path(__file__).parent /  "vswhere.exe"
 
     output = subprocess.check_output(
-        [vswhere_path, "-prerelease", "-legacy", "-format", "json"]
+        [vswhere_path, "-prerelease", "-legacy", "-products", "*", "-format", "json"]
     )
     compilers = json.loads(output.decode("ascii", errors="ignore"))
     for cl in compilers:
