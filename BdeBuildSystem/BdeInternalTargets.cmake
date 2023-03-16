@@ -45,12 +45,6 @@ endmacro()
 # Add thread related options to the target
 function(bbs_add_target_thread_flags target scope)
     if (NOT BDE_BUILD_TARGET_NO_MT)
-        # let cmake resolve the actual thread library needed on the link line
-        find_package(Threads REQUIRED) # note: this only runs if FindThreads has not been found yet
-        # Do not use Threads::Threads here. EmitPkgConfig bbcmake module will add this
-        # to the .pc file's Requires.private which is invalid.
-        target_link_libraries(${target} ${scope} ${CMAKE_THREAD_LIBS_INIT})
-
         # add OS specific compilation definitions for multithreaded code
         if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
             target_compile_definitions(${target}
