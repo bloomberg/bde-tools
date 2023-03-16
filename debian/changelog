@@ -1,8 +1,20 @@
-bde-tools (3.114.0.1) unstable; urgency=low
+bde-tools (3.115.0.0) unstable; urgency=low
 
+  * a934a5d Exports and internal targets. (#286)
+  * 741aa80 VS Build Tools support (#285)
+  * f1358cf Add private packages (#284)
+  * 739fe32 fuzz_testing doc update DRQS 171206698 (#282)
+  * b05a27e add .vscode/.cache to excluded folders (#283)
+  * 07e3cba Spellcheck pass (#281)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 15 Mar 2023 21:17:39 -0400
+
+bde-tools (3.114.0.1) git; urgency=low
+
+  * 302cb3a Changelog for version 3.114.0.1
   * d25906d Changelog for version 3.114.0.0
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 15 Feb 2023 17:18:09 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 15 Feb 2023 17:21:04 -0500
 
 bde-tools (3.114.0.0) git; urgency=low
 
