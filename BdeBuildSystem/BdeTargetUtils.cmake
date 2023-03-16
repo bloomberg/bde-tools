@@ -52,6 +52,13 @@ else()
     set_property(GLOBAL PROPERTY BBS_CMD_WRAPPER "")
 endif()
 
+if (NOT BBS_UOR_CONFIG_IN)
+    find_file(BBS_UOR_CONFIG_IN
+              "uorConfig.cmake.in"
+              PATHS ${CMAKE_CURRENT_LIST_DIR}/support
+              )
+endif()
+
 #[[.rst:
 .. command:: bbs_add_target_include_dirs
 
@@ -65,22 +72,44 @@ function(bbs_add_target_include_dirs target scope)
     endforeach()
 endfunction()
 
+# Try to find an external dependency passed via arguments
 function(_bbs_defer_target_import target)
-    set(_deferred_deps) # empty list
-    foreach(dep ${ARGN})
-        if (NOT TARGET ${dep})
-            list(APPEND _deferred_deps ${dep})
-        endif()
-    endforeach()
+    bbs_load_conan_build_info()
 
-    if (_deferred_deps)
-        if (NOT WIN32)
-            message(VERBOSE "Resolving required link libraries for ${target} : ${_deferred_deps}")
-            bbs_import_pkgconfig_targets(${_deferred_deps})
-        else()
-            message(FATAL_ERROR "Unresolved external dependancies: ${_deferred_deps}")
+    foreach(dep ${ARGN})
+        if (NOT dep OR TARGET ${dep})
+            continue()
         endif()
-    endif()
+
+        if(NOT WIN32)
+            bbs_import_pkgconfig_targets(${dep})
+
+            if (TARGET ${dep})
+                continue()
+            endif()
+        endif()
+
+        bbs_import_conan_target(${dep})
+
+        if (TARGET ${dep})
+            continue()
+        endif()
+
+        bbs_import_cmake_config(${dep})
+
+        if (TARGET ${dep})
+            continue()
+        endif()
+
+        bbs_import_raw_library(${dep})
+
+        if (TARGET ${dep})
+            continue()
+        endif()
+
+
+        message(WARNING "Unresolved external dependency: ${dep}")
+    endforeach()
 endfunction()
 
 #[[.rst:
@@ -90,10 +119,6 @@ endfunction()
 #]]
 
 function(bbs_import_target_dependencies target)
-    if (WIN32)
-        return()
-    endif()
-
     set(_deferred_deps) # empty list
     foreach(dep ${ARGN})
         if (NOT TARGET ${dep})
@@ -204,9 +229,32 @@ function (bbs_install_target target)
     get_target_property(_target_type ${target} TYPE)
     if (   _target_type STREQUAL "STATIC_LIBRARY"
         OR _target_type STREQUAL "SHARED_LIBRARY")
-        install(TARGETS ${target}
+        foreach(p ${${uor_name}_PACKAGES})
+            install(TARGETS ${p}-iface  
+                    EXPORT  ${uor_name}Targets
+                    COMPONENT ${_COMPONENT})
+        endforeach()
+        install(TARGETS ${target}  
+                EXPORT  ${uor_name}Targets
                 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
                 COMPONENT ${_COMPONENT})
+        install(EXPORT  ${uor_name}Targets
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake
+                COMPONENT ${_COMPONENT})
+
+        # generate/install <Package>Config.cmake
+        # Note template uses uor_name and uor_deps variables
+        include(CMakePackageConfigHelpers)
+
+        set(uor_deps ${${target}_DEPENDS})
+        configure_package_config_file(
+            ${BBS_UOR_CONFIG_IN}
+            ${CMAKE_CURRENT_BINARY_DIR}/${uor_name}Config.cmake
+            INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake)
+        install(FILES  ${CMAKE_CURRENT_BINARY_DIR}/${uor_name}Config.cmake
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake
+                COMPONENT ${_COMPONENT})
+
         bbs_install_target_headers(${target})
 
     elseif (_target_type STREQUAL "EXECUTABLE")
@@ -251,7 +299,6 @@ endfunction()
 # .. command:: bbs_emit_bde_metadata
 #
 # Emit bde metadata for the target.
-# OBSOLETE
 function (bbs_emit_bde_metadata target)
     cmake_parse_arguments(PARSE_ARGV 1
                           ""
@@ -369,7 +416,7 @@ function(bbs_setup_target_uor target)
             message(FATAL_ERROR "Main file found in library ${uor_name}: ${_main_file}")
         endif()
 
-        # Each package in the groups is an individual OBJECT library
+        # Each package in the groups is an individual OBJECT or INTERFACE library
         if (${uor_name}_PACKAGES)
             foreach(pkg ${${uor_name}_PACKAGES})
                 # Check if this is customized package
@@ -377,50 +424,72 @@ function(bbs_setup_target_uor target)
                     message(TRACE "Processing customized ${pkg}")
                     add_subdirectory(${_SOURCE_DIR}/${pkg})
 
-                    # Custom package can "export" ether OBJECT library target (if it contains
-                    # compilable sources) or INTERFACE library target if it is header-only
-                    # package. All we do here is to add group dependencies to the package
-                    # and add it as a dependency to the group.
-                    if (TARGET ${pkg}-obj)
-                        target_link_libraries(${pkg}-obj PUBLIC ${${uor_name}_PCDEPS})
-                        target_link_libraries(${target} PUBLIC ${pkg}-obj)
-                    elseif (TARGET ${pkg}-iface)
-                        target_link_libraries(${pkg}-iface INTERFACE ${${uor_name}_PCDEPS})
-                        target_link_libraries(${target} INTERFACE ${pkg}-iface)
+                    # Custom package must "export" and interface library that can be ether 
+                    # OBJECT library target (if it contains compilable sources) or INTERFACE
+                    # library target if it is header-only package. All we do here is to add 
+                    # group dependencies to the package interface and add it as a dependency 
+                    # to the group.
+                    if (TARGET ${pkg}-iface)
+                        get_target_property(_pkg_type ${pkg}-iface TYPE)
+                        if (_pkg_type STREQUAL "OBJECT_LIBRARY")
+                            target_link_libraries(${pkg}-iface PRIVATE ${${uor_name}_PCDEPS})
+                            target_link_libraries(${target} PUBLIC ${pkg}-iface)
+                        else()
+                            target_link_libraries(${target} INTERFACE ${pkg}-iface)
+                        endif()
+
+                    else()
+                        message(FATAL_ERROR "Custom package should produce an interface library")
                     endif()
                 else()
                     message(TRACE "Processing ${pkg}")
 
-                    add_library(${pkg}-obj OBJECT ${${pkg}_SOURCE_FILES} ${${pkg}_INCLUDE_FILES})
-                    set_target_properties(${pkg}-obj PROPERTIES LINKER_LANGUAGE CXX)
-                    bbs_add_target_include_dirs(${pkg}-obj PUBLIC ${${pkg}_INCLUDE_DIRS})
-                    target_link_libraries(${pkg}-obj PUBLIC bbs_bde_flags)
+                    # If the library contains only header files, we will create an INTERFACE
+                    # library; otherwise, we will create an OBJECT library
+                    if (${pkg}_SOURCE_FILES) 
+                        message(TRACE "Adding OBJECT library ${pkg}-iface")
+                        add_library(${pkg}-iface 
+                                    OBJECT ${${pkg}_SOURCE_FILES} ${${pkg}_INCLUDE_FILES})
+                        set_target_properties(${pkg}-iface PROPERTIES LINKER_LANGUAGE CXX)
+                        bbs_add_target_include_dirs(${pkg}-iface PUBLIC ${${pkg}_INCLUDE_DIRS})
 
-                    if (NOT BDE_BUILD_TARGET_NO_MT)
-                        target_link_libraries(${pkg}-obj PUBLIC bbs_threads)
+                        bbs_add_target_bde_flags(${pkg}-iface PRIVATE)
+                        bbs_add_target_thread_flags(${pkg}-iface PRIVATE)
+
+                        target_link_libraries(${pkg}-iface PRIVATE ${${uor_name}_PCDEPS})
+
+                        # Adding library for the package as real static library
+                        add_library(${pkg} STATIC)
+                        target_link_libraries(${pkg} PUBLIC ${pkg}-iface)
+                        bbs_add_target_bde_flags(${pkg} PUBLIC)
+
+                        # Important: link with DEPENDS and not PCDEPS for packages
+                        # in a groups. For groups with underscores (z_bae) we do
+                        # not want to use pc-fied name like z-baelu.
+                        # For the group's dependencies (external) we use PCDEPS.
+                        # This is different from a standalone packages that can
+                        # have only external PC dependencies.
+                        foreach(p ${${pkg}_DEPENDS})
+                            target_link_libraries(${pkg}-iface PUBLIC ${p}-iface)
+                            target_link_libraries(${pkg} INTERFACE ${p})
+                        endforeach()
+
+                        target_link_libraries(${target} PUBLIC ${pkg}-iface)
+                    else()
+                        message(TRACE "Adding INTERFACE library ${pkg}-iface")
+                        add_library(${pkg}-iface INTERFACE ${${pkg}_INCLUDE_FILES})
+                        bbs_add_target_include_dirs(${pkg}-iface INTERFACE ${${pkg}_INCLUDE_DIRS})
+
+                        # Adding library for the package as an interface library
+                        add_library(${pkg} INTERFACE)
+                        target_link_libraries(${pkg} INTERFACE ${pkg}-iface)
+
+                        foreach(p ${${pkg}_DEPENDS})
+                            target_link_libraries(${pkg}-iface INTERFACE ${p}-iface)
+                            target_link_libraries(${pkg} INTERFACE ${p})
+                        endforeach()
+                        target_link_libraries(${target} INTERFACE ${pkg}-iface)
                     endif()
-
-                    add_library(${pkg}-iface INTERFACE)
-                    target_link_libraries(${pkg}-iface INTERFACE ${pkg}-obj)
-
-                    add_library(${pkg} STATIC)
-                    target_link_libraries(${pkg} PUBLIC ${pkg}-obj)
-
-                    # Important: link with DEPENDS and not PCDEPS for packages
-                    # in a groups. For groups with underscores (z_bae) we do
-                    # not want to use pc-fied name like z-baelu.
-                    # For the group's dependencies (external) we use PCDEPS.
-                    # This is different from a standalone packages that can
-                    # have only external PC dependencies.
-                    foreach(p ${${pkg}_DEPENDS})
-                        target_link_libraries(${pkg}-obj PUBLIC ${p}-iface)
-
-                        target_link_libraries(${pkg} PUBLIC ${p})
-                    endforeach()
-
-                    target_link_libraries(${pkg}-obj PUBLIC ${${uor_name}_PCDEPS})
-
-                    target_link_libraries(${target} PUBLIC ${pkg}-obj)
 
                     # Generating cpp03 headers, implementation and test files if any
                     bbs_generate_cpp03_sources("${${pkg}_INCLUDE_FILES}")
@@ -441,12 +510,9 @@ function(bbs_setup_target_uor target)
 
             set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
 
-            target_link_libraries(${target} PUBLIC ${${uor_name}_PCDEPS}
-                                            INTERFACE bbs_bde_flags)
-
-            if (NOT BDE_BUILD_TARGET_NO_MT)
-                target_link_libraries(${target} INTERFACE bbs_threads)
-            endif()
+            target_link_libraries(${target} PUBLIC ${${uor_name}_PCDEPS})
+            bbs_add_target_bde_flags(${target} PRIVATE)
+            bbs_add_target_thread_flags(${target} PRIVATE)
 
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
 
@@ -474,12 +540,9 @@ function(bbs_setup_target_uor target)
             target_sources(${target} PRIVATE ${${uor_name}_SOURCE_FILES})
             bbs_add_target_include_dirs(${target} PUBLIC ${${uor_name}_INCLUDE_DIRS})
 
-            target_link_libraries(${target} PUBLIC    ${${uor_name}_PCDEPS}
-                                            INTERFACE bbs_bde_flags)
-
-            if (NOT BDE_BUILD_TARGET_NO_MT)
-                target_link_libraries(${target} INTERFACE bbs_threads)
-            endif()
+            target_link_libraries(${target} PUBLIC ${${uor_name}_PCDEPS})
+            bbs_add_target_bde_flags(${target} PRIVATE)
+            bbs_add_target_thread_flags(${target} PRIVATE)
 
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
             if (NOT _SKIP_TESTS)
@@ -539,9 +602,7 @@ function(bbs_setup_target_uor target)
             bbs_add_target_include_dirs(${lib_target} PUBLIC "${${uor_name}_INCLUDE_DIRS}")
             target_link_libraries(${lib_target} PUBLIC "${${uor_name}_PCDEPS}")
 
-            if (NOT BDE_BUILD_TARGET_NO_MT)
-                target_link_libraries(${lib_target} INTERFACE bbs_threads)
-            endif()
+            bbs_add_target_thread_flags(${lib_target} PRIVATE)
 
             # Copy properties from executable target to corresponding properties
             # of created ${lib_target} target. This will correctly set compiler/linker

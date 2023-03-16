@@ -1,219 +1,102 @@
 include_guard()
 
-# import bbs_thread as a target 
-function(_bbs_import_threads)
-    add_library(bbs_threads INTERFACE IMPORTED GLOBAL)
+# :: bbs_load_conan_build_info ::
+# -----------------------------------------------------------------------------
+# The function tries to detect the use of conan and loads the
+# 'conan_build_info.cmake' file into memory
+function(bbs_load_conan_build_info)
+    if (TARGET "CONAN_PKG::bde-tools")
+        message(STATUS "Conan package already loaded")
+        return()
+    endif()
 
-    # let cmake resolve the actual thread library needed on the link line
-    find_package(Threads REQUIRED) # note: this only runs if FindThreads has not been found yet
-    # Do not use Threads::Threads here. EmitPkgConfig bbcmake module will add this
-    # to the .pc file's Requires.private which is invalid.
-    target_link_libraries(bbs_threads INTERFACE ${CMAKE_THREAD_LIBS_INIT})
-
-    # add OS specific compilation definitions for multithreaded code
-    if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
-        target_compile_definitions(bbs_threads
-            INTERFACE
-                _POSIX_PTHREAD_SEMANTICS
-                _REENTRANT)
-
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "SunPro")
-            target_compile_options(
-                bbs_threads
-                INTERFACE
-                    -mt)
-        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-            target_compile_options(
-                bbs_threads
-                INTERFACE
-                    -pthread)
-        endif()
-    elseif(CMAKE_SYSTEM_NAME STREQUAL "AIX")
-        target_compile_definitions(
-            bbs_threads
-            INTERFACE
-                _POSIX_PTHREAD_SEMANTICS
-                _REENTRANT
-                _THREAD_SAFE
-                __VACPP_MULTI__)
-        target_compile_options(
-            bbs_threads
-            INTERFACE
-                -qthreaded)
-    elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        target_compile_definitions(
-            bbs_threads
-            INTERFACE
-                _POSIX_PTHREAD_SEMANTICS
-                _REENTRANT)
-        target_compile_options(
-            bbs_threads
-            INTERFACE
-                -pthread)
+    set(CONAN_BUILD_INFO ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    if (EXISTS ${CONAN_BUILD_INFO})
+        message(STATUS "Found ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+        include(${CONAN_BUILD_INFO})
+        conan_basic_setup(TARGETS)
     endif()
 endfunction()
 
-function(_bbs_import_bsl_rt)
-    add_library(bbs_bsl_rt INTERFACE IMPORTED GLOBAL)
+# :: bbs_import_conan_target ::
+# -----------------------------------------------------------------------------
+# The function tries to resolve a single dependency using conan targets.  The
+# main purpose of the function is to resolve the disparity of target names, and
+# work around the current limitation in the conan cmake generator creating
+# non-global targets that cannot be aliased
+function(bbs_import_conan_target depName)
+    bbs_assert_no_unparsed_args("")
 
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "SunPro")
-        target_link_libraries(bbs_bsl_rt INTERFACE -lrt)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "XL")
-        target_compile_definitions(
-            bbs_bsl_rt
-            INTERFACE 
-                __NOLOCK_ON_INPUT
-                __NOLOCK_ON_OUTPUT)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-            target_link_libraries(bbs_bsl_rt INTERFACE -lrt)
-        endif()
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        target_link_libraries(bbs_bsl_rt INTERFACE Ws2_32)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_link_libraries(bbs_bsl_rt INTERFACE rt stdc++)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-    endif ()
+    set(conanDep "CONAN_PKG::${depName}")
+    if (TARGET ${conanDep})
+        message(VERBOSE "Found dependency ${depName} in conan")
+
+        # After https://github.com/conan-io/conan/issues/3482 is resolved this
+        # should be just an alias
+        add_library(${depName} INTERFACE IMPORTED)
+        target_link_libraries(${depName} INTERFACE ${conanDep})
+        foreach(prop INTERFACE_LINK_LIBRARIES INTERFACE_INCLUDE_DIRECTORIES INTERFACE_COMPILE_DEFINITIONS INTERFACE_COMPILE_OPTIONS)
+            get_property(tmpProp TARGET ${conanDep} PROPERTY ${prop})
+            set_property(TARGET ${conanDep} PROPERTY ${prop} ${tmpProp})
+        endforeach()
+    endif()
 endfunction()
 
-function(_bbs_import_bde_flags)
-    add_library(bbs_bde_flags INTERFACE IMPORTED GLOBAL)
+# Try to find external dependency using CMake export.
+function(bbs_import_cmake_config depName)
+    bbs_assert_no_unparsed_args("")
 
-    # Those 2 flags are inferred from CMAKE_BUILD_TYPE
-    set(BDE_BUILD_TARGET_OPT OFF)
-    set(BDE_BUILD_TARGET_DBG OFF)
-    # Other flags can be set by users
-    option(BDE_BUILD_TARGET_NO_EXC "Disable exceptions")
-    option(BDE_BUILD_TARGET_NO_MT  "Disable multi-threading")
-    option(BDE_BUILD_TARGET_SAFE   "Enable safe build")
-    option(BDE_BUILD_TARGET_ASAN   "Enable address sanitizer")
-    option(BDE_BUILD_TARGET_MSAN   "Enable memory sanitizer")
-    option(BDE_BUILD_TARGET_TSAN   "Enable thread sanitizer")
-    option(BDE_BUILD_TARGET_UBSAN  "Enable UB sanitizer")
-    option(BDE_BUILD_TARGET_FUZZ   "Enable fuzzer")
-    # Asserts and reviews (mutually exclusive values options)
-    set(BDE_BUILD_TARGET_ASSERT_LEVEL default CACHE STRING "Assert level")
-    set_property(CACHE BDE_BUILD_TARGET_ASSERT_LEVEL PROPERTY STRINGS default AOPT ADBG ASAFE ANONE)
-    set(BDE_BUILD_TARGET_REVIEW_LEVEL default CACHE STRING "Review level")
-    set_property(CACHE BDE_BUILD_TARGET_REVIEW_LEVEL PROPERTY STRINGS default ROPT RDBG RSAFE RNONE)
+    string(REPLACE "-" "_" libName ${depName})
 
-    if (NOT CMAKE_BUILD_TYPE)
-        set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+    find_package(
+        ${libName}
+        NO_SYSTEM_ENVIRONMENT_PATH
+        NO_CMAKE_PACKAGE_REGISTRY
+        QUIET
+        GLOBAL
+        PATH_SUFFIXES "${CMAKE_INSTALL_LIBDIR}/cmake"
+    )
+
+    if(NOT ${libName}_FOUND)
+        message(FATAL_ERROR "${libName} NOT FOUND")
     endif()
-
-    message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-    if (CMAKE_BUILD_TYPE STREQUAL "Release" OR
-        CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-        set(BDE_BUILD_TARGET_OPT ON)
-    endif()
-
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR
-        CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-        set(BDE_BUILD_TARGET_DBG ON)
-    endif()
-
-    foreach(flag OPT DBG NO_EXC NO_MT SAFE)
-        if (BDE_BUILD_TARGET_${flag})
-            target_compile_definitions(
-                bbs_bde_flags
-                INTERFACE
-                    BDE_BUILD_TARGET_${flag})
+    if(TARGET ${libName})
+        message(VERBOSE "CMake config found for ${libName} in ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}/cmake")
+        if (NOT TARGET ${depName})
+            add_library(${depName} ALIAS ${libName})
         endif()
-    endforeach()
-
-    # Sanitizers
-    foreach(flag ASAN MSAN TSAN UBSAN)
-        if (BDE_BUILD_TARGET_${flag})
-            target_compile_definitions(
-                bbs_bde_flags
-                INTERFACE
-                    BDE_BUILD_TARGET_${flag})
-        endif()
-    endforeach()
-
-    # Fuzzer
-    if (BDE_BUILD_TARGET_FUZZ)
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                BDE_ACTIVATE_FUZZ_TESTING
-                FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
     endif()
-
-    # ASSERT levels
-    if(BDE_BUILD_TARGET_ASSERT_LEVEL STREQUAL "default")
-    elseif(BDE_BUILD_TARGET_ASSERT_LEVEL STREQUAL "AOPT")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                BSLS_ASSERT_LEVEL_ASSERT_OPT)
-    elseif(BDE_BUILD_TARGET_ASSERT_LEVEL STREQUAL "ADBG")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                BSLS_ASSERT_LEVEL_ASSERT)
-    elseif(BDE_BUILD_TARGET_ASSERT_LEVEL STREQUAL "ASAFE")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                BSLS_ASSERT_LEVEL_ASSERT_SAFE)
-    elseif(BDE_BUILD_TARGET_ASSERT_LEVEL STREQUAL "ANONE")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                BSLS_ASSERT_LEVEL_NONE)
-    endif()
-
-    # REVIEW levels
-    if(BDE_BUILD_TARGET_REVIEW_LEVEL STREQUAL "default")
-    elseif(BDE_BUILD_TARGET_REVIEW_LEVEL STREQUAL "ROPT")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                BSLS_REVIEW_LEVEL_REVIEW_OPT)
-    elseif(BDE_BUILD_TARGET_REVIEW_LEVEL STREQUAL "RDBG")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                BSLS_REVIEW_LEVEL_REVIEW)
-    elseif(BDE_BUILD_TARGET_REVIEW_LEVEL STREQUAL "RSAFE")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                BSLS_REVIEW_LEVEL_REVIEW_SAFE)
-    elseif(BDE_BUILD_TARGET_REVIEW_LEVEL STREQUAL "RNONE")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                BSLS_REVIEW_LEVEL_NONE)
-    endif()
-
-    # non thread related definitions for specific compilers
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "SunPro")
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "XL")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE 
-                __NOLOCK_ON_INPUT
-                __NOLOCK_ON_OUTPUT)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        target_compile_definitions(
-            bbs_bde_flags
-            INTERFACE
-                NOGDI
-                NOMINMAX
-                _CRT_SECURE_NO_WARNINGS
-                _SCL_SECURE_NO_DEPRECATE
-                WIN32_LEAN_AND_MEAN
-                VC_EXTRALEAN)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-    endif ()
 endfunction()
 
-if(NOT TARGET bbs_threads)
-    _bbs_import_threads()
-    _bbs_import_bsl_rt()
-    _bbs_import_bde_flags()
-endif()
+# Try to find external dependency by looking up the library with
+# the specified name.
+function(bbs_import_raw_library depName)
+    bbs_assert_no_unparsed_args("")
+
+    string(REPLACE "-" "_" libName ${depName})
+
+    set(libraryPath "${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}")
+    set(includePath "${CMAKE_PREFIX_PATH}/include")
+
+    message(VERBOSE "Looking in : ${libraryPath}, ${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    message(VERBOSE "Headers in : ${includePath}")
+    find_library(
+        rawLib_${libName}
+        NAMES
+            lib${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}
+        PATHS
+            "${libraryPath}"
+        NO_DEFAULT_PATH
+    )
+    if(rawLib_${libName})
+        message(VERBOSE "Found(raw): ${rawLib_${libName}}")
+        add_library(${depName} INTERFACE IMPORTED)
+        set_target_properties(
+            ${depName}
+            PROPERTIES
+            INTERFACE_LINK_LIBRARIES "${rawLib_${libName}}"
+            INTERFACE_INCLUDE_DIRECTORIES "${includePath}"
+        )
+    endif()
+endfunction()
