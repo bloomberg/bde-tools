@@ -1,5 +1,11 @@
-bde-tools (3.115.0.0) unstable; urgency=low
+bde-tools (3.115.1.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 16 Mar 2023 16:01:41 -0400
+
+bde-tools (3.115.0.0) git; urgency=low
+
+  * 83cdfed Changelog for version 3.115.0.0
   * a934a5d Exports and internal targets. (#286)
   * 741aa80 VS Build Tools support (#285)
   * f1358cf Add private packages (#284)
@@ -7,7 +13,7 @@ bde-tools (3.115.0.0) unstable; urgency=low
   * b05a27e add .vscode/.cache to excluded folders (#283)
   * 07e3cba Spellcheck pass (#281)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 15 Mar 2023 21:17:39 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 15 Mar 2023 23:46:41 -0400
 
 bde-tools (3.114.0.1) git; urgency=low
 
