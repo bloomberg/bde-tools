@@ -21,6 +21,7 @@ The main difficulty with sanitized build is the proper compiler deployment on
 the build host - some compilers require special versions of the compiler
 libraries to be available at link/run time. 
 
+{{{ internal
 Build with a Default Compiler
 -----------------------------
 The default gcc compiler installed on the build hosts can build instrumented
@@ -86,5 +87,34 @@ configuring this compiler.
 .. code-block:: shell
 
    $ eval `bbs_build_env -u dbg_asan_64_cpp17 -p Clang-13-rt`
+
+}}}
+{{{ oss
+Build with sanitizers
+---------------------
+Make sure that compiler you use for instrumented build is installed
+with all necessary support for sanitizers
+
+* Clone the `bde <https://github.com/bloomberg/bde>`_ repository:
+
+.. code-block:: shell
+
+   $ git clone https://github.com/bloomberg/bde.git
+   $ cd bde
+
+
+* Configure build with an address sanitizer:
+
+.. code-block:: shell
+
+   $ eval `bbs_build_env -u dbg_asan_64_cpp17`
+
+* Build and run BDE tests:
+
+.. code-block:: shell
+
+   $ bbs_build --target all.t --test run
+
+}}}
 
 * Build and test as usual.
