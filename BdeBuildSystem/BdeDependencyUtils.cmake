@@ -53,7 +53,6 @@ function(bbs_import_cmake_config depName)
         NO_SYSTEM_ENVIRONMENT_PATH
         NO_CMAKE_PACKAGE_REGISTRY
         QUIET
-        GLOBAL
         PATH_SUFFIXES "${CMAKE_INSTALL_LIBDIR}/cmake"
     )
 
