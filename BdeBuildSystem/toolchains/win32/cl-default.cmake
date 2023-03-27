@@ -23,15 +23,11 @@ set(CXX_WARNINGS
 
 string(CONCAT DEFAULT_CXX_FLAGS
        "${DEFAULT_CXX_FLAGS_INIT} "
-       "/bigobj "
        "/TP "
        "/FS "
        "/MP "
        "/GR "
        "/GT "
-       "/nologo "
-       "/D_WIN32_WINNT=0x0601 "
-       "/DWINVER=0x0601 "
        ${CXX_WARNINGS}
       )
 
@@ -42,9 +38,6 @@ string(CONCAT DEFAULT_C_FLAGS
        "/FS "
        "/MP "
        "/GT "
-       "/nologo "
-       "/D_WIN32_WINNT=0x0601 "
-       "/DWINVER=0x0601 "
       )
 
 # Include BDE ufid presets

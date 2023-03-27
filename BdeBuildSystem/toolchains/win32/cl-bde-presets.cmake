@@ -1,12 +1,24 @@
 # Set various Windows specific defines
 string(CONCAT DEFAULT_CXX_FLAGS
        "${DEFAULT_CXX_FLAGS} "
-       "-DNOGDI "
-       "-DNOMINMAX "
        "-D_CRT_SECURE_NO_WARNINGS "
        "-D_SCL_SECURE_NO_DEPRECATE "
-       "-DWIN32_LEAN_AND_MEAN "
+       "-DFD_SETSIZE=1024 "
+       "-DNOGDI "
+       "-DNOMINMAX "
        "-DVC_EXTRALEAN "
+       "-DWIN32_LEAN_AND_MEAN "
+       "/D_WIN32_WINNT=0x0601 "
+       "/DWINVER=0x0601 "
+       "/bigobj "
+       "/nologo "
+      )
+
+string(CONCAT DEFAULT_C_FLAGS
+       "${DEFAULT_C_FLAGS} "
+       "/D_WIN32_WINNT=0x0601 "
+       "/DWINVER=0x0601 "
+       "/nologo "
       )
 
 # Set requested CPP standard

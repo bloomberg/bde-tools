@@ -13,9 +13,6 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "/MP "
        "/GR "
        "/GT "
-       "/nologo "
-       "/D_WIN32_WINNT=0x0601 "
-       "/DWINVER=0x0601 "
       )
 
 string(CONCAT DEFAULT_C_FLAGS
@@ -24,9 +21,6 @@ string(CONCAT DEFAULT_C_FLAGS
        "/FS "
        "/MP "
        "/GT "
-       "/nologo "
-       "/D_WIN32_WINNT=0x0601 "
-       "/DWINVER=0x0601 "
       )
 
 # Include BDE ufid presets
