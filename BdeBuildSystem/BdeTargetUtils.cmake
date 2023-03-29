@@ -228,13 +228,17 @@ function (bbs_install_target target)
 
     get_target_property(_target_type ${target} TYPE)
     if (   _target_type STREQUAL "STATIC_LIBRARY"
-        OR _target_type STREQUAL "SHARED_LIBRARY")
+        OR _target_type STREQUAL "SHARED_LIBRARY"
+        OR _target_type STREQUAL "INTERFACE_LIBRARY")
         foreach(p ${${uor_name}_PACKAGES})
-            install(TARGETS ${p}-iface  
-                    EXPORT  ${uor_name}Targets
-                    COMPONENT ${_COMPONENT})
+            if (TARGET ${p}-iface)
+                install(TARGETS ${p}-iface
+                        EXPORT  ${uor_name}Targets
+                        COMPONENT ${_COMPONENT})
+            endif()
         endforeach()
-        install(TARGETS ${target}  
+
+        install(TARGETS ${target}
                 EXPORT  ${uor_name}Targets
                 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
                 COMPONENT ${_COMPONENT})
