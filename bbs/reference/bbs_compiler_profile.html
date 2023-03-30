@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Compiler Profiles &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="bbs_build_env" href="../tools/bbs_build_env.html" />
+    <link rel="prev" title="Code Generation" href="code_generation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_generation.html">Code Generation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Compiler Profiles</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#hardcoded-compiler-profiles">Hardcoded Compiler Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flexible-compiler-profiles">Flexible Compiler Profiles</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Compiler Profiles</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="../tools/bbs_build_env.html" class="btn btn-neutral float-right" title="bbs_build_env" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      
+      
+        <a href="code_generation.html" class="btn btn-neutral float-left" title="Code Generation" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="compiler-profiles">
+<h1>Compiler Profiles<a class="headerlink" href="#compiler-profiles" title="Permalink to this headline">¶</a></h1>
+<p>BBS compiler profiles are CMake toolchains that define compiler configuration
+used to build the project.  CMake toolchains can define a compiler
+configuration with different levels of details, but BBS conceptually
+recognizes 2 type of profile:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Hardcoded (constrained) compiler profiles</p></li>
+<li><p>Flexible BBS compiler profiles</p></li>
+</ul>
+</div></blockquote>
+<p>Note that a client can always write a profile that will support only a subset
+of standard BDE build flags and hardcode other aspects of the compiler
+settings. Writing such a profile will require in-depth knowledge of both CMake
+toolchains and BBS build flags (See <a class="reference internal" href="bbs_build_configuration.html#ufid"><span class="std std-ref">UFID</span></a> for more details).</p>
+<div class="section" id="hardcoded-compiler-profiles">
+<h2>Hardcoded Compiler Profiles<a class="headerlink" href="#hardcoded-compiler-profiles" title="Permalink to this headline">¶</a></h2>
+<p>Those profiles are essentially a fully defined CMake toolchains that provide
+all compilation and link flags as well as pathes to the C/C++ compilers and
+other build tools. Such profiles are usually supplied as part of the production
+build environment and guarantee the consistency of production builds.</p>
+<p>The simplified example of such profile is shown below:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">set(</span><span class="no">CMAKE_C_COMPILER</span><span class="w"> </span><span class="na">/usr/bin/gcc-10</span><span class="w"> </span><span class="no">CACHE</span><span class="w"> </span><span class="no">FILEPATH</span><span class="w"> </span><span class="s">&quot;C Compiler path&quot;</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_CXX_COMPILER</span><span class="w"> </span><span class="na">/usr/bin/g++-10</span><span class="w"> </span><span class="no">CACHE</span><span class="w"> </span><span class="no">FILEPATH</span><span class="w"> </span><span class="s">&quot;C++ Compiler path&quot;</span><span class="nf">)</span><span class="w"></span>
+
+<span class="nf">set(</span><span class="no">CMAKE_C_FLAGS</span><span class="w"> </span><span class="s">&quot;-march=westmere -m64&quot;</span><span class="w"> </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;Bloomberg ABI C flags.&quot;</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_C_FLAGS_RELWITHDEBINFO</span><span class="w"> </span><span class="s">&quot;-g -O2 -fno-strict-aliasing&quot;</span><span class="w"> </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;ABI C flags.&quot;</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="m">17</span><span class="w"> </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;C++ standard.&quot;</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_CXX_FLAGS</span><span class="w"> </span><span class="s">&quot;-D_GLIBCXX_USE_CXX11_ABI=0 -march=westmere -m64&quot;</span><span class="w"> </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;ABI C++ flags.&quot;</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_CXX_FLAGS_RELWITHDEBINFO</span><span class="w"> </span><span class="s">&quot;-g -O2 -fno-strict-aliasing&quot;</span><span class="w"> </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;ABI C++ flags.&quot;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>As shown above, this profile hardcodes the path to compiler, bitness (‘-m64’),
+compilation flags, additional defines and C++ standard.</p>
+<p>Note that CMake toolchains by default supports 4 build types:</p>
+<table class="colwidths-given docutils align-left">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>CMake Build Type</p></th>
+<th class="head"><p>Ufid mapping</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Release</p></td>
+<td><p>opt</p></td>
+</tr>
+<tr class="row-odd"><td><p>Debug</p></td>
+<td><p>dbg</p></td>
+</tr>
+<tr class="row-even"><td><p>RelWithDebInfo</p></td>
+<td><p>opt_dbg</p></td>
+</tr>
+<tr class="row-odd"><td><p>MinSizeRel</p></td>
+<td><p>N/A - not supported</p></td>
+</tr>
+</tbody>
+</table>
+<p>Hardcoded compiler profiles allow users to select different build types only.</p>
+</div>
+<div class="section" id="flexible-compiler-profiles">
+<h2>Flexible Compiler Profiles<a class="headerlink" href="#flexible-compiler-profiles" title="Permalink to this headline">¶</a></h2>
+<p>Those profiles are effectively a specially designed CMake toolchains that will
+set compilation and links flags based on the CMake and environement variables
+passed at the configure step.  Those profiles are provided by BDE build system.</p>
+<p>The simplified excerpt from gcc flexible profile is shown below:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">set(</span><span class="no">DEFAULT_CXX_FLAGS</span><span class="w"> </span><span class="s">&quot;$ENV{CXXFLAGS}&quot;</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">DEFAULT_C_FLAGS</span><span class="w"> </span><span class="s">&quot;$ENV{CFLAGS}&quot;</span><span class="nf">)</span><span class="w"></span>
+
+<span class="nf">if(</span><span class="no">BDE_BUILD_TARGET_64</span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">string(</span><span class="no">CONCAT</span><span class="w"> </span><span class="no">DEFAULT_CXX_FLAGS</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;${DEFAULT_CXX_FLAGS} &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-m64 &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">string(</span><span class="no">CONCAT</span><span class="w"> </span><span class="no">DEFAULT_C_FLAGS</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;${DEFAULT_C_FLAGS} &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-m64 &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="nf">)</span><span class="w"></span>
+<span class="nf">endif()</span><span class="w"></span>
+
+<span class="nf">if(</span><span class="no">BDE_BUILD_TARGET_32</span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">string(</span><span class="no">CONCAT</span><span class="w"> </span><span class="no">DEFAULT_CXX_FLAGS</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;${DEFAULT_CXX_FLAGS} &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-m32 &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-mstackrealign &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-mfpmath=sse &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-D_FILE_OFFSET_BITS=64 &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">string(</span><span class="no">CONCAT</span><span class="w"> </span><span class="no">DEFAULT_C_FLAGS</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;${DEFAULT_C_FLAGS} &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-m32 &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-mstackrealign &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-mfpmath=sse &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="s">&quot;-D_FILE_OFFSET_BITS=64 &quot;</span><span class="w"></span>
+<span class="w">           </span><span class="nf">)</span><span class="w"></span>
+<span class="nf">endif()</span><span class="w"></span>
+
+<span class="nf">if</span> <span class="nf">(</span><span class="no">BDE_BUILD_TARGET_CPP03</span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">set(</span><span class="no">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="m">98</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">elseif(</span><span class="no">BDE_BUILD_TARGET_CPP11</span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">set(</span><span class="no">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="m">11</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">elseif(</span><span class="no">BDE_BUILD_TARGET_CPP14</span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">set(</span><span class="no">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="m">14</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">elseif(</span><span class="no">BDE_BUILD_TARGET_CPP17</span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">set(</span><span class="no">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="m">17</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">elseif(</span><span class="no">BDE_BUILD_TARGET_CPP20</span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">set(</span><span class="no">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="m">20</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">elseif(</span><span class="no">BDE_BUILD_TARGET_CPP23</span><span class="nf">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">set(</span><span class="no">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="m">23</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">endif()</span><span class="w"></span>
+<span class="p">...</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_CXX_FLAGS</span><span class="w">        </span><span class="o">${</span><span class="nt">DEFAULT_CXX_FLAGS</span><span class="o">}</span><span class="w"> </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;Default&quot;</span><span class="w"> </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_C_FLAGS</span><span class="w">          </span><span class="o">${</span><span class="nt">DEFAULT_C_FLAGS</span><span class="o">}</span><span class="w">   </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;Default&quot;</span><span class="w"> </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_EXE_LINKER_FLAGS</span><span class="w"> </span><span class="o">${</span><span class="nt">DEFAULT_EXE_LINKER_FLAGS</span><span class="o">}</span><span class="w"> </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;Default&quot;</span><span class="w"> </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+
+<span class="nf">set(</span><span class="no">CMAKE_CXX_FLAGS_RELEASE</span><span class="w">         </span><span class="s">&quot;-O2 -DNDEBUG&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;Release&quot;</span><span class="w">        </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_CXX_FLAGS_MINSIZEREL</span><span class="w">      </span><span class="s">&quot;-O2 -DNDEBUG&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;MinSizeRel&quot;</span><span class="w">     </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_CXX_FLAGS_RELWITHDEBINFO</span><span class="w">  </span><span class="s">&quot;-O2 -g -DNDEBUG&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;RelWithDebInfo&quot;</span><span class="w"> </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_CXX_FLAGS_DEBUG</span><span class="w">           </span><span class="s">&quot;-g&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;Debug&quot;</span><span class="w">          </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+
+<span class="nf">set(</span><span class="no">CMAKE_C_FLAGS_RELEASE</span><span class="w">           </span><span class="s">&quot;-O2 -DNDEBUG&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;Release&quot;</span><span class="w">        </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_C_FLAGS_MINSIZEREL</span><span class="w">        </span><span class="s">&quot;-O2 -DNDEBUG&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;MinSizeRel&quot;</span><span class="w">     </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_C_FLAGS_RELWITHDEBINFO</span><span class="w">    </span><span class="s">&quot;-O2 -g -DNDEBUG&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;RelWithDebInfo&quot;</span><span class="w"> </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_C_FLAGS_DEBUG</span><span class="w">             </span><span class="s">&quot;-g&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="no">CACHE</span><span class="w"> </span><span class="no">STRING</span><span class="w"> </span><span class="s">&quot;Debug&quot;</span><span class="w">          </span><span class="no">FORCE</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This toolchain allows user to invoke CMake with different BUILD flags to change
+the active compiler configuration:</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>$ cmake -DBDE_BUILD_TARGET_CPP20<span class="o">=</span>ON -DBDE_BUILD_TARGET_64 &lt;path&gt;
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

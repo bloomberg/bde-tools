@@ -1,0 +1,545 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>sim_cpp11_features.pl &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="bbs_make_vscode" href="bbs_make_vscode.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">sim_cpp11_features.pl</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#purpose">Purpose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#options">Options</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#output-filename-ext"><code class="docutils literal notranslate"><span class="pre">--output=</span></code> <em>filename.ext</em></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#no-inplace"><code class="docutils literal notranslate"><span class="pre">--[no-]inplace</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#verify-no-change"><code class="docutils literal notranslate"><span class="pre">--verify-no-change</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#clean"><code class="docutils literal notranslate"><span class="pre">--clean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#var-args-max-args"><code class="docutils literal notranslate"><span class="pre">--var-args=</span></code> <em>max-args</em></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#test"><code class="docutils literal notranslate"><span class="pre">--test</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#debug-level"><code class="docutils literal notranslate"><span class="pre">--debug=</span></code> <em>level</em></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#trace-subroutine-level"><code class="docutils literal notranslate"><span class="pre">--trace=</span></code> <em>subroutine</em>:<em>level</em></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#input-file-name"><em>input-file-name…</em></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#embedded-options">Embedded options</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#var-args-n"><code class="docutils literal notranslate"><span class="pre">//</span> <span class="pre">$var-args=</span></code> <em>n</em></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#local-var-args-n"><code class="docutils literal notranslate"><span class="pre">//</span> <span class="pre">$local-var-args=</span></code> <em>n</em></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#limitations">Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>sim_cpp11_features.pl</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+      
+        <a href="bbs_make_vscode.html" class="btn btn-neutral float-left" title="bbs_make_vscode" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="sim-cpp11-features-pl">
+<span id="sim-cpp11-features-top"></span><h1>sim_cpp11_features.pl<a class="headerlink" href="#sim-cpp11-features-pl" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="purpose">
+<h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>sim_cpp11_features.pl</strong> program converts a file with specially
+delimited regions of C++11 code and generates a C++03 version of that code that
+emulates the C++11 features. By default, the C++03 expansions are placed in a
+separate file with an extra “<code class="docutils literal notranslate"><span class="pre">_cpp03</span></code>” delimiter before the extension.
+Currently, this program emulates two constructs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Variadic templates (a.k.a. parameter packs) are emulated by creating
+multiple copies of the template code, starting with zero template
+arguments and adding an argument with each repetition (up to 10
+arguments by default).</p></li>
+<li><p>Forwarding references in function arguments are emulated by
+surrounding the argument declaration in a
+<code class="docutils literal notranslate"><span class="pre">BSLS_COMPILERFEATURES_FORWARD_REF</span></code> macro invocation and replacing
+<code class="docutils literal notranslate"><span class="pre">std::forward</span></code> calls with <code class="docutils literal notranslate"><span class="pre">BSLS_COMPILERFEATURES_FORWARD</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<p>Both emulations are approximate, at best, but experience has found them to be
+extremely useful.</p>
+<p>The program is located in the <code class="docutils literal notranslate"><span class="pre">bde-tools</span></code> repo as
+<code class="docutils literal notranslate"><span class="pre">BdeBuildSystem/scripts/sim_cpp11_features.pl</span></code> and is intended to be invoked
+by the BBS build system.</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>Usage:</strong> <code class="docutils literal notranslate"><span class="pre">sim_cpp11_features.pl</span></code> [ <em>option…</em> ] <em>input-file-name…</em></p>
+<p>Each input file can contain zero or more regions delimited by the simulation
+marker</p>
+<div class="highlight-perl notranslate"><div class="highlight"><pre><span></span><span class="c1">#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES</span>
+</pre></div>
+</div>
+<p>and its matching <code class="docutils literal notranslate"><span class="pre">#endif</span></code>.</p>
+<p>A C++11 compiler will see the code within each simulation region verbetim. A
+C++03 compiler will see an altenative version of the code generated by
+this tool.</p>
+<div class="section" id="options">
+<h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="output-filename-ext">
+<h4><code class="docutils literal notranslate"><span class="pre">--output=</span></code> <em>filename.ext</em><a class="headerlink" href="#output-filename-ext" title="Permalink to this headline">¶</a></h4>
+<p>Specifies the name of the output file. By default, the C++11 output overwrites
+the input file and the C++03 output is written to a file whose name is the same
+as the input filename except with a “<code class="docutils literal notranslate"><span class="pre">_cpp03</span></code>” inserted before the filename
+extension. For example, if the input file is “<code class="docutils literal notranslate"><span class="pre">bxxy_useful.h</span></code>”, then the
+C++03 expansion is written to “<code class="docutils literal notranslate"><span class="pre">bxxy_useful_cpp03.h</span></code>”. If <code class="docutils literal notranslate"><span class="pre">--output</span></code>  is
+specified, then the C++11 output is written to <em>filename.ext</em>  and the C++03
+output is written to <em>filename_cpp03.ext</em>.  If <em>filename</em> is a single dash (-),
+then output is written to standard out (<code class="docutils literal notranslate"><span class="pre">--inplace</span></code> mode only).</p>
+</div>
+<div class="section" id="no-inplace">
+<h4><code class="docutils literal notranslate"><span class="pre">--[no-]inplace</span></code><a class="headerlink" href="#no-inplace" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">--inplace</span></code>  option causes the C++11 and C++03 code to be intermixed
+within the same output file, separated by conditional compilation directives.
+This option, which was the only operating mode prior to June 2020, tends to
+produce a verbose source file that is difficult to maintain. The default is
+<code class="docutils literal notranslate"><span class="pre">--no-inplace</span></code>.</p>
+</div>
+<div class="section" id="verify-no-change">
+<h4><code class="docutils literal notranslate"><span class="pre">--verify-no-change</span></code><a class="headerlink" href="#verify-no-change" title="Permalink to this headline">¶</a></h4>
+<p>Verify that nothing has changed in the main file that would result in a change
+in generated code (including any generated code within the main file itself).
+If any output (including the main file) would change, do not write any output
+and abort with an error.</p>
+</div>
+<div class="section" id="clean">
+<h4><code class="docutils literal notranslate"><span class="pre">--clean</span></code><a class="headerlink" href="#clean" title="Permalink to this headline">¶</a></h4>
+<p>When used with <code class="docutils literal notranslate"><span class="pre">--inplace</span></code>, removes all C++03 emulation code, leaving a
+C++11-only file that is more convenient to maintain during development.
+Typically, this option is used once just before adding or modifying code. After
+a successful build using C++11, this tool is typically run again without
+<code class="docutils literal notranslate"><span class="pre">--clean</span></code> to produce release code that can be tested with C++03.</p>
+</div>
+<div class="section" id="var-args-max-args">
+<h4><code class="docutils literal notranslate"><span class="pre">--var-args=</span></code> <em>max-args</em><a class="headerlink" href="#var-args-max-args" title="Permalink to this headline">¶</a></h4>
+<p>The maximum number of variadic template expansions to generate (default 10).
+This value is written into the C++11 file as an embedded option (see below) so
+that future runs do not need to specify this option again.</p>
+</div>
+<div class="section" id="test">
+<h4><code class="docutils literal notranslate"><span class="pre">--test</span></code><a class="headerlink" href="#test" title="Permalink to this headline">¶</a></h4>
+<p>Runs the tool on a built-in test file, producing a <code class="docutils literal notranslate"><span class="pre">diff</span></code>  of the original
+and modified file if changes were detected. Usually used with <code class="docutils literal notranslate"><span class="pre">--inplace</span></code>.</p>
+</div>
+<div class="section" id="debug-level">
+<h4><code class="docutils literal notranslate"><span class="pre">--debug=</span></code> <em>level</em><a class="headerlink" href="#debug-level" title="Permalink to this headline">¶</a></h4>
+<p>Turns on debugging at the specified level. The higher the level, the more
+verbose the output.</p>
+</div>
+<div class="section" id="trace-subroutine-level">
+<h4><code class="docutils literal notranslate"><span class="pre">--trace=</span></code> <em>subroutine</em>:<em>level</em><a class="headerlink" href="#trace-subroutine-level" title="Permalink to this headline">¶</a></h4>
+<p>Turns on tracing for the specified subroutine (for debugging).</p>
+</div>
+<div class="section" id="input-file-name">
+<h4><em>input-file-name…</em><a class="headerlink" href="#input-file-name" title="Permalink to this headline">¶</a></h4>
+<p>One or more input file names.  If the input file is a single dash (-), then
+read from standard input.</p>
+</div>
+</div>
+<div class="section" id="embedded-options">
+<h3>Embedded options<a class="headerlink" href="#embedded-options" title="Permalink to this headline">¶</a></h3>
+<p>A few options can be embedded directly into the input file at the end of an
+<code class="docutils literal notranslate"><span class="pre">#if</span></code>  directive that introduces a region to be emulated:</p>
+<div class="section" id="var-args-n">
+<h4><code class="docutils literal notranslate"><span class="pre">//</span> <span class="pre">$var-args=</span></code> <em>n</em><a class="headerlink" href="#var-args-n" title="Permalink to this headline">¶</a></h4>
+<p>Globally sets the maximum number of variadic template expansions to <em>n</em> . A
+value specified using the command-line <code class="docutils literal notranslate"><span class="pre">--var-args</span></code> option overrides the
+value of <em>n</em> specified using this embedded option and overwrites <em>n</em> in the
+generated output.</p>
+</div>
+<div class="section" id="local-var-args-n">
+<h4><code class="docutils literal notranslate"><span class="pre">//</span> <span class="pre">$local-var-args=</span></code> <em>n</em><a class="headerlink" href="#local-var-args-n" title="Permalink to this headline">¶</a></h4>
+<p>Sets the maximum number of variadic template expansions to <em>n</em>  only for the
+current region. The number of expansions returns to the file default after the
+closing <code class="docutils literal notranslate"><span class="pre">#endif</span></code>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h2>
+<p>The C++11 emulation provided by this tool is incomplete at best. It does not
+produce a semantic interpretation of the input code and is limited to basic
+pattern matching. Known limitations are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>All parameter packs for a given instantiation of a variadic template must
+be the same length.</p></li>
+<li><p>Perfect-forwarding emulation does not recognize prvalues as rvalues.</p></li>
+<li><p>There is limited support for partial specialization of variadic class
+templates. In particular, specializing on the empty parameter pack is not
+currently supported.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>The following input file (let’s call it “<code class="docutils literal notranslate"><span class="pre">foo.h</span></code>”):</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES </span><span class="c1">// $var-args=3</span>
+
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="p">...</span><span class="w"> </span><span class="n">ARG</span><span class="o">&gt;</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="n">j</span><span class="p">(</span><span class="n">ARG</span><span class="o">&amp;&amp;</span><span class="p">...</span><span class="w"> </span><span class="n">arg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">g</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">ARG</span><span class="o">&gt;</span><span class="p">(</span><span class="n">arg</span><span class="p">)...);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>gets rewritten into the same input file (“<code class="docutils literal notranslate"><span class="pre">foo.h</span></code>”) as:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bsls_compilerfeatures.h&gt;</span><span class="cp"></span>
+
+<span class="cp">#if BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES</span>
+<span class="c1">// Include version that can be compiled with C++03</span>
+<span class="c1">// Generated on Mon Nov  2 13:17:20 2020</span>
+<span class="c1">// Command line: sim_cpp11_features.pl foo.h</span>
+<span class="cp"># define COMPILING_FOO_H</span>
+<span class="cp">#</span><span class="w"> </span><span class="cp">include</span><span class="w"> </span><span class="cpf">&lt;foo_cpp03.h&gt;</span><span class="cp"></span>
+<span class="cp"># undef COMPILING_FOO_H</span>
+<span class="cp">#else</span>
+
+<span class="cp">#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES </span><span class="c1">// $var-args=3</span>
+
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="p">...</span><span class="w"> </span><span class="n">ARG</span><span class="o">&gt;</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="n">j</span><span class="p">(</span><span class="n">ARG</span><span class="o">&amp;&amp;</span><span class="p">...</span><span class="w"> </span><span class="n">arg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">g</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">ARG</span><span class="o">&gt;</span><span class="p">(</span><span class="n">arg</span><span class="p">)...);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="cp">#endif</span>
+
+<span class="cp">#endif </span><span class="c1">// End C++11 code</span>
+</pre></div>
+</div>
+<p>and a new “<code class="docutils literal notranslate"><span class="pre">_cpp03</span></code>” header file is created with the C++03 equivalent
+expansions (“<code class="docutils literal notranslate"><span class="pre">foo_cpp03.h</span></code>”):</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// foo_cpp03.h                                                        -*-C++-*-</span>
+
+<span class="c1">// Automatically generated file.  **DO NOT EDIT**</span>
+
+<span class="cp">#ifndef INCLUDED_FOO_CPP03</span>
+<span class="cp">#define INCLUDED_FOO_CPP03</span>
+
+<span class="c1">//@PURPOSE: Provide C++03 implementation for foo.h</span>
+<span class="c1">//</span>
+<span class="c1">//@CLASSES: See foo.h for list of classes</span>
+<span class="c1">//</span>
+<span class="c1">//@SEE_ALSO: foo</span>
+<span class="c1">//</span>
+<span class="c1">//@DESCRIPTION:  This component is the C++03 translation of a C++11 component,</span>
+<span class="c1">// generated by the &#39;sim_cpp11_features.pl&#39; program.  If the original header</span>
+<span class="c1">// contains any specially delimited regions of C++11 code, then this</span>
+<span class="c1">// generated file contains the C++03 equivalent, i.e., with variadic templates</span>
+<span class="c1">// expanded and rvalue-references replaced by &#39;bslmf::MovableRef&#39; objects.</span>
+<span class="c1">// The header code in this file is designed to be &#39;#include&#39;d into the</span>
+<span class="c1">// original header when compiling with a C++03 compiler.  If there are no</span>
+<span class="c1">// specially delimited regions of C++11 code, then this header contains no</span>
+<span class="c1">// code and is not &#39;#include&#39;d in the original header.</span>
+<span class="c1">//</span>
+<span class="c1">// Generated on Mon Nov  2 13:17:20 2020</span>
+<span class="c1">// Command line: sim_cpp11_features.pl foo.h</span>
+
+<span class="cp">#ifdef COMPILING_FOO_H</span>
+
+<span class="cp">#if BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES</span>
+<span class="c1">// {{{ BEGIN GENERATED CODE</span>
+<span class="c1">// Command line: sim_cpp11_features.pl foo.h</span>
+<span class="cp">#ifndef FOO_VARIADIC_LIMIT</span>
+<span class="cp">#define FOO_VARIADIC_LIMIT 3</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifndef FOO_VARIADIC_LIMIT_A</span>
+<span class="cp">#define FOO_VARIADIC_LIMIT_A FOO_VARIADIC_LIMIT</span>
+<span class="cp">#endif</span>
+
+<span class="cp">#if FOO_VARIADIC_LIMIT_A &gt;= 0</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">j</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">g</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="cp">#endif  </span><span class="c1">// FOO_VARIADIC_LIMIT_A &gt;= 0</span>
+
+<span class="cp">#if FOO_VARIADIC_LIMIT_A &gt;= 1</span>
+<span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">ARG_1</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">j</span><span class="p">(</span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARG_1</span><span class="p">)</span><span class="w"> </span><span class="n">arg_1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">g</span><span class="p">(</span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARG_1</span><span class="p">,</span><span class="w"> </span><span class="n">arg_1</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="cp">#endif  </span><span class="c1">// FOO_VARIADIC_LIMIT_A &gt;= 1</span>
+
+<span class="cp">#if FOO_VARIADIC_LIMIT_A &gt;= 2</span>
+<span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">ARG_1</span><span class="p">,</span><span class="w"></span>
+<span class="w">          </span><span class="k">class</span><span class="w"> </span><span class="nc">ARG_2</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">j</span><span class="p">(</span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARG_1</span><span class="p">)</span><span class="w"> </span><span class="n">arg_1</span><span class="p">,</span><span class="w"></span>
+<span class="w">       </span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARG_2</span><span class="p">)</span><span class="w"> </span><span class="n">arg_2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">g</span><span class="p">(</span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARG_1</span><span class="p">,</span><span class="w"> </span><span class="n">arg_1</span><span class="p">),</span><span class="w"></span>
+<span class="w">      </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARG_2</span><span class="p">,</span><span class="w"> </span><span class="n">arg_2</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="cp">#endif  </span><span class="c1">// FOO_VARIADIC_LIMIT_A &gt;= 2</span>
+
+<span class="cp">#if FOO_VARIADIC_LIMIT_A &gt;= 3</span>
+<span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">ARG_1</span><span class="p">,</span><span class="w"></span>
+<span class="w">          </span><span class="k">class</span><span class="w"> </span><span class="nc">ARG_2</span><span class="p">,</span><span class="w"></span>
+<span class="w">          </span><span class="k">class</span><span class="w"> </span><span class="nc">ARG_3</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">j</span><span class="p">(</span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARG_1</span><span class="p">)</span><span class="w"> </span><span class="n">arg_1</span><span class="p">,</span><span class="w"></span>
+<span class="w">       </span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARG_2</span><span class="p">)</span><span class="w"> </span><span class="n">arg_2</span><span class="p">,</span><span class="w"></span>
+<span class="w">       </span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARG_3</span><span class="p">)</span><span class="w"> </span><span class="n">arg_3</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">g</span><span class="p">(</span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARG_1</span><span class="p">,</span><span class="w"> </span><span class="n">arg_1</span><span class="p">),</span><span class="w"></span>
+<span class="w">      </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARG_2</span><span class="p">,</span><span class="w"> </span><span class="n">arg_2</span><span class="p">),</span><span class="w"></span>
+<span class="w">      </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARG_3</span><span class="p">,</span><span class="w"> </span><span class="n">arg_3</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="cp">#endif  </span><span class="c1">// FOO_VARIADIC_LIMIT_A &gt;= 3</span>
+
+<span class="cp">#else</span>
+<span class="c1">// The generated code below is a workaround for the absence of perfect</span>
+<span class="c1">// forwarding in some compilers.</span>
+
+<span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="p">...</span><span class="w"> </span><span class="n">ARG</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">j</span><span class="p">(</span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARG</span><span class="p">)...</span><span class="w"> </span><span class="n">arg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">g</span><span class="p">(</span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARG</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p">)...);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="c1">// }}} END GENERATED CODE</span>
+<span class="cp">#endif</span>
+
+<span class="cp">#else </span><span class="c1">// if ! defined(DEFINED_FOO_H)</span>
+<span class="cp"># error Not valid except when included from foo.h</span>
+<span class="cp">#endif </span><span class="c1">// ! defined(COMPILING_FOO_H)</span>
+
+<span class="cp">#endif </span><span class="c1">// ! defined(INCLUDED_FOO_CPP03)</span>
+
+<span class="c1">// ----------------------------------------------------------------------------</span>
+<span class="c1">// Copyright 2020 Bloomberg Finance L.P.</span>
+<span class="c1">//</span>
+<span class="c1">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">// you may not use this file except in compliance with the License.</span>
+<span class="c1">// You may obtain a copy of the License at</span>
+<span class="c1">//</span>
+<span class="c1">//     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">//</span>
+<span class="c1">// Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">// See the License for the specific language governing permissions and</span>
+<span class="c1">// limitations under the License.</span>
+<span class="c1">// ----------------------------- END-OF-FILE ----------------------------------</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

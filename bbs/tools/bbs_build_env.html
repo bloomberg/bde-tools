@@ -1,0 +1,424 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>bbs_build_env &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="bbs_build" href="bbs_build.html" />
+    <link rel="prev" title="Compiler Profiles" href="../reference/bbs_compiler_profile.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">bbs_build_env</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites-and-supported-platforms">Prerequisites and Supported Platforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-it-works">How It Works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage-examples">Usage Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#environment-variables-set-by-bbs-build-env">Environment Variables Set by bbs_build_env</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#commands-and-options">Commands and Options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#commands">Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#set-command-options">Set Command Options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>bbs_build_env</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="bbs_build.html" class="btn btn-neutral float-right" title="bbs_build" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      
+      
+        <a href="../reference/bbs_compiler_profile.html" class="btn btn-neutral float-left" title="Compiler Profiles" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="bbs-build-env">
+<span id="bbs-build-env-top"></span><h1>bbs_build_env<a class="headerlink" href="#bbs-build-env" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bbs_build_env</span></code> is a tool that can be used to simplify the process of
+selecting a compiler and managing multiple build flavors.</p>
+<p>More specifically, the tool helps solve the following problems when using
+CMake:</p>
+<ol class="arabic simple">
+<li><p>CMake does not create the output directory for build artifacts.  The script
+evaluates the system and build configuration and creates easily
+identifiable name for the build directory that is used by other build
+scripts.</p></li>
+<li><p>Setting a compiler configuration under Windows OS ( which is significantly
+different from Unix )</p></li>
+</ol>
+<div class="section" id="prerequisites-and-supported-platforms">
+<h3>Prerequisites and Supported Platforms<a class="headerlink" href="#prerequisites-and-supported-platforms" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">bbs_build_env</span></code> requires:</p>
+<ul class="simple">
+<li><p>Python 3.6+</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">bbs_build_env</span></code> is supported on all platform where the <a class="reference internal" href="../general_info/requirements.html#requirements-top"><span class="std std-ref">CMake based
+build system is supported</span></a>.</p>
+<p>On Windows, bbs_build_env is <strong>not supported</strong> by the windows command
+prompt. Instead, you must use the tool through Git bash(msysgit).  See the
+tutorial for more details (TODO).</p>
+</div>
+<div class="section" id="how-it-works">
+<h3>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">bbs_build_env</span></code> prints a list of Bourne shell commands to set environment
+variables known to <code class="docutils literal notranslate"><span class="pre">bbs_build</span></code>, so that configuration options do not need to
+be manually provided.  The end result is that the build output directory,
+compiler, and installation prefix are unique for each build configuration.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Since the <code class="docutils literal notranslate"><span class="pre">bbs_build_env</span></code> prints shell commands to the standard output,
+the output must be executed by the current <em>Bourne</em> shell using the <code class="docutils literal notranslate"><span class="pre">eval</span></code>
+command.</p>
+</div>
+</div>
+<div class="section" id="usage-examples">
+<h3>Usage Examples<a class="headerlink" href="#usage-examples" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p><code class="docutils literal notranslate"><span class="pre">eval</span> <span class="pre">`bbs_build_env</span> <span class="pre">-p</span> <span class="pre">gcc-9.0.0</span> <span class="pre">-u</span> <span class="pre">dbg_64</span> <span class="pre">-i</span> <span class="pre">~/bde-install`</span></code></p>
+<p>Set up the environment variables so that the <code class="docutils literal notranslate"><span class="pre">bbs_build</span></code> build tool uses
+the build profile named <code class="docutils literal notranslate"><span class="pre">gcc-9.0.0</span></code> (assuming that build profile with this
+name exist), builds with the UFID configuration ‘dbg_64’ to the output
+directory <code class="docutils literal notranslate"><span class="pre">&lt;uplid&gt;-&lt;ufid&gt;</span></code>, and install the libraries to a installation
+prefix of <code class="docutils literal notranslate"><span class="pre">~/bde-install/</span></code>.</p>
+<p>For example, on my system, the uplid was
+<code class="docutils literal notranslate"><span class="pre">unix-linux-x86_64-2.6.32-gcc-9.0.0</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">unix-linux-x86_64-2.6.32-gcc-9.0.0-dbg_64</span></code> was the name of the build
+output directory.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="environment-variables-set-by-bbs-build-env">
+<span id="bbs-build-env-env"></span><h3>Environment Variables Set by bbs_build_env<a class="headerlink" href="#environment-variables-set-by-bbs-build-env" title="Permalink to this headline">¶</a></h3>
+<p>The following environment variables may be set by evaluating the output of
+bde_setwafenv.py:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CXX</span></code></p>
+<p>The path to the C++ compiler.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CC</span></code></p>
+<p>The path to the C compiler.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BBS_ENV_MARKER</span></code></p>
+<p>Flag to use BBS build system in the dual-mode CMakeLists.txt
+(this flag is transitional tool to support both old and new build systems
+and will be removed once the transition is completed )</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BDE_CMAKE_TOOLCHAIN</span></code></p>
+<p>The path to the CMake toolchain. If the toolchain file is set, it will
+override the <code class="docutils literal notranslate"><span class="pre">CXX</span></code> and <code class="docutils literal notranslate"><span class="pre">CC</span></code> variables during CMake configuration step.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BDE_CMAKE_UFID</span></code></p>
+<p>The <a class="reference internal" href="../reference/bbs_build_configuration.html#ufid"><span class="std std-ref">UFID</span></a> to use.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BDE_CMAKE_UPLID</span></code></p>
+<p>The UPLID determined by <code class="docutils literal notranslate"><span class="pre">bbs_build_env</span></code>. Note that UPLID is primarily
+used to setup compile environment for Windows.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BDE_CMAKE_BUILD_DIR</span></code></p>
+<p>The path in which build artifacts will be generated.  This will be set to the
+expanded value of <code class="docutils literal notranslate"><span class="pre">&quot;$BDE_CMAKE_UPLID-$BDE_CMAKE_UFID</span></code>, so that build
+directory is unique for each build configuration.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PREFIX</span></code></p>
+<p>The installation prefix.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="commands-and-options">
+<h2>Commands and Options<a class="headerlink" href="#commands-and-options" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="commands">
+<span id="bbs-build-env-commands"></span><h3>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h3>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">bbs_build_env</span></code> will print the Bourne shell commands to set
+environment variables.</p>
+<p>It also provides 3 other optional commands:</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-unset">
+<span class="sig-name descname"><span class="pre">unset</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-arg-unset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print Bourne shell commands to unset any environment variables that might be
+set previously by <code class="docutils literal notranslate"><span class="pre">bbs_build_env</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-list">
+<span class="sig-name descname"><span class="pre">list</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-arg-list" title="Permalink to this definition">¶</a></dt>
+<dd><p>List the available build profiles.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-arg-set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print Bourne shell commands to set environment variables.  This is the
+default command if none is specified. The section
+<a class="reference internal" href="#bbs-build-env-options"><span class="std std-ref">Set Command Options</span></a> documents the options available for this
+command.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="set-command-options">
+<span id="bbs-build-env-options"></span><h3>Set Command Options<a class="headerlink" href="#set-command-options" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-p">
+<span id="cmdoption-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-p" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the compiler profile to use.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-u">
+<span id="cmdoption-ufid"></span><span class="sig-name descname"><span class="pre">-u</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--ufid</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the build configuration using a <a class="reference internal" href="../reference/bbs_build_configuration.html#ufid"><span class="std std-ref">UFID</span></a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-build-type">
+<span class="sig-name descname"><span class="pre">--build-type</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-build-type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the CMake native build type (Debug/Release/RelWithDebInfo).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-abi-bits">
+<span class="sig-name descname"><span class="pre">--abi-bits</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-abi-bits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the build bitness.</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">--ufid</span></code> option superseds <code class="docutils literal notranslate"><span class="pre">--build-type</span></code> and <code class="docutils literal notranslate"><span class="pre">--abit-bits</span></code> options
+(the latter will be ignored). Also note that the CMake build types are
+translated into ufid for low level build system.</p>
+</div>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-b">
+<span id="cmdoption-build-dir"></span><span class="sig-name descname"><span class="pre">-b</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--build-dir</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the build directory.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-i">
+<span id="cmdoption-install-dir"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--install-dir</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the “root installation directory”.</p>
+</dd></dl>
+
+<p>Use the <code class="docutils literal notranslate"><span class="pre">--help</span></code> option for more information.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>BdeTestDriverUtils &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>BdeTestDriverUtils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="bdetestdriverutils">
+<h1>BdeTestDriverUtils<a class="headerlink" href="#bdetestdriverutils" title="Permalink to this headline">¶</a></h1>
+<p>This module provide a set of function to generate BDE tests</p>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_add_bde_style_test">
+<span class="sig-name descname"><span class="pre">bbs_add_bde_style_test</span></span><a class="headerlink" href="#command:bbs_add_bde_style_test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Add the [executable] <code class="docutils literal notranslate"><span class="pre">target</span></code> as a BDE test and create ctest labels for it.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">bbs_add_bde_style_test(</span><span class="nb">target</span><span class="w"></span>
+<span class="w">                       </span><span class="p">[</span><span class="w"> </span><span class="no">WORKING_DIRECTORY</span><span class="w">     </span><span class="nb">dir</span><span class="w">       </span><span class="p">]</span><span class="w"></span>
+<span class="w">                       </span><span class="p">[</span><span class="w"> </span><span class="no">TEST_VERBOSITY</span><span class="w">        </span><span class="nb">verbosity</span><span class="w"> </span><span class="p">]</span><span class="w"></span>
+<span class="w">                       </span><span class="p">[</span><span class="w"> </span><span class="no">EXTRA_ARGS</span><span class="w">            </span><span class="nb">args</span><span class="w"> </span><span class="p">...</span><span class="w">  </span><span class="p">]</span><span class="w"></span>
+<span class="w">                       </span><span class="p">[</span><span class="w"> </span><span class="no">LABELS</span><span class="w">                </span><span class="nb">prop</span><span class="w"> </span><span class="nb">value</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">]</span><span class="w"></span>
+<span class="w">                      </span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_add_component_tests">
+<span class="sig-name descname"><span class="pre">bbs_add_component_tests</span></span><a class="headerlink" href="#command:bbs_add_component_tests" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Generate build targets [executables] for the specified <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code>, add them as
+BDE tests and generate necessary build dependencies and test labels.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">bbs_add_component_tests(</span><span class="nb">target</span><span class="w"> </span><span class="no">SOURCES</span><span class="w"> </span><span class="nb">source1.t.cpp</span><span class="w"> </span><span class="p">[</span><span class="nb">source2.t.cpp</span><span class="w"> </span><span class="p">...]</span><span class="w"></span>
+<span class="w">                        </span><span class="p">[</span><span class="w"> </span><span class="no">WORKING_DIRECTORY</span><span class="w">      </span><span class="nb">dir</span><span class="w">            </span><span class="p">]</span><span class="w"></span>
+<span class="w">                        </span><span class="p">[</span><span class="w"> </span><span class="no">TEST_VERBOSITY</span><span class="w">         </span><span class="nb">verbosity</span><span class="w">      </span><span class="p">]</span><span class="w"></span>
+<span class="w">                        </span><span class="p">[</span><span class="w"> </span><span class="no">EXTRA_ARGS</span><span class="w">             </span><span class="nb">test_arg</span><span class="w">   </span><span class="p">...</span><span class="w"> </span><span class="p">]</span><span class="w"></span>
+<span class="w">                        </span><span class="p">[</span><span class="w"> </span><span class="no">PROPERTIES</span><span class="w">             </span><span class="nb">prop</span><span class="w"> </span><span class="nb">value</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">]</span><span class="w"></span>
+<span class="w">                        </span><span class="p">[</span><span class="w"> </span><span class="no">TEST_DEPS</span><span class="w">              </span><span class="nb">lib1</span><span class="w"> </span><span class="nb">lib2</span><span class="w">  </span><span class="p">...</span><span class="w"> </span><span class="p">]</span><span class="w"></span>
+<span class="w">                        </span><span class="p">[</span><span class="w"> </span><span class="no">TEST_TARGET_PROPERTIES</span><span class="w"> </span><span class="nb">prop</span><span class="w"> </span><span class="nb">value</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">]</span><span class="w"></span>
+<span class="w">                       </span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

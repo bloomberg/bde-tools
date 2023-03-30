@@ -1,0 +1,473 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Code Generation &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Compiler Profiles" href="bbs_compiler_profile.html" />
+    <link rel="prev" title="Build Configuration Options" href="bbs_build_configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Code Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-interaction">User Interaction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#expanding-parameter-packs">Expanding Parameter Packs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview-of-parameter-packs">Overview of Parameter Packs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#unexpanded-source-code">Unexpanded (source) code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#expanded-generated-code">Expanded (generated) code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-parameter-packs">Writing parameter packs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#initial-simulation-tool-usage">Initial simulation tool usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ongoing-synchronization-of-the-cpp03-files">Ongoing synchronization of the _cpp03 files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Code Generation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="bbs_compiler_profile.html" class="btn btn-neutral float-right" title="Compiler Profiles" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      
+      
+        <a href="bbs_build_configuration.html" class="btn btn-neutral float-left" title="Build Configuration Options" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="code-generation">
+<span id="code-generation-top"></span><h1>Code Generation<a class="headerlink" href="#code-generation" title="Permalink to this headline">¶</a></h1>
+<p>This section describes how the BDE Build System interacts with code generators.</p>
+<div class="section" id="overview">
+<span id="code-generation-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The BDE CMake build system generates some code automatically. Currently this is
+done to simulate variadic templates for code being built with a C++03 compiler
+(see <a class="reference internal" href="#expanding-parameter-packs">Expanding Parameter Packs</a> below). The code generation is run
+automatically as part of the configuration of a project (see <a class="reference internal" href="#user-interaction">User Interaction</a>
+below). The code generation step generates code into the source tree of the
+repository, which differs from how many CMake projects are structured. This
+code is checked into our repositories, both for release labels and our main
+branch.</p>
+<p>We generate the code in the source tree for 2 principal reasons:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Debuggability
+At debug time, the generated code is what has to be visible to the
+debugger.  If it’s a transient artifact, it won’t be available when
+developers are trying to diagnose issues.</p></li>
+<li><p>Build reproducibility
+Generating the code in-tree makes sure our releases can be reproduced
+trivially.</p></li>
+</ul>
+</div></blockquote>
+<p>In order to ensure generated code in source control is not out of date, our CI
+systems perform builds that verify that generated code is up to date with both
+the latest version of the source code, and the latest version of the code
+generation tools (see <a class="reference internal" href="#user-interaction">User Interaction</a> below).</p>
+</div>
+<div class="section" id="user-interaction">
+<h2>User Interaction<a class="headerlink" href="#user-interaction" title="Permalink to this headline">¶</a></h2>
+<p>After the generation templates are written and the initial code generation is
+done (e.g., <a class="reference internal" href="#writing-parameter-packs">Writing Parameter Packs</a> and <a class="reference internal" href="#initial-simulation-tool-usage">Initial simulation tool usage</a>,
+below), the ongoing use of the code generators is transparent to any user of
+the <code class="docutils literal notranslate"><span class="pre">bbs_build</span></code> tool.</p>
+<p>Users set up their environment as usual, then run the <code class="docutils literal notranslate"><span class="pre">bbs_build</span> <span class="pre">configure</span></code>
+step, which sets up the rules for re-generating the target files if necessary:</p>
+<blockquote>
+<div><div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ bbs_build configure
+    ...
+    -- Looking <span class="k">for</span> pthread_create <span class="k">in</span> pthread - found
+    -- Found Threads: TRUE
+    -- sim_cpp11 generation: /bb/mbiga/mbig1480/bde/groups/bdl/bdlb/bdlb_nullablevalue.cpp -&gt; /bb/mbiga/mbig1480/bde/groups/bdl/bdlb/bdlb_nullablevalue_cpp03.cpp
+    -- sim_cpp11 generation: /bb/mbiga/mbig1480/bde/groups/bdl/bdlb/bdlb_nullablevalue.h -&gt; /bb/mbiga/mbig1480/bde/groups/bdl/bdlb/bdlb_nullablevalue_cpp03.h
+    -- sim_cpp11 generation: /bb/mbiga/mbig1480/bde/groups/bsl/bslalg/bslalg_arrayprimitives.cpp -&gt; /bb/mbiga/mbig1480/bde/groups/bsl/bslalg/bslalg_arrayprimitives_cpp03.cpp
+    -- sim_cpp11 generation: /bb/mbiga/mbig1480/bde/groups/bsl/bslalg/bslalg_arrayprimitives.h -&gt; /bb/mbiga/mbig1480/bde/groups/bsl/bslalg/bslalg_arrayprimitives_cpp03.h
+    ...
+</pre></div>
+</div>
+</div></blockquote>
+<p>Afterwards, during the build phase, the generated files are re-generated only
+if necessary:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ bbs_build build
+    ...
+    <span class="o">[</span><span class="m">99</span>/328<span class="o">]</span> Generating ../../groups/bsl/bslmf/bslmf_functionpointertraits_cpp03.h - sim_cpp11_features.pl updated file
+    <span class="o">[</span><span class="m">100</span>/328<span class="o">]</span> Generating ../../groups/bsl/bslmf/bslmf_nthparameter_cpp03.cpp - sim_cpp11_features.pl did not need to update
+    ...
+</pre></div>
+</div>
+<p>In this example, <code class="docutils literal notranslate"><span class="pre">bslmf_functionpointertraits_cpp03.h</span></code> needed to be
+regenerated, but <code class="docutils literal notranslate"><span class="pre">bslmf_nthparameter_cpp03.cpp</span></code> did not.  Unless you are
+working directly on a component with generated code, the latter is the much
+more common occurence.</p>
+</div>
+<div class="section" id="expanding-parameter-packs">
+<span id="parameter-packs-top"></span><h2>Expanding Parameter Packs<a class="headerlink" href="#expanding-parameter-packs" title="Permalink to this headline">¶</a></h2>
+<p>This section describes how BDE simulates
+<a class="reference external" href="https://en.cppreference.com/w/cpp/language/parameter_pack">parameter packs</a>
+(a.k.a. variadic templates) on C++03 compilers.</p>
+<div class="section" id="overview-of-parameter-packs">
+<span id="parameter-packs-1"></span><h3>Overview of Parameter Packs<a class="headerlink" href="#overview-of-parameter-packs" title="Permalink to this headline">¶</a></h3>
+<p>Parameter packs are a feature that was added in C++11, allowing for template
+expansions with a variable number of parameters.  For example:</p>
+</div>
+<div class="section" id="unexpanded-source-code">
+<span id="parameter-packs-example-1"></span><h3>Unexpanded (source) code<a class="headerlink" href="#unexpanded-source-code" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">VALUE</span><span class="p">,</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">ALLOCATOR</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="p">...</span><span class="w"> </span><span class="n">ARGS</span><span class="o">&gt;</span><span class="w"></span>
+<span class="kr">inline</span><span class="w"></span>
+<span class="k">typename</span><span class="w"> </span><span class="nc">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">reference</span><span class="w"></span>
+<span class="n">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">emplace_front</span><span class="p">(</span><span class="n">ARGS</span><span class="o">&amp;&amp;</span><span class="p">...</span><span class="w"> </span><span class="n">arguments</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">emplace</span><span class="p">(</span><span class="n">cbegin</span><span class="p">(),</span><span class="w"> </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARGS</span><span class="p">,</span><span class="w"> </span><span class="n">arguments</span><span class="p">)...);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">front</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>We simulate the variadic expansions in C++03 using
+<code class="docutils literal notranslate"><span class="pre">bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl</span></code>.</p>
+<p>This tool can be applied to any source file (e.g., <code class="docutils literal notranslate"><span class="pre">bslstl_list.h</span></code>) and
+generates an <code class="docutils literal notranslate"><span class="pre">_cpp03</span></code> file (e.g. <code class="docutils literal notranslate"><span class="pre">bslstl_list_cpp03.h</span></code>) alongside it, as
+well as modifying the original file to include the <code class="docutils literal notranslate"><span class="pre">_cpp03</span></code> file if
+necessary.</p>
+<p>The generated <code class="docutils literal notranslate"><span class="pre">_cpp03</span></code> equivalent of the example above is not as readable,
+which is why we isolate it off into its own file which can be ignored during
+code reviews.  In this example, only the first 3 expansions are shown; the
+actual _cpp03 file has 10 expansions covering 300 lines of code just for this
+one method.</p>
+</div>
+<div class="section" id="expanded-generated-code">
+<span id="parameter-packs-example-2"></span><h3>Expanded (generated) code<a class="headerlink" href="#expanded-generated-code" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#if BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES</span>
+<span class="c1">// {{{ BEGIN GENERATED CODE</span>
+<span class="c1">// Command line: sim_cpp11_features.pl bslstl_list.h</span>
+<span class="cp">#ifndef BSLSTL_LIST_VARIADIC_LIMIT</span>
+<span class="cp">#define BSLSTL_LIST_VARIADIC_LIMIT 10</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifndef BSLSTL_LIST_VARIADIC_LIMIT_E</span>
+<span class="cp">#define BSLSTL_LIST_VARIADIC_LIMIT_E BSLSTL_LIST_VARIADIC_LIMIT</span>
+<span class="cp">#endif</span>
+<span class="cp">#if BSLSTL_LIST_VARIADIC_LIMIT_E &gt;= 0</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">VALUE</span><span class="p">,</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">ALLOCATOR</span><span class="o">&gt;</span><span class="w"></span>
+<span class="kr">inline</span><span class="w"></span>
+<span class="k">typename</span><span class="w"> </span><span class="nc">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">reference</span><span class="w"></span>
+<span class="n">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">emplace_front</span><span class="p">(</span><span class="w"></span>
+<span class="w">                          </span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">emplace</span><span class="p">(</span><span class="n">cbegin</span><span class="p">());</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">front</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="cp">#endif  </span><span class="c1">// BSLSTL_LIST_VARIADIC_LIMIT_E &gt;= 0</span>
+
+<span class="cp">#if BSLSTL_LIST_VARIADIC_LIMIT_E &gt;= 1</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">VALUE</span><span class="p">,</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">ALLOCATOR</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">ARGS_01</span><span class="o">&gt;</span><span class="w"></span>
+<span class="kr">inline</span><span class="w"></span>
+<span class="k">typename</span><span class="w"> </span><span class="nc">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">reference</span><span class="w"></span>
+<span class="n">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">emplace_front</span><span class="p">(</span><span class="w"></span>
+<span class="w">                       </span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARGS_01</span><span class="p">)</span><span class="w"> </span><span class="n">arguments_01</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">emplace</span><span class="p">(</span><span class="n">cbegin</span><span class="p">(),</span><span class="w"> </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARGS_01</span><span class="p">,</span><span class="w"> </span><span class="n">arguments_01</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">front</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="cp">#endif  </span><span class="c1">// BSLSTL_LIST_VARIADIC_LIMIT_E &gt;= 1</span>
+
+<span class="cp">#if BSLSTL_LIST_VARIADIC_LIMIT_E &gt;= 2</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">VALUE</span><span class="p">,</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">ALLOCATOR</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">ARGS_01</span><span class="p">,</span><span class="w"></span>
+<span class="w">          </span><span class="k">class</span><span class="w"> </span><span class="nc">ARGS_02</span><span class="o">&gt;</span><span class="w"></span>
+<span class="kr">inline</span><span class="w"></span>
+<span class="k">typename</span><span class="w"> </span><span class="nc">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">reference</span><span class="w"></span>
+<span class="n">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">emplace_front</span><span class="p">(</span><span class="w"></span>
+<span class="w">                       </span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARGS_01</span><span class="p">)</span><span class="w"> </span><span class="n">arguments_01</span><span class="p">,</span><span class="w"></span>
+<span class="w">                       </span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARGS_02</span><span class="p">)</span><span class="w"> </span><span class="n">arguments_02</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">emplace</span><span class="p">(</span><span class="n">cbegin</span><span class="p">(),</span><span class="w"> </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARGS_01</span><span class="p">,</span><span class="w"> </span><span class="n">arguments_01</span><span class="p">),</span><span class="w"></span>
+<span class="w">                      </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARGS_02</span><span class="p">,</span><span class="w"> </span><span class="n">arguments_02</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">front</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="cp">#endif  </span><span class="c1">// BSLSTL_LIST_VARIADIC_LIMIT_E &gt;= 2</span>
+
+<span class="cp">#if BSLSTL_LIST_VARIADIC_LIMIT_E &gt;= 3</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">VALUE</span><span class="p">,</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">ALLOCATOR</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">ARGS_01</span><span class="p">,</span><span class="w"></span>
+<span class="w">          </span><span class="k">class</span><span class="w"> </span><span class="nc">ARGS_02</span><span class="p">,</span><span class="w"></span>
+<span class="w">          </span><span class="k">class</span><span class="w"> </span><span class="nc">ARGS_03</span><span class="o">&gt;</span><span class="w"></span>
+<span class="kr">inline</span><span class="w"></span>
+<span class="k">typename</span><span class="w"> </span><span class="nc">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">reference</span><span class="w"></span>
+<span class="n">list</span><span class="o">&lt;</span><span class="n">VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOCATOR</span><span class="o">&gt;::</span><span class="n">emplace_front</span><span class="p">(</span><span class="w"></span>
+<span class="w">                       </span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARGS_01</span><span class="p">)</span><span class="w"> </span><span class="n">arguments_01</span><span class="p">,</span><span class="w"></span>
+<span class="w">                       </span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARGS_02</span><span class="p">)</span><span class="w"> </span><span class="n">arguments_02</span><span class="p">,</span><span class="w"></span>
+<span class="w">                       </span><span class="n">BSLS_COMPILERFEATURES_FORWARD_REF</span><span class="p">(</span><span class="n">ARGS_03</span><span class="p">)</span><span class="w"> </span><span class="n">arguments_03</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">emplace</span><span class="p">(</span><span class="n">cbegin</span><span class="p">(),</span><span class="w"> </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARGS_01</span><span class="p">,</span><span class="w"> </span><span class="n">arguments_01</span><span class="p">),</span><span class="w"></span>
+<span class="w">                      </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARGS_02</span><span class="p">,</span><span class="w"> </span><span class="n">arguments_02</span><span class="p">),</span><span class="w"></span>
+<span class="w">                      </span><span class="n">BSLS_COMPILERFEATURES_FORWARD</span><span class="p">(</span><span class="n">ARGS_03</span><span class="p">,</span><span class="w"> </span><span class="n">arguments_03</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">front</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="cp">#endif  </span><span class="c1">// BSLSTL_LIST_VARIADIC_LIMIT_E &gt;= 3</span>
+</pre></div>
+</div>
+<p>As you can see, manually maintaining such expanded code is a nightmare.</p>
+</div>
+</div>
+<div class="section" id="writing-parameter-packs">
+<h2>Writing parameter packs<a class="headerlink" href="#writing-parameter-packs" title="Permalink to this headline">¶</a></h2>
+<p>Parameter pack templates are written as normal C++11 code in the header, source
+file, and test driver of the component. Each template member is surrounded by a
+specific <code class="docutils literal notranslate"><span class="pre">#if</span></code> block:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES</span>
+<span class="c1">//...</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>Also, anywhere that <code class="docutils literal notranslate"><span class="pre">bsl::forward</span></code> would be used,
+<code class="docutils literal notranslate"><span class="pre">BSLS_COMPILERFEATURES_FORWARD</span></code> is used instead (see
+the unexpanded example above (<a class="reference internal" href="#parameter-packs-example-1"><span class="std std-ref">Unexpanded (source) code</span></a>)).</p>
+</div>
+<div class="section" id="initial-simulation-tool-usage">
+<h2>Initial simulation tool usage<a class="headerlink" href="#initial-simulation-tool-usage" title="Permalink to this headline">¶</a></h2>
+<p>We store generated code in our source tree.  See
+<a class="reference internal" href="#code-generation-overview"><span class="std std-ref">Overview</span></a> for the rationale.</p>
+<p>Once a variadic template is added (to a header, source, or test driver file)
+for the first time, the developer adds a <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;_cpp03</span></code> sub-component to
+<code class="docutils literal notranslate"><span class="pre">&lt;package&gt;.mem</span></code> file for the package.  The build systems determines on which
+componets to run the variadic simulation expansion by looking for subordinate
+components with <code class="docutils literal notranslate"><span class="pre">_cpp03</span></code> extensions.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>.../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl bsl_list.h
+.../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl bsl_list.cpp
+.../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl bsl_list.t.cpp
+<span class="nb">echo</span> bslstl_list_cpp03 &gt;&gt; package/bslstl.mem
+sort -o package/bslstl.mem package/bslstl.mem
+git add bsl_list_cpp03.<span class="o">{</span>h,cpp,t.cpp<span class="o">}</span> package/bslstl.mem
+git commit -m<span class="s1">&#39;Adding cpp03 files&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="ongoing-synchronization-of-the-cpp03-files">
+<h2>Ongoing synchronization of the _cpp03 files<a class="headerlink" href="#ongoing-synchronization-of-the-cpp03-files" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">bbs_build</span></code> tool automatically generates rules to re-run
+<code class="docutils literal notranslate"><span class="pre">sim_cpp11_features.pl</span></code> if the source files have changed.</p>
+<p>A different option is passed to <code class="docutils literal notranslate"><span class="pre">bbs_build</span></code> by the nightly and feature branch
+test builds which causes the build to fail if the source and <code class="docutils literal notranslate"><span class="pre">_cpp03</span></code> files
+are out of sync, allowing us to make sure that the state of committed code is
+in sync.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>bbs_build build --cpp11-verify-no-change
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

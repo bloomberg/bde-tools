@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Setup and Build BDE &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Build a Single Package or Component" href="build_single_target.html" />
+    <link rel="prev" title="Installation And Configuration" href="../general_info/installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Setup and Build BDE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#download-the-bde-libraries">Download the BDE libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setup-the-environment">Setup the Environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#inspect-build-environment-settings">Inspect Build Environment Settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#configure-the-build">Configure the Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-and-install">Build and Install</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Setup and Build BDE</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="build_single_target.html" class="btn btn-neutral float-right" title="Build a Single Package or Component" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      
+      
+        <a href="../general_info/installation.html" class="btn btn-neutral float-left" title="Installation And Configuration" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="setup-and-build-bde">
+<span id="bbs-setup-build-top"></span><h1>Setup and Build BDE<a class="headerlink" href="#setup-and-build-bde" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">BDE</span> <span class="pre">Build</span> <span class="pre">System</span></code> (BBS) allows users to quickly set build parameters in
+the environment variables that will be used by various bbs tools.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This same process can be used to build any <a class="reference internal" href="../reference/bde_repo_layout.html"><span class="doc">BDE-style</span></a> repository.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Build setup must always be performed at the top of the repository or the workspace.</p>
+</div>
+<div class="section" id="download-the-bde-libraries">
+<h2>Download the BDE libraries<a class="headerlink" href="#download-the-bde-libraries" title="Permalink to this headline">¶</a></h2>
+<p>BDE library can be cloned from
+public <a class="reference external" href="https://github.com/bloomberg/bde">github bde</a> repository:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/bloomberg/bde.git
+$ <span class="nb">cd</span> bde
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="build_workspace.html#bbs-build-workspace-top"><span class="std std-ref">Build Multiple Projects in a Workspace</span></a> for the instruction on setting a build
+workspace with multiple repos.</p>
+</div>
+<div class="section" id="setup-the-environment">
+<span id="id1"></span><h2>Setup the Environment<a class="headerlink" href="#setup-the-environment" title="Permalink to this headline">¶</a></h2>
+<p>Use <a class="reference internal" href="../tools/bbs_build_env.html"><span class="doc">bbs_build_env</span></a> To set the build variables in the
+environment:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">eval</span> <span class="sb">`</span>bbs_build_env -u dbg_64<span class="sb">`</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-p</span></code> and <code class="docutils literal notranslate"><span class="pre">-u</span></code> options can be used to configure the compiler and
+build options resectively.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">bbs_build_env</span> <span class="pre">list</span></code> can be used to list the available compilers (users can
+also <a class="reference internal" href="configure_profile.html"><span class="doc">add a custom compiler profile</span></a>). The build
+options are passed by <a class="reference internal" href="../reference/bbs_build_configuration.html#ufid"><span class="std std-ref">UFID</span></a></p>
+<p>After setting the build environment, user can subsequently run <code class="docutils literal notranslate"><span class="pre">bbs_build</span>
+<span class="pre">configure</span></code> without additional options.</p>
+<div class="section" id="inspect-build-environment-settings">
+<h3>Inspect Build Environment Settings<a class="headerlink" href="#inspect-build-environment-settings" title="Permalink to this headline">¶</a></h3>
+<p>Users can also use <a class="reference internal" href="../tools/bbs_build_env.html"><span class="doc">bbs_build_env</span></a> to see the environment
+variables that will be set:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ bbs_build_env -u dbg_64
+Effective ufid: dbg_64
+Using build profile: gcc-10.2.1
+<span class="nb">export</span> <span class="nv">BBS_ENV_MARKER</span><span class="o">=</span>ON
+<span class="nb">export</span> <span class="nv">BDE_CMAKE_UPLID</span><span class="o">=</span>unix-linux-x86_64-3.10.0-gcc-10.2.1
+<span class="nb">export</span> <span class="nv">BDE_CMAKE_UFID</span><span class="o">=</span>dbg
+<span class="nb">export</span> <span class="nv">BDE_CMAKE_BUILD_DIR</span><span class="o">=</span><span class="s2">&quot;_build/unix-linux-x86_64-3.10.0-gcc-10.2.1-dbg&quot;</span>
+<span class="nb">export</span> <span class="nv">CC</span><span class="o">=</span>/opt/bb/bin/gcc
+<span class="nb">export</span> <span class="nv">CXX</span><span class="o">=</span>/opt/bb/bin/g++
+<span class="nb">export</span> <span class="nv">BDE_CMAKE_TOOLCHAIN</span><span class="o">=</span>/home/&lt;user&gt;/bde-tools/BdeBuildSystem/toolchains/linux/gcc-default.cmake
+<span class="nb">export</span> <span class="nv">BDE_CMAKE_INSTALL_DIR</span><span class="o">=</span>/home/&lt;user&gt;/workspace/bde/_install
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="configure-the-build">
+<h2>Configure the Build<a class="headerlink" href="#configure-the-build" title="Permalink to this headline">¶</a></h2>
+<p>Because we used <a class="reference internal" href="../tools/bbs_build_env.html"><span class="doc">bbs_build_env</span></a> to set environment variables
+specifying the compiler and build options, we do not need to pass any options
+to configure.  Alternatively, compiler and build options can be passed
+explicitly to <a class="reference internal" href="../tools/bbs_build.html"><span class="doc">bbs_build on the command line</span></a>.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ bbs_build configure
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">configure</span></code> step must be done after setting a new build environment
+(be it a different compiler, ufid or a build shell).</p>
+</div>
+<p>In the case when you want to make sure that any pre-existing build
+configuration is erased, add <code class="docutils literal notranslate"><span class="pre">--clean</span></code> parameter:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ bbs_build configure --clean
+</pre></div>
+</div>
+</div>
+<div class="section" id="build-and-install">
+<h2>Build and Install<a class="headerlink" href="#build-and-install" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Build the software:</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ bbs_build build
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Build and run any tests:</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ bbs_build build --tests run
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Install the headers and built libraries:</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ bbs_build install
+</pre></div>
+</div>
+<p>Developers can also <a class="reference internal" href="build_single_target.html"><span class="doc">build individual components and groups of
+components</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

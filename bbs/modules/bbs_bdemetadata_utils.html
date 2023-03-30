@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>BdeMetadataUtils &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>BdeMetadataUtils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="bdemetadatautils">
+<h1>BdeMetadataUtils<a class="headerlink" href="#bdemetadatautils" title="Permalink to this headline">¶</a></h1>
+<p>This module provide a set of function to parse BDE metadata files.</p>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_read_metadata">
+<span class="sig-name descname"><span class="pre">bbs_read_metadata</span></span><a class="headerlink" href="#command:bbs_read_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>This command reads BDE group or package level metadata files and populates a
+set of list variables that describe the content of the groups and/pr package(s)
+respectively.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">bbs_read_metadata(</span><span class="no">PACKAGE</span><span class="w"> </span><span class="nv">&lt;package&gt;</span><span class="w"> </span>
+<span class="w">                  </span><span class="p">[</span><span class="no">SOURCE_DIR</span><span class="w"> </span><span class="nv">&lt;dir&gt;</span><span class="p">]</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>PACKAGE mode reads the bde metadata file for a single package from the
+optionally specified <code class="docutils literal notranslate"><span class="pre">SOURCE_DIR</span></code> (if not specified, the value of
+<code class="docutils literal notranslate"><span class="pre">CMAKE_CURRENT_SOURCE_DIR</span></code> is used) and sets the following list variables in
+the parent scope:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>&lt;package&gt;_COMPONENTS</p></li>
+<li><p>&lt;package&gt;_DEPENDS</p></li>
+<li><p>&lt;package&gt;_PCDEPS</p></li>
+<li><p>&lt;package&gt;_INCLUDE_DIRS</p></li>
+<li><p>&lt;package&gt;_INCLUDE_FILES</p></li>
+<li><p>&lt;package&gt;_SOURCE_DIRS</p></li>
+<li><p>&lt;package&gt;_SOURCE_FILES</p></li>
+<li><p>&lt;package&gt;_MAIN_SOURCE</p></li>
+<li><p>&lt;package&gt;_TEST_DEPENDS</p></li>
+<li><p>&lt;package&gt;_TEST_PCDEPS</p></li>
+<li><p>&lt;package&gt;_TEST_SOURCES</p></li>
+<li><p>&lt;package&gt;_G_TEST_SOURCES</p></li>
+<li><p>&lt;package&gt;_METADATA_DIR</p></li>
+</ul>
+</div></blockquote>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">bbs_read_metadata(</span><span class="no">GROUP</span><span class="w"> </span><span class="nv">&lt;group&gt;</span><span class="w"></span>
+<span class="w">                  </span><span class="p">[</span><span class="no">SOURCE_DIR</span><span class="w"> </span><span class="nv">&lt;dir&gt;</span><span class="p">]</span><span class="w"></span>
+<span class="w">                  </span><span class="p">[</span><span class="no">CUSTOM_PACKAGES</span><span class="w"> </span><span class="nv">&lt;pkg list&gt;</span><span class="p">]</span><span class="w"></span>
+<span class="w">                  </span><span class="p">[</span><span class="no">PRIVATE_PACKAGES</span><span class="w"> </span><span class="nv">&lt;pkg list&gt;</span><span class="p">]</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>GROUP mode reads the bde group metadata files from the optionally specified
+<code class="docutils literal notranslate"><span class="pre">SOURCE_DIR</span></code> (if not specified, the value of <code class="docutils literal notranslate"><span class="pre">CMAKE_CURRENT_SOURCE_DIR</span></code> is
+used) skipping the optionally specified <code class="docutils literal notranslate"><span class="pre">CUSTOM_PACKAGES</span></code> folders.
+Additionally for all <code class="docutils literal notranslate"><span class="pre">PRIVATE</span></code> packages the include files will not be added 
+to the  <code class="docutils literal notranslate"><span class="pre">INCLUDE_FILES</span></code> variable for the group.
+Subfolder in the <code class="docutils literal notranslate"><span class="pre">SOURCE_DIR</span></code> s treatead as a folder containing a package.
+In addition to package list variables, it sets the following group list
+variables in the parent scope:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>&lt;group&gt;_PACKAGES</p></li>
+<li><p>&lt;group&gt;_COMPONENTS</p></li>
+<li><p>&lt;group&gt;_DEPENDS</p></li>
+<li><p>&lt;group&gt;_PCDEPS</p></li>
+<li><p>&lt;group&gt;_INCLUDE_DIRS</p></li>
+<li><p>&lt;group&gt;_INCLUDE_FILES</p></li>
+<li><p>&lt;group&gt;_SOURCE_DIRS</p></li>
+<li><p>&lt;group&gt;_SOURCE_FILES</p></li>
+<li><p>&lt;group&gt;_TEST_DEPENDS</p></li>
+<li><p>&lt;group&gt;_TEST_PCDEPS</p></li>
+<li><p>&lt;group&gt;_TEST_SOURCES</p></li>
+<li><p>&lt;group&gt;_G_TEST_SOURCES</p></li>
+<li><p>&lt;group&gt;_METADATA_DIRS</p></li>
+</ul>
+</div></blockquote>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

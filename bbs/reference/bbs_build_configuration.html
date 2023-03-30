@@ -1,0 +1,518 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Build Configuration Options &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Code Generation" href="code_generation.html" />
+    <link rel="prev" title="BDE-Style Repository" href="bde_repo_layout.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Build Configuration Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#uplid">UPLID</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#valid-os-types">Valid OS Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#valid-os-names">Valid OS Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#known-compiler-types">Known Compiler Types</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ufid">UFID</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ufid-flags">UFID flags</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Build Configuration Options</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="code_generation.html" class="btn btn-neutral float-right" title="Code Generation" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      
+      
+        <a href="bde_repo_layout.html" class="btn btn-neutral float-left" title="BDE-Style Repository" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="build-configuration-options">
+<h1>Build Configuration Options<a class="headerlink" href="#build-configuration-options" title="Permalink to this headline">¶</a></h1>
+<p>BBS provides users with ability to configure the build for a specific compiler,
+operating system, architecture and build flavors. Those configurations are
+identified/described by a set of flags.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The compiler and build options are typically set in the build environmenet
+using <a class="reference internal" href="../tools/bbs_build_env.html"><span class="doc">bbs_build_env</span></a>.</p>
+</div>
+<div class="section" id="uplid">
+<h2>UPLID<a class="headerlink" href="#uplid" title="Permalink to this headline">¶</a></h2>
+<p>UPLID stands for Universal Platform ID.  It is used to identify the platform
+and tool-chain used to build the repository.  This identifier comprises the
+following parts (in order) joined together with the delimiter <code class="docutils literal notranslate"><span class="pre">-</span></code>:</p>
+<ol class="arabic simple">
+<li><p>OS Type</p></li>
+<li><p>OS Name</p></li>
+<li><p>CPU type</p></li>
+<li><p>OS Version</p></li>
+<li><p>CompilerToolchain</p></li>
+</ol>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">unix-linux-x86_64-3.10.0-gcc-9.0.0</span></code> is an UPLID whose OS
+type is <code class="docutils literal notranslate"><span class="pre">unix</span></code>, OS Name is <code class="docutils literal notranslate"><span class="pre">linux</span></code>, CPU type is <code class="docutils literal notranslate"><span class="pre">x86_64</span></code>, OS
+version is <code class="docutils literal notranslate"><span class="pre">3.10.0</span></code> and compiler profile with name <code class="docutils literal notranslate"><span class="pre">gcc-9.0.0</span></code>.</p>
+<p>UPLID (combined with UFID) is primarily used to generate unique build folders
+for building different flavors of BDE repos.</p>
+<div class="section" id="valid-os-types">
+<h3>Valid OS Types<a class="headerlink" href="#valid-os-types" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-given docutils align-left">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>OS Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>unix</p></td>
+<td><p>Unix-based operating systems and containers(Linux, Solaris, AIX, OS X, WSL)</p></td>
+</tr>
+<tr class="row-odd"><td><p>windows</p></td>
+<td><p>Microsoft Windows operating system</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="valid-os-names">
+<h3>Valid OS Names<a class="headerlink" href="#valid-os-names" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-given docutils align-left">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>OS Name</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>linux</p></td>
+<td><p>Linux/Linux container (including WSL)</p></td>
+</tr>
+<tr class="row-odd"><td><p>darwin</p></td>
+<td><p>MacOS X</p></td>
+</tr>
+<tr class="row-even"><td><p>aix</p></td>
+<td><p>IBM AIX OS</p></td>
+</tr>
+<tr class="row-odd"><td><p>sunos</p></td>
+<td><p>Sun Solaris OS</p></td>
+</tr>
+<tr class="row-even"><td><p>windows_nt</p></td>
+<td><p>Microsoft Windows OS</p></td>
+</tr>
+</tbody>
+</table>
+<p>BBS tools will detect the operating system versions and CPU types by inspecting
+the underlying operating system configuration files.</p>
+</div>
+<div class="section" id="known-compiler-types">
+<h3>Known Compiler Types<a class="headerlink" href="#known-compiler-types" title="Permalink to this headline">¶</a></h3>
+<p>BBS tools are capable of auto-detecting common compilers and find a default BDE
+toolchain for those compiler types.</p>
+<table class="colwidths-given docutils align-left">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Compiler type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>gcc</p></td>
+<td><blockquote>
+<div><p>GNU gcc compiler</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-odd"><td><p>clang</p></td>
+<td><p>clang compiler</p></td>
+</tr>
+<tr class="row-even"><td><p>xlc</p></td>
+<td><p>IBM XL C/C++ compiler</p></td>
+</tr>
+<tr class="row-odd"><td><p>cc</p></td>
+<td><p>Sun Studio C/C++ compiler</p></td>
+</tr>
+<tr class="row-even"><td><p>cl</p></td>
+<td><p>Visual Studio C/C++ compiler</p></td>
+</tr>
+</tbody>
+</table>
+<p>The Compiler toolchains part is generated based on the compiler build profile
+selected by the tool.</p>
+</div>
+</div>
+<div class="section" id="ufid">
+<span id="id1"></span><h2>UFID<a class="headerlink" href="#ufid" title="Permalink to this headline">¶</a></h2>
+<p>UFIDs (Unified Flag ID) are used to identify the resulting binary/library
+configuration to be produced by the build system.</p>
+<p>Each individual UFID flag enables/disables a specific configuration aspect of
+the resulting build artifacts. Each UFID flag is also mapped to a CMake
+variable that can be used with raw CMake workflows to specify the build
+configuration.</p>
+<div class="section" id="ufid-flags">
+<h3>UFID flags<a class="headerlink" href="#ufid-flags" title="Permalink to this headline">¶</a></h3>
+<p>The following flags are recognized by BBS tools:</p>
+<table class="colwidths-given docutils align-left">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 30%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Ufid flag</p></th>
+<th class="head"><p>CMake Variable</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>dbg</p></td>
+<td><p>CMAKE_BUILD_TYPE=’Debug’</p></td>
+<td><p>Non optimized build with debug information</p></td>
+</tr>
+<tr class="row-odd"><td><p>opt</p></td>
+<td><p>CMAKE_BUILD_TYPE=’Release’</p></td>
+<td><p>Optimized build without debug information</p></td>
+</tr>
+<tr class="row-even"><td><p>opt_dbg</p></td>
+<td><p>CMAKE_BUILD_TYPE=’RelWithDebInfo’</p></td>
+<td><p>Optimized build with debug information</p></td>
+</tr>
+<tr class="row-odd"><td><p>noexc</p></td>
+<td><p>BDE_BUILD_TARGET_NOEXC</p></td>
+<td><p>Build with no exception (if not specified, exceptions are enabled)</p></td>
+</tr>
+<tr class="row-even"><td><p>nomt</p></td>
+<td><p>BDE_BUILD_TARGET_NOMT</p></td>
+<td><p>Build without multi-threading (if not specified, multi-threading is enabled)</p></td>
+</tr>
+<tr class="row-odd"><td><p>64</p></td>
+<td><p>N/A</p></td>
+<td><p>Build for 64-bit architecture (if not specified, build for 32-bit)</p></td>
+</tr>
+<tr class="row-even"><td><p>safe</p></td>
+<td><p>BDE_BUILD_TARGET_SAFE</p></td>
+<td><p>Enable additional assertion checks;</p></td>
+</tr>
+<tr class="row-odd"><td><p>safe2</p></td>
+<td><p>BDE_BUILD_TARGET_SAFE2</p></td>
+<td><p>Enable aggresive assertion checks,  binary-incompatible build</p></td>
+</tr>
+<tr class="row-even"><td><p>aopt</p></td>
+<td><p>-DBSLS_ASSERT_LEVEL_ASSERT_OPT</p></td>
+<td><p>Set bsls assert level to OPT</p></td>
+</tr>
+<tr class="row-odd"><td><p>adbg</p></td>
+<td><p>-DBSLS_ASSERT_LEVEL_ASSERT_DBG</p></td>
+<td><p>Set bsls assert level to DBG</p></td>
+</tr>
+<tr class="row-even"><td><p>asafe</p></td>
+<td><p>-DBSLS_ASSERT_LEVEL_ASSERT_SAFE</p></td>
+<td><p>Set bsls assert level to SAFE</p></td>
+</tr>
+<tr class="row-odd"><td><p>anone</p></td>
+<td><p>-DBSLS_ASSERT_LEVEL_ASSERT_NONE</p></td>
+<td><p>Disable bsls asserts</p></td>
+</tr>
+<tr class="row-even"><td><p>ropt</p></td>
+<td><p>-DBSLS_REVIEW_LEVEL_REVIEW_OPT</p></td>
+<td><p>Set bsls review level to OPT</p></td>
+</tr>
+<tr class="row-odd"><td><p>rdbg</p></td>
+<td><p>-DBSLS_REVIEW_LEVEL_REVIEW_DBG</p></td>
+<td><p>Set bsls review level to DBG</p></td>
+</tr>
+<tr class="row-even"><td><p>rsafe</p></td>
+<td><p>-DBSLS_REVIEW_LEVEL_REVIEW_SAFE</p></td>
+<td><p>Set bsls review level to SAFE</p></td>
+</tr>
+<tr class="row-odd"><td><p>rnone</p></td>
+<td><p>-DBSLS_REVIEW_LEVEL_REVIEW_NONE</p></td>
+<td><p>Disable bsls reviews</p></td>
+</tr>
+<tr class="row-even"><td><p>asan</p></td>
+<td><p>BDE_BUILD_TARGET_ASAN</p></td>
+<td><p>Build with address sanitizer</p></td>
+</tr>
+<tr class="row-odd"><td><p>msan</p></td>
+<td><p>BDE_BUILD_TARGET_MSAN</p></td>
+<td><p>Build with memory sanitizer</p></td>
+</tr>
+<tr class="row-even"><td><p>tsan</p></td>
+<td><p>BDE_BUILD_TARGET_TSAN</p></td>
+<td><p>Build with thread sanitizer</p></td>
+</tr>
+<tr class="row-odd"><td><p>ubsan</p></td>
+<td><p>BDE_BUILD_TARGET_UBSAN</p></td>
+<td><p>Build with undefined behavior sanitizer</p></td>
+</tr>
+<tr class="row-even"><td><p>fuzz</p></td>
+<td><p>BDE_BUILD_TARGET_FUZZ</p></td>
+<td><p>Build with fuzz tester (specify another sanitizer too)</p></td>
+</tr>
+<tr class="row-odd"><td><p>pic</p></td>
+<td><p>CMAKE_POSITION_INDEPENDENT_CODE</p></td>
+<td><p>Build position-independent code</p></td>
+</tr>
+<tr class="row-even"><td><p>stlport</p></td>
+<td><p>BDE_BUILD_TARGET_STLPORT</p></td>
+<td><p><strong>(SunOS only)</strong> Use STLport standard library implementation</p></td>
+</tr>
+<tr class="row-odd"><td><p>cpp03</p></td>
+<td><p>CMAKE_CXX_STANDARD=98</p></td>
+<td><p>Build with support for C++03 features</p></td>
+</tr>
+<tr class="row-even"><td><p>cpp11</p></td>
+<td><p>CMAKE_CXX_STANDARD=11</p></td>
+<td><p>Build with support for C++11 features</p></td>
+</tr>
+<tr class="row-odd"><td><p>cpp14</p></td>
+<td><p>CMAKE_CXX_STANDARD=14</p></td>
+<td><p>Build with support for C++14 features</p></td>
+</tr>
+<tr class="row-even"><td><p>cpp17</p></td>
+<td><p>CMAKE_CXX_STANDARD=17</p></td>
+<td><p>Build with support for C++17 features</p></td>
+</tr>
+<tr class="row-odd"><td><p>cpp20</p></td>
+<td><p>CMAKE_CXX_STANDARD=20</p></td>
+<td><p>Build with support for C++20 features</p></td>
+</tr>
+<tr class="row-even"><td><p>cpp23</p></td>
+<td><p>CMAKE_CXX_STANDARD=23</p></td>
+<td><p>Build with support for C++23 features</p></td>
+</tr>
+</tbody>
+</table>
+<p>For example, the UFID <code class="docutils literal notranslate"><span class="pre">dbg_64_pic</span></code> represents a build
+configuration that enables debugging symbols, enables multi-threading
+and exceptions and produces position independent code for 64-bit bitness .</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

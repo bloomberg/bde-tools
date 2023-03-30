@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>BDE-Style Repository &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Build Configuration Options" href="bbs_build_configuration.html" />
+    <link rel="prev" title="BBS Overview" href="overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">BBS Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">BDE-Style Repository</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#terminology">Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bde-physical-code-organization">BDE Physical Code Organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#units-and-unique-names">Units and Unique Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#regular-components-packages-and-package-groups">Regular Components, Packages, and Package Groups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stand-alone-and-application-packages">Stand-Alone and Application Packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#non-standard-package-types">Non-standard Package Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#header-only-packages">Header-only Packages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#third-party-packages">Third-Party Packages</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#bde-metadata">BDE Metadata</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mem-file">Mem File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dep-file">Dep File</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>BDE-Style Repository</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="bbs_build_configuration.html" class="btn btn-neutral float-right" title="Build Configuration Options" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      
+      
+        <a href="overview.html" class="btn btn-neutral float-left" title="BBS Overview" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="bde-style-repository">
+<span id="bde-repo-layout-top"></span><h1>BDE-Style Repository<a class="headerlink" href="#bde-style-repository" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>For a repository to be buildable with the BDE tools, it must have the following
+characteristics:</p>
+<ul class="simple">
+<li><p>Must follow <a class="reference internal" href="#bde-repo-layout-physical-layout"><span class="std std-ref">BDE Physical Code Organization</span></a>.</p></li>
+<li><p>Must provide <a class="reference internal" href="#bde-repo-layout-metadata"><span class="std std-ref">BDE Metadata</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="terminology">
+<h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><dl class="glossary simple">
+<dt id="term-component">component<a class="headerlink" href="#term-component" title="Permalink to this term">¶</a></dt><dd><p>A component comprises a <code class="docutils literal notranslate"><span class="pre">.h</span></code> and <code class="docutils literal notranslate"><span class="pre">.cpp</span></code> pair, along with an
+associated test driver (<code class="docutils literal notranslate"><span class="pre">.t.cpp</span></code> file).  E.g., the component
+<code class="docutils literal notranslate"><span class="pre">bslstl_map</span></code> comprises <code class="docutils literal notranslate"><span class="pre">bslstl_map.h</span></code> and <code class="docutils literal notranslate"><span class="pre">bslstl_map.cpp</span></code>, and is
+associated with the test driver file <code class="docutils literal notranslate"><span class="pre">bslstl_map.t.cpp</span></code>.</p>
+</dd>
+<dt id="term-package">package<a class="headerlink" href="#term-package" title="Permalink to this term">¶</a></dt><dd><p>A physical unit that comprises a collection of related components.</p>
+</dd>
+<dt id="term-package-group">package group<a class="headerlink" href="#term-package-group" title="Permalink to this term">¶</a></dt><dd><p>A physically cohesive unit that comprises a collection of packages.</p>
+</dd>
+<dt id="term-stand-alone-package">stand-alone package<a class="headerlink" href="#term-stand-alone-package" title="Permalink to this term">¶</a></dt><dd><p>A package that does not belong to a package group.</p>
+</dd>
+</dl>
+</div></blockquote>
+<blockquote id="bde-repo-layout-uor">
+<div><dl class="glossary simple">
+<dt id="term-UOR-Unit-of-Release">UOR (Unit of Release)<a class="headerlink" href="#term-UOR-Unit-of-Release" title="Permalink to this term">¶</a></dt><dd><p>A stand-alone package or a package group.  Generally, UORs are the
+libraries (<code class="docutils literal notranslate"><span class="pre">.a</span></code> files or applications) that get deployed on a system.
+The names of UORs must be globally unique.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="bde-physical-code-organization">
+<span id="bde-repo-layout-physical-layout"></span><h2>BDE Physical Code Organization<a class="headerlink" href="#bde-physical-code-organization" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="units-and-unique-names">
+<span id="bde-repo-layout-units"></span><h3>Units and Unique Names<a class="headerlink" href="#units-and-unique-names" title="Permalink to this headline">¶</a></h3>
+<p>Components, Packages, and Package Groups are all considered physical units
+inside of a repository.  Unit names have the constraint that they must be
+globally unique.  This characteristic of units greatly simplifies how we can
+reason about the source code.</p>
+<p>Having globally unique component names allows BDE to use direct include
+directives instead of relative ones, i.e., using <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&lt;bdlt_date.h&gt;</span></code>
+instead of <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&quot;include/header.h&quot;</span></code>.  Using direct includes affords us
+flexibility with development and deployment.  Otherwise, we would not be able
+to extract an arbitrary subset of our code for point distributions without
+recreating our entire directory structure.  Separately, our development process
+for package groups may choose to locate headers differently when using code
+withing the group compared with once the code is released.</p>
+<p>The argument for angle brackets rather than quotes is similar: Angle brackets
+<code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code> provide full control over source of headers and can simulate the common
+usage of double quotes <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> simply by adding <code class="docutils literal notranslate"><span class="pre">-I.</span></code> to the compile line.</p>
+<p>Having unique unit names is achieved in BDE via using a central name registry
+as well as following certain naming conventions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The name of each package group is a unique mnemonic exactly three
+characters long (e.g., <code class="docutils literal notranslate"><span class="pre">bsl</span></code>).</p></li>
+<li><p>The name of a package should be prefixed with the name of the package group
+and should also be a mnemonic no longer than six characters (e.g.,
+<code class="docutils literal notranslate"><span class="pre">bslma</span></code>).</p></li>
+<li><p>The name of a component should be prefixed by the name of the package in
+which the component is contained followed by an <code class="docutils literal notranslate"><span class="pre">_</span></code> (e.g.,
+<code class="docutils literal notranslate"><span class="pre">bslma_allocator</span></code>).</p></li>
+<li><p>The name of a stand-alone package should be prefixed with <code class="docutils literal notranslate"><span class="pre">a_</span></code> if it’s an
+adapter, and <code class="docutils literal notranslate"><span class="pre">m_</span></code> if it’s an application.</p></li>
+<li><p>All of the names should be in lower case.</p></li>
+</ul>
+</div></blockquote>
+<p>For more details on naming conventions and design rules of components,
+packages, and package groups, please see <a class="reference external" href="https://github.com/bloomberg/bde/wiki/physical-code-organization#physical-code-organization">BDE Physical Code Organization
+Guidelines</a>.</p>
+</div>
+<div class="section" id="regular-components-packages-and-package-groups">
+<h3>Regular Components, Packages, and Package Groups<a class="headerlink" href="#regular-components-packages-and-package-groups" title="Permalink to this headline">¶</a></h3>
+<p>The source code must be organized into 3 hierarchical levels of aggregation (in
+order from smallest to largest): components, packages, and package groups.  A
+package comprises a set of components; a package group comprises a set of
+packages.</p>
+<p>By default, package groups should be located in <code class="docutils literal notranslate"><span class="pre">&lt;repo_root&gt;/groups</span></code>, and a
+package belonging to a package group should be a sub-directory of that package
+group.</p>
+<p>For example, in BDE, the <code class="docutils literal notranslate"><span class="pre">bsl</span></code> package group contains the packages <code class="docutils literal notranslate"><span class="pre">bsls</span></code>
+and <code class="docutils literal notranslate"><span class="pre">bslma</span></code> (in addition to many other packages).  The <code class="docutils literal notranslate"><span class="pre">bsls</span></code> package
+contains the components <code class="docutils literal notranslate"><span class="pre">bsls_util</span></code> and <code class="docutils literal notranslate"><span class="pre">bsls_ident</span></code>; The <code class="docutils literal notranslate"><span class="pre">bslma</span></code> package
+contains the components <code class="docutils literal notranslate"><span class="pre">bslma_allocator</span></code> and <code class="docutils literal notranslate"><span class="pre">bslma_testallocator</span></code>.  These
+physical units should have the following structure on the file system:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&lt;repo_root&gt;
+ `-- groups
+     |-- bsl
+     |   |-- group
+     |   |   |-- bsl.mem
+     |   |   |-- bsl.dep
+     |   |-- bsls
+     |   |   |-- package
+     |   |   |   |-- bsls.mem
+     |   |   |   |-- bsls.dep
+     |   |   |-- bsls_ident.h
+     |   |   |-- bsls_ident.cpp
+     |   |   |-- bsls_ident.t.cpp
+     |   |   |-- bsls_util.h
+     |   |   |-- bsls_util.cpp
+     |   |   |-- bsls_util.t.cpp
+     |   `-- bslma
+     |       |-- package
+     |       |   |-- bslma.mem
+     |       |   |-- bslma.dep
+     |       |-- bslma_allocator.h
+     |       |-- bslma_allocator.cpp
+     |       |-- bslma_allocator.t.cpp
+     |       |-- bslma_testallocator.h
+     |       |-- bslma_testallocator.cpp
+     |       `-- bslma_testallocator.t.cpp
+     `-- bdl
+         |
+         `-- ...
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="stand-alone-and-application-packages">
+<h3>Stand-Alone and Application Packages<a class="headerlink" href="#stand-alone-and-application-packages" title="Permalink to this headline">¶</a></h3>
+<p>Stand-alone packages are packages that do not belong to a package group.
+An application package is a special kind of stand-alone package, with the main
+difference being that an application package contains a <code class="docutils literal notranslate"><span class="pre">&lt;package&gt;.m.cpp</span></code>
+file in which the <code class="docutils literal notranslate"><span class="pre">main</span></code> function is defined.</p>
+<p>By default, application packages should be located in the <code class="docutils literal notranslate"><span class="pre">applications</span></code>
+directory, adapter packages should be located in the <code class="docutils literal notranslate"><span class="pre">adapters</span></code> directory,
+and other types of stand-alone packages can be located in the <code class="docutils literal notranslate"><span class="pre">standalones</span></code>
+directory.</p>
+</div>
+<div class="section" id="non-standard-package-types">
+<h3>Non-standard Package Types<a class="headerlink" href="#non-standard-package-types" title="Permalink to this headline">¶</a></h3>
+<p>BDE repository can include source files that don’t conform to a standard
+BDE-style package.  Often, the reason is to bundle an existing third-party
+package inside of a repository.</p>
+<p>There are two common types of non-conforming packages: header-only packages and
+third-party packages.</p>
+<div class="section" id="header-only-packages">
+<h4>Header-only Packages<a class="headerlink" href="#header-only-packages" title="Permalink to this headline">¶</a></h4>
+<p>Header-only packages are packages that contain header-only library or just a
+set of headers. These packages do not behave like regular BDE packages in
+that they do not contain BDE components.  Nonetheless, <code class="docutils literal notranslate"><span class="pre">mem</span></code> file in those
+packages still can be used to provide the list of headers contained in the
+package.</p>
+</div>
+<div class="section" id="third-party-packages">
+<h4>Third-Party Packages<a class="headerlink" href="#third-party-packages" title="Permalink to this headline">¶</a></h4>
+<p>Third-party packages are not BDE-style packages and do not contain any
+<a class="reference internal" href="#bde-repo-layout-metadata"><span class="std std-ref">BDE Metadata</span></a>.  By default, these packages are located under
+the <code class="docutils literal notranslate"><span class="pre">thirdparty</span></code> directory, and must be provided with a custom
+<code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Third-party packages mainly exist to simplify the build process for certain
+low-level libraries.  A third-party package can be easily moved to its own
+repository if so desired, in which case the third-party package must be
+first separately built and installed before the original repository that
+depended on that third-party package can be built.</p>
+</div>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="bde-metadata">
+<span id="bde-repo-layout-metadata"></span><h2>BDE Metadata<a class="headerlink" href="#bde-metadata" title="Permalink to this headline">¶</a></h2>
+<p>There are 3 types of metadata that can be applied to either a package or a
+package group in a BDE-style repository.  Two types of metadata are
+required:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">mem</span></code></p>
+<p>Define the members of a package or package group.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dep</span></code></p>
+<p>Define the dependencies of a package or package group.</p>
+</li>
+</ul>
+</div></blockquote>
+<p>And additional type of metadata is optional:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">t.dep</span></code></p>
+<p>Define the dependencies of the test drivers for a package or package group.</p>
+</li>
+</ul>
+</div></blockquote>
+<p>Each type of metadata should be stored as a file in either the <code class="docutils literal notranslate"><span class="pre">package</span></code>
+sub-directory in a package or the <code class="docutils literal notranslate"><span class="pre">group</span></code> sub-directory in a package group.
+A metadata file’s name should begin with the package or package group to which
+it applies, followed by a <code class="docutils literal notranslate"><span class="pre">.</span></code>, and finally followed by the type of the
+metadata.  For example, in the BDE libraries, the <code class="docutils literal notranslate"><span class="pre">mem</span></code> file of the package
+group <code class="docutils literal notranslate"><span class="pre">bsl</span></code> is named <code class="docutils literal notranslate"><span class="pre">bsl.mem</span></code> and located at the path
+<code class="docutils literal notranslate"><span class="pre">&lt;repo_root&gt;/groups/bsl/group/bsl.mem</span></code>; the <code class="docutils literal notranslate"><span class="pre">dep</span></code> file of the package
+<code class="docutils literal notranslate"><span class="pre">bslstl</span></code> is named <code class="docutils literal notranslate"><span class="pre">bslstl.dep</span></code> and located at the path
+<code class="docutils literal notranslate"><span class="pre">&lt;repo_root&gt;/groups/bsl/group/bslstl.dep</span></code>.</p>
+<div class="section" id="mem-file">
+<span id="bde-repo-layout-mem"></span><h3>Mem File<a class="headerlink" href="#mem-file" title="Permalink to this headline">¶</a></h3>
+<p>A package <code class="docutils literal notranslate"><span class="pre">mem</span></code> file defines the list of member components in the package.  A
+package group <code class="docutils literal notranslate"><span class="pre">mem</span></code> file defines the list of member packages in the package
+group.</p>
+<p>Each line of a <code class="docutils literal notranslate"><span class="pre">mem</span></code> file contains a single entry (a component or a package).
+Blank lines are ignored and a <code class="docutils literal notranslate"><span class="pre">#</span></code> within a line marks the remainder as a
+comment.</p>
+<p>For example:</p>
+<ul class="simple">
+<li><p>the <code class="docutils literal notranslate"><span class="pre">mem</span></code> file for the <code class="docutils literal notranslate"><span class="pre">bsl</span></code> group <a class="reference external" href="https://github.com/bloomberg/bde/blob/main/groups/bsl/group/bsl.mem">bsl.mem</a></p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">mem</span></code> file for the <code class="docutils literal notranslate"><span class="pre">bslma</span></code> package <a class="reference external" href="https://github.com/bloomberg/bde/blob/main/groups/bsl/bslma/package/bslma.mem">bslma.mem</a></p></li>
+</ul>
+</div>
+<div class="section" id="dep-file">
+<span id="bde-repo-layout-dep"></span><h3>Dep File<a class="headerlink" href="#dep-file" title="Permalink to this headline">¶</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">dep</span></code> file describes the allowed dependencies for either a package
+or a package-group.  A package-group’s <code class="docutils literal notranslate"><span class="pre">dep</span></code> file describes the other
+package-groups that components within that package-group may depend on.
+Similarly, a package’s <code class="docutils literal notranslate"><span class="pre">dep</span></code> file describes the other packages within
+the <em>same</em> package-group that components within that package may
+depend on.  Note that a package’s <code class="docutils literal notranslate"><span class="pre">dep</span></code> file should <em>not</em> refer to other
+package-groups, since the dependencies on other package-groups are
+inherited from the package-group-level <code class="docutils literal notranslate"><span class="pre">dep</span></code> file.</p>
+<p>Each line of a <code class="docutils literal notranslate"><span class="pre">dep</span></code> file contains a single entry (a package or a package
+group).  Blank lines are ignored and a <code class="docutils literal notranslate"><span class="pre">#</span></code> within a line marks the remainder
+as a comment.</p>
+<p>For example:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">dep</span></code> file for the <code class="docutils literal notranslate"><span class="pre">bdl</span></code> group <a class="reference external" href="https://github.com/bloomberg/bde/blob/main/groups/bdl/group/bdl.dep">bdl.dep</a></p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">dep</span></code> file for the <code class="docutils literal notranslate"><span class="pre">bslma</span></code> package <a class="reference external" href="https://github.com/bloomberg/bde/blob/main/groups/bsl/bslma/package/bslma.dep">bslma.dep</a></p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

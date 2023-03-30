@@ -1,0 +1,278 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Build Multiple Projects in a Workspace &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Create a Library or Application" href="create_library.html" />
+    <link rel="prev" title="Build a Single Package or Component" href="build_single_target.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Build Multiple Projects in a Workspace</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#download-libraries">Download Libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-workspace-cmakelists-txt">Create workspace CMakeLists.txt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configure-and-build-the-workspace">Configure and Build the Workspace</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Build Multiple Projects in a Workspace</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="create_library.html" class="btn btn-neutral float-right" title="Create a Library or Application" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      
+      
+        <a href="build_single_target.html" class="btn btn-neutral float-left" title="Build a Single Package or Component" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="build-multiple-projects-in-a-workspace">
+<span id="bbs-build-workspace-top"></span><h1>Build Multiple Projects in a Workspace<a class="headerlink" href="#build-multiple-projects-in-a-workspace" title="Permalink to this headline">¶</a></h1>
+<p>In some use cases it is necessary to build multiple repositories containing
+dependant libraries.  In this example we build the libraries in
+the <code class="docutils literal notranslate"><span class="pre">bde</span></code> and
+<code class="docutils literal notranslate"><span class="pre">my_app</span></code> source code repositories as part of a single workspace.</p>
+<div class="section" id="download-libraries">
+<h2>Download Libraries<a class="headerlink" href="#download-libraries" title="Permalink to this headline">¶</a></h2>
+<p>In this example, we are using <code class="docutils literal notranslate"><span class="pre">bde</span></code> and <code class="docutils literal notranslate"><span class="pre">my_app</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/bloomberg/bde.git
+$ git clone https://github.com/&lt;user&gt;/my_app.git
+</pre></div>
+</div>
+</div>
+<div class="section" id="create-workspace-cmakelists-txt">
+<h2>Create workspace CMakeLists.txt<a class="headerlink" href="#create-workspace-cmakelists-txt" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Create <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file to build both libraries:</p></li>
+</ul>
+<div class="highlight-CMake notranslate"><div class="highlight"><pre><span></span><span class="c"># CMakeLists.txt for a workspace</span>
+<span class="nf">cmake_minimum_required(</span><span class="no">VERSION</span><span class="w"> </span><span class="m">3.22</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">project(</span><span class="nb">workspace</span><span class="nf">)</span><span class="w"></span>
+
+<span class="nf">enable_testing()</span><span class="w"></span>
+
+<span class="nf">add_subdirectory(</span><span class="nb">bde</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">add_subdirectory(</span><span class="nb">my_app</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configure-and-build-the-workspace">
+<h2>Configure and Build the Workspace<a class="headerlink" href="#configure-and-build-the-workspace" title="Permalink to this headline">¶</a></h2>
+<p>Proceed with <a class="reference internal" href="build_bde_basic.html"><span class="doc">setting up the environment and building</span></a> as
+usual.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

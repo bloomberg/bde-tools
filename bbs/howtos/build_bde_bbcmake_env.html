@@ -1,0 +1,305 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Build BDE with bbcmake-env &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Build BDE with bbcmake-env</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="build-bde-with-bbcmake-env">
+<span id="bbs-build-bde-bbcmake-env-top"></span><h1>Build BDE with bbcmake-env<a class="headerlink" href="#build-bde-with-bbcmake-env" title="Permalink to this headline">¶</a></h1>
+<p>This build mode is a simplified version of the bbcmake build which
+automatically deploys all production build dependencies from the dpkg metadata.</p>
+<p>See <a class="reference external" href="https://bbgithub.dev.bloomberg.com/pages/cmake-community/bbcmake-env/">bbcmake-env</a>
+documentation for more information on using this tool.</p>
+<div class="section" id="download-bde-library">
+<h2>Download BDE library<a class="headerlink" href="#download-bde-library" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Clone the <a class="reference external" href="https://bbgithub.dev.bloomberg.com/bde/bde">bde</a> repository:</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git clone bbgithub:bde/bde
+$ <span class="nb">cd</span> bde
+</pre></div>
+</div>
+</div>
+<div class="section" id="build-bde">
+<h2>Build BDE<a class="headerlink" href="#build-bde" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Configure build</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ plocum bbcmake-env -64 -S . -DBBS_BUILD_SYSTEM<span class="o">=</span>ON
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">plocum</span></code> is an internal command that executes the command on the build
+farm. This is a preferred way of running computation intensive tasks
+on the shared development mashines.</p>
+</div>
+<ul class="simple">
+<li><p>Inspect the build configuration</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ plocum bbcmake-env -64 -S . --info
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Build BDE libraries</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ plocum bbcmake-env -64 -S . --action build -DBBS_BUILD_SYSTEM<span class="o">=</span>ON
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Build test BDE targets (by passing the test target names to the <code class="docutils literal notranslate"><span class="pre">--action</span></code>
+parameter):</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ plocum bbcmake-env -64 -S . --action build:all.t -DBBS_BUILD_SYSTEM<span class="o">=</span>ON
+</pre></div>
+</div>
+<p>The use of <code class="docutils literal notranslate"><span class="pre">-DBBS_BUILD_SYSTEM=ON</span></code> marker is temporary and will not be
+required once BBS will become BDE primary build system.</p>
+<ul class="simple">
+<li><p>Test BDE</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ plocum bbcmake-env -64 -S . --action ctest -DBBS_BUILD_SYSTEM<span class="o">=</span>ON
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">bbcmake-env</span></code> help for passing ctest options to limit the set of test
+driver to run. BDE test drivers use test labels (<code class="docutils literal notranslate"><span class="pre">-L</span></code> ctest parameter)
+matching the group, package or component name with <code class="docutils literal notranslate"><span class="pre">.t</span></code> suffix: <code class="docutils literal notranslate"><span class="pre">bal.t</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bdlt.t</span></code>, <code class="docutils literal notranslate"><span class="pre">bsls_platform.t</span></code>.</p>
+</div>
+</div>
+<div class="section" id="instrumented-build">
+<h2>Instrumented build<a class="headerlink" href="#instrumented-build" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bbcmake-env</span></code> provide an ability to select a community toolchain for drop-in
+instrumented analysis configurations on top of the standard bloomberg toolchain:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ plocum bbcmake-env -64 -S .  --action build:all.t -DBBS_BUILD_SYSTEM<span class="o">=</span>ON
+  -DCMAKE_BUILD_TYPE<span class="o">=</span>Coverage --bbtoolchain BBInstrumentationToolchain
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The refroot used for such builds must contain intrumentation toolchains.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

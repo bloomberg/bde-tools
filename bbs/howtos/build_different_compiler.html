@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Use a Non-Standard Compiler or Build Option &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="BBS Overview" href="../reference/overview.html" />
+    <link rel="prev" title="Build Using A Sanitizer" href="build_instrumented.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Use a Non-Standard Compiler or Build Option</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-cxx-and-cxxflags">Using <code class="docutils literal notranslate"><span class="pre">CXX</span></code> and <code class="docutils literal notranslate"><span class="pre">CXXFLAGS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#observering-compiler-command-lines">Observering Compiler Command Lines</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Use a Non-Standard Compiler or Build Option</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="../reference/overview.html" class="btn btn-neutral float-right" title="BBS Overview" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      
+      
+        <a href="build_instrumented.html" class="btn btn-neutral float-left" title="Build Using A Sanitizer" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="use-a-non-standard-compiler-or-build-option">
+<span id="bbs-different-compiler-top"></span><h1>Use a Non-Standard Compiler or Build Option<a class="headerlink" href="#use-a-non-standard-compiler-or-build-option" title="Permalink to this headline">¶</a></h1>
+<p>A common task is to need to build BDE (or another
+<a class="reference internal" href="../reference/bde_repo_layout.html"><span class="doc">BDE-style</span></a> repository) with a non-standard
+compiler or build options.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Production software should not be built using a non-standard compiler or build options.</p>
+</div>
+<p>Most common compilers and build options and should be configured using <code class="docutils literal notranslate"><span class="pre">-p</span></code> and <code class="docutils literal notranslate"><span class="pre">-u</span></code>
+options to <a class="reference internal" href="../tools/bbs_build_env.html"><span class="doc">bbs_build_env</span></a> or by command line options
+to <a class="reference internal" href="../tools/bbs_build.html"><span class="doc">bbs_build</span></a>. <code class="docutils literal notranslate"><span class="pre">bbs_build_env</span> <span class="pre">list</span></code> will provide a list of detected compilers.  Common build options are documented as <a class="reference internal" href="../reference/bbs_build_configuration.html#ufid"><span class="std std-ref">UFIDs</span></a>.</p>
+<p>For compilers that will be used regularly, users can
+<a class="reference internal" href="configure_profile.html"><span class="doc">create a custom compiler profile</span></a>.</p>
+<div class="section" id="using-cxx-and-cxxflags">
+<h2>Using <code class="docutils literal notranslate"><span class="pre">CXX</span></code> and <code class="docutils literal notranslate"><span class="pre">CXXFLAGS</span></code><a class="headerlink" href="#using-cxx-and-cxxflags" title="Permalink to this headline">¶</a></h2>
+<p>For experimental builds using non-default compiler installations or non-standard option
+the simplest approach is to use the standard <code class="docutils literal notranslate"><span class="pre">CMake</span></code> environment variables like
+<code class="docutils literal notranslate"><span class="pre">CC</span></code>, <code class="docutils literal notranslate"><span class="pre">CXX</span></code>, and <code class="docutils literal notranslate"><span class="pre">CXXFLAGS</span></code>.</p>
+<p>For example:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">eval</span> <span class="sb">`</span>bbs_build_env<span class="sb">`</span>
+  Using system configuration: /somewhere/bbs_build_profiles
+  Effective ufid: dbg
+  Using build profile: gcc-10.2.1
+  Using install directory: /somewhere/else/bde/_install
+
+$ <span class="nb">export</span> <span class="nv">CXX</span><span class="o">=</span>/unusual/compiler/location/compiler
+$ <span class="nb">export</span> <span class="nv">CXXFLAGS</span><span class="o">=</span>-fcoroutines
+$ bbs_build configure build
+</pre></div>
+</div>
+<p>The example above overides the compiler being used to be
+<code class="docutils literal notranslate"><span class="pre">/unusual/compiler/location/compiler</span></code>, and passes the <code class="docutils literal notranslate"><span class="pre">-fcorourtines</span></code> option
+via the compiler command line.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="../tools/bbs_build_env.html"><span class="doc">bbs_build_env</span></a> will overwrite existing variables you have set.</p>
+</div>
+</div>
+<div class="section" id="observering-compiler-command-lines">
+<h2>Observering Compiler Command Lines<a class="headerlink" href="#observering-compiler-command-lines" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">-v</span></code> (verbose) option to <a class="reference internal" href="../tools/bbs_build.html"><span class="doc">bbs_build</span></a> will print the command
+line to the console, allowing us to verify the compiler and build options are being
+used correctly.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ bbs_build build -v
+...
+<span class="o">[</span><span class="m">376</span>/1436<span class="o">]</span> /unusual/compiler/location/compiler -DBDE_BUILD_TARGET_DBG -I/somewhere/bde/groups/bsl/bsls ... -fcoroutines ... -c /somewhere/bde/groups/bsl/bsls/bsls_systemtime.cpp
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

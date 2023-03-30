@@ -1,0 +1,291 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>BdeTargetUtils &mdash; BDE Build Tools  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/bde.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BDE Build Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Bde Build System</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general_info/installation.html">Installation And Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-To</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_bde_basic.html">Setup and Build BDE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_single_target.html">Build a Single Package or Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_workspace.html">Build Multiple Projects in a Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/create_library.html">Create a Library or Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/configure_profile.html">Add a Custom Compiler Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_instrumented.html">Build Using A Sanitizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howtos/build_different_compiler.html">Use a Non-Standard Compiler or Build Option</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/overview.html">BBS Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bde_repo_layout.html">BDE-Style Repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_build_configuration.html">Build Configuration Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/code_generation.html">Code Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/bbs_compiler_profile.html">Compiler Profiles</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build_env.html">bbs_build_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_build.html">bbs_build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/bbs_make_vscode.html">bbs_make_vscode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/sim_cpp11_features.html">sim_cpp11_features.pl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BDE Build Tools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>BdeTargetUtils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="bdetargetutils">
+<h1>BdeTargetUtils<a class="headerlink" href="#bdetargetutils" title="Permalink to this headline">¶</a></h1>
+<p>This module provide a set of function to create and populate bde targets.</p>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_add_target_include_dirs">
+<span class="sig-name descname"><span class="pre">bbs_add_target_include_dirs</span></span><a class="headerlink" href="#command:bbs_add_target_include_dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add include directories for this target.</p>
+</dd></dl>
+
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_import_target_dependencies">
+<span class="sig-name descname"><span class="pre">bbs_import_target_dependencies</span></span><a class="headerlink" href="#command:bbs_import_target_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import dependencies of the target</p>
+</dd></dl>
+
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_configure_target_tests">
+<span class="sig-name descname"><span class="pre">bbs_configure_target_tests</span></span><a class="headerlink" href="#command:bbs_configure_target_tests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure tests from the specified sources and
+add the target as their main build dependency.</p>
+</dd></dl>
+
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_install_target_headers">
+<span class="sig-name descname"><span class="pre">bbs_install_target_headers</span></span><a class="headerlink" href="#command:bbs_install_target_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate installation command for target headers.</p>
+</dd></dl>
+
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_install_target">
+<span class="sig-name descname"><span class="pre">bbs_install_target</span></span><a class="headerlink" href="#command:bbs_install_target" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Generate installation command for target.</p>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_emit_pkg_config">
+<span class="sig-name descname"><span class="pre">bbs_emit_pkg_config</span></span><a class="headerlink" href="#command:bbs_emit_pkg_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emit package config for the target</p>
+</dd></dl>
+
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_emit_bde_metadata">
+<span class="sig-name descname"><span class="pre">bbs_emit_bde_metadata</span></span><a class="headerlink" href="#command:bbs_emit_bde_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Emit bde metadata for the target.</p>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_generate_cpp03_sources">
+<span class="sig-name descname"><span class="pre">bbs_generate_cpp03_sources</span></span><a class="headerlink" href="#command:bbs_generate_cpp03_sources" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Generate cpp03 source files.</p>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:bbs_setup_target_uor">
+<span class="sig-name descname"><span class="pre">bbs_setup_target_uor</span></span><a class="headerlink" href="#command:bbs_setup_target_uor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Parse metadata and populate UOR target.
+This command is a bbs equivalent of configure_bb_target().
+CUSTOM_PACKAGES - list of packages that provide their custom CML
+PRIVATE_PACKAGES - list of packages that provide implementation details</p>
+<blockquote>
+<div><p>headers for those packages should not be installed.</p>
+</div></blockquote>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Bloomberg Finance L.P..
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
