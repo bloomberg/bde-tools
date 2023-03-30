@@ -49,8 +49,8 @@ via the compiler command line.
 
    :doc:`../tools/bbs_build_env` will overwrite existing variables you have set.
           
-Observering Compiler Command Lines
-----------------------------------
+Observing Build System Traces
+-----------------------------
 
 The ``-v`` (verbose) option to :doc:`../tools/bbs_build` will print the command
 line to the console, allowing us to verify the compiler and build options are being
