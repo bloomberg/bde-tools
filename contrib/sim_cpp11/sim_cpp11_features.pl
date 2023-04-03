@@ -2591,6 +2591,20 @@ sub processFile($$)
     # timestamps, they will compare equal after this replacement.
     $fileData =~ s/$timestampPrefix.*$/$timestampComment/mg;
 
+    # This regex recognizes correctly-formatted Bloomberg copyright/license
+    # blocks.  Exit with a fatal error if the block is not detected.
+    if ($fileData =~ m!
+            (//[ ]--+\n
+             //[ ]Copyright[ ]\d+[ ]Bloomberg.*\n
+             (//[ ].*\n|//\n)+
+             //[ ]-+[ ]END-OF-FILE[ ]-+)!x) {
+        $copyright = $1;
+        debug("Copyright is now\n$copyright")
+    }
+    else {
+        fatal("No recognizable copyright block")
+    }
+
     # Find the cut points of the file.  We will transform the unexpanded part
     # in the middle, then join it back with the prologue and epilogue at the
     # end. Some boilerplate may be inserted after the prologue and before the
