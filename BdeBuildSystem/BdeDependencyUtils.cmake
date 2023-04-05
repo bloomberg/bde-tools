@@ -53,14 +53,13 @@ function(bbs_import_cmake_config depName)
         NO_SYSTEM_ENVIRONMENT_PATH
         NO_CMAKE_PACKAGE_REGISTRY
         QUIET
-        PATH_SUFFIXES "${CMAKE_INSTALL_LIBDIR}/cmake"
     )
 
     if(NOT ${libName}_FOUND)
         message(FATAL_ERROR "${libName} NOT FOUND")
     endif()
     if(TARGET ${libName})
-        message(VERBOSE "CMake config found for ${libName} in ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}/cmake")
+        message(VERBOSE "CMake config found for ${libName}")
         if (NOT TARGET ${depName})
             add_library(${depName} ALIAS ${libName})
         endif()
@@ -74,28 +73,31 @@ function(bbs_import_raw_library depName)
 
     string(REPLACE "-" "_" libName ${depName})
 
-    set(libraryPath "${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR}")
-    set(includePath "${CMAKE_PREFIX_PATH}/include")
+    foreach (prefix IN LISTS CMAKE_PREFIX_PATH)
+        set(libraryPath "${prefix}/${CMAKE_INSTALL_LIBDIR}")
+        set(includePath "${prefix}/include")
 
-    message(VERBOSE "Looking in : ${libraryPath}, ${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    message(VERBOSE "Headers in : ${includePath}")
-    find_library(
-        rawLib_${libName}
-        NAMES
-            lib${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}
-            ${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}
-        PATHS
-            "${libraryPath}"
-        NO_DEFAULT_PATH
-    )
-    if(rawLib_${libName})
-        message(VERBOSE "Found(raw): ${rawLib_${libName}}")
-        add_library(${depName} INTERFACE IMPORTED)
-        set_target_properties(
-            ${depName}
-            PROPERTIES
-            INTERFACE_LINK_LIBRARIES "${rawLib_${libName}}"
-            INTERFACE_INCLUDE_DIRECTORIES "${includePath}"
+        message(VERBOSE "Looking in : ${libraryPath}, ${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        message(VERBOSE "Headers in : ${includePath}")
+        find_library(
+            rawLib_${libName}
+            NAMES
+                lib${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                ${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}
+            PATHS
+                "${libraryPath}"
+            NO_DEFAULT_PATH
         )
-    endif()
+        if(rawLib_${libName})
+            message(VERBOSE "Found(raw): ${rawLib_${libName}}")
+            add_library(${depName} INTERFACE IMPORTED)
+            set_target_properties(
+                ${depName}
+                PROPERTIES
+                INTERFACE_LINK_LIBRARIES "${rawLib_${libName}}"
+                INTERFACE_INCLUDE_DIRECTORIES "${includePath}"
+            )
+            return()
+        endif()
+    endforeach()
 endfunction()
