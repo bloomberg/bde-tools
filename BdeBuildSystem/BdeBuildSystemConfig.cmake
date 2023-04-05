@@ -8,6 +8,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/BdeMetadataUtils.cmake)
 # Copy of ImportPkgConfigTarget cmake-community module.
 include(${CMAKE_CURRENT_LIST_DIR}/BdeImportPkgConfigTargets.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/BdePkgconfigUtils.cmake)
+# Copy of EmitPkgConfigFile cmake-community module.
+include(${CMAKE_CURRENT_LIST_DIR}/BdeEmitPkgConfigFile.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/BdeDependencyUtils.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/BdeInternalTargets.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/BdeTargetUtils.cmake)

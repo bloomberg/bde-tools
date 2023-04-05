@@ -1,0 +1,10 @@
+prefix=@PKG_PREFIX@
+libdir=${prefix}/@PKG_LIBDIR@
+includedir=${prefix}/@PKG_INCLUDEDIR@
+
+Name: @PC_NAME@
+Description: @PKG_DESCRIPTION@ 
+Version: @PKG_VERSION@ 
+Requires.private: @PKG_REQUIRES@ 
+Libs: -L${libdir} -l@TARGET_NAME@ @PKG_LIBS@
+Cflags: -I${includedir} @PKG_OPTIONS@

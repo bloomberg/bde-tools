@@ -289,14 +289,10 @@ function (bbs_emit_pkg_config target)
         string(REPLACE "_" "-" _COMPONENT ${uor_name})
     endif()
 
-    find_package(EmitPkgConfigFile QUIET)
-
-    if (EmitPkgConfigFile_FOUND)
-        emit_pkgconfig_file(TARGET ${target}
+    bbs_emit_pkgconfig_file(TARGET ${target}
                             PREFIX "${CMAKE_INSTALL_PREFIX}"
                             VERSION "${BB_BUILDID_PKG_VERSION}" # todo: add real version
                             INSTALL_COMPONENT "${_COMPONENT}-pkgconfig")
-    endif()
 endfunction()
 
 #.rst:

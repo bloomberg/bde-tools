@@ -5,7 +5,6 @@ Maintainer: Oleg Subbotin <osubbotin@bloomberg.net>
 Build-Depends: 
     bbtoolchain-cmake-debhelper,
     build-base,
-    cmake-emit-pkgconfig-file,
     cmake,
     make,
     ninja,
@@ -31,7 +30,6 @@ Description: GDB Pretty printers for Bloomberg components
 Package: bbs-cmake-module
 Architecture: all
 Depends:
-    cmake-emit-pkgconfig-file,
     cmake-gen-bde-metadata
 Description: BdeBuildSystem CMake module
  CMake module to process metadata in BDE-style repositories.
