@@ -191,11 +191,12 @@ function(bde_parse_ufid UFID)
 
     # Reset global properties to prohibit implicit paths for library lookup and
     # set the global custom lib suffix.
-    foreach(type 32 64 X32)
+    foreach(type 32 X32)
         set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB${type}_PATHS  FALSE)
     endforeach()
 
     if(${bde_ufid_is_64})
+        set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS  TRUE)
         set(CMAKE_FIND_LIBRARY_CUSTOM_LIB_SUFFIX "64" CACHE INTERNAL "" FORCE)
     else()
         set(CMAKE_FIND_LIBRARY_CUSTOM_LIB_SUFFIX "" CACHE INTERNAL "" FORCE)
