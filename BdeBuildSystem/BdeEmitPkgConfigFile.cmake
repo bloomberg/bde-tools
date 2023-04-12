@@ -1,7 +1,7 @@
 include_guard()
 
 function(bbs_emit_pkgconfig_file)
-    set(singleValueArgs TARGET PKG VERSION PREFIX LIBDIR INCLUDEDIR INSTALL_COMPONENT)
+    set(singleValueArgs TARGET PKG VERSION PREFIX LIBDIR INCLUDEDIR COMPONENT)
     set(multiValueArgs DEPS UOR_DEPS OPTIONS)
     cmake_parse_arguments(args "" "${singleValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -28,7 +28,7 @@ function(bbs_emit_pkgconfig_file)
             foreach( dep ${args_DEPS} )
                 bbs_uor_to_pc_name( ${dep} ${dep}_PC )
                 if( ${${dep}_PC} MATCHES "(^.*([:][:]).*$)" )
-                    message( WARNING "Ignoring ${${dep}_PC} when generating ${args_PKG}.pc since it is unclear what pkg-config package supplies that dependency.")
+                    message(WARNING "Ignoring ${${dep}_PC} when generating ${args_PKG}.pc since it is unclear what pkg-config package supplies that dependency.")
                 else()
                     list( APPEND pcDeps ${${dep}_PC} )
                 endif()
@@ -39,7 +39,7 @@ function(bbs_emit_pkgconfig_file)
             foreach( dep ${args_UOR_DEPS} )
                 bbs_uor_to_pc_name( ${dep} ${dep}_PC )
                 if( ${${dep}_PC} MATCHES "(^.*([:][:]).*$)" )
-                    message( WARNING "Ignoring ${${dep}_PC} when generating ${args_PKG}.pc since it is unclear what pkg-config package supplies that dependency.")
+                    message(WARNING "Ignoring ${${dep}_PC} when generating ${args_PKG}.pc since it is unclear what pkg-config package supplies that dependency.")
                 else()
                     list( APPEND pcDeps ${${dep}_PC} )
                 endif()
@@ -62,7 +62,7 @@ function(bbs_emit_pkgconfig_file)
             if ( BB_${l}_HAS_NO_PKGCONFIG )
                 message( STATUS "not adding ${l} to ${args_TARGET}.pc file" )
             elseif(${l} MATCHES "^-l.*")
-                message( STATUS "adding ${l} to ${args_TARGET}.pc Libs instead of Requires")
+                message(TRACE "adding ${l} to ${args_TARGET}.pc Libs instead of Requires")
                 set(PKG_LIBS "${PKG_LIBS} ${l}")
             else()
                 set(target_type "")
@@ -93,7 +93,7 @@ function(bbs_emit_pkgconfig_file)
 
     endif()
 
-    set( PKG_DESCRIPTION ${TARGET_NAME} )
+    set(PKG_DESCRIPTION ${TARGET_NAME})
 
     if (args_VERSION)
         set(PKG_VERSION "${args_VERSION}")
@@ -124,11 +124,11 @@ function(bbs_emit_pkgconfig_file)
     endif(args_INCLUDEDIR)
 
     # setup the install rule for this metadata
-    if(args_INSTALL_COMPONENT)
-        set( install_component "${args_INSTALL_COMPONENT}" )
-    else(args_INSTALL_COMPONENT)
-        set( install_component "${CMAKE_INSTALL_DEFAULT_COMPONENT_NAME}" )
-    endif(args_INSTALL_COMPONENT)
+    if(args_COMPONENT)
+        set(_COMPONENT "${args_COMPONENT}")
+    else(args_COMPONENT)
+        set(_COMPONENT "${CMAKE_INSTALL_DEFAULT_COMPONENT_NAME}")
+    endif(args_COMPONENT)
 
     configure_file(${BdeBuildSystem_DIR}/support/template.pc.in
         "${CMAKE_CURRENT_BINARY_DIR}/${PC_NAME}.pc"
@@ -137,6 +137,11 @@ function(bbs_emit_pkgconfig_file)
     install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/${PC_NAME}.pc"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
-        COMPONENT "${install_component}"
+        COMPONENT "${_COMPONENT}-pkgconfig"
+    )
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/${PC_NAME}.pc"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+        COMPONENT "${_COMPONENT}-all"
     )
 endfunction()

@@ -205,6 +205,10 @@ function (bbs_install_target_headers target)
     install(FILES ${${target}_INCLUDE_FILES}
             DESTINATION ${_install_include_dir}
             COMPONENT ${_COMPONENT}-headers)
+
+    install(FILES ${${target}_INCLUDE_FILES}
+            DESTINATION ${_install_include_dir}
+            COMPONENT ${_COMPONENT}-all)
 endfunction()
 
 #.rst:
@@ -230,21 +234,26 @@ function (bbs_install_target target)
     if (   _target_type STREQUAL "STATIC_LIBRARY"
         OR _target_type STREQUAL "SHARED_LIBRARY"
         OR _target_type STREQUAL "INTERFACE_LIBRARY")
+
         foreach(p ${${uor_name}_PACKAGES})
             if (TARGET ${p}-iface)
                 install(TARGETS ${p}-iface
-                        EXPORT  ${uor_name}Targets
-                        COMPONENT ${_COMPONENT})
+                        EXPORT  ${uor_name}Targets)
             endif()
         endforeach()
 
         install(TARGETS ${target}
-                EXPORT  ${uor_name}Targets
-                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                COMPONENT ${_COMPONENT})
+                EXPORT  ${uor_name}Targets)
         install(EXPORT  ${uor_name}Targets
                 DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake
                 COMPONENT ${_COMPONENT})
+
+        install(TARGETS ${target}
+                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                COMPONENT ${_COMPONENT})
+        install(TARGETS ${target}
+                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                COMPONENT ${_COMPONENT}-all)
 
         # generate/install <Package>Config.cmake
         # Note template uses uor_name and uor_deps variables
@@ -266,6 +275,10 @@ function (bbs_install_target target)
             TARGETS ${target}
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
             COMPONENT ${_COMPONENT})
+        install(
+            TARGETS ${target}
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            COMPONENT ${_COMPONENT}-all)
     endif()
 endfunction()
 
@@ -292,7 +305,7 @@ function (bbs_emit_pkg_config target)
     bbs_emit_pkgconfig_file(TARGET ${target}
                             PREFIX "${CMAKE_INSTALL_PREFIX}"
                             VERSION "${BB_BUILDID_PKG_VERSION}" # todo: add real version
-                            INSTALL_COMPONENT "${_COMPONENT}-pkgconfig")
+                            COMPONENT ${_COMPONENT})
 endfunction()
 
 #.rst:
@@ -319,6 +332,8 @@ function (bbs_emit_bde_metadata target)
     if (GenBDEMetadata_FOUND)
         gen_bde_metadata(TARGET ${target}
                          INSTALL_COMPONENT "${_COMPONENT}-bdemeta")
+        gen_bde_metadata(TARGET ${target}
+                         INSTALL_COMPONENT "${_COMPONENT}-all")
     endif()
 endfunction()
 
