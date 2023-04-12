@@ -13,13 +13,23 @@
 #
 include_guard()
 
-macro( _bbs_pcimport_initialize )
+macro(_bbs_pcimport_initialize)
   #
   # Get the default pkg-config search path
   #
-  find_program( PKG_CONFIG_EXECUTABLE pkg-config )
-  if ( NOT PKG_CONFIG_EXECUTABLE )
-    message( FATAL_ERROR "Failed to find pkg-config" )
+  find_program(PKG_CONFIG_EXECUTABLE pkg-config)
+  if (NOT PKG_CONFIG_EXECUTABLE)
+    if (BDE_BUILD_TARGET_64)
+      find_program(PKG_CONFIG_EXECUTABLE pkg-config.64)
+      if (NOT PKG_CONFIG_EXECUTABLE)
+         message(FATAL_ERROR "Failed to find pkg-config")
+      endif()
+    else()
+      find_program(PKG_CONFIG_EXECUTABLE pkg-config.32)
+      if (NOT PKG_CONFIG_EXECUTABLE)
+         message(FATAL_ERROR "Failed to find pkg-config")
+      endif()
+    endif()
   endif()
 
   execute_process( COMMAND ${PKG_CONFIG_EXECUTABLE} --variable pc_path pkg-config
