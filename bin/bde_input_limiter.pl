@@ -8,7 +8,8 @@
 use warnings;
 use strict;
 
-my $max_count = 5000;
+# was 5000
+my $max_count = 500;
 
 $|++;
 
@@ -22,7 +23,7 @@ if ($max_count <= 0) {
      print("###############################\n");
      print("#### OUTPUT LIMIT EXCEEDED ####\n");
      print("###############################\n");
- 
+
      # get rid of any remaining input, without causing SIGPIPE upstream
      while (<>) {
          # noop

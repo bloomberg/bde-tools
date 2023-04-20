@@ -6,6 +6,7 @@ import os
 import argparse
 import platform
 
+LINE_LIMIT = 500 # was 5000
 
 def unicodeWrite(out, str):
     try:
@@ -59,7 +60,7 @@ if out:
         l for l in outlines if not l.startswith("Note: including file:")
     ]
 
-    out = limitListLines(outlines, 5000, "output")
+    out = limitListLines(outlines, LINE_LIMIT, "output")
 
     msg = msg + out
 
@@ -70,7 +71,7 @@ unicodeWrite(
 if err:
     err = err.decode(sys.stderr.encoding or "ascii", "replace")
 
-    err = limitLines(err, 5000, "error")
+    err = limitLines(err, LINE_LIMIT, "error")
 
     msg = msg + err
 
