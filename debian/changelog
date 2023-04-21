@@ -1,9 +1,16 @@
-bde-tools (3.116.0.0) unstable; urgency=low
+bde-tools (3.117.0.0) unstable; urgency=low
 
+  * 8521564 Add uor-all install component (#289)
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 20 Apr 2023 15:05:05 -0400
+
+bde-tools (3.116.0.0) git; urgency=low
+
+  * 7c8245c Changelog for version 3.116.0.0
   * fcbbb28 sim_cpp11 copy copyright blocks from source to cpp03 drqs164946453 (#280)
   * bd89ac4 Cleanup/unify compilation flags for Windows (#287)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 6 Apr 2023 15:02:20 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 6 Apr 2023 16:11:01 -0400
 
 bde-tools (3.115.1.0) git; urgency=low
 
