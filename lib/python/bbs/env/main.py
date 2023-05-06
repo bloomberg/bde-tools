@@ -125,23 +125,27 @@ def find_installdir(version):
     return None
 
 def populate_ufid(ufid_str, profile):
-    # Most degenerative test - no toolchain. All valid ufids are accepted.
+    platform_str = sysutil.unversioned_platform()
+
     ufid = Ufid.Ufid.from_str(ufid_str)
 
     if profile is None:
-        return ufid
+        profile = profile_utils.BuildProfile()
 
     properties = profile.properties
 
     if properties is None:
-        return ufid
+        properties = dict()
 
     # Populating build types
     full_ufid_flags = []
-    if ufid.is_set("opt"):
+    if ufid.is_set("opt") or ufid.is_set("dbg"):
+        if ufid.is_set("opt"):
+            full_ufid_flags.append("opt")
+        if ufid.is_set("dbg"):
+            full_ufid_flags.append("dbg")
+    else:
         full_ufid_flags.append("opt")
-
-    if ufid.is_set("dbg"):
         full_ufid_flags.append("dbg")
 
     # Validating and populating ufid bitness
@@ -149,11 +153,22 @@ def populate_ufid(ufid_str, profile):
     if bitness is None:
         if ufid.is_set("64"):
             full_ufid_flags.append("64")
+        elif ufid.is_set("32"):
+            full_ufid_flags.append("32")
+        else:
+            if sysutil.is_64bit_system():
+                full_ufid_flags.append("64")
+            else:
+                full_ufid_flags.append("32")
     else:
-        if bitness == 64:
-            full_ufid_flags.append(str(bitness))
-        elif bitness == 32 and ufid.is_set("64"):
+        if bitness == 32 and ufid.is_set("64") or \
+           bitness == 64 and ufid.is_set("32"):
             print(f"ERROR: Ufid flag {bitness} cannot be used with profile {profile.name}", file=sys.stderr)
+            return None
+        elif bitness == 64 or bitness == 32:
+            full_ufid_flags.append(str(bitness))
+        else:
+            print(f"ERROR: Invalid value of toolchains bitness flag: {bitness} in profile {profile.name}", file=sys.stderr)
             return None
 
     # Validating and populating true/false flags
@@ -227,7 +242,7 @@ def populate_ufid(ufid_str, profile):
                     return None
 
     # Validating and populating CXX standards flags
-    cxx_standards = ["cpp03", "cpp11", "cpp14", "cpp17", "cpp20", "cpp23"]
+    cxx_standards = ["cpp03", "cpp11", "cpp14", "cpp17", "cpp20", "cpp23", ]
     value = properties.get("standard")
     if value is None:
         for flag in cxx_standards:

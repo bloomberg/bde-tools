@@ -186,7 +186,7 @@ function(bbs_add_target_bde_flags target scope)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "XL")
         target_compile_definitions(
             ${target}
-            ${scope} 
+            ${scope}
                 __NOLOCK_ON_INPUT
                 __NOLOCK_ON_OUTPUT)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

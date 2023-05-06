@@ -9,9 +9,9 @@ the environment variables that will be used by various bbs tools.
 .. note::
 
    This same process can be used to build any :doc:`BDE-style<../reference/bde_repo_layout>` repository.
-   
+
 .. note::
-   
+
    The Build setup must always be performed at the top of the repository or the workspace.
 
 Download the BDE libraries
@@ -73,7 +73,7 @@ variables that will be set:
    Using build profile: gcc-10.2.1
    export BBS_ENV_MARKER=ON
    export BDE_CMAKE_UPLID=unix-linux-x86_64-3.10.0-gcc-10.2.1
-   export BDE_CMAKE_UFID=dbg
+   export BDE_CMAKE_UFID=dbg_64
    export BDE_CMAKE_BUILD_DIR="_build/unix-linux-x86_64-3.10.0-gcc-10.2.1-dbg"
    export CC=/opt/bb/bin/gcc
    export CXX=/opt/bb/bin/g++
@@ -88,7 +88,7 @@ to configure.  Alternatively, compiler and build options can be passed
 explicitly to :doc:`bbs_build on the command line<../tools/bbs_build>`.
 
 .. code-block:: shell
-    
+
    $ bbs_build configure
 
 .. note::
@@ -100,9 +100,9 @@ In the case when you want to make sure that any pre-existing build
 configuration is erased, add ``--clean`` parameter:
 
 .. code-block:: shell
-   
+
    $ bbs_build configure --clean
-  
+
 
 Build and Install
 -----------------
@@ -126,4 +126,3 @@ Build and Install
 
 Developers can also :doc:`build individual components and groups of
 components<build_single_target>`.
-

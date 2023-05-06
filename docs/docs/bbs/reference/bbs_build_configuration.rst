@@ -101,13 +101,14 @@ The following flags are recognized by BBS tools:
    :header: "Ufid flag", "CMake Variable", "Description"
    :widths: 10, 30, 60
    :align: left
-   
+
    "dbg", "CMAKE_BUILD_TYPE='Debug'", "Non optimized build with debug information"
    "opt",  "CMAKE_BUILD_TYPE='Release'", "Optimized build without debug information"
    "opt_dbg", "CMAKE_BUILD_TYPE='RelWithDebInfo'", "Optimized build with debug information"
    "noexc", "BDE_BUILD_TARGET_NOEXC", "Build with no exception (if not specified, exceptions are enabled)"
    "nomt", "BDE_BUILD_TARGET_NOMT", "Build without multi-threading (if not specified, multi-threading is enabled)"
-   "64", "N/A", "Build for 64-bit architecture (if not specified, build for 32-bit)"
+   "32", "BDE_BUILD_TARGET_32", "Build for 32-bit architecture"
+   "64", "BDE_BUILD_TARGET_64", "Build for 64-bit architecture (if nether 32/64 are specified, defaults to compiler settings)"
    "safe", "BDE_BUILD_TARGET_SAFE", "Enable additional assertion checks;"
    "safe2", "BDE_BUILD_TARGET_SAFE2", "Enable aggresive assertion checks,  binary-incompatible build"
    "aopt", "-DBSLS_ASSERT_LEVEL_ASSERT_OPT", "Set bsls assert level to OPT"
@@ -135,4 +136,3 @@ The following flags are recognized by BBS tools:
 For example, the UFID ``dbg_64_pic`` represents a build
 configuration that enables debugging symbols, enables multi-threading
 and exceptions and produces position independent code for 64-bit bitness .
-

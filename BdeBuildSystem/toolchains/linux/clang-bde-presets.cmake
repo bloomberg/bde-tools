@@ -6,6 +6,15 @@
 # not handled by this code and must be passed to cmake directly by
 # BDE or other wrappers (bbcmake) or by plain cmake.
 
+if (NOT BDE_BUILD_TARGET_32 AND NOT BDE_BUILD_TARGET_64)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        # 64 bit
+        set(BDE_BUILD_TARGET_64 ON CACHE INTERNAL "" FORCE)
+    else()
+        set(BDE_BUILD_TARGET_32 ON CACHE INTERNAL "" FORCE)
+    endif()
+endif()
+
 if(BDE_BUILD_TARGET_64)
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "

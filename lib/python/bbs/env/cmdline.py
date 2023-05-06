@@ -1,6 +1,7 @@
 """Handle command line options.
 """
 
+from bbs.common.sysutil import unversioned_platform
 import argparse
 
 def get_args_parser():
@@ -61,7 +62,7 @@ bbs_build_env list                               # list available compilers
             ("u", "ufid"),
             {
                 "type": str,
-                "default": "dbg_64",
+                "default": "",
                 "help": "the Unified Platform ID (UFID) identifying the build "
                 "configuration (default: %(default)s)."
             }
