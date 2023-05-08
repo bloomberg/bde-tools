@@ -476,7 +476,6 @@ function(bbs_setup_target_uor target)
                         # Adding library for the package as real static library
                         add_library(${pkg} STATIC)
                         target_link_libraries(${pkg} PUBLIC ${pkg}-iface)
-                        bbs_add_target_bde_flags(${pkg} PUBLIC)
 
                         # Important: link with DEPENDS and not PCDEPS for packages
                         # in a groups. For groups with underscores (z_bae) we do

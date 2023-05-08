@@ -111,6 +111,11 @@ function(bbs_add_component_tests target)
         get_filename_component(test_target_name ${test_target_name} NAME_WLE)
         add_executable(${test_target_name}.t EXCLUDE_FROM_ALL ${test_src})
 
+        # Explicitely adding flags here because we do not want those flags to be
+        # PUBLIC for standalone libraries.
+        bbs_add_target_bde_flags(${test_target_name}.t PRIVATE)
+        bbs_add_target_thread_flags(${test_target_name}.t PRIVATE)
+
         target_link_libraries(${test_target_name}.t PUBLIC ${target} ${_TEST_DEPS})
 
         if (BDE_BUILD_TARGET_FUZZ)
