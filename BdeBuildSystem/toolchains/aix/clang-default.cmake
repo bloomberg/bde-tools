@@ -1,8 +1,10 @@
 # Default compiler-less toolchains for BDE build system.
-# The actual compiler for this toolchain is passed via CXX and CC 
+# The actual compiler for this toolchain is passed via CXX and CC
 # environment variables.
 #
 # AIX, clang
+
+include(${CMAKE_CURRENT_LIST_DIR}/../setup_refroot_pkgconfig.cmake)
 
 set(DEFAULT_CXX_FLAGS_INIT "$ENV{CXXFLAGS}")
 

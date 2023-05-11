@@ -1,39 +1,10 @@
 # Default compiler-less toolchains for BDE build system.
-# The actual compiler for this toolchain is passed via CXX and CC 
+# The actual compiler for this toolchain is passed via CXX and CC
 # environment variables.
 #
 # Linux, gcc
 
-# Set base environment variables for Bloomberg environment
-if (DEFINED ENV{DISTRIBUTION_REFROOT})
-    set(DISTRIBUTION_REFROOT "$ENV{DISTRIBUTION_REFROOT}/" CACHE STRING "BB Dpkg root set from environment variable.")
-
-    find_program(PKG_CONFIG_EXECUTABLE pkg-config PATHS
-      ${DISTRIBUTION_REFROOT}/opt/bb/lib/bin
-      /opt/bb/lib/bin
-      NO_SYSTEM_ENVIRONMENT_PATH)
-
-    if (BDE_BUILD_TARGET_64)
-        set(ROBO_PKG_CONFIG_PATH "${DISTRIBUTION_REFROOT}/opt/bb/lib64/robo/pkgconfig:${DISTRIBUTION_REFROOT}/opt/bb/lib64/pkgconfig" CACHE STRING "The location of the robo pkgconfig files.")
-        set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS yes)
-        set(CMAKE_INSTALL_LIBDIR lib64)
-    else()
-        set(ROBO_PKG_CONFIG_PATH "${DISTRIBUTION_REFROOT}/opt/bb/lib/robo/pkgconfig:${DISTRIBUTION_REFROOT}/opt/bb/lib/pkgconfig" CACHE STRING "The location of the robo pkgconfig files.")
-        set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS no)
-    endif()
-
-    if (DEFINED ENV{PKG_CONFIG_PATH} AND NOT "$ENV{PKG_CONFIG_PATH}" MATCHES ".*${ROBO_PKG_CONFIG_PATH}$")
-        message(STATUS "WARNING: Using user supplied PKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}")
-    endif()
-    if (NOT "$ENV{PKG_CONFIG_PATH}" MATCHES ".*${ROBO_PKG_CONFIG_PATH}$")
-        set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${ROBO_PKG_CONFIG_PATH}")
-    endif()
-
-    set(ENV{PKG_CONFIG_SYSROOT_DIR} ${DISTRIBUTION_REFROOT})
-
-    # Set the path for looking up includes, libs and files.
-    list(APPEND CMAKE_SYSTEM_PREFIX_PATH ${DISTRIBUTION_REFROOT}/opt/bb)
-endif()
+include(${CMAKE_CURRENT_LIST_DIR}/../setup_refroot_pkgconfig.cmake)
 
 set(DEFAULT_CXX_FLAGS "$ENV{CXXFLAGS}")
 set(DEFAULT_C_FLAGS "$ENV{CFLAGS}")

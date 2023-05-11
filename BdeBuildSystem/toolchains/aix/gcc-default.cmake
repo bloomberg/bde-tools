@@ -1,5 +1,5 @@
 # Default compiler-less toolchains for BDE build system.
-# The actual compiler for this toolchain is passed via CXX and CC 
+# The actual compiler for this toolchain is passed via CXX and CC
 # environment variables.
 #
 # AIX, gcc
@@ -13,6 +13,8 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 # This obviously doesn't work in the presence of C++, so turn off using
 # -isystem to avoid great hilarity.
 set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
+
+include(${CMAKE_CURRENT_LIST_DIR}/../setup_refroot_pkgconfig.cmake)
 
 set(DEFAULT_CXX_FLAGS "$ENV{CXXFLAGS}")
 set(DEFAULT_C_FLAGS "$ENV{CFLAGS}")

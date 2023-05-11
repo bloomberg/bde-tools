@@ -1,8 +1,10 @@
 # Default compiler-less toolchains for BBS build system.
-# The actual compiler for this toolchain is passed via CXX and CC 
+# The actual compiler for this toolchain is passed via CXX and CC
 # environment variables.
 #
 # Darwin, gcc
+
+include(${CMAKE_CURRENT_LIST_DIR}/../setup_refroot_pkgconfig.cmake)
 
 set(DEFAULT_CXX_FLAGS "$ENV{CXXFLAGS}")
 set(DEFAULT_C_FLAGS "$ENV{CFLAGS}")
