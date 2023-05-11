@@ -1,8 +1,16 @@
-bde-tools (3.117.0.0) unstable; urgency=low
+bde-tools (3.118.0.0) unstable; urgency=low
 
+  * 465b664 Get dependent components (#288)
+  * 168d0ea Add support for ufid flag 32 (#290)
+
+ -- Harold Bott <hbott1@bloomberg.net>  Mon, 8 May 2023 16:17:13 -0400
+
+bde-tools (3.117.0.0) git; urgency=low
+
+  * e0f769c Changelog for version 3.117.0.0
   * 8521564 Add uor-all install component (#289)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 20 Apr 2023 15:05:05 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 21 Apr 2023 11:44:47 -0400
 
 bde-tools (3.116.0.0) git; urgency=low
 
