@@ -621,6 +621,10 @@ def configure(options):
             + ("ON" if options.wafstyleout else "OFF"),
             "-DBDE_CPP11_VERIFY_NO_CHANGE="
             + ("ON" if options.cpp11_verify_no_change else "OFF"),
+            "-DBBS_USE_WAFSTYLEOUT="
+            + ("ON" if options.wafstyleout else "OFF"),
+            "-DBBS_CPP11_VERIFY_NO_CHANGE="
+            + ("ON" if options.cpp11_verify_no_change else "OFF"),
             "-DCMAKE_INSTALL_PREFIX=" + options.prefix,
             "-DCMAKE_INSTALL_LIBDIR="
             + (
