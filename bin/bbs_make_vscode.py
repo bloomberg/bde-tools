@@ -4,10 +4,20 @@ import sys
 import shutil
 import pathlib
 import json
+import shutil
 
 
 def removeBuildType(ufid: str):
     return "_".join([x for x in ufid.split("_") if not x in ["opt", "dbg"]])
+
+
+def backup(path: pathlib.Path):
+    try:
+        shutil.copy(path, str(path) + ".bak")
+    except:
+        pass
+
+    return path
 
 
 binDir = pathlib.Path(__file__).parent
@@ -77,19 +87,22 @@ settings = json.loads((templatesPath / "settings.json").read_text())
 settings["cmake.buildDirectory"] = "${workspaceFolder}/" + buildDir
 settings["cmake.configureSettings"] = cmakeFlags
 
+
 def setCompiler(envVar, cmakeVar):
     compiler = os.getenv(envVar)
     if compiler:
         settings["cmake.configureSettings"][cmakeVar] = compiler
 
+
 setCompiler("CC", "CMAKE_C_COMPILER")
 setCompiler("CXX", "CMAKE_CXX_COMPILER")
 
-pathlib.Path(".vscode/settings.json").write_text(
+backup(pathlib.Path(".vscode/settings.json")).write_text(
     json.dumps(settings, indent=4)
 )
 
 # c_cpp_properties.json
+backup(pathlib.Path(".vscode/c_cpp_properties.json"))
 shutil.copy(templatesPath / "c_cpp_properties.json", ".vscode")
 
 # launch.json
@@ -109,7 +122,9 @@ for configName in launchConfigNames:
 
 launch = json.loads((templatesPath / "launch.json").read_text())
 launch["configurations"] = launchConfigs
-pathlib.Path(".vscode/launch.json").write_text(json.dumps(launch, indent=4))
+backup(pathlib.Path(".vscode/launch.json")).write_text(
+    json.dumps(launch, indent=4)
+)
 
 
 # -----------------------------------------------------------------------------
