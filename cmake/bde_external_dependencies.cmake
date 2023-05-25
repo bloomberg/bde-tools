@@ -209,6 +209,16 @@ function(bde_import_target_from_pc retDeps depName)
         add_library(${depName} INTERFACE IMPORTED)
     endif()
 
+    # HACK. pkg_check_modules() does not understand -pthread flag in .pc file.
+    if (${depName} STREQUAL "crypto")
+        set_property(
+            TARGET ${depName}
+            APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES "-lpthread"
+        )
+    endif()
+
+
     if(${depName}_pc_INCLUDE_DIRS)
         set_property(
             TARGET ${depName}
