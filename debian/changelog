@@ -1,9 +1,19 @@
-bde-tools (3.118.0.0) unstable; urgency=low
+bde-tools (3.119.0.0) unstable; urgency=low
 
+  * ac155dd Force pthread for libcrypto (#294)
+  * e0257d9 Backup old vscode settings before overwriting (#293)
+  * 7c24363 Add BBS support to sample CMakeLists.txt (#292)
+  * dc12947 Setup refroot pkgconfig (#291)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 25 May 2023 13:21:00 -0400
+
+bde-tools (3.118.0.0) git; urgency=low
+
+  * f63dfe9 Changelog for version 3.118.0.0
   * 465b664 Get dependent components (#288)
   * 168d0ea Add support for ufid flag 32 (#290)
 
- -- Harold Bott <hbott1@bloomberg.net>  Mon, 8 May 2023 16:17:13 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 11 May 2023 10:08:05 -0400
 
 bde-tools (3.117.0.0) git; urgency=low
 
