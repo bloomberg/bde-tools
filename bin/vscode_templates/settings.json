@@ -5,10 +5,6 @@
     "cmake.generator": "Ninja",
     "cmake.parallelJobs": 0,
     "cmake.configureSettings": {},
-    "cmake.ctestArgs": [
-        "-L",
-        "^${command:cmake.buildTargetName}$"
-    ],
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {
         "*.ipp": "cpp"
