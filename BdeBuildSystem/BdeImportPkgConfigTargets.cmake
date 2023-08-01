@@ -3,7 +3,7 @@
 # with changed prefix (to avoid name clash) of the functions.
 # -----------------------------------------------------------
 
-# import each item in the argument list and all it's
+# import each item in the argument list and all its
 # dependencies as an imported library target
 #
 # Dependency information is searched with the pkg-config tool
@@ -110,7 +110,7 @@ function( _bbs_import_pkgconfig_targets pkgnames pkgparents )
 endfunction()
  
 #
-# Add the following pkg and all it's required dependencies as imported targets
+# Add the following pkg and all its required dependencies as imported targets
 #
 function( _bbs_pcimport_add_package pkgname pkgcallchain )
   if ( TARGET ${pkgname} OR ${pkgname} MATCHES "^\\$")
@@ -129,8 +129,8 @@ function( _bbs_pcimport_add_package pkgname pkgcallchain )
 endfunction()
 
 #
-# Add the following target and all it's required dependencies
-# as imported targets from it's entry in the cache
+# Add the following target and all its required dependencies
+# as imported targets from its entry in the cache
 #
 function( _bbs_pcimport_import_cached_target targetname pkgcallchain )
   message( VERBOSE "Importing cached ${targetname} (${_pcimport_${targetname}_version})" )
@@ -175,8 +175,8 @@ function( _bbs_pcimport_import_cached_target targetname pkgcallchain )
 endfunction()
 
 #
-# Add the following pkg-config and all it's required dependencies
-# as imported targets from it's pkg-config file
+# Add the following pkg-config and all its required dependencies
+# as imported targets from its pkg-config file
 #
 function( _bbs_pcimport_import_pkgconfig_target pkgname pkgcallchain )
   set( saved_env_pkg_config_sysroot_dir $ENV{PKG_CONFIG_SYSROOT_DIR} )
