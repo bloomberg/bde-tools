@@ -35,6 +35,7 @@ if (BBS_USE_WAFSTYLEOUT)
     find_file(WAF_STYLE_OUT
               "wafstyleout.py"
               PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
+              NO_DEFAULT_PATH
               )
 
     if(WAF_STYLE_OUT)
@@ -50,6 +51,16 @@ if (BBS_USE_WAFSTYLEOUT)
     endif()
 else()
     set_property(GLOBAL PROPERTY BBS_CMD_WRAPPER "")
+endif()
+
+find_file(CHECK_CYCLES
+          "check_cycles.py"
+          PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
+          NO_DEFAULT_PATH
+          )
+
+if(CHECK_CYCLES)
+    message(STATUS "Found check_cycles.py in ${CHECK_CYCLES}")
 endif()
 
 if (NOT BBS_UOR_CONFIG_IN)
@@ -368,6 +379,29 @@ function (bbs_generate_cpp03_sources srcFiles)
 endfunction()
 
 #.rst:
+# .. command:: bbs_check_cycles_target
+#
+# Generate custom target to check uor cycles.
+function (bbs_emit_check_cycles target)
+    if(CHECK_CYCLES)
+        get_property(cmd_wrapper GLOBAL PROPERTY BBS_CMD_WRAPPER)
+
+        get_target_property(uor_name ${target} NAME)
+
+        LIST(APPEND src ${${target}_INCLUDE_FILES})
+        LIST(APPEND src ${${target}_SOURCE_FILES})
+        LIST(APPEND src ${${target}_TEST_SOURCES})
+        add_custom_target(${uor_name}.check_cycles
+            COMMAND   ${cmd_wrapper} "${Python3_EXECUTABLE}" "${CHECK_CYCLES}" ${src}
+        )
+
+        if (NOT TARGET check_cycles)
+            add_custom_target(check_cycles)
+        endif()
+        add_dependencies(check_cycles ${uor_name}.check_cycles)
+    endif()
+endfunction()
+#.rst:
 # .. command:: bbs_setup_target_uor
 #
 # Parse metadata and populate UOR target.
@@ -587,6 +621,9 @@ function(bbs_setup_target_uor target)
         if (NOT TARGET ${pc_name} AND NOT uor_name STREQUAL pc_name)
             add_library(${pc_name} ALIAS ${target})
         endif()
+
+        # Create a custom target for checking UOR dependency cycles
+        bbs_emit_check_cycles(${target})
 
     elseif (_target_type STREQUAL "EXECUTABLE")
         # Configure application package from BDE metadata. Fail if we loaded
