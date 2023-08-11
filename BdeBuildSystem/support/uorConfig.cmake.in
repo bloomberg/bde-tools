@@ -3,14 +3,15 @@
 include(CMakeFindDependencyMacro)
 
 if(NOT TARGET @uor_name@)
-	if(NOT WIN32)
-             find_dependency(Threads)
-	endif()
-	foreach(dep @uor_deps@)
- 	    find_dependency(${dep} PATHS ${CMAKE_CURRENT_LIST_DIR})
-	endforeach()
+    if(NOT WIN32)
+        find_dependency(Threads)
+    endif()
 
-        include(${CMAKE_CURRENT_LIST_DIR}/@uor_name@Targets.cmake)
+    foreach(dep @uor_deps@)
+        find_dependency(${dep})
+    endforeach()
+
+    include(${CMAKE_CURRENT_LIST_DIR}/@uor_name@Targets.cmake)
 endif()
 
 check_required_components(@uor_name@)

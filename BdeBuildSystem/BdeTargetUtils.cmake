@@ -256,7 +256,7 @@ function (bbs_install_target target)
         install(TARGETS ${target}
                 EXPORT  ${uor_name}Targets)
         install(EXPORT  ${uor_name}Targets
-                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${uor_name}
                 COMPONENT ${_COMPONENT})
 
         install(TARGETS ${target}
@@ -274,9 +274,9 @@ function (bbs_install_target target)
         configure_package_config_file(
             ${BBS_UOR_CONFIG_IN}
             ${CMAKE_CURRENT_BINARY_DIR}/${uor_name}Config.cmake
-            INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake)
+            INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${uor_name})
         install(FILES  ${CMAKE_CURRENT_BINARY_DIR}/${uor_name}Config.cmake
-                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${uor_name}
                 COMPONENT ${_COMPONENT})
 
         bbs_install_target_headers(${target})
