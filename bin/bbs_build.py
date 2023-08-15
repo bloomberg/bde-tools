@@ -16,6 +16,8 @@ import multiprocessing
 
 from pathlib import Path
 
+from get_dependers import get_dependers
+
 ####################################################################
 # MSVC environment setup routines
 if "Windows" == platform.system():
@@ -182,6 +184,7 @@ class Options:
         self.generator = args.generator if hasattr(args, "generator") else None
 
         self.targets = args.targets
+        self.dependers_of = args.dependers_of
         self.tests = args.tests
         self.jobs = JobsOptions(args.jobs)
         self.timeout = args.timeout
@@ -435,11 +438,20 @@ def wrapper():
         "build", 'Options for the "build" command'
     )
 
-    group.add_argument(
+    target_group = group.add_mutually_exclusive_group()
+
+    target_group.add_argument(
         "--targets",
         type=lambda x: x.split(","),
         help="Comma-separated list of build targets (e.g. "
         '"bsl", "bslma", or "bslma_testallocator.t").',
+    )
+
+    target_group.add_argument(
+        "--dependers-of",
+        type=lambda x: x.split(","),
+        help="Comma-separated list of targets whose dependers need to be "
+        "built."
     )
 
     group.add_argument(
@@ -725,10 +737,9 @@ class CacheInfo:
                 self.build_type = line.strip().split("=")[1]
 
 
-def build_target(target, build_dir, extra_args, environ):
+def build_targets(target_list, build_dir, extra_args, environ):
     build_cmd = ["cmake", "--build", build_dir]
-    if target:
-        build_cmd += ["--target", target]
+    build_cmd += ["--target"] + target_list
 
     # filter out empty extra_args or Ninja wont like it
     build_cmd += [arg for arg in extra_args if arg]
@@ -758,40 +769,69 @@ def build(options):
         elif options.generator == "Unix Makefiles":
             extra_args += ["-k"]
 
-    target_list = options.targets if options.targets else ["all"]
-    for target in target_list:
-        main_target = None
-        test_target = None
+    target_list = []
+    if options.dependers_of:
+        # If '--dependers-of' is specified on command line, then only build
+        # the dependers of the specified components.  If '--test' was
+        # specified, build the test driver dependers.  Otherwise, build the
+        # packages that the dependers belong to.
+        target_list = get_dependers(options.dependers_of, options.tests)
 
-        if target.endswith(".t"):
-            # If 'target.t' is specified on command line, then only build the
-            # test target
-            main_target = None
-            test_target = target
+        if target_list:
+            print("Dependers found: " + " ".join(target_list))
+
+            if not options.tests:
+                def get_package_name(component):
+                    parts = component.split('_')
+                    # Take care of standalones
+                    return f"s_{parts[1]}" if parts[0] == "s" else parts[0]
+
+                target_list = list({get_package_name(depender)
+                                    for depender in target_list})
+                print("Building " + " ".join(target_list))
+
+            build_targets(target_list, options.build_dir, extra_args, env)
         else:
-            # 'target' without '.t' was specified.  If '--test' was specified,
-            # still try to build 'target' (e.g., for matrix build to try
-            # building application targets)
-            main_target = target
-            test_target = target + ".t" if options.tests else None
+            raise RuntimeError("No dependers found")
+    else:
+        target_list = options.targets if options.targets else ["all"]
+        for target in target_list:
+            main_target = None
+            test_target = None
 
-        if main_target:
-            if main_target == "all":
+            if target.endswith(".t"):
+                # If 'target.t' is specified on command line, then only build
+                # the test target
                 main_target = None
-            try:
-                build_target(main_target, options.build_dir, extra_args, env)
-            except:
-                # Continue if the 'target' without '.td' was specified, and
-                # '--test' was specified since the main target might not exist
-                if not options.tests and not options.keep_going:
-                    raise
+                test_target = target
+            else:
+                # 'target' without '.t' was specified.  If '--test' was
+                # specified, still try to build 'target' (e.g., for matrix
+                # build to try building application targets)
+                main_target = target
+                test_target = target + ".t" if options.tests else None
 
-        if test_target:
-            try:
-                build_target(test_target, options.build_dir, extra_args, env)
-            except:
-                if not options.keep_going:
-                    raise
+            if main_target:
+                if main_target == "all":
+                    main_target = None
+                try:
+                    build_targets([main_target], options.build_dir, extra_args,
+                                  env)
+                except:
+                    # Continue if the 'target' without '.t' was specified, and
+                    # '--test' was specified since the main target might not
+                    # exist
+                    if not options.tests and not options.keep_going:
+                        raise
+
+            if test_target:
+                try:
+                    build_targets([test_target], options.build_dir, extra_args,
+                                  env)
+                except:
+                    if not options.keep_going:
+                        raise
+
 
     if "run" == options.tests:
         test_cmd = [

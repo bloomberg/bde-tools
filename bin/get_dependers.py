@@ -5,7 +5,7 @@ import re
 import sys
 
 
-def get_dependent_test_drivers(targets):
+def get_dependers(targets, tests_only):
     json_path = locate_compile_commands_json()
     if not json_path:
         return None
@@ -18,13 +18,11 @@ def get_dependent_test_drivers(targets):
     if not components:
         return None
 
-    clients, test_clients = get_component_dependencies(components)
+    dependers, test_dependers = get_all_dependers(components)
 
-    dependent_components = get_dependent_components_for_targets(targets, clients, test_clients)
-    if not dependent_components:
-        return None
-
-    return [target + '.t' for target in dependent_components]
+    dependers_of_targets = get_dependers_of_targets(targets, dependers,
+                                                    test_dependers, tests_only)
+    return sorted(dependers_of_targets)
 
 
 def locate_compile_commands_json():
@@ -57,7 +55,8 @@ def read_valid_components(compile_commands):
         if component_name in components:
           continue
 
-        fullNameLambda = lambda ext: os.path.join(dirname, component_name + ext)
+        fullNameLambda = lambda ext: os.path.join(dirname,
+                                                  component_name + ext)
         paths = {
             ext: fullNameLambda(ext)
             for ext in ['.h', '.hpp', '.c', '.cpp', '.t.c', '.t.cpp']
@@ -74,9 +73,9 @@ def read_valid_components(compile_commands):
     return components
 
 
-def get_component_dependencies(components):
-    dependencies = {}
-    test_dependencies = {}
+def get_all_dependers(components):
+    dependers = {}
+    test_dependers = {}
     for component_name, component_files in components.items():
         for ext, file in component_files.items():
             includes = {
@@ -84,60 +83,84 @@ def get_component_dependencies(components):
                 for include in get_includes(file)
                 if include != component_name and include in components
             }
-            deps = dependencies if ".t" not in ext else test_dependencies
+            deps = dependers if ".t" not in ext else test_dependers
             for include in includes:
                 deps.setdefault(include, set()).add(component_name)
-    return dependencies, test_dependencies
+    return dependers, test_dependers
 
 
 def get_includes(file_name):
     if not file_name:
         return set()
     with open(file_name) as f:
-        return re.findall(r'#include [<\"]([\w]*).h[p]*[>\"]', f.read())
+        return re.findall(r'^#include [<\"]([\w]*).h[p]*[>\"]', f.read(),
+                          flags=re.MULTILINE)
 
 
-def get_dependent_components_for_targets(targets, dependencies, test_dependencies):
-    dependent_components = set()
+def get_dependers_of_targets(targets, dependers, test_dependers, tests_only):
+    dependers_of_targets = set()
     for target in targets:
-        if target not in dependencies.keys():
+        if target not in dependers.keys():
             continue
-        dependent_components.update(
-            get_dependent_components_for_target(target, dependencies, test_dependencies))
-    return dependent_components
+        dependers_of_targets.update(
+            get_dependers_of_target(target, dependers, test_dependers,
+                                    tests_only))
+    return dependers_of_targets
 
 
-def get_dependent_components_for_target(target, dependencies, test_dependencies):
+def get_dependers_of_target(target, dependers, test_dependers, tests_only):
     # breadth-first traversal
-    target_dependencies = {target}
-    target_test_dependencies = {target}
+    dependers_of_target = {target}
     components_to_search = [target]
+    deps = test_dependers if tests_only else dependers
     while components_to_search:
         component = components_to_search.pop(0)
 
-        for client in dependencies.get(component, set()):
-            if client not in target_dependencies:
-                target_dependencies.add(client)
+        for client in dependers.get(component, set()):
+            if client not in dependers_of_target:
                 components_to_search.append(client)
 
-        target_test_dependencies.update(test_dependencies.get(component, set()))
+        dependers_of_target.update(dependers.get(component, set()))
+        if tests_only:
+            dependers_of_target.update(test_dependers.get(component, set()))
 
-    return set.union(target_dependencies, target_test_dependencies)
+    if tests_only:
+        dependers_of_target = {depender + '.t' for depender in
+                               dependers_of_target}
+    return dependers_of_target
 
 
 def main():
-    argc = len(sys.argv)
-    if argc <= 1:
-        print(f'usage: get_dependers target1 target2 ...')
-        sys.exit(1)
-    targets = sys.argv[1:]
+    try:
+        parser = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]))
 
-    dependencies = get_dependent_test_drivers(targets)
-    # combine dependencies into a comma separated list in string and print
-    if dependencies:
-        print(','.join(dependencies))
-    else:
-        print('No dependers found')
+        parser.add_argument(
+            "targets",
+            type=lambda x: x.split(","),
+            help='Comma-separated list of targets whose dependent components '
+            'need to be collected.'
+        )
+
+        parser.add_argument(
+            "-t",
+            "--tests-only",
+            action="store_true",
+            help="Return a list of dependent test drivers instead of "
+            "components"
+        )
+
+        args = parser.parse_args()
+
+        dependers = get_dependers(args.targets, args.tests_only)
+
+        # combine dependencies into a comma separated list in string and print
+        if dependers:
+            print(','.join(dependers))
+        else:
+            raise RuntimeError('No dependers found')
+    except Exception as e:
+        print("Error: {}".format(e), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
