@@ -739,7 +739,8 @@ class CacheInfo:
 
 def build_targets(target_list, build_dir, extra_args, environ):
     build_cmd = ["cmake", "--build", build_dir]
-    build_cmd += ["--target"] + target_list
+    if target_list:
+        build_cmd += ["--target"] + target_list
 
     # filter out empty extra_args or Ninja wont like it
     build_cmd += [arg for arg in extra_args if arg]
@@ -812,11 +813,13 @@ def build(options):
                 test_target = target + ".t" if options.tests else None
 
             if main_target:
+                build_list = [main_target]
                 if main_target == "all":
-                    main_target = None
+                    build_list = []
+
                 try:
-                    build_targets([main_target], options.build_dir, extra_args,
-                                  env)
+                    build_targets(build_list, options.build_dir,
+                                  extra_args, env)
                 except:
                     # Continue if the 'target' without '.t' was specified, and
                     # '--test' was specified since the main target might not
