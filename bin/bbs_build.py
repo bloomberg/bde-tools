@@ -261,7 +261,7 @@ class Platform:
 
     @staticmethod
     def generator_choices():
-        choices = ["Ninja Multi-Config", "Ninja", "Unix Makefiles"]
+        choices = ["Ninja", "Ninja Multi-Config", "Unix Makefiles"]
         if "Windows" == platform.system():
             choices.append("msvc")
         return choices
@@ -400,7 +400,7 @@ def wrapper():
             choices=genChoices,
             dest="generator",
             help="Select the build system for compilation.",
-            default="Ninja Multi-Config",
+            default="Ninja",
         )
 
     group = parser.add_argument_group(
