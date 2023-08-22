@@ -15,6 +15,7 @@ install(PROGRAMS BdeBuildSystem/scripts/sim_cpp11_features.pl
 # bbs shell wrappers
 install(PROGRAMS bin/bbs_build
                  bin/bbs_build_env
+                 bin/get_dependers
         DESTINATION libexec/bde-tools/bin
         COMPONENT bde-tools)
 
@@ -30,6 +31,7 @@ install(PROGRAMS bin/bde_build_env.py
                  bin/bde_runtest.py
                  bin/bde_input_limiter.pl
                  bin/cmake_build.py
+                 bin/get_dependers.py
         DESTINATION libexec/bde-tools/bin
         COMPONENT bde-tools)
 
