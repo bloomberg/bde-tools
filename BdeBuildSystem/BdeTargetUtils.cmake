@@ -557,6 +557,7 @@ function(bbs_setup_target_uor target)
             endforeach()
 
             set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
+            set_target_properties(${target} PROPERTIES BB_UOR_IS_GROUP TRUE)
 
             target_link_libraries(${target} PUBLIC ${${uor_name}_PCDEPS})
             bbs_add_target_bde_flags(${target} PRIVATE)
