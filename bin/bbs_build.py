@@ -1,4 +1,5 @@
 from pylibinit import addlibpath
+
 addlibpath.add_lib_path()
 
 from bbs.ufid.ufid import Ufid
@@ -28,10 +29,18 @@ if "Windows" == platform.system():
 
 
 def find_installdir(version):
-    vswhere_path = Path(__file__).parent /  "vswhere.exe"
+    vswhere_path = Path(__file__).parent / "vswhere.exe"
 
     output = subprocess.check_output(
-        [vswhere_path, "-prerelease", "-legacy", "-products", "*", "-format", "json"]
+        [
+            vswhere_path,
+            "-prerelease",
+            "-legacy",
+            "-products",
+            "*",
+            "-format",
+            "json",
+        ]
     )
     compilers = json.loads(output.decode("ascii", errors="ignore"))
     for cl in compilers:
@@ -142,9 +151,9 @@ class Options:
         if not self.prefix:
             self.prefix = "/opt/bb"
 
-        self.dpkg_version = value_or_env(args.dpkg_version,
-                                         "DPKG_VERSION",
-                                         "Dpkg version")
+        self.dpkg_version = value_or_env(
+            args.dpkg_version, "DPKG_VERSION", "Dpkg version"
+        )
 
         self.clean = args.clean
         self.toolchain = value_or_env(
@@ -167,7 +176,9 @@ class Options:
             if p.is_dir():
                 self.bbs_module_path = p.resolve()
             else:
-                raise RuntimeError("Cannot find BdeBuildSystem cmake modules\n")
+                raise RuntimeError(
+                    "Cannot find BdeBuildSystem cmake modules\n"
+                )
 
         # Get the compiler from UPLID
         uplid = os.getenv("BDE_CMAKE_UPLID")
@@ -181,7 +192,8 @@ class Options:
         self.cpp11_verify_no_change = args.cpp11_verify_no_change
         self.dump_cmake_flags = args.dump_cmake_flags
 
-        self.generator = args.generator if hasattr(args, "generator") else None
+        self.generator = args.generator
+        self.config = args.config
 
         self.targets = args.targets
         self.dependers_of = args.dependers_of
@@ -217,36 +229,29 @@ class Platform:
 
     @staticmethod
     def generator(options):
-        host_platform = platform.system()
-        if "Windows" == host_platform:
-            if not options.generator or options.generator == "Ninja":
-                return ["Ninja"]
+        if "msvc" == options.generator:
+            if options.compiler not in Platform.msvcVersionMap:
+                raise RuntimeError(f"Unknown compiler '{options.compiler}'")
 
-            if options.compiler in Platform.msvcVersionMap:
-                msvcInfo = Platform.msvcVersionMap[options.compiler]
-                generator = [
-                    "Visual Studio {} {}".format(
-                        msvcInfo.version, msvcInfo.year
-                    )
-                ]
+            msvcInfo = Platform.msvcVersionMap[options.compiler]
+            generator = [
+                "Visual Studio {} {}".format(msvcInfo.version, msvcInfo.year)
+            ]
 
-                is64 = options.ufid and "64" in options.ufid
-                if msvcInfo.version < 16:
-                    if is64:
-                        generator[0] += " Win64"
-                else:
-                    generator += ["-A", "x64" if is64 else "Win32"]
-                return generator
-
-        return [options.generator] if options.generator else ["Ninja"]
+            is64 = options.ufid and "64" in options.ufid
+            if msvcInfo.version < 16:
+                if is64:
+                    generator[0] += " Win64"
+            else:
+                generator += ["-A", "x64" if is64 else "Win32"]
+            return generator
+        else:
+            return [options.generator]
 
     @staticmethod
     def generator_env(options):
         host_platform = platform.system()
-        if (
-            "Ninja" == Platform.generator(options)[0]
-            and "Windows" == host_platform
-        ):
+        if options.generator != "msvc" and "Windows" == host_platform:
             return get_msvc_env(
                 Platform.msvcVersionMap[options.compiler].version,
                 64 if options.ufid and "64" in options.ufid else 32,
@@ -256,34 +261,23 @@ class Platform:
 
     @staticmethod
     def generator_choices():
-        host_platform = platform.system()
-        if "Windows" == host_platform:
-            return ["msvc", "Ninja"]
-        else:
-            return ["Ninja", "Unix Makefiles"]
+        choices = ["Ninja Multi-Config", "Ninja", "Unix Makefiles"]
+        if "Windows" == platform.system():
+            choices.append("msvc")
+        return choices
 
     @staticmethod
     def cmake_verbosity(verbose):
-        if 0 == verbose:
-            return "ERROR"
-        else:
-            if 1 == verbose:
-                return "WARNING"
-            else:
-                if 2 == verbose:
-                    return "STATUS"
-                else:
-                    if 3 == verbose:
-                        return "VERBOSE"
-        return "TRACE"
+        verbosity = ["ERROR", "WARNING", "STATUS", "VERBOSE", "TRACE"]
+        return verbosity[max(0, min(len(verbosity) - 1, verbose))]
 
     @staticmethod
-    def generator_jobs_arg(gen, options):
+    def generator_jobs_arg(options):
         formatStrings = {}
-        if gen.startswith("Visual Studio"):
+        if options.generator == "msvc":
             formatStrings[JobsOptions.Type.ALL_AVAILABLE] = "/maxcpucount"
             formatStrings[JobsOptions.Type.FIXED] = "/maxcpucount:{}"
-        elif "Makefiles" in gen:
+        elif options.generator == "Unix Makefiles":
             formatStrings[JobsOptions.Type.ALL_AVAILABLE] = "-j"
             formatStrings[JobsOptions.Type.FIXED] = "-j{}"
         else:
@@ -300,31 +294,7 @@ class Platform:
 
         raise RuntimeError()
 
-    @staticmethod
-    def allBuildTarget(options):
-        gen = Platform.generator(options)
-        if gen[0].startswith("Visual Studio"):
-            return "ALL_BUILD"
-        else:
-            return "all"
-
-
-def run_command(cmd, cwd=None):
-    p = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd
-    )
-    (out, err) = p.communicate()
-    ret = p.returncode
-
-    if ret:
-        print("{}".format(out), file=sys.stdout)
-        print("{}".format(err), file=sys.stderr)
-
-    return ret
-
-
 def wrapper():
-
     parser = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]))
     parser.add_argument(
         "cmd", nargs="+", choices=["configure", "build", "install"]
@@ -398,9 +368,7 @@ def wrapper():
         "--regex", help="Regular expression for filtering test drivers"
     )
 
-    group.add_argument(
-        "--dpkg_version", help="Version string for .pc files"
-    )
+    group.add_argument("--dpkg_version", help="Version string for .pc files")
 
     group.add_argument(
         "--wafstyleout",
@@ -432,6 +400,7 @@ def wrapper():
             choices=genChoices,
             dest="generator",
             help="Select the build system for compilation.",
+            default="Ninja Multi-Config",
         )
 
     group = parser.add_argument_group(
@@ -451,7 +420,14 @@ def wrapper():
         "--dependers-of",
         type=lambda x: x.split(","),
         help="Comma-separated list of targets whose dependers need to be "
-        "built."
+        "built.",
+    )
+
+    group.add_argument(
+        "--config",
+        choices=["Debug", "RelWithDebInfo", "Release"],
+        help="Select the build type. If not provided, the build "
+        "type used on 'configure' stage will be used.",
     )
 
     group.add_argument(
@@ -536,6 +512,7 @@ def mkdir_if_not_present(path):
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise
+
 
 def ufid_to_cmake_flags(ufid_str):
     cmake_flags = []
@@ -641,38 +618,32 @@ def configure(options):
     mkdir_if_not_present(options.build_dir)
     # todo - detect generator change
 
-
     # Important: CMAKE_INSTALL_LIBDIR is passed here to accomodate
     # default installation layout.
     # Update: Darwin/MacOS uses lib for default 64 bit installs.
     host_platform = platform.system()
 
     flags = ufid_to_cmake_flags(options.ufid) + [
-            "-DBdeBuildSystem_DIR:PATH=" + str(options.bbs_module_path),
-            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "-DBBS_BUILD_SYSTEM=ON",
-            "-DBBS_USE_WAFSTYLEOUT="
-            + ("ON" if options.wafstyleout else "OFF"),
-            "-DBBS_CPP11_VERIFY_NO_CHANGE="
-            + ("ON" if options.cpp11_verify_no_change else "OFF"),
-            "-DCMAKE_INSTALL_PREFIX=" + options.prefix,
-            "-DCMAKE_INSTALL_LIBDIR="
-            + (
-                "lib64"
-                if ("64" in options.ufid and "Darwin" != host_platform)
-                else "lib"
-            )
-        ]
+        "-DBdeBuildSystem_DIR:PATH=" + str(options.bbs_module_path),
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DBBS_BUILD_SYSTEM=ON",
+        "-DBBS_USE_WAFSTYLEOUT=" + ("ON" if options.wafstyleout else "OFF"),
+        "-DBBS_CPP11_VERIFY_NO_CHANGE="
+        + ("ON" if options.cpp11_verify_no_change else "OFF"),
+        "-DCMAKE_INSTALL_PREFIX=" + options.prefix,
+        "-DCMAKE_INSTALL_LIBDIR="
+        + (
+            "lib64"
+            if ("64" in options.ufid and "Darwin" != host_platform)
+            else "lib"
+        ),
+    ]
 
     if options.test_regex:
-        flags.append(
-            "-DBDE_TEST_REGEX:STRING=" + options.test_regex
-        )
+        flags.append("-DBDE_TEST_REGEX:STRING=" + options.test_regex)
 
     if options.dpkg_version:
-        flags.append(
-            "-DBB_BUILDID_PKG_VERSION=" + options.dpkg_version
-        )
+        flags.append("-DBB_BUILDID_PKG_VERSION=" + options.dpkg_version)
 
     if options.toolchain:
         p = Path(options.toolchain)
@@ -697,7 +668,7 @@ def configure(options):
         flags.append("-DDISTRIBUTION_REFROOT:PATH=" + options.refroot)
 
     if options.dump_cmake_flags:
-        print(*flags, sep = "\n")
+        print(*flags, sep="\n")
         return
 
     configure_cmd = (
@@ -706,6 +677,11 @@ def configure(options):
         + flags
         + ["--log-level=" + Platform.cmake_verbosity(options.verbose)]
     )
+
+    if options.generator in ["msvc", "Ninja Multi-Config"]:
+        # CMAKE_BUILD_TYPE will be unused by CMake, but used later by bbs_build
+        # build
+        configure_cmd.append("--no-warn-unused-cli")
 
     print("Configuration cmd:")
     print(" ".join(configure_cmd))
@@ -731,6 +707,8 @@ class CacheInfo:
         for line in open(cacheFileName):
             if line.startswith("CMAKE_GENERATOR:"):
                 self.generator = line.strip().split("=")[1]
+                if self.generator.startswith("Visual Studio"):
+                    self.generator = "msvc"
             elif line.startswith("CMAKE_CONFIGURATION_TYPES:"):
                 self.multiconfig = True
             elif line.startswith("CMAKE_BUILD_TYPE:"):
@@ -748,24 +726,41 @@ def build_targets(target_list, build_dir, extra_args, environ):
     subprocess.check_call(build_cmd, env=environ)
 
 
+def buildType(options, cache_info):
+    """
+    Return the build type derived from the combination of the specified
+    'options' and 'cache_info'.
+    """
+
+    if options.config and not cache_info.multiconfig:
+        raise RuntimeError(
+            f"'--config' option is not allowed for the '{cache_info.generator}' generator"
+        )
+
+    return options.config if options.config else cache_info.build_type
+
+
 def build(options):
     """Build"""
     cache_info = CacheInfo(options.build_dir)
     options.generator = cache_info.generator
     env = Platform.generator_env(options)
+
+    build_type = buildType(options, cache_info)
+
     extra_args = []
     if cache_info.multiconfig:
-        extra_args += ["--config", cache_info.build_type]
+        extra_args += ["--config", build_type]
     extra_args += [
         "--",
-        Platform.generator_jobs_arg(options.generator, options),
+        Platform.generator_jobs_arg(options),
     ]
 
-    if options.verbose and options.generator == "Ninja":
+    if options.verbose and options.generator.startswith("Ninja"):
         extra_args += ["-v"]
 
     if options.keep_going:
-        if options.generator == "Ninja":
+        if options.generator.startswith("Ninja"):
             extra_args += ["-k", "100"]
         elif options.generator == "Unix Makefiles":
             extra_args += ["-k"]
@@ -782,13 +777,15 @@ def build(options):
             print("Dependers found: " + " ".join(target_list))
 
             if not options.tests:
+
                 def get_package_name(component):
-                    parts = component.split('_')
+                    parts = component.split("_")
                     # Take care of standalones
                     return f"s_{parts[1]}" if parts[0] == "s" else parts[0]
 
-                target_list = list({get_package_name(depender)
-                                    for depender in target_list})
+                target_list = list(
+                    {get_package_name(depender) for depender in target_list}
+                )
                 print("Building " + " ".join(target_list))
 
             build_targets(target_list, options.build_dir, extra_args, env)
@@ -818,8 +815,9 @@ def build(options):
                     build_list = []
 
                 try:
-                    build_targets(build_list, options.build_dir,
-                                  extra_args, env)
+                    build_targets(
+                        build_list, options.build_dir, extra_args, env
+                    )
                 except:
                     # Continue if the 'target' without '.t' was specified, and
                     # '--test' was specified since the main target might not
@@ -829,12 +827,12 @@ def build(options):
 
             if test_target:
                 try:
-                    build_targets([test_target], options.build_dir, extra_args,
-                                  env)
+                    build_targets(
+                        [test_target], options.build_dir, extra_args, env
+                    )
                 except:
                     if not options.keep_going:
                         raise
-
 
     if "run" == options.tests:
         test_cmd = [
@@ -844,7 +842,7 @@ def build(options):
             Platform.ctest_jobs_arg(options),
         ]
         if cache_info.multiconfig:
-            test_cmd += ["-C", cache_info.build_type]
+            test_cmd += ["-C", build_type]
 
         if options.timeout > 0:
             test_cmd += ["--timeout", str(options.timeout)]
@@ -879,7 +877,8 @@ def install(options):
 
     cache_info = CacheInfo(options.build_dir)
     if cache_info.multiconfig:
-        install_cmd += ["-DCMAKE_INSTALL_CONFIG_NAME=" + cache_info.build_type]
+        build_type = buildType(options, cache_info)
+        install_cmd += ["-DCMAKE_INSTALL_CONFIG_NAME=" + build_type]
 
     install_cmd += ["-P", "cmake_install.cmake"]
 

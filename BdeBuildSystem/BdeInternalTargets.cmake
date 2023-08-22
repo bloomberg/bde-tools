@@ -1,10 +1,7 @@
 include_guard()
 
 macro(_bbs_init_bde_options)
-    # Those 2 flags are inferred from CMAKE_BUILD_TYPE
-    set(BDE_BUILD_TARGET_OPT OFF)
-    set(BDE_BUILD_TARGET_DBG OFF)
-    # Other flags can be set by users
+    # Flags that can be set by users
     option(BDE_BUILD_TARGET_NO_EXC "Disable exceptions")
     option(BDE_BUILD_TARGET_NO_MT  "Disable multi-threading")
     option(BDE_BUILD_TARGET_SAFE   "Enable safe build")
@@ -25,21 +22,6 @@ macro(_bbs_init_bde_options)
     set_property(CACHE BDE_BUILD_TARGET_ASSERT_LEVEL PROPERTY STRINGS default AOPT ADBG ASAFE ANONE)
     set(BDE_BUILD_TARGET_REVIEW_LEVEL default CACHE STRING "Review level")
     set_property(CACHE BDE_BUILD_TARGET_REVIEW_LEVEL PROPERTY STRINGS default ROPT RDBG RSAFE RNONE)
-
-    if (NOT CMAKE_BUILD_TYPE)
-        set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
-    endif()
-
-    message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-    if (CMAKE_BUILD_TYPE STREQUAL "Release" OR
-        CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    set(BDE_BUILD_TARGET_OPT ON)
-    endif()
-
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR
-        CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-        set(BDE_BUILD_TARGET_DBG ON)
-    endif()
 endmacro()
 
 # Add thread related options to the target
@@ -105,7 +87,7 @@ function(bbs_add_target_rt_flags target scope)
 endfunction()
 
 function(bbs_add_target_bde_flags target scope)
-    foreach(flag OPT DBG NO_EXC NO_MT SAFE CPP03 CPP11 CPP14 CPP17 CPP20 32 64)
+    foreach(flag NO_EXC NO_MT SAFE CPP03 CPP11 CPP14 CPP17 CPP20 32 64)
         if (BDE_BUILD_TARGET_${flag})
             target_compile_definitions(
                 ${target}
@@ -113,6 +95,11 @@ function(bbs_add_target_bde_flags target scope)
                     BDE_BUILD_TARGET_${flag})
         endif()
     endforeach()
+    target_compile_definitions(
+        ${target}
+        ${scope}
+            "$<$<CONFIG:RelWithDebInfo,Debug>:BDE_BUILD_TARGET_DBG>"
+            "$<$<CONFIG:RelWithDebInfo,Release>:BDE_BUILD_TARGET_OPT>")
 
     # Sanitizers
     foreach(flag ASAN MSAN TSAN UBSAN)

@@ -1,6 +1,7 @@
 {
     "cmake.useCMakePresets": "never",
     "cmake.configureOnOpen": true,
+    "cmake.automaticReconfigure": false,
     "cmake.buildDirectory": "",
     "cmake.generator": "Ninja",
     "cmake.parallelJobs": 0,
