@@ -1,11 +1,20 @@
-bde-tools (3.122.0.0) unstable; urgency=low
+bde-tools (3.123.0.0) unstable; urgency=low
 
+  * 011446c Support Ninja multi config generator (#302)
+  * c272c68 Restore ctest label (#301)
+  * 46dbcf3 Integrate 'get_dependers' into build scripts - DRQS 172509043 (#298)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 22 Aug 2023 15:18:45 -0400
+
+bde-tools (3.122.0.0) git; urgency=low
+
+  * 9b7d589 Changelog for version 3.122.0.0
   * 1fb3660 Fix BDE CMake exports install location (#300)
   * 82b4ada Add cycle check targets (#299)
   * 6f33bd0 Remove MSVC 2013 (#297)
   * a35ae1a BdeImportPkgConfigTargets.cmake: fix "it's" where needed (#296)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 11 Aug 2023 14:26:07 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 11 Aug 2023 14:31:49 -0400
 
 bde-tools (3.121.0.0) git; urgency=low
 
