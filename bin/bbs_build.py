@@ -69,7 +69,7 @@ def get_msvc_env(version, bitness):
     result = {}
 
     bat_file = find_vcvars(version)
-    arch = "x86" if bitness == 32 else "x86_amd64"
+    arch = "x86" if bitness == 32 else "x64"
     process = subprocess.Popen(
         [bat_file, arch, "&&", "set"], stdout=subprocess.PIPE, shell=True
     )

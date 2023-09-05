@@ -57,7 +57,7 @@ def is_64bit_system():
     if sys.maxsize > 2 ** 32:
         return True
 
-    return platform.machine().lower() in ("amd64", "x86_64", "sun4v", "ppc64")
+    return platform.machine().lower() in ("amd64", "x86_64", "x64", "sun4v", "ppc64")
 
 
 def repo_root_path():
@@ -229,9 +229,8 @@ def get_win32_os_info_from_cygwin():
         )
     os_ver = m.group(1)
 
-    # Make the assumption that we are on a X86 system.
     if is_64bit_system():
-        cpu_type = "x86_64"
+        cpu_type = "x64"
     else:
         cpu_type = "x86"
 
@@ -298,7 +297,7 @@ def get_os_info():
 
         # Make the assumption that we are on a X86 system.
         if is_64bit_system():
-            cpu_type = "x86_64"
+            cpu_type = "x64"
         else:
             cpu_type = "x86"
 
