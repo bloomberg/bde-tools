@@ -1,10 +1,16 @@
-bde-tools (3.123.0.0) unstable; urgency=low
+bde-tools (3.124.0.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 5 Sep 2023 16:14:16 -0400
+
+bde-tools (3.123.0.0) git; urgency=low
+
+  * 0e031f8 Changelog for version 3.123.0.0
   * 011446c Support Ninja multi config generator (#302)
   * c272c68 Restore ctest label (#301)
   * 46dbcf3 Integrate 'get_dependers' into build scripts - DRQS 172509043 (#298)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 22 Aug 2023 15:18:45 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 25 Aug 2023 10:22:49 -0400
 
 bde-tools (3.122.0.0) git; urgency=low
 
