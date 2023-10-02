@@ -1,5 +1,5 @@
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-    set(root /opt/bb/bin)
+    set(root ${DISTRIBUTION_REFROOT}/opt/bb/bin)
     set(CMAKE_CXX_COMPILER ${root}/g++)
     set(CMAKE_C_COMPILER ${root}/gcc)
 
@@ -7,7 +7,7 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "AIX")
-    set(root /opt/bb/bin)
+    set(root ${DISTRIBUTION_REFROOT}/opt/bb/bin)
     set(CMAKE_CXX_COMPILER ${root}/xlC_r)
     set(CMAKE_C_COMPILER ${root}/xlc_r)
 
@@ -15,7 +15,7 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "AIX")
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
-    set(root /opt/bb/bin)
+    set(root ${DISTRIBUTION_REFROOT}/opt/bb/bin)
     set(CMAKE_CXX_COMPILER ${root}/CC)
     set(CMAKE_C_COMPILER ${root}/cc)
 
