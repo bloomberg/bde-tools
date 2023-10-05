@@ -1,7 +1,15 @@
-bde-tools (3.124.0.0) unstable; urgency=low
+bde-tools (3.125.0.0) unstable; urgency=low
 
+  * 4dc12a0 Use DISTRIBUTION_REFROOT for local override builds (#305)
+  * 1d200bb Add bbs workspace CML.txt (#304)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 5 Sep 2023 16:14:16 -0400
+ -- Chris Cotter <ccotter14@bloomberg.net>  Mon, 2 Oct 2023 10:08:05 -0400
+
+bde-tools (3.124.0.0) git; urgency=low
+
+  * c22d33d Changelog for version 3.124.0.0
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Sat, 16 Sep 2023 15:27:41 -0400
 
 bde-tools (3.123.0.0) git; urgency=low
 
