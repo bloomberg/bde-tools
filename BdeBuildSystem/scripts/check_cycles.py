@@ -51,7 +51,7 @@ def find_cycles(graph):
     return cycles
 
 def build_dependency_graph(file_list):
-    include_pattern = re.compile(r'^\s*#\s*include\s+["<](\w+)\.h[">]\s+(// for testing only)?',
+    include_pattern = re.compile(r'^\s*#\s*include\s*["<](\w+)(?:\.fwd)?\.h[">]\s*(// for testing only)?',
                                  re.MULTILINE)
 
     test_graph = {}

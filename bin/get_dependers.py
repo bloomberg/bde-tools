@@ -4,6 +4,7 @@ import os
 import re
 import sys
 
+from pathlib import Path
 
 def get_dependers(targets, tests_only):
     json_path = locate_compile_commands_json()
@@ -47,28 +48,19 @@ def read_compile_commands_json(json_path: str):
 def read_valid_components(compile_commands):
     components = {}
     for command in compile_commands:
-        cpp_path = command['file']
-        cpp_name = os.path.basename(cpp_path)
-        component_name = cpp_name.split('.')[0]
-        dirname = os.path.dirname(cpp_path)
+        cpp_path = Path(command['file'])
+        component_name = cpp_path.name.partition('.')[0]
 
         if component_name in components:
-          continue
+            continue
 
-        fullNameLambda = lambda ext: os.path.join(dirname,
-                                                  component_name + ext)
-        paths = {
-            ext: fullNameLambda(ext)
-            for ext in ['.h', '.hpp', '.c', '.cpp', '.t.c', '.t.cpp']
-            if os.path.isfile(fullNameLambda(ext))
+        fullExt = lambda name: "".join(Path(name).suffixes)
+
+        components[component_name] = {
+            fullExt(path): str(path.absolute())
+            for path in cpp_path.parent.glob(f"{component_name}.*")
+            if path.suffix in [".h", ".hpp", ".c", ".cpp"] and path.is_file()
         }
-
-        hasHeader = not paths.keys().isdisjoint({'.h', '.hpp'})
-        hasSource = not paths.keys().isdisjoint({'.c', '.cpp'})
-        hasTest = not paths.keys().isdisjoint({'.t.c', '.t.cpp'})
-
-        if hasHeader and hasSource and hasTest:
-            components[component_name] = paths
 
     return components
 

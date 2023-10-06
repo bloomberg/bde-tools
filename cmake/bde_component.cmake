@@ -126,6 +126,12 @@ function(bde_component_find_sources component rootDir)
     endif()
     bde_struct_set_field(${component} HEADER "${header}")
 
+    # Forwarding header
+    bde_utils_find_file_extension(fwdHeader ${baseName} ".fwd.h")
+    if(fwdHeader)
+        bde_struct_append_field(${component} HEADER "${fwdHeader}")
+    endif()
+
     bde_component_generate_cpp03("${source}")
     bde_component_generate_cpp03("${header}")
 endfunction()
