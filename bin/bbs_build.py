@@ -295,18 +295,25 @@ class Platform:
         raise RuntimeError()
 
 def wrapper():
-    parser = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]))
+    description = """ 
+                  bbs_build is a CMake/CTest wrapper that  provides a simpler
+                  interface for the CMake/CTest invocation.
+                  """
+    parser = argparse.ArgumentParser(prog="bbs_build",
+                                     description=description)
     parser.add_argument(
         "cmd", nargs="+", choices=["configure", "build", "install"]
     )
 
     parser.add_argument(
         "--build_dir",
-        help="Path to the build directory. If not specified, "
-        "the build system generates the name using the "
-        "current platform, compiler, and ufid. The generated "
-        "build directory looks like this: "
-        '"./_build/unix-linux-x86_64-2.6.32-gcc-5.4.0-opt_64_cpp11"',
+        help = '''
+               Path to the build directory. If not specified,
+               the build system generates the name using the 
+               current platform, compiler, and ufid. The generated 
+               build directory looks like this: 
+               "./_build/unix-linux-x86_64-2.6.32-gcc-5.4.0-opt_64_cpp17"
+               '''
     )
 
     parser.add_argument(
@@ -322,16 +329,18 @@ def wrapper():
         "--verbose",
         action="count",
         default=0,
-        help="Produce verbose output (including compiler " "command lines).",
+        help ="Produce verbose output (including compiler " "command lines).",
     )
 
     parser.add_argument(
         "--prefix",
-        default="/opt/bb",
-        help="The path prefix in which to look for "
-        'dependencies for this build. If "--refroot" is '
-        "specified, this prefix is relative to the "
-        'refroot (default="/opt/bb").',
+        default = "/opt/bb",
+        help = '''
+               The path prefix in which to look for 
+               dependencies for this build. If "--refroot" is 
+               specified, this prefix is relative to the 
+               refroot (default="/opt/bb").
+               '''
     )
 
     group = parser.add_argument_group(
@@ -340,8 +349,10 @@ def wrapper():
     group.add_argument(
         "-u",
         "--ufid",
-        help='Unified Flag IDentifier (e.g. "opt_dbg_64_cpp17"). See '
-        "bde-tools documentation.",
+        help = '''
+               Unified Flag IDentifier (e.g. "opt_dbg_64_cpp17"). See 
+               bde-tools documentation.
+               '''
     )
 
     group.add_argument("--toolchain", help="Path to the CMake toolchain file.")
@@ -412,8 +423,16 @@ def wrapper():
     target_group.add_argument(
         "--targets",
         type=lambda x: x.split(","),
-        help="Comma-separated list of build targets (e.g. "
-        '"bsl", "bslma", or "bslma_testallocator.t").',
+        help='''Comma-separated list of build system targets.
+                The build system targets include the targets for
+                libraries and test drivers for 
+                package groups ("bsl"/"bsl.t"), packages ("bslma"/"bslma.t"),
+                and individual component ("bslma_allocator.t") as well as 
+                non-build targets to perform various operations such as 
+                cycle checks ("check_cycles"/"bsl.check_cycles") and cleanup 
+                ("clean"). Supplying a target of "help" will list all of the 
+                available targets.
+            ''',
     )
 
     target_group.add_argument(

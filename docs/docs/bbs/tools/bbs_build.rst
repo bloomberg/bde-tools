@@ -178,6 +178,26 @@ Parameters for build command
    Generate xml report when running tests. Reports can be found in the
    ``<build_dir>/Testing`` folder.
 
+Available targets
+-----------------
+
+.. csv-table::
+   :header: "Target", "Description"
+   :widths: 40, 60
+   :align: left
+
+   "help", "List all of the available targets"
+   "all", "Build all libraries and application UORs (except tests)"
+   "all.t", "Build all UORs and their test drivers"
+   "<uor>", "Build the specified UOR (except tests)"
+   "<uor>.t", "Build the specified UOR and its test driver"
+   "<package_name>", "Build the specified package (except tests)"
+   "<package_name>.t", "Build the specified package and its test driver"
+   "<component_name>.t", "Build the specified component's test driver"
+   "check_cycles", "Verify the workspace for implementation and test cyclic dependencies"
+   "<uor>.check_cycles", "Verify the specified OUR for implementation and test cyclic dependencies"
+   "clean", "Remove currently configure build folder"
+
 Parameters for install command
 ------------------------------
 

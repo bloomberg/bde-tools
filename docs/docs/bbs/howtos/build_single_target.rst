@@ -40,6 +40,14 @@ drivers in the current build repository or workspace.
 
      $ bbs_build build --target bslmt --test run  # Build and run test drivers for bslmt package
 
+* Check implementation cycles:
+
+  .. code-block:: shell
+    
+     $ bbs_build build --target check_cycles      # Check cycles for all libraries
+
+     $ bbs_build build --target bal.check_cycles  # Check cycles for bal package group only
+
 Optimized workflow
 ------------------
 When working on a single component, we want to minimize the number of the
