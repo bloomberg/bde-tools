@@ -1,9 +1,18 @@
-bde-tools (3.125.0.0) unstable; urgency=low
+bde-tools (3.126.0.0) unstable; urgency=low
 
+  * bab5331 Extend documentation of targets for bbs_build (#303)
+  * b16999d Getdependers properly handle applications (#308)
+  * 9dd58d3 Add support for forwarding headers drqs 173150684 (#307)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 18 Oct 2023 15:12:15 -0400
+
+bde-tools (3.125.0.0) git; urgency=low
+
+  * 2c99ca0 Changelog for version 3.125.0.0
   * 4dc12a0 Use DISTRIBUTION_REFROOT for local override builds (#305)
   * 1d200bb Add bbs workspace CML.txt (#304)
 
- -- Chris Cotter <ccotter14@bloomberg.net>  Mon, 2 Oct 2023 10:08:05 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 5 Oct 2023 10:34:00 -0400
 
 bde-tools (3.124.0.0) git; urgency=low
 
