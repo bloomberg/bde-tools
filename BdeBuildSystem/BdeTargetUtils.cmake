@@ -190,22 +190,32 @@ function (bbs_install_target_headers target)
     set(_install_include_dir "include") # the default.
 
     set(_install_interface_found FALSE)
-    get_property(_target_interface_include
-                 TARGET ${target}
-                 PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 
-    foreach(_i ${_target_interface_include})
-        string(REGEX MATCH "^\\$<(BUILD|INSTALL)_INTERFACE:(.+)>"
-               _match ${_i})
-        if (_match)
-            set(EXPRESSION_TYPE ${CMAKE_MATCH_1})
-            set(EXPRESSION_DIR ${CMAKE_MATCH_2})
-            if (EXPRESSION_TYPE STREQUAL "INSTALL")
-                set(_install_interface_found TRUE)
-                set(_install_include_dir ${EXPRESSION_DIR})
+    get_property(_target_include_install_path
+                 TARGET ${target}
+                 PROPERTY INCLUDES_INSTALL_PATH)
+
+    if (_target_include_install_path)
+        set(_install_interface_found TRUE)
+        set(_install_include_dir ${_target_include_install_path})
+    else()
+        get_property(_target_interface_include
+                    TARGET ${target}
+                    PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+
+        foreach(_i ${_target_interface_include})
+            string(REGEX MATCH "^\\$<(BUILD|INSTALL)_INTERFACE:(.+)>"
+                _match ${_i})
+            if (_match)
+                set(EXPRESSION_TYPE ${CMAKE_MATCH_1})
+                set(EXPRESSION_DIR ${CMAKE_MATCH_2})
+                if (EXPRESSION_TYPE STREQUAL "INSTALL")
+                    set(_install_interface_found TRUE)
+                    set(_install_include_dir ${EXPRESSION_DIR})
+                endif()
             endif()
-        endif()
-    endforeach(_i)
+        endforeach(_i)
+    endif()
 
     if(NOT _install_interface_found)
         set_property(TARGET ${target}
@@ -473,10 +483,10 @@ function(bbs_setup_target_uor target)
                     message(TRACE "Processing customized ${pkg}")
                     add_subdirectory(${_SOURCE_DIR}/${pkg})
 
-                    # Custom package must "export" and interface library that can be ether 
+                    # Custom package must "export" and interface library that can be ether
                     # OBJECT library target (if it contains compilable sources) or INTERFACE
-                    # library target if it is header-only package. All we do here is to add 
-                    # group dependencies to the package interface and add it as a dependency 
+                    # library target if it is header-only package. All we do here is to add
+                    # group dependencies to the package interface and add it as a dependency
                     # to the group.
                     if (TARGET ${pkg}-iface)
                         get_target_property(_pkg_type ${pkg}-iface TYPE)
@@ -495,9 +505,9 @@ function(bbs_setup_target_uor target)
 
                     # If the library contains only header files, we will create an INTERFACE
                     # library; otherwise, we will create an OBJECT library
-                    if (${pkg}_SOURCE_FILES) 
+                    if (${pkg}_SOURCE_FILES)
                         message(TRACE "Adding OBJECT library ${pkg}-iface")
-                        add_library(${pkg}-iface 
+                        add_library(${pkg}-iface
                                     OBJECT ${${pkg}_SOURCE_FILES} ${${pkg}_INCLUDE_FILES})
                         set_target_properties(${pkg}-iface PROPERTIES LINKER_LANGUAGE CXX)
                         bbs_add_target_include_dirs(${pkg}-iface PUBLIC ${${pkg}_INCLUDE_DIRS})
