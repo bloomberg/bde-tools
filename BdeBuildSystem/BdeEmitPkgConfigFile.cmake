@@ -5,6 +5,11 @@ function(bbs_emit_pkgconfig_file)
     set(multiValueArgs DEPS UOR_DEPS OPTIONS)
     cmake_parse_arguments(args "" "${singleValueArgs}" "${multiValueArgs}" ${ARGN})
 
+    if (WIN32)
+        # pkg-config files cannot be used on Windows
+        return()
+    endif()
+
     if ( (NOT args_PKG) AND (NOT args_TARGET) )
         message(FATAL_ERROR "You need to supply PKG or TARGET to bbs_emit_pkgconfig_file")
     endif()
