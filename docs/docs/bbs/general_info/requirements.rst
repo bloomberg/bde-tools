@@ -16,7 +16,7 @@ Supported Platforms
 
    "Linux/WSL", "gcc 5+, clang 5.x+"
    "Darwin", "clang 5.x+"
-   "Windows", "Visual Studio 2015+"
+   "Windows", "Visual Studio 2017+"
    "Solaris", "Sun Studio 12+, gcc 5+"
    "AIX", "Xlc 10+, gcc 5+"
    

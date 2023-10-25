@@ -223,8 +223,6 @@ class Platform:
         "msvc-2022": MsvcVersion(2022, 17),
         "msvc-2019": MsvcVersion(2019, 16),
         "msvc-2017": MsvcVersion(2017, 15),
-        "msvc-2015": MsvcVersion(2015, 14),
-        "msvc-2013": MsvcVersion(2013, 12),
     }
 
     @staticmethod
@@ -370,8 +368,8 @@ def wrapper():
     group.add_argument(
         "--compiler",
         help="Specify version of MSVC (Windows only). "
-        'Currently supported versions are: "msvc-2019", '
-        '"msvc-2017", "msvc-2015", and "msvc-2013".  Latest '
+        'Currently supported versions are: '
+        '"msvc-2022", "msvc-2019", and "msvc-2017".  Latest '
         "installed version will be default.",
     )
 

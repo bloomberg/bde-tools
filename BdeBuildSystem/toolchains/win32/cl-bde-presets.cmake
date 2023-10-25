@@ -1,3 +1,8 @@
+if(NOT BDE_TARGET_WINVER)
+    # win10 is default on windows SDK target when nothing is set
+    set(BDE_TARGET_WINVER "0x0A00")
+endif()
+
 # Set various Windows specific defines
 string(CONCAT DEFAULT_CXX_FLAGS
        "${DEFAULT_CXX_FLAGS} "
@@ -8,16 +13,16 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-DNOMINMAX "
        "-DVC_EXTRALEAN "
        "-DWIN32_LEAN_AND_MEAN "
-       "/D_WIN32_WINNT=0x0601 "
-       "/DWINVER=0x0601 "
+       "/D_WIN32_WINNT=${BDE_TARGET_WINVER} "
+       "/DWINVER=${BDE_TARGET_WINVER} "
        "/bigobj "
        "/nologo "
       )
 
 string(CONCAT DEFAULT_C_FLAGS
        "${DEFAULT_C_FLAGS} "
-       "/D_WIN32_WINNT=0x0601 "
-       "/DWINVER=0x0601 "
+       "/D_WIN32_WINNT=${BDE_TARGET_WINVER} "
+       "/DWINVER=${BDE_TARGET_WINVER} "
        "/nologo "
       )
 
