@@ -507,13 +507,13 @@ class Nullable:
         self.val = val
         self.type = val.type.template_argument(0)
         self.members = []
-        if val["d_imp"].type.has_key("d_allocator_p"):
-            alloc = val["d_imp"]["d_allocator_p"]
+        if val.type.has_key("d_allocator"):
+            alloc = val["d_allocator_p"]
             self.members = _createAllocatorList(alloc)
 
-        self.members.append(("null", val["d_imp"]["d_isNull"]))
-        if not val["d_imp"]["d_isNull"]:
-            buf = val["d_imp"]["d_buffer"]["d_buffer"]
+        self.members.append(("null", not val["d_value"]["d_hasValue"]))
+        if val["d_value"]["d_hasValue"]:
+            buf = val["d_value"]["d_buffer"]["d_buffer"]
             self.members.append(
                 ("value", buf.cast(self.type.pointer()).dereference())
             )
