@@ -1,10 +1,16 @@
-bde-tools (3.126.1.0) unstable; urgency=low
+bde-tools (3.126.2.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 31 Oct 2023 11:56:03 -0400
+
+bde-tools (3.126.1.0) git; urgency=low
+
+  * 66983af Changelog for version 3.126.1.0
   * 15d68ff Minimal fix for nullable: the current implementation is based in bsl::optional (#311)
   * 50fb16f Default winver change drqs 173162883 (#309)
   * b93b450 Add headers install path different from INSTALL_INTERFACE (#310)
 
- -- Alex Velasco <avelasco50@bloomberg.net>  Thu, 26 Oct 2023 15:44:48 +0100
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 26 Oct 2023 14:21:24 -0400
 
 bde-tools (3.126.0.0) git; urgency=low
 
