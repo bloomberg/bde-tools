@@ -131,7 +131,7 @@ def stringRep(arg, length):
         if cc in string.printable:
             print_str += cc
         else:
-            print_str += "\{0:03o}".format(int(ci))
+            print_str += "\\{0:03o}".format(int(ci))
     if print_len < length:
         print_str += "..."
     return print_str
