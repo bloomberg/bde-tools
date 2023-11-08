@@ -678,6 +678,7 @@ function(bbs_setup_target_uor target)
                     set_property(TARGET ${lib_target} APPEND PROPERTY INTERFACE_${prop} ${value})
                 endif()
             endforeach()
+
         else()
             add_library(${lib_target} INTERFACE)
 
@@ -694,6 +695,13 @@ function(bbs_setup_target_uor target)
                     set_property(TARGET ${lib_target} APPEND PROPERTY INTERFACE_${prop} ${value})
                 endif()
             endforeach()
+        endif()
+
+        # Create an alias for the application library to be used as an external
+        # pkg-config compatible dependency
+        bbs_uor_to_pc_name(${lib_target} pc_name)
+        if (NOT TARGET ${pc_name} AND NOT ${lib_target} STREQUAL pc_name)
+            add_library(${pc_name} ALIAS ${lib_target})
         endif()
 
         bbs_import_target_dependencies(${lib_target} "${${uor_name}_PCDEPS}")
