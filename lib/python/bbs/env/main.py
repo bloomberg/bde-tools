@@ -265,10 +265,10 @@ def print_envs(args, ufid, profile):
 
     if args.build_dir:
         build_path = Path(args.build_dir).resolve()
-        print(f'export BDE_CMAKE_BUILD_DIR={build_path}')
+        print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
     else:
         build_path = Path(f"_build/{uplid}-{ufid}").resolve()
-        print(f'export BDE_CMAKE_BUILD_DIR={build_path}')
+        print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
 
     if os_type == "windows":
         print(f"export CXX=cl")
@@ -280,9 +280,9 @@ def print_envs(args, ufid, profile):
             print(f"export CXX={profile.cxx_path}")
 
         if (profile.toolchain):
-            print(f"export BDE_CMAKE_TOOLCHAIN={Path(profile.toolchain)}")
+            print(f'export BDE_CMAKE_TOOLCHAIN="{Path(profile.toolchain)}"')
         else:
-            print(f"unset BDE_CMAKE_TOOLCHAIN")
+            print(f'unset BDE_CMAKE_TOOLCHAIN')
 
 
     install_dir = args.install_dir if args.install_dir else "_install"
@@ -290,7 +290,7 @@ def print_envs(args, ufid, profile):
     print("Using install directory: %s" % os.path.abspath(install_dir),
           file=sys.stderr)
 
-    print(f"export BDE_CMAKE_INSTALL_DIR={Path(install_dir).resolve()}")
+    print(f'export BDE_CMAKE_INSTALL_DIR="{Path(install_dir).resolve()}"')
 
 
 def list_build_profiles(profiles):
