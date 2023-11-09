@@ -718,6 +718,13 @@ function(bbs_setup_target_uor target)
                                        TEST_DEPS  ${${uor_name}_PCDEPS}
                                                   ${${uor_name}_TEST_PCDEPS}
                                        LABELS     "all" ${target})
+            if (TARGET ${lib_target}.t)
+                if (NOT TARGET ${target}.t)
+                    add_custom_target(${target}.t)
+                endif()
+                add_dependencies(${target}.t ${lib_target}.t)
+            endif()
+
             if (${lib_target}_TEST_TARGETS)
                 bbs_import_target_dependencies(${lib_target} ${${uor_name}_TEST_PCDEPS})
             endif()
