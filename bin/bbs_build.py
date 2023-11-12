@@ -513,10 +513,10 @@ def wrapper():
 
 
 def remove_builddir(path):
-    real_path = os.path.realpath(path)
-    cmake_cache = os.path.join(real_path, "CMakeCache.txt")
+    real_path = Path(path)
+    cmake_cache = real_path.joinpath("CMakeCache.txt")
 
-    if os.path.isdir(real_path) and os.path.exists(cmake_cache):
+    if real_path.is_dir() and cmake_cache.exists():
         try:
             shutil.rmtree(real_path)
         except shutil.Error as exception:
@@ -524,8 +524,9 @@ def remove_builddir(path):
 
 
 def mkdir_if_not_present(path):
+    real_path = Path(path)
     try:
-        os.makedirs(path)
+        os.makedirs(real_path)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise

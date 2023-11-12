@@ -40,14 +40,6 @@ def program():
         print(f"Unsupported platform: {platform_str}", file=sys.stderr)
         sys.exit(1)
 
-    if platform_str == "win32" and not sysutil.is_mingw_environment():
-        print(
-            "This tool is used to configure unix-style environment "
-            "variables. On Windows platforms it must be run from a unix "
-            "shell environment, either cygwin, or mingw/msys/msysgit"
-        )
-        sys.exit(1)
-
     parser = cmdline.get_args_parser()
 
     args = parser.parse_args()
@@ -272,9 +264,11 @@ def print_envs(args, ufid, profile):
     print(f"export BDE_CMAKE_UFID={ufid}")
 
     if args.build_dir:
-        print(f'export BDE_CMAKE_BUILD_DIR="{args.build_dir}"')
+        build_path = Path(args.build_dir).resolve()
+        print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
     else:
-        print(f'export BDE_CMAKE_BUILD_DIR="_build/{uplid}-{ufid}"')
+        build_path = Path(f"_build/{uplid}-{ufid}").resolve()
+        print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
 
     if os_type == "windows":
         print(f"export CXX=cl")
@@ -286,9 +280,9 @@ def print_envs(args, ufid, profile):
             print(f"export CXX={profile.cxx_path}")
 
         if (profile.toolchain):
-            print(f"export BDE_CMAKE_TOOLCHAIN={Path(profile.toolchain).as_posix()}")
+            print(f'export BDE_CMAKE_TOOLCHAIN="{Path(profile.toolchain)}"')
         else:
-            print(f"unset BDE_CMAKE_TOOLCHAIN")
+            print(f'unset BDE_CMAKE_TOOLCHAIN')
 
 
     install_dir = args.install_dir if args.install_dir else "_install"
@@ -296,7 +290,7 @@ def print_envs(args, ufid, profile):
     print("Using install directory: %s" % os.path.abspath(install_dir),
           file=sys.stderr)
 
-    print(f"export BDE_CMAKE_INSTALL_DIR={Path(install_dir).resolve().as_posix()}")
+    print(f'export BDE_CMAKE_INSTALL_DIR="{Path(install_dir).resolve()}"')
 
 
 def list_build_profiles(profiles):
