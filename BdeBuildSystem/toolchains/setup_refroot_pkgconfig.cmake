@@ -33,4 +33,6 @@ if (DEFINED DISTRIBUTION_REFROOT)
 
     # Set the path for looking up includes, libs and files.
     list(APPEND CMAKE_SYSTEM_PREFIX_PATH ${DISTRIBUTION_REFROOT}/opt/bb)
+
+    list(APPEND CMAKE_MODULE_PATH ${DISTRIBUTION_REFROOT}/opt/bb/share/cmake/Modules)
 endif()
