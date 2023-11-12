@@ -1,7 +1,15 @@
-bde-tools (3.126.2.0) unstable; urgency=low
+bde-tools (3.126.3.0) unstable; urgency=low
 
+  * db1ae7f Merge remote-tracking branch 'upstream/main' into releases/3.126.x
+  * 3cf5cd5 Add toolchains for cygwin (#312)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 31 Oct 2023 11:56:03 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Sat, 11 Nov 2023 21:25:41 -0500
+
+bde-tools (3.126.2.0) git; urgency=low
+
+  * 4cfdca2 Changelog for version 3.126.2.0
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 31 Oct 2023 12:04:47 -0400
 
 bde-tools (3.126.1.0) git; urgency=low
 
