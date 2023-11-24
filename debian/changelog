@@ -1,10 +1,20 @@
-bde-tools (3.126.0.0) unstable; urgency=low
+bde-tools (3.127.0.0) unstable; urgency=low
 
+  * 3cf5cd5 Add toolchains for cygwin (#312)
+  * 15d68ff Minimal fix for nullable: the current implementation is based in bsl::optional (#311)
+  * 50fb16f Default winver change drqs 173162883 (#309)
+  * b93b450 Add headers install path different from INSTALL_INTERFACE (#310)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 16 Nov 2023 11:05:43 -0500
+
+bde-tools (3.126.0.0) git; urgency=low
+
+  * d10483a Changelog for version 3.126.0.0
   * bab5331 Extend documentation of targets for bbs_build (#303)
   * b16999d Getdependers properly handle applications (#308)
   * 9dd58d3 Add support for forwarding headers drqs 173150684 (#307)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 18 Oct 2023 15:12:15 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 20 Oct 2023 11:04:57 -0400
 
 bde-tools (3.125.0.0) git; urgency=low
 
