@@ -105,6 +105,10 @@ backup(pathlib.Path(".vscode/settings.json")).write_text(
 backup(pathlib.Path(".vscode/c_cpp_properties.json"))
 shutil.copy(templatesPath / "c_cpp_properties.json", ".vscode")
 
+# extensions.json
+backup(pathlib.Path(".vscode/extensions.json"))
+shutil.copy(templatesPath / "extensions.json", ".vscode")
+
 # launch.json
 commonLaunchArgs = json.loads(
     (templatesPath / "common_launch_args.json").read_text()

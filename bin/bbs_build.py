@@ -293,7 +293,7 @@ class Platform:
         raise RuntimeError()
 
 def wrapper():
-    description = """ 
+    description = """
                   bbs_build is a CMake/CTest wrapper that  provides a simpler
                   interface for the CMake/CTest invocation.
                   """
@@ -307,9 +307,9 @@ def wrapper():
         "--build_dir",
         help = '''
                Path to the build directory. If not specified,
-               the build system generates the name using the 
-               current platform, compiler, and ufid. The generated 
-               build directory looks like this: 
+               the build system generates the name using the
+               current platform, compiler, and ufid. The generated
+               build directory looks like this:
                "./_build/unix-linux-x86_64-2.6.32-gcc-5.4.0-opt_64_cpp17"
                '''
     )
@@ -334,9 +334,9 @@ def wrapper():
         "--prefix",
         default = "/opt/bb",
         help = '''
-               The path prefix in which to look for 
-               dependencies for this build. If "--refroot" is 
-               specified, this prefix is relative to the 
+               The path prefix in which to look for
+               dependencies for this build. If "--refroot" is
+               specified, this prefix is relative to the
                refroot (default="/opt/bb").
                '''
     )
@@ -348,7 +348,7 @@ def wrapper():
         "-u",
         "--ufid",
         help = '''
-               Unified Flag IDentifier (e.g. "opt_dbg_64_cpp17"). See 
+               Unified Flag IDentifier (e.g. "opt_dbg_64_cpp17"). See
                bde-tools documentation.
                '''
     )
@@ -423,12 +423,12 @@ def wrapper():
         type=lambda x: x.split(","),
         help='''Comma-separated list of build system targets.
                 The build system targets include the targets for
-                libraries and test drivers for 
+                libraries and test drivers for
                 package groups ("bsl"/"bsl.t"), packages ("bslma"/"bslma.t"),
-                and individual component ("bslma_allocator.t") as well as 
-                non-build targets to perform various operations such as 
-                cycle checks ("check_cycles"/"bsl.check_cycles") and cleanup 
-                ("clean"). Supplying a target of "help" will list all of the 
+                and individual component ("bslma_allocator.t") as well as
+                non-build targets to perform various operations such as
+                cycle checks ("check_cycles"/"bsl.check_cycles") and cleanup
+                ("clean"). Supplying a target of "help" will list all of the
                 available targets.
             ''',
     )

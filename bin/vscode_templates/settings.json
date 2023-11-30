@@ -20,5 +20,18 @@
         "**/.git": true,
         "**/_build": true,
         ".vscode/.cache": true
-    }
+    },
+    "C_Cpp.autocomplete": "disabled",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "[cpp]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "clangd.arguments": [
+        "--background-index",
+        "-j=4",
+        "--enable-config",
+        "--header-insertion=never",
+        "--compile-commands-dir=${workspaceFolder}/.vscode"
+    ],
+    "cmake.copyCompileCommands": "${workspaceFolder}/.vscode/compile_commands.json"
 }
