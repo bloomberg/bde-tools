@@ -218,9 +218,7 @@ def get_production_profiles(uplid):
                                 "noexc": false,
                                 "bitness": 64,
                                 "standard": "cpp17",
-                                "sanitizer": false,
-                                "assert_level": "default",
-                                "review_level": "default"
+                                "sanitizer": false
                             }
                         },
                         {
@@ -231,9 +229,7 @@ def get_production_profiles(uplid):
                                 "noexc": false,
                                 "bitness": 32,
                                 "standard" : "cpp17",
-                                "sanitizer": false,
-                                "assert_level": "default",
-                                "review_level": "default"
+                                "sanitizer": false
                             }
                         }
                     ]
@@ -249,9 +245,7 @@ def get_production_profiles(uplid):
                                 "noexc": false,
                                 "bitness": 64,
                                 "standard": "cpp03",
-                                "sanitizer": false,
-                                "assert_level": "default",
-                                "review_level": "default"
+                                "sanitizer": false
                             }
                         },
                         {
@@ -262,9 +256,7 @@ def get_production_profiles(uplid):
                                 "noexc": false,
                                 "bitness": 32,
                                 "standard" : "cpp03",
-                                "sanitizer": false,
-                                "assert_level": "default",
-                                "review_level": "default"
+                                "sanitizer": false
                             }
                         }
                     ]
@@ -280,9 +272,7 @@ def get_production_profiles(uplid):
                                 "noexc": false,
                                 "bitness": 64,
                                 "standard": "cpp03",
-                                "sanitizer": false,
-                                "assert_level": "default",
-                                "review_level": "default"
+                                "sanitizer": false
                             }
                         },
                         {
@@ -293,9 +283,7 @@ def get_production_profiles(uplid):
                                 "noexc": false,
                                 "bitness": 32,
                                 "standard" : "cpp03",
-                                "sanitizer": false,
-                                "assert_level": "default",
-                                "review_level": "default"
+                                "sanitizer": false
                             }
                         }
                     ]
