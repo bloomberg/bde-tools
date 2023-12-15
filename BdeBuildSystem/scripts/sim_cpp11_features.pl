@@ -302,7 +302,7 @@ use strict;
 use 5.010;
 
 use FindBin;
-use lib "$FindBin::RealBin/../bdedox/lib/perl";
+use lib "$FindBin::RealBin/lib";
 
 # These using decl's replace the use of 'common::sense' which is not installed
 # by default.
