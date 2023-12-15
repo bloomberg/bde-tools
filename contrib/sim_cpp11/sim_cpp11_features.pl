@@ -1442,12 +1442,13 @@ sub repeatPacks($$@)
 
         for (my $expandNum = 0; $expandNum < @packExpansions; ++$expandNum)
         {
-            $workingBuffer =~ m/(.*)__PACK_([VT])$expandNum([RF])__(.*)/g or
+            $workingBuffer =~ m/__PACK_([VT])$expandNum([RF])__(.*)/g or
                 fatal("Can't find pack $expandNum in working buffer");
-            my $packStart = $+[1];    # Start of pack
-            my $packType  = $2;       # 'T' for type, 'V' for value.
-            my $isFill    = ($3 eq 'F');
-            my $packEnd   = $-[4];    # One past end of pack
+
+            my $packStart = $-[1] - 7;    # Start of pack
+            my $packType  = $1;       # 'T' for type, 'V' for value.
+            my $isFill    = ($2 eq 'F');
+            my $packEnd   = $-[3];    # One past end of pack
             my $packLen   = $packEnd - $packStart;
 
             # For class specializations with fill-parameters, express the
