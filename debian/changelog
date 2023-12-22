@@ -1,7 +1,14 @@
-bde-tools (3.128.1.0) unstable; urgency=low
+bde-tools (4.0.0.0) unstable; urgency=low
 
+  * No commits found
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 15 Dec 2023 17:48:07 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 15 Dec 2023 17:49:20 -0500
+
+bde-tools (3.128.1.0) git; urgency=low
+
+  * c76c27e Changelog for version 3.128.1.0
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 15 Dec 2023 17:49:20 -0500
 
 bde-tools (3.128.0.0) git; urgency=low
 
