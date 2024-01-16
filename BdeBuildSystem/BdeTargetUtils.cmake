@@ -664,6 +664,7 @@ function(bbs_setup_target_uor target)
             bbs_add_target_include_dirs(${lib_target} PUBLIC "${${uor_name}_INCLUDE_DIRS}")
             target_link_libraries(${lib_target} PUBLIC "${${uor_name}_PCDEPS}")
 
+            bbs_add_target_bde_flags(${lib_target} PRIVATE)
             bbs_add_target_thread_flags(${lib_target} PRIVATE)
 
             # Copy properties from executable target to corresponding properties
@@ -684,6 +685,9 @@ function(bbs_setup_target_uor target)
 
             target_link_libraries(${lib_target} INTERFACE "${${uor_name}_PCDEPS}")
             bbs_add_target_include_dirs(${lib_target} INTERFACE "${${uor_name}_INCLUDE_DIRS}")
+
+            bbs_add_target_bde_flags(${target} PRIVATE)
+            bbs_add_target_thread_flags(${target} PRIVATE)
 
             # Copy properties from executable target to corresponding INTERFACE_* properties
             # of created ${lib_target} target. This will correctly set compiler/linker
