@@ -50,9 +50,15 @@ function(bbs_add_target_thread_flags target scope)
                     _REENTRANT
                     _THREAD_SAFE
                     __VACPP_MULTI__)
-            target_compile_options(${target}
-                ${scope}
-                    -qthreaded)
+            if (CMAKE_CXX_COMPILER_ID STREQUAL "XL")
+                target_compile_options(${target}
+                    ${scope}
+                        -qthreaded)
+            elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+                target_compile_options(${target}
+                    ${scope}
+                        -pthread)
+            endif()
         elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
             target_compile_definitions(${target}
                 ${scope}
