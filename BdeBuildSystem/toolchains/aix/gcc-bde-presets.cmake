@@ -18,11 +18,11 @@ endif()
 if(BDE_BUILD_TARGET_64)
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
-           "-maix64 "
+           "-m64 "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
-           "-maix64 "
+           "-m64 "
            )
 
     # All tools on AIX need a bitness.
@@ -38,11 +38,11 @@ endif()
 if(BDE_BUILD_TARGET_32)
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
-           "-maix32 "
+           "-m32 "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
-           "-maix32 "
+           "-m32 "
            )
     # All tools on AIX need a bitness.
     set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> -X32 cr <TARGET> <LINK_FLAGS> <OBJECTS>")

@@ -21,12 +21,10 @@ set(DEFAULT_C_FLAGS "$ENV{CFLAGS}")
 
 string(CONCAT DEFAULT_CXX_FLAGS
        "${DEFAULT_CXX_FLAGS_INIT} "
-       "-maix${BUILD_BITNESS} "
       )
 
 string(CONCAT DEFAULT_C_FLAGS
        "${DEFAULT_C_FLAGS_INIT} "
-       "-maix${BUILD_BITNESS} "
       )
 
 # Include BDE ufid presets
