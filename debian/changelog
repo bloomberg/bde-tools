@@ -1,8 +1,14 @@
-bde-tools (4.0.0.0) unstable; urgency=low
+bde-tools (4.1.0.0) unstable; urgency=low
 
-  * No commits found
+  * 5fb3c86 Ensure BDE_BUILD_TARGET_* flags are defined for executable targets and its internal lib (#317)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 15 Dec 2023 17:49:20 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 18 Jan 2024 14:02:27 -0500
+
+bde-tools (4.0.0.0) git; urgency=low
+
+  * 4b92127 Changelog for version 4.0.0.0
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 22 Dec 2023 12:26:33 -0500
 
 bde-tools (3.128.1.0) git; urgency=low
 
