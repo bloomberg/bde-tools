@@ -503,6 +503,10 @@ def wrapper():
 
     if "configure" in args.cmd:
         configure(options)
+    elif options.cpp11_verify_no_change:
+        raise RuntimeError(
+            f"'cpp11-verify-no-change' option is only intended for use with 'configure'"
+        )
 
     if "build" in args.cmd:
         build(options)
