@@ -91,9 +91,11 @@ def _createAllocatorList(cbase):
     return [] if not printAllocator else [("alloc", cbase)]
 
 
-def _optionalAllocator(allocator, prefix=",", suffix=""):
+def _optionalAllocator(obj, prefix=",", suffix=""):
+    if not hasattr(obj, "alloc"):
+        return ""
     printalloc = gdb.parameter("print bslma-allocator")
-    return "%salloc:%s%s" % (prefix, allocator, suffix) if printalloc else ""
+    return "%salloc:%s%s" % (prefix, obj.alloc, suffix) if printalloc else ""
 
 
 def keyValueIterator(arg):
@@ -135,6 +137,14 @@ def stringRep(arg, length):
     if print_len < length:
         print_str += "..."
     return print_str
+
+
+def hasMember(obj, memb):
+    try:
+        obj[memb]
+    except gdb.error:
+        return False
+    return True
 
 
 ## Debug catch all pretty printer
@@ -508,15 +518,22 @@ class Nullable:
         self.type = val.type.template_argument(0)
         self.members = []
         if val.type.has_key("d_allocator"):
-            alloc = val["d_allocator_p"]
+            alloc = val["d_allocator"]
             self.members = _createAllocatorList(alloc)
 
-        self.members.append(("null", not val["d_value"]["d_hasValue"]))
-        if val["d_value"]["d_hasValue"]:
-            buf = val["d_value"]["d_buffer"]["d_buffer"]
-            self.members.append(
-                ("value", buf.cast(self.type.pointer()).dereference())
-            )
+        if hasMember(val, "d_value"):
+            self.members.append(("null", not val["d_value"]["d_hasValue"]))
+            if val["d_value"]["d_hasValue"]:
+                buf = val["d_value"]["d_buffer"]["d_buffer"]
+                self.members.append(
+                    ("value", buf.cast(self.type.pointer()).dereference())
+                )
+        else:
+            self.members.append(("null", not val["_M_payload"]["_M_engaged"]))
+            if val["_M_payload"]["_M_engaged"]:
+                self.members.append(
+                    ("value", val["_M_payload"]["_M_payload"]["_M_value"])
+                )
 
     def to_string(self):
         return str(self.val.type)
@@ -849,9 +866,11 @@ class BslString:
 
     def __init__(self, val):
         self.val = val
-        self.alloc = val["d_allocator"]["d_mechanism"]
+        self.members = []
+        if hasMember(val["d_allocator"], "d_resource"):
+            self.alloc = val["d_allocator"]["d_resource"]
+            self.members.extend(_createAllocatorList(self.alloc))
         self.simp = val.cast(val.type.items()[0][1].type)
-        self.members = _createAllocatorList(self.alloc)
         self.members.append(("data", self.simp))
 
     def to_string(self):
@@ -871,8 +890,12 @@ class StringRefData:
         self.val = val
 
     def to_string(self):
-        length = self.val["d_end_p"] - self.val["d_begin_p"]
-        buffer = self.val["d_begin_p"]
+        if hasMember(self.val, "d_start_p"):
+            buffer = self.val["d_start_p"]
+            length = self.val["d_length"]
+        else:
+            buffer = self.val["_M_str"]
+            length = self.val["_M_len"]
         return '%s[length:%d] "%s"' % (
             stringAddress(buffer),
             length,
@@ -914,9 +937,11 @@ class BslVector:
 
     def __init__(self, val):
         self.val = val
-        self.alloc = val["d_allocator"]["d_mechanism"]
+        self.members = []
+        if hasMember(val["d_allocator"], "d_resource"):
+            self.alloc = val["d_allocator"]["d_resource"]
+            self.members.extend(_createAllocatorList(self.alloc))
         self.vimp = val.cast(val.type.items()[0][1].type)
-        self.members = _createAllocatorList(self.alloc)
         self.members.append(("data", self.vimp))
 
     def to_string(self):
@@ -948,7 +973,10 @@ class BslMap:
             "bsl::pair<%s, %s >" % (self.keyArg.const(), self.valueArg)
         )
         self.size = val["d_tree"]["d_numNodes"]
-        self.alloc = val["d_compAndAlloc"]["d_pool"]["d_pool"]["d_mechanism"]
+        if hasMember(val["d_compAndAlloc"]["d_pool"]["d_pool"], "d_resource"):
+            self.alloc = val["d_compAndAlloc"]["d_pool"]["d_pool"][
+                "d_resource"
+            ]
         self.sentinel = val["d_tree"]["d_sentinel"]
 
     def to_string(self):
@@ -957,7 +985,7 @@ class BslMap:
             self.keyArg,
             self.valueArg,
             self.size,
-            _optionalAllocator(self.alloc),
+            _optionalAllocator(self),
         )
 
     def display_hint(self):
@@ -990,7 +1018,10 @@ class BslSet:
         )
 
         self.size = val["d_tree"]["d_numNodes"]
-        self.alloc = val["d_compAndAlloc"]["d_pool"]["d_pool"]["d_mechanism"]
+        if hasMember(val["d_compAndAlloc"]["d_pool"]["d_pool"], "d_resource"):
+            self.alloc = val["d_compAndAlloc"]["d_pool"]["d_pool"][
+                "d_resource"
+            ]
         self.sentinel = val["d_tree"]["d_sentinel"]
 
     def to_string(self):
@@ -998,7 +1029,7 @@ class BslSet:
         return "set<%s> [size:%d%s]" % (
             self.valueType,
             self.size,
-            _optionalAllocator(self.alloc),
+            _optionalAllocator(self),
         )
 
     def display_hint(self):
@@ -1015,9 +1046,12 @@ class BslUnorderedMap:
         self.impl = val["d_impl"]
         self.size = int(self.impl["d_size"])
         self.capacity = int(self.impl["d_capacity"])
-        self.alloc = self.impl["d_parameters"]["d_nodeFactory"]["d_pool"][
-            "d_mechanism"
-        ]
+        if hasMember(self.impl["d_parameters"]["d_nodeFactory"]["d_pool"],
+                     "d_resource"
+        ):
+            self.alloc = self.impl["d_parameters"]["d_nodeFactory"]["d_pool"][
+                "d_resource"
+            ]
 
         self.keyArg = val.type.template_argument(0)
         self.valueArg = val.type.template_argument(1)
@@ -1037,7 +1071,7 @@ class BslUnorderedMap:
             self.size,
             self.capacity,
             self.buckets,
-            _optionalAllocator(self.alloc),
+            _optionalAllocator(self),
         )
 
     def display_hint(self):
@@ -1056,9 +1090,12 @@ class BslUnorderedSet:
         self.impl = val["d_impl"]
         self.size = int(self.impl["d_size"])
         self.capacity = int(self.impl["d_capacity"])
-        self.alloc = self.impl["d_parameters"]["d_nodeFactory"]["d_pool"][
-            "d_mechanism"
-        ]
+        if hasMember(self.impl["d_parameters"]["d_nodeFactory"]["d_pool"],
+                     "d_resource"
+        ):
+            self.alloc = self.impl["d_parameters"]["d_nodeFactory"]["d_pool"][
+                "d_resource"
+            ]
 
         self.valueType = val.type.template_argument(0)
 
@@ -1072,7 +1109,7 @@ class BslUnorderedSet:
             self.size,
             self.capacity,
             self.buckets,
-            _optionalAllocator(self.alloc),
+            _optionalAllocator(self),
         )
 
     def display_hint(self):
