@@ -257,6 +257,7 @@ class Options:
 
         self.targets = args.targets
         self.dependers_of = args.dependers_of
+        self.no_missing_target_warning = args.no_missing_target_warning
         self.tests = args.tests
         self.jobs = JobsOptions(args.jobs)
         self.timeout = args.timeout
@@ -525,6 +526,12 @@ def wrapper():
     )
 
     group.add_argument(
+        "--no-missing-target-warning",
+        action="store_true",
+        help="Suppress warnings for invalid targets.",
+    )
+
+    group.add_argument(
         "--tests",
         choices=["build", "run"],
         help="Select whether to build or run the tests. Tests "
@@ -755,7 +762,8 @@ def build(options):
         # the dependers of the specified components.  If '--test' was
         # specified, build the test driver dependers.  Otherwise, build the
         # packages that the dependers belong to.
-        target_list = get_dependers(options.dependers_of, options.tests)
+        target_list = get_dependers(options.dependers_of, options.tests,
+                                    options.no_missing_target_warning)
 
         if target_list:
             print("Dependers found: " + " ".join(target_list))

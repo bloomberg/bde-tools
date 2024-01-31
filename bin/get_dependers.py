@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-def get_dependers(targets, output_targets):
+def get_dependers(targets, output_targets, no_missing_target_warning=False):
     json_path = locate_compile_commands_json()
     if not json_path:
         return None
@@ -23,7 +23,8 @@ def get_dependers(targets, output_targets):
     dependers, test_dependers = get_all_dependers(component_files)
 
     dependers_of_targets = get_dependers_of_targets(
-        targets, dependers, test_dependers, output_targets, component_files
+        targets, dependers, test_dependers, output_targets, component_files,
+        no_missing_target_warning
     )
     return sorted(dependers_of_targets)
 
@@ -77,7 +78,7 @@ def get_all_dependers(component_files):
             includes = {
                 include
                 for include in get_includes(file)
-                if include != component_name and include in component_files
+                if include in component_files
             }
             deps = dependers if ".t" not in ext else test_dependers
             for include in includes:
@@ -96,11 +97,24 @@ def get_includes(file_name):
 
 
 def get_dependers_of_targets(
-    targets, dependers, test_dependers, output_targets, component_files
+    targets, dependers, test_dependers, output_targets, component_files,
+    no_missing_target_warning
 ):
+
+    def is_valid_target(target):
+        if target.endswith('.t'):
+            return target[:-2] in dependers.keys()
+        return target in dependers.keys()
+
     dependers_of_targets = set()
     for target in targets:
-        if target not in dependers.keys():
+        if not is_valid_target(target):
+            if not no_missing_target_warning:
+                sys.stderr.write(f"Error: Target {target} is unknown.\n")
+            continue
+        if target.endswith('.t'):
+            if output_targets:
+                dependers_of_targets.add(target)
             continue
         dependers_of_targets.update(
             get_dependers_of_target(
@@ -166,9 +180,16 @@ def main():
             "drivers) instead of components",
         )
 
+        parser.add_argument(
+            "--no-missing-target-warning",
+            action="store_true",
+            help="Suppress warnings when invalid targets are given."
+        )
+
         args = parser.parse_args()
 
-        dependers = get_dependers(args.targets, args.output_targets)
+        dependers = get_dependers(args.targets, args.output_targets,
+                                  args.no_missing_target_warning)
 
         # combine dependencies into a comma separated list in string and print
         if dependers:
