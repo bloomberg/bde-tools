@@ -1,8 +1,18 @@
-bde-tools (4.1.0.0) unstable; urgency=low
+bde-tools (4.2.0.0) unstable; urgency=low
 
+  * b232b4b Allow 'get_dependers' to take test drivers DRQS 173580698 (#316)
+  * f8a4212 Multiple gdb pretty printers broken possibly due to BDE 4 allocator changes (DRQS 174058317) (#319)
+  * 02e3b80 Check for 'configure' argument has been added for 'cpp11-verify-no-change' option (#320)
+  * cd58e85 Fix simcpp11 copyright block handling drqs173929549 (#318)
+
+ -- Harold Bott <hbott1@bloomberg.net>  Wed, 31 Jan 2024 14:43:49 -0500
+
+bde-tools (4.1.0.0) git; urgency=low
+
+  * 940125d Changelog for version 4.1.0.0
   * 5fb3c86 Ensure BDE_BUILD_TARGET_* flags are defined for executable targets and its internal lib (#317)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 18 Jan 2024 14:02:27 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 20 Jan 2024 13:17:21 -0500
 
 bde-tools (4.0.0.0) git; urgency=low
 
