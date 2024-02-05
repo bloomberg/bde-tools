@@ -19,6 +19,7 @@ def get_dependers(targets, output_targets, no_missing_target_warning=False):
     component_files = read_valid_components(compile_commands)
     if not component_files:
         return None
+    add_bsl_bslhdrs(component_files)
 
     dependers, test_dependers = get_all_dependers(component_files)
 
@@ -70,6 +71,30 @@ def read_valid_components(compile_commands):
     return components
 
 
+def add_bsl_bslhdrs(component_files):
+    # Add all headers in 'bsl+bslhdrs' package to 'component_files' as if they
+    # are valid components
+    if not component_files:
+        return
+    # get path to 'bsl+bslhdrs'
+    component_filenames =  next(iter(component_files.values()))
+    if not component_filenames:
+        return
+    file = next(iter(component_filenames.values()))
+    index = file.find('groups')
+    if index < 0:
+        return
+    bsl_bslhdrs_path = Path(file[:index], "groups", "bsl", "bsl+bslhdrs")
+    # add all the headers in 'bsl+bslhdrs' to 'component_files'
+    for h_file in Path(bsl_bslhdrs_path).glob("*.h"):
+        if h_file.is_file():
+            component_name = h_file.stem
+            if component_name in component_files:
+                continue
+            component_files[component_name] = {".h": str(h_file)}
+    return
+
+
 def get_all_dependers(component_files):
     dependers = {}
     test_dependers = {}
@@ -102,9 +127,13 @@ def get_dependers_of_targets(
 ):
 
     def is_valid_target(target):
-        if target.endswith('.t'):
-            return target[:-2] in dependers.keys()
-        return target in dependers.keys()
+        # If 'target' is a 'bsl_bslhdrs' header, return True if and only if it
+        # is specified without '.t'.'''
+        component_name = target[:-2] if target.endswith('.t') else target
+        if component_name in component_files.keys() and \
+            list(component_files[component_name].keys()) == [".h"]:
+                return '.t' not in target
+        return component_name in dependers.keys()
 
     dependers_of_targets = set()
     for target in targets:
@@ -145,6 +174,11 @@ def get_dependers_of_target(
         dependers_of_target.update(dependers.get(component, set()))
         if output_targets:
             dependers_of_target.update(test_dependers.get(component, set()))
+
+    # remove any 'bsl+bslhdrs' "component" added
+    dependers_of_target = [depender for depender in dependers_of_target
+                           if depender not in component_files.keys() or
+                           list(component_files[depender].keys()) != [".h"]]
 
     if not output_targets:
         return dependers_of_target
