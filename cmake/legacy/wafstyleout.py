@@ -22,7 +22,11 @@ def unicodeWrite(out, str):
 def limitListLines(stringAsList, limit, name):
     if len(stringAsList) > limit:
         string = "\n".join(stringAsList[:limit])
-        string += f"\n###################################################################\n####### Too many {name} lines ({len(stringAsList)}) - truncating to {limit}\n###################################################################\n"
+        banner = "#" * 67
+        string += f"\n{banner}\n"                                    + \
+                  f"####### Too many {name} lines "                  + \
+                  f"({len(stringAsList)}) - truncating to {limit}\n" + \
+                  f"{banner}##\n"
     else:
         string = "\n".join(stringAsList)
 
@@ -114,7 +118,8 @@ if msg:
     if p.returncode == 0:
         marker_str = "WARNING"
     else:
-        if any("bde_runtest" in arg for arg in sys.argv):
+        # Use just "_runtest" here to match either the bde or bbs versions
+        if any("_runtest" in arg for arg in sys.argv):
             marker_str = "TEST"
         else:
             marker_str = "ERROR"
