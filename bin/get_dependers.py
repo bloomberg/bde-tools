@@ -19,7 +19,7 @@ def get_dependers(targets, output_targets, no_missing_target_warning=False):
     component_files = read_valid_components(compile_commands)
     if not component_files:
         return None
-    add_bsl_bslhdrs(component_files)
+    add_bsl_bslhdrs(compile_commands, component_files)
 
     dependers, test_dependers = get_all_dependers(component_files)
 
@@ -71,22 +71,28 @@ def read_valid_components(compile_commands):
     return components
 
 
-def add_bsl_bslhdrs(component_files):
+def add_bsl_bslhdrs(compile_commands, component_files):
     # Add all headers in 'bsl+bslhdrs' package to 'component_files' as if they
     # are valid components
-    if not component_files:
+
+    bsl_bslhdrs_path = None
+    for command in compile_commands:
+        for switch in command["command"].split():
+            # The include path switch is /I or -I for all compilers (msvc, gcc, clang, xlC, sun CC)
+            if len(switch) > 2 and switch[1] == 'I' and switch.endswith("bsl+bslhdrs"):
+                bsl_bslhdrs_path = Path(switch[2:])
+                if not bsl_bslhdrs_path.is_dir():
+                    continue
+                else:
+                    break
+        if bsl_bslhdrs_path:
+            break
+
+    if not bsl_bslhdrs_path:
         return
-    # get path to 'bsl+bslhdrs'
-    component_filenames =  next(iter(component_files.values()))
-    if not component_filenames:
-        return
-    file = next(iter(component_filenames.values()))
-    index = file.find('groups')
-    if index < 0:
-        return
-    bsl_bslhdrs_path = Path(file[:index], "groups", "bsl", "bsl+bslhdrs")
+
     # add all the headers in 'bsl+bslhdrs' to 'component_files'
-    for h_file in Path(bsl_bslhdrs_path).glob("*.h"):
+    for h_file in bsl_bslhdrs_path.glob("*.h"):
         if h_file.is_file():
             component_name = h_file.stem
             if component_name in component_files:
