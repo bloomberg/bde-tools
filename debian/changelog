@@ -1,10 +1,11 @@
 bde-tools (4.3.0.0) unstable; urgency=low
 
+  * 608c1e6 Changelog for version 4.3.0.0
   * 52f4197 Get dependers bsl+bslhdrs fix (#323)
   * 063afae Fix test runtime failure misclassification (#322)
   * a363755 'get-dependers' handle bsl+bslhdrs (DRQS 174213551) (#321)
 
- -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Thu, 8 Feb 2024 12:17:33 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 17 Feb 2024 12:53:23 -0500
 
 bde-tools (4.2.0.0) git; urgency=low
 
