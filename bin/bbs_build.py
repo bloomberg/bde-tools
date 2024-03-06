@@ -311,7 +311,7 @@ def wrapper():
                the build system generates the name using the
                current platform, compiler, and ufid. The generated
                build directory looks like this:
-               "./_build/unix-linux-x86_64-2.6.32-gcc-5.4.0-opt_64_cpp17"
+               "./_build/unix-linux-x86_64-2.6.32-gcc-11.0.0-opt_64_cpp20"
                '''
     )
 
@@ -349,7 +349,7 @@ def wrapper():
         "-u",
         "--ufid",
         help = '''
-               Unified Flag IDentifier (e.g. "opt_dbg_64_cpp17"). See
+               Unified Flag IDentifier (e.g. "opt_dbg_64_cpp20"). See
                bde-tools documentation.
                '''
     )

@@ -40,12 +40,12 @@ build.
       Available profiles:
       0: BBToolchain64 (default)
          Toolchain:     /<refroot_path>/opt/bb/share/plink/BBToolchain64.cmake
-         Properties:    {'noexc': False, 'bitness': 64, 'standard': 'cpp17', 'sanitizer': False, 'assert_level': 'default', 'review_level': 'default'}
+         Properties:    {'noexc': False, 'bitness': 64, 'standard': 'cpp20', 'sanitizer': False, 'assert_level': 'default', 'review_level': 'default'}
          Description:   Production toolchain for dpkg builds, 64-bit.
 
       1: BBToolchain32
          Toolchain:     /<refroot_path>/opt/bb/share/plink/BBToolchain32.cmake
-         Properties:    {'noexc': False, 'bitness': 32, 'standard': 'cpp17', 'sanitizer': False, 'assert_level': 'default', 'review_level': 'default'}
+         Properties:    {'noexc': False, 'bitness': 32, 'standard': 'cpp20', 'sanitizer': False, 'assert_level': 'default', 'review_level': 'default'}
          Description:   Production toolchain for dpkg builds, 32-bit.
 
 Configure, build and test BDE 

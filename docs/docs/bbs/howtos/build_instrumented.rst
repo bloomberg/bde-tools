@@ -39,7 +39,7 @@ libraries/application with no additional configuration.
 
 .. code-block:: shell
 
-   $ eval `bbs_build_env -u dbg_asan_64_cpp17`
+   $ eval `bbs_build_env -u dbg_asan_64_cpp20`
 
 * Build and run BDE tests:
 
@@ -86,7 +86,7 @@ configuring this compiler.
 
 .. code-block:: shell
 
-   $ eval `bbs_build_env -u dbg_asan_64_cpp17 -p Clang-13-rt`
+   $ eval `bbs_build_env -u dbg_asan_64_cpp20 -p Clang-13-rt`
 
 }}}
 {{{ oss
@@ -107,7 +107,7 @@ with all necessary support for sanitizers
 
 .. code-block:: shell
 
-   $ eval `bbs_build_env -u dbg_asan_64_cpp17`
+   $ eval `bbs_build_env -u dbg_asan_64_cpp20`
 
 * Build and run BDE tests:
 
