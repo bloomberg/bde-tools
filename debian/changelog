@@ -1,8 +1,14 @@
-bde-tools (4.4.0.0) unstable; urgency=low
+bde-tools (4.4.1.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 6 Mar 2024 13:57:25 -0500
+
+bde-tools (4.4.0.0) git; urgency=low
+
+  * f8c0e59 Changelog for version 4.4.0.0
   * d2576d0 Changelog for version 4.4.0.0
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Sun, 3 Mar 2024 17:37:38 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Sun, 3 Mar 2024 17:38:33 -0500
 
 bde-tools (4.3.0.0) git; urgency=low
 
