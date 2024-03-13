@@ -45,6 +45,7 @@ string(CONCAT DEFAULT_CXX_FLAGS
        "-fdiagnostics-show-option "
        "-fno-strict-aliasing "
        "-fno-omit-frame-pointer "
+       "-fno-var-tracking "
        ${CXX_WARNINGS}
       )
 
