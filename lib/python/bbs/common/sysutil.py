@@ -81,7 +81,7 @@ def unversioned_platform():
     if s == "win32" or s == "os2":
         return s
 
-    return re.split("\d+$", s)[0]
+    return re.split(r"\d+$", s)[0]
 
 
 def is_mingw_environment():

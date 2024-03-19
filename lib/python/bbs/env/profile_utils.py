@@ -331,7 +331,7 @@ def get_compiler_version(compiler_type, cxx_path):
 
     if "clang" == compiler_type:
         version = get_command_output([cxx_path, "--version"])
-        m = re.search("version\s+([0-9\.]+)", version)
+        m = re.search(r"version\s+([0-9\.]+)", version)
         version = m.group(1) if m else "0.0.0"
 
     return version
