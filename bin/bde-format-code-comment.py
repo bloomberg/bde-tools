@@ -88,7 +88,7 @@ def main():
 
     # Check if we're outside a balanced '//..' set
 
-    if len(re.findall("(//\.\.)", text[: code_block_span[0]])) % 2 == 1:
+    if len(re.findall(r"(//\.\.)", text[: code_block_span[0]])) % 2 == 1:
         print(doBdeFormat(args, text))
         sys.exit(0)
 
@@ -140,7 +140,7 @@ def main():
 
         l = re.sub(f"{linesep}[ ]{{{code_offset + 2}}}", linesep, l)
         l = l.replace(linesep, linesep + " " * code_offset + "//")
-        match = re.search("offset='(\d+)'", l)
+        match = re.search(r"offset='(\d+)'", l)
         if match:
             offset = int(match.group(1))
             if offset < min_offset or offset >= max_offset:
