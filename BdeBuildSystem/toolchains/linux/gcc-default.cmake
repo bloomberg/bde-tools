@@ -26,6 +26,7 @@ set(CXX_WARNINGS
     "-Wpacked "
     "-Wparentheses "
     "-Wpointer-arith "
+    "-Wreorder "
     "-Wsign-compare "
     "-Wstrict-overflow=1 "
     "-Wtype-limits "
