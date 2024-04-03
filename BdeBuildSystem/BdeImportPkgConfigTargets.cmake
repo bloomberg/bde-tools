@@ -284,6 +284,14 @@ macro ( _bbs_pcimport_import_line match resultlist line )
         string( REGEX REPLACE "[<>=]=?[ ]*([.0-9]+\\.*)+" "" output "${CMAKE_MATCH_1}" )
       endif()
       string( STRIP "${output}" output )
+
+
+      if(CMAKE_SYSTEM_NAME STREQUAL "SunOS" AND
+         CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+         # gcc on sun does not understand -mt flag
+         string( REPLACE "-mt" "" output ${output})
+      endif()
+
       if ( output )
         string( REPLACE " " ";" ${resultlist} "${output}") #convert string to ; separated list
         if( IMPORT_LINE_SPLIT_CSV )
