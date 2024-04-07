@@ -1,7 +1,14 @@
-bde-tools (4.5.0.0) unstable; urgency=low
+bde-tools (4.6.0.0) unstable; urgency=low
 
+  * 397b29e Python: Raw strings fix errors from invalid escape sequences (#326)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 13 Mar 2024 14:35:26 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 3 Apr 2024 11:46:02 -0400
+
+bde-tools (4.5.0.0) git; urgency=low
+
+  * ddcef5d Changelog for version 4.5.0.0
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 13 Mar 2024 14:39:03 -0400
 
 bde-tools (4.4.1.0) git; urgency=low
 
