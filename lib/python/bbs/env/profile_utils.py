@@ -217,7 +217,7 @@ def get_production_profiles(uplid):
                             "properties": {
                                 "noexc": false,
                                 "bitness": 64,
-                                "standard": "cpp17",
+                                "standard": "cpp20",
                                 "sanitizer": false
                             }
                         },
@@ -228,7 +228,7 @@ def get_production_profiles(uplid):
                             "properties": {
                                 "noexc": false,
                                 "bitness": 32,
-                                "standard" : "cpp17",
+                                "standard" : "cpp20",
                                 "sanitizer": false
                             }
                         }
