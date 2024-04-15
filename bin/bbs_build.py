@@ -636,6 +636,9 @@ def ufid_to_cmake_flags(ufid_str):
     if ufid.is_set("cpp23"):
         cmake_flags.append("-DBDE_BUILD_TARGET_CPP23=1")
 
+    if ufid.is_set("cpp26"):
+        cmake_flags.append("-DBDE_BUILD_TARGET_CPP26=1")
+
     return cmake_flags
 
 

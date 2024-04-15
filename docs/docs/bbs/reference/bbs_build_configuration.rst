@@ -132,6 +132,7 @@ The following flags are recognized by BBS tools:
    "cpp17", "CMAKE_CXX_STANDARD=17", "Build with support for C++17 features"
    "cpp20", "CMAKE_CXX_STANDARD=20", "Build with support for C++20 features"
    "cpp23", "CMAKE_CXX_STANDARD=23", "Build with support for C++23 features"
+   "cpp26", "CMAKE_CXX_STANDARD=26", "Build with support for C++26 features"
 
 For example, the UFID ``dbg_64_pic`` represents a build
 configuration that enables debugging symbols, enables multi-threading

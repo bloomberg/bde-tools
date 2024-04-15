@@ -234,7 +234,7 @@ def populate_ufid(ufid_str, profile):
                     return None
 
     # Validating and populating CXX standards flags
-    cxx_standards = ["cpp03", "cpp11", "cpp14", "cpp17", "cpp20", "cpp23", ]
+    cxx_standards = ["cpp03", "cpp11", "cpp14", "cpp17", "cpp20", "cpp23", "cpp26" ]
     value = properties.get("standard")
     if value is None:
         for flag in cxx_standards:

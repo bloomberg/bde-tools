@@ -55,6 +55,7 @@ class Ufid():
         "cpp17": (BACK + 13, "Build with support for C++17 features"),
         "cpp20": (BACK + 14, "Build with support for C++20 features"),
         "cpp23": (BACK + 15, "Build with support for C++23 features"),
+        "cpp26": (BACK + 16, "Build with support for C++26 features"),
     }
 
     def __init__(self, flags=[]):
@@ -75,7 +76,7 @@ class Ufid():
         if len(self.flags.intersection({ "32", "64"})) > 1:
             raise blderror.InvalidUfidError("Multiple bitness in ufid")
 
-        if len(self.flags.intersection({ "cpp03", "cpp11", "cpp14", "cpp17", "cpp20", "cpp23"})) > 1:
+        if len(self.flags.intersection({ "cpp03", "cpp11", "cpp14", "cpp17", "cpp20", "cpp23", "cpp26"})) > 1:
             raise blderror.InvalidUfidError("Multiple cpp standards in ufid")
 
     @classmethod
