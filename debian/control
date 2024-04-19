@@ -30,6 +30,7 @@ Description: GDB Pretty printers for Bloomberg components
 Package: bbs-cmake-module
 Architecture: all
 Depends:
-    cmake-gen-bde-metadata
+    cmake-gen-bde-metadata,
+    python3.8
 Description: BdeBuildSystem CMake module
  CMake module to process metadata in BDE-style repositories.
