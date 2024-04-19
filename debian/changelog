@@ -1,8 +1,15 @@
-bde-tools (4.6.0.0) unstable; urgency=low
+bde-tools (4.7.0.0) unstable; urgency=low
 
+  * c6e2611 Add conanfile.py (#328)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 19 Apr 2024 10:22:54 -0400
+
+bde-tools (4.6.0.0) git; urgency=low
+
+  * d786e19 Changelog for version 4.6.0.0
   * 397b29e Python: Raw strings fix errors from invalid escape sequences (#326)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 3 Apr 2024 11:46:02 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Sun, 7 Apr 2024 19:39:32 -0400
 
 bde-tools (4.5.0.0) git; urgency=low
 
