@@ -1,8 +1,15 @@
-bde-tools (4.7.0.0) unstable; urgency=low
+bde-tools (4.8.0.0) unstable; urgency=low
 
+  * 4fb3b76 'get-dependers' overhaul (DRQS 174235626) (#324)
+
+ -- Harold Bott <hbott1@bloomberg.net>  Fri, 26 Apr 2024 10:58:22 -0400
+
+bde-tools (4.7.0.0) git; urgency=low
+
+  * 292a28c Changelog for version 4.7.0.0
   * c6e2611 Add conanfile.py (#328)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 19 Apr 2024 10:22:54 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 19 Apr 2024 17:52:17 -0400
 
 bde-tools (4.6.0.0) git; urgency=low
 
