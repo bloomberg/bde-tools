@@ -9,29 +9,17 @@ if(NOT DEFINED DISTRIBUTION_REFROOT)
     endif()
 endif()
 
+# We converged on the compilation flags with the production toolchains on all platforms.
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain64.cmake")
-
-    string(APPEND CMAKE_C_FLAGS   " -fno-strict-aliasing")
-    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
-
-    string(APPEND CMAKE_CXX_FLAGS " -fno-strict-aliasing")
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "AIX")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain64.cmake")
-
-    string(APPEND CMAKE_C_FLAGS   " -qalias=noansi")
-    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
-
-    string(APPEND CMAKE_CXX_FLAGS " -qalias=noansi")
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain64.cmake")
-    # Nothing to do on Sun.
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
