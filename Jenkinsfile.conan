@@ -1,0 +1,61 @@
+#!groovy
+
+// ***************************************************************
+// This is an internal Bloomberg Conan recipe.                   *
+// This recipe does not work outside of Bloomberg infrastructure *
+// ***************************************************************
+
+library identifier: "conan-pipeline@main",
+        retriever: modernSCM([
+            $class: 'GitSCMSource',
+            remote: "https://bbgithub.dev.bloomberg.com/conan/conan-pipeline",
+            credentialsId: 'bbgithub_token'
+    ])
+
+jobInfo.failIfBranchIndexing()
+
+node('WINDOWS') {
+    try {
+        stage('Checkout') {
+            checkout scm
+        }
+
+        withConan { conan ->
+            stage('Create package(s)') {
+                conan.profile.detect()
+
+                String user = 'test'
+                String channel = 'unstable'
+
+                if (env.CHANGE_ID) {
+                    user = 'pr'
+                    channel = "pr-${env.CHANGE_ID}"
+                }
+
+                conan.create(name: 'bde-tools',
+                             user:    user,
+                             channel: channel,
+                             '-o:a':  '*:dependency_user_channel=test/unstable')
+                conan.create(name: 'bbs-cmake-module',
+                             user:    user,
+                             channel: channel,
+                             '-o:a':  '*:dependency_user_channel=test/unstable')
+            }
+            stage('Publish package(s)') {
+                Boolean dryRun = true
+
+                if ((env.BRANCH_NAME ?: '').startsWith('releases/') && debian.isChangelogUpdated()) {
+                    dryRun = false
+                }
+
+                conan.remoteBbConan { remote ->
+                    remote.upload(dryRun: dryRun, pattern: 'bde-tools')
+                    remote.upload(dryRun: dryRun, pattern: 'bbs-cmake-module')
+                }
+            }
+        }
+    }
+    finally {
+        deleteDir()
+    }
+}
