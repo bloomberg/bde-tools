@@ -53,6 +53,19 @@ string(CONCAT DEFAULT_C_FLAGS
        "-fno-strict-aliasing "
       )
 
+if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm")
+    # Compiling with GCC on darwin requires -ld_classic
+    string(CONCAT DEFAULT_CXX_FLAGS
+        "${DEFAULT_CXX_FLAGS} "
+        "-ld_classic "
+        )
+    string(CONCAT DEFAULT_C_FLAGS
+        "${DEFAULT_C_FLAGS} "
+        "-ld_classic "
+        )
+endif()
+
+
 # Include BDE ufid presets
 include("${CMAKE_CURRENT_LIST_DIR}/gcc-bde-presets.cmake")
 

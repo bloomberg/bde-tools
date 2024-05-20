@@ -42,7 +42,6 @@ set(CXX_WARNINGS
 
 string(CONCAT DEFAULT_CXX_FLAGS
        "${DEFAULT_CXX_FLAGS} "
-       "-march=westmere "
        "-fdiagnostics-show-option "
        "-fno-strict-aliasing "
        "-fno-omit-frame-pointer "
@@ -52,10 +51,20 @@ string(CONCAT DEFAULT_CXX_FLAGS
 
 string(CONCAT DEFAULT_C_FLAGS
        "${DEFAULT_C_FLAGS} "
-       "-march=westmere "
        "-fdiagnostics-show-option "
        "-fno-strict-aliasing "
       )
+
+if (NOT ${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm|aarch")
+    string(CONCAT DEFAULT_CXX_FLAGS
+        "${DEFAULT_CXX_FLAGS} "
+        "-march=westmere "
+        )
+    string(CONCAT DEFAULT_C_FLAGS
+        "${DEFAULT_C_FLAGS} "
+        "-march=westmere "
+        )
+endif()
 
 # Include BDE ufid presets
 include("${CMAKE_CURRENT_LIST_DIR}/gcc-bde-presets.cmake")

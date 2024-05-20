@@ -7,7 +7,7 @@
 # BDE or other wrappers (bbcmake) or by plain cmake.
 
 if (NOT BDE_BUILD_TARGET_32 AND NOT BDE_BUILD_TARGET_64)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    if(${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "64")
         # 64 bit
         set(BDE_BUILD_TARGET_64 ON CACHE INTERNAL "" FORCE)
     else()
@@ -15,26 +15,38 @@ if (NOT BDE_BUILD_TARGET_32 AND NOT BDE_BUILD_TARGET_64)
     endif()
 endif()
 
-if(BDE_BUILD_TARGET_64)
-    string(CONCAT DEFAULT_CXX_FLAGS
-           "${DEFAULT_CXX_FLAGS} "
-           "-m64 "
-           )
-    string(CONCAT DEFAULT_C_FLAGS
-           "${DEFAULT_C_FLAGS} "
-           "-m64 "
-           )
-endif()
+if (NOT ${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm")
+    if(BDE_BUILD_TARGET_64)
+        string(CONCAT DEFAULT_CXX_FLAGS
+            "${DEFAULT_CXX_FLAGS} "
+            "-m64 "
+            )
+        string(CONCAT DEFAULT_C_FLAGS
+            "${DEFAULT_C_FLAGS} "
+            "-m64 "
+            )
+    endif()
 
-if(BDE_BUILD_TARGET_32)
-    string(CONCAT DEFAULT_CXX_FLAGS
-           "${DEFAULT_CXX_FLAGS} "
-           "-m32 "
-           )
-    string(CONCAT DEFAULT_C_FLAGS
-           "${DEFAULT_C_FLAGS} "
-           "-m32 "
-           )
+    if(BDE_BUILD_TARGET_32)
+        string(CONCAT DEFAULT_CXX_FLAGS
+            "${DEFAULT_CXX_FLAGS} "
+            "-m32 "
+            )
+        string(CONCAT DEFAULT_C_FLAGS
+            "${DEFAULT_C_FLAGS} "
+            "-m32 "
+            )
+    endif()
+else()
+    if(${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "64")
+        if (NOT BDE_BUILD_TARGET_64)
+            message(FATAL_ERROR "Cross-compiling on ARM is not supported.")
+        endif()
+    else()
+        if (NOT BDE_BUILD_TARGET_32)
+            message(FATAL_ERROR "Cross-compiling on ARM is not supported.")
+        endif()
+    endif()
 endif()
 
 

@@ -7,7 +7,7 @@
 # BDE or other wrappers (bbcmake) or by plain cmake.
 
 if (NOT BDE_BUILD_TARGET_32 AND NOT BDE_BUILD_TARGET_64)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    if(${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "64")
         # 64 bit
         set(BDE_BUILD_TARGET_64 ON CACHE INTERNAL "" FORCE)
     else()
