@@ -1,8 +1,18 @@
-bde-tools (4.8.0.0) unstable; urgency=low
+bde-tools (4.9.0.0) unstable; urgency=low
 
+  * 808ff2a Linux on arm + various fixes (#332)
+  * e407ff4 Update compiler versions range
+  * f54ceda Add Conan Jenkins file. (#329)
+  * 113dc4f Remove duplicated flags from BDE dpkg toolchains (#331)
+
+ -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Mon, 20 May 2024 12:50:25 -0400
+
+bde-tools (4.8.0.0) git; urgency=low
+
+  * 746d9a2 Changelog for version 4.8.0.0
   * 4fb3b76 'get-dependers' overhaul (DRQS 174235626) (#324)
 
- -- Harold Bott <hbott1@bloomberg.net>  Fri, 26 Apr 2024 10:58:22 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 26 Apr 2024 13:58:44 -0400
 
 bde-tools (4.7.0.0) git; urgency=low
 
