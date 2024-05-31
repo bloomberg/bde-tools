@@ -9,7 +9,7 @@ from conan import ConanFile
 from conan.tools.cmake import CMake
 
 class Package(ConanFile):
-    python_requires = "conan-dpkg-recipe/[>=0.7]@test/unstable"
+    python_requires = "conan-dpkg-recipe/[>=0.9]@test/unstable"
     python_requires_extend = "conan-dpkg-recipe.DPKGConan"
 
     def init(self):
