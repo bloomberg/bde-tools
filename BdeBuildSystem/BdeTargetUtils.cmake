@@ -411,14 +411,16 @@ function (bbs_emit_check_cycles target)
         add_dependencies(check_cycles ${uor_name}.check_cycles)
     endif()
 endfunction()
+
 #.rst:
 # .. command:: bbs_setup_target_uor
 #
-# Parse metadata and populate UOR target.
-# This command is a bbs equivalent of configure_bb_target().
-# CUSTOM_PACKAGES - list of packages that provide their custom CML
-# PRIVATE_PACKAGES - list of packages that provide implementation details
-#                    headers for those packages should not be installed.
+#  Parse metadata and populate UOR target.
+#  This command is a bbs equivalent of configure_bb_target().
+#
+#  * CUSTOM_PACKAGES  list of packages that provide their custom CML
+#  * PRIVATE_PACKAGES  list of packages that provide implementation details
+#    headers for those packages should not be installed.
 function(bbs_setup_target_uor target)
     cmake_parse_arguments(PARSE_ARGV 1
                           ""
