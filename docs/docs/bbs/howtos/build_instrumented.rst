@@ -81,7 +81,7 @@ Installing and Configuring a Compiler for an Instrumented Build
 .. note::
 
    Clang compilers require special run-time libraries to be linked with the
-   instrumented code.  Thos run-time libraries are not deployed by default
+   instrumented code.  Those run-time libraries are not deployed by default
    in the Bloomberg environment.
 
 Instrumented build with a "custom" compiler should start with installing and
