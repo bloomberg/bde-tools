@@ -51,8 +51,17 @@ compiler, and installation prefix are unique for each build configuration.
 
 Usage Examples
 --------------
+1. ``bbs_build_env list``
 
-1. ``eval `bbs_build_env -p gcc-9.0.0 -u dbg_64 -i ~/bde-install```
+   List the selection of compilers available in the environment.
+
+   These compilers may be provided using the ``-p`` option when configuring
+   the environment (see below).  Additional compilers can be manually configured
+   into this list by editing ``~/.bbs_build_profiles``.  See
+   :doc:`../howtos/configure_profile`.
+   
+
+2. ``eval `bbs_build_env -p gcc-9.0.0 -u dbg_64 -i ~/bde-install```
 
    Set up the environment variables so that the ``bbs_build`` build tool uses
    the build profile named ``gcc-9.0.0`` (assuming that build profile with this

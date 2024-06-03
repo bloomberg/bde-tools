@@ -11,7 +11,7 @@ The :ref:`ufid` options related to sanitizers are:
 .. csv-table::
    :header: "UFID flag", "Sanitizer"
    :align: left
-   
+
    "asan",  "Build with address sanitizer"
    "msan",  "Build with memory sanitizer"
    "tsan",  "Build with thread sanitizer"
@@ -19,11 +19,11 @@ The :ref:`ufid` options related to sanitizers are:
 
 The main difficulty with sanitized build is the proper compiler deployment on
 the build host - some compilers require special versions of the compiler
-libraries to be available at link/run time. 
+libraries to be available at link/run time.
 
-{{{ internal
 Build with a Default Compiler
 -----------------------------
+{{{ internal
 The default gcc compiler installed on the build hosts can build instrumented
 libraries/application with no additional configuration.
 
@@ -33,7 +33,18 @@ libraries/application with no additional configuration.
 
    $ git clone bbgithub:bde/bde
    $ cd bde
+}}}
+{{{ oss
+Make sure that compiler you use for instrumented build is installed
+with all necessary support for sanitizers
 
+* Clone the `bde <https://github.com/bloomberg/bde>`_ repository:
+
+.. code-block:: shell
+
+   $ git clone https://github.com/bloomberg/bde.git
+   $ cd bde
+}}}
 
 * Configure build with an address sanitizer:
 
@@ -47,10 +58,31 @@ libraries/application with no additional configuration.
 
    $ plocum bbs_build --target all.t --test run
 
-Configuring a Compiler for an Instrumented Build
-------------------------------------------------
-Clang compilers require special run-time libraries to be linked with the
-instrumented code that are not deployed by default.
+* Build and test as usual.
+
+{{{ internal
+.. note::
+
+   ``ERROR: Ufid flag asan cannot be used with profile BBToolchain64``
+
+   If you see a similar error, you should use the ``-p`` option with ``bbs_build_env``
+   to select different toolchain (see :doc:`../tools/bbs_build_env`).
+
+This is because the compiler-toolchain used for production builds does **not** support santizer UFIDs.
+These will typically be the default compiler-toolchain if you are building in a refroot (like
+``dpkg-distro-dev build``).
+}}}
+
+
+{{{ internal
+Installing and Configuring a Compiler for an Instrumented Build
+---------------------------------------------------------------
+
+.. note::
+
+   Clang compilers require special run-time libraries to be linked with the
+   instrumented code.  Thos run-time libraries are not deployed by default
+   in the Bloomberg environment.
 
 Instrumented build with a "custom" compiler should start with installing and
 configuring this compiler.
@@ -58,7 +90,7 @@ configuring this compiler.
 * Install refroot with the compiler and necessary compiler libraries:
 
 .. code-block:: shell
-    
+
    $ refroot-install --distribution=unstable --yes --arch amd64 \
       --package clang-13.0 --package compiler-rt-13.0 \
       --refroot-path=<refroot_path>
@@ -87,34 +119,4 @@ configuring this compiler.
 .. code-block:: shell
 
    $ eval `bbs_build_env -u dbg_asan_64_cpp20 -p Clang-13-rt`
-
 }}}
-{{{ oss
-Build with sanitizers
----------------------
-Make sure that compiler you use for instrumented build is installed
-with all necessary support for sanitizers
-
-* Clone the `bde <https://github.com/bloomberg/bde>`_ repository:
-
-.. code-block:: shell
-
-   $ git clone https://github.com/bloomberg/bde.git
-   $ cd bde
-
-
-* Configure build with an address sanitizer:
-
-.. code-block:: shell
-
-   $ eval `bbs_build_env -u dbg_asan_64_cpp20`
-
-* Build and run BDE tests:
-
-.. code-block:: shell
-
-   $ bbs_build --target all.t --test run
-
-}}}
-
-* Build and test as usual.
