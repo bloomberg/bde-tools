@@ -1,4 +1,5 @@
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -180,11 +181,11 @@ class _Worker(threading.Thread):
                 self._ctx.log.debug_case(self._case, "DOES NOT EXIST")
                 self._status.notify_done()
                 return
-            elif rc == 0:
-                self._ctx.log.record_success(self._case, rc, decode_text(out))
-            else:
+            elif rc != 0 or re.search("runtime error:", decode_text(err)) is not None:
                 self._ctx.log.record_failure(self._case, rc, decode_text(out))
                 self._status.set_failure()
+            else:
+                self._ctx.log.record_success(self._case, rc, decode_text(out))
 
 
 class Runner(object):
