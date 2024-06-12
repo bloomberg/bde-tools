@@ -1,11 +1,19 @@
-bde-tools (4.9.0.0) unstable; urgency=low
+bde-tools (4.10.0.0) unstable; urgency=low
 
+  * 2a7b05a Handle "runtime error:" as a test failure (#334)
+  * b3cca33 Add a note about production toolchains for sanitizer builds (#333)
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 11 Jun 2024 09:42:28 -0400
+
+bde-tools (4.9.0.0) git; urgency=low
+
+  * 4bfe6cc Changelog for version 4.9.0.0
   * 808ff2a Linux on arm + various fixes (#332)
   * e407ff4 Update compiler versions range
   * f54ceda Add Conan Jenkins file. (#329)
   * 113dc4f Remove duplicated flags from BDE dpkg toolchains (#331)
 
- -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Mon, 20 May 2024 12:50:25 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 23 May 2024 14:28:15 -0400
 
 bde-tools (4.8.0.0) git; urgency=low
 
