@@ -155,15 +155,22 @@ function(bbs_configure_target_tests target)
     cmake_parse_arguments(""
                           ""
                           ""
-                          "SOURCES;TEST_DEPS;LABELS"
+                          "TEST_SOURCES;GTEST_SOURCES;TEST_DEPS;LABELS"
                           ${ARGN})
     bbs_assert_no_unparsed_args("")
 
-    if (_SOURCES)
+    if (_TEST_SOURCES)
         bbs_add_component_tests(${target}
-                                    SOURCES   ${_SOURCES}
-                                    TEST_DEPS ${_TEST_DEPS}
-                                    LABELS    ${_LABELS})
+                                TEST_SOURCES  ${_TEST_SOURCES}
+                                TEST_DEPS     ${_TEST_DEPS}
+                                LABELS        ${_LABELS})
+        set(${target}_TEST_TARGETS "${${target}_TEST_TARGETS}" PARENT_SCOPE)
+    endif()
+    if (_GTEST_SOURCES)
+        bbs_add_component_gtests(${target}
+                                 GTEST_SOURCES ${_GTEST_SOURCES}
+                                 TEST_DEPS     ${_TEST_DEPS}
+                                 LABELS        ${_LABELS})
         set(${target}_TEST_TARGETS "${${target}_TEST_TARGETS}" PARENT_SCOPE)
     endif()
 endfunction()
@@ -558,12 +565,13 @@ function(bbs_setup_target_uor target)
 
                     if (NOT _SKIP_TESTS)
                         bbs_configure_target_tests(${pkg}
-                                                   SOURCES   ${${pkg}_TEST_SOURCES}
-                                                   TEST_DEPS ${${pkg}_DEPENDS}
-                                                             ${${pkg}_TEST_DEPENDS}
-                                                             ${${uor_name}_PCDEPS}
-                                                             ${${uor_name}_TEST_PCDEPS}
-                                                   LABELS    "all" ${target} ${pkg})
+                                                   TEST_SOURCES   ${${pkg}_TEST_SOURCES}
+                                                   GTEST_SOURCES  ${${pkg}_GTEST_SOURCES}
+                                                   TEST_DEPS      ${${pkg}_DEPENDS}
+                                                                  ${${pkg}_TEST_DEPENDS}
+                                                                  ${${uor_name}_PCDEPS}
+                                                                  ${${uor_name}_TEST_PCDEPS}
+                                                   LABELS         "all" ${target} ${pkg})
                     endif()
                 endif()
             endforeach()
@@ -579,6 +587,7 @@ function(bbs_setup_target_uor target)
 
             if (NOT _SKIP_TESTS)
                 set(import_test_deps ON)
+                set(import_gtest_deps ON)
                 foreach(pkg ${${uor_name}_PACKAGES})
                     if (${pkg}_TEST_TARGETS)
                         if (NOT TARGET ${target}.t)
@@ -590,6 +599,13 @@ function(bbs_setup_target_uor target)
                             # one generated test target
                             bbs_import_target_dependencies(${target} ${${uor_name}_TEST_PCDEPS})
                             set(import_test_deps OFF)
+                        endif()
+                        if (${pkg}_GTEST_SOURCES)
+                            if (import_gtest_deps)
+                                # Import UOR test dependencies only once and only if we have gtests
+                                bbs_import_target_dependencies(${target} gtest)
+                                set(import_gtest_deps OFF)
+                            endif()
                         endif()
                     endif()
                 endforeach()
@@ -608,12 +624,16 @@ function(bbs_setup_target_uor target)
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
             if (NOT _SKIP_TESTS)
                 bbs_configure_target_tests(${target}
-                                           SOURCES    ${${uor_name}_TEST_SOURCES}
-                                           TEST_DEPS  ${${uor_name}_PCDEPS}
-                                                      ${${uor_name}_TEST_PCDEPS}
-                                           LABELS     "all" ${target})
+                                           TEST_SOURCES   ${${uor_name}_TEST_SOURCES}
+                                           GTEST_SOURCES  ${${uor_name}_GTEST_SOURCES}
+                                           TEST_DEPS      ${${uor_name}_PCDEPS}
+                                                          ${${uor_name}_TEST_PCDEPS}
+                                           LABELS         "all" ${target})
                 if (${target}_TEST_TARGETS)
                     bbs_import_target_dependencies(${target} ${${uor_name}_TEST_PCDEPS})
+                endif()
+                if (${target}_GTEST_SOURCES)
+                    bbs_import_target_dependencies(${target} gtest)
                 endif()
             endif()
         endif()
@@ -720,10 +740,11 @@ function(bbs_setup_target_uor target)
         # Set up tests and link against the private library
         if (NOT _SKIP_TESTS)
             bbs_configure_target_tests(${lib_target}
-                                       SOURCES    ${${uor_name}_TEST_SOURCES}
-                                       TEST_DEPS  ${${uor_name}_PCDEPS}
-                                                  ${${uor_name}_TEST_PCDEPS}
-                                       LABELS     "all" ${target})
+                                       TEST_SOURCES   ${${uor_name}_TEST_SOURCES}
+                                       GTEST_SOURCES  ${${uor_name}_GTEST_SOURCES}
+                                       TEST_DEPS      ${${uor_name}_PCDEPS}
+                                                      ${${uor_name}_TEST_PCDEPS}
+                                       LABELS         "all" ${target})
             if (TARGET ${lib_target}.t)
                 if (NOT TARGET ${target}.t)
                     add_custom_target(${target}.t)

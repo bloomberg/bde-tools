@@ -68,12 +68,12 @@ endfunction()
 #[[.rst:
 .. command:: bbs_add_component_tests
 
-Generate build targets [executables] for the specified ``SOURCES``, add them as
+Generate build targets [executables] for the specified ``TEST_SOURCES``, add them as
 BDE tests and generate necessary build dependencies and test labels.
 
 .. code-block:: cmake
 
-   bbs_add_component_tests(target SOURCES source1.t.cpp [source2.t.cpp ...]
+   bbs_add_component_tests(target TEST_SOURCES source1.t.cpp [source2.t.cpp ...]
                            [ WORKING_DIRECTORY      dir            ]
                            [ TEST_VERBOSITY         verbosity      ]
                            [ EXTRA_ARGS             test_arg   ... ]
@@ -88,16 +88,16 @@ function(bbs_add_component_tests target)
                           ""
                           ""
                           "TEST_VERBOSITY;TEST_REGEX"
-                          "EXTRA_ARGS;LABELS;SOURCES;TEST_DEPS")
+                          "EXTRA_ARGS;LABELS;TEST_SOURCES;TEST_DEPS")
     bbs_assert_no_unparsed_args("")
 
-    if (NOT _SOURCES)
+    if (NOT _TEST_SOURCES)
         message(FATAL_ERROR "No sources for the test ${target}")
     endif()
 
     set(test_targets)
 
-    foreach(test_src ${_SOURCES})
+    foreach(test_src ${_TEST_SOURCES})
         # Stripping all extentions from the test source ( including numbers
         # from the numbered tests )
         get_filename_component(test_name ${test_src} NAME_WE)
