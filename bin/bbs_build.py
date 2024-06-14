@@ -69,9 +69,16 @@ def get_msvc_env(version, bitness):
     result = {}
 
     bat_file = find_vcvars(version)
-    arch = "x86" if bitness == 32 else "x64"
+    host_arch = platform.machine().lower() # typically amd64 or arm64
+    if "arm" in host_arch:
+        target_arch = "arm" if bitness == 32 else "arm64"
+    else:
+        target_arch = "x86" if bitness == 32 else "amd64"
+
+    arch_arg = host_arch if host_arch == target_arch else f"{host_arch}_{target_arch}"
+
     process = subprocess.Popen(
-        [bat_file, arch, "&&", "set"], stdout=subprocess.PIPE, shell=True
+        [bat_file, arch_arg, "&&", "set"], stdout=subprocess.PIPE, shell=True
     )
     (out, err) = process.communicate()
 
