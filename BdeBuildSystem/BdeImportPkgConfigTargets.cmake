@@ -333,11 +333,24 @@ macro( _bbs_pcimport_deduce_libs targetname libflags )
   #split the flags into dirs, libraries and other flags
   set(${targetname}_libdirs "")
   set(${targetname}_misclinklibs "")
+  set(next_flag_as_is FALSE)
+
   foreach( ${targetname}_libflag ${${libflags}} )
+    if( next_flag_as_is )
+      # Take the flag after --framework as-is
+      list( APPEND ${targetname}_misclinklibs ${${targetname}_libflag} )
+      set(next_flag_as_is FALSE)
+      continue()
+    endif()
+
     if( ${targetname}_libflag MATCHES "^-L(.+)$" )
       list( APPEND ${targetname}_libdirs $ENV{PKG_CONFIG_SYSROOT_DIR}${CMAKE_MATCH_1} )
     elseif( ${targetname}_libflag MATCHES "^-l(.+)$" AND NOT ${targetname}_libflag IN_LIST _bbs_static_blacklist )
       list( APPEND ${targetname}_libs ${CMAKE_MATCH_1} )
+    elseif( ${targetname}_libflag MATCHES "-framework" )
+      # Take the flag after --framework as-is
+      list( APPEND ${targetname}_misclinklibs ${${targetname}_libflag} )
+      set(next_flag_as_is TRUE)
     elseif( ${targetname}_libflag MATCHES "^-(.+)$" )
       # add miscellaneous flags to the link line for the target
       list( APPEND ${targetname}_misclinklibs ${${targetname}_libflag} )
