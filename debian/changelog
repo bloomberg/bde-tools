@@ -1,9 +1,17 @@
-bde-tools (4.10.0.0) unstable; urgency=low
+bde-tools (4.11.0.0) unstable; urgency=low
 
+  * 42ef1af Add ARM support for MSVC (#335)
+  * 2a282f5 Add support for gtests (#325)
+
+ -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Fri, 14 Jun 2024 12:13:56 -0400
+
+bde-tools (4.10.0.0) git; urgency=low
+
+  * 9da4f2c Changelog for version 4.10.0.0
   * 2a7b05a Handle "runtime error:" as a test failure (#334)
   * b3cca33 Add a note about production toolchains for sanitizer builds (#333)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 11 Jun 2024 09:42:28 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 12 Jun 2024 13:10:51 -0400
 
 bde-tools (4.9.0.0) git; urgency=low
 
