@@ -11,23 +11,25 @@ find_package(Perl)
 
 # Find sim_cpp11_features.pl.  It's ok if it's missing, as it will be during
 # dpkg builds.
-if(PERL_FOUND AND NOT WIN32)
-    message(TRACE
-            "Found perl version ${PERL_VERSION_STRING} at ${PERL_EXECUTABLE}")
-    find_program(SIM_CPP11
-                 "sim_cpp11_features.pl"
-                 PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
-                 )
-    if(SIM_CPP11)
-        message(STATUS "Found sim_cpp11_features.pl in ${SIM_CPP11}")
+if(NOT DEFINED SIM_CPP11)
+    if(PERL_FOUND AND NOT WIN32)
+        message(TRACE
+                "Found perl version ${PERL_VERSION_STRING} at ${PERL_EXECUTABLE}")
+        find_program(SIM_CPP11
+                     "sim_cpp11_features.pl"
+                     PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
+                     )
+        if(SIM_CPP11)
+            message(STATUS "Found sim_cpp11_features.pl in ${SIM_CPP11}")
 
-        option(BBS_CPP11_VERIFY_NO_CHANGE "Verify that sim_cpp11_features generates no changes" OFF)
+            option(BBS_CPP11_VERIFY_NO_CHANGE "Verify that sim_cpp11_features generates no changes" OFF)
+        else()
+            message(STATUS "${CMAKE_CURRENT_LIST_DIR}")
+            message(STATUS "sim_cpp11_features.pl not found - disabled")
+        endif()
     else()
-        message(STATUS "${CMAKE_CURRENT_LIST_DIR}")
-        message(STATUS "sim_cpp11_features.pl not found - disabled")
+        message(STATUS "Perl not found and/or on Windows - sim_cpp11_features.pl disabled")
     endif()
-else()
-    message(STATUS "Perl not found and/or on Windows - sim_cpp11_features.pl disabled")
 endif()
 
 option(BBS_USE_WAFSTYLEOUT "Use waf-style output wrapper" OFF)
@@ -53,14 +55,16 @@ else()
     set_property(GLOBAL PROPERTY BBS_CMD_WRAPPER "")
 endif()
 
-find_file(CHECK_CYCLES
-          "check_cycles.py"
-          PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
-          NO_DEFAULT_PATH
-          )
+if(NOT DEFINED CHECK_CYCLES)
+    find_file(CHECK_CYCLES
+              "check_cycles.py"
+              PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
+              NO_DEFAULT_PATH
+              )
 
-if(CHECK_CYCLES)
-    message(STATUS "Found check_cycles.py in ${CHECK_CYCLES}")
+    if(CHECK_CYCLES)
+        message(STATUS "Found check_cycles.py in ${CHECK_CYCLES}")
+    endif()
 endif()
 
 if (NOT BBS_UOR_CONFIG_IN)
