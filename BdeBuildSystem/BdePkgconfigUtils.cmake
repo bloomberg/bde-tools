@@ -37,10 +37,10 @@ function(bbs_uor_to_pc_name uor_name pc_name)
 
     if(DEFINED _uor_to_pkgconfig_map_${uor_name})
         set(${pc_name} ${_uor_to_pkgconfig_map_${uor_name}} PARENT_SCOPE)
+    else()
+        string(REPLACE "_" "-" sanitizedName "${uor_name}")
+        set(${pc_name} ${sanitizedName} PARENT_SCOPE)
     endif()
-
-    string(REPLACE "_" "-" sanitizedName "${uor_name}")
-    set(${pc_name} ${sanitizedName} PARENT_SCOPE)
 endfunction()
 
 #.rst
@@ -52,10 +52,10 @@ function(bbs_pc_to_uor_name pc_name uor_name )
     bbs_assert_no_extra_args()
     if(DEFINED _pkgconfig_to_uor_map_${pc_name})
         set(${uor_name} ${_pkgconfig_to_uor_map_${pc_name}} PARENT_SCOPE)
+    else()
+        string(REPLACE "-" "_" sanitizedName "${pc_name}")
+        set(${uor_name} ${sanitizedName} PARENT_SCOPE)
     endif()
-
-    string(REPLACE "-" "_" sanitizedName "${pc_name}")
-    set(${uor_name} ${sanitizedName} PARENT_SCOPE)
 endfunction()
 
 #.rst
