@@ -159,13 +159,20 @@ function(bbs_configure_target_tests target)
     cmake_parse_arguments(""
                           ""
                           ""
-                          "TEST_SOURCES;GTEST_SOURCES;TEST_DEPS;LABELS"
+                          "TEST_SOURCES;SOURCES;GTEST_SOURCES;TEST_DEPS;LABELS"
                           ${ARGN})
     bbs_assert_no_unparsed_args("")
 
     if (_TEST_SOURCES)
         bbs_add_component_tests(${target}
                                 TEST_SOURCES  ${_TEST_SOURCES}
+                                TEST_DEPS     ${_TEST_DEPS}
+                                LABELS        ${_LABELS})
+        set(${target}_TEST_TARGETS "${${target}_TEST_TARGETS}" PARENT_SCOPE)
+    endif()
+    if (_SOURCES)
+        bbs_add_component_tests(${target}
+                                TEST_SOURCES  ${_SOURCES}
                                 TEST_DEPS     ${_TEST_DEPS}
                                 LABELS        ${_LABELS})
         set(${target}_TEST_TARGETS "${${target}_TEST_TARGETS}" PARENT_SCOPE)
