@@ -1,9 +1,17 @@
-bde-tools (4.11.0.0) unstable; urgency=low
+bde-tools (4.11.1.0) unstable; urgency=low
 
+  * 51dd87e Don't repeatedly find sim_cpp11_features.pl and check_cycles.py (#337)
+  * 7d6e40f Handle --framework flag in .pc (#336)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 12 Jul 2024 16:14:43 -0400
+
+bde-tools (4.11.0.0) git; urgency=low
+
+  * fd6ea81 Changelog for version 4.11.0.0
   * 42ef1af Add ARM support for MSVC (#335)
   * 2a282f5 Add support for gtests (#325)
 
- -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Fri, 14 Jun 2024 12:13:56 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 10 Jul 2024 12:36:30 -0400
 
 bde-tools (4.10.0.0) git; urgency=low
 
