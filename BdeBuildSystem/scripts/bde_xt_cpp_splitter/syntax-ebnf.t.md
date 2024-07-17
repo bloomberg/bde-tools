@@ -75,15 +75,15 @@ forList
 
 forListItem
     : testCaseNumber
-    | testCaseNumberSliceNumber
+    | testCaseNumberSliceName
     ;
 
-testCaseNumberSliceNumber
-    : testCaseNumber "." sliceNumber
+testCaseNumberSliceName
+    : testCaseNumber "." sliceName
     ;
 
-sliceNumber
-    : /[1-9][0-9]?/
+sliceName
+    : /[a-zA-Z][a-zA-Z0-9_]+/
     ;
 
 slicingComment
@@ -93,7 +93,8 @@ slicingComment
     ;
 
 codeSlicingComment
-    : "CODE SLICING " ("BEGIN"|"BREAK"|"END")
+    : "CODE SLICING " ("BEGIN"|"BREAK") (sliceName)?
+	| "CODE SLICING " "END"
     ;
 
 typeListSlicingComment

@@ -112,7 +112,7 @@ def _getHelpDumpMdText(name: str) -> str:
     return f"{note}\n\n{text}\n\n{note}\n"
 
 
-_HELP_TEMPLATES = ["syntax-guide", "syntax-ebnf"]
+_HELP_TEMPLATES = ["usage-guide", "syntax-ebnf"]
 
 
 class _HelpAction(argparse._HelpAction):
@@ -132,6 +132,8 @@ class _HelpAction(argparse._HelpAction):
         super().__init__(option_strings)
         self.nargs = "?"
         self.choices = _HELP_TEMPLATES
+        if help is not None:
+            self.help = help
 
     def __call__(self, parser, namespace, values, option_string=None):
         if values is None:
@@ -226,7 +228,7 @@ def makeArgParser() -> argparse.ArgumentParser:
     mainArgParser = argparse.ArgumentParser(
         prog=__prog__,
         description="Automate BDE test driver splitting",
-        epilog="Use --help with an argument for additional guides, such as --help syntax-guide.",
+        epilog="Use --help with an argument for additional guides, such as --help usage-guide.",
         add_help=False,
     )
 
@@ -235,7 +237,8 @@ def makeArgParser() -> argparse.ArgumentParser:
         "--help",
         choices=["syntax"],
         action=_HelpAction,
-        help="Show this help message and exit.",
+        help="Without arguments show this help message and exit.  With arguments show the "
+        "specified help document and exit.",
     )
 
     mainArgParser.add_argument(
@@ -243,7 +246,7 @@ def makeArgParser() -> argparse.ArgumentParser:
         choices=["md"],
         nargs="?",
         action=_HelpDumpAction,
-        help="Write extra help markdown files (such as syntax-guide) into the specified output "
+        help="Write extra help markdown files (such as usage-guide) into the specified output "
         "directory and exit.  The output directory must be *before* --dump-help on the command "
         " line",
     )
@@ -251,8 +254,8 @@ def makeArgParser() -> argparse.ArgumentParser:
     mainArgParser.add_argument(
         "--force-colors",
         action="store_true",
-        help="Use this together with `less -r` to get colored output for --help with an argument, "
-        "such as --help syntax-guide.",
+        help="Use this before --help <argument>, together with `| less -r`, to get colored "
+        "output, and paging.  E.g., `--force-colors --help usage-guide | less -r`",
     )
 
     mainArgParser.add_argument(
