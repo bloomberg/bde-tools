@@ -328,7 +328,7 @@ class ParsedArgs:
         )
 
         # If there is no path in the stamp file argument put it into the output directory
-        if not self.stampFilePath.parent:
+        if len(self.stampFilePath.parts) == 1:
             self.stampFilePath = self.outDirectory / self.stampFilePath
 
         # Add the 'groups' directory from the input file to the groups search path, if the path
