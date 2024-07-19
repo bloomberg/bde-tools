@@ -116,13 +116,12 @@ cases into the parts, maybe even more than one.  For example:
 {|CONTROL-COMMENT-PREFIX|}PARTS (syntax version 1.0.0)
 //@
 //@# This test driver will be split into multiple parts for faster compilation
-//@# using bde_xt_cpp_splitter.py from the bde-tools repo.  Note that test
-//@# cases may be further sliced into multiple parts within the test case
-//@# itself (i.e., there is not a 1-1 mapping between the parts listed below
-//@# and the generated files).  The specification for the {|CONTROL-COMMENT-PREFIX|}
-//@# comments can be found:
-//@#    bde_xt_cpp_splitter --help syntax-guide
-//@#    bde_xt_cpp_splitter --help syntax-ebnf
+//@# using bde_xt_cpp_splitter.py from the bde-tools repo.  Each line below 
+//@# controls which test cases from this file will be included in one (or more)
+//@# standalone test drivers.  Specific contents of each part can be further 
+//@# controlled by {|CONTROL-COMMENT-PREFIX|} comments throughout this file, for which full 
+//@# documentation can be found by running:
+//@#    bde_xt_cpp_splitter --help usage-guide
 //@
 //@  CASES: 1..10, 19
 //@  CASES: 11..END
