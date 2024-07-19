@@ -5,10 +5,12 @@ import logging
 import os
 
 from dataclasses import dataclass
+from pathlib import Path
+from enum import Enum
+from typing import Tuple
 
 from lib.generateParts import generateTestcasesToPartsMapping
 from lib import (
-    sourceFileOpen,
     parseComponentName,
     generatePartsFromXtCpp,
     parseXtCpp,
@@ -19,60 +21,49 @@ from lib.myConstants import MY_CONTROL_COMMENT_PREFIX
 
 
 __version__: str = "0.0.1"
-__prog__: str = os.path.basename(__file__).split(".", maxsplit=1)[0]
+__prog__: str = Path(__file__).stem
+
+class FileType(Enum):
+    FILE = 0
+    DIRECTORY = 1
+
+def _verifyTypeAndAccess(path: Path, type : FileType, access : int):
+    typeCheckFn = Path.is_file if type == FileType.FILE else Path.is_dir
+    if not typeCheckFn(path):
+        raise argparse.ArgumentTypeError(f"'{path}' is not a {type.name.lower()}")
+
+    def _verifyAccess(mode : int, message: str):
+        if access & mode and not os.access(path, mode):
+            raise argparse.ArgumentTypeError(f"'{path}' is not {message}")
+
+    _verifyAccess(os.R_OK, "readable")
+    _verifyAccess(os.W_OK, "writable")
 
 
 def _verifyOutputDirectoryArg(outputDirectoryPath: str) -> str:
-    if not os.path.isdir(outputDirectoryPath):
-        raise argparse.ArgumentTypeError(f"{outputDirectoryPath!r} is not a directory")
-
-    if not os.access(outputDirectoryPath, os.R_OK):
-        raise argparse.ArgumentTypeError(f"{outputDirectoryPath!r} is not readable")
-
-    if not os.access(outputDirectoryPath, os.W_OK):
-        raise argparse.ArgumentTypeError(f"{outputDirectoryPath!r} is not writable")
-
+    _verifyTypeAndAccess(Path(outputDirectoryPath), FileType.DIRECTORY, os.R_OK | os.W_OK)
     return outputDirectoryPath
 
 
 def _verifyGroupsDirectoryArg(groupsDirectoryPath: str) -> str:
-    if not os.path.isdir(groupsDirectoryPath):
-        raise argparse.ArgumentTypeError(f"{groupsDirectoryPath!r} is not a directory")
-
-    if not os.access(groupsDirectoryPath, os.R_OK):
-        raise argparse.ArgumentTypeError(f"{groupsDirectoryPath!r} is not readable")
-
+    _verifyTypeAndAccess(Path(groupsDirectoryPath), FileType.DIRECTORY, os.R_OK)
     return groupsDirectoryPath
 
 
 def _verifyStampPathArg(stampFileName: str) -> str:
-    dirname, filename = os.path.split(stampFileName)
+    stampPath = Path(stampFileName)
 
-    if dirname:
-        if not os.path.isdir(dirname):
-            raise argparse.ArgumentTypeError(f"{dirname!r} is not a directory")
+    if os.path.dirname(stampPath):
+        _verifyTypeAndAccess(stampPath.parent, FileType.DIRECTORY, os.R_OK | os.W_OK)
 
-        if not os.access(dirname, os.R_OK):
-            raise argparse.ArgumentTypeError(f"{dirname!r} is not readable")
-
-        if not os.access(dirname, os.W_OK):
-            raise argparse.ArgumentTypeError(f"{dirname!r} is not writable")
-
-    if os.path.exists(stampFileName):
-        if not os.path.isfile(stampFileName):
-            raise argparse.ArgumentTypeError(f"{stampFileName!r} is not a file")
-
-        if not os.access(stampFileName, os.R_OK):
-            raise argparse.ArgumentTypeError(f"{stampFileName!r} is not readable")
-
-        if not os.access(stampFileName, os.W_OK):
-            raise argparse.ArgumentTypeError(f"{stampFileName!r} is not writable")
+    if stampPath.exists():
+        _verifyTypeAndAccess(stampPath, FileType.FILE, os.R_OK | os.W_OK)
 
     return stampFileName
 
 
 def _applyMacrosToMdText(mdName: str, mdText: str) -> str:
-    myName = os.path.splitext(os.path.basename(os.path.realpath(__file__)))[0]
+    myName = Path(__file__).resolve().stem
     macros = {
         "{|SCRIPT-NAME|}": f"{myName}",
         "{|CONTROL-COMMENT-PREFIX|}": MY_CONTROL_COMMENT_PREFIX,
@@ -92,9 +83,8 @@ _MY_HELP_NOTE = (
 
 
 def _getHelpMdText(name: str) -> str:
-    syntaxHelp = os.path.join(os.path.dirname(os.path.realpath(__file__)), f"{name}.t.md")
-    with open(syntaxHelp, "rt") as helpMdFile:
-        return _applyMacrosToMdText(name, helpMdFile.read())
+    syntaxHelp = Path(__file__).resolve().with_name(f"{name}.t.md")
+    return _applyMacrosToMdText(name, syntaxHelp.read_text())
 
 
 def _getInteractiveHelpMdText(name: str) -> str:
@@ -115,49 +105,35 @@ def _getHelpDumpMdText(name: str) -> str:
 _HELP_TEMPLATES = ["usage-guide", "syntax-ebnf"]
 
 
-class _HelpAction(argparse._HelpAction):
-    def __init__(
-        self,
-        option_strings,
-        dest,
-        nargs=None,
-        const=None,
-        default=None,
-        type=None,
-        choices=None,
-        required=False,
-        help=None,
-        metavar=None,
-    ):
-        super().__init__(option_strings)
-        self.nargs = "?"
-        self.choices = _HELP_TEMPLATES
-        if help is not None:
-            self.help = help
+class _HelpAction(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         if values is None:
             parser.print_help()
         else:
             assert isinstance(values, str)
-            from rich.console import Console as RichConsole
-            from rich.markdown import Markdown as RichMarkdown
+            mdText = _getInteractiveHelpMdText(values)
 
-            console = RichConsole(
-                force_terminal=namespace.force_colors,
-                legacy_windows=not namespace.force_colors,
-                safe_box=not namespace.force_colors,
-                tab_size=4,
-                emoji=True,
-                highlight=False,
-            )
-            if console.width > 80:
-                console.width = 80
-            console.print(
-                RichMarkdown(_getInteractiveHelpMdText(values), style="github"),
-                highlight=False,
-                markup=False,
-            )
+            try:
+                from rich.console import Console as RichConsole
+                from rich.markdown import Markdown as RichMarkdown
+
+                console = RichConsole(
+                    force_terminal=namespace.force_colors,
+                    legacy_windows=not namespace.force_colors,
+                    safe_box=not namespace.force_colors,
+                    tab_size=4,
+                    emoji=True,
+                    highlight=False,
+                )
+                console.width = min(console.width, 80)
+                console.print(
+                    RichMarkdown(mdText, style="github"),
+                    highlight=False,
+                    markup=False,
+                )
+            except ImportError:
+                print(mdText)
         exit(0)
 
 
@@ -171,14 +147,13 @@ class _HelpDumpAction(argparse.Action):
                 "the command line"
             )
         print("Processing help markdown templates:")
-        myName = os.path.splitext(os.path.basename(os.path.realpath(__file__)))[0]
+        myName = Path(__file__).resolve().stem
         for mdName in _HELP_TEMPLATES:
             mdText = _getHelpDumpMdText(mdName)
             mdOutName = f"{myName}-{mdName}.md"
-            outName = os.path.join(namespace.outdir, mdOutName)
-            print(f"    Writing {outName}...")
-            with open(outName, "wt") as outFile:
-                outFile.write(mdText)
+            outPath = Path(namespace.outdir) / mdOutName
+            print(f"    Writing {outPath}...")
+            outPath.write_text(mdText)
         print("Done.")
 
         exit(0)
@@ -186,14 +161,9 @@ class _HelpDumpAction(argparse.Action):
 
 @dataclass
 class ParsedSourcePathArg:
-    full: str
-    directory: str
-    filename: str
-    suffixes: str
+    filePath: Path
     qualifiedComponentName: str
     group: str
-    package: str
-    componentName: str
 
 
 class _XtCppPathArgAction(argparse.Action):
@@ -201,25 +171,19 @@ class _XtCppPathArgAction(argparse.Action):
         if not isinstance(values, str):
             parser.error(f"Unexpected command line argument type: {values!r}")
 
-        if not os.path.isfile(values):
-            parser.error(f"{values!r} is not a file")
+        filePath = Path(values)
 
-        if not os.access(values, os.R_OK):
-            parser.error(f"{values!r} is not readable")
+        _verifyTypeAndAccess(filePath, FileType.FILE, os.R_OK)
 
-        dirPart, filePart = os.path.split(values)
-        qualifiedComponentName, suffixes = filePart.split(".", maxsplit=1)
+        qualifiedComponentName, suffixes = filePath.name.split(".", maxsplit=1)
 
         if suffixes.lower() != "xt.cpp":
-            parser.error(f"{filePart!r} does not have the xt.cpp test driver suffix")
+            parser.error(f"{filePath} does not have the xt.cpp test driver suffix")
 
         result = ParsedSourcePathArg(
-            values,
-            dirPart,
-            filePart,
-            suffixes,
+            filePath,
             qualifiedComponentName,
-            *parseComponentName(qualifiedComponentName, errorFunc=parser.error),
+            parseComponentName(qualifiedComponentName, errorFunc=parser.error)[0],
         )
         setattr(namespace, self.dest, result)
 
@@ -235,7 +199,8 @@ def makeArgParser() -> argparse.ArgumentParser:
     mainArgParser.add_argument(
         "-h",
         "--help",
-        choices=["syntax"],
+        choices=_HELP_TEMPLATES,
+        nargs='?',
         action=_HelpAction,
         help="Without arguments show this help message and exit.  With arguments show the "
         "specified help document and exit.",
@@ -332,12 +297,11 @@ def logCommandlineArguments(args: argparse.Namespace) -> None:
 @dataclass(init=False, eq=False, order=False)
 class ParsedArgs:
     loglevel: str
-    xtCppFull: str
-    xtCppFilename: str
+    xtCppPath: Path
     xtCppComponent: str
-    outDirectory: str
-    stampFilePath: str
-    groupsDirsPath: str
+    outDirectory: Path
+    stampFilePath: Path
+    groupsDirsPath: Tuple[Path, ...]
     useLineDirectives: bool | None
 
     def __init__(self) -> None:
@@ -356,79 +320,78 @@ class ParsedArgs:
 
         self.useLineDirectives = args.line_directives
 
-        xtCppPath: ParsedSourcePathArg = args.xtCppPath
-        self.xtCppFull = xtCppPath.full
-        self.xtCppFilename = xtCppPath.filename
-        self.xtCppComponent = xtCppPath.qualifiedComponentName
+        self.xtCppPath = args.xtCppPath.filePath
+        self.xtCppComponent = args.xtCppPath.qualifiedComponentName
 
-        self.outDirectory = args.outdir
+        self.outDirectory = Path(args.outdir)
 
-        self.stampFilePath = args.stampfile if args.stampfile else f"{self.xtCppFilename}.stamp"
+        self.stampFilePath = Path(args.stampfile if args.stampfile else f"{self.xtCppPath.name}.stamp")
 
         # If there is no path in the stamp file argument put it into the output directory
         if not os.path.dirname(self.stampFilePath):
-            self.stampFilePath = os.path.join(self.outDirectory, self.stampFilePath)
+            self.stampFilePath = self.outDirectory / self.stampFilePath
 
         # Add the 'groups' directory from the input file to the groups search path, if the path
         # actually ends in .../groups/grp/grppkg (like .../groups/bsl/bslstl)
-        groupDir, package = os.path.split(args.xtCppPath.directory)
-        if groupDir:
-            if not package:  # There was a path separator at the end of `directory``
-                groupDir, package = os.path.split(args.xtCppPath.directory[:-1])
+        resolvedPath = self.xtCppPath.resolve()
+        packageDir = resolvedPath.parent
+        groupDir = packageDir.parent
+        groupsDir = groupDir.parent
 
-            if package:
-                groupsDir, group = os.path.split(groupDir)
-                if os.path.basename(groupsDir) == "groups" and group == args.xtCppPath.group:
-                    args.groups_directory.append(groupsDir)
+        if groupsDir.name == "groups" and groupDir.name == args.xtCppPath.group:
+            args.groups_directory.append(groupsDir)
 
-        self.groupsDirsPath = os.path.pathsep.join(args.groups_directory)
+        self.groupsDirsPath = tuple(Path(x) for x in args.groups_directory)
 
         lineDirectivesStr = (
             self.useLineDirectives if self.useLineDirectives is not None else "Not Set"
         )
         logging.info(
             "Effective Command Line Arguments:\n"
-            f"    Log level         : {self.loglevel!r}\n"
-            f"    Input xt.cpp file : {self.xtCppFull!r}\n"
-            f"    Output directory  : {self.outDirectory!r}\n"
-            f"    Stamp file        : {self.stampFilePath!r}\n"
-            f"    Groups search path: {self.groupsDirsPath!r}\n"
+            f"    Log level         : {self.loglevel}\n"
+            f"    Input xt.cpp file : {self.xtCppPath}\n"
+            f"    Output directory  : {self.outDirectory}\n"
+            f"    Stamp file        : {self.stampFilePath}\n"
+            f"    Groups search path: {", ".join([str(x) for x in self.groupsDirsPath])}\n"
             f"    Line directives   : {lineDirectivesStr}"
         )
 
 
-def loadXtCpp(xtCppFilename: str) -> list[str]:
-    logging.info(f"Reading {xtCppFilename!r}.")
-    with sourceFileOpen(xtCppFilename, "r") as xtcppFile:
-        return xtcppFile.read().splitlines()
+def loadXtCpp(xtCppPath: Path) -> list[str]:
+    logging.info(f"Reading '{xtCppPath}'.")
+    return xtCppPath.read_text().splitlines()
 
 
 # ===== MAIN =====
 def main():
     args = ParsedArgs()
 
-    xtCppLines = loadXtCpp(args.xtCppFull)
+    xtCppLines = loadXtCpp(args.xtCppPath)
     logging.info(f"Read {len(xtCppLines)} lines.")
 
     parseResult = parseXtCpp(
-        args.xtCppFull, args.xtCppFilename, args.xtCppComponent, xtCppLines, args.groupsDirsPath
+        str(args.xtCppPath),  # tbd
+        args.xtCppPath.name,  # tbd
+        args.xtCppComponent,
+        xtCppLines,
+        os.path.pathsep.join([str(x) for x in args.groupsDirsPath]),  # tbd
     )
-    logging.info(f"Parsing success for {args.xtCppFull!r}.")
+    logging.info(f"Parsing success for '{args.xtCppPath}'.")
 
     testcasesToPartsMapping = generateTestcasesToPartsMapping(parseResult)
     partsContents = generatePartsFromXtCpp(
-        args.xtCppFull,
-        args.xtCppFilename,
+        str(args.xtCppPath),  # tbd
+        args.xtCppPath.name,  # tbd
         args.xtCppComponent,
         parseResult,
         testcasesToPartsMapping,
         xtCppLines,
         args.useLineDirectives,
     )
-    logging.info(f"Parts contents generated for {args.xtCppFull!r}.")
+    logging.info(f"Parts contents generated for '{args.xtCppPath}'.")
     writeOutputForXtCpp(
-        args.stampFilePath,
-        args.outDirectory,
+        str(args.stampFilePath), # tbd
+        str(args.outDirectory),  # tbd
         args.xtCppComponent,
         partsContents,
         testcasesToPartsMapping,
