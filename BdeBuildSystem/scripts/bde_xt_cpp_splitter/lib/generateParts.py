@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import datetime
-import glob
 import json
 import logging
-import os
+from pathlib import Path
 import sys
 from typing import Callable, Mapping, MutableMapping, MutableSequence, Sequence, Set, Tuple
 
@@ -16,21 +15,20 @@ from lib.xtCppParseResults import (
     Testcase,
     UnslicedTestcase,
 )
-from lib.sourceFileOpen import sourceFileOpen
 from lib.myConstants import MY_INFO_COMMENT_PREFIX
 
 
-def _collectXteFiles(fp, qualifiedComponentName) -> Sequence[str]:
-    inputDirectory: str = os.path.dirname(fp)
-    singleXtsCpp = os.path.join(inputDirectory, f"{qualifiedComponentName}.xte.cpp")
+def _collectXteFiles(xtCppPath: Path, qualifiedComponentName) -> Sequence[Path]:
+    inputDirectory: Path = xtCppPath.parent
+    singleXtsCpp = inputDirectory / f"{qualifiedComponentName}.xte.cpp"
 
-    rv: MutableSequence[str] = []
-    if os.path.exists(singleXtsCpp):
-        logging.debug(f"Found extra standalone translation unit {singleXtsCpp!r}")
+    rv: MutableSequence[Path] = []
+    if singleXtsCpp.exists():
+        logging.debug(f"Found extra standalone translation unit '{singleXtsCpp}'")
         rv.append(singleXtsCpp)
 
-    for name in glob.glob(os.path.join(inputDirectory, f"{qualifiedComponentName}.xte.*.cpp")):
-        logging.debug(f"Found extra standalone translation unit {name!r}")
+    for name in inputDirectory.glob(f"{qualifiedComponentName}.xte.*.cpp"):
+        logging.debug(f"Found extra standalone translation unit '{name}'")
         rv.append(name)
 
     if not rv:
@@ -40,35 +38,25 @@ def _collectXteFiles(fp, qualifiedComponentName) -> Sequence[str]:
 
 
 def _generateXteParts(
-    fp: str, useLineDirectives: bool, xtsFiles: Sequence[str]
+    useLineDirectives: bool, xtsFiles: Sequence[Path]
 ) -> MutableSequence[MutableSequence[str]]:
     rv = []
     for filepath in xtsFiles:
-        with sourceFileOpen(filepath, "r") as xtsFile:
-            lines = xtsFile.read().splitlines()
+        lines = filepath.read_text(encoding="ascii", errors="surrogateescape").splitlines()
 
-            if not lines:
-                raise ValueError(f"File {filepath!r} appears to be empty")
+        if not lines:
+            raise ValueError(f"File '{filepath}' appears to be empty")
 
-            if not lines[0].startswith(f"// {os.path.basename(filepath) }") or not lines[
-                0
-            ].endswith(" -*-C++-*-"):
-                raise ValueError(
-                    f"File {filepath!r} Does not start with the expected C++ prologue line: "
-                    f"{lines[0]!r}"
-                )
-            rv.append(
-                [
-                    "",
-                    f"{MY_INFO_COMMENT_PREFIX}Standalone translation unit "
-                    f"{os.path.basename(filepath)!r}",
-                    "",
-                ]
+        if not lines[0].startswith(f"// {filepath.name} ") or not lines[0].endswith(" -*-C++-*-"):
+            raise ValueError(
+                f"File '{filepath}' Does not start with the expected C++ prologue line: "
+                f"{lines[0]!r}"
             )
-            if useLineDirectives:
-                rv[-1].append(f'#line 2 "{fp}"')
+        rv.append(["", f"{MY_INFO_COMMENT_PREFIX}Standalone translation unit {filepath.name}", ""])
+        if useLineDirectives:
+            rv[-1].append(f'#line 2 "{json.dumps(str(filepath))[1:-1]}"')
 
-            rv[-1] += lines[1:]
+        rv[-1] += lines[1:]
 
     return rv
 
@@ -229,8 +217,8 @@ def _generateSilencingOfWarnings(silencedWarnings: Set[SilencedWarningKind]) -> 
 
 
 def _generateSlicedTestcase(
-    lineFp: str,
-    fn: str,
+    escapedXtCppPath: str,
+    xtCppName: str,
     testcase: SlicedTestcase,
     newCaseNum: int,
     sliceNumber: int,
@@ -240,7 +228,7 @@ def _generateSlicedTestcase(
     rv: MutableSequence[str] = []
     writeLineDirective(rv, testcase.block.start)
     rv.append(
-        f"      case {newCaseNum}: {{  // 'case {testcase.number}' slice {sliceNumber} in \"{fn}\""
+        f"      case {newCaseNum}: {{  // 'case {testcase.number}' slice {sliceNumber} in \"{xtCppName}\""
     )
 
     rv += testcase.generateCode(sliceNumber - 1, lines, writeLineDirective)
@@ -273,15 +261,15 @@ def _collapseLineDirectives(partLines: MutableSequence[str]) -> None:
 
 
 def _generateParts(
-    fp: str,
-    fn: str,
+    escapedXtCppPath: str,
+    xtCppPath: Path,
+    xtCppName: str,
     qualifiedComponentName: str,
     parseResults: ParseResult,
     testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
     lines: MutableSequence[str],
     writeLineDirective: Callable[[MutableSequence[str], int], str],
 ) -> MutableSequence[MutableSequence[str]]:
-    lineFp = json.dumps(fp)[1:-1]  # Using JSON to escape backslashes
 
     origToPartMappings = _generatedToOriginalTestcaseMapping(parseResults.parts)
     partToOrigMappings = _generateCommandLineArgToOriginalMapping(parseResults.parts)
@@ -305,7 +293,7 @@ def _generateParts(
             "// the build system will just overwrite it.  Do not commit it into any source",
             "// repository.  It is not for human consumption and its history is irrelevant.",
             "//",
-            f'// See the original source code in: "{fp}"',
+            f'// See the original source code in: "{xtCppPath}"',
             "//",
             f"// This file was was generated on {datetime.datetime.utcnow().isoformat()} UTC by:",
             f'// "{sys.argv[0]}"',
@@ -326,7 +314,7 @@ def _generateParts(
                     "void printTestInfo(int test)",
                     "{",
                     "    if (test < 0) {",
-                    f'        printf("TEST {fp} CASE %d RUN AS '
+                    f'        printf("TEST {escapedXtCppPath} CASE %d RUN AS '
                     f'{qualifiedComponentName}.{partNumber:02}.t CASE %d\\n", test, test);',
                     "        return;                                                       // RETURN",
                     "    }",
@@ -350,7 +338,7 @@ def _generateParts(
                     "      } break;",
                     "    }",
                     "",
-                    f'    printf("TEST {fp} CASE %d ", origCase);',
+                    f'    printf("TEST {escapedXtCppPath} CASE %d ", origCase);',
                     "    if (origSlice > 0) {",
                     '        printf("SLICE %d ", origSlice);',
                     "    }",
@@ -370,7 +358,7 @@ def _generateParts(
                     "    using std::cout;  using std::endl;",
                     "",
                     "    if (test < 0) {",
-                    f'        cout << "TEST {fp} CASE " << test ',
+                    f'        cout << "TEST {escapedXtCppPath} CASE " << test ',
                     f'             << "RUN AS {qualifiedComponentName}.{partNumber:02}.t CASE "',
                     "              << test << endl;",
                     "        return;                                                       // RETURN",
@@ -395,7 +383,7 @@ def _generateParts(
                     "      } break;",
                     "    }",
                     "",
-                    f'    cout << "TEST {fp} CASE " << origCase;',
+                    f'    cout << "TEST {escapedXtCppPath} CASE " << origCase;',
                     "    if (origSlice > 0) {",
                     '        cout << " SLICE " << origSlice;',
                     "    }",
@@ -434,7 +422,7 @@ def _generateParts(
                 theCase = testcases[content]
                 assert isinstance(theCase, UnslicedTestcase)
                 partLines += theCase.generateCode(
-                    fn, origToPartMapping[content], lines, writeLineDirective
+                    xtCppName, origToPartMapping[content], lines, writeLineDirective
                 )
                 continue  # !!! continue
 
@@ -442,8 +430,8 @@ def _generateParts(
             theCase = testcases[content[0]]
             assert isinstance(theCase, SlicedTestcase)
             partLines += _generateSlicedTestcase(
-                lineFp,
-                fn,
+                escapedXtCppPath,
+                xtCppName,
                 theCase,
                 origToPartMapping[content[0]],
                 content[1],
@@ -459,7 +447,7 @@ def _generateParts(
         for content in negativeCases:
             theCase = testcases[content]
             assert isinstance(theCase, UnslicedTestcase)
-            partLines += theCase.generateCode(fn, theCase.number, lines, writeLineDirective)
+            partLines += theCase.generateCode(xtCppName, theCase.number, lines, writeLineDirective)
 
         partLines += parseResults.conditionalCommonCodeBlocks.generateCodeForBlock(
             CodeBlockInterval(stopTestcasesLine, len(lines) + 1),
@@ -477,8 +465,8 @@ def _generateParts(
 
 
 def generateParts(
-    fp: str,
-    fn: str,
+    xtCppPath: Path,
+    xtCppName: str,
     qualifiedComponentName: str,
     parseResults: ParseResult,
     testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
@@ -492,10 +480,12 @@ def generateParts(
     if useLineDirectives is None:  # Default is writing the line directives
         useLineDirectives = True
 
+    escapedXtCppPath = json.dumps(str(xtCppPath))[1:-1]  # Using JSON to escape backslashes
+
     if useLineDirectives:
 
         def writeLineDirective(ls: MutableSequence[str], lineNumber: int) -> str:
-            ls.append(f'#line {lineNumber} "{fp}"')
+            ls.append(f'#line {lineNumber} "{escapedXtCppPath}"')
             return ls[-1]
 
     else:
@@ -504,8 +494,9 @@ def generateParts(
             return ""
 
     parts = _generateParts(
-        fp,
-        fn,
+        escapedXtCppPath,
+        xtCppPath,
+        xtCppName,
         qualifiedComponentName,
         parseResults,
         testcasesToPartsMapping,
@@ -513,13 +504,13 @@ def generateParts(
         writeLineDirective,
     )
 
-    xteFiles = _collectXteFiles(fp, qualifiedComponentName)
+    xteFiles = _collectXteFiles(xtCppPath, qualifiedComponentName)
     if len(xteFiles) > 0:
-        logging.info(f"Generated {len(parts)} parts from splitting {fn!r}")
+        logging.info(f"Generated {len(parts)} parts from splitting {xtCppName!r}")
         logging.info(f"Found {len(xteFiles)} 'xte' file(s) adding them as additional parts")
-        parts += _generateXteParts(fp, useLineDirectives, xteFiles)
+        parts += _generateXteParts(useLineDirectives, xteFiles)
         logging.info(f"All together there are {len(parts)} parts for {qualifiedComponentName!r}")
     else:
-        logging.info(f"Generated {len(parts)} parts for {fn!r}")
+        logging.info(f"Generated {len(parts)} parts for {xtCppName!r}")
 
     return parts

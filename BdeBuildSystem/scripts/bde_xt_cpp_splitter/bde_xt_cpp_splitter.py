@@ -23,16 +23,18 @@ from lib.myConstants import MY_CONTROL_COMMENT_PREFIX
 __version__: str = "0.0.1"
 __prog__: str = Path(__file__).stem
 
+
 class FileType(Enum):
     FILE = 0
     DIRECTORY = 1
 
-def _verifyTypeAndAccess(path: Path, type : FileType, access : int):
+
+def _verifyTypeAndAccess(path: Path, type: FileType, access: int):
     typeCheckFn = Path.is_file if type == FileType.FILE else Path.is_dir
     if not typeCheckFn(path):
         raise argparse.ArgumentTypeError(f"'{path}' is not a {type.name.lower()}")
 
-    def _verifyAccess(mode : int, message: str):
+    def _verifyAccess(mode: int, message: str):
         if access & mode and not os.access(path, mode):
             raise argparse.ArgumentTypeError(f"'{path}' is not {message}")
 
@@ -127,11 +129,7 @@ class _HelpAction(argparse.Action):
                     highlight=False,
                 )
                 console.width = min(console.width, 80)
-                console.print(
-                    RichMarkdown(mdText, style="github"),
-                    highlight=False,
-                    markup=False,
-                )
+                console.print(RichMarkdown(mdText, style="github"), highlight=False, markup=False)
             except ImportError:
                 print(mdText)
         exit(0)
@@ -200,7 +198,7 @@ def makeArgParser() -> argparse.ArgumentParser:
         "-h",
         "--help",
         choices=_HELP_TEMPLATES,
-        nargs='?',
+        nargs="?",
         action=_HelpAction,
         help="Without arguments show this help message and exit.  With arguments show the "
         "specified help document and exit.",
@@ -325,10 +323,12 @@ class ParsedArgs:
 
         self.outDirectory = Path(args.outdir)
 
-        self.stampFilePath = Path(args.stampfile if args.stampfile else f"{self.xtCppPath.name}.stamp")
+        self.stampFilePath = Path(
+            args.stampfile if args.stampfile else f"{self.xtCppPath.name}.stamp"
+        )
 
         # If there is no path in the stamp file argument put it into the output directory
-        if not os.path.dirname(self.stampFilePath):
+        if not self.stampFilePath.parent:
             self.stampFilePath = self.outDirectory / self.stampFilePath
 
         # Add the 'groups' directory from the input file to the groups search path, if the path
@@ -352,14 +352,14 @@ class ParsedArgs:
             f"    Input xt.cpp file : {self.xtCppPath}\n"
             f"    Output directory  : {self.outDirectory}\n"
             f"    Stamp file        : {self.stampFilePath}\n"
-            f"    Groups search path: {", ".join([str(x) for x in self.groupsDirsPath])}\n"
+            f"    Groups search path: {', '.join([str(x) for x in self.groupsDirsPath])}\n"
             f"    Line directives   : {lineDirectivesStr}"
         )
 
 
 def loadXtCpp(xtCppPath: Path) -> list[str]:
     logging.info(f"Reading '{xtCppPath}'.")
-    return xtCppPath.read_text().splitlines()
+    return xtCppPath.read_text(encoding="ascii", errors="surrogateescape").splitlines()
 
 
 # ===== MAIN =====
@@ -370,18 +370,14 @@ def main():
     logging.info(f"Read {len(xtCppLines)} lines.")
 
     parseResult = parseXtCpp(
-        str(args.xtCppPath),  # tbd
-        args.xtCppPath.name,  # tbd
-        args.xtCppComponent,
-        xtCppLines,
-        os.path.pathsep.join([str(x) for x in args.groupsDirsPath]),  # tbd
+        args.xtCppPath, args.xtCppPath.name, args.xtCppComponent, xtCppLines, args.groupsDirsPath
     )
     logging.info(f"Parsing success for '{args.xtCppPath}'.")
 
     testcasesToPartsMapping = generateTestcasesToPartsMapping(parseResult)
     partsContents = generatePartsFromXtCpp(
-        str(args.xtCppPath),  # tbd
-        args.xtCppPath.name,  # tbd
+        args.xtCppPath,
+        args.xtCppPath.name,
         args.xtCppComponent,
         parseResult,
         testcasesToPartsMapping,
@@ -390,8 +386,8 @@ def main():
     )
     logging.info(f"Parts contents generated for '{args.xtCppPath}'.")
     writeOutputForXtCpp(
-        str(args.stampFilePath), # tbd
-        str(args.outDirectory),  # tbd
+        args.stampFilePath,
+        args.outDirectory,
         args.xtCppComponent,
         partsContents,
         testcasesToPartsMapping,

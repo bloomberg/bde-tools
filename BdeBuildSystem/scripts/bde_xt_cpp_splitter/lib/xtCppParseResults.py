@@ -40,7 +40,7 @@ class UnslicedTestcase(Testcase):
 
     def generateCode(
         self,
-        fn: str,
+        xtCppName: str,
         caseNumber: int,
         lines: Sequence[str],
         writeLineDirective: Callable[[MutableSequence[str], int], str],
@@ -48,7 +48,7 @@ class UnslicedTestcase(Testcase):
         rv = []
         writeLineDirective(rv, self.block.start)
         if self.number != caseNumber:
-            rv.append(f"      case {caseNumber}: {{  // 'case {self.number}' in \"{fn}\"")
+            rv.append(f"      case {caseNumber}: {{  // 'case {self.number}' in \"{xtCppName}\"")
             rv += lines[self.block.start : self.block.stop - 1]
         else:
             rv += lines[self.block.start - 1 : self.block.stop - 1]

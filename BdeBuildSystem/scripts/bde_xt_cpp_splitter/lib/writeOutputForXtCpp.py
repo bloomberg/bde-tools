@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
-import os
-import pathlib
+from pathlib import Path
 import re
 from typing import MutableSequence, Sequence, TextIO, Tuple
 
@@ -104,25 +103,24 @@ def _makePartFilename(partNumber: int, qualifiedComponentName: str) -> str:
     return f"{qualifiedComponentName}.{partNumber:02}.t.cpp"
 
 
-def _makePartPath(partNumber: int, outputDirectory: str, qualifiedComponentName: str) -> str:
-    return os.path.normpath(
-        os.path.join(outputDirectory, _makePartFilename(partNumber, qualifiedComponentName))
-    )
+def _makePartPath(partNumber: int, outputDirectory: Path, qualifiedComponentName: str) -> Path:
+    return (outputDirectory / _makePartFilename(partNumber, qualifiedComponentName)).resolve()
 
 
-def _makePartCpp03Path(partPath: str) -> str:
-    return re.sub(r"(\.[0-9][0-9]\.t\.cpp)", "_cpp03\1", partPath)
+def _makePartCpp03Path(partPath: Path) -> Path:
+    newName = re.sub(r"(\.[0-9][0-9]\.t\.cpp)", "_cpp03\1", partPath.name)
+    return partPath.parent / newName
 
 
 def _writeStampFileIfNeededAndDeleteExtraFiles(
-    stampPath: str, outputDirectory: str, qualifiedComponentName: str, numParts: int
+    stampPath: Path, outputDirectory: Path, qualifiedComponentName: str, numParts: int
 ) -> None:
     content = []
     for partNumber in range(1, numParts + 1):
         content.append(_makePartFilename(partNumber, qualifiedComponentName))
 
     # Verify if stamp file content is unchanged
-    if os.path.isfile(stampPath):
+    if stampPath.is_file():
         with sourceFileOpen(stampPath, "r") as stampFile:
             existingContent = stampFile.read().splitlines()
             if len(existingContent) == len(content) and all(
@@ -133,14 +131,14 @@ def _writeStampFileIfNeededAndDeleteExtraFiles(
 
             # Delete .NN.t.cpp amd _cpp03.NN.t.cpp files we do not need anymore
             for filename in existingContent:
-                filepath = os.path.join(outputDirectory, filename)
-                if filename not in content and os.path.exists(filepath):
-                    logging.info(f"Deleting {filepath!r}")
-                    os.unlink(filepath)
+                filepath = outputDirectory / filename
+                if filename not in content and filepath.exists():
+                    logging.info(f"Deleting '{filepath}'")
+                    filepath.unlink()
                     cpp03path = _makePartCpp03Path(filepath)
-                    if os.path.exists(cpp03path):
-                        logging.info(f"Deleting {cpp03path!r}")
-                        os.unlink(cpp03path)
+                    if cpp03path.exists():
+                        logging.info(f"Deleting '{cpp03path}'")
+                        cpp03path.unlink()
 
     logging.info(f"Writing stamp file '{stampPath}'.")
     with sourceFileOpen(stampPath, "w") as stampFile:
@@ -162,7 +160,7 @@ _MY_TIMESTAMP_BLANK = "// This file was was generated on YYYY-MM-DDTHH:MM:SS.sss
 
 
 def _writePartFile(
-    partNumber: int, outputDirectory: str, qualifiedComponentName: str, lines: Sequence[str]
+    partNumber: int, outputDirectory: Path, qualifiedComponentName: str, lines: Sequence[str]
 ):
     outName = _makePartFilename(partNumber, qualifiedComponentName)
     outPath = _makePartPath(partNumber, outputDirectory, qualifiedComponentName)
@@ -172,7 +170,7 @@ def _writePartFile(
     prologue = f"// {outName} {' ' * spaces}{cppFlag}\n"
     del cppFlag, spaces
 
-    if pathlib.Path(outPath).exists():
+    if outPath.exists():
         needToWrite: bool = False
         with sourceFileOpen(outPath, "r") as infile:
             if infile.readline() != prologue:
@@ -188,7 +186,7 @@ def _writePartFile(
                         needToWrite = True
                         break
         if not needToWrite:
-            logging.info(f"Part file {outPath!r} exists with the proper content.")
+            logging.info(f"Part file '{outPath}' exists with the proper content.")
             return  # !!! RETURN
 
     logging.info(f"Writing part file {outPath}.")
@@ -198,7 +196,7 @@ def _writePartFile(
 
 
 def _writePartFilesIfNeeded(
-    outputDirectory: str, qualifiedComponentName: str, partsContents: Sequence[Sequence[str]]
+    outputDirectory: Path, qualifiedComponentName: str, partsContents: Sequence[Sequence[str]]
 ) -> None:
     for partNumber, lines in enumerate(partsContents, 1):
         _writePartFile(partNumber, outputDirectory, qualifiedComponentName, lines)
@@ -219,13 +217,13 @@ def _writeMapping(
 
 
 def writeOutputForXtCpp(
-    stampPath: str,
-    outputDirectory: str,
+    stampPath: Path,
+    outputDirectory: Path,
     qualifiedComponentName: str,
     partsContents: Sequence[Sequence[str]],
     testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
 ) -> None:
-    lockfileName = os.path.join(outputDirectory, f"{qualifiedComponentName}.xt.cpp.mapping")
+    lockfileName = outputDirectory / f"{qualifiedComponentName}.xt.cpp.mapping"
     with sourceFileOpen(lockfileName, "w") as mappingAndLockFile:
         _writePartFilesIfNeeded(outputDirectory, qualifiedComponentName, partsContents)
         _writeStampFileIfNeededAndDeleteExtraFiles(

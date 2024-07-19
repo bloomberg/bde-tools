@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import os
+from pathlib import Path
 import re
-from typing import Mapping
+from typing import Mapping, MutableMapping, Tuple
 import functools
 
 from lib.sourceFileOpen import sourceFileOpen
@@ -13,52 +13,51 @@ class CppMacroError(ValueError):
 
 
 @functools.lru_cache
-def _getComponentMacroPrefixes(groupsDirs: str) -> Mapping[str, str]:
-    prefixToPath: Mapping[str, str] = {}
-    for groupsDir in groupsDirs.split(os.path.pathsep):
-        if not groupsDir:
-            groupsDir = os.path.curdir
-        for groupDir in os.listdir(groupsDir):
-            groupName = groupDir
-            groupDir = os.path.join(groupsDir, groupDir)
-            if not os.path.isdir(os.path.join(groupsDir, groupDir)):
+def _getComponentMacroPrefixes(groupsDirs: Tuple[Path, ...]) -> Mapping[str, Path]:
+    prefixToPath: MutableMapping[str, Path] = {}
+
+    for groupsDir in groupsDirs:
+        # if not groupsDir:
+        #     groupsDir = os.path.curdir
+        for groupDir in groupsDir.iterdir():
+            groupName = groupDir.stem
+            if not groupDir.is_dir():
                 continue  # !!! CONTINUE
 
-            groupMemFilename = os.path.join(groupDir, "group", f"{groupName}.mem")
+            groupMemFilename = groupDir / "group" / f"{groupName}.mem"
 
-            with open(
-                groupMemFilename, "r", encoding="ascii", errors="surrogateescape"
-            ) as memFile:
-                packageList = (
-                    line
-                    for line in memFile.read().splitlines()
-                    if line and not line.lstrip().startswith("#") and "+" not in line
-                )
+            packageList = (
+                line
+                for line in groupMemFilename.read_text(
+                    encoding="ascii", errors="surrogateescape"
+                ).splitlines()
+                if line and not line.lstrip().startswith("#") and "+" not in line
+            )
+
             for packageName in packageList:
-                pkgDir = os.path.join(groupDir, packageName)
-                pkgMemFilename = os.path.join(pkgDir, "package", f"{packageName}.mem")
-                with open(
-                    pkgMemFilename, "r", encoding="ascii", errors="surrogateescape"
-                ) as memFile:
-                    componentList = (
-                        line
-                        for line in memFile.read().splitlines()
-                        if line and not line.lstrip().startswith("#")
-                    )
+                pkgDir = groupDir / packageName
+                pkgMemFilename = pkgDir / "package" / f"{packageName}.mem"
+                componentList = (
+                    line
+                    for line in pkgMemFilename.read_text(
+                        encoding="ascii", errors="surrogateescape"
+                    ).splitlines()
+                    if line and not line.lstrip().startswith("#")
+                )
                 for component in componentList:
-                    prefixToPath[component.upper() + "_"] = os.path.join(pkgDir, f"{component}.h")
+                    prefixToPath[component.upper() + "_"] = pkgDir / f"{component}.h"
 
     return prefixToPath
 
 
 @functools.lru_cache(maxsize=8)
-def _readFileForMacros(filename: str) -> str:
+def _readFileForMacros(filename: Path) -> str:
     with sourceFileOpen(filename, "r") as headerFile:
         return headerFile.read().replace("\\\n", " ")
 
 
 @functools.lru_cache
-def _findMacroDefInComponents(macroName: str, groupsDirs: str) -> str | None:
+def _findMacroDefInComponents(macroName: str, groupsDirs: Tuple[Path, ...]) -> str | None:
     if macroName.startswith("_"):
         return None
 
@@ -81,26 +80,26 @@ def _findMacroDefInComponents(macroName: str, groupsDirs: str) -> str | None:
     elif len(defs) > 1:
         raise CppMacroError(
             f"More than one definition found for {macroName!r} in "
-            f"{_getComponentMacroPrefixes(groupsDirs)[prefix]!r}"
+            f"'{_getComponentMacroPrefixes(groupsDirs)[prefix]}'"
         )
 
     return defs[0].strip()
 
 
 @functools.lru_cache
-def _findMacroDefInXtCpp(macroName: str, xtCppFull: str) -> str | None:
+def _findMacroDefInXtCpp(macroName: str, xtCppFull: Path) -> str | None:
     content = _readFileForMacros(xtCppFull)
     defs = re.findall(rf".*^\s*#\s*define\s+{macroName}\b(.*)", content, flags=re.MULTILINE)
     if not defs:
         return None
     elif len(defs) > 1:
-        raise CppMacroError(f"More than one definition found for {macroName!r} in {xtCppFull!r}")
+        raise CppMacroError(f"More than one definition found for {macroName!r} in '{xtCppFull}'")
 
     return defs[0].strip()
 
 
 @functools.lru_cache
-def findMacroDefinition(macroName: str, xtCppFull: str, groupsDirs: str) -> str:
+def findMacroDefinition(macroName: str, xtCppFull: Path, groupsDirs: Tuple[Path, ...]) -> str:
     inXtCpp = _findMacroDefInXtCpp(macroName, xtCppFull)
     inComps = _findMacroDefInComponents(macroName, groupsDirs)
 

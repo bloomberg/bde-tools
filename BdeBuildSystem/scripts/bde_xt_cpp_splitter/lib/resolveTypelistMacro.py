@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
 import re
-from typing import Sequence
+from typing import Sequence, Tuple
 import functools
 
 from lib.extensionsForPy38 import removeprefix
@@ -28,7 +29,7 @@ def _resplitMacroValue(theList: str) -> str:
 
 
 @functools.lru_cache
-def _getListForMacro(macroName: str, xtCppFull: str, groupsDirs: str) -> str:
+def _getListForMacro(macroName: str, xtCppFull: Path, groupsDirs: Tuple[Path, ...]) -> str:
     return _resplitMacroValue(findMacroDefinition(macroName, xtCppFull, groupsDirs))
 
 
@@ -40,7 +41,7 @@ def _isMacroLookingName(name: str) -> bool:
 
 
 @functools.lru_cache
-def _resolveTypelist(theList: str, xtCppFull: str, groupsDirs: str) -> str:
+def _resolveTypelist(theList: str, xtCppFull: Path, groupsDirs: Tuple[Path, ...]) -> str:
     typeList = ""
     for name in theList.split("$"):
         if _isMacroLookingName(name):
@@ -54,12 +55,14 @@ def _resolveTypelist(theList: str, xtCppFull: str, groupsDirs: str) -> str:
 
 
 @functools.lru_cache
-def resolveTypelistMacro(macroName: str, xtCppFull: str, groupsDirs: str) -> Sequence[str]:
+def resolveTypelistMacro(macroName: str, xtCppFull: Path, groupsDirs: str) -> Sequence[str]:
     return _resolveTypelist(macroName, xtCppFull, groupsDirs).split("$")
 
 
 @functools.lru_cache
-def resolveTypelistMacroValue(macroValue: str, xtCppFull: str, groupsDirs: str) -> Sequence[str]:
+def resolveTypelistMacroValue(
+    macroValue: str, xtCppFull: Path, groupsDirs: Tuple[Path, ...]
+) -> Sequence[str]:
     return _resolveTypelist(_resplitMacroValue(macroValue), xtCppFull, groupsDirs).split("$")
 
 
