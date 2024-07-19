@@ -190,7 +190,7 @@ def makeArgParser() -> argparse.ArgumentParser:
     mainArgParser = argparse.ArgumentParser(
         prog=__prog__,
         description="Automate BDE test driver splitting",
-        epilog="Use --help with an argument for additional guides, such as --help usage-guide.",
+        epilog="Use --help usage-guide to get help with splitting a test driver, such as syntax.",
         add_help=False,
     )
 
