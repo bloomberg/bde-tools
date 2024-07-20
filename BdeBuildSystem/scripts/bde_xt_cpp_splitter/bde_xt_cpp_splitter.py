@@ -181,7 +181,7 @@ class _XtCppPathArgAction(argparse.Action):
         result = ParsedSourcePathArg(
             filePath,
             qualifiedComponentName,
-            parseComponentName(qualifiedComponentName, errorFunc=parser.error)[0],
+            parseComponentName(qualifiedComponentName, errorFunc=parser.error).groupPart,
         )
         setattr(namespace, self.dest, result)
 

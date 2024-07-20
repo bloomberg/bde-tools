@@ -46,7 +46,7 @@ class CodeBlockInterval:
             )
         self._stop = newStop
 
-    def extendThisBy(self, numberOfLines: LineNumber) -> None:
+    def extendBy(self, numberOfLines: LineNumber) -> None:
         if numberOfLines < 0:
             raise ValueError(
                 f"Extending by {numberOfLines} (negative) number of lines is not supported."
