@@ -114,11 +114,12 @@ class _HelpAction(argparse.Action):
             parser.print_help()
         else:
             assert isinstance(values, str)
-            mdText = _getInteractiveHelpMdText(values)
 
             try:
                 from rich.console import Console as RichConsole
                 from rich.markdown import Markdown as RichMarkdown
+
+                mdText = _getInteractiveHelpMdText(values)
 
                 console = RichConsole(
                     force_terminal=namespace.force_colors,
@@ -131,7 +132,7 @@ class _HelpAction(argparse.Action):
                 console.width = min(console.width, 80)
                 console.print(RichMarkdown(mdText, style="github"), highlight=False, markup=False)
             except ImportError:
-                print(mdText)
+                print(_getHelpMdText(values))
         exit(0)
 
 
