@@ -70,7 +70,9 @@ def getUnsupportedControlCommentFrom(line: str) -> str:
             else ""
         )
 
-    if MY_CONTROL_COMMENT_PREFIX in line:
+    if MY_CONTROL_COMMENT_PREFIX in line and not line.index(
+        MY_CONTROL_COMMENT_PREFIX
+    ) > line.index("//"):
         controlPart = line[
             line.index(MY_CONTROL_COMMENT_PREFIX) + len(MY_CONTROL_COMMENT_PREFIX) :
         ]
