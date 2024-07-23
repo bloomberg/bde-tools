@@ -50,7 +50,7 @@ def _generateXteParts(
         if not lines[0].startswith(f"// {filepath.name} ") or not lines[0].endswith(" -*-C++-*-"):
             raise ValueError(
                 f"File '{filepath}' Does not start with the expected C++ prologue line: "
-                f"{lines[0]!r}"
+                f"'{lines[0]}'"
             )
         rv.append(["", f"{MY_INFO_COMMENT_PREFIX}Standalone translation unit {filepath.name}", ""])
         if useLineDirectives:
@@ -141,9 +141,7 @@ def generateTestcasesToPartsMapping(
                 if elem > 0:
                     rv[elem - 1] = (partNum, getGeneratedCaseNumber(partNum, elem))
             else:  # Sliced test case
-                assert isinstance(
-                    elem, tuple
-                ), f"{elem!r} is not a tuple, but {elem.__class__.__name__!r}"
+                assert isinstance(elem, tuple), f"{elem!r} is not a tuple, but '{type(elem)}'"
                 caseNum = elem[0]
                 if isinstance(rv[caseNum - 1], tuple):
                     rv[caseNum - 1] = []
@@ -506,11 +504,11 @@ def generateParts(
 
     xteFiles = _collectXteFiles(xtCppPath, qualifiedComponentName)
     if len(xteFiles) > 0:
-        logging.info(f"Generated {len(parts)} parts from splitting {xtCppName!r}")
+        logging.info(f"Generated {len(parts)} parts from splitting '{xtCppName}'")
         logging.info(f"Found {len(xteFiles)} 'xte' file(s) adding them as additional parts")
         parts += _generateXteParts(useLineDirectives, xteFiles)
-        logging.info(f"All together there are {len(parts)} parts for {qualifiedComponentName!r}")
+        logging.info(f"All together there are {len(parts)} parts for '{qualifiedComponentName}'")
     else:
-        logging.info(f"Generated {len(parts)} parts for {xtCppName!r}")
+        logging.info(f"Generated {len(parts)} parts for '{xtCppName}'")
 
     return parts

@@ -20,11 +20,11 @@ class CodeBlockInterval:
 
         if startArg < 1 or stopArg < 1:
             raise ValueError(
-                f"{type(self)!r} Line numbers must be positive: {startArg}, {stopArg=}"
+                f"'{type(self)}' Line numbers must be positive: {startArg}, {stopArg=}"
             )
         if startArg > stopArg:
             raise ValueError(
-                f"{type(self)!r} Stop cannot be smaller than start: {startArg=}, {stopArg}"
+                f"'{type(self)}' Stop cannot be smaller than start: {startArg=}, {stopArg}"
             )
 
         self._start = startArg
@@ -42,7 +42,7 @@ class CodeBlockInterval:
     def stop(self, newStop: LineNumber) -> None:
         if newStop < self._start:
             raise ValueError(
-                f"{type(self)!r}.stop ({newStop}) cannot be smaller than start ({self._start})"
+                f"'{type(self)}.stop' ({newStop}) cannot be smaller than start ({self._start})"
             )
         self._stop = newStop
 

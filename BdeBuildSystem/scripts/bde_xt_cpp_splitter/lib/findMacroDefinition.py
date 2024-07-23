@@ -58,7 +58,7 @@ def _findMacroDefInFile(macroName: str, filename: Path) -> str | None:
     if not defs:
         return None
     elif len(defs) > 1:
-        raise CppMacroError(f"More than one definition found for {macroName!r} in '{filename}'")
+        raise CppMacroError(f"More than one definition found for '{macroName}' in '{filename}'")
 
     return defs[0].strip()
 
@@ -89,10 +89,10 @@ def findMacroDefinition(macroName: str, xtCppFull: Path, groupsDirs: Tuple[Path,
     inComps = _findMacroDefInComponents(macroName, groupsDirs)
 
     if inXtCpp is None and inComps is None:
-        raise CppMacroError(f"Unable to find definition for {macroName!r}")
+        raise CppMacroError(f"Unable to find definition for '{macroName}'")
     elif inXtCpp is not None and inComps is not None:
         raise CppMacroError(
-            f"Two definitions found for {macroName!r} in both the test driver and a header"
+            f"Two definitions found for '{macroName}' in both the test driver and a header"
         )
     elif inXtCpp is not None:
         return inXtCpp  # !!! RETURN

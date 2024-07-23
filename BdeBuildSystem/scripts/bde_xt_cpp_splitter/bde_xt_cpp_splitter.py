@@ -168,7 +168,7 @@ class ParsedSourcePathArg:
 class _XtCppPathArgAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not isinstance(values, str):
-            parser.error(f"Unexpected command line argument type: {values!r}")
+            parser.error(f"Unexpected command line argument type: '{type(values)}', {values!r}")
 
         filePath = Path(values)
 

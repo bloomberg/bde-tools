@@ -143,7 +143,7 @@ class TypelistSlicing:
         rv = []
         rv.append(
             f"{_getIndent(lines[self.controlCommentBlock.start - 1])}{MY_INFO_COMMENT_PREFIX}"
-            f"sliced typelist {self.macroName!r} slice {typeSliceIndex+1} of {self.numSlices}"
+            f"sliced typelist '{self.macroName}' slice {typeSliceIndex+1} of {self.numSlices}"
         )
         writeLineDirective(rv, self.macroDefinitionBlock.start)
         rv.append(
