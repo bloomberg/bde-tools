@@ -4,13 +4,14 @@ import itertools
 import logging
 from pathlib import Path
 import re
-from typing import MutableSequence, Sequence, TextIO, Tuple
+from typing import MutableSequence, Sequence, TextIO
 
 from lib.sourceFileOpen import sourceFileOpen
+from lib.xtCppParseResults import SlicedMapping, UnslicedMapping
 
 
 def _generateTestCaseMappingTable(
-    testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
+    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
 ) -> Sequence[str]:
     rv: MutableSequence[str] = []
     rv += [
@@ -28,22 +29,22 @@ def _generateTestCaseMappingTable(
         r"// +=====+====+====+=====+=======+",
     ]
     tableContent = []
-    for caseNum, caseNumMap in enumerate(testcasesToPartsMapping, 1):
-        if isinstance(caseNumMap, tuple):
-            inPartCaseNum = caseNumMap[1]
+    for caseNum, caseNumMapping in enumerate(testcasesToPartsMapping, 1):
+        if isinstance(caseNumMapping, UnslicedMapping):
+            inPartCaseNum = caseNumMapping.testcaseNumber
             assert isinstance(inPartCaseNum, int)
             if inPartCaseNum > 0:
                 tableContent.append(
-                    f"// | {caseNum:3} |    | {caseNumMap[0]:02} | {inPartCaseNum:3} |"
+                    f"// | {caseNum:3} |    | {caseNumMapping.partNumber:02} | {inPartCaseNum:3} |"
                 )
             else:
                 tableContent.append(  # Negative case numbers are not changed
-                    f"// | {inPartCaseNum:3} |    | {caseNumMap[0]:02} | {inPartCaseNum:3} |"
+                    f"// | {inPartCaseNum:3} |    | {caseNumMapping.partNumber:02} | {inPartCaseNum:3} |"
                 )
         else:
-            for partNum, sliceNum, caseInPart in caseNumMap:
+            for slicedMapping in caseNumMapping:
                 tableContent.append(
-                    f"// | {caseNum:3} | {sliceNum:2} | {partNum:02} | {caseInPart:3} |"
+                    f"// | {caseNum:3} | {slicedMapping.ofSliceNumber:2} | {slicedMapping.partNumber:02} | {slicedMapping.testcaseNumber:3} |"
                 )
     rv += "\n// +-----+----+----+-----+\n".join(tableContent).split("\n")
     rv.append("// +=====+====+====+=====+")
@@ -52,8 +53,7 @@ def _generateTestCaseMappingTable(
 
 
 def _generatePartMappingTable(
-    testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
-    numParts: int,
+    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]], numParts: int
 ) -> Sequence[str]:
     rv: MutableSequence[str] = []
     rv += [
@@ -72,26 +72,25 @@ def _generatePartMappingTable(
     ]
     for forPart in range(1, numParts + 1):
         partContent = []
-        for caseNum, caseNumMap in enumerate(testcasesToPartsMapping, 1):
-            if isinstance(caseNumMap, tuple):
-                if caseNumMap[0] != forPart:
+        for caseNum, caseNumMapping in enumerate(testcasesToPartsMapping, 1):
+            if isinstance(caseNumMapping, UnslicedMapping):
+                if caseNumMapping.partNumber != forPart:
                     continue  # !! CONTINUE !!
-                inPartCaseNum = caseNumMap[1]
-                assert isinstance(inPartCaseNum, int)
+                inPartCaseNum = caseNumMapping.testcaseNumber
                 if inPartCaseNum > 0:
                     partContent.append(
-                        f"// | {caseNumMap[0]:02} | {caseNum:3} |    | {inPartCaseNum:3} |"
+                        f"// | {caseNumMapping.partNumber:02} | {caseNum:3} |    | {inPartCaseNum:3} |"
                     )
                 else:
                     partContent.append(  # Negative case numbers are not changed
-                        f"// | {caseNumMap[0]:02} | {inPartCaseNum:3} |    | {inPartCaseNum:3} |"
+                        f"// | {caseNumMapping.partNumber:02} | {inPartCaseNum:3} |    | {inPartCaseNum:3} |"
                     )
             else:
-                for partNum, sliceNum, caseInPart in caseNumMap:
-                    if partNum != forPart:
+                for slicedMapping in caseNumMapping:
+                    if slicedMapping.partNumber != forPart:
                         continue  # !! CONTINUE !!
                     partContent.append(
-                        f"// | {partNum:02} | {caseNum:3} | {sliceNum:2} | {caseInPart:3} |"
+                        f"// | {slicedMapping.partNumber:02} | {caseNum:3} | {slicedMapping.ofSliceNumber:2} | {slicedMapping.testcaseNumber:3} |"
                     )
         rv += "\n// +----+-----+----+-----+\n".join(partContent).split("\n")
         rv.append("// +====+-----+----+-----+")
@@ -108,16 +107,14 @@ def _makePartPath(partNumber: int, outputDirectory: Path, qualifiedComponentName
 
 
 def _makePartCpp03Path(partPath: Path) -> Path:
-    newName = re.sub(r"(\.[0-9][0-9]\.t\.cpp)", "_cpp03\1", partPath.name)
-    return partPath.parent / newName
+    newName = re.sub(r"(\.\d{2}\.t\.cpp)", "_cpp03\1", partPath.name)
+    return partPath.with_name(newName)
 
 
 def _writeStampFileIfNeededAndDeleteExtraFiles(
     stampPath: Path, outputDirectory: Path, qualifiedComponentName: str, numParts: int
 ) -> None:
-    content = []
-    for partNumber in range(1, numParts + 1):
-        content.append(_makePartFilename(partNumber, qualifiedComponentName))
+    content = [_makePartFilename(part + 1, qualifiedComponentName) for part in range(numParts)]
 
     # Verify if stamp file content is unchanged
     if stampPath.is_file():
@@ -130,21 +127,20 @@ def _writeStampFileIfNeededAndDeleteExtraFiles(
                 return  # !!! RETURN
 
             # Delete .NN.t.cpp amd _cpp03.NN.t.cpp files we do not need anymore
-            for filename in existingContent:
+            def loggedUnlink(path: Path) -> None:
+                if not path.exists():
+                    return  # !!! RETURN !!!
+                logging.info(f"Deleting '{path}'")
+                path.unlink()
+
+            for filename in set(existingContent).difference(content):
                 filepath = outputDirectory / filename
-                if filename not in content and filepath.exists():
-                    logging.info(f"Deleting '{filepath}'")
-                    filepath.unlink()
-                    cpp03path = _makePartCpp03Path(filepath)
-                    if cpp03path.exists():
-                        logging.info(f"Deleting '{cpp03path}'")
-                        cpp03path.unlink()
+                loggedUnlink(filepath)
+                loggedUnlink(_makePartCpp03Path(filepath))
 
     logging.info(f"Writing stamp file '{stampPath}'.")
     with sourceFileOpen(stampPath, "w") as stampFile:
-        for line in content:
-            stampFile.write(line)
-            stampFile.write("\n")
+        stampFile.writelines(line + "\n" for line in content)
 
 
 def _isTimestampLine(line: str):
@@ -153,46 +149,40 @@ def _isTimestampLine(line: str):
     )
 
 
-_MY_TIMESTAMP_REGEX = re.compile(
-    r"// This file was was generated on \d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d\d\d\d\d UTC by:"
-)
-_MY_TIMESTAMP_BLANK = "// This file was was generated on YYYY-MM-DDTHH:MM:SS.ssssss UTC by:"
+def _isPartContentSame(prologue: str, lines: Sequence[str], outPath: Path) -> bool:
+    if not outPath.exists():
+        return False
+    with sourceFileOpen(outPath, "r") as infile:
+        if infile.readline() != prologue:
+            return False
+        for needLine, existLine in itertools.zip_longest(lines, infile):
+            if needLine is None or existLine is None:
+                return False
+            elif _isTimestampLine(needLine) and _isTimestampLine(existLine):
+                continue  # !!! CONTINUE
+            elif needLine.rstrip() != existLine.rstrip():
+                return False
+
+    return True
 
 
 def _writePartFile(
     partNumber: int, outputDirectory: Path, qualifiedComponentName: str, lines: Sequence[str]
 ):
-    outName = _makePartFilename(partNumber, qualifiedComponentName)
     outPath = _makePartPath(partNumber, outputDirectory, qualifiedComponentName)
 
     cppFlag = "-*-C++-*-"
-    spaces = 79 - (4 + len(outName) + len(cppFlag))
-    prologue = f"// {outName} {' ' * spaces}{cppFlag}\n"
+    spaces = 79 - (4 + len(outPath.name) + len(cppFlag))
+    prologue = f"// {outPath.name} {' ' * spaces}{cppFlag}\n"
     del cppFlag, spaces
 
-    if outPath.exists():
-        needToWrite: bool = False
-        with sourceFileOpen(outPath, "r") as infile:
-            if infile.readline() != prologue:
-                needToWrite = True
-            else:
-                for needLine, existLine in itertools.zip_longest(lines, infile):
-                    if needLine is None or existLine is None:
-                        needToWrite = True
-                        break
-                    elif _isTimestampLine(needLine) and _isTimestampLine(existLine):
-                        continue  # !!! CONTINUE
-                    elif needLine.rstrip() != existLine.rstrip():
-                        needToWrite = True
-                        break
-        if not needToWrite:
-            logging.info(f"Part file '{outPath}' exists with the proper content.")
-            return  # !!! RETURN
-
-    logging.info(f"Writing part file {outPath}.")
-    with sourceFileOpen(outPath, "w") as outfile:
-        outfile.write(prologue)
-        outfile.write("\n".join(lines) + "\n")
+    if not _isPartContentSame(prologue, lines, outPath):
+        logging.info(f"Writing part file {outPath}.")
+        with sourceFileOpen(outPath, "w") as outfile:
+            outfile.write(prologue)
+            outfile.writelines(line + "\n" for line in lines)
+    else:
+        logging.info(f"Part file {outPath!r} exists with the proper content.")
 
 
 def _writePartFilesIfNeeded(
@@ -204,16 +194,17 @@ def _writePartFilesIfNeeded(
 
 def _writeMapping(
     mappingFile: TextIO,
-    testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
+    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
     numParts: int,
 ):
-    content = []
-    content += _generateTestCaseMappingTable(testcasesToPartsMapping)
-    content += ["", ""]
-    content += _generatePartMappingTable(testcasesToPartsMapping, numParts)
-    for line in content:
-        mappingFile.write(line)
-        mappingFile.write("\n")
+    mappingFile.writelines(
+        line + "\n"
+        for line in itertools.chain(
+            _generateTestCaseMappingTable(testcasesToPartsMapping),
+            ["", ""],
+            _generatePartMappingTable(testcasesToPartsMapping, numParts),
+        )
+    )
 
 
 def writeOutputForXtCpp(
@@ -221,7 +212,7 @@ def writeOutputForXtCpp(
     outputDirectory: Path,
     qualifiedComponentName: str,
     partsContents: Sequence[Sequence[str]],
-    testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
+    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
 ) -> None:
     lockfileName = outputDirectory / f"{qualifiedComponentName}.xt.cpp.mapping"
     with sourceFileOpen(lockfileName, "w") as mappingAndLockFile:

@@ -33,6 +33,7 @@ from lib.xtCppParseResults import (
     CodeSlicing,
     ConditionalCommonCodeBlock,
     ConditionalCommonCodeBlocks,
+    OriginalTestcaseNumbers,
     SilencedWarningKind,
     SimCpp11Cpp03LinesToUpdate,
     SimCpp11IncludeConstruct,
@@ -382,10 +383,10 @@ def _findMainEnd(xtCppName: str, offset: int, fromMainLines: Sequence[str]) -> i
     return additionalOffset + idx
 
 
-def _findMainBlock(xtCppName: str, lines: Sequence[str]) -> Tuple[int, CodeBlockInterval]:
+def _findMainBlock(xtCppName: str, lines: Sequence[str]) -> CodeBlockInterval:
     """Find main function plus some sanity checks."""
     start = _findMainStart(xtCppName, lines)
-    return start, CodeBlockInterval(
+    return CodeBlockInterval(
         start + 1, start + 1 + _findMainEnd(xtCppName, start + 1, lines[start + 1 :]) + 2
     )
 
@@ -421,9 +422,15 @@ def _findTestPrintLine(xtCppName: str, offset: int, mainLines: Sequence[str]) ->
     raise ParseError(f"{xtCppName}:{offset}: Could not find the printf or cout line for 'test'")
 
 
+@dataclass
+class _TestCasesOnly:
+    offset: int
+    lines: Sequence[str]
+
+
 def _extractTestcasesOnlyBlock(
     xtCppName: str, offset: int, mainLines: Sequence[str]
-) -> Tuple[int, Sequence[str]]:
+) -> _TestCasesOnly:
     """Get the part that only has the case +/-N: { ~~~ } break; elements"""
 
     try:
@@ -445,14 +452,20 @@ def _extractTestcasesOnlyBlock(
     if mainLines[idx + 1 :].count("      default: {") != 1:
         raise ParseError(f"{xtCppName}: More than one 'default: {{' present in 'main'")
 
-    return offset + idx + 1, mainLines[idx + 1 : idx + idx2 + 1]
+    return _TestCasesOnly(offset + idx + 1, mainLines[idx + 1 : idx + idx2 + 1])
 
 
 @dataclass
-class _CodeSliceParsingState:
+class _CodeSliceInfo:
+    sliceName: str  # Empty string when there is no name
+    block: CodeBlockInterval
+
+
+@dataclass
+class _CodeSlicingParsingState:
     sliceName: str  # Empty if no name
     startLine: int
-    sliceBlocks: MutableSequence[Tuple[str, CodeBlockInterval]]
+    sliceBlocks: MutableSequence[_CodeSliceInfo]
     subSlices: MutableMapping[int, _TypelistParseResult | CodeSlicing]
 
 
@@ -473,11 +486,11 @@ def _parseOneTestcase(
 
     codeSliceNamesToLine: MutableMapping[str, int] = {}
 
-    codeSliceStack: MutableSequence[_CodeSliceParsingState] = []
+    codeSliceStack: MutableSequence[_CodeSlicingParsingState] = []
 
     currentCodeSliceName: str = ""
     currentCodeSliceStart: int = 0
-    currentCodeSliceBlocks: MutableSequence[Tuple[str, CodeBlockInterval]] = []
+    currentCodeSliceBlocks: MutableSequence[_CodeSliceInfo] = []
     currentCodeSliceNumberToSubSlice: MutableMapping[int, _TypelistParseResult | CodeSlicing] = {}
 
     def parseCodeSliceName(prefix: str) -> str:
@@ -529,7 +542,7 @@ def _parseOneTestcase(
                     "each code slice may have only one code slicing or a typelist slicing in it."
                 )
             codeSliceStack.append(
-                _CodeSliceParsingState(
+                _CodeSlicingParsingState(
                     currentCodeSliceName,
                     currentCodeSliceStart,
                     currentCodeSliceBlocks,
@@ -558,16 +571,16 @@ def _parseOneTestcase(
             )
 
         currentCodeSliceBlocks.append(
-            (
+            _CodeSliceInfo(
                 currentCodeSliceName,
-                CodeBlockInterval(currentCodeSliceBlocks[-1][1].stop - 1, lineNumber + 1),
+                CodeBlockInterval(currentCodeSliceBlocks[-1].block.stop - 1, lineNumber + 1),
             )
         )
 
-        wholeBlock = CodeBlockInterval(currentCodeSliceBlocks[0][1].start, lineNumber + 1)
+        wholeBlock = CodeBlockInterval(currentCodeSliceBlocks[0].block.start, lineNumber + 1)
         slices: MutableSequence[CodeSlice] = []
-        for sliceIndex, sliceTuple in enumerate(currentCodeSliceBlocks, 0):
-            theSlice = CodeSlice(*sliceTuple)
+        for sliceIndex, sliceInfo in enumerate(currentCodeSliceBlocks, 0):
+            theSlice = CodeSlice(sliceInfo.sliceName, sliceInfo.block)
 
             # No sub-slicing
             if sliceIndex not in currentCodeSliceNumberToSubSlice:
@@ -737,7 +750,9 @@ def _parseOneTestcase(
                 )
 
             currentCodeSliceBlocks.append(
-                (currentCodeSliceName, CodeBlockInterval(currentCodeSliceStart, lineNumber + 1))
+                _CodeSliceInfo(
+                    currentCodeSliceName, CodeBlockInterval(currentCodeSliceStart, lineNumber + 1)
+                )
             )
             currentCodeSliceStart = lineNumber
             currentCodeSliceName = parseCodeSliceName(
@@ -851,7 +866,13 @@ def _parseTestcases(
     resolveTypelist=Callable[[str], Sequence[str]],
 ) -> Sequence[_TestcaseParseResult]:
     """Find all test cases from 'case +/-N: { to } break;"""
-    tescaseBlocks: Sequence[Tuple[int, CodeBlockInterval]] = []
+
+    @dataclass
+    class _TempParsedTestcase:
+        testcaseNumber: int
+        block: CodeBlockInterval
+
+    testcaseBlocks: Sequence[_TempParsedTestcase] = []
 
     startOffset = offset
     theLines = casesLines
@@ -897,20 +918,26 @@ def _parseTestcases(
             casesLines = casesLines[1:]
             offset += 1
 
-        tescaseBlocks.append((num, CodeBlockInterval(tcStart + 1, offset + 2)))
+        testcaseBlocks.append(_TempParsedTestcase(num, CodeBlockInterval(tcStart + 1, offset + 2)))
 
         casesLines = casesLines[1:]
         offset += 1
 
     parsedTestcases: Sequence[_TestcaseParseResult] = []
     casesLines = theLines
-    for testcaseNumber, block in tescaseBlocks:
+    for tmpParsed in testcaseBlocks:
         parsedTestcases.append(
             _parseOneTestcase(
                 xtCppName,
-                testcaseNumber,
-                block,
-                casesLines[block.start - startOffset - 1 : block.stop - startOffset - 1],
+                tmpParsed.testcaseNumber,
+                tmpParsed.block,
+                casesLines[
+                    tmpParsed.block.start
+                    - startOffset
+                    - 1 : tmpParsed.block.stop
+                    - startOffset
+                    - 1
+                ],
                 resolveTypelist,
             )
         )
@@ -1004,9 +1031,9 @@ def _parseBlockCondition(
     condition: str,
     testcaseNumberSet: Set[int],
     sliceNameMap: Mapping[int, Mapping[str, int]],
-) -> Set[int | Tuple[int, int]]:
+) -> Set[OriginalTestcaseNumbers]:
 
-    rv: MutableSet[int | Tuple[int, int]] = set()
+    rv: MutableSet[OriginalTestcaseNumbers] = set()
     testCaseSpecs: Iterable[str] = (spec.strip() for spec in condition.split(","))
     for spec in testCaseSpecs:
         if ".." in spec:
@@ -1066,7 +1093,7 @@ def _parseBlockCondition(
                 )
 
             # NOTE This algorithm allows "holes" in the range
-            rv.update(numbersInRange)
+            rv.update(OriginalTestcaseNumbers(num, None) for num in numbersInRange)
         elif "." in spec:
             if spec.count(".") > 1:
                 f"{xtCppName}:{lineNumber}: Syntax error in '{spec}' in  too many '.'"
@@ -1098,7 +1125,7 @@ def _parseBlockCondition(
                     f"Available names are {sliceNameMap[caseNum]}"
                 )
             sliceNum = sliceNameMap[caseNum][sliceName]
-            rv.add((caseNum, sliceNum))
+            rv.add(OriginalTestcaseNumbers(caseNum, sliceNum))
 
         else:
             if not _isTestcaseInt(spec):
@@ -1114,7 +1141,7 @@ def _parseBlockCondition(
                     f"{xtCppName}:{lineNumber}: Testcase number {caseNum} does not exit.  "
                     f"Available numbers are {testcaseNumberSet}"
                 )
-            rv.add(caseNum)
+            rv.add(OriginalTestcaseNumbers(caseNum, None))
 
     if not rv:
         raise ParseError(
@@ -1129,7 +1156,7 @@ def _parseBlockCondition(
 class _OpenConditionalBlock:
     startLineNumber: int
     conditionAsWritten: str
-    compiledCondition: Set[int | Tuple[int, int]]
+    compiledCondition: Set[OriginalTestcaseNumbers]
 
 
 _MY_FOR_PREFIX = f"{MY_CONTROL_COMMENT_PREFIX}FOR "
@@ -1213,13 +1240,13 @@ _MY_PARTS_DEFINITION_HEADING = f"{MY_CONTROL_COMMENT_PREFIX}PARTS (syntax versio
 
 def _parsePartsDefinitionTable(
     xtCppName: str, lines: Sequence[str], testcaseToNumSlices: MutableMapping[int, int]
-) -> Sequence[Sequence[int | Tuple[int, int]]]:
+) -> Sequence[Sequence[OriginalTestcaseNumbers]]:
     try:
         idx = lines.index(_MY_PARTS_DEFINITION_HEADING)
     except ValueError:
         raise ParseError(f"{xtCppName}: Cannot find PARTS definition") from None
 
-    partDefinitions: MutableSequence[MutableSequence[int | Tuple[int, int]]] = []
+    partDefinitions: MutableSequence[MutableSequence[OriginalTestcaseNumbers]] = []
 
     unslicedCases = [
         caseNumber for caseNumber, numSlices in testcaseToNumSlices.items() if numSlices == 1
@@ -1346,7 +1373,7 @@ def _parsePartsDefinitionTable(
 
                 # NOTE This algorithm allows "holes" in the range
                 for num in numbersInRange:
-                    partDefinitions[-1].append(num)
+                    partDefinitions[-1].append(OriginalTestcaseNumbers(num, None))
                     testcaseToNumSlices.pop(num)
                     unslicedCases.remove(num)
             elif "." in contentDef:
@@ -1381,10 +1408,10 @@ def _parsePartsDefinitionTable(
                         f"not use the 'caseNumber.SLICES' form."
                     )
                 for sliceNumber in range(1, testcaseToNumSlices[num]):
-                    partDefinitions[-1].append((num, sliceNumber))
+                    partDefinitions[-1].append(OriginalTestcaseNumbers(num, sliceNumber))
                     partDefinitions.append([])
 
-                partDefinitions[-1].append((num, testcaseToNumSlices[num]))
+                partDefinitions[-1].append(OriginalTestcaseNumbers(num, testcaseToNumSlices[num]))
                 testcaseToNumSlices.pop(num)
 
             else:
@@ -1411,7 +1438,7 @@ def _parsePartsDefinitionTable(
                         f"Available not-sliced test case numbers are {unslicedCases}"
                     )
 
-                partDefinitions[-1].append(num)
+                partDefinitions[-1].append(OriginalTestcaseNumbers(num, None))
                 testcaseToNumSlices.pop(num)
                 unslicedCases.remove(num)
 
@@ -1453,19 +1480,22 @@ def parse(
 
     _verifySupportedControlComments(xtCppName, lines)
 
-    offset, mainBlock = _findMainBlock(xtCppName, lines)
+    mainBlock = _findMainBlock(xtCppName, lines)
 
-    testPrintLineInfo = _findTestPrintLine(xtCppName, offset, lines[offset : mainBlock.stop - 1])
+    testPrintLineInfo = _findTestPrintLine(
+        xtCppName, mainBlock.start - 1, lines[mainBlock.start - 1 : mainBlock.stop - 1]
+    )
 
     def resolveTypelist(theListMacroValue: str):
         return resolveTypelistMacroValue(theListMacroValue, xtCppFull, groupsDirs)
 
-    testcaseParseResults = _parseTestcases(
-        xtCppName,
-        *_extractTestcasesOnlyBlock(xtCppName, offset, lines[offset : mainBlock.stop - 1]),
-        resolveTypelist,
+    testCasesOnly = _extractTestcasesOnlyBlock(
+        xtCppName, mainBlock.start - 1, lines[mainBlock.start - 1 : mainBlock.stop - 1]
     )
-    del offset, mainBlock
+    testcaseParseResults = _parseTestcases(
+        xtCppName, testCasesOnly.offset, testCasesOnly.lines, resolveTypelist
+    )
+    del testCasesOnly, mainBlock
 
     sliceNameMap = _createSliceNameMap(testcaseParseResults)
     testcaseNumberSet = set(parseResult.testcaseNumber for parseResult in testcaseParseResults)

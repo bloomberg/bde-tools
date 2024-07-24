@@ -5,14 +5,17 @@ import json
 import logging
 from pathlib import Path
 import sys
-from typing import Callable, Mapping, MutableMapping, MutableSequence, Sequence, Set, Tuple
+from typing import Callable, Mapping, MutableMapping, MutableSequence, Sequence, Set
 
 from lib.codeBlockInterval import CodeBlockInterval
 from lib.xtCppParseResults import (
+    OriginalTestcaseNumbers,
     ParseResult,
     SilencedWarningKind,
+    SlicedMapping,
     SlicedTestcase,
     Testcase,
+    UnslicedMapping,
     UnslicedTestcase,
 )
 from lib.myConstants import MY_INFO_COMMENT_PREFIX
@@ -62,7 +65,7 @@ def _generateXteParts(
 
 
 def _generatedToOriginalTestcaseMapping(
-    parts: Sequence[Sequence[int | Tuple[int, int]]],
+    parts: Sequence[Sequence[OriginalTestcaseNumbers]],
 ) -> Sequence[Mapping[int, int]]:
     """Map part-number+generated-test-case-number -> original--test-case-number.
 
@@ -75,18 +78,20 @@ def _generatedToOriginalTestcaseMapping(
 
     for contents in parts:
         rv.append({})
-        positiveCases = sorted([elem[0] if isinstance(elem, tuple) else elem for elem in contents])
+        sortedCases = sorted(elem.testcaseNumber for elem in contents)
         partCaseNum: int = 1
-        for origCaseNum in positiveCases:
+        for origCaseNum in sortedCases:
             if origCaseNum > 0:
                 rv[-1][origCaseNum] = partCaseNum
                 partCaseNum += 1
+            else:
+                rv[-1][origCaseNum] = origCaseNum
     return rv
 
 
 def _generateCommandLineArgToOriginalMapping(
-    parts: Sequence[Sequence[int | Tuple[int, int]]],
-) -> Sequence[Mapping[int, Tuple[int, int]]]:
+    parts: Sequence[Sequence[OriginalTestcaseNumbers]],
+) -> Sequence[Mapping[int, OriginalTestcaseNumbers]]:
     """Map part-number+generated-test-case-number -> original--test-case-number.
 
     Negative cases are mapped to themselves.
@@ -94,42 +99,42 @@ def _generateCommandLineArgToOriginalMapping(
     Positive cases are numbered 1..N in each test driver part.
     """
 
-    rv: MutableSequence[MutableMapping[int, Tuple[int, int]]] = []
+    rv: MutableSequence[MutableMapping[int, OriginalTestcaseNumbers]] = []
 
     for contents in parts:
         rv.append({})
-        positiveCases = sorted(
-            contents, key=lambda elem: elem[0] if isinstance(elem, tuple) else elem
-        )
+        sortedCases = sorted(contents, key=lambda elem: elem.testcaseNumber)
         partCaseNum: int = 1
-        for elem in positiveCases:
-            origCaseNum = elem[0] if isinstance(elem, tuple) else elem
+        for elem in sortedCases:
+            origCaseNum = elem.testcaseNumber
             if origCaseNum > 0:
-                rv[-1][partCaseNum] = elem if isinstance(elem, tuple) else (elem, 0)
+                rv[-1][partCaseNum] = elem
                 partCaseNum += 1
+            else:
+                rv[-1][elem.testcaseNumber] = elem
     return rv
 
 
 def generateTestcasesToPartsMapping(
     parseResults: ParseResult,
-) -> Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]]:
+) -> Sequence[UnslicedMapping | Sequence[SlicedMapping]]:
     """Original test case number to part+case-number or [part+case-number+slice-number]"""
 
-    rv: MutableSequence[Tuple[int, int] | MutableSequence[Tuple[int, int, int]]] = []
+    rv: MutableSequence[UnslicedMapping | MutableSequence[SlicedMapping]] = []
 
     # First fill positive test cases as if they were all unsliced going into part 100 as case 100,
     # so we do not need to use a map (in the next loop)
     for testcase in parseResults.testcases:
         if testcase.number > 0:
-            rv.append((100, 100))
+            rv.append(UnslicedMapping(100, 100))
 
     partToOrigMap = _generatedToOriginalTestcaseMapping(parseResults.parts)
 
     def getGeneratedCaseNumber(partNum: int, origCaseNum: int) -> int:
         part = partToOrigMap[partNum - 1]
-        for newCaseNum, elem in enumerate(part, 1):
-            if elem == origCaseNum:
-                return newCaseNum
+        for original, generated in part.items():
+            if original == origCaseNum:
+                return generated
         raise ValueError(
             f"INTERNAL ERROR: Could not find generated case number for "
             f"{origCaseNum} in part {partNum}.\n{part=}\n{parseResults.parts=}"
@@ -137,31 +142,36 @@ def generateTestcasesToPartsMapping(
 
     for partNum, part in enumerate(parseResults.parts, 1):
         for elem in part:
-            if isinstance(elem, int):
-                if elem > 0:
-                    rv[elem - 1] = (partNum, getGeneratedCaseNumber(partNum, elem))
-            else:  # Sliced test case
-                assert isinstance(elem, tuple), f"{elem!r} is not a tuple, but '{type(elem)}'"
-                caseNum = elem[0]
-                if isinstance(rv[caseNum - 1], tuple):
-                    rv[caseNum - 1] = []
-                sliceList = rv[caseNum - 1]
-                assert not isinstance(sliceList, tuple)
-                sliceList.append((partNum, elem[1], getGeneratedCaseNumber(partNum, caseNum)))
+            if elem.testcaseNumber > 0:
+                if not elem.hasSliceNumber:
+                    rv[elem.testcaseNumber - 1] = UnslicedMapping(
+                        partNum, getGeneratedCaseNumber(partNum, elem.testcaseNumber)
+                    )
+                else:  # Sliced test case
+                    if isinstance(rv[elem.testcaseNumber - 1], UnslicedMapping):
+                        rv[elem.testcaseNumber - 1] = []
+                    sliceList = rv[elem.testcaseNumber - 1]
+                    assert not isinstance(sliceList, UnslicedMapping)
+                    assert elem.sliceNumber is not None
+                    sliceList.append(
+                        SlicedMapping(
+                            partNum,
+                            getGeneratedCaseNumber(partNum, elem.testcaseNumber),
+                            elem.sliceNumber,
+                        )
+                    )
 
     # Add negative cases
     for partNum, part in enumerate(parseResults.parts, 1):
         for elem in part:
-            if isinstance(elem, int):
-                if elem < 0:
-                    rv.append((partNum, elem))
+            if elem.testcaseNumber < 0:
+                rv.append(UnslicedMapping(partNum, elem.testcaseNumber))
 
     return rv
 
 
 def _generateTestCaseMappingTableForPart(
-    testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
-    partNum: int,
+    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]], partNum: int
 ) -> Sequence[str]:
     rv: MutableSequence[str] = []
     rv += [
@@ -177,19 +187,21 @@ def _generateTestCaseMappingTableForPart(
         r"// +=====+====+=====+==========+",
     ]
     tableContent = []
-    for caseNum, caseNumMap in enumerate(testcasesToPartsMapping, 1):
-        if isinstance(caseNumMap, tuple):
-            if caseNumMap[0] == partNum:
-                inPartCaseNum = caseNumMap[1]
+    for caseNum, caseNumMapping in enumerate(testcasesToPartsMapping, 1):
+        if isinstance(caseNumMapping, UnslicedMapping):
+            if caseNumMapping.partNumber == partNum:
+                inPartCaseNum = caseNumMapping.testcaseNumber
                 assert isinstance(inPartCaseNum, int)
                 if inPartCaseNum > 0:
                     tableContent.append(f"// | {caseNum:3} |    | {inPartCaseNum:3} |")
                 else:  # Negative case numbers are not changed
                     tableContent.append(f"// | {inPartCaseNum:3} |    | {inPartCaseNum:3} |")
         else:
-            for pn, sliceNum, caseInPart in caseNumMap:
-                if pn == partNum:
-                    tableContent.append(f"// | {caseNum:3} | {sliceNum:2} | {caseInPart:3} |")
+            for slicedMapping in caseNumMapping:
+                if slicedMapping.partNumber == partNum:
+                    tableContent.append(
+                        f"// | {caseNum:3} | {slicedMapping.ofSliceNumber:2} | {slicedMapping.testcaseNumber:3} |"
+                    )
     rv += "\n// +-----+----+-----+\n".join(tableContent).split("\n")
     rv += ["// +=====+====+=====+", ""]
 
@@ -264,7 +276,7 @@ def _generateParts(
     xtCppName: str,
     qualifiedComponentName: str,
     parseResults: ParseResult,
-    testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
+    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
     lines: MutableSequence[str],
     writeLineDirective: Callable[[MutableSequence[str], int], str],
 ) -> MutableSequence[MutableSequence[str]]:
@@ -323,10 +335,19 @@ def _generateParts(
                     "    switch(test) {",
                 ]
                 for newNum, caseAndSlice in partToOrigMapping.items():
-                    partLines.append(f"      case {newNum}: {{")
-                    partLines.append(f"        origCase = {caseAndSlice[0]};")
-                    partLines.append(f"        origSlice = {caseAndSlice[1]};")
-                    partLines.append("      } break;")
+                    if caseAndSlice.testcaseNumber < 0:
+                        # Negative test cases are handled by the `default` in the `switch`
+                        continue  # !!! CONTINUE !!!
+
+                    sliceNum = (
+                        caseAndSlice.sliceNumber if caseAndSlice.sliceNumber is not None else 0
+                    )
+                    partLines += [
+                        f"      case {newNum}: {{",
+                        f"        origCase = {caseAndSlice.testcaseNumber};",
+                        f"        origSlice = {sliceNum};",
+                        "      } break;",
+                    ]
 
                 partLines += [
                     "      default: {",
@@ -356,7 +377,7 @@ def _generateParts(
                     "    using std::cout;  using std::endl;",
                     "",
                     "    if (test < 0) {",
-                    f'        cout << "TEST {escapedXtCppPath} CASE " << test ',
+                    f'        cout << "TEST {escapedXtCppPath} CASE " << test',
                     f'             << "RUN AS {qualifiedComponentName}.{partNumber:02}.t CASE "',
                     "              << test << endl;",
                     "        return;                                                       // RETURN",
@@ -368,10 +389,19 @@ def _generateParts(
                     "    switch(test) {",
                 ]
                 for newNum, caseAndSlice in partToOrigMapping.items():
-                    partLines.append(f"      case {newNum}: {{")
-                    partLines.append(f"        origCase = {caseAndSlice[0]};")
-                    partLines.append(f"        origSlice = {caseAndSlice[1]};")
-                    partLines.append("      } break;")
+                    if caseAndSlice.testcaseNumber < 0:
+                        # Negative test cases are handled by the `default` in the `switch`
+                        continue  # !!! CONTINUE !!!
+
+                    sliceNum = (
+                        caseAndSlice.sliceNumber if caseAndSlice.sliceNumber is not None else 0
+                    )
+                    partLines += [
+                        f"      case {newNum}: {{",
+                        f"        origCase = {caseAndSlice.testcaseNumber};",
+                        f"        origSlice = {sliceNum};",
+                        "      } break;",
+                    ]
 
                 partLines += [
                     "      default: {",
@@ -408,38 +438,35 @@ def _generateParts(
         partLines.append("    printTestInfo(test);")
 
         partLines += lines[parseResults.testPrintLine.lineNumber + 1 : firstTestcasesLine - 1]
-        positiveCases = [
-            content for content in partContents if isinstance(content, tuple) or content > 0
-        ]
+        positiveCases = [content for content in partContents if content.testcaseNumber > 0]
 
-        for content in sorted(
-            positiveCases, reverse=True, key=lambda e: e[0] if isinstance(e, tuple) else e
-        ):
-            if isinstance(content, int):
+        for content in sorted(positiveCases, reverse=True, key=lambda e: e.testcaseNumber):
+            if not content.hasSliceNumber:
                 # Simple, unsliced test case
-                theCase = testcases[content]
+                theCase = testcases[content.testcaseNumber]
                 assert isinstance(theCase, UnslicedTestcase)
                 partLines += theCase.generateCode(
-                    xtCppName, origToPartMapping[content], lines, writeLineDirective
+                    xtCppName, origToPartMapping[content.testcaseNumber], lines, writeLineDirective
                 )
                 continue  # !!! continue
 
             # There are slices
-            theCase = testcases[content[0]]
+            theCase = testcases[content.testcaseNumber]
             assert isinstance(theCase, SlicedTestcase)
+            assert isinstance(content.sliceNumber, int)
             partLines += _generateSlicedTestcase(
                 escapedXtCppPath,
                 xtCppName,
                 theCase,
-                origToPartMapping[content[0]],
-                content[1],
+                origToPartMapping[content.testcaseNumber],
+                content.sliceNumber,
                 lines,
                 writeLineDirective,
             )
         del positiveCases
 
         negativeCases = [
-            content for content in partContents if isinstance(content, int) and content < 0
+            content.testcaseNumber for content in partContents if content.testcaseNumber < 0
         ]
 
         for content in negativeCases:
@@ -467,7 +494,7 @@ def generateParts(
     xtCppName: str,
     qualifiedComponentName: str,
     parseResults: ParseResult,
-    testcasesToPartsMapping: Sequence[Tuple[int, int] | Sequence[Tuple[int, int, int]]],
+    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
     lines: MutableSequence[str],
     useLineDirectives: bool | None,
 ) -> Sequence[Sequence[str]]:

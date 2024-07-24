@@ -6,9 +6,9 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSequence,
+    Optional,
     Sequence,
     Set,
-    Tuple,
 )
 
 from dataclasses import dataclass, field
@@ -249,12 +249,17 @@ class CodeSlicing:
     def coveredBlock(self) -> CodeBlockInterval:
         return self.block
 
-    def _getDualIndex(self, sliceIndex: int) -> Tuple[int, int]:
+    @dataclass
+    class _DualIndex:
+        myIndex: int
+        subIndex: int
+
+    def _getDualIndex(self, sliceIndex: int) -> _DualIndex:
         codeSliceIndex = 0
         while self.codeSlices[codeSliceIndex].numSlices <= sliceIndex:
             sliceIndex -= self.codeSlices[codeSliceIndex].numSlices
             codeSliceIndex += 1
-        return codeSliceIndex, sliceIndex
+        return CodeSlicing._DualIndex(codeSliceIndex, sliceIndex)
 
     def createSliceNameMap(self) -> Mapping[str, int]:
         rv: MutableMapping[str, int] = {}
@@ -273,13 +278,15 @@ class CodeSlicing:
         lines: Sequence[str],
         writeLineDirective: Callable[[MutableSequence[str], int], str],
     ) -> Sequence[str]:
-        codeSliceIndex, innerIndex = self._getDualIndex(sliceIndex)
+        dualIndex = self._getDualIndex(sliceIndex)
         rv = []
         rv.append(
             f"{_getIndent(lines[self.block.start - 1])}{MY_INFO_COMMENT_PREFIX}"
-            f"code slice {codeSliceIndex+1} of {len(self.codeSlices)}"
+            f"code slice {dualIndex.myIndex+1} of {len(self.codeSlices)}"
         )
-        rv += self.codeSlices[codeSliceIndex].generateCode(innerIndex, lines, writeLineDirective)
+        rv += self.codeSlices[dualIndex.myIndex].generateCode(
+            dualIndex.subIndex, lines, writeLineDirective
+        )
         writeLineDirective(rv, self.block.stop)
         return rv
 
@@ -373,7 +380,7 @@ class TestPrintLineInfo:
 
 @dataclass
 class ConditionalCommonCodeBlock:
-    activeFor: Set[int | Tuple[int, int]]  # (n, 100) - all test case, (n, 1-99) - just a slice
+    activeFor: Set[OriginalTestcaseNumbers]
     conditionAsWritten: str
     block: CodeBlockInterval
 
@@ -381,11 +388,14 @@ class ConditionalCommonCodeBlock:
     def coveredBlock(self) -> CodeBlockInterval:
         return self.block
 
-    def isActive(self, partContent: Sequence[int | Tuple[int, int]]) -> bool:
+    def isActive(self, partContent: Sequence[OriginalTestcaseNumbers]) -> bool:
         for elem in partContent:
             if elem in self.activeFor:
                 return True
-            if isinstance(elem, tuple) and elem[0] in self.activeFor:
+            if (
+                elem.hasSliceNumber
+                and OriginalTestcaseNumbers(elem.testcaseNumber, None) in self.activeFor
+            ):
                 return True
         return False
 
@@ -410,7 +420,7 @@ class ConditionalCommonCodeBlocks:
     def generateCodeForBlock(
         self,
         withinBlock: CodeBlockInterval,
-        partContents: Sequence[int | Tuple[int, int]],
+        partContents: Sequence[OriginalTestcaseNumbers],
         lines: Sequence[str],
         writeLineDirective: Callable[[MutableSequence[str], int], str],
     ) -> Sequence[str]:
@@ -487,17 +497,48 @@ SilencedWarningKind = Literal["unused"]
 
 
 @dataclass
+class PartTestcaseNumbers:
+    partNumber: int
+    testcaseNumber: int
+
+
+@dataclass(frozen=True)
+class OriginalTestcaseNumbers:
+    testcaseNumber: int
+    sliceNumber: Optional[int]
+
+    def __post_init__(self):
+        if self.testcaseNumber < 0 and self.sliceNumber is not None:
+            raise ValueError(f"Negative test cases cannot have slices: {self!r}")
+
+    @property
+    def hasSliceNumber(self) -> bool:
+        return self.sliceNumber is not None
+
+
+@dataclass
+class UnslicedMapping:
+    partNumber: int
+    testcaseNumber: int
+
+    @property
+    def isUnset(self) -> bool:
+        return self.partNumber == 100 and self.testcaseNumber == 100
+
+
+@dataclass
+class SlicedMapping:
+    partNumber: int
+    testcaseNumber: int
+    ofSliceNumber: int
+
+
+@dataclass
 class ParseResult:
     useLineDirectives: bool | None
     silencedWarnings: Set[SilencedWarningKind]
     simCpp11: SimCpp11IncludeConstruct | SimCpp11Cpp03LinesToUpdate | None
-    parts: Sequence[Sequence[int | Tuple[int, int]]]
+    parts: Sequence[Sequence[OriginalTestcaseNumbers]]
     conditionalCommonCodeBlocks: ConditionalCommonCodeBlocks
     testPrintLine: TestPrintLineInfo
     testcases: Sequence[Testcase]
-
-    def generateBeforeTestPrintCode(self) -> Sequence[str]:
-        """Return the next block"""
-        rv = []
-
-        return rv
