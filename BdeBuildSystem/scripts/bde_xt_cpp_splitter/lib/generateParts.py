@@ -5,7 +5,7 @@ import json
 import logging
 from pathlib import Path
 import sys
-from typing import Callable, Mapping, MutableMapping, MutableSequence, Sequence, Set
+from typing import Callable, Generator, Mapping, MutableMapping, MutableSequence, Sequence, Set
 
 from lib.codeBlockInterval import CodeBlockInterval
 from lib.xtCppParseResults import (
@@ -316,6 +316,23 @@ def _generateParts(
         )
 
         if not qualifiedComponentName.endswith("_cpp03"):
+
+            def generateCases() -> Generator[str, None, None]:  # type: ignore
+                nonlocal partToOrigMapping
+
+                for newNum, caseAndSlice in partToOrigMapping.items():
+                    if caseAndSlice.testcaseNumber < 0:
+                        # Negative test cases are handled by the `default` in the `switch`
+                        continue  # !!! CONTINUE !!!
+
+                    sliceNum = (
+                        caseAndSlice.sliceNumber if caseAndSlice.sliceNumber is not None else 0
+                    )
+                    yield f"      case {newNum}: {{"
+                    yield f"        origCase = {caseAndSlice.testcaseNumber};"
+                    yield f"        origSlice = {sliceNum};"
+                    yield "      } break;"
+
             if parseResults.testPrintLine.kind == "printf":
                 partLines += [
                     "#include <stdio.h>",
@@ -334,20 +351,8 @@ def _generateParts(
                     "    int origCase, origSlice;",
                     "    switch(test) {",
                 ]
-                for newNum, caseAndSlice in partToOrigMapping.items():
-                    if caseAndSlice.testcaseNumber < 0:
-                        # Negative test cases are handled by the `default` in the `switch`
-                        continue  # !!! CONTINUE !!!
 
-                    sliceNum = (
-                        caseAndSlice.sliceNumber if caseAndSlice.sliceNumber is not None else 0
-                    )
-                    partLines += [
-                        f"      case {newNum}: {{",
-                        f"        origCase = {caseAndSlice.testcaseNumber};",
-                        f"        origSlice = {sliceNum};",
-                        "      } break;",
-                    ]
+                partLines += generateCases()
 
                 partLines += [
                     "      default: {",
@@ -388,20 +393,8 @@ def _generateParts(
                     "    int origCase, origSlice;",
                     "    switch(test) {",
                 ]
-                for newNum, caseAndSlice in partToOrigMapping.items():
-                    if caseAndSlice.testcaseNumber < 0:
-                        # Negative test cases are handled by the `default` in the `switch`
-                        continue  # !!! CONTINUE !!!
 
-                    sliceNum = (
-                        caseAndSlice.sliceNumber if caseAndSlice.sliceNumber is not None else 0
-                    )
-                    partLines += [
-                        f"      case {newNum}: {{",
-                        f"        origCase = {caseAndSlice.testcaseNumber};",
-                        f"        origSlice = {sliceNum};",
-                        "      } break;",
-                    ]
+                partLines += generateCases()
 
                 partLines += [
                     "      default: {",

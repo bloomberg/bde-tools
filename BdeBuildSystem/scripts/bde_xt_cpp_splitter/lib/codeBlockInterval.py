@@ -18,14 +18,9 @@ class CodeBlockInterval:
         if stopArg == -1:
             stopArg = startArg
 
-        if startArg < 1 or stopArg < 1:
-            raise ValueError(
-                f"'{type(self)}' Line numbers must be positive: {startArg}, {stopArg=}"
-            )
-        if startArg > stopArg:
-            raise ValueError(
-                f"'{type(self)}' Stop cannot be smaller than start: {startArg=}, {stopArg}"
-            )
+        assert startArg > 0
+        assert stopArg > 0
+        assert startArg <= stopArg
 
         self._start = startArg
         self._stop = stopArg
@@ -40,17 +35,11 @@ class CodeBlockInterval:
 
     @stop.setter
     def stop(self, newStop: LineNumber) -> None:
-        if newStop < self._start:
-            raise ValueError(
-                f"'{type(self)}.stop' ({newStop}) cannot be smaller than start ({self._start})"
-            )
+        assert newStop >= self._start
         self._stop = newStop
 
     def extendBy(self, numberOfLines: LineNumber) -> None:
-        if numberOfLines < 0:
-            raise ValueError(
-                f"Extending by {numberOfLines} (negative) number of lines is not supported."
-            )
+        assert numberOfLines >= 0
         self._stop += numberOfLines
 
     def __len__(self):
