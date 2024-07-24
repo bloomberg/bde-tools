@@ -4,98 +4,11 @@ import itertools
 import logging
 from pathlib import Path
 import re
-from typing import MutableSequence, Sequence, TextIO
+from typing import Sequence, TextIO
 
+from lib.mappingTables import generatePartMappingTable, generateTestCaseMappingTable
 from lib.sourceFileOpen import sourceFileOpen
-from lib.xtCppParseResults import SlicedMapping, UnslicedMapping
-
-
-def _generateTestCaseMappingTable(
-    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
-) -> Sequence[str]:
-    rv: MutableSequence[str] = []
-    rv += [
-        r"// +=============================+",
-        r"// |   TEST CASE MAPPING TABLE   |",
-        r"// +=============================+",
-        r"// | Original Test Case Number   |",
-        r"// |     +-----------------------+",
-        r"// |     | Slice Number          |",
-        r"// |     |    +------------------+",
-        r"// |     |    | Part Number      |",
-        r"// |     |    |    +-------------+",
-        r"// |     |    |    | Case Number |",
-        r"// |     |    |    | in Part     |",
-        r"// +=====+====+====+=====+=======+",
-    ]
-    tableContent = []
-    for caseNum, caseNumMapping in enumerate(testcasesToPartsMapping, 1):
-        if isinstance(caseNumMapping, UnslicedMapping):
-            inPartCaseNum = caseNumMapping.testcaseNumber
-            assert isinstance(inPartCaseNum, int)
-            if inPartCaseNum > 0:
-                tableContent.append(
-                    f"// | {caseNum:3} |    | {caseNumMapping.partNumber:02} | {inPartCaseNum:3} |"
-                )
-            else:
-                tableContent.append(  # Negative case numbers are not changed
-                    f"// | {inPartCaseNum:3} |    | {caseNumMapping.partNumber:02} | {inPartCaseNum:3} |"
-                )
-        else:
-            for slicedMapping in caseNumMapping:
-                tableContent.append(
-                    f"// | {caseNum:3} | {slicedMapping.ofSliceNumber:2} | {slicedMapping.partNumber:02} | {slicedMapping.testcaseNumber:3} |"
-                )
-    rv += "\n// +-----+----+----+-----+\n".join(tableContent).split("\n")
-    rv.append("// +=====+====+====+=====+")
-
-    return rv
-
-
-def _generatePartMappingTable(
-    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]], numParts: int
-) -> Sequence[str]:
-    rv: MutableSequence[str] = []
-    rv += [
-        r"// +============================+",
-        r"// |     PART MAPPING TABLE     |",
-        r"// +============================+",
-        r"// | Part Number                |",
-        r"// |    +-----------------------+",
-        r"// |    | Original Case Number  |",
-        r"// |    |     +-----------------+",
-        r"// |    |     | Slice Number    |",
-        r"// |    |     |    +------------+",
-        r"// |    |     |    | Part Case  |",
-        r"// |    |     |    | Number     |",
-        r"// +====+=====+====+=====+======+",
-    ]
-    for forPart in range(1, numParts + 1):
-        partContent = []
-        for caseNum, caseNumMapping in enumerate(testcasesToPartsMapping, 1):
-            if isinstance(caseNumMapping, UnslicedMapping):
-                if caseNumMapping.partNumber != forPart:
-                    continue  # !! CONTINUE !!
-                inPartCaseNum = caseNumMapping.testcaseNumber
-                if inPartCaseNum > 0:
-                    partContent.append(
-                        f"// | {caseNumMapping.partNumber:02} | {caseNum:3} |    | {inPartCaseNum:3} |"
-                    )
-                else:
-                    partContent.append(  # Negative case numbers are not changed
-                        f"// | {caseNumMapping.partNumber:02} | {inPartCaseNum:3} |    | {inPartCaseNum:3} |"
-                    )
-            else:
-                for slicedMapping in caseNumMapping:
-                    if slicedMapping.partNumber != forPart:
-                        continue  # !! CONTINUE !!
-                    partContent.append(
-                        f"// | {slicedMapping.partNumber:02} | {caseNum:3} | {slicedMapping.ofSliceNumber:2} | {slicedMapping.testcaseNumber:3} |"
-                    )
-        rv += "\n// +----+-----+----+-----+\n".join(partContent).split("\n")
-        rv.append("// +====+-----+----+-----+")
-
-    return rv
+from lib.xtCppParseResults import TestcaseMapping
 
 
 def _makePartFilename(partNumber: int, qualifiedComponentName: str) -> str:
@@ -193,16 +106,14 @@ def _writePartFilesIfNeeded(
 
 
 def _writeMapping(
-    mappingFile: TextIO,
-    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
-    numParts: int,
+    mappingFile: TextIO, testcasesToPartsMapping: Sequence[TestcaseMapping], numParts: int
 ):
     mappingFile.writelines(
         line + "\n"
         for line in itertools.chain(
-            _generateTestCaseMappingTable(testcasesToPartsMapping),
+            generateTestCaseMappingTable(testcasesToPartsMapping),
             ["", ""],
-            _generatePartMappingTable(testcasesToPartsMapping, numParts),
+            generatePartMappingTable(testcasesToPartsMapping, numParts),
         )
     )
 
@@ -212,7 +123,7 @@ def writeOutputForXtCpp(
     outputDirectory: Path,
     qualifiedComponentName: str,
     partsContents: Sequence[Sequence[str]],
-    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
+    testcasesToPartsMapping: Sequence[TestcaseMapping],
 ) -> None:
     lockfileName = outputDirectory / f"{qualifiedComponentName}.xt.cpp.mapping"
     with sourceFileOpen(lockfileName, "w") as mappingAndLockFile:

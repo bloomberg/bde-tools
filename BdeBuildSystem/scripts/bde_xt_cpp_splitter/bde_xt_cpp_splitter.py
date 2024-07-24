@@ -370,11 +370,12 @@ def main():
     xtCppLines = loadXtCpp(args.xtCppPath)
     logging.info(f"Read {len(xtCppLines)} lines.")
 
+    logging.info(f"Parsing '{args.xtCppPath}'.")
     parseResult = parseXtCpp(
         args.xtCppPath, args.xtCppPath.name, args.xtCppComponent, xtCppLines, args.groupsDirsPath
     )
-    logging.info(f"Parsing success for '{args.xtCppPath}'.")
 
+    logging.info(f"Generating parts' content for '{args.xtCppPath}'.")
     testcasesToPartsMapping = generateTestcasesToPartsMapping(parseResult)
     partsContents = generatePartsFromXtCpp(
         args.xtCppPath,
@@ -385,7 +386,8 @@ def main():
         xtCppLines,
         args.useLineDirectives,
     )
-    logging.info(f"Parts contents generated for '{args.xtCppPath}'.")
+
+    logging.info(f"Writing parts/stamp/mapping for '{args.xtCppPath}'.")
     writeOutputForXtCpp(
         args.stampFilePath,
         args.outDirectory,

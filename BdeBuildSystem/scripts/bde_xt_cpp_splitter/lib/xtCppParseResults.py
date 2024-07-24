@@ -517,20 +517,31 @@ class OriginalTestcaseNumbers:
 
 
 @dataclass
-class UnslicedMapping:
+class TestcaseMapping:
+    originalTestcaseNumber: int
+    sliceNumber: Optional[int]
     partNumber: int
-    testcaseNumber: int
+    partTestcaseNumber: int
+
+    @property
+    def originalTestcaseNumberSortWeight(self) -> int:
+        return (
+            self.originalTestcaseNumber
+            if self.originalTestcaseNumber > 0
+            else 100 - self.originalTestcaseNumber
+        )
 
     @property
     def isUnset(self) -> bool:
-        return self.partNumber == 100 and self.testcaseNumber == 100
+        return self.partNumber == 100 and self.partTestcaseNumber == 100
 
+    @property
+    def hasSliceNumber(self) -> bool:
+        return self.sliceNumber is not None
 
-@dataclass
-class SlicedMapping:
-    partNumber: int
-    testcaseNumber: int
-    ofSliceNumber: int
+    def sliceText(self, width: int) -> str:
+        assert width > 0
+        return f"{self.sliceNumber:{width}}" if self.hasSliceNumber else " " * width
 
 
 @dataclass

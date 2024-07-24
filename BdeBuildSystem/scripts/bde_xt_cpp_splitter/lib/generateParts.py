@@ -12,13 +12,13 @@ from lib.xtCppParseResults import (
     OriginalTestcaseNumbers,
     ParseResult,
     SilencedWarningKind,
-    SlicedMapping,
     SlicedTestcase,
     Testcase,
-    UnslicedMapping,
+    TestcaseMapping,
     UnslicedTestcase,
 )
 from lib.myConstants import MY_INFO_COMMENT_PREFIX
+from lib.mappingTables import generateTestCaseMappingTableForPart
 
 
 def _collectXteFiles(xtCppPath: Path, qualifiedComponentName) -> Sequence[Path]:
@@ -115,18 +115,10 @@ def _generateCommandLineArgToOriginalMapping(
     return rv
 
 
-def generateTestcasesToPartsMapping(
-    parseResults: ParseResult,
-) -> Sequence[UnslicedMapping | Sequence[SlicedMapping]]:
+def generateTestcasesToPartsMapping(parseResults: ParseResult) -> Sequence[TestcaseMapping]:
     """Original test case number to part+case-number or [part+case-number+slice-number]"""
 
-    rv: MutableSequence[UnslicedMapping | MutableSequence[SlicedMapping]] = []
-
-    # First fill positive test cases as if they were all unsliced going into part 100 as case 100,
-    # so we do not need to use a map (in the next loop)
-    for testcase in parseResults.testcases:
-        if testcase.number > 0:
-            rv.append(UnslicedMapping(100, 100))
+    rv: MutableSequence[TestcaseMapping] = []
 
     partToOrigMap = _generatedToOriginalTestcaseMapping(parseResults.parts)
 
@@ -143,68 +135,24 @@ def generateTestcasesToPartsMapping(
     for partNum, part in enumerate(parseResults.parts, 1):
         for elem in part:
             if elem.testcaseNumber > 0:
-                if not elem.hasSliceNumber:
-                    rv[elem.testcaseNumber - 1] = UnslicedMapping(
-                        partNum, getGeneratedCaseNumber(partNum, elem.testcaseNumber)
+                rv.append(
+                    TestcaseMapping(
+                        elem.testcaseNumber,
+                        elem.sliceNumber,
+                        partNum,
+                        getGeneratedCaseNumber(partNum, elem.testcaseNumber),
                     )
-                else:  # Sliced test case
-                    if isinstance(rv[elem.testcaseNumber - 1], UnslicedMapping):
-                        rv[elem.testcaseNumber - 1] = []
-                    sliceList = rv[elem.testcaseNumber - 1]
-                    assert not isinstance(sliceList, UnslicedMapping)
-                    assert elem.sliceNumber is not None
-                    sliceList.append(
-                        SlicedMapping(
-                            partNum,
-                            getGeneratedCaseNumber(partNum, elem.testcaseNumber),
-                            elem.sliceNumber,
-                        )
-                    )
+                )
 
     # Add negative cases
     for partNum, part in enumerate(parseResults.parts, 1):
         for elem in part:
             if elem.testcaseNumber < 0:
-                rv.append(UnslicedMapping(partNum, elem.testcaseNumber))
-
-    return rv
-
-
-def _generateTestCaseMappingTableForPart(
-    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]], partNum: int
-) -> Sequence[str]:
-    rv: MutableSequence[str] = []
-    rv += [
-        r"// +===========================+",
-        r"// | THIS PART's MAPPING TABLE |",
-        r"// +===========================+",
-        r"// | Original Test Case Number |",
-        r"// |     +---------------------+",
-        r"// |     | Slice Number        |",
-        r"// |     |    +----------------+",
-        r"// |     |    |  Case Number   |",
-        r"// |     |    |  in Part       |",
-        r"// +=====+====+=====+==========+",
-    ]
-    tableContent = []
-    for caseNum, caseNumMapping in enumerate(testcasesToPartsMapping, 1):
-        if isinstance(caseNumMapping, UnslicedMapping):
-            if caseNumMapping.partNumber == partNum:
-                inPartCaseNum = caseNumMapping.testcaseNumber
-                assert isinstance(inPartCaseNum, int)
-                if inPartCaseNum > 0:
-                    tableContent.append(f"// | {caseNum:3} |    | {inPartCaseNum:3} |")
-                else:  # Negative case numbers are not changed
-                    tableContent.append(f"// | {inPartCaseNum:3} |    | {inPartCaseNum:3} |")
-        else:
-            for slicedMapping in caseNumMapping:
-                if slicedMapping.partNumber == partNum:
-                    tableContent.append(
-                        f"// | {caseNum:3} | {slicedMapping.ofSliceNumber:2} | {slicedMapping.testcaseNumber:3} |"
+                rv.append(
+                    TestcaseMapping(
+                        elem.testcaseNumber, elem.sliceNumber, partNum, elem.testcaseNumber
                     )
-    rv += "\n// +-----+----+-----+\n".join(tableContent).split("\n")
-    rv += ["// +=====+====+=====+", ""]
-
+                )
     return rv
 
 
@@ -276,7 +224,7 @@ def _generateParts(
     xtCppName: str,
     qualifiedComponentName: str,
     parseResults: ParseResult,
-    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
+    testcasesToPartsMapping: Sequence[TestcaseMapping],
     lines: MutableSequence[str],
     writeLineDirective: Callable[[MutableSequence[str], int], str],
 ) -> MutableSequence[MutableSequence[str]]:
@@ -311,9 +259,8 @@ def _generateParts(
             "",
         ]
 
-        partLines += _generateTestCaseMappingTableForPart(
-            testcasesToPartsMapping, len(results) + 1
-        )
+        partLines += generateTestCaseMappingTableForPart(testcasesToPartsMapping, len(results) + 1)
+        partLines.append("")  # Add an empty line after the table
 
         if not qualifiedComponentName.endswith("_cpp03"):
 
@@ -343,7 +290,8 @@ def _generateParts(
                     "    if (test < 0) {",
                     f'        printf("TEST {escapedXtCppPath} CASE %d RUN AS '
                     f'{qualifiedComponentName}.{partNumber:02}.t CASE %d\\n", test, test);',
-                    "        return;                                                       // RETURN",
+                    "        return;                                                       "
+                    "// RETURN",
                     "    }",
                     "",
                     "    // First see if the case number exists in this test driver",
@@ -356,9 +304,10 @@ def _generateParts(
 
                 partLines += [
                     "      default: {",
-                    f'        printf("TEST {qualifiedComponentName}.{partNumber:02}.t CASE %d\\n", '
-                    "test);",
-                    "        return;                                                       // RETURN",
+                    f'        printf("TEST {qualifiedComponentName}.{partNumber:02}.t CASE %d\\n"'
+                    ", test);",
+                    "        return;                                                       "
+                    "// RETURN",
                     "      } break;",
                     "    }",
                     "",
@@ -385,7 +334,8 @@ def _generateParts(
                     f'        cout << "TEST {escapedXtCppPath} CASE " << test',
                     f'             << "RUN AS {qualifiedComponentName}.{partNumber:02}.t CASE "',
                     "              << test << endl;",
-                    "        return;                                                       // RETURN",
+                    "        return;                                                       "
+                    "// RETURN",
                     "    }",
                     "",
                     "    // First see if the case number exists in this test driver",
@@ -400,7 +350,8 @@ def _generateParts(
                     "      default: {",
                     f'        cout << "TEST {qualifiedComponentName}.{partNumber:02}.t CASE "',
                     "              << test << endl;",
-                    "        return;                                                       // RETURN",
+                    "        return;                                                       "
+                    "// RETURN",
                     "      } break;",
                     "    }",
                     "",
@@ -487,7 +438,7 @@ def generateParts(
     xtCppName: str,
     qualifiedComponentName: str,
     parseResults: ParseResult,
-    testcasesToPartsMapping: Sequence[UnslicedMapping | Sequence[SlicedMapping]],
+    testcasesToPartsMapping: Sequence[TestcaseMapping],
     lines: MutableSequence[str],
     useLineDirectives: bool | None,
 ) -> Sequence[Sequence[str]]:
