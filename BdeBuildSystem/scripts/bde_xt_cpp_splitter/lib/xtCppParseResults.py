@@ -46,12 +46,12 @@ class UnslicedTestcase(Testcase):
         writeLineDirective: Callable[[MutableSequence[str], int], str],
     ) -> Sequence[str]:
         rv = []
-        writeLineDirective(rv, self.block.start)
+        writeLineDirective(rv, self.block.startLine)
         if self.number != caseNumber:
             rv.append(f"      case {caseNumber}: {{  // 'case {self.number}' in \"{xtCppName}\"")
-            rv += lines[self.block.start : self.block.stop - 1]
+            rv += lines[self.block.startIndex + 1 : self.block.stopIndex]
         else:
-            rv += lines[self.block.start - 1 : self.block.stop - 1]
+            rv += lines[self.block.startIndex : self.block.stopIndex]
         return rv
 
 
@@ -83,35 +83,31 @@ class SlicedTestcase(Testcase):
         lastSlice: bool = sliceNumber == self.numSlices
 
         # Conditional blocks before slicing begins
-        skippedBlocks = []
-        if not firstSlice:
-            skippedBlocks += [
-                conditionalBlock
-                for conditionalBlock in self.intoFirstSliceBlocks
-                if conditionalBlock in withinBlock
-            ]
-        if not lastSlice:
-            skippedBlocks += [
-                conditionalBlock
-                for conditionalBlock in self.intoLastSliceBlocks
-                if conditionalBlock in withinBlock
-            ]
+        def filterWithinBlock(blocks: Sequence[CodeBlockInterval]):
+            return filter(lambda x: x in withinBlock, blocks)
 
+        skippedBlocks: MutableSequence[CodeBlockInterval] = []
+        if not firstSlice:
+            skippedBlocks += filterWithinBlock(self.intoFirstSliceBlocks)
+        if not lastSlice:
+            skippedBlocks += filterWithinBlock(self.intoLastSliceBlocks)
         # We really need the blocks to write out
-        lastWrittenIndex = withinBlock.start - 1
-        writtenBlocks = []
+        lastWrittenIndex = withinBlock.startIndex
+        writtenBlocks: MutableSequence[CodeBlockInterval] = []
         for skippedBlock in skippedBlocks:
-            writtenBlocks.append(CodeBlockInterval(lastWrittenIndex + 1, skippedBlock.start - 1))
-            lastWrittenIndex = skippedBlock.stop
+            writtenBlocks.append(
+                CodeBlockInterval(lastWrittenIndex + 1, skippedBlock.startLine - 1)
+            )
+            lastWrittenIndex = skippedBlock.stopIndex + 1
 
         for writtenBlock in writtenBlocks:
-            writeLineDirective(rv, writtenBlock.start)
-            rv += lines[writtenBlock.start - 1 : writtenBlock.stop - 1]
+            writeLineDirective(rv, writtenBlock.startLine)
+            rv += lines[writtenBlock.startIndex : writtenBlock.stopIndex]
 
         if skippedBlocks and not writtenBlocks:
             writeLineDirective(rv, lastWrittenIndex)
 
-        rv += lines[lastWrittenIndex : withinBlock.stop - 1]
+        rv += lines[lastWrittenIndex : withinBlock.stopIndex]
 
         return rv
 
@@ -129,7 +125,9 @@ class TypelistSlicing:
 
     @property
     def coveredBlock(self) -> CodeBlockInterval:
-        return CodeBlockInterval(self.controlCommentBlock.start, self.macroDefinitionBlock.stop)
+        return CodeBlockInterval(
+            self.controlCommentBlock.startLine, self.macroDefinitionBlock.stopLine
+        )
 
     def createSliceNameMap(self) -> Mapping[str, int]:
         return {}
@@ -142,15 +140,15 @@ class TypelistSlicing:
     ) -> Sequence[str]:
         rv = []
         rv.append(
-            f"{_getIndent(lines[self.controlCommentBlock.start - 1])}{MY_INFO_COMMENT_PREFIX}"
+            f"{_getIndent(lines[self.controlCommentBlock.startIndex])}{MY_INFO_COMMENT_PREFIX}"
             f"sliced typelist '{self.macroName}' slice {typeSliceIndex+1} of {self.numSlices}"
         )
-        writeLineDirective(rv, self.macroDefinitionBlock.start)
+        writeLineDirective(rv, self.macroDefinitionBlock.startLine)
         rv.append(
-            f"{_getIndent(lines[self.macroDefinitionBlock.start - 1])}"
+            f"{_getIndent(lines[self.macroDefinitionBlock.startIndex])}"
             f"#define {self.macroName} {', '.join(self.slicedTypelist[typeSliceIndex])}"
         )
-        writeLineDirective(rv, self.macroDefinitionBlock.stop)
+        writeLineDirective(rv, self.macroDefinitionBlock.stopLine)
 
         return rv
 
@@ -174,7 +172,7 @@ class TypelistSlicedTestcase(SlicedTestcase):
     ) -> Sequence[str]:
         rv = []
         rv += self.generateCodeForBlock(
-            CodeBlockInterval(self.block.start + 1, self.typeSlices.coveredBlock.start),
+            CodeBlockInterval(self.block.startLine + 1, self.typeSlices.coveredBlock.startLine),
             sliceIndex,
             lines,
             writeLineDirective,
@@ -183,7 +181,7 @@ class TypelistSlicedTestcase(SlicedTestcase):
         rv += self.typeSlices.generateCode(sliceIndex - 1, lines, writeLineDirective)
 
         rv += self.generateCodeForBlock(
-            CodeBlockInterval(self.typeSlices.coveredBlock.stop, self.block.stop),
+            CodeBlockInterval(self.typeSlices.coveredBlock.stopLine, self.block.stopLine),
             sliceIndex,
             lines,
             writeLineDirective,
@@ -200,18 +198,14 @@ class CodeSlice:
 
     @property
     def numSlices(self) -> int:
-        if self.subSlicing is None:
-            return 1
-        return self.subSlicing.numSlices
+        return 1 if self.subSlicing is None else self.subSlicing.numSlices
 
     def createSliceNameMap(self) -> Mapping[str, int]:
         rv: MutableMapping[str, int] = {self.name: 1}
 
         if self.subSlicing is not None:
             subNames = self.subSlicing.createSliceNameMap()
-            for name, sliceNumber in subNames.items():
-                rv[name] = sliceNumber + 1
-
+            rv.update((name, sliceNumber + 1) for name, sliceNumber in subNames.items())
         return rv
 
     def generateCode(
@@ -222,16 +216,16 @@ class CodeSlice:
     ) -> Sequence[str]:
         rv: MutableSequence[str] = []
         if self.subSlicing is None:
-            writeLineDirective(rv, self.activeBlock.start)
-            rv += lines[self.activeBlock.start : self.activeBlock.stop - 2]
+            writeLineDirective(rv, self.activeBlock.startLine)
+            rv += lines[self.activeBlock.startIndex + 1 : self.activeBlock.stopIndex - 1]
             return rv  # !!! RETURN
 
         # When here, we have an inner type-list split
-        rv += lines[self.activeBlock.start : self.subSlicing.coveredBlock.start - 1]
+        rv += lines[self.activeBlock.startIndex + 1 : self.subSlicing.coveredBlock.startIndex]
         rv += self.subSlicing.generateCode(innerIndex, lines, writeLineDirective)
-        if rv[-1] != writeLineDirective([], self.subSlicing.coveredBlock.stop):
-            writeLineDirective(rv, self.subSlicing.coveredBlock.stop)
-        rv += lines[self.subSlicing.coveredBlock.stop - 1 : self.activeBlock.stop - 2]
+        if rv[-1] != writeLineDirective([], self.subSlicing.coveredBlock.stopLine):
+            writeLineDirective(rv, self.subSlicing.coveredBlock.stopLine)
+        rv += lines[self.subSlicing.coveredBlock.stopIndex : self.activeBlock.stopIndex - 1]
 
         return rv
 
@@ -281,13 +275,13 @@ class CodeSlicing:
         dualIndex = self._getDualIndex(sliceIndex)
         rv = []
         rv.append(
-            f"{_getIndent(lines[self.block.start - 1])}{MY_INFO_COMMENT_PREFIX}"
+            f"{_getIndent(lines[self.block.startIndex])}{MY_INFO_COMMENT_PREFIX}"
             f"code slice {dualIndex.myIndex+1} of {len(self.codeSlices)}"
         )
         rv += self.codeSlices[dualIndex.myIndex].generateCode(
             dualIndex.subIndex, lines, writeLineDirective
         )
-        writeLineDirective(rv, self.block.stop)
+        writeLineDirective(rv, self.block.stopLine)
         return rv
 
 
@@ -307,14 +301,14 @@ class TopCodeSlicedTestcase(SlicedTestcase):
     ) -> Sequence[str]:
         rv: MutableSequence[str] = []
         rv += self.generateCodeForBlock(
-            CodeBlockInterval(self.block.start + 1, self.codeSlicing.coveredBlock.start),
+            CodeBlockInterval(self.block.startLine + 1, self.codeSlicing.coveredBlock.startLine),
             sliceIndex,
             lines,
             writeLineDirective,
         )
         rv += self.codeSlicing.generateCode(sliceIndex, lines, writeLineDirective)
         rv += self.generateCodeForBlock(
-            CodeBlockInterval(self.codeSlicing.coveredBlock.stop, self.block.stop),
+            CodeBlockInterval(self.codeSlicing.coveredBlock.stopLine, self.block.stopLine),
             sliceIndex,
             lines,
             writeLineDirective,
@@ -342,9 +336,11 @@ class MultipliedSlicesTestcase(SlicedTestcase):
         typeSliceIndex = sliceIndex // self.codeSlicing.numSlices
 
         rv: MutableSequence[str] = []
-        assert self.typeSlicing.coveredBlock.start < self.codeSlicing.coveredBlock.start - 1
+        assert (
+            self.typeSlicing.coveredBlock.startLine < self.codeSlicing.coveredBlock.startLine - 1
+        )
         rv += self.generateCodeForBlock(
-            CodeBlockInterval(self.block.start + 1, self.typeSlicing.coveredBlock.start),
+            CodeBlockInterval(self.block.startLine + 1, self.typeSlicing.coveredBlock.startLine),
             sliceIndex,
             lines,
             writeLineDirective,
@@ -353,7 +349,7 @@ class MultipliedSlicesTestcase(SlicedTestcase):
 
         rv += self.generateCodeForBlock(
             CodeBlockInterval(
-                self.typeSlicing.coveredBlock.stop, self.codeSlicing.coveredBlock.start
+                self.typeSlicing.coveredBlock.stopLine, self.codeSlicing.coveredBlock.startLine
             ),
             sliceIndex,
             lines,
@@ -363,7 +359,7 @@ class MultipliedSlicesTestcase(SlicedTestcase):
         rv += self.codeSlicing.generateCode(codeSliceIndex, lines, writeLineDirective)
 
         rv += self.generateCodeForBlock(
-            CodeBlockInterval(self.codeSlicing.coveredBlock.start, self.block.stop),
+            CodeBlockInterval(self.codeSlicing.coveredBlock.startLine, self.block.stopLine),
             sliceIndex,
             lines,
             writeLineDirective,
@@ -408,8 +404,8 @@ class ConditionalCommonCodeBlocks:
     def coveredBlock(self) -> CodeBlockInterval:
         assert self.conditionalBlocks
         return CodeBlockInterval(
-            self.conditionalBlocks[0].coveredBlock.start,
-            self.conditionalBlocks[-1].coveredBlock.stop,
+            self.conditionalBlocks[0].coveredBlock.startLine,
+            self.conditionalBlocks[-1].coveredBlock.stopLine,
         )
 
     def overlapsWithAnyConditional(self, block: CodeBlockInterval) -> bool:
@@ -426,7 +422,7 @@ class ConditionalCommonCodeBlocks:
     ) -> Sequence[str]:
         rv = []
 
-        nextActiveLine: int = withinBlock.start
+        nextActiveLine: int = withinBlock.startLine
         blocksToWrite: MutableSequence[CodeBlockInterval] = []
         for conditionalBlock in self.conditionalBlocks:
             if conditionalBlock.block not in withinBlock:
@@ -439,14 +435,14 @@ class ConditionalCommonCodeBlocks:
 
             if not conditionalBlock.isActive(partContents):
                 blocksToWrite.append(
-                    CodeBlockInterval(nextActiveLine, conditionalBlock.block.start)
+                    CodeBlockInterval(nextActiveLine, conditionalBlock.block.startLine)
                 )
-                nextActiveLine = conditionalBlock.block.stop
-        blocksToWrite.append(CodeBlockInterval(nextActiveLine, withinBlock.stop))
+                nextActiveLine = conditionalBlock.block.stopLine
+        blocksToWrite.append(CodeBlockInterval(nextActiveLine, withinBlock.stopLine))
 
         for blockToWrite in blocksToWrite:
-            writeLineDirective(rv, blockToWrite.start)
-            rv += lines[blockToWrite.start - 1 : blockToWrite.stop - 1]
+            writeLineDirective(rv, blockToWrite.startLine)
+            rv += lines[blockToWrite.startIndex : blockToWrite.stopIndex]
 
         return rv
 
@@ -525,15 +521,13 @@ class TestcaseMapping:
 
     @property
     def originalTestcaseNumberSortWeight(self) -> int:
+        # We order negative test cases after the positive ones.  Since maximum valid positive test
+        # case number is 99, we can return negative test case numbers as 101 for -1, 102 for -2,...
         return (
             self.originalTestcaseNumber
             if self.originalTestcaseNumber > 0
             else 100 - self.originalTestcaseNumber
         )
-
-    @property
-    def isUnset(self) -> bool:
-        return self.partNumber == 100 and self.partTestcaseNumber == 100
 
     @property
     def hasSliceNumber(self) -> bool:

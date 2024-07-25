@@ -14,6 +14,10 @@ class CodeBlockInterval:
     _start: LineNumber
     _stop: LineNumber
 
+    @classmethod
+    def CreateFromIndex(cls, startArg: int, stopArg: int = -1):
+        return CodeBlockInterval(startArg + 1, stopArg if stopArg == -1 else stopArg - 1)
+
     def __init__(self, startArg: LineNumber, stopArg: LineNumber = -1):
         if stopArg == -1:
             stopArg = startArg
@@ -26,17 +30,29 @@ class CodeBlockInterval:
         self._stop = stopArg
 
     @property
-    def start(self):
+    def startLine(self) -> LineNumber:
         return self._start
 
     @property
-    def stop(self):
+    def stopLine(self) -> LineNumber:
         return self._stop
 
-    @stop.setter
-    def stop(self, newStop: LineNumber) -> None:
+    @stopLine.setter
+    def stopLine(self, newStop: LineNumber) -> None:
         assert newStop >= self._start
         self._stop = newStop
+
+    @property
+    def startIndex(self) -> int:
+        return self._start - 1
+
+    @property
+    def stopIndex(self) -> int:
+        return self._stop - 1
+
+    @stopIndex.setter
+    def stopIndex(self, newStopIndex: int) -> None:
+        self.stopLine = newStopIndex + 1
 
     def extendBy(self, numberOfLines: LineNumber) -> None:
         assert numberOfLines >= 0

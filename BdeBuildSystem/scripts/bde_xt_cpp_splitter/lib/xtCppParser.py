@@ -73,22 +73,17 @@ class _TypelistParseResult:
 
     def makeSlicedTypelist(self, xtCppName: str) -> Sequence[Sequence[str]]:
         numTypes = len(self.typelist)
-        sliceSize = numTypes // self.numSlices
+        sliceSize, remainder = divmod(numTypes, self.numSlices)
         if sliceSize < 1:
             raise ParseError(
                 f"{xtCppName}:{self.controlCommentBlock}: Too large number of slices "
                 f"({self.numSlices}), length of the type list is {numTypes}"
             )
-        remainder = numTypes - (sliceSize * self.numSlices)
-        slicedTypelist: Sequence[Sequence[str]] = []
-        start: int = 0
-        while start < len(self.typelist):
-            numInSlice = sliceSize + 1 if remainder > 0 else sliceSize
-            remainder -= 1
-            slicedTypelist.append(self.typelist[start : start + numInSlice])
-            start += numInSlice
 
-        return slicedTypelist
+        def sliceStart(i):
+            return i * sliceSize + min(i, remainder)
+
+        return [self.typelist[sliceStart(i) : sliceStart(i + 1)] for i in range(self.numSlices)]
 
 
 @dataclass
@@ -114,13 +109,10 @@ class _TestcaseParseResult:
 def _createSliceNameMap(
     parseResults: Sequence[_TestcaseParseResult],
 ) -> Mapping[int, Mapping[str, int]]:
-    rv: MutableMapping[int, Mapping[str, int]] = {}
-    for parseResult in parseResults:
-        if parseResult.codeSlicing is None:
-            rv[parseResult.testcaseNumber] = {}
-        else:
-            rv[parseResult.testcaseNumber] = parseResult.codeSlicing.createSliceNameMap()
-    return rv
+    def sliceNameMap(result):
+        return result.codeSlicing.createSliceNameMap() if result.codeSlicing else {}
+
+    return {parseResult.testcaseNumber: sliceNameMap(parseResult) for parseResult in parseResults}
 
 
 _MY_SIMCPP11_IF_RE = re.compile(r"\s*#\s*if\s+BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES")
@@ -129,15 +121,16 @@ _MY_SIMCPP11_IF_RE = re.compile(r"\s*#\s*if\s+BSLS_COMPILERFEATURES_SIMULATE_CPP
 def _parseSimCpp11Include(
     xtCppName: str, qualifiedComponentName: str, lines: Sequence[str]
 ) -> SimCpp11IncludeConstruct | None:
-    idx = next((idx for idx, line in enumerate(lines) if re.match(_MY_SIMCPP11_IF_RE, line)), None)
+    def firstLineMatching(regex, lines):
+        return next((idx for idx, line in enumerate(lines) if re.match(regex, line)), None)
+
+    idx = firstLineMatching(_MY_SIMCPP11_IF_RE, lines)
     if idx is None:
         return None  # !!! RETURN !!!
     ifDefLine = idx + 1
 
     defineRe = rf"\s*#\s*define\s+COMPILING_{qualifiedComponentName.upper()}_X?T_CPP"
-    idx = next(
-        (idx for idx, line in enumerate(lines[ifDefLine:]) if re.match(defineRe, line)), None
-    )
+    idx = firstLineMatching(defineRe, lines[ifDefLine:])
     if idx is None:
         raise ParseError(
             f"{xtCppName}:{ifDefLine}: Cannot find "
@@ -146,9 +139,7 @@ def _parseSimCpp11Include(
     defineLine = ifDefLine + idx + 1
 
     includeRe = rf"\s*#\s*include\s+<{qualifiedComponentName.lower()}_cpp03.xt.cpp>"
-    idx = next(
-        (idx for idx, line in enumerate(lines[defineLine:]) if re.match(includeRe, line)), None
-    )
+    idx = firstLineMatching(includeRe, lines[defineLine:])
     if idx is None:
         raise ParseError(
             f"{xtCppName}:{defineLine}: Cannot find "
@@ -157,9 +148,7 @@ def _parseSimCpp11Include(
     includeLine = defineLine + idx + 1
 
     undefRe = rf"\s*#\s*undef\s+COMPILING_{qualifiedComponentName.upper()}_X?T_CPP"
-    idx = next(
-        (idx for idx, line in enumerate(lines[includeLine:]) if re.match(undefRe, line)), None
-    )
+    idx = firstLineMatching(undefRe, lines[includeLine:])
     if idx is None:
         raise ParseError(
             f"{xtCppName}:{includeLine}: Cannot find "
@@ -262,7 +251,6 @@ def _getSilencedWarnings(xtCppName: str, lines: Sequence[str]) -> Set[SilencedWa
                     raise ParseError(
                         f"{xtCppName}:{lineNumber}: Unknown warning name: '{warning}' in '{line}'"
                     )
-                assert warning in SET_OF_SUPPORTED_SILENCED_WARNINGS
                 rv.add(warning)  # type: ignore
     return rv
 
@@ -278,13 +266,14 @@ def _isSliceNumInt(txt: str) -> bool:
 def _verifyFoundPositiveTestCases(
     xtCppName: str, testcasesNumbers: Iterable[_TestcaseParseResult]
 ) -> None:
-    positiveTestcaseNumbers = sorted(
-        [pr.testcaseNumber for pr in testcasesNumbers if pr.testcaseNumber > 0]
-    )
+    positiveTestcaseNumbers = [
+        pr.testcaseNumber for pr in testcasesNumbers if pr.testcaseNumber > 0
+    ]
+
     if not positiveTestcaseNumbers:
         raise ParseError(f"{xtCppName}: Unable to find any test cases in 'main'")
 
-    allCases = list(range(1, positiveTestcaseNumbers[-1] + 1))
+    allCases = set(range(1, max(positiveTestcaseNumbers) + 1))
     for testcaseNumber in positiveTestcaseNumbers:
         if testcaseNumber not in allCases:
             raise ParseError(f"{xtCppName}: Duplicate test-case number {testcaseNumber}")
@@ -386,8 +375,8 @@ def _findMainEnd(xtCppName: str, offset: int, fromMainLines: Sequence[str]) -> i
 def _findMainBlock(xtCppName: str, lines: Sequence[str]) -> CodeBlockInterval:
     """Find main function plus some sanity checks."""
     start = _findMainStart(xtCppName, lines)
-    return CodeBlockInterval(
-        start + 1, start + 1 + _findMainEnd(xtCppName, start + 1, lines[start + 1 :]) + 2
+    return CodeBlockInterval.CreateFromIndex(
+        start, start + _findMainEnd(xtCppName, start + 1, lines[start + 1 :]) + 2
     )
 
 
@@ -441,7 +430,7 @@ def _extractTestcasesOnlyBlock(
         except ValueError:
             raise ParseError(f"{xtCppName}: Could not find 'switch(test) {{ case 0:' in 'main'")
 
-    if len([line for line in mainLines if line.startswith("    switch (test) { case 0:")]) > 1:
+    if sum(line.startswith("    switch (test) { case 0:") for line in mainLines) > 1:
         raise ParseError(f"{xtCppName}: More than one 'switch(test) {{ case 0:' present in 'main'")
 
     try:
@@ -573,11 +562,11 @@ def _parseOneTestcase(
         currentCodeSliceBlocks.append(
             _CodeSliceInfo(
                 currentCodeSliceName,
-                CodeBlockInterval(currentCodeSliceBlocks[-1].block.stop - 1, lineNumber + 1),
+                CodeBlockInterval(currentCodeSliceBlocks[-1].block.stopLine - 1, lineNumber + 1),
             )
         )
 
-        wholeBlock = CodeBlockInterval(currentCodeSliceBlocks[0].block.start, lineNumber + 1)
+        wholeBlock = CodeBlockInterval(currentCodeSliceBlocks[0].block.startLine, lineNumber + 1)
         slices: MutableSequence[CodeSlice] = []
         for sliceIndex, sliceInfo in enumerate(currentCodeSliceBlocks, 0):
             theSlice = CodeSlice(sliceInfo.sliceName, sliceInfo.block)
@@ -628,7 +617,7 @@ def _parseOneTestcase(
     intoFirstSliceStart: int = 0
     intoLastSliceStart: int = 0
 
-    for lineNumber, line in enumerate(caseLines, testcaseBlock.start):
+    for lineNumber, line in enumerate(caseLines, testcaseBlock.startLine):
         parsed = line.strip()
         # Skip empty lines
         if not parsed:
@@ -845,7 +834,7 @@ def _parseOneTestcase(
         and (intoFirstSliceBlocks or intoLastSliceBlocks)
     ):
         raise ParseError(
-            f"{xtCppName}:{testcaseBlock.start}: There are INTO LAST/FIRST SLICE comments "
+            f"{xtCppName}:{testcaseBlock.startLine}: There are INTO LAST/FIRST SLICE comments "
             f"present, but test-case {testcaseNumber} has no slices"
         )
 
@@ -932,11 +921,9 @@ def _parseTestcases(
                 tmpParsed.testcaseNumber,
                 tmpParsed.block,
                 casesLines[
-                    tmpParsed.block.start
+                    tmpParsed.block.startIndex
+                    - startOffset : tmpParsed.block.stopIndex
                     - startOffset
-                    - 1 : tmpParsed.block.stop
-                    - startOffset
-                    - 1
                 ],
                 resolveTypelist,
             )
@@ -1483,14 +1470,14 @@ def parse(
     mainBlock = _findMainBlock(xtCppName, lines)
 
     testPrintLineInfo = _findTestPrintLine(
-        xtCppName, mainBlock.start - 1, lines[mainBlock.start - 1 : mainBlock.stop - 1]
+        xtCppName, mainBlock.startIndex, lines[mainBlock.startIndex : mainBlock.stopIndex]
     )
 
     def resolveTypelist(theListMacroValue: str):
         return resolveTypelistMacroValue(theListMacroValue, xtCppFull, groupsDirs)
 
     testCasesOnly = _extractTestcasesOnlyBlock(
-        xtCppName, mainBlock.start - 1, lines[mainBlock.start - 1 : mainBlock.stop - 1]
+        xtCppName, mainBlock.startIndex, lines[mainBlock.startIndex : mainBlock.stopIndex]
     )
     testcaseParseResults = _parseTestcases(
         xtCppName, testCasesOnly.offset, testCasesOnly.lines, resolveTypelist

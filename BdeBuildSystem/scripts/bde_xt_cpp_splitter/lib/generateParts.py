@@ -184,7 +184,7 @@ def _generateSlicedTestcase(
     writeLineDirective: Callable[[MutableSequence[str], int], str],
 ) -> Sequence[str]:
     rv: MutableSequence[str] = []
-    writeLineDirective(rv, testcase.block.start)
+    writeLineDirective(rv, testcase.block.startLine)
     rv.append(
         f"      case {newCaseNum}: {{  // 'case {testcase.number}' slice {sliceNumber} in \"{xtCppName}\""
     )
@@ -232,8 +232,8 @@ def _generateParts(
     origToPartMappings = _generatedToOriginalTestcaseMapping(parseResults.parts)
     partToOrigMappings = _generateCommandLineArgToOriginalMapping(parseResults.parts)
 
-    firstTestcasesLine = min(tc.block.start for tc in parseResults.testcases)
-    stopTestcasesLine = max(tc.block.stop for tc in parseResults.testcases)
+    firstTestcasesLine = min(tc.block.startLine for tc in parseResults.testcases)
+    stopTestcasesLine = max(tc.block.stopLine for tc in parseResults.testcases)
 
     testcases: Mapping[int, Testcase] = {tc.number: tc for tc in parseResults.testcases}
 
