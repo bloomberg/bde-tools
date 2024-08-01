@@ -33,16 +33,15 @@ from lib.xtCppParseResults import (
     CodeSlicing,
     ConditionalCommonCodeBlock,
     ConditionalCommonCodeBlocks,
-    OriginalTestcaseNumbers,
+    OriginalTestcase,
     SilencedWarningKind,
     SimCpp11Cpp03LinesToUpdate,
     SimCpp11IncludeConstruct,
     Testcase,
     TestPrintLineInfo,
     UnslicedTestcase,
-    TopCodeSlicedTestcase,
+    CodeSlicedTestcase,
     TypelistSlicedTestcase,
-    MultipliedSlicesTestcase,
     CodeSlice,
     TypelistSlicing,
     ParseResult,
@@ -512,15 +511,14 @@ def _parseOneTestcase(
 
         return maybeName
 
-    def beginCodeSlicing(sliceName: str, lineNumber: int) -> None:
-        nonlocal codeSliceStack, currentCodeSliceName
+    def beginCodeSlicing() -> None:
+        nonlocal codeSliceStack, currentCodeSliceName, lineNumber
         nonlocal currentCodeSliceStart, currentCodeSliceBlocks, currentCodeSliceNumberToSubSlice
 
-        if topTypelistSlicing is not None and sliceName:
+        if topTypelistSlicing is not None:
             raise ParseError(
-                f"{xtCppName}:{lineNumber}: Code slices cannot be named when a type list slicing "
-                "is present on the same  level because the name would not map to a single "
-                f"slice.  Please remove '{sliceName}'."
+                f"{xtCppName}:{lineNumber}: Code slicing cannot be used when type list slicing is "
+                "present on the same level."
             )
 
         if currentCodeSliceStart:
@@ -539,13 +537,13 @@ def _parseOneTestcase(
                 )
             )
 
-        currentCodeSliceName = sliceName
-        currentCodeSliceStart = lineNumber
+        currentCodeSliceName = parseCodeSliceName(f"{MY_CONTROL_COMMENT_PREFIX}CODE SLICING BEGIN")
+        currentCodeSliceStart = lineNumber + 1  # We "skip" the control-comment
         currentCodeSliceBlocks = []
         currentCodeSliceNumberToSubSlice = {}
 
-    def endCodeSlicing(lineNumber: int) -> None:
-        nonlocal topCodeSlicing, currentCodeSliceName
+    def endCodeSlicing() -> None:
+        nonlocal topCodeSlicing, currentCodeSliceName, lineNumber
         nonlocal currentCodeSliceStart, currentCodeSliceBlocks, currentCodeSliceNumberToSubSlice
 
         if currentCodeSliceStart == 0:
@@ -562,11 +560,17 @@ def _parseOneTestcase(
         currentCodeSliceBlocks.append(
             _CodeSliceInfo(
                 currentCodeSliceName,
-                CodeBlockInterval(currentCodeSliceBlocks[-1].block.stopLine - 1, lineNumber + 1),
-            )
+                CodeBlockInterval(currentCodeSliceBlocks[-1].block.stopLine + 1, lineNumber),
+            )  # stopLine points at the BREAK control comment, so we need to add 1 to skip it
+            # lineNumber points to the END comment, which we don't include
         )
 
-        wholeBlock = CodeBlockInterval(currentCodeSliceBlocks[0].block.startLine, lineNumber + 1)
+        # sub-blocks do not contain the control-comments, but for sanity of the code-generating the
+        # complete block (whose "printing" belongs to this slicing) includes the control-comments,
+        # hence the -1 and +1 to extend the complete block over all lines.
+        wholeBlock = CodeBlockInterval(
+            currentCodeSliceBlocks[0].block.startLine - 1, lineNumber + 1
+        )
         slices: MutableSequence[CodeSlice] = []
         for sliceIndex, sliceInfo in enumerate(currentCodeSliceBlocks, 0):
             theSlice = CodeSlice(sliceInfo.sliceName, sliceInfo.block)
@@ -721,9 +725,7 @@ def _parseOneTestcase(
                     f"\"level\" '{line}'.  Test cases may have only one top code slicing, and "
                     "each code slice may have only one code slicing or a typelist slicing in it."
                 )
-            beginCodeSlicing(
-                parseCodeSliceName(f"{MY_CONTROL_COMMENT_PREFIX}CODE SLICING BEGIN"), lineNumber
-            )
+            beginCodeSlicing()
         elif parsed.startswith(f"{MY_CONTROL_COMMENT_PREFIX}CODE SLICING BREAK"):
             if currentCodeSliceStart == 0:
                 raise ParseError(
@@ -740,15 +742,15 @@ def _parseOneTestcase(
 
             currentCodeSliceBlocks.append(
                 _CodeSliceInfo(
-                    currentCodeSliceName, CodeBlockInterval(currentCodeSliceStart, lineNumber + 1)
-                )
+                    currentCodeSliceName, CodeBlockInterval(currentCodeSliceStart, lineNumber)
+                )  # lineNumber is at the BREAK comment, which we do not include
             )
-            currentCodeSliceStart = lineNumber
+            currentCodeSliceStart = lineNumber + 1  # We "skip" the control comment
             currentCodeSliceName = parseCodeSliceName(
                 f"{MY_CONTROL_COMMENT_PREFIX}CODE SLICING BREAK"
             )
         elif parsed.startswith(f"{MY_CONTROL_COMMENT_PREFIX}CODE SLICING END"):
-            endCodeSlicing(lineNumber)
+            endCodeSlicing()
         elif parsed.startswith(f"{MY_CONTROL_COMMENT_PREFIX}SLICING TYPELIST"):
             if 0 in currentCodeSliceNumberToSubSlice:
                 raise ParseError(
@@ -975,7 +977,7 @@ def _convertTestcaseParseResults(
             and testcaseParseResult.typelistParseResult is None
         ):
             rv.append(
-                TopCodeSlicedTestcase(
+                CodeSlicedTestcase(
                     testcaseParseResult.testcaseNumber,
                     testcaseParseResult.block,
                     testcaseParseResult.intoFirstSliceBlocks,
@@ -984,26 +986,6 @@ def _convertTestcaseParseResults(
                 )
             )
 
-        # Most complex, has typelist slicing followed by code-slicing at the top level
-        elif (
-            testcaseParseResult.codeSlicing is not None
-            and testcaseParseResult.typelistParseResult is not None
-        ):
-            rv.append(
-                MultipliedSlicesTestcase(
-                    testcaseParseResult.testcaseNumber,
-                    testcaseParseResult.block,
-                    testcaseParseResult.intoFirstSliceBlocks,
-                    testcaseParseResult.intoLastSliceBlocks,
-                    TypelistSlicing(
-                        testcaseParseResult.typelistParseResult.controlCommentBlock,
-                        testcaseParseResult.typelistParseResult.originalMacroBlock,
-                        testcaseParseResult.typelistParseResult.macroName,
-                        testcaseParseResult.typelistParseResult.makeSlicedTypelist(xtCppName),
-                    ),
-                    testcaseParseResult.codeSlicing,
-                )
-            )
         else:
             assert (
                 False
@@ -1018,9 +1000,9 @@ def _parseBlockCondition(
     condition: str,
     testcaseNumberSet: Set[int],
     sliceNameMap: Mapping[int, Mapping[str, int]],
-) -> Set[OriginalTestcaseNumbers]:
+) -> Set[OriginalTestcase]:
 
-    rv: MutableSet[OriginalTestcaseNumbers] = set()
+    rv: MutableSet[OriginalTestcase] = set()
     testCaseSpecs: Iterable[str] = (spec.strip() for spec in condition.split(","))
     for spec in testCaseSpecs:
         if ".." in spec:
@@ -1080,7 +1062,7 @@ def _parseBlockCondition(
                 )
 
             # NOTE This algorithm allows "holes" in the range
-            rv.update(OriginalTestcaseNumbers(num, None) for num in numbersInRange)
+            rv.update(OriginalTestcase(num, None) for num in numbersInRange)
         elif "." in spec:
             if spec.count(".") > 1:
                 f"{xtCppName}:{lineNumber}: Syntax error in '{spec}' in  too many '.'"
@@ -1112,7 +1094,7 @@ def _parseBlockCondition(
                     f"Available names are {sliceNameMap[caseNum]}"
                 )
             sliceNum = sliceNameMap[caseNum][sliceName]
-            rv.add(OriginalTestcaseNumbers(caseNum, sliceNum))
+            rv.add(OriginalTestcase(caseNum, sliceNum))
 
         else:
             if not _isTestcaseInt(spec):
@@ -1128,7 +1110,7 @@ def _parseBlockCondition(
                     f"{xtCppName}:{lineNumber}: Testcase number {caseNum} does not exit.  "
                     f"Available numbers are {testcaseNumberSet}"
                 )
-            rv.add(OriginalTestcaseNumbers(caseNum, None))
+            rv.add(OriginalTestcase(caseNum, None))
 
     if not rv:
         raise ParseError(
@@ -1143,7 +1125,7 @@ def _parseBlockCondition(
 class _OpenConditionalBlock:
     startLineNumber: int
     conditionAsWritten: str
-    compiledCondition: Set[OriginalTestcaseNumbers]
+    compiledCondition: Set[OriginalTestcase]
 
 
 _MY_FOR_PREFIX = f"{MY_CONTROL_COMMENT_PREFIX}FOR "
@@ -1227,13 +1209,13 @@ _MY_PARTS_DEFINITION_HEADING = f"{MY_CONTROL_COMMENT_PREFIX}PARTS (syntax versio
 
 def _parsePartsDefinitionTable(
     xtCppName: str, lines: Sequence[str], testcaseToNumSlices: MutableMapping[int, int]
-) -> Sequence[Sequence[OriginalTestcaseNumbers]]:
+) -> Sequence[Sequence[OriginalTestcase]]:
     try:
         idx = lines.index(_MY_PARTS_DEFINITION_HEADING)
     except ValueError:
         raise ParseError(f"{xtCppName}: Cannot find PARTS definition") from None
 
-    partDefinitions: MutableSequence[MutableSequence[OriginalTestcaseNumbers]] = []
+    partDefinitions: MutableSequence[MutableSequence[OriginalTestcase]] = []
 
     unslicedCases = [
         caseNumber for caseNumber, numSlices in testcaseToNumSlices.items() if numSlices == 1
@@ -1360,7 +1342,7 @@ def _parsePartsDefinitionTable(
 
                 # NOTE This algorithm allows "holes" in the range
                 for num in numbersInRange:
-                    partDefinitions[-1].append(OriginalTestcaseNumbers(num, None))
+                    partDefinitions[-1].append(OriginalTestcase(num, None))
                     testcaseToNumSlices.pop(num)
                     unslicedCases.remove(num)
             elif "." in contentDef:
@@ -1395,10 +1377,10 @@ def _parsePartsDefinitionTable(
                         f"not use the 'caseNumber.SLICES' form."
                     )
                 for sliceNumber in range(1, testcaseToNumSlices[num]):
-                    partDefinitions[-1].append(OriginalTestcaseNumbers(num, sliceNumber))
+                    partDefinitions[-1].append(OriginalTestcase(num, sliceNumber))
                     partDefinitions.append([])
 
-                partDefinitions[-1].append(OriginalTestcaseNumbers(num, testcaseToNumSlices[num]))
+                partDefinitions[-1].append(OriginalTestcase(num, testcaseToNumSlices[num]))
                 testcaseToNumSlices.pop(num)
 
             else:
@@ -1425,7 +1407,7 @@ def _parsePartsDefinitionTable(
                         f"Available not-sliced test case numbers are {unslicedCases}"
                     )
 
-                partDefinitions[-1].append(OriginalTestcaseNumbers(num, None))
+                partDefinitions[-1].append(OriginalTestcase(num, None))
                 testcaseToNumSlices.pop(num)
                 unslicedCases.remove(num)
 

@@ -64,6 +64,3 @@ def resolveTypelistMacroValue(
     macroValue: str, xtCppFull: Path, groupsDirs: Tuple[Path, ...]
 ) -> Sequence[str]:
     return _resolveTypelist(_resplitMacroValue(macroValue), xtCppFull, groupsDirs).split("$")
-
-
-# print(_resplitMacroValue("int(int, int), int,foo,bar"))

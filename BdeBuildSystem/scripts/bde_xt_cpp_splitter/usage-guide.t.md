@@ -12,7 +12,7 @@ The '.xt.cpp' files contain control-comments that are special C++ line-comments
 Those control comments determine the pieces of the full test driver ('.xt.cpp')
 go into the parts.
 
-Control-comments may need multiply lines to be human-readable.  Currently the
+Control-comments may need multiple lines to be human-readable.  Currently the
 `PARTS` guide is the only control comment that is not limited to one line.  The
 additional lines that belong to such a control comment all start with `//@`,
 but not with `{|CONTROL-COMMENT-PREFIX|}`.  Any line that does not start with
@@ -20,17 +20,18 @@ but not with `{|CONTROL-COMMENT-PREFIX|}`.  Any line that does not start with
 block.  The acceptable syntax within such a block is defined by the type of the
 control-comment.
 
- The splitting process performs minimal transformations on the contents of the 
-`.xt.cpp` file, primarily selectively taking or ignoring different parts of the 
-original file.   Within `main`, the initial output message and test case 
-numbering are modified, all other lines are copied over from the original 
+ The splitting process performs minimal transformations on the contents of the
+`.xt.cpp` file, primarily selectively taking or ignoring different parts of the
+original file.   Within `main`, the initial output message and test case
+numbering are modified, all other lines are copied over from the original
 `.xt.cpp` file.
 
 Within the part files, preprocessor `#line` directives are added that refer
 back to the original '.xt.cpp' source and line number, so compiler warning and
 error messages, as well as runtime messages (such as `ASSERT`) will display the
 original '.xt.cpp' file name and source line number.  (This behaviour can be
-disabled if necessary, see Turning Off Line Directives.)
+disabled if necessary, see 
+[Turning Off Line Directives]{#Turning Off Line Directives}.)
 
 Negative test cases are moved into their parts unchanged.  Their code cannot be
 sliced (it would not make much sense to slice a benchmark) and the negative
@@ -116,10 +117,10 @@ cases into the parts, maybe even more than one.  For example:
 {|CONTROL-COMMENT-PREFIX|}PARTS (syntax version 1.0.0)
 //@
 //@# This test driver will be split into multiple parts for faster compilation
-//@# using bde_xt_cpp_splitter.py from the bde-tools repo.  Each line below 
+//@# using bde_xt_cpp_splitter.py from the bde-tools repo.  Each line below
 //@# controls which test cases from this file will be included in one (or more)
-//@# standalone test drivers.  Specific contents of each part can be further 
-//@# controlled by {|CONTROL-COMMENT-PREFIX|} comments throughout this file, for which full 
+//@# standalone test drivers.  Specific contents of each part can be further
+//@# controlled by {|CONTROL-COMMENT-PREFIX|} comments throughout this file, for which full
 //@# documentation can be found by running:
 //@#    bde_xt_cpp_splitter --help usage-guide
 //@
@@ -396,7 +397,7 @@ had 19 types, asked for 4 slices.  Integer division 19 / 4 results is 4 with a
 remainder of 3.  The script will then increase the size of the first 3 type
 slices by 1, resulting in a 5, 5, 5, 4 distribution of types.  First 5 types go
 into slice 1, next 5  into slice 2, etc. and the last 4 types into slice 4.
-	
+
 The above example from bslstl_hashtable.xt.cpp will then be expanded into the
 following  4 macro definitions in 4 separately generated parts:
 
@@ -582,26 +583,8 @@ but not on `END`.
 {|CONTROL-COMMENT-PREFIX|}CODE SLICING END
 ```
 
-For further information see Conditional Code Outside of Test Cases.
-
-#### Last Resort, or Multiplicative Slicing
-
-In a situation where a test case is so huge that even slicing every type in its
-type list into its own part won't solve compilation or run time problems, it is
-possible to slice a test case first on type list, then on code.  Such slicing
-will produce a total number of slices equal to the product of the number of
-type list slices and the number of code slices.  The emitted slices will first
-test all code slices using the first type list slice (which will usually be the
-first type) and then all the test code slices with the rest of the type slices
-one by one.
-
-At the time of writing no code requires such brute force slicing.
-
-This kind of slicing can be easily recognized by observing that the type
-slicing (and the type list macro definition) is outside of the code slicing.
-
-Code slices may not be named in multiplicative slicing because they do not
-correspond to one slice only.
+For further information see
+[Conditional Code Outside of Test Cases]{#Conditional Code Outside of Test Cases}.
 
 ### Placing Code Into First or Last slice
 
@@ -646,8 +629,9 @@ paragraph.
 
 Note that a `{|CONTROL-COMMENT-PREFIX|}SILENCE WARNINGS: UNUSED` is available
 to turn off compiler warnings about unused (common test) code for difficult
-test drivers where adding `FOR` comments by hand would be too much work.  See
-complete discussion of that feature under Miscellanous Control Comments.
+test drivers where adding `FOR` comments by hand would be too much or fragile
+work.  See complete discussion of the `SILENCE WARNINGS` feature under
+[Miscellanous Control Comments]{#Miscellanous Control Comments}.
 
 `{|CONTROL-COMMENT-PREFIX|}FOR ...` comments may only be used outside of the
 `switch(test)` block in main.  Attempting to use them within a test case will
@@ -660,7 +644,7 @@ There are begin/end, and single-line variations of the `FOR` control comment:
   - `typedef Elem int; {|CONTROL-COMMENT-PREFIX|}FOR case-or-slice-list`
 
 The list is comma separated test case numbers, or `test-case.slice-name`.  For
-slice names see Naming Code Slices.
+slice names see [Naming Code Slices]{#Naming Code Slices}.
 
 The code will only be emitted when any of the listed test cases or test case
 slices are active.  If a sliced test case is listed without a slice specified

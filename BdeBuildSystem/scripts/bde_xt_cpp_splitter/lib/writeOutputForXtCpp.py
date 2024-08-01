@@ -33,9 +33,7 @@ def _writeStampFileIfNeededAndDeleteExtraFiles(
     if stampPath.is_file():
         with sourceFileOpen(stampPath, "r") as stampFile:
             existingContent = stampFile.read().splitlines()
-            if len(existingContent) == len(content) and all(
-                needLine == existLine for needLine, existLine in zip(content, existingContent)
-            ):
+            if existingContent == content:
                 logging.info(f"Stamp file '{stampPath}' exists with the proper content.")
                 return  # !!! RETURN
 

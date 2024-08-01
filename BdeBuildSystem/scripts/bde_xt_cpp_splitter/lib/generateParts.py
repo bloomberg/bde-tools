@@ -1,16 +1,28 @@
 from __future__ import annotations
 
 import datetime
+import itertools
 import json
 import logging
 from pathlib import Path
 import sys
-from typing import Callable, Generator, Mapping, MutableMapping, MutableSequence, Sequence, Set
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    Mapping,
+    MutableMapping,
+    MutableSequence,
+    Sequence,
+    Set,
+    Tuple,
+)
 
 from lib.codeBlockInterval import CodeBlockInterval
 from lib.xtCppParseResults import (
-    OriginalTestcaseNumbers,
+    OriginalTestcase,
     ParseResult,
+    PartTestcase,
     SilencedWarningKind,
     SlicedTestcase,
     Testcase,
@@ -43,29 +55,26 @@ def _collectXteFiles(xtCppPath: Path, qualifiedComponentName) -> Sequence[Path]:
 def _generateXteParts(
     useLineDirectives: bool, xtsFiles: Sequence[Path]
 ) -> MutableSequence[MutableSequence[str]]:
-    rv = []
-    for filepath in xtsFiles:
+    def _generateXtePart(useLineDirectives: bool, filepath: Path) -> MutableSequence[str]:
         lines = filepath.read_text(encoding="ascii", errors="surrogateescape").splitlines()
-
         if not lines:
             raise ValueError(f"File '{filepath}' appears to be empty")
-
         if not lines[0].startswith(f"// {filepath.name} ") or not lines[0].endswith(" -*-C++-*-"):
             raise ValueError(
                 f"File '{filepath}' Does not start with the expected C++ prologue line: "
                 f"'{lines[0]}'"
             )
-        rv.append(["", f"{MY_INFO_COMMENT_PREFIX}Standalone translation unit {filepath.name}", ""])
+
+        rv = ["", f"{MY_INFO_COMMENT_PREFIX}Standalone translation unit {filepath.name}", ""]
         if useLineDirectives:
-            rv[-1].append(f'#line 2 "{json.dumps(str(filepath))[1:-1]}"')
+            rv.append(f'#line 2 "{json.dumps(str(filepath))[1:-1]}"')
+        return rv + lines[1:]
 
-        rv[-1] += lines[1:]
-
-    return rv
+    return [_generateXtePart(useLineDirectives, filepath) for filepath in xtsFiles]
 
 
 def _generatedToOriginalTestcaseMapping(
-    parts: Sequence[Sequence[OriginalTestcaseNumbers]],
+    parts: Sequence[Sequence[OriginalTestcase]],
 ) -> Sequence[Mapping[int, int]]:
     """Map part-number+generated-test-case-number -> original--test-case-number.
 
@@ -74,24 +83,21 @@ def _generatedToOriginalTestcaseMapping(
     Positive cases are numbered 1..N in each test driver part.
     """
 
-    rv: MutableSequence[MutableMapping[int, int]] = []
+    def _partMapping(contents: Sequence[OriginalTestcase]) -> Mapping[int, int]:
+        mapping: Mapping[int, int] = {}
+        partCaseIt = itertools.count(1)
 
-    for contents in parts:
-        rv.append({})
-        sortedCases = sorted(elem.testcaseNumber for elem in contents)
-        partCaseNum: int = 1
-        for origCaseNum in sortedCases:
-            if origCaseNum > 0:
-                rv[-1][origCaseNum] = partCaseNum
-                partCaseNum += 1
-            else:
-                rv[-1][origCaseNum] = origCaseNum
-    return rv
+        for origCase in sorted(elem.testcaseNumber for elem in contents):
+            mapping[origCase] = next(partCaseIt) if origCase > 0 else origCase
+
+        return mapping
+
+    return [_partMapping(contents) for contents in parts]
 
 
 def _generateCommandLineArgToOriginalMapping(
-    parts: Sequence[Sequence[OriginalTestcaseNumbers]],
-) -> Sequence[Mapping[int, OriginalTestcaseNumbers]]:
+    parts: Sequence[Sequence[OriginalTestcase]],
+) -> Sequence[Mapping[int, OriginalTestcase]]:
     """Map part-number+generated-test-case-number -> original--test-case-number.
 
     Negative cases are mapped to themselves.
@@ -99,7 +105,7 @@ def _generateCommandLineArgToOriginalMapping(
     Positive cases are numbered 1..N in each test driver part.
     """
 
-    rv: MutableSequence[MutableMapping[int, OriginalTestcaseNumbers]] = []
+    rv: MutableSequence[MutableMapping[int, OriginalTestcase]] = []
 
     for contents in parts:
         rv.append({})
@@ -112,48 +118,49 @@ def _generateCommandLineArgToOriginalMapping(
                 partCaseNum += 1
             else:
                 rv[-1][elem.testcaseNumber] = elem
-    return rv
+
+    def _partMapping(contents: Sequence[OriginalTestcase]) -> Mapping[int, OriginalTestcase]:
+        mapping: Mapping[int, OriginalTestcase] = {}
+        partCaseIt = itertools.count(1)
+
+        for origCase in sorted(contents, key=lambda x: x.testcaseNumber):
+            mapping[
+                next(partCaseIt) if origCase.testcaseNumber > 0 else origCase.testcaseNumber
+            ] = origCase
+
+        return mapping
+
+    return [_partMapping(contents) for contents in parts]
 
 
 def generateTestcasesToPartsMapping(parseResults: ParseResult) -> Sequence[TestcaseMapping]:
     """Original test case number to part+case-number or [part+case-number+slice-number]"""
 
-    rv: MutableSequence[TestcaseMapping] = []
-
     partToOrigMap = _generatedToOriginalTestcaseMapping(parseResults.parts)
 
     def getGeneratedCaseNumber(partNum: int, origCaseNum: int) -> int:
         part = partToOrigMap[partNum - 1]
-        for original, generated in part.items():
-            if original == origCaseNum:
-                return generated
-        raise ValueError(
-            f"INTERNAL ERROR: Could not find generated case number for "
-            f"{origCaseNum} in part {partNum}.\n{part=}\n{parseResults.parts=}"
-        )
+        generated = part.get(origCaseNum)
+        if generated is None:
+            raise ValueError(
+                f"INTERNAL ERROR: Could not find generated case number for "
+                f"{origCaseNum} in part {partNum}.\n{part=}\n{parseResults.parts=}"
+            )
+        return generated
+
+    positiveMappings: MutableSequence[TestcaseMapping] = []
+    negativeMappings: MutableSequence[TestcaseMapping] = []
 
     for partNum, part in enumerate(parseResults.parts, 1):
         for elem in part:
+            mapping = TestcaseMapping(elem, PartTestcase(partNum, elem.testcaseNumber))
             if elem.testcaseNumber > 0:
-                rv.append(
-                    TestcaseMapping(
-                        elem.testcaseNumber,
-                        elem.sliceNumber,
-                        partNum,
-                        getGeneratedCaseNumber(partNum, elem.testcaseNumber),
-                    )
-                )
+                mapping.partTestcaseNumber = getGeneratedCaseNumber(partNum, elem.testcaseNumber)
+                positiveMappings.append(mapping)
+            else:
+                negativeMappings.append(mapping)
 
-    # Add negative cases
-    for partNum, part in enumerate(parseResults.parts, 1):
-        for elem in part:
-            if elem.testcaseNumber < 0:
-                rv.append(
-                    TestcaseMapping(
-                        elem.testcaseNumber, elem.sliceNumber, partNum, elem.testcaseNumber
-                    )
-                )
-    return rv
+    return positiveMappings + negativeMappings
 
 
 def _generateSilencingOfWarnings(silencedWarnings: Set[SilencedWarningKind]) -> Sequence[str]:
@@ -162,15 +169,15 @@ def _generateSilencingOfWarnings(silencedWarnings: Set[SilencedWarningKind]) -> 
 
     rv: MutableSequence[str] = ["#include <bsls_platform.h>"]
 
-    for warning in silencedWarnings:
-        if warning == "UNUSED":
-            rv += [
-                "#ifdef BSLS_PLATFORM_HAS_PRAGMA_GCC_DIAGNOSTIC",
-                '    #pragma GCC diagnostic ignored "-Wunused"',
-                '    #pragma GCC diagnostic ignored "-Wunused-function"',
-                "#endif",
-                "",
-            ]
+    if "UNUSED" in silencedWarnings:
+        rv += [
+            "#ifdef BSLS_PLATFORM_HAS_PRAGMA_GCC_DIAGNOSTIC",
+            '    #pragma GCC diagnostic ignored "-Wunused"',
+            '    #pragma GCC diagnostic ignored "-Wunused-function"',
+            "#endif",
+            "",
+        ]
+
     return rv
 
 
@@ -181,41 +188,44 @@ def _generateSlicedTestcase(
     newCaseNum: int,
     sliceNumber: int,
     lines: Sequence[str],
-    writeLineDirective: Callable[[MutableSequence[str], int], str],
+    appendLineDirective: Callable[[MutableSequence[str], int], str],
 ) -> Sequence[str]:
     rv: MutableSequence[str] = []
-    writeLineDirective(rv, testcase.block.startLine)
+    appendLineDirective(rv, testcase.block.startLine)
     rv.append(
         f"      case {newCaseNum}: {{  // 'case {testcase.number}' slice {sliceNumber} in \"{xtCppName}\""
     )
 
-    rv += testcase.generateCode(sliceNumber - 1, lines, writeLineDirective)
+    rv += testcase.generateCode(sliceNumber - 1, lines, appendLineDirective)
     return rv
 
 
 def _collapseLineDirectives(partLines: MutableSequence[str]) -> None:
-    lastEffectiveLineDirectiveSeenAt = -1
-    lineIndex = 0
-    while lineIndex < len(partLines):
-        line = partLines[lineIndex].strip()
-        if not line:
-            lineIndex += 1
-            continue  # !!! CONTINUE !!!
-
-        if line.startswith("#line "):
-            if lastEffectiveLineDirectiveSeenAt == -1:
-                lastEffectiveLineDirectiveSeenAt = lineIndex
-            else:
-                # We have a redundant #line, let's overwrite the previous one and drop empty lines
-                # between them if there were any
-                partLines[lastEffectiveLineDirectiveSeenAt] = line
-                del partLines[lastEffectiveLineDirectiveSeenAt + 1 : lineIndex + 1]
-                lineIndex -= lineIndex - lastEffectiveLineDirectiveSeenAt
-        else:
-            # Any non-empty, non-#line line necessitates the previously see #line, so we cannot
-            # overwrite/collapse it
-            lastEffectiveLineDirectiveSeenAt = -1
-        lineIndex += 1
+    isLine: Callable[[str], bool] = lambda s: s.strip().startswith("#line ")
+    isNonLine: Callable[[Tuple[int, str]], bool] = lambda tup: not isLine(tup[1])
+    isEmpty: Callable[[Tuple[int, str]], bool] = lambda tup: not tup[1].strip()
+    enumerateSlice: Callable[[Sequence[Any], int], enumerate[Any]] = lambda seq, idx: enumerate(
+        seq[idx:], idx
+    )
+    try:
+        curIndex = 0
+        while True:
+            # Find next `#line` directive
+            lineIdx, _ = next(itertools.dropwhile(isNonLine, enumerateSlice(partLines, curIndex)))
+            while True:
+                # Find next non-empty line
+                nextIdx, line = next(
+                    itertools.dropwhile(isEmpty, enumerateSlice(partLines, lineIdx + 1))
+                )
+                if isLine(line):
+                    # If it's another `#line` directive, remove the previous
+                    # one along with whitespace between them.
+                    del partLines[lineIdx:nextIdx]
+                else:
+                    curIndex = nextIdx + 1
+                    break
+    except StopIteration:
+        return
 
 
 def _generateParts(
@@ -226,7 +236,7 @@ def _generateParts(
     parseResults: ParseResult,
     testcasesToPartsMapping: Sequence[TestcaseMapping],
     lines: MutableSequence[str],
-    writeLineDirective: Callable[[MutableSequence[str], int], str],
+    appendLineDirective: Callable[[MutableSequence[str], int], str],
 ) -> MutableSequence[MutableSequence[str]]:
 
     origToPartMappings = _generatedToOriginalTestcaseMapping(parseResults.parts)
@@ -376,7 +386,7 @@ def _generateParts(
             CodeBlockInterval(2, parseResults.testPrintLine.lineNumber),
             partContents,
             lines,
-            writeLineDirective,
+            appendLineDirective,
         )
 
         partLines.append("    printTestInfo(test);")
@@ -390,7 +400,10 @@ def _generateParts(
                 theCase = testcases[content.testcaseNumber]
                 assert isinstance(theCase, UnslicedTestcase)
                 partLines += theCase.generateCode(
-                    xtCppName, origToPartMapping[content.testcaseNumber], lines, writeLineDirective
+                    xtCppName,
+                    origToPartMapping[content.testcaseNumber],
+                    lines,
+                    appendLineDirective,
                 )
                 continue  # !!! continue
 
@@ -405,7 +418,7 @@ def _generateParts(
                 origToPartMapping[content.testcaseNumber],
                 content.sliceNumber,
                 lines,
-                writeLineDirective,
+                appendLineDirective,
             )
         del positiveCases
 
@@ -416,16 +429,18 @@ def _generateParts(
         for content in negativeCases:
             theCase = testcases[content]
             assert isinstance(theCase, UnslicedTestcase)
-            partLines += theCase.generateCode(xtCppName, theCase.number, lines, writeLineDirective)
+            partLines += theCase.generateCode(
+                xtCppName, theCase.number, lines, appendLineDirective
+            )
 
         partLines += parseResults.conditionalCommonCodeBlocks.generateCodeForBlock(
             CodeBlockInterval(stopTestcasesLine, len(lines) + 1),
             partContents,
             lines,
-            writeLineDirective,
+            appendLineDirective,
         )
 
-        if writeLineDirective([], 1) != "":
+        if appendLineDirective([], 1) != "":
             _collapseLineDirectives(partLines)
 
         results.append(partLines)
@@ -453,13 +468,13 @@ def generateParts(
 
     if useLineDirectives:
 
-        def writeLineDirective(ls: MutableSequence[str], lineNumber: int) -> str:
+        def appendLineDirective(ls: MutableSequence[str], lineNumber: int) -> str:
             ls.append(f'#line {lineNumber} "{escapedXtCppPath}"')
             return ls[-1]
 
     else:
 
-        def writeLineDirective(ls: MutableSequence[str], lineNumber: int) -> str:
+        def appendLineDirective(ls: MutableSequence[str], lineNumber: int) -> str:
             return ""
 
     parts = _generateParts(
@@ -470,7 +485,7 @@ def generateParts(
         parseResults,
         testcasesToPartsMapping,
         lines,
-        writeLineDirective,
+        appendLineDirective,
     )
 
     xteFiles = _collectXteFiles(xtCppPath, qualifiedComponentName)
