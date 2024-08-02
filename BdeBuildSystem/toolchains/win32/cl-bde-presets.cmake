@@ -47,6 +47,22 @@ endif()
 # Disable GNU c++ extensions.
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Sanitizers
+if(BDE_BUILD_TARGET_ASAN)
+    string(CONCAT DEFAULT_CXX_FLAGS
+           "${DEFAULT_CXX_FLAGS} "
+           "/fsanitize=address "
+           )
+    string(CONCAT DEFAULT_C_FLAGS
+           "${DEFAULT_C_FLAGS} "
+           "/fsanitize=address "
+           )
+    string(CONCAT DEFAULT_EXE_LINKER_FLAGS
+           "${DEFAULT_EXE_LINKER_FLAGS} "
+           "/fsanitize=address "
+           )
+endif()
+
 # NOTE: all c++ compilers support exception by default
 # and BDE will by default define BDE_BUILD_TARGET_EXC
 if (BDE_BUILD_TARGET_NO_EXC)
