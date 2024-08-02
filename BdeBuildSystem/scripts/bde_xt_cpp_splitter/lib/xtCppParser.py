@@ -13,6 +13,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    TypeVar,
 )
 
 from dataclasses import dataclass
@@ -105,6 +106,23 @@ class _TestcaseParseResult:
         return self.codeSlicing.block
 
 
+T = TypeVar("T")
+
+
+def _findIndexIf(cond: Callable[[T], bool], seq: Sequence[T], fromIndex: int = 0) -> int | None:
+    return next(
+        (idx for idx, element in enumerate(seq[fromIndex:], fromIndex) if cond(element)), None
+    )
+
+
+def _equalTo(what: str) -> Callable[[str], bool]:
+    def _boundEqualTo(line: str) -> bool:
+        nonlocal what
+        return line.rstrip() == what
+
+    return _boundEqualTo
+
+
 def _createSliceNameMap(
     parseResults: Sequence[_TestcaseParseResult],
 ) -> Mapping[int, Mapping[str, int]]:
@@ -120,40 +138,41 @@ _MY_SIMCPP11_IF_RE = re.compile(r"\s*#\s*if\s+BSLS_COMPILERFEATURES_SIMULATE_CPP
 def _parseSimCpp11Include(
     xtCppName: str, qualifiedComponentName: str, lines: Sequence[str]
 ) -> SimCpp11IncludeConstruct | None:
-    def firstLineMatching(regex, lines):
-        return next((idx for idx, line in enumerate(lines) if re.match(regex, line)), None)
+    matches: Callable[[re.Pattern[str] | str], Callable[[str], bool]] = (
+        lambda regex: lambda text: re.match(regex, text) is not None
+    )
 
-    idx = firstLineMatching(_MY_SIMCPP11_IF_RE, lines)
+    idx = _findIndexIf(matches(_MY_SIMCPP11_IF_RE), lines)
     if idx is None:
         return None  # !!! RETURN !!!
     ifDefLine = idx + 1
 
     defineRe = rf"\s*#\s*define\s+COMPILING_{qualifiedComponentName.upper()}_X?T_CPP"
-    idx = firstLineMatching(defineRe, lines[ifDefLine:])
+    idx = _findIndexIf(matches(defineRe), lines, ifDefLine)
     if idx is None:
         raise ParseError(
             f"{xtCppName}:{ifDefLine}: Cannot find "
             f"`#define COMPILING_{qualifiedComponentName.upper()}_XT_CPP`"
         )
-    defineLine = ifDefLine + idx + 1
+    defineLine = idx + 1
 
     includeRe = rf"\s*#\s*include\s+<{qualifiedComponentName.lower()}_cpp03.xt.cpp>"
-    idx = firstLineMatching(includeRe, lines[defineLine:])
+    idx = _findIndexIf(matches(includeRe), lines, defineLine)
     if idx is None:
         raise ParseError(
             f"{xtCppName}:{defineLine}: Cannot find "
             f"`#include <{qualifiedComponentName.lower()}_cpp03.xt.cpp>`"
         )
-    includeLine = defineLine + idx + 1
+    includeLine = idx + 1
 
     undefRe = rf"\s*#\s*undef\s+COMPILING_{qualifiedComponentName.upper()}_X?T_CPP"
-    idx = firstLineMatching(undefRe, lines[includeLine:])
+    idx = _findIndexIf(matches(undefRe), lines, includeLine)
     if idx is None:
         raise ParseError(
             f"{xtCppName}:{includeLine}: Cannot find "
             f"`#undef COMPILING_{qualifiedComponentName.upper()}_XT_CPP`"
         )
-    undefLine = includeLine + idx + 1
+    undefLine = idx + 1
 
     elseLine = undefLine + 1
 
@@ -175,28 +194,22 @@ def _parseSimCpp11Cpp03(
     qualifiedComponentName = removesuffix(qualifiedComponentName, "_cpp03")
 
     ifdefLineContent = f"#ifdef COMPILING_{qualifiedComponentName.upper()}_XT_CPP"
-    idx = next((idx for idx, line in enumerate(lines) if line.strip() == ifdefLineContent), None)
+    idx = _findIndexIf(_equalTo(ifdefLineContent), lines)
     if idx is None:
         raise ParseError(f"{xtCppName}: Cannot find '{ifdefLineContent}' in _cpp03 file")
     ifDefLine = idx + 1
 
     elseLineContent = f"#else // if ! defined(COMPILING_{qualifiedComponentName.upper()}_XT_CPP)"
-    idx = next(
-        (idx for idx, line in enumerate(lines[ifDefLine:]) if line.strip() == elseLineContent),
-        None,
-    )
+    idx = _findIndexIf(_equalTo(elseLineContent), lines, ifDefLine)
     if idx is None:
         raise ParseError(f"{xtCppName}: Cannot find '{elseLineContent}' in _cpp03 file")
-    elseLine = ifDefLine + idx + 1
+    elseLine = idx + 1
 
     endifLineContent = f"#endif // defined(COMPILING_{qualifiedComponentName.upper()}_XT_CPP)"
-    idx = next(
-        (idx for idx, line in enumerate(lines[elseLine:]) if line.strip() == endifLineContent),
-        None,
-    )
+    idx = _findIndexIf(_equalTo(endifLineContent), lines, elseLine)
     if idx is None:
         raise ParseError(f"{xtCppName}: Cannot find '{endifLineContent}' in _cpp03 file")
-    endifLine = elseLine + idx + 1
+    endifLine = idx + 1
 
     invocationLines: MutableSequence[int] = []
     for lineNumber, line in enumerate(lines, 1):
@@ -258,10 +271,6 @@ def _isTestcaseInt(txt: str) -> bool:
     return txt.isdigit() or (txt.startswith("-") and txt[1:].isdigit())
 
 
-def _isSliceNumInt(txt: str) -> bool:
-    return txt.isdigit()
-
-
 def _verifyFoundPositiveTestCases(
     xtCppName: str, testcasesNumbers: Iterable[_TestcaseParseResult]
 ) -> None:
@@ -285,20 +294,18 @@ def _verifyFoundPositiveTestCases(
 def _findMainStart(xtCppName: str, lines: Sequence[str]) -> int:
     """Find 'int main(int argc, char *argv[])', ensure there is only one, other sanity checks."""
 
-    try:
-        idx = lines.index("int main(int argc, char *argv[])")
-    except ValueError:
+    if (idx := _findIndexIf(_equalTo("int main(int argc, char *argv[])"), lines)) is None:
         raise ParseError(
             f"{xtCppName}: Could not find definition 'int main(int argc, char *argv[])'"
         )
 
-    try:
-        idx2 = lines[idx + 1 :].index("int main(int argc, char *argv[])")
+    if (
+        idx2 := _findIndexIf(_equalTo("int main(int argc, char *argv[])"), lines, idx + 1)
+    ) is not None:
         raise ParseError(
-            f"{xtCppName}:{idx+idx2+2}: Found a second 'int main(int argc, char *argv[])')"
+            f"{xtCppName}:{idx2+1}: Found a second 'int main(int argc, char *argv[])').  "
+            f"First main was found at {idx+1}."
         )
-    except ValueError:
-        pass
 
     return idx
 
@@ -316,11 +323,10 @@ def _findMainEnd(xtCppName: str, offset: int, fromMainLines: Sequence[str]) -> i
 
     # Find the real end of main
     while True:
-        try:
-            idx = fromMainLines.index("}")
-            found += f"\nFOUND: {idx=}, {offset=}, {offset+additionalOffset+idx=}"
-        except ValueError:
+        if (idx := _findIndexIf(_equalTo("}"), fromMainLines)) is None:
             raise ParseError(f"{xtCppName}:{offset}: Could not find closing brace for 'main'")
+
+        found += f"\nFOUND: {idx=}, {offset=}, {offset+additionalOffset+idx=}"
 
         # If the closing brace is in a usage example block we have to look for another
         idxPrev, linePrev = next(
@@ -356,13 +362,7 @@ def _findMainEnd(xtCppName: str, offset: int, fromMainLines: Sequence[str]) -> i
         if line.startswith("#else // if ! defined(COMPILING_"):
             return idx  # !!! RETURN !!!
 
-    idx2 = -1
-    try:
-        idx2 = fromMainLines[idx + 1 :].index("}")
-    except ValueError:
-        pass
-
-    if idx2 != -1:
+    if (idx2 := _findIndexIf(_equalTo("}"), fromMainLines, idx + 1)) is not None:
         raise ParseError(
             f"{xtCppName}:{offset + idx + 1}: Found a second closing brace for 'main' on line "
             f"{offset + idx  + idx2 + 1}"
@@ -392,11 +392,6 @@ _COUT_TEST_PRINT_RE = re.compile(
 
 def _findTestPrintLine(xtCppName: str, offset: int, mainLines: Sequence[str]) -> TestPrintLineInfo:
     for offset, line in enumerate(mainLines, offset):
-        if not line.startswith("    "):  ## SKIP unindented lines
-            continue  # !!! CONTINUE
-
-        if '"TEST "' not in line or "__FILE__" not in line or "test" not in line:
-            continue  # !!! CONTINUE
 
         if re.fullmatch(_PRINTF_TEST_PRINT_RE, line):
             return TestPrintLineInfo(offset + 1, "printf")
@@ -411,36 +406,34 @@ def _findTestPrintLine(xtCppName: str, offset: int, mainLines: Sequence[str]) ->
 
 
 @dataclass
-class _TestCasesOnly:
+class _TestSwitchCaseLines:
     offset: int
     lines: Sequence[str]
 
 
-def _extractTestcasesOnlyBlock(
+def _extractTestSwitchCaseLines(
     xtCppName: str, offset: int, mainLines: Sequence[str]
-) -> _TestCasesOnly:
+) -> _TestSwitchCaseLines:
     """Get the part that only has the case +/-N: { ~~~ } break; elements"""
 
-    try:
-        idx = mainLines.index("    switch (test) { case 0:  // Zero is always the leading case.")
-    except ValueError:
-        try:
-            idx = mainLines.index("    switch (test) { case 0:")
-        except ValueError:
+    if (
+        idx := _findIndexIf(
+            _equalTo("    switch (test) { case 0:  // Zero is always the leading case."), mainLines
+        )
+    ) is None:
+        if (idx := _findIndexIf(_equalTo("    switch (test) { case 0:"), mainLines)) is None:
             raise ParseError(f"{xtCppName}: Could not find 'switch(test) {{ case 0:' in 'main'")
 
     if sum(line.startswith("    switch (test) { case 0:") for line in mainLines) > 1:
         raise ParseError(f"{xtCppName}: More than one 'switch(test) {{ case 0:' present in 'main'")
 
-    try:
-        idx2 = mainLines[idx + 1 :].index("      default: {")
-    except ValueError:
+    if (idx2 := _findIndexIf(_equalTo("      default: {"), mainLines, idx + 1)) is None:
         raise ParseError(f"{xtCppName}:{offset  + idx + 2} Could not find 'default: {{' in 'main'")
 
     if mainLines[idx + 1 :].count("      default: {") != 1:
         raise ParseError(f"{xtCppName}: More than one 'default: {{' present in 'main'")
 
-    return _TestCasesOnly(offset + idx + 1, mainLines[idx + 1 : idx + idx2 + 1])
+    return _TestSwitchCaseLines(offset + idx + 1, mainLines[idx + 1 : idx2])
 
 
 @dataclass
@@ -672,10 +665,6 @@ def _parseOneTestcase(
                 raise ParseError(
                     f"{xtCppName}:{lineNumber}: Could not parse macro name in #define '{line}'"
                 )
-            if not currentTypelistMacroName:
-                raise ParseError(
-                    f"{xtCppName}:{lineNumber}: Could not parse macro name in #define '{line}'"
-                )
 
             if not re.fullmatch(_MACRO_NAME_RE, currentTypelistMacroName):
                 raise ParseError(
@@ -774,7 +763,7 @@ def _parseOneTestcase(
                     f"{xtCppName}:{lineNumber}: Number of slices "
                     f"({currentTypelistNumberOfSlices}) must be larger than 0 '{line}'"
                 )
-            elif currentTypelistNumberOfSlices > 89:
+            elif currentTypelistNumberOfSlices > 99:
                 raise ParseError(
                     f"{xtCppName}:{lineNumber}: Too large number of slices "
                     f"({currentTypelistNumberOfSlices}) '{line}'"
@@ -914,22 +903,19 @@ def _parseTestcases(
         casesLines = casesLines[1:]
         offset += 1
 
-    parsedTestcases: Sequence[_TestcaseParseResult] = []
-    casesLines = theLines
-    for tmpParsed in testcaseBlocks:
-        parsedTestcases.append(
-            _parseOneTestcase(
-                xtCppName,
-                tmpParsed.testcaseNumber,
-                tmpParsed.block,
-                casesLines[
-                    tmpParsed.block.startIndex
-                    - startOffset : tmpParsed.block.stopIndex
-                    - startOffset
-                ],
-                resolveTypelist,
-            )
+    parsedTestcases = [
+        _parseOneTestcase(
+            xtCppName,
+            tmpParsed.testcaseNumber,
+            tmpParsed.block,
+            theLines[
+                tmpParsed.block.startIndex - startOffset : tmpParsed.block.stopIndex - startOffset
+            ],
+            resolveTypelist,
         )
+        for tmpParsed in testcaseBlocks
+    ]
+
     return parsedTestcases
 
 
@@ -994,6 +980,56 @@ def _convertTestcaseParseResults(
     return rv
 
 
+def _parseTestcaseRange(
+    xtCppName: str,
+    lineNumber: int,
+    spec: str,
+    testcaseNumberSet: Set[int] | Mapping[int, int],
+    *,
+    allowTheWordEnd: bool = False,
+) -> Tuple[int, int]:
+    if spec.count("..") > 1:
+        f"{xtCppName}:{lineNumber}: Syntax error in '{spec}' in  too many '..'"
+
+    start, stop = spec.split("..")
+    start = start.strip()
+    stop = stop.strip()
+    if not start or not stop:
+        raise ParseError(f"{xtCppName}:{lineNumber}: Syntax error in '{spec}'")
+
+    if not _isTestcaseInt(start):
+        raise ParseError(f"{xtCppName}:{lineNumber}: Not a number '{start}' in '{spec}'")
+
+    start = int(start)
+    if start == 0 or abs(start) > 99:
+        raise ParseError(f"{xtCppName}:{lineNumber}: Invalid test case number {start} in '{spec}'")
+
+    if start not in testcaseNumberSet:
+        raise ParseError(
+            f"{xtCppName}:{lineNumber}: Testcase number {start} in '{spec}' does not "
+            f"exist.  Available numbers are: {testcaseNumberSet}"
+        )
+
+    if allowTheWordEnd and stop == "END":
+        stop = 100 if start > 0 else -100
+    else:
+        if not _isTestcaseInt(stop):
+            raise ParseError(f"{xtCppName}:{lineNumber}: Not a number '{stop}' in '{spec}'")
+        stop = int(stop)
+        if stop == 0 or abs(stop) > 99:
+            raise ParseError(
+                f"{xtCppName}:{lineNumber}: Invalid test case number {stop} in '{spec}'"
+            )
+
+        if stop not in testcaseNumberSet:
+            raise ParseError(
+                f"{xtCppName}:{lineNumber}: Testcase number {stop} in '{spec}' does not "
+                f"exist.  Available numbers are: {testcaseNumberSet}"
+            )
+
+    return start, stop
+
+
 def _parseBlockCondition(
     xtCppName: str,
     lineNumber: int,
@@ -1006,53 +1042,14 @@ def _parseBlockCondition(
     testCaseSpecs: Iterable[str] = (spec.strip() for spec in condition.split(","))
     for spec in testCaseSpecs:
         if ".." in spec:
-            if spec.count("..") > 1:
-                f"{xtCppName}:{lineNumber}: Syntax error in '{spec}' in  too many '..'"
-            start, stop = spec.split("..")
-            start = start.strip()
-            stop = stop.strip()
-            if not start or not stop:
-                raise ParseError(f"{xtCppName}:{lineNumber}: Syntax error in '{spec}'")
-
-            if not _isTestcaseInt(start):
-                raise ParseError(f"{xtCppName}:{lineNumber}: Not a number '{start}' in '{spec}'")
-            start = int(start)
-            if start == 0 or abs(start) > 99:
-                raise ParseError(
-                    f"{xtCppName}:{lineNumber}: Invalid test case number {start} in '{spec}'"
-                )
-
-            if start not in testcaseNumberSet:
-                raise ParseError(
-                    f"{xtCppName}:{lineNumber}: Testcase number {start} in '{spec}' does not "
-                    f"exist.  Available numbers are: {testcaseNumberSet}"
-                )
-
-            if not _isTestcaseInt(stop):
-                raise ParseError(f"{xtCppName}:{lineNumber}: Not a number '{stop}' in '{spec}'")
-            stop = int(stop)
-            if stop == 0 or abs(stop) > 99:
-                raise ParseError(
-                    f"{xtCppName}:{lineNumber}: Invalid test case number {stop} in '{spec}'"
-                )
-
-            if stop not in testcaseNumberSet:
-                raise ParseError(
-                    f"{xtCppName}:{lineNumber}: Testcase number {stop} in '{spec}' does not "
-                    f"exist.  Available numbers are: {testcaseNumberSet}"
-                )
-
+            start, stop = _parseTestcaseRange(xtCppName, lineNumber, spec, testcaseNumberSet)
             if start > 0:
                 numbersInRange = [
-                    caseNumber
-                    for caseNumber in testcaseNumberSet
-                    if caseNumber >= start and caseNumber <= stop
+                    caseNumber for caseNumber in testcaseNumberSet if start <= caseNumber <= stop
                 ]
             else:
                 numbersInRange = [
-                    caseNumber
-                    for caseNumber in testcaseNumberSet
-                    if caseNumber <= start and caseNumber >= stop
+                    caseNumber for caseNumber in testcaseNumberSet if start >= caseNumber >= stop
                 ]
 
             if len(numbersInRange) < 2:
@@ -1241,83 +1238,21 @@ def _parsePartsDefinitionTable(
         contentDefinitions = (elem.strip() for elem in line.split(","))
         for contentDef in contentDefinitions:
             if ".." in contentDef:
-                if contentDef.count("..") > 1:
-                    raise ParseError(
-                        f"{xtCppName}:{idx+1}: Syntax error in '{contentDef}' in '{line}', "
-                        "too many '..'"
-                    )
-                startStopList = contentDef.split("..")
-                if len(startStopList) != 2:
-                    raise ParseError(
-                        f"{xtCppName}:{idx+1}: Syntax error in '{contentDef}' in '{line}'"
-                    )
-                start, stop = startStopList[0].strip(), startStopList[1].strip()
-                del startStopList
-                if not start or not stop:
-                    raise ParseError(
-                        f"{xtCppName}:{idx+1}: Syntax error in '{contentDef}' in '{line}'"
-                    )
-
-                if not _isTestcaseInt(start):
-                    raise ParseError(
-                        f"{xtCppName}:{idx+1}: Not a number '{start}' in '{contentDef}' in "
-                        f"'{line}'"
-                    )
-                start = int(start)
-                if start == 0 or abs(start) > 99:
-                    raise ParseError(
-                        f"{xtCppName}:{idx+1}: Invalid test case number {start} in "
-                        f"'{contentDef}' in '{line}'"
-                    )
-
-                if start not in testcaseToNumSlices:
-                    raise ParseError(
-                        f"{xtCppName}:{idx+1}: Testcase number {start} in '{contentDef}' is not "
-                        f"available.  Available numbers are {unslicedCases}"
-                    )
-                if start not in unslicedCases:
-                    raise ParseError(
-                        f"{xtCppName}:{idx+1}: Slice test case {start} in '{contentDef}' cannot "
-                        f"be used in a range.  Available numbers are {unslicedCases}"
-                    )
-
-                if stop == "END":
-                    stop = 100 if start > 0 else -100
-                else:
-                    if not _isTestcaseInt(stop):
-                        raise ParseError(
-                            f"{xtCppName}:{idx+1}: Not a number '{stop}' in '{contentDef}' in "
-                            f"'{line}'"
-                        )
-                    stop = int(stop)
-                    if stop == 0 or abs(stop) > 99:
-                        raise ParseError(
-                            f"{xtCppName}:{idx+1}: Invalid test case number {stop} in "
-                            f"'{contentDef}' in '{line}'"
-                        )
-
-                    if stop not in testcaseToNumSlices:
-                        raise ParseError(
-                            f"{xtCppName}:{idx+1}: Testcase number {stop} in '{contentDef}' is "
-                            f"not available.  Available numbers are {unslicedCases}"
-                        )
-                    if stop not in unslicedCases:
-                        raise ParseError(
-                            f"{xtCppName}:{idx+1}: Sliced test case {stop} in '{contentDef}' "
-                            f"cannot be used in a range.  Available numbers are {unslicedCases}"
-                        )
+                start, stop = _parseTestcaseRange(
+                    xtCppName, idx + 1, contentDef, testcaseToNumSlices, allowTheWordEnd=True
+                )
 
                 if start > 0:
                     numbersInRange = [
                         caseNumber
                         for caseNumber in testcaseToNumSlices.keys()
-                        if caseNumber >= start and caseNumber <= stop
+                        if start <= caseNumber <= stop
                     ]
                 else:
                     numbersInRange = [
                         caseNumber
                         for caseNumber in testcaseToNumSlices.keys()
-                        if caseNumber <= start and caseNumber >= stop
+                        if start >= caseNumber >= stop
                     ]
 
                 slicedCases = [
@@ -1458,7 +1393,7 @@ def parse(
     def resolveTypelist(theListMacroValue: str):
         return resolveTypelistMacroValue(theListMacroValue, xtCppFull, groupsDirs)
 
-    testCasesOnly = _extractTestcasesOnlyBlock(
+    testCasesOnly = _extractTestSwitchCaseLines(
         xtCppName, mainBlock.startIndex, lines[mainBlock.startIndex : mainBlock.stopIndex]
     )
     testcaseParseResults = _parseTestcases(
