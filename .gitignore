@@ -3,6 +3,8 @@
 
 .*.sw?
 
+.pytest_cache/
+.vs/
 .vscode/
 
 # Byte-compiled / optimized / DLL files
