@@ -1,9 +1,19 @@
-bde-tools (4.11.1.0) unstable; urgency=low
+bde-tools (4.12.0.1) unstable; urgency=low
 
+  * 7095eb8 Merge pull request #339 from afeher/DRQS-175991813-bde_xt_cpp_splitter-script
+  * e36b827 Enable asan for MSVC (#342)
+  * eb89c4c Remove event library .pc mapping (#341)
+  * e6fee34 Merge pull request #2 from rkhlebnikov/splitter
+
+ -- Attila Feher <afeher@bloomberg.net>  Mon, 5 Aug 2024 14:33:49 -0400
+
+bde-tools (4.11.1.0) git; urgency=low
+
+  * fb3d8cf Changelog for version 4.11.1.0
   * 51dd87e Don't repeatedly find sim_cpp11_features.pl and check_cycles.py (#337)
   * 7d6e40f Handle --framework flag in .pc (#336)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 12 Jul 2024 16:14:43 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 15 Jul 2024 11:18:23 -0400
 
 bde-tools (4.11.0.0) git; urgency=low
 
