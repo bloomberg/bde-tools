@@ -2275,6 +2275,8 @@ EOT
 # Mapping of extensions to prefix and suffix text, in descending order of the
 # length of the extensions.
 my @extToBoilerplateMap = (
+    [ qr{_cpp03\.xt\.cpp$}
+                            , $cpp03TestDriverPrefix, $cpp03TestDriverSuffix ],
     [ qr{_cpp03\.[0-9]+\.t\.cpp$}
                             , $cpp03TestDriverPrefix, $cpp03TestDriverSuffix ],
     [ qr{_cpp03\.t\.cpp$}   , $cpp03TestDriverPrefix, $cpp03TestDriverSuffix ],

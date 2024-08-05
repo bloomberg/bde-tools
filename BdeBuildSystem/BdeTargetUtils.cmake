@@ -58,9 +58,9 @@ endif()
 if(NOT DEFINED CHECK_CYCLES)
     find_file(CHECK_CYCLES
               "check_cycles.py"
-              PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
-              NO_DEFAULT_PATH
-              )
+               PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
+               NO_DEFAULT_PATH
+             )
 
     if(CHECK_CYCLES)
         message(STATUS "Found check_cycles.py in ${CHECK_CYCLES}")
@@ -159,7 +159,7 @@ function(bbs_configure_target_tests target)
     cmake_parse_arguments(""
                           ""
                           ""
-                          "TEST_SOURCES;SOURCES;GTEST_SOURCES;TEST_DEPS;LABELS"
+                          "TEST_SOURCES;SOURCES;GTEST_SOURCES;SPLIT_SOURCES;TEST_DEPS;LABELS"
                           ${ARGN})
     bbs_assert_no_unparsed_args("")
 
@@ -182,6 +182,13 @@ function(bbs_configure_target_tests target)
                                  GTEST_SOURCES ${_GTEST_SOURCES}
                                  TEST_DEPS     ${_TEST_DEPS}
                                  LABELS        ${_LABELS})
+        set(${target}_TEST_TARGETS "${${target}_TEST_TARGETS}" PARENT_SCOPE)
+    endif()
+    if (_SPLIT_SOURCES)
+        bbs_add_component_tests(${target}
+                                SPLIT_SOURCES ${_SPLIT_SOURCES}
+                                TEST_DEPS     ${_TEST_DEPS}
+                                LABELS        ${_LABELS})
         set(${target}_TEST_TARGETS "${${target}_TEST_TARGETS}" PARENT_SCOPE)
     endif()
 endfunction()
@@ -381,6 +388,13 @@ endfunction()
 #
 # Generate cpp03 source files.
 function (bbs_generate_cpp03_sources srcFiles)
+    cmake_parse_arguments(PARSE_ARGV 1
+                          ""
+                          "IMMEDIATE"
+                          ""
+                          "")
+    bbs_assert_no_unparsed_args("")
+
     if(SIM_CPP11)
         get_property(cmd_wrapper GLOBAL PROPERTY BBS_CMD_WRAPPER)
 
@@ -397,9 +411,17 @@ function (bbs_generate_cpp03_sources srcFiles)
                 string(REPLACE "_cpp03." "." cpp11SrcFile ${srcFile})
                 message(TRACE "sim_cpp11 ${cpp11Operation}: ${cpp11SrcFile} -> ${srcFile}")
 
+                set(command ${cmd_wrapper} "${PERL_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}")
+
+                if (_IMMEDIATE)
+                    execute_process(
+                        COMMAND ${command}
+                        COMMAND_ERROR_IS_FATAL ANY)
+                endif()
+
                 add_custom_command(
                     OUTPUT    "${srcFile}"
-                    COMMAND   ${cmd_wrapper} "${PERL_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}"
+                    COMMAND   ${command}
                     DEPENDS   "${cpp11SrcFile}")
             endif()
         endforeach()
@@ -573,16 +595,18 @@ function(bbs_setup_target_uor target)
                     bbs_generate_cpp03_sources("${${pkg}_INCLUDE_FILES}")
                     bbs_generate_cpp03_sources("${${pkg}_SOURCE_FILES}")
                     bbs_generate_cpp03_sources("${${pkg}_TEST_SOURCES}")
+                    bbs_generate_cpp03_sources("${${pkg}_SPLIT_TEST_SOURCES}" IMMEDIATE)
 
                     if (NOT _SKIP_TESTS)
                         bbs_configure_target_tests(${pkg}
-                                                   TEST_SOURCES   ${${pkg}_TEST_SOURCES}
-                                                   GTEST_SOURCES  ${${pkg}_GTEST_SOURCES}
-                                                   TEST_DEPS      ${${pkg}_DEPENDS}
-                                                                  ${${pkg}_TEST_DEPENDS}
-                                                                  ${${uor_name}_PCDEPS}
-                                                                  ${${uor_name}_TEST_PCDEPS}
-                                                   LABELS         "all" ${target} ${pkg})
+                                                   TEST_SOURCES  ${${pkg}_TEST_SOURCES}
+                                                   GTEST_SOURCES ${${pkg}_GTEST_SOURCES}
+                                                   SPLIT_SOURCES ${${pkg}_SPLIT_TEST_SOURCES}
+                                                   TEST_DEPS     ${${pkg}_DEPENDS}
+                                                                 ${${pkg}_TEST_DEPENDS}
+                                                                 ${${uor_name}_PCDEPS}
+                                                                 ${${uor_name}_TEST_PCDEPS}
+                                                   LABELS        "all" ${target} ${pkg})
                     endif()
                 endif()
             endforeach()
@@ -635,11 +659,12 @@ function(bbs_setup_target_uor target)
             bbs_import_target_dependencies(${target} ${${uor_name}_PCDEPS})
             if (NOT _SKIP_TESTS)
                 bbs_configure_target_tests(${target}
-                                           TEST_SOURCES   ${${uor_name}_TEST_SOURCES}
-                                           GTEST_SOURCES  ${${uor_name}_GTEST_SOURCES}
-                                           TEST_DEPS      ${${uor_name}_PCDEPS}
-                                                          ${${uor_name}_TEST_PCDEPS}
-                                           LABELS         "all" ${target})
+                                           TEST_SOURCES  ${${uor_name}_TEST_SOURCES}
+                                           GTEST_SOURCES ${${uor_name}_GTEST_SOURCES}
+                                           SPLIT_SOURCES ${${uor_name}_SPLIT_TEST_SOURCES}
+                                           TEST_DEPS     ${${uor_name}_PCDEPS}
+                                                         ${${uor_name}_TEST_PCDEPS}
+                                           LABELS        "all" ${target})
                 if (${target}_TEST_TARGETS)
                     bbs_import_target_dependencies(${target} ${${uor_name}_TEST_PCDEPS})
                 endif()
@@ -751,11 +776,12 @@ function(bbs_setup_target_uor target)
         # Set up tests and link against the private library
         if (NOT _SKIP_TESTS)
             bbs_configure_target_tests(${lib_target}
-                                       TEST_SOURCES   ${${uor_name}_TEST_SOURCES}
-                                       GTEST_SOURCES  ${${uor_name}_GTEST_SOURCES}
-                                       TEST_DEPS      ${${uor_name}_PCDEPS}
-                                                      ${${uor_name}_TEST_PCDEPS}
-                                       LABELS         "all" ${target})
+                                       TEST_SOURCES  ${${uor_name}_TEST_SOURCES}
+                                       GTEST_SOURCES ${${uor_name}_GTEST_SOURCES}
+                                       SPLIT_SOURCES ${${uor_name}_SPLIT_TEST_SOURCES}
+                                       TEST_DEPS     ${${uor_name}_PCDEPS}
+                                                     ${${uor_name}_TEST_PCDEPS}
+                                       LABELS        "all" ${target})
             if (TARGET ${lib_target}.t)
                 if (NOT TARGET ${target}.t)
                     add_custom_target(${target}.t)
