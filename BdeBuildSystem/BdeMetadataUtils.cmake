@@ -35,6 +35,7 @@ the parent scope:
     * <package>_TEST_PCDEPS
     * <package>_TEST_SOURCES
     * <package>_GTEST_SOURCES
+    * <package>_SPLIT_TEST_SOURCES
     * <package>_METADATA_DIR
 
 .. code-block:: cmake
@@ -65,6 +66,7 @@ variables in the parent scope:
     * <group>_TEST_PCDEPS
     * <group>_TEST_SOURCES
     * <group>_GTEST_SOURCES
+    * <group>_SPLIT_TEST_SOURCES
     * <group>_METADATA_DIRS
 #]]
 function(bbs_read_metadata)
@@ -168,7 +170,8 @@ macro(bbs_read_group_metadata group dir)
             bbs_read_package_metadata(${pkg} ${_SOURCE_DIR}/${pkg})
             set(propagate_properties COMPONENTS INCLUDE_DIRS INCLUDE_FILES
                                      SOURCE_DIRS SOURCE_FILES
-                                     TEST_SOURCES GTEST_SOURCES METADATA_DIRS)
+                                     TEST_SOURCES GTEST_SOURCES SPLIT_TEST_SOURCES
+                                     METADATA_DIRS)
 
             # Private packages do not propagate their include files to the group
             if (${pkg} IN_LIST _PRIVATE_PACKAGES)
@@ -190,7 +193,7 @@ macro(bbs_read_group_metadata group dir)
 
     foreach(var PACKAGES DEPENDS PCDEPS TEST_DEPENDS TEST_PCDEPS COMPONENTS
                 INCLUDE_DIRS INCLUDE_FILES SOURCE_DIRS SOURCE_FILES
-                TEST_SOURCES GTEST_SOURCES METADATA_DIRS)
+                TEST_SOURCES GTEST_SOURCES SPLIT_TEST_SOURCES METADATA_DIRS)
         set(${group}_${var} ${${group}_${var}} PARENT_SCOPE)
     endforeach()
 endmacro()
@@ -264,6 +267,9 @@ macro(_bbs_set_bde_component_lists dir package mems)
                 list(APPEND ${package}_TEST_SOURCES ${dir}/${mem}.t.cpp)
             elseif(EXISTS ${dir}/${mem}.g.cpp)
                 list(APPEND ${package}_GTEST_SOURCES ${dir}/${mem}.g.cpp)
+            elseif(EXISTS ${dir}/${mem}.xt.cpp)
+                message(TRACE "Split TD: --->  ${dir}/${mem}.xt.cpp <---")
+                list(APPEND ${package}_SPLIT_TEST_SOURCES ${dir}/${mem}.xt.cpp)
             endif()
 
             # finding numbered and forwarding header tests
@@ -296,7 +302,7 @@ macro(_bbs_set_bde_component_lists dir package mems)
     # propagate the lists to the caller
     foreach(var COMPONENTS INCLUDE_DIRS INCLUDE_FILES
                 SOURCE_DIRS SOURCE_FILES MAIN_SOURCE
-                TEST_SOURCES GTEST_SOURCES)
+                TEST_SOURCES GTEST_SOURCES SPLIT_TEST_SOURCES)
         set(${package}_${var} ${${package}_${var}} PARENT_SCOPE)
     endforeach()
 endmacro()

@@ -81,7 +81,7 @@ Environment Variables Set by bbs_build_env
 ------------------------------------------
 
 The following environment variables may be set by evaluating the output of
-bde_setwafenv.py:
+bbs_build_env.py:
 
 - ``CXX``
 
