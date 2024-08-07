@@ -174,18 +174,15 @@ class Options:
         )
 
         # Find the bbs cmake modules
-        p = Path(self.refroot) if self.refroot else Path("/")
-        p = p / "opt" / "bb" / "share" / "cmake" / "BdeBuildSystem"
-        if p.is_dir():
-            self.bbs_module_path = p.resolve()
-        else:
-            p = Path(__file__).parent.parent / "BdeBuildSystem"
-            if p.is_dir():
-                self.bbs_module_path = p.resolve()
-            else:
+        p = Path(__file__).parent.parent / "BdeBuildSystem"
+        if not p.is_dir():
+            p = Path(self.refroot) if self.refroot else Path("/")
+            p = p / "opt" / "bb" / "share" / "cmake" / "BdeBuildSystem"
+            if not p.is_dir():
                 raise RuntimeError(
                     "Cannot find BdeBuildSystem cmake modules\n"
                 )
+        self.bbs_module_path = p.resolve()
 
         # Get the compiler from UPLID
         uplid = os.getenv("BDE_CMAKE_UPLID")
@@ -663,7 +660,7 @@ def configure(options):
     host_platform = platform.system()
 
     flags = ufid_to_cmake_flags(options.ufid) + [
-        "-DBdeBuildSystem_DIR:PATH=" + str(options.bbs_module_path),
+        "-DBdeBuildSystem_ROOT:PATH=" + str(options.bbs_module_path),
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
         "-DBBS_BUILD_SYSTEM=ON",
         "-DBBS_USE_WAFSTYLEOUT=" + ("ON" if options.wafstyleout else "OFF"),
