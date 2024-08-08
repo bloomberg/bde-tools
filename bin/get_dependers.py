@@ -46,7 +46,7 @@ class Component:
             elif suffix_count == 2: # application and test driver
                 if suffixes[0] == ".m" and suffixes[1] in [".c", ".cpp"]:
                     self.application_path = path
-                elif suffixes[0] == ".t" and suffixes[1] in [".c", ".cpp"]:
+                elif suffixes[0] in [".t", ".xt", ".g"] and suffixes[1] in [".c", ".cpp"]:
                     self.test_driver_paths = [path]
             elif suffix_count == 3: # split test drivers
                 if suffixes[1] == ".t" and suffixes[2] in [".c", ".cpp"]:
@@ -113,23 +113,23 @@ class Target:
         an invalid target using the given 'components'.  If the target is
         neither a valid component name nor a valid test driver name, the target
         is marked as invalid.'''
-        path = Path(target_name)
-        component_name = path.name.partition(".")[0]
+        split_name = target_name.split(".")
+        component_name = split_name[0]
 
         self.component : Optional[Component] = None
         self.name = target_name
         self.depender_names = set()
 
-        suffixes = path.suffixes
+        suffixes = split_name[1:]
         suffix_count = len(suffixes)
+
         if suffix_count == 0 and component_name in components.keys():
             self.target_type = TargetType.COMPONENT
             self.component = components[component_name]
             self.update_depender_names(components, output_targets)
-        elif suffix_count >= 1 and suffixes[-1] == ".t" and \
+        elif suffix_count >= 1 and suffixes[-1] == "t" and \
             component_name in components.keys() and \
-            any([target_name in str(test_driver) for test_driver
-                 in components[component_name].test_driver_paths]):
+            len(components[component_name].test_driver_paths) > 0:
             self.target_type = TargetType.TEST_DRIVER
             # test drivers don't have dependers
         else:
