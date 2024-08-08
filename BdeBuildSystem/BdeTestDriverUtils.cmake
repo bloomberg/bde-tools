@@ -7,7 +7,7 @@ This module provide a set of function to generate BDE tests
 #]]
 
 # On windows we will invoke the python script directly
-# On unix - the shell wrapper will find the interperter and 
+# On unix - the shell wrapper will find the interperter and
 # invoke the implementation file.
 find_package(Python3 3.6 REQUIRED)
 
@@ -89,7 +89,7 @@ BDE tests and generate necessary build dependencies and test labels.
 
 .. code-block:: cmake
 
-   bbs_add_component_tests(target 
+   bbs_add_component_tests(target
                            TEST_SOURCES source1.t.cpp [source2.t.cpp ...]
                            SPLIT_SOURCES source3.xt.cpp [source4.xt.cpp]
                            [ WORKING_DIRECTORY      dir            ]
@@ -181,7 +181,6 @@ function(bbs_add_component_tests target)
     set(split_cpp03_test_srcs ${_SPLIT_SOURCES})
     list(FILTER split_cpp03_test_srcs INCLUDE REGEX "_cpp03\.")
 
-    message(STATUS "Split source: ${_SPLIT_SOURCES}")
     foreach(test_src ${_SPLIT_SOURCES})
         # Stripping all extentions from the test source ( including numbers
         # from the numbered tests )
@@ -194,8 +193,6 @@ function(bbs_add_component_tests target)
         # Stripping last 2 extentions from the test source (.xt.cpp)
         get_filename_component(test_target_name ${test_src} NAME_WLE)
         get_filename_component(test_target_name ${test_target_name} NAME_WLE)
-
-        message(DEBUG "Running TD splitter for: ${test_src}")
 
         # Check if _cpp03 version of this test exists
         if (${split_cpp03_test_srcs} MATCHES "${test_target_name}_cpp03\.xt\.cpp")
@@ -234,8 +231,6 @@ function(bbs_add_component_tests target)
             MAIN_DEPENDENCY ${test_src})
         set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${stamp_file})
 
-        message(DEBUG "Generated files found: ${td_cpp_files}")
-
         if("${td_cpp_files}" STREQUAL "")
             message(FATAL_ERROR "Test splitter generated no files")
         endif()
@@ -257,18 +252,16 @@ function(bbs_add_component_tests target)
         foreach(split_test ${td_cpp_files})
             get_filename_component(split_target_name ${split_test} NAME_WLE)
             get_filename_component(split_target_name ${split_target_name} NAME_WLE)
-            
+
             if (${test_name} MATCHES "_cpp03")
                 # Add a custom target for dependency handling, but no executable for _cpp03 splits
                 add_custom_target(${split_target_name}.t SOURCES ${td_output_dir}/${split_test})
             else()
-                message(DEBUG "add_executable(${split_target_name}.t EXCLUDE_FROM_ALL ${td_output_dir}/${split_test})")
                 add_executable(${split_target_name}.t EXCLUDE_FROM_ALL ${td_output_dir}/${split_test})
 
                 bbs_add_target_bde_flags(${split_target_name}.t PRIVATE)
                 bbs_add_target_thread_flags(${split_target_name}.t PRIVATE)
 
-                message(DEBUG "target_link_libraries(${split_target_name}.t PUBLIC ${target} ${_TEST_DEPS})")
                 target_link_libraries(${split_target_name}.t PUBLIC ${target} ${_TEST_DEPS})
 
                 if (BDE_BUILD_TARGET_FUZZ)
@@ -296,8 +289,6 @@ function(bbs_add_component_tests target)
 
         list(APPEND test_targets ${test_name}.t)
     endforeach()
-
-    message(STATUS "test_targets: ${test_targets}")
 
     set(${target}_TEST_TARGETS "${test_targets}" PARENT_SCOPE)
 endfunction()
