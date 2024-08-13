@@ -11,7 +11,15 @@ if (DEFINED DISTRIBUTION_REFROOT)
     find_program(PKG_CONFIG_EXECUTABLE pkg-config PATHS
       ${DISTRIBUTION_REFROOT}/opt/bb/lib/bin
       /opt/bb/lib/bin
-      NO_SYSTEM_ENVIRONMENT_PATH)
+      NO_SYSTEM_ENVIRONMENT_PATH
+      NO_DEFAULT_PATH)
+
+  if (NOT ${PKG_CONFIG_EXECUTABLE})
+        find_program(PKG_CONFIG_EXECUTABLE pkg-config)
+        if (NOT ${PKG_CONFIG_EXECUTABLE})
+            message(STATUS "pkg-config is not found; Dependency resolution might fail.")
+        endif()
+    endif()
 
     if (BDE_BUILD_TARGET_64)
         set(ROBO_PKG_CONFIG_PATH "${DISTRIBUTION_REFROOT}/opt/bb/lib64/robo/pkgconfig:${DISTRIBUTION_REFROOT}/opt/bb/lib64/pkgconfig" CACHE STRING "The location of the robo pkgconfig files.")
