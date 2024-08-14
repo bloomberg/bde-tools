@@ -122,9 +122,9 @@ def find_toolchain_file(toolchain):
 
         refroot = os.getenv("DISTRIBUTION_REFROOT", "/")
 
+        toolchain_locations.append(Path(sys.argv[0]).resolve().parent.parent.joinpath("BdeBuildSystem/toolchains", sysutil.unversioned_platform()))
         toolchain_locations.append(Path(refroot).resolve())
         toolchain_locations.append(Path(refroot).resolve().joinpath("opt/bb/share/cmake/BdeBuildSystem/toolchains", sysutil.unversioned_platform()))
-        toolchain_locations.append(Path(sys.argv[0]).resolve().parent.parent.joinpath("BdeBuildSystem/toolchains", sysutil.unversioned_platform()))
         toolchain_locations.append(Path.cwd().resolve())
 
         for folder in toolchain_locations:
