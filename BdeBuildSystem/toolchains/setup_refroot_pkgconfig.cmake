@@ -14,9 +14,9 @@ if (DEFINED DISTRIBUTION_REFROOT)
       NO_SYSTEM_ENVIRONMENT_PATH
       NO_DEFAULT_PATH)
 
-  if (NOT ${PKG_CONFIG_EXECUTABLE})
+  if (NOT PKG_CONFIG_EXECUTABLE)
         find_program(PKG_CONFIG_EXECUTABLE pkg-config)
-        if (NOT ${PKG_CONFIG_EXECUTABLE})
+        if (NOT PKG_CONFIG_EXECUTABLE)
             message(STATUS "pkg-config is not found; Dependency resolution might fail.")
         endif()
     endif()
