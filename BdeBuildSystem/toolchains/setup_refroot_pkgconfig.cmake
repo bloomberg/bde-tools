@@ -28,6 +28,7 @@ if (DEFINED DISTRIBUTION_REFROOT)
     else()
         set(ROBO_PKG_CONFIG_PATH "${DISTRIBUTION_REFROOT}/opt/bb/lib/robo/pkgconfig:${DISTRIBUTION_REFROOT}/opt/bb/lib/pkgconfig" CACHE STRING "The location of the robo pkgconfig files.")
         set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS no)
+        set(CMAKE_INSTALL_LIBDIR lib)
     endif()
 
     if (DEFINED ENV{PKG_CONFIG_PATH} AND NOT "$ENV{PKG_CONFIG_PATH}" MATCHES ".*${ROBO_PKG_CONFIG_PATH}$")
