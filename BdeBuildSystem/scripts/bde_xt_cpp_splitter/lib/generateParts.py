@@ -174,6 +174,7 @@ def _generateSilencingOfWarnings(silencedWarnings: Set[SilencedWarningKind]) -> 
             "#ifdef BSLS_PLATFORM_HAS_PRAGMA_GCC_DIAGNOSTIC",
             '    #pragma GCC diagnostic ignored "-Wunused"',
             '    #pragma GCC diagnostic ignored "-Wunused-function"',
+            '    #pragma GCC diagnostic ignored "-Wunused-variable"',
             "#endif",
             "",
         ]
