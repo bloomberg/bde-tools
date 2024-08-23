@@ -1,11 +1,25 @@
-bde-tools (4.12.0.1) unstable; urgency=low
+bde-tools (4.13.0.0) unstable; urgency=low
 
+  * 6c00352 Merge pull request #350 from afeher/clang-only-warning-disable
+  * da5920b Merge pull request #349 from afeher/fix-unused-warning-supression-again
+  * b7ba612 Merge pull request #348 from afeher/fix-empty-cpp03-file-handling
+  * e753651 Merge pull request #347 from afeher/fix-splitter-warning-suppression
+  * 105c5a3 Remove unnecessarily verbose output. (#346)
+  * 04b1513 Adjust get_dependers to handle .xt.cpp and .g.cpp (#345)
+  * 3e11fb5 Change BdeBuildSystem search order (#344)
+  * ef24207 Merge pull request #343 from afeher/drqs-175992119-integrate-bde_xt_cpp_splitter-into-bbs_build
+
+ -- Attila Feher <afeher@bloomberg.net>  Fri, 23 Aug 2024 15:19:55 -0400
+
+bde-tools (4.12.0.1) git; urgency=low
+
+  * de1b0d7 Changelog for version 4.12.0.1
   * 7095eb8 Merge pull request #339 from afeher/DRQS-175991813-bde_xt_cpp_splitter-script
   * e36b827 Enable asan for MSVC (#342)
   * eb89c4c Remove event library .pc mapping (#341)
   * e6fee34 Merge pull request #2 from rkhlebnikov/splitter
 
- -- Attila Feher <afeher@bloomberg.net>  Mon, 5 Aug 2024 14:33:49 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 5 Aug 2024 22:48:03 +0000
 
 bde-tools (4.11.1.0) git; urgency=low
 
