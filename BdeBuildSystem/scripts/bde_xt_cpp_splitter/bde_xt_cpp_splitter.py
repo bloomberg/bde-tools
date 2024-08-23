@@ -374,6 +374,12 @@ def main():
     parseResult = parseXtCpp(
         args.xtCppPath, args.xtCppPath.name, args.xtCppComponent, xtCppLines, args.groupsDirsPath
     )
+    if parseResult is None:
+        logging.info(f"No need for parts for empty file '{args.xtCppPath}'.")
+        writeOutputForXtCpp(
+            args.stampFilePath, args.outDirectory, args.xtCppComponent, [xtCppLines], []
+        )
+        return  # !!!RETURN!!!
 
     logging.info(f"Generating parts' content for '{args.xtCppPath}'.")
     testcasesToPartsMapping = generateTestcasesToPartsMapping(parseResult)
