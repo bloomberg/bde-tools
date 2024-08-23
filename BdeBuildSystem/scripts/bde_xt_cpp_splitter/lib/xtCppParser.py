@@ -1372,7 +1372,7 @@ def parse(
     qualifiedComponentName: str,
     lines: Sequence[str],
     groupsDirs: Tuple[Path, ...],
-) -> ParseResult:
+) -> ParseResult | None:
     # Verify file starts with prologue comment line with name and language
     prologueReStr = f"// {qualifiedComponentName}" + r"\.(?:t|xt)\.cpp +-\*-C\+\+-\*-"
     prologueMatch = re.fullmatch(prologueReStr, lines[0])
@@ -1381,6 +1381,10 @@ def parse(
             f"{xtCppName}:1: The source does not start with the expected prologue comment line, "
             f"but with '{lines[0]}'"
         )
+
+    if qualifiedComponentName.endswith("_cpp03") and "// No C++03 Expansion" in lines:
+        # There is no C++03 expansion, we do not need to generate split output for this file
+        return None
 
     _verifySupportedControlComments(xtCppName, lines)
 
