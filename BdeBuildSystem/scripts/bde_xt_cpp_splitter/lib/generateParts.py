@@ -175,6 +175,7 @@ def _generateSilencingOfWarnings(silencedWarnings: Set[SilencedWarningKind]) -> 
             '    #pragma GCC diagnostic ignored "-Wunused"',
             '    #pragma GCC diagnostic ignored "-Wunused-function"',
             '    #pragma GCC diagnostic ignored "-Wunused-variable"',
+            '    #pragma GCC diagnostic ignored "-Wunneeded-internal-declaration"',
             "#endif",
             "",
         ]
