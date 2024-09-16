@@ -333,13 +333,15 @@ macro( _bbs_pcimport_deduce_libs targetname libflags )
   #split the flags into dirs, libraries and other flags
   set(${targetname}_libdirs "")
   set(${targetname}_misclinklibs "")
-  set(next_flag_as_is FALSE)
+  set(${targetname}_complex_flag "")
+  set(append_next_flag FALSE)
 
   foreach( ${targetname}_libflag ${${libflags}} )
-    if( next_flag_as_is )
-      # Take the flag after --framework as-is
-      list( APPEND ${targetname}_misclinklibs ${${targetname}_libflag} )
-      set(next_flag_as_is FALSE)
+    if( append_next_flag )
+      # Concatenate complex flags; Currently handles -framework flag on Darwin
+      set(${targetname}_complex_flag "${${targetname}_complex_flag} ${${targetname}_libflag}" )
+      list( APPEND ${targetname}_misclinklibs ${${targetname}_complex_flag} )
+      set(append_next_flag FALSE)
       continue()
     endif()
 
@@ -348,9 +350,9 @@ macro( _bbs_pcimport_deduce_libs targetname libflags )
     elseif( ${targetname}_libflag MATCHES "^-l(.+)$" AND NOT ${targetname}_libflag IN_LIST _bbs_static_blacklist )
       list( APPEND ${targetname}_libs ${CMAKE_MATCH_1} )
     elseif( ${targetname}_libflag MATCHES "-framework" )
-      # Take the flag after --framework as-is
-      list( APPEND ${targetname}_misclinklibs ${${targetname}_libflag} )
-      set(next_flag_as_is TRUE)
+      # Concatenate the -framework flag with the flag immediately floowing it
+      set(${targetname}_complex_flag ${${targetname}_libflag} )
+      set(append_next_flag TRUE)
     elseif( ${targetname}_libflag MATCHES "^-(.+)$" )
       # add miscellaneous flags to the link line for the target
       list( APPEND ${targetname}_misclinklibs ${${targetname}_libflag} )
@@ -365,6 +367,7 @@ macro( _bbs_pcimport_deduce_libs targetname libflags )
       list( APPEND ${targetname}_libs ${${targetname}_libflag} )
     endif()
   endforeach()
+
 
   foreach( ${targetname}_lib ${${targetname}_libs} )
     # find the library filename, supporting GNU ld's '-l :filename' option
