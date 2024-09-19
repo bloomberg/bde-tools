@@ -113,7 +113,9 @@ function(bbs_add_component_tests target)
         message(FATAL_ERROR "No sources for the test ${target}")
     endif()
 
-    set(test_targets)
+    # This function can be called few times for BDE tests, gtest and split tests.
+    # We want to "continue" to populate the list set by previous calls.
+    set(test_targets ${${target}_TEST_TARGETS})
 
     foreach(test_src ${_TEST_SOURCES})
         # Stripping all extentions from the test source ( including numbers
