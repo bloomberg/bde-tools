@@ -827,7 +827,14 @@ def build(options):
 
             build_targets(target_list, options.build_dir, extra_args, env)
         else:
-            raise RuntimeError("No dependers found")
+            # When no --test is specified, and --dependers-of is only passed
+            # "<component>.t" as arguments, there is nothing that really needs
+            # to be built.
+            if not options.tests:
+                print("Nothing to be built for dependers of tests only.")
+                return
+            else:
+                raise RuntimeError("No dependers found")
     else:
         target_list = options.targets if options.targets else ["all"]
         for target in target_list:
