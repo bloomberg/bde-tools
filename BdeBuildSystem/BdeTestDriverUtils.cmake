@@ -230,7 +230,8 @@ function(bbs_add_component_tests target)
             OUTPUT ${outputs}
             COMMAND ${command}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            MAIN_DEPENDENCY ${test_src})
+            MAIN_DEPENDENCY ${test_src}
+            DEPENDS_EXPLICIT_ONLY)
         set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${stamp_file})
 
         if("${td_cpp_files}" STREQUAL "")
