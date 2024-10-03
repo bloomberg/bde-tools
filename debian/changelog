@@ -1,5 +1,12 @@
-bde-tools (4.13.0.0) unstable; urgency=low
+bde-tools (4.15.0.0) unstable; urgency=low
 
+  * a59dd17 Dependers of tests only with no --test is not an error (#351)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 2 Oct 2024 12:05:59 -0400
+
+bde-tools (4.13.0.0) git; urgency=low
+
+  * 2321767 Changelog for version 4.13.0.0
   * 6c00352 Merge pull request #350 from afeher/clang-only-warning-disable
   * da5920b Merge pull request #349 from afeher/fix-unused-warning-supression-again
   * b7ba612 Merge pull request #348 from afeher/fix-empty-cpp03-file-handling
@@ -9,7 +16,7 @@ bde-tools (4.13.0.0) unstable; urgency=low
   * 3e11fb5 Change BdeBuildSystem search order (#344)
   * ef24207 Merge pull request #343 from afeher/drqs-175992119-integrate-bde_xt_cpp_splitter-into-bbs_build
 
- -- Attila Feher <afeher@bloomberg.net>  Fri, 23 Aug 2024 15:19:55 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 23 Aug 2024 15:54:41 -0400
 
 bde-tools (4.12.0.1) git; urgency=low
 
