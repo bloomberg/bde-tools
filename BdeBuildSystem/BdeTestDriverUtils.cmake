@@ -226,13 +226,21 @@ function(bbs_add_component_tests target)
             list(APPEND outputs ${td_output_dir}/${split_test})
         endforeach()
 
+        if( ${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.27.0)
+            set(command_extra_flags DEPENDS_EXPLICIT_ONLY)
+            set(configure_dependency ${stamp_file})
+        else()
+            set(command_extra_flags)
+            set(configure_dependency ${test_src})
+        endif()
+
         add_custom_command(
             OUTPUT ${outputs}
             COMMAND ${command}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             MAIN_DEPENDENCY ${test_src}
-            DEPENDS_EXPLICIT_ONLY)
-        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${stamp_file})
+            ${command_extra_flags})
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${configure_dependency})
 
         if("${td_cpp_files}" STREQUAL "")
             message(FATAL_ERROR "Test splitter generated no files")
