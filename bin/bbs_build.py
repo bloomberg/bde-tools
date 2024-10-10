@@ -194,7 +194,7 @@ class Options:
         self.test_regex = args.regex
         self.wafstyleout = args.wafstyleout
         self.cpp11_verify_no_change = args.cpp11_verify_no_change
-        self.no_sanitize_recover = args.no_sanitize_recover
+        self.recover_sanitizer = args.recover_sanitizer
         self.dump_cmake_flags = args.dump_cmake_flags
 
         self.generator = args.generator
@@ -402,10 +402,10 @@ def wrapper():
     )
 
     group.add_argument(
-        "--no-sanitize-recover",
+        "--recover-sanitizer",
         action="store_true",
         default=False,
-        help="Fail on sanitizer errors.",
+        help="Try to recover after sanitizer error(s) and continue",
     )
 
     group.add_argument(
@@ -681,8 +681,8 @@ def configure(options):
             if ("64" in options.ufid and "Darwin" != host_platform)
             else "lib"
         ),
-        "-DBDE_NO_SANITIZE_RECOVER="
-        + ("ON" if options.no_sanitize_recover else "OFF"),
+        "-DBDE_RECOVER_SANITIZER="
+        + ("ON" if options.recover_sanitizer else "OFF"),
     ]
 
     if options.test_regex:

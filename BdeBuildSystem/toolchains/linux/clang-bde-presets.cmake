@@ -8,8 +8,8 @@
 
 macro(setSanitizerFlags out sanitizer)
     set(${out} "-fsanitize=${sanitizer} ")
-    if (BDE_NO_SANITIZE_RECOVER)
-        string(CONCAT ${out} "-fno-sanitize-recover=${sanitizer} ")
+    if (NOT BDE_RECOVER_SANITIZER)
+        string(CONCAT ${out} "${${out}} -fno-sanitize-recover=${sanitizer} ")
     endif()
 endmacro()
 
@@ -89,7 +89,7 @@ endif()
 
 # Sanitizers
 if(BDE_BUILD_TARGET_ASAN)
-    setSanitizerFlags(COMMON_ASAN_FLAGS, "address")
+    setSanitizerFlags(COMMON_ASAN_FLAGS "address")
 
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
@@ -107,7 +107,7 @@ if(BDE_BUILD_TARGET_ASAN)
 endif()
 
 if(BDE_BUILD_TARGET_MSAN)
-    setSanitizerFlags(COMMON_MSAN_FLAGS, "memory")
+    setSanitizerFlags(COMMON_MSAN_FLAGS "memory")
 
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
@@ -125,7 +125,7 @@ if(BDE_BUILD_TARGET_MSAN)
 endif()
 
 if(BDE_BUILD_TARGET_TSAN)
-    setSanitizerFlags(COMMON_TSAN_FLAGS, "thread")
+    setSanitizerFlags(COMMON_TSAN_FLAGS "thread")
 
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
@@ -143,7 +143,7 @@ if(BDE_BUILD_TARGET_TSAN)
 endif()
 
 if(BDE_BUILD_TARGET_UBSAN)
-    setSanitizerFlags(COMMON_UBSAN_FLAGS, "undefined")
+    setSanitizerFlags(COMMON_UBSAN_FLAGS "undefined")
 
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
