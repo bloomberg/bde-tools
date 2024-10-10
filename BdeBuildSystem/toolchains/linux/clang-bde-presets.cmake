@@ -6,6 +6,13 @@
 # not handled by this code and must be passed to cmake directly by
 # BDE or other wrappers (bbcmake) or by plain cmake.
 
+macro(setSanitizerFlags out sanitizer)
+    set(${out} "-fsanitize=${sanitizer} ")
+    if (BDE_NO_SANITIZE_RECOVER)
+        string(CONCAT ${out} "-fno-sanitize-recover=${sanitizer} ")
+    endif()
+endmacro()
+
 if (NOT BDE_BUILD_TARGET_32 AND NOT BDE_BUILD_TARGET_64)
     if(${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "64")
         # 64 bit
@@ -82,65 +89,73 @@ endif()
 
 # Sanitizers
 if(BDE_BUILD_TARGET_ASAN)
+    setSanitizerFlags(COMMON_ASAN_FLAGS, "address")
+
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
-           "-fsanitize=address "
+           "${COMMON_ASAN_FLAGS} "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
-           "-fsanitize=address "
+           "${COMMON_ASAN_FLAGS} "
            )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
-           "-fsanitize=address "
+           "${COMMON_ASAN_FLAGS} "
            "-static-libsan "
            )
 endif()
 
 if(BDE_BUILD_TARGET_MSAN)
+    setSanitizerFlags(COMMON_MSAN_FLAGS, "memory")
+
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
-           "-fsanitize=memory "
+           "${COMMON_MSAN_FLAGS} "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
-           "-fsanitize=memory "
+           "${COMMON_MSAN_FLAGS} "
            )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
-           "-fsanitize=memory "
+           "${COMMON_MSAN_FLAGS} "
            "-static-libsan "
            )
 endif()
 
 if(BDE_BUILD_TARGET_TSAN)
+    setSanitizerFlags(COMMON_TSAN_FLAGS, "thread")
+
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
-           "-fsanitize=thread "
+           "${COMMON_TSAN_FLAGS} "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
-           "-fsanitize=thread "
+           "${COMMON_TSAN_FLAGS} "
            )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
-           "-fsanitize=thread "
+           "${COMMON_TSAN_FLAGS} "
            "-static-libsan "
            )
 endif()
 
 if(BDE_BUILD_TARGET_UBSAN)
+    setSanitizerFlags(COMMON_UBSAN_FLAGS, "undefined")
+
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
-           "-fsanitize=undefined "
+           "${COMMON_UBSAN_FLAGS} "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
-           "-fsanitize=undefined "
+           "${COMMON_UBSAN_FLAGS} "
            )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
-           "-fsanitize=undefined "
+           "${COMMON_UBSAN_FLAGS} "
            "-static-libsan "
            )
 endif()

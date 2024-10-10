@@ -194,6 +194,7 @@ class Options:
         self.test_regex = args.regex
         self.wafstyleout = args.wafstyleout
         self.cpp11_verify_no_change = args.cpp11_verify_no_change
+        self.no_sanitize_recover = args.no_sanitize_recover
         self.dump_cmake_flags = args.dump_cmake_flags
 
         self.generator = args.generator
@@ -398,6 +399,13 @@ def wrapper():
         help="Verify that none of the generated _cpp03 "
         "components change when the generator is run (i.e., "
         "the components are up-to-date).",
+    )
+
+    group.add_argument(
+        "--no-sanitize-recover",
+        action="store_true",
+        default=False,
+        help="Fail on sanitizer errors.",
     )
 
     group.add_argument(
@@ -673,6 +681,8 @@ def configure(options):
             if ("64" in options.ufid and "Darwin" != host_platform)
             else "lib"
         ),
+        "-DBDE_NO_SANITIZE_RECOVER="
+        + ("ON" if options.no_sanitize_recover else "OFF"),
     ]
 
     if options.test_regex:
