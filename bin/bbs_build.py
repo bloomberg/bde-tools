@@ -827,8 +827,12 @@ def build(options):
 
                 def get_package_name(component):
                     parts = component.split("_")
-                    # Take care of standalones
-                    return f"s_{parts[1]}" if parts[0] == "s" else parts[0]
+                    # Take care of standalones, adapters, etc.
+                    return (
+                        f"{parts[0]}_{parts[1]}"
+                        if len(parts[0]) == 1
+                        else parts[0]
+                    )
 
                 target_list = list(
                     {get_package_name(depender) for depender in target_list}
