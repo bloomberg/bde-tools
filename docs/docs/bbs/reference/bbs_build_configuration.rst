@@ -98,7 +98,7 @@ UFID flags
 The following flags are recognized by BBS tools:
 
 .. csv-table::
-   :header: "Ufid flag", "CMake Variable", "Description"
+   :header: "Ufid flag", "CMake Variable / Preprocessor Definition", "Description"
    :widths: 10, 30, 60
    :align: left
 
@@ -110,15 +110,15 @@ The following flags are recognized by BBS tools:
    "32", "BDE_BUILD_TARGET_32", "Build for 32-bit architecture"
    "64", "BDE_BUILD_TARGET_64", "Build for 64-bit architecture (if nether 32/64 are specified, defaults to compiler settings)"
    "safe", "BDE_BUILD_TARGET_SAFE", "Enable additional assertion checks;"
-   "safe2", "BDE_BUILD_TARGET_SAFE2", "Enable aggresive assertion checks,  binary-incompatible build"
-   "aopt", "-DBSLS_ASSERT_LEVEL_ASSERT_OPT", "Set bsls assert level to OPT"
-   "adbg", "-DBSLS_ASSERT_LEVEL_ASSERT_DBG", "Set bsls assert level to DBG"
-   "asafe", "-DBSLS_ASSERT_LEVEL_ASSERT_SAFE", "Set bsls assert level to SAFE"
-   "anone", "-DBSLS_ASSERT_LEVEL_ASSERT_NONE", "Disable bsls asserts"
-   "ropt", "-DBSLS_REVIEW_LEVEL_REVIEW_OPT", "Set bsls review level to OPT"
-   "rdbg", "-DBSLS_REVIEW_LEVEL_REVIEW_DBG", "Set bsls review level to DBG"
-   "rsafe", "-DBSLS_REVIEW_LEVEL_REVIEW_SAFE", "Set bsls review level to SAFE"
-   "rnone", "-DBSLS_REVIEW_LEVEL_REVIEW_NONE", "Disable bsls reviews"
+   "safe2", "BDE_BUILD_TARGET_SAFE_2", "Enable aggresive assertion checks,  binary-incompatible build"
+   "aopt", "BSLS_ASSERT_LEVEL_ASSERT_OPT", "Set bsls assert level to OPT"
+   "adbg", "BSLS_ASSERT_LEVEL_ASSERT_DBG", "Set bsls assert level to DBG"
+   "asafe", "BSLS_ASSERT_LEVEL_ASSERT_SAFE", "Set bsls assert level to SAFE"
+   "anone", "BSLS_ASSERT_LEVEL_ASSERT_NONE", "Disable bsls asserts"
+   "ropt", "BSLS_REVIEW_LEVEL_REVIEW_OPT", "Set bsls review level to OPT"
+   "rdbg", "BSLS_REVIEW_LEVEL_REVIEW_DBG", "Set bsls review level to DBG"
+   "rsafe", "BSLS_REVIEW_LEVEL_REVIEW_SAFE", "Set bsls review level to SAFE"
+   "rnone", "BSLS_REVIEW_LEVEL_REVIEW_NONE", "Disable bsls reviews"
    "asan", "BDE_BUILD_TARGET_ASAN", "Build with address sanitizer"
    "msan", "BDE_BUILD_TARGET_MSAN", "Build with memory sanitizer"
    "tsan", "BDE_BUILD_TARGET_TSAN", "Build with thread sanitizer"
