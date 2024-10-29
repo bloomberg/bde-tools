@@ -1,7 +1,6 @@
 import shutil
 import subprocess
 import sys
-import argparse
 import re
 import os
 
@@ -46,6 +45,9 @@ class Log:
             self.file.write((text + os.linesep).encode())
 
 
+k_codeBlockMarker = "/// ```"
+
+
 def main():
     args = sys.argv[1:]
     text = sys.stdin.buffer.read().decode()
@@ -64,8 +66,8 @@ def main():
             args[i] = "-fallback-style=BDE"
 
     code_block_span = [
-        text.rfind("//..", 0, offset),
-        text.find("//..", offset),
+        text.rfind(k_codeBlockMarker, 0, offset),
+        text.find(k_codeBlockMarker, offset),
     ]
     code_offset = (
         code_block_span[0]
@@ -79,25 +81,26 @@ def main():
         print(doBdeFormat(args, text))
         sys.exit(0)
 
-    for l in text[code_block_span[0] : code_block_span[1] + 4].split(
-        os.linesep
-    ):
-        if not l.strip().startswith("//"):
+    for l in text[
+        code_block_span[0] : code_block_span[1] + len(k_codeBlockMarker)
+    ].split(os.linesep):
+        if not l.strip().startswith("///"):
             print(doBdeFormat(args, text))
             sys.exit(0)
 
-    # Check if we're outside a balanced '//..' set
+    # Check if we're outside a balanced '/// ```' set
 
-    if len(re.findall(r"(//\.\.)", text[: code_block_span[0]])) % 2 == 1:
+    if len(re.findall(k_codeBlockMarker, text[: code_block_span[0]])) % 2 == 1:
         print(doBdeFormat(args, text))
         sys.exit(0)
 
-    code_block_span[0] = code_block_span[0] + 4
+    code_block_span[0] = code_block_span[0] + len(k_codeBlockMarker)
 
     code_block = text[code_block_span[0] : code_block_span[1]]
+
     uncommented = re.sub(
-        "^" + " " * code_offset + "//",
-        " " * (code_offset + 2),
+        "^" + " " * code_offset + "///",
+        " " * (code_offset + len("///")),
         code_block,
         flags=re.MULTILINE,
     )
@@ -138,8 +141,8 @@ def main():
     for l in out.splitlines():
         linesep = "&#10;" if l.find("&#13;") == -1 else "&#13;&#10;"
 
-        l = re.sub(f"{linesep}[ ]{{{code_offset + 2}}}", linesep, l)
-        l = l.replace(linesep, linesep + " " * code_offset + "//")
+        l = re.sub(f"{linesep}[ ]{{{code_offset + len("///")}}}", linesep, l)
+        l = l.replace(linesep, linesep + " " * code_offset + "///")
         match = re.search(r"offset='(\d+)'", l)
         if match:
             offset = int(match.group(1))
