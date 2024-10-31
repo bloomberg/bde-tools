@@ -2596,7 +2596,8 @@ sub processFile($$)
     # blocks.  Exit with a fatal error if the block is not detected.
     if ($fileData =~ m!
             (//[ ]--+\n
-             //[ ]Copyright[ ]\d+[ ]Bloomberg.*\n
+            (//[ ]+NOTICE:\s*\n)?
+             //[ ]+Copyright[ ]\d+[ ]Bloomberg.*\n
              (//[ ].*\n|//\n)+
              //[ ]-+[ ]END-OF-FILE[ ]-+)!x) {
         $copyright = $1;
