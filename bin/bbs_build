@@ -16,7 +16,7 @@ realpath() (
 SCRIPT=$(realpath "$0")
 
 # Find suitable python version and invoke the tool.
-for pyver in 3.10 3.9 3.8 3.7 3.6 3 ""; do
+for pyver in 3.13 3.12 3.11 3.10 3.9 3.8 3.7 3.6 3 ""; do
     python$pyver -V > /dev/null 2>&1 && exec python$pyver "${SCRIPT}.py" "$@"
 done
 echo "No appropriate python interpreter found." >&2
