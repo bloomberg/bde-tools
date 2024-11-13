@@ -101,14 +101,8 @@ function(bbs_add_component_gtests target)
         endif()
 
         gtest_discover_tests(${gtest_target_name}.t
-                             WORKING_DIRECTORY "${_WORKING_DIRECTORY}"
-                             DISCOVERY_TIMEOUT "${_DISCOVERY_TIMEOUT}"
+                             DISCOVERY_TIMEOUT 10
                              EXTRA_ARGS        "${_EXTRA_ARGS}"
-                             PROPERTIES        "${_PROPERTIES}"
-                             TEST_PREFIX       "${_TEST_PREFIX}"
-                             TEST_SUFFIX       "${_TEST_SUFFIX}"
-                             TEST_FILTER       "${_TEST_FILTER}"
-                             XML_OUTPUT_DIR    "${_XML_OUTPUT_DIR}"
                             )
 
 
@@ -118,7 +112,6 @@ function(bbs_add_component_gtests target)
         endif()
 
         bbs_add_bde_style_gtest(${gtest_target_name}
-                                WORKING_DIRECTORY "${_WORKING_DIRECTORY}"
                                 LABELS            "${_LABELS}"
                                                   "${test_src_labels}")
 
