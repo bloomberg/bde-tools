@@ -1542,6 +1542,8 @@ def reload():
 
     ## Remove the pretty printer if it exists
     for printer in gdb.pretty_printers:
+        if not hasattr(printer, "name"):
+            continue
         if printer.name == "BDE":
             gdb.pretty_printers.remove(printer)
             break
