@@ -29,7 +29,6 @@ find_file(BBS_SPLIT_TEST bde_xt_cpp_splitter.py
           PATHS "${CMAKE_CURRENT_LIST_DIR}/scripts/bde_xt_cpp_splitter")
 
 if (BBS_SPLIT_TEST)
-    message(STATUS "Found split test driver generator: ${BBS_SPLIT_TEST}")
     set(BBS_SPLIT_TEST ${Python3_EXECUTABLE} ${BBS_SPLIT_TEST})
 
     if (BBS_USE_WAFSTYLEOUT)
