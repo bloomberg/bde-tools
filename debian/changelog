@@ -1,12 +1,22 @@
-bde-tools (4.16.0.0) unstable; urgency=low
+bde-tools (4.17.0.0) unstable; urgency=low
 
+  * 23634ed Remove noisy log (#360)
+  * ad147f3 Fix detection loop meeting 'function' objects (#359)
+  * 295981b Update Python versions
+  * 804f06f adjust format-code-comment to new style (#358)
+
+ -- Daryl Haresign <dharesign@bloomberg.net>  Thu, 14 Nov 2024 10:58:18 -0500
+
+bde-tools (4.16.0.0) git; urgency=low
+
+  * bead5ea Changelog for version 4.16.0.0
   * 1098686 bbs_build_configuration minor updates (#357)
   * a5ff0c6 fix dependers-of handling of adapters (#356)
   * 7c3df11 Change default for sanitizer recovery (#355)
   * 149444c Hard fail on sanitizer errors (linux) (#354)
   * 8158de2 Split test dependencies fix for older CMake. (#353)
 
- -- Jake Fevold <jfevold@bloomberg.net>  Mon, 21 Oct 2024 15:34:52 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 24 Oct 2024 18:45:16 -0400
 
 bde-tools (4.15.0.0) git; urgency=low
 
