@@ -173,8 +173,11 @@ def _parseSimCpp11Include(
             f"`#undef COMPILING_{qualifiedComponentName.upper()}_XT_CPP`"
         )
     undefLine = idx + 1
-
     elseLine = undefLine + 1
+
+    # Skip any empty or clang-format command lines.
+    while re.match(r"^($|[\t ]*// clang-format.*)", lines[elseLine - 1]):
+        elseLine = elseLine + 1
 
     if len(lines) < elseLine:
         raise ParseError(f"{xtCppName}:{undefLine}: Premature end of file, expected `#else`")

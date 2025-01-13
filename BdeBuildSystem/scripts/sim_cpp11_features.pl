@@ -166,12 +166,16 @@ gets rewritten into the same input file ("C<foo.h>") as:
     #include <bsls_compilerfeatures.h>
 
     #if BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
+    // clang-format off
     // Include version that can be compiled with C++03
     // Generated on Mon Nov  2 13:17:20 2020
     // Command line: sim_cpp11_features.pl foo.h
+
     # define COMPILING_FOO_H
     # include <foo_cpp03.h>
     # undef COMPILING_FOO_H
+
+    // clang-format on
     #else
 
     #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=3
@@ -2257,12 +2261,16 @@ EOT
 
 my $masterPrefix = <<EOT;
 #if $simCpp11Macro
+// clang-format off
 // Include version that can be compiled with C++03
 // <timestampComment>
 // Command line: <commandLine>
+
 # define COMPILING_<CPP11_SOURCEFILE>
 # include <<cpp03>>
 # undef COMPILING_<CPP11_SOURCEFILE>
+
+// clang-format on
 #else
 
 EOT
