@@ -1,11 +1,18 @@
-bde-tools (4.17.0.0) unstable; urgency=low
+bde-tools (4.19.0.0) unstable; urgency=low
 
+  * ec365bc *LAND ONLY WITH OTHER REPO PRs* - Add clang-format guards (#361)
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 13 Jan 2025 10:46:30 -0500
+
+bde-tools (4.17.0.0) git; urgency=low
+
+  * 964f78d Changelog for version 4.17.0.0
   * 23634ed Remove noisy log (#360)
   * ad147f3 Fix detection loop meeting 'function' objects (#359)
   * 295981b Update Python versions
   * 804f06f adjust format-code-comment to new style (#358)
 
- -- Daryl Haresign <dharesign@bloomberg.net>  Thu, 14 Nov 2024 10:58:18 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 15 Nov 2024 12:31:57 -0500
 
 bde-tools (4.16.0.0) git; urgency=low
 
