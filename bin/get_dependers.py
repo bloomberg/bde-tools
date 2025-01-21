@@ -176,12 +176,13 @@ class Target:
 
 
 def get_dependers(targets: List[str], output_targets: bool,
-                  no_missing_target_warning: bool = False) -> List[str]:
+                  no_missing_target_warning: bool = False,
+                  buildDir: Optional[str] = None) -> List[str]:
     '''Returns a list of components that depend on the specified targets.  If
     'output_targets' is True, returns a list of targets.  If
     'no_missing_target_warning' is True, suppresses warnings when some targets
     are invalid.  If no dependers are found, returns an empty list.'''
-    compile_commands_json_path = locate_compile_commands_json()
+    compile_commands_json_path = locate_compile_commands_json(buildDir)
     if not compile_commands_json_path:
         return []
 
@@ -206,11 +207,11 @@ def get_dependers(targets: List[str], output_targets: bool,
     return sorted(depender_names)
 
 
-def locate_compile_commands_json() -> Optional[Path]:
+def locate_compile_commands_json(buildDir : Optional[str]) -> Optional[Path]:
     '''Locates the 'compile_commands.json' file in the build directory and
     returns its absolute path.  If 'BDE_CMAKE_BUILD_DIR' is not set or the file
     is not found, prints an error and returns None.'''
-    bde_cmake_build_dir = os.environ.get("BDE_CMAKE_BUILD_DIR")
+    bde_cmake_build_dir = os.environ.get("BDE_CMAKE_BUILD_DIR") if buildDir is None else buildDir
     if bde_cmake_build_dir:
         json_path = Path.cwd() / bde_cmake_build_dir / "compile_commands.json"
         if not json_path.exists():
@@ -306,10 +307,20 @@ def main():
             help="Suppress warnings when invalid targets are given."
         )
 
+        parser.add_argument(
+            "--build_dir",
+            help = '''
+                Path to the build directory. If not specified,
+                the use one specified in BDE_CMAKE_BUILD_DIR environment
+                variable.
+                '''
+        )
+
         args = parser.parse_args()
 
         dependers = get_dependers(args.targets, args.output_targets,
-                                  args.no_missing_target_warning)
+                                  args.no_missing_target_warning,
+                                  args.build_dir)
 
         # combine dependencies into a comma separated list in string and print
         if dependers:

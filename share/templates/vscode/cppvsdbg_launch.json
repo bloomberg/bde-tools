@@ -1,5 +1,5 @@
 {
-    "name": "(Windows) Launch",
+    "name": "(Windows) ",
     "type": "cppvsdbg",
     "console": "externalTerminal"
 }

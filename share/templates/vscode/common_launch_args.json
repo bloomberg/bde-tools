@@ -1,0 +1,19 @@
+{
+    "Launch Current Component Test": {
+        "request": "launch",
+        "program": "${command:cmake.buildDirectory}/tests/${fileBasenameNoExtension}$$executableSuffix$$",
+        "args": [
+            "${input:args}"
+        ],
+        "cwd": "${command:cmake.buildDirectory}/tests",
+        "preLaunchTask": "Build current component test"
+    },
+    "Launch CMake Launch Target": {
+        "request": "launch",
+        "program": "${command:cmake.launchTargetPath}",
+        "args": [
+            "${input:args}"
+        ],
+        "cwd": "${command:cmake.getLaunchTargetDirectory}"
+    }
+}

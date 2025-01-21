@@ -1,0 +1,290 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "buildenv",
+            "type": "shell",
+            "command": "eval `bbs_build_env ${input:params}` && bbs_make_vscode && touch .promptinput",
+            "problemMatcher": [],
+            "hide": true,
+            "presentation": {
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "promptbarrier",
+            "type": "shell",
+            "command": "if [ -f .promptinput ]; then rm -f .promptinput; else echo 'Prompt cancelled' && exit 1; fi",
+            "problemMatcher": [],
+            "hide": true,
+            "presentation": {
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "configure",
+            "type": "cmake",
+            "command": "configure",
+            "problemMatcher": [],
+            "hide": true,
+            "presentation": {
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Set up BDE Environment",
+            "type": "shell",
+            "command": "cp",
+            "args": [
+                "${command:cmake.buildDirectory}/compile_commands.json",
+                "$$projectCachePath$$"
+            ],
+            "problemMatcher": [],
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "buildenv",
+                "promptbarrier",
+                "configure"
+            ],
+            "presentation": {
+                "echo": false,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Run bde_verify on current file",
+            "type": "shell",
+            "command": "bde_verify",
+            "args": [
+                "-config",
+                "${env:BDE_VERIFY_CFG}",
+                "-cl",
+                "\"check function-contract off\"",
+                "-w",
+                "-p",
+                "${command:cmake.buildDirectory}",
+                "${file}"
+            ],
+            "problemMatcher": {
+                "source": "bde_verify",
+                "base": "$gcc"
+            },
+            "presentation": {
+                "revealProblems": "onProblem",
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "Test current component",
+            "type": "shell",
+            "command": "bbs_build build --known-env --target $(echo ${fileBasenameNoExtension} | cut -f 1 -d '.') --test run -v",
+            "problemMatcher": [
+                "$gcc",
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*)$",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                }
+            ],
+            "presentation": {
+                "showReuseMessage": false,
+                "clear": true,
+                "revealProblems": "onProblem"
+            }
+        },
+        {
+            "label": "Test current package",
+            "type": "shell",
+            "command": "bbs_build build --known-env --target $(echo ${fileBasenameNoExtension} | sed -n 's/\\([^_]*\\).*/\\1/p') --test run -v",
+            "problemMatcher": [
+                "$gcc",
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*)$",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                }
+            ],
+            "presentation": {
+                "showReuseMessage": false,
+                "clear": true,
+                "revealProblems": "onProblem"
+            }
+        },
+        {
+            "label": "Test current group",
+            "type": "shell",
+            "command": "bbs_build build --known-env --target $(echo ${fileBasenameNoExtension} | head -c 3) --test run -v",
+            "problemMatcher": [
+                "$gcc",
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*)$",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                }
+            ],
+            "presentation": {
+                "showReuseMessage": false,
+                "clear": true,
+                "revealProblems": "onProblem"
+            }
+        },
+        {
+            "label": "Test dependers of current component",
+            "type": "shell",
+            "command": "bbs_build build --known-env --dependers-of $(echo ${fileBasenameNoExtension} | cut -f 1 -d '.') --test run -v",
+            "problemMatcher": [
+                "$gcc",
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*)$",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                }
+            ],
+            "presentation": {
+                "showReuseMessage": false,
+                "clear": true,
+                "revealProblems": "onProblem"
+            }
+        },
+        {
+            "label": "Test dependers of changes on branch",
+            "type": "shell",
+            "command": "bbs_build build --known-env --dependers-of $(bde_get_changed_components.sh ${fileDirname}) --test run -v",
+            "problemMatcher": [
+                "$gcc",
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*)$",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                }
+            ],
+            "presentation": {
+                "showReuseMessage": false,
+                "clear": true,
+                "revealProblems": "onProblem"
+            }
+        },
+        {
+            "label": "Build current component test",
+            "type": "shell",
+            "command": "bbs_build build --known-env --target $(echo ${fileBasenameNoExtension} | cut -f 1 -d '.') --test build -v",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "showReuseMessage": false,
+                "clear": true,
+                "revealProblems": "onProblem"
+            }
+        },
+        {
+            "label": "Clear test problems",
+            "type": "shell",
+            "command": "echo \"Clearing test problems...\nDone.\"",
+            "problemMatcher": [
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": {
+                        "regexp": "Never ever match this.",
+                        "message": 0
+                    }
+                }
+            ],
+            "presentation": {
+                "showReuseMessage": false,
+                "clear": true,
+                "revealProblems": "always"
+            }
+        },
+        {
+            "label": "Install Recommended Extensions",
+            "type": "shell",
+            "command": "cat .vscode/extensions.json | sed -nE 's/.*\"(.*\\..*)\".*/\\1/p' | xargs -n 1 $$codepath$$ --install-extension",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "params",
+            "description": "Params for bbs_build_env",
+            "default": "",
+            "type": "promptString"
+        }
+    ]
+}

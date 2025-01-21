@@ -69,18 +69,20 @@ def get_msvc_env(version, bitness):
     result = {}
 
     bat_file = find_vcvars(version)
-    host_arch = platform.machine().lower() # typically amd64 or arm64
+    host_arch = platform.machine().lower()  # typically amd64 or arm64
     if "arm" in host_arch:
         target_arch = "arm" if bitness == 32 else "arm64"
     else:
         target_arch = "x86" if bitness == 32 else "amd64"
 
-    arch_arg = host_arch if host_arch == target_arch else f"{host_arch}_{target_arch}"
+    arch_arg = (
+        host_arch if host_arch == target_arch else f"{host_arch}_{target_arch}"
+    )
 
     process = subprocess.Popen(
         [bat_file, arch_arg, "&&", "set"], stdout=subprocess.PIPE, shell=True
     )
-    (out, err) = process.communicate()
+    (out, _) = process.communicate()
 
     if sys.version_info > (3, 0):
         out = out.decode("ascii", errors="ignore")
@@ -196,6 +198,7 @@ class Options:
         self.cpp11_verify_no_change = args.cpp11_verify_no_change
         self.recover_sanitizer = args.recover_sanitizer
         self.dump_cmake_flags = args.dump_cmake_flags
+        self.known_env = args.known_env
 
         self.generator = args.generator
         self.config = args.config
@@ -255,7 +258,11 @@ class Platform:
     @staticmethod
     def generator_env(options):
         host_platform = platform.system()
-        if options.generator != "msvc" and "Windows" == host_platform:
+        if (
+            options.generator != "msvc"
+            and "Windows" == host_platform
+            and not options.known_env
+        ):
             return get_msvc_env(
                 Platform.msvcVersionMap[options.compiler].version,
                 64 if options.ufid and "64" in options.ufid else 32,
@@ -298,26 +305,26 @@ class Platform:
 
         raise RuntimeError()
 
+
 def wrapper():
     description = """
                   bbs_build is a CMake/CTest wrapper that  provides a simpler
                   interface for the CMake/CTest invocation.
                   """
-    parser = argparse.ArgumentParser(prog="bbs_build",
-                                     description=description)
+    parser = argparse.ArgumentParser(prog="bbs_build", description=description)
     parser.add_argument(
         "cmd", nargs="+", choices=["configure", "build", "install"]
     )
 
     parser.add_argument(
         "--build_dir",
-        help = '''
+        help="""
                Path to the build directory. If not specified,
                the build system generates the name using the
                current platform, compiler, and ufid. The generated
                build directory looks like this:
                "./_build/unix-linux-x86_64-2.6.32-gcc-11.0.0-opt_64_cpp20"
-               '''
+               """,
     )
 
     parser.add_argument(
@@ -333,18 +340,18 @@ def wrapper():
         "--verbose",
         action="count",
         default=0,
-        help ="Produce verbose output (including compiler " "command lines).",
+        help="Produce verbose output (including compiler " "command lines).",
     )
 
     parser.add_argument(
         "--prefix",
-        default = "/opt/bb",
-        help = '''
+        default="/opt/bb",
+        help="""
                The path prefix in which to look for
                dependencies for this build. If "--refroot" is
                specified, this prefix is relative to the
                refroot (default="/opt/bb").
-               '''
+               """,
     )
 
     group = parser.add_argument_group(
@@ -353,10 +360,10 @@ def wrapper():
     group.add_argument(
         "-u",
         "--ufid",
-        help = '''
+        help="""
                Unified Flag IDentifier (e.g. "opt_dbg_64_cpp20"). See
                bde-tools documentation.
-               '''
+               """,
     )
 
     group.add_argument("--toolchain", help="Path to the CMake toolchain file.")
@@ -374,7 +381,7 @@ def wrapper():
     group.add_argument(
         "--compiler",
         help="Specify version of MSVC (Windows only). "
-        'Currently supported versions are: '
+        "Currently supported versions are: "
         '"msvc-2022", "msvc-2019", and "msvc-2017".  Latest '
         "installed version will be default.",
     )
@@ -415,6 +422,13 @@ def wrapper():
         help="Dump CMake flags and exit.",
     )
 
+    group.add_argument(
+        "--known-env",
+        action="store_true",
+        default=False,
+        help="(MSVC Only) Do not set the environment via vcvarsall.bat.",
+    )
+
     genChoices = Platform.generator_choices()
     if len(genChoices) > 1:
         group.add_argument(
@@ -434,7 +448,7 @@ def wrapper():
     target_group.add_argument(
         "--targets",
         type=lambda x: x.split(","),
-        help='''Comma-separated list of build system targets.
+        help="""Comma-separated list of build system targets.
                 The build system targets include the targets for
                 libraries and test drivers for
                 package groups ("bsl"/"bsl.t"), packages ("bslma"/"bslma.t"),
@@ -443,7 +457,7 @@ def wrapper():
                 cycle checks ("check_cycles"/"bsl.check_cycles") and cleanup
                 ("clean"). Supplying a target of "help" will list all of the
                 available targets.
-            ''',
+            """,
     )
 
     target_group.add_argument(
@@ -713,8 +727,19 @@ def configure(options):
     if options.refroot:
         flags.append("-DDISTRIBUTION_REFROOT:PATH=" + options.refroot)
 
+    generator_env = Platform.generator_env(options)
+
     if options.dump_cmake_flags:
-        print(*flags, sep="\n")
+        cmakeFlags = {}
+        for arg in flags:
+            key, value = arg.split("=")
+
+            # Remove -D and the type
+            key = key.replace("-D", "").split(":")[0]
+
+            cmakeFlags[key] = value
+
+        print(json.dumps({"flags": cmakeFlags, "env": dict(generator_env)}))
         return
 
     configure_cmd = (
@@ -734,7 +759,7 @@ def configure(options):
     subprocess.check_call(
         configure_cmd,
         cwd=options.build_dir,
-        env=Platform.generator_env(options),
+        env=generator_env,
     )
 
 
@@ -817,8 +842,12 @@ def build(options):
         # the dependers of the specified components.  If '--test' was
         # specified, build the test driver dependers.  Otherwise, build the
         # packages that the dependers belong to.
-        target_list = get_dependers(options.dependers_of, options.tests,
-                                    options.no_missing_target_warning)
+        target_list = get_dependers(
+            options.dependers_of,
+            options.tests,
+            options.no_missing_target_warning,
+            options.build_dir,
+        )
 
         if target_list:
             print("Dependers found: " + " ".join(target_list))

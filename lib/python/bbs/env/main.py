@@ -267,7 +267,13 @@ def print_envs(args, ufid, profile):
         build_path = Path(args.build_dir).resolve()
         print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
     else:
-        build_path = Path(f"_build/{uplid}-{ufid}").resolve()
+        # BDE_BUILD_AREA is set by bde_docker to reduce the number of queries
+        # to the host file system
+        build_path = (
+            Path(os.getenv("BDE_BUILD_AREA", os.getcwd()))
+            / "_build"
+            / f"{uplid}-{ufid}"
+        )
         print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
 
     if os_type == "windows":
@@ -283,7 +289,6 @@ def print_envs(args, ufid, profile):
             print(f'export BDE_CMAKE_TOOLCHAIN="{Path(profile.toolchain)}"')
         else:
             print(f'unset BDE_CMAKE_TOOLCHAIN')
-
 
     install_dir = args.install_dir if args.install_dir else "_install"
 

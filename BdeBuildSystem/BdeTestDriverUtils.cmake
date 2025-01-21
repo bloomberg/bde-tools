@@ -129,6 +129,17 @@ function(bbs_add_component_tests target)
         get_filename_component(test_target_name ${test_src} NAME_WLE)
         get_filename_component(test_target_name ${test_target_name} NAME_WLE)
         add_executable(${test_target_name}.t EXCLUDE_FROM_ALL ${test_src})
+        set_target_properties(
+            ${test_target_name}.t
+            PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+        add_custom_command(TARGET ${test_target_name}.t
+            POST_BUILD
+            COMMAND
+            ${CMAKE_COMMAND} -E create_hardlink
+            "$<TARGET_FILE:${test_target_name}.t>"
+            "$<TARGET_FILE_DIR:${test_target_name}.t>/${test_target_name}${CMAKE_EXECUTABLE_SUFFIX}"
+        )
 
         # Explicitely adding flags here because we do not want those flags to be
         # PUBLIC for standalone libraries.
@@ -268,6 +279,10 @@ function(bbs_add_component_tests target)
                 add_custom_target(${split_target_name}.t SOURCES ${td_output_dir}/${split_test})
             else()
                 add_executable(${split_target_name}.t EXCLUDE_FROM_ALL ${td_output_dir}/${split_test})
+                set_target_properties(
+                    ${split_target_name}.t
+                    PROPERTIES
+                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
                 bbs_add_target_bde_flags(${split_target_name}.t PRIVATE)
                 bbs_add_target_thread_flags(${split_target_name}.t PRIVATE)

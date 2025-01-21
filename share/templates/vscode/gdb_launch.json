@@ -1,5 +1,5 @@
 {
-    "name": "(gdb) Launch",
+    "name": "(gdb) ",
     "type": "cppdbg",
     "externalConsole": false,
     "MIMode": "gdb",
@@ -8,6 +8,9 @@
             "description": "Enable pretty-printing for gdb",
             "text": "-enable-pretty-printing",
             "ignoreFailures": true
+        },
+        {
+            "text": "source ${workspaceFolder}/.vscode/init-bde-pretty-printers"
         }
     ]
 }

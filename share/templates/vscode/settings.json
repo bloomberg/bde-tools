@@ -9,7 +9,8 @@
     "cmake.ctest.allowParallelJobs": true,
     "cmake.ctestArgs": [
         "-L",
-        "^${command:cmake.buildTargetName}$"
+        "^${command:cmake.buildTargetName}$",
+        "--no-label-summary"
     ],
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {
@@ -30,8 +31,8 @@
         "--background-index",
         "-j=4",
         "--enable-config",
-        "--header-insertion=never",
-        "--compile-commands-dir=${workspaceFolder}/.vscode"
+        "--header-insertion=never"
     ],
-    "cmake.copyCompileCommands": "${workspaceFolder}/.vscode/compile_commands.json"
+    "cmake.options.statusBarVisibility": "compact",
+    "terminal.integrated.scrollback": 20000
 }
