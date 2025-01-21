@@ -57,7 +57,7 @@
             "command": "bde_verify",
             "args": [
                 "-config",
-                "${env:BDE_VERIFY_CFG}",
+                "$BDE_VERIFY_CFG",
                 "-cl",
                 "\"check function-contract off\"",
                 "-w",
