@@ -21,8 +21,11 @@ binDir = pathlib.Path(__file__).parent
 bdeToolsDir = binDir.parent
 
 isGitBash = shutil.which("cygpath") is not None
-isWSL = not isGitBash and "WSL" in os.uname().release
-
+isWSL = (
+    not isGitBash
+    and "WSL" in os.uname().release
+    and "container" not in os.environ
+)
 
 def cygpath(opt, file):
     return subprocess.run(
