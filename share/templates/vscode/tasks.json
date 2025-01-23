@@ -32,7 +32,7 @@
             }
         },
         {
-            "label": "Set up BDE Environment",
+            "label": "Set up BDE environment",
             "type": "shell",
             "command": "cp",
             "args": [
@@ -48,6 +48,15 @@
             ],
             "presentation": {
                 "echo": false,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "List available compilers",
+            "type": "shell",
+            "command": "bbs_build_env list",
+            "problemMatcher": [],
+            "presentation": {
                 "showReuseMessage": false
             }
         },
@@ -273,7 +282,7 @@
             }
         },
         {
-            "label": "Install Recommended Extensions",
+            "label": "Install recommended extensions",
             "type": "shell",
             "command": "cat .vscode/extensions.json | sed -nE 's/.*\"(.*\\..*)\".*/\\1/p' | xargs -n 1 $$codepath$$ --install-extension",
             "problemMatcher": []
