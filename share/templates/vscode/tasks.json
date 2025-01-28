@@ -246,6 +246,38 @@
             }
         },
         {
+            "label": "Test target...",
+            "type": "shell",
+            "command": "bbs_build build --known-env --target ${input:testtarget} --test run -v",
+            "problemMatcher": [
+                "$gcc",
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*)$",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                }
+            ],
+            "presentation": {
+                "showReuseMessage": false,
+                "clear": true,
+                "revealProblems": "onProblem"
+            }
+        },
+        {
             "label": "Build current component test",
             "type": "shell",
             "command": "bbs_build build --known-env --target $(echo ${fileBasenameNoExtension} | cut -f 1 -d '.') --test build -v",
@@ -292,6 +324,12 @@
         {
             "id": "params",
             "description": "Params for bbs_build_env",
+            "default": "",
+            "type": "promptString"
+        },
+        {
+            "id": "testtarget",
+            "description": "Target to test",
             "default": "",
             "type": "promptString"
         }
