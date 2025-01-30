@@ -1,8 +1,17 @@
-bde-tools (4.19.0.0) unstable; urgency=low
+bde-tools (4.20.0.0) unstable; urgency=low
 
+  * 1d192fc Add "Test target..." task (#365)
+  * 6d0df1f Add list available compilers task (#364)
+  * 7f6eee8 make_vscode improvements (#363)
+
+ -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Tue, 28 Jan 2025 11:10:55 -0500
+
+bde-tools (4.19.0.0) git; urgency=low
+
+  * a813fab Changelog for version 4.19.0.0
   * ec365bc *LAND ONLY WITH OTHER REPO PRs* - Add clang-format guards (#361)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 13 Jan 2025 10:46:30 -0500
+ -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 20 Jan 2025 10:18:15 -0500
 
 bde-tools (4.17.0.0) git; urgency=low
 
