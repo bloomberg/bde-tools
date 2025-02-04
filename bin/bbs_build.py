@@ -879,6 +879,18 @@ def build(options):
             else:
                 raise RuntimeError("No dependers found")
     else:
+        known_targets = None
+        if options.generator.startswith("Ninja"):
+            result = subprocess.run(
+                ["cmake", "--build", options.build_dir, "--", "-t", "targets"],
+                env=env,
+                capture_output=True,
+                text=True
+            )
+            known_targets = [
+                line.split(":")[0] for line in result.stdout.splitlines()
+            ]
+
         target_list = options.targets if options.targets else ["all"]
         for target in target_list:
             main_target = None
@@ -896,7 +908,12 @@ def build(options):
                 main_target = target
                 test_target = target + ".t" if options.tests else None
 
-            if main_target:
+            build_succeeded = False
+            if (
+                main_target == "all"
+                or known_targets is None
+                or main_target in known_targets
+            ):
                 build_list = [main_target]
                 if main_target == "all":
                     build_list = []
@@ -905,6 +922,7 @@ def build(options):
                     build_targets(
                         build_list, options.build_dir, extra_args, env
                     )
+                    build_succeeded = True
                 except:
                     # Continue if the 'target' without '.t' was specified, and
                     # '--test' was specified since the main target might not
@@ -912,14 +930,25 @@ def build(options):
                     if not options.tests and not options.keep_going:
                         raise
 
-            if test_target:
+            if known_targets is None or test_target in known_targets:
                 try:
                     build_targets(
                         [test_target], options.build_dir, extra_args, env
                     )
+                    build_succeeded = True
                 except:
                     if not options.keep_going:
                         raise
+
+            if not build_succeeded and not options.keep_going:
+                targets = [
+                    f"'{t}'"
+                    for t in [main_target, test_target]
+                    if t is not None
+                ]
+                raise RuntimeError(
+                    f"Failed to build target '{target}' (tried {' and '.join(targets)})."
+                )
 
     if "run" == options.tests:
         test_cmd = [
