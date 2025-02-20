@@ -98,15 +98,7 @@ def unset_command():
 
 
 def find_installdir(version):
-    vswhere_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "..",
-        "..",
-        "..",
-        "bin",
-        "vswhere.exe",
-    )
+    vswhere_path = Path(__file__).resolve().parents[4] / "bin" / "vswhere.exe"
     output = subprocess.check_output(
         [vswhere_path, "-prerelease", "-legacy", "-products", "*", "-format", "json"]
     )
@@ -265,16 +257,9 @@ def print_envs(args, ufid, profile):
 
     if args.build_dir:
         build_path = Path(args.build_dir).resolve()
-        print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
     else:
-        # BDE_BUILD_AREA is set by bde_docker to reduce the number of queries
-        # to the host file system
-        build_path = (
-            Path(os.getenv("BDE_BUILD_AREA", os.getcwd()))
-            / "_build"
-            / f"{uplid}-{ufid}"
-        )
-        print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
+        build_path = Path.cwd() / "_build" / f"{uplid}-{ufid}"
+    print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
 
     if os_type == "windows":
         print(f"export CXX=cl")
@@ -292,10 +277,9 @@ def print_envs(args, ufid, profile):
 
     install_dir = args.install_dir if args.install_dir else "_install"
 
-    print("Using install directory: %s" % os.path.abspath(install_dir),
-          file=sys.stderr)
-
-    print(f'export BDE_CMAKE_INSTALL_DIR="{Path(install_dir).resolve()}"')
+    resolved_install_dir = Path(install_dir).resolve()
+    print(f"Using install directory: {resolved_install_dir}", file=sys.stderr)
+    print(f'export BDE_CMAKE_INSTALL_DIR="{resolved_install_dir}"')
 
 
 def list_build_profiles(profiles):

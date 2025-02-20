@@ -47,8 +47,8 @@ else:
 
     bashExecutable = cygpath("-w", shutil.which("bash"))
 
-buildArea = os.getenv("BDE_BUILD_AREA", "${workspaceFolder}")
-projectCache = os.getenv("BDE_PROJECT_CACHE", f"{buildArea}/.vscode")
+buildArea = "${workspaceFolder}"
+projectCache = f"{buildArea}/.vscode"
 
 uplid = os.getenv("BDE_CMAKE_UPLID")
 ufid = os.getenv("BDE_CMAKE_UFID")
