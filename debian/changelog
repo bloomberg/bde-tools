@@ -1,10 +1,18 @@
-bde-tools (4.20.0.0) unstable; urgency=low
+bde-tools (4.21.0.0) unstable; urgency=low
 
+  * fb20e9d Remove bde build area (#367)
+  * 2ef5fdc Clean output for ninja (#366)
+
+ -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Thu, 20 Feb 2025 08:21:17 -0500
+
+bde-tools (4.20.0.0) git; urgency=low
+
+  * 9ae31e9 Changelog for version 4.20.0.0
   * 1d192fc Add "Test target..." task (#365)
   * 6d0df1f Add list available compilers task (#364)
   * 7f6eee8 make_vscode improvements (#363)
 
- -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Tue, 28 Jan 2025 11:10:55 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 30 Jan 2025 15:46:06 -0500
 
 bde-tools (4.19.0.0) git; urgency=low
 
