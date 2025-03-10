@@ -164,6 +164,10 @@ class Options:
             args.dpkg_version, "DPKG_VERSION", "Dpkg version"
         )
 
+        self.cmake_flags = value_or_env(
+            args.cmake_flags, "CMAKE_FLAGS", "CMake flags"
+        )
+
         self.clean = args.clean
         self.toolchain = value_or_env(
             args.toolchain, "BDE_CMAKE_TOOLCHAIN", "CMake toolchain file"
@@ -199,6 +203,7 @@ class Options:
         self.recover_sanitizer = args.recover_sanitizer
         self.dump_cmake_flags = args.dump_cmake_flags
         self.known_env = args.known_env
+
 
         self.generator = args.generator
         self.config = args.config
@@ -427,6 +432,12 @@ def wrapper():
         action="store_true",
         default=False,
         help="(MSVC Only) Do not set the environment via vcvarsall.bat.",
+    )
+
+    group.add_argument(
+        "--cmake-flags",
+        type=str,
+        help="String with comma-separated flags for CMake"
     )
 
     genChoices = Platform.generator_choices()
@@ -704,6 +715,9 @@ def configure(options):
 
     if options.dpkg_version:
         flags.append("-DBB_BUILDID_PKG_VERSION=" + options.dpkg_version)
+
+    if options.cmake_flags:
+        flags.extend(options.cmake_flags.split(","))
 
     if options.toolchain:
         p = Path(options.toolchain)
