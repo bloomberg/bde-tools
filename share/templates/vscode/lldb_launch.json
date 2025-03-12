@@ -1,4 +1,7 @@
 {
     "name": "(lldb) ",
-    "type": "lldb-dap"
+    "type": "lldb-dap",
+    "preRunCommands": [
+        "settings set target.run-args ${input:args}"
+    ]
 }

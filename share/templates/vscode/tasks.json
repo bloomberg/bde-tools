@@ -99,7 +99,22 @@
                     "source": "CTest",
                     "pattern": [
                         {
-                            "regexp": "^(.*)$",
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                },
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*) *\\(context\\).*$",
                             "message": 1
                         },
                         {
@@ -131,7 +146,22 @@
                     "source": "CTest",
                     "pattern": [
                         {
-                            "regexp": "^(.*)$",
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                },
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*) *\\(context\\).*$",
                             "message": 1
                         },
                         {
@@ -163,7 +193,22 @@
                     "source": "CTest",
                     "pattern": [
                         {
-                            "regexp": "^(.*)$",
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                },
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*) *\\(context\\).*$",
                             "message": 1
                         },
                         {
@@ -195,7 +240,22 @@
                     "source": "CTest",
                     "pattern": [
                         {
-                            "regexp": "^(.*)$",
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                },
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*) *\\(context\\).*$",
                             "message": 1
                         },
                         {
@@ -227,7 +287,22 @@
                     "source": "CTest",
                     "pattern": [
                         {
-                            "regexp": "^(.*)$",
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                },
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*) *\\(context\\).*$",
                             "message": 1
                         },
                         {
@@ -259,7 +334,22 @@
                     "source": "CTest",
                     "pattern": [
                         {
-                            "regexp": "^(.*)$",
+                            "regexp": "^Error (.*)\\((\\d+)\\): (.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ]
+                },
+                {
+                    "owner": "CTest",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "source": "CTest",
+                    "pattern": [
+                        {
+                            "regexp": "^(.*) *\\(context\\).*$",
                             "message": 1
                         },
                         {

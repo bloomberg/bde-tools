@@ -34,5 +34,7 @@
         "--header-insertion=never"
     ],
     "cmake.options.statusBarVisibility": "compact",
-    "terminal.integrated.scrollback": 20000
+    "terminal.integrated.scrollback": 20000,
+    "clang-format.executable": "bde-format",
+    "clang-format.fallbackStyle": "bde"
 }

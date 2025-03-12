@@ -1,5 +1,8 @@
 {
     "name": "(Windows) ",
     "type": "cppvsdbg",
-    "console": "externalTerminal"
+    "console": "externalTerminal",
+    "args": [
+        "${input:args}"
+    ]
 }

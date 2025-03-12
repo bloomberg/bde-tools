@@ -10,6 +10,11 @@
             "ignoreFailures": true
         },
         {
+            "description": "Set command line arguments",
+            "text": "-gdb-set args ${input:args}",
+            "ignoreFailures": true
+        },
+        {
             "text": "source ${workspaceFolder}/.vscode/init-bde-pretty-printers"
         }
     ]
