@@ -19,7 +19,7 @@ class _TextRecorder(object):
         self._logger.debug("CASE %2d: START" % case)
 
     def success(self, case, rc, out):
-        if self._opts.is_verbose:
+        if self._opts.is_verbose and not self._opts.log_errors_only:
             self._logger.info(
                 "CASE %2d: SUCCESS (rc %s)\n%s" % (case, rc, out)
             )

@@ -20,6 +20,7 @@ class Options(object):
             None.
         filter_abi_bits (str): Override abi_bits filter for test policy.
         filter_host_type (str): Override host_type filter for test policy.
+        log_errors_only (bool): If True, only log test cases that failed.
 
     """
 
@@ -38,6 +39,8 @@ class Options(object):
         self.valgrind_tool = kw["valgrind_tool"]
         self.filter_abi_bits = kw["filter_abi_bits"]
         self.filter_host_type = kw["filter_host_type"]
+        self.log_errors_only = kw.get("log_errors_only")
+
 
 
 # -----------------------------------------------------------------------------

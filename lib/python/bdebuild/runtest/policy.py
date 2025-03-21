@@ -5,7 +5,7 @@ import platform
 class Policy(object):
     """Determines and manages the test runner policy.
 
-    This class provides backward compatibility with a mechansim used in the
+    This class provides backward compatibility with a mechanism used in the
     previous version of the test runner that excludes certain test cases from
     running based on a set of criteria defined in ``test_filter.py``.  The
     structure the policy file probably should be redesigned.

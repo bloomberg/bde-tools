@@ -124,7 +124,11 @@ def get_cmdline_options():
         default=None,
         help='(default: "ABI_BITS" environment variable)',
     )
-
+    parser.add_option(
+        "--log-errors-only",
+        action="store_true",
+        help="Do not log test cases that completed without errors (default: log all test cases)",
+    )
     return parser
 
 
@@ -154,6 +158,7 @@ def make_context_from_options(options, args):
         valgrind_tool=valgrind_tool,
         filter_host_type=options.filter_host_type,
         filter_abi_bits=options.filter_abi_bits,
+        log_errors_only=options.log_errors_only
     )
     test_logger = log.Log(test_options)
     test_policy = policy.Policy(test_options)

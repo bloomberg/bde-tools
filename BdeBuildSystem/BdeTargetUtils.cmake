@@ -167,14 +167,16 @@ function(bbs_configure_target_tests target)
         bbs_add_component_tests(${target}
                                 TEST_SOURCES  ${_TEST_SOURCES}
                                 TEST_DEPS     ${_TEST_DEPS}
-                                LABELS        ${_LABELS})
+                                LABELS        ${_LABELS}
+                                EXTRA_ARGS    -v 2 --log-errors-only)
         set(${target}_TEST_TARGETS "${${target}_TEST_TARGETS}" PARENT_SCOPE)
     endif()
     if (_SOURCES)
         bbs_add_component_tests(${target}
                                 TEST_SOURCES  ${_SOURCES}
                                 TEST_DEPS     ${_TEST_DEPS}
-                                LABELS        ${_LABELS})
+                                LABELS        ${_LABELS}
+                                EXTRA_ARGS    -v 2 --log-errors-only)
         set(${target}_TEST_TARGETS "${${target}_TEST_TARGETS}" PARENT_SCOPE)
     endif()
     if (_GTEST_SOURCES)
