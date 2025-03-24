@@ -9,11 +9,12 @@ from conan import ConanFile
 from conan.tools.cmake import CMake
 
 class Package(ConanFile):
-    python_requires = "conan-dpkg-recipe/[>=0.9]@test/unstable"
+    python_requires = "conan-dpkg-recipe/[>=0.16]@test/unstable"
     python_requires_extend = "conan-dpkg-recipe.DPKGConan"
 
     def init(self):
         super().init()
+        self.dependency_ignore.append('cmake')
         self.dependency_ignore.append('python3.8')
 
     def build(self):
