@@ -1,6 +1,10 @@
 # This CMakeLists.txt can be used to build a workspace containing multiple
 # BDE-style repositories.
 
+# If this minimum required version is changed, please also keep the
+# `CMAKE_TEMPLATE` in
+#   bde:bde-ci-tools/lib/python/bdecicommon/cmakeworkspacecreator.py
+# in sync.
 cmake_minimum_required(VERSION 3.24)
 project(workspace)
 
