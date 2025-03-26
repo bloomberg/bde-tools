@@ -64,7 +64,7 @@ listing the compilers that are found on the host:
 
 .. code-block:: Bash
 
-   $ bbs_build_env.py list
+   $ bbs_build_env list
 
 In most cases, the tool will list compilers currently installed in the system
 without any additional configuration.
