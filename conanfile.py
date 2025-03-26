@@ -16,6 +16,7 @@ class Package(ConanFile):
         super().init()
         self.dependency_ignore.append('cmake')
         self.dependency_ignore.append('python3.8')
+        self.dependency_ignore.append('python3.12')
 
     def build(self):
         cmake = CMake(self)

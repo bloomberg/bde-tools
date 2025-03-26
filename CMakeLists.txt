@@ -16,6 +16,9 @@ install(PROGRAMS BdeBuildSystem/scripts/sim_cpp11_features.pl
 install(PROGRAMS bin/bbs_build
                  bin/bbs_build_env
                  bin/bbs_make_vscode
+                 bin/bde_build_env
+                 bin/cmake_build
+                 bin/bde_runtest
                  bin/get_dependers
         DESTINATION libexec/bde-tools/bin
         COMPONENT bde-tools)
@@ -23,16 +26,16 @@ install(PROGRAMS bin/bbs_build
 # bbs tools implementation
 install(FILES bin/bbs_build.py
               bin/bbs_build_env.py
+              bin/bde_build_env.py
+              bin/bde_runtest.py
+              bin/cmake_build.py
         DESTINATION libexec/bde-tools/bin
         COMPONENT bde-tools)
 
 # bde-tools
 # keep pylibinit when removing old bde-tools install rules(!)
 install(PROGRAMS bin/bbs_make_vscode.py
-                 bin/bde_build_env.py
-                 bin/bde_runtest.py
                  bin/bde_input_limiter.pl
-                 bin/cmake_build.py
                  bin/get_dependers.py
                  bin/bde_get_changed_components.sh
         DESTINATION libexec/bde-tools/bin

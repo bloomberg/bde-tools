@@ -8,29 +8,32 @@ Build-Depends:
     cmake,
     make,
     ninja,
-    python3.8
+    python3.12 [amd64],
+    python3.8 [!amd64]
 Standards-Version: 3.8.4
 
 Package: bde-tools
-Architecture: all
+Architecture: any
 Depends: 
     cmake,
     coreutils,
     make,
     ninja,
     perl,
-    python3.8
+    python3.12 [amd64],
+    python3.8 [!amd64]
 Description: BDE Build Tools
  Tools to build BDE-style repositories.
 
 Package: bde-gdb-printers
-Architecture: all
+Architecture: any
 Description: GDB Pretty printers for Bloomberg components
 
 Package: bbs-cmake-module
-Architecture: all
+Architecture: any
 Depends:
     cmake-gen-bde-metadata,
-    python3.8
+    python3.12 [amd64],
+    python3.8 [!amd64]
 Description: BdeBuildSystem CMake module
  CMake module to process metadata in BDE-style repositories.
