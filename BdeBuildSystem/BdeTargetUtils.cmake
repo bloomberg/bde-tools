@@ -303,6 +303,14 @@ function (bbs_install_target target)
                 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
                 COMPONENT ${_COMPONENT}-all)
 
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+            get_target_property(pdb_output_dir ${target} COMPILE_PDB_OUTPUT_DIRECTORY)
+            get_target_property(pdb_name ${target} COMPILE_PDB_NAME)
+            if (pdb_output_dir AND pdb_name)
+                install(FILES ${pdb_output_dir}/${pdb_name}.pdb DESTINATION ${CMAKE_INSTALL_LIBDIR})
+            endif()
+        endif()
+
         # generate/install <Package>Config.cmake
         # Note template uses uor_name and uor_deps variables
         include(CMakePackageConfigHelpers)
@@ -454,6 +462,20 @@ function (bbs_emit_check_cycles target)
     endif()
 endfunction()
 
+#[[.rst:
+.. command:: bbs_add_target_pdb
+
+Add target property to generate pdb files on MSVC. When different targets point
+to the same PDB name, the individual PDBs will be merged.
+#]]
+function(bbs_add_target_pdb target pdb_name)
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	set_target_properties(${target} PROPERTIES
+			      COMPILE_PDB_NAME ${pdb_name}
+			      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+    endif()
+endfunction()
+
 #.rst:
 # .. command:: bbs_setup_target_uor
 #
@@ -564,6 +586,8 @@ function(bbs_setup_target_uor target)
                         # Adding library for the package as real static library
                         add_library(${pkg} STATIC)
                         target_link_libraries(${pkg} PUBLIC ${pkg}-iface)
+			# The package's PDB is added to the UOR's (target) PDB
+			bbs_add_target_pdb(${pkg}-iface ${target})
 
                         # Important: link with DEPENDS and not PCDEPS for packages
                         # in a groups. For groups with underscores (z_bae) we do
@@ -615,6 +639,7 @@ function(bbs_setup_target_uor target)
 
             set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
             set_target_properties(${target} PROPERTIES BB_UOR_IS_GROUP TRUE)
+            bbs_add_target_pdb(${target} ${target})
 
             target_link_libraries(${target} PUBLIC ${${uor_name}_PCDEPS})
             bbs_add_target_bde_flags(${target} PRIVATE)
@@ -651,6 +676,8 @@ function(bbs_setup_target_uor target)
             # Configure standalone library ( no packages ) and tests from BDE metadata
             message(VERBOSE "Adding library for ${target}")
             set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
+	    bbs_add_target_pdb(${target} ${target})
+
             target_sources(${target} PRIVATE ${${uor_name}_SOURCE_FILES})
             bbs_add_target_include_dirs(${target} PUBLIC ${${uor_name}_INCLUDE_DIRS})
 
