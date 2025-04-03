@@ -1,9 +1,22 @@
-bde-tools (4.22.0.0) unstable; urgency=low
+bde-tools (4.23.0.0) unstable; urgency=low
 
+  * 4df3de5 Add PDBs installation on Windows (#377)
+  * 6711365 Fix typo in installation docs (#375)
+  * b3f2703 Move away from Python 3.8 (#372)
+  * 8316d1e Add note to keep cmake_minimum_required in sync (#352)
+  * 1fe18ea Remove cmake from bde-tools dependencies (#374)
+  * 869696e Use new release profiles (#373)
+  * 924c7ad Do not verbose log the tests that succeed. (#371)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 3 Apr 2025 14:29:39 -0400
+
+bde-tools (4.22.0.0) git; urgency=low
+
+  * 2926962 Changelog for version 4.22.0.0
   * 1e658ce Minor fixes (#368)
   * be0810d Add flag for CMake parameters (#369)
 
- -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Wed, 12 Mar 2025 08:30:02 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 14 Mar 2025 10:15:53 -0400
 
 bde-tools (4.21.0.0) git; urgency=low
 
