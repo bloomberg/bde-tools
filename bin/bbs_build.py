@@ -944,7 +944,7 @@ def build(options):
                     if not options.tests and not options.keep_going:
                         raise
 
-            if known_targets is None or test_target in known_targets:
+            if test_target and (known_targets is None or test_target in known_targets):
                 try:
                     build_targets(
                         [test_target], options.build_dir, extra_args, env
