@@ -75,6 +75,14 @@ cmakeSettings = json.loads(
     ).stdout.decode()
 )
 
+# Remove BASH_FUNC_<...>%% environment variables set by VSCode which it then
+# gets confused by when we feed it back to settings.json
+cmakeSettings["env"] = {
+    key: value
+    for key, value in cmakeSettings["env"].items()
+    if "%%" not in key
+}
+
 print(f"Generating .vscode folder...")
 print(f"  BDE tools directory: {bdeToolsDir}")
 print(f"  Build directory:     {buildDir}")
