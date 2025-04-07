@@ -22,11 +22,18 @@ endif()
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain32.cmake")
 
-    string(APPEND CMAKE_C_FLAGS " -xthreadvar=dynamic")
-    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
+    # CMAKE_<LANG>_COMPILER_ID is not populated for toolchain file yet
+    # Using CMAKE_<LANG>_COMPILER instead ( contains full path to the compiler binary )
 
-    string(APPEND CMAKE_CXX_FLAGS " -xthreadvar=dynamic")
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
+    if (NOT "${CMAKE_C_COMPILER}" MATCHES ".*gcc")
+        string(APPEND CMAKE_C_FLAGS " -xthreadvar=dynamic")
+        set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} CACHE STRING "Bloomberg ABI C flags." FORCE)
+    endif()
+
+    if (NOT "${CMAKE_CXX_COMPILER}" MATCHES ".*g\\+\\+")
+        string(APPEND CMAKE_CXX_FLAGS " -xthreadvar=dynamic")
+        set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING "Bloomberg ABI C++ flags." FORCE)
+    endif()
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
