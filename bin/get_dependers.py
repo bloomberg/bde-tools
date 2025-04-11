@@ -145,8 +145,14 @@ class Target:
         depender_names = {self.component.name}
         test_depender_names = set()
         component_names_to_search = [self.component.name]
+
         while component_names_to_search:
             component_name = component_names_to_search.pop(0)
+
+            cpp03_name = component_name + '_cpp03'
+            if cpp03_name in components and cpp03_name not in component_names_to_search:
+                depender_names.update([cpp03_name])
+
             component = components[component_name]
             component_names_to_search.extend(
                 component.depender_names - depender_names)
