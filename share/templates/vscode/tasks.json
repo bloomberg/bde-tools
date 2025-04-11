@@ -135,7 +135,7 @@
         {
             "label": "Test current package",
             "type": "shell",
-            "command": "bbs_build build --known-env --target $(echo ${fileBasenameNoExtension} | sed -n 's/\\([^_]*\\).*/\\1/p') --test run -v",
+            "command": "bbs_build build --known-env --target $(echo ${fileBasenameNoExtension} | sed -n 's/\\(\\(?:[as]_\\)\\{0,1\\}[^_]*\\).*/\\1/p') --test run -v",
             "problemMatcher": [
                 "$gcc",
                 {
