@@ -1,5 +1,17 @@
-bde-tools (4.23.0.0) unstable; urgency=low
+bde-tools (4.24.0.0) unstable; urgency=low
 
+  * 411b354 Make include_guard global (#383)
+  * e7a1ff3 New conan build requirements (#382)
+  * e3beb89 test package task handle adapters and standalones (#381)
+  * 3b56316 Add _cpp03 files in get_dependers (#380)
+  * dcafb5e Support GCC on Solaris (#378)
+  * e16be6f Do not use %% env vars (#379)
+
+ -- Andrey Zherikov <azherikov@bloomberg.net>  Tue, 22 Apr 2025 13:06:27 -0400
+
+bde-tools (4.23.0.0) git; urgency=low
+
+  * 77761d9 Changelog for version 4.23.0.0
   * 4df3de5 Add PDBs installation on Windows (#377)
   * 6711365 Fix typo in installation docs (#375)
   * b3f2703 Move away from Python 3.8 (#372)
@@ -8,7 +20,7 @@ bde-tools (4.23.0.0) unstable; urgency=low
   * 869696e Use new release profiles (#373)
   * 924c7ad Do not verbose log the tests that succeed. (#371)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 3 Apr 2025 14:29:39 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 3 Apr 2025 14:40:25 -0400
 
 bde-tools (4.22.0.0) git; urgency=low
 
