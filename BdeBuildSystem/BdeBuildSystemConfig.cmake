@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-include_guard()
+include_guard(DIRECTORY)
 
 # Sub-modules are listed here in dependency order
 include(${CMAKE_CURRENT_LIST_DIR}/BdeBuildSystemUtils.cmake)
