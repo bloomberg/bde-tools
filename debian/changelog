@@ -1,5 +1,13 @@
-bde-tools (4.24.0.0) unstable; urgency=low
+bde-tools (4.24.1.1) unstable; urgency=low
 
+  * 64c75c8 Make include guard in directory scope (#385)
+  * 8361f19 Revert "Make include_guard global" (#384)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 25 Apr 2025 12:32:42 -0400
+
+bde-tools (4.24.0.0) git; urgency=low
+
+  * 878dd1c Changelog for version 4.24.0.0
   * 411b354 Make include_guard global (#383)
   * e7a1ff3 New conan build requirements (#382)
   * e3beb89 test package task handle adapters and standalones (#381)
@@ -7,7 +15,7 @@ bde-tools (4.24.0.0) unstable; urgency=low
   * dcafb5e Support GCC on Solaris (#378)
   * e16be6f Do not use %% env vars (#379)
 
- -- Andrey Zherikov <azherikov@bloomberg.net>  Tue, 22 Apr 2025 13:06:27 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 24 Apr 2025 14:47:29 -0400
 
 bde-tools (4.23.0.0) git; urgency=low
 
