@@ -36,8 +36,8 @@
             "type": "shell",
             "command": "cp",
             "args": [
-                "${command:cmake.buildDirectory}/compile_commands.json",
-                "$$projectCachePath$$"
+                "\"${command:cmake.buildDirectory}/compile_commands.json\"",
+                "\"$$projectCachePath$$\""
             ],
             "problemMatcher": [],
             "dependsOrder": "sequence",
@@ -71,8 +71,8 @@
                 "\"check function-contract off\"",
                 "-w",
                 "-p",
-                "${command:cmake.buildDirectory}",
-                "${file}"
+                "\"${command:cmake.buildDirectory}\"",
+                "\"${file}\""
             ],
             "problemMatcher": {
                 "source": "bde_verify",
