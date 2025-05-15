@@ -1013,7 +1013,7 @@ def install(options):
     install_cmd += ["-P", "cmake_install.cmake"]
 
     environ = os.environ
-    environ["DESTDIR"] = os.path.abspath(options.install_dir)
+    environ["DESTDIR"] = os.path.abspath(os.path.expanduser(options.install_dir))
 
     print("Install cmd:")
     print(" ".join(install_cmd))
