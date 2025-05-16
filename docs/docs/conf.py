@@ -14,18 +14,12 @@
 
 import sys
 import os
-
-# import shlex
-
-import sphinx
-import distutils.version
-
-sphinx_version = distutils.version.LooseVersion(sphinx.__version__)
+from datetime import datetime
 
 # -- Project information -----------------------------------------------------
 
 project = u"BDE Build Tools"
-copyright = u"2022, Bloomberg Finance L.P."
+copyright = f'{datetime.now().year}, Bloomberg LP'
 author = u"BDE"
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -34,9 +28,9 @@ author = u"BDE"
 sys.path.insert(0, os.path.abspath("."))
 
 # The short X.Y version.
-version = ""
+version = ''
 # The full version, including alpha/beta/rc tags.
-release = ""
+release = ''
 
 # -- General configuration ------------------------------------------------
 
@@ -86,7 +80,7 @@ else:
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # The name of the Pygments (syntax highlighting) style to use.
 # pygments_style = 'sphinx'
@@ -101,9 +95,6 @@ todo_include_todos = False
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
-html_theme_path = [
-    "_themes",
-]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -117,11 +108,7 @@ rst_prolog = "\n.. include:: /global.inc\n"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_context = {
-    "css_files": [
-        "_static/bde.css",
-    ],
-}
+html_css_files = ['bde.css']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -136,5 +123,5 @@ html_context = {
 html_show_sourcelink = False
 
 # -- Extension configuration -------------------------------------------------
-def setup(app):
-    app.add_css_file("bde.css")
+#def setup(app):
+#    app.add_css_file("bde.css")
