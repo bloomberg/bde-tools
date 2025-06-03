@@ -11,6 +11,8 @@ from conan.tools.cmake import CMake
 class Package(ConanFile):
     python_requires = "conan-dpkg-recipe/[>=0.19]@test/unstable"
     python_requires_extend = "conan-dpkg-recipe.DPKGConan"
+
+    package_type = "build-scripts"
     add_build_tool_requirements = True
 
     def init(self):

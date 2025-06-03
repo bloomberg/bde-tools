@@ -31,16 +31,14 @@ node('WINDOWS') {
                     channel = "pr-${env.CHANGE_ID}"
                 }
 
-                conan.getReleaseProfiles().each { profile ->
-                    conan.create(name: 'bde-tools',
-                                 user:    user,
-                                 channel: channel,
-                                 '-o:a':  '*:dependency_user_channel=test/unstable')
-                    conan.create(name: 'bbs-cmake-module',
-                                 user:    user,
-                                 channel: channel,
-                                 '-o:a':  '*:dependency_user_channel=test/unstable')
-                }
+                conan.create(name: 'bde-tools',
+                             user:    user,
+                             channel: channel,
+                             '-o:a':  '*:dependency_user_channel=test/unstable')
+                conan.create(name: 'bbs-cmake-module',
+                             user:    user,
+                             channel: channel,
+                             '-o:a':  '*:dependency_user_channel=test/unstable')
             }
             stage('Publish package(s)') {
                 Boolean dryRun = true
