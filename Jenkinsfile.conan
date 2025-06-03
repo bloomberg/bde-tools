@@ -35,12 +35,10 @@ node('WINDOWS') {
                     conan.create(name: 'bde-tools',
                                  user:    user,
                                  channel: channel,
-                                 '-pr:h': profile,
                                  '-o:a':  '*:dependency_user_channel=test/unstable')
                     conan.create(name: 'bbs-cmake-module',
                                  user:    user,
                                  channel: channel,
-                                 '-pr:h': profile,
                                  '-o:a':  '*:dependency_user_channel=test/unstable')
                 }
             }
