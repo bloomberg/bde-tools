@@ -9,28 +9,22 @@ from conan import ConanFile
 from conan.tools.cmake import CMake
 
 class Package(ConanFile):
-    python_requires = "conan-dpkg-recipe/[>=0.19]@test/unstable"
-    python_requires_extend = "conan-dpkg-recipe.DPKGConan"
+    python_requires = "conan-dpkg-recipe/[>=0.22]@test/unstable"
+    python_requires_extend = "conan-dpkg-recipe.CMakeModule"
 
-    package_type = "build-scripts"
-    add_build_tool_requirements = True
+    skip_unit_tests = True
 
     def init(self):
         super().init()
         self.dependency_ignore.append('python3.8')
         self.dependency_ignore.append('python3.12')
 
-    def build(self):
-        cmake = CMake(self)
-        cmake.configure()
-        cmake.build()
+    def get_build_target(self) -> str | None:
+        return None
 
-    def package(self):
-        cmake = CMake(self)
-        cmake.install(component=self.name)
+    def get_install_components(self) -> list[str] | None:
+        return [self.name]
 
     def package_info(self):
         if "bbs-cmake-module" == self.name:
-            bbs_module_path=os.path.join(self.package_folder, "share", "cmake", "BdeBuildSystem")
-            self.buildenv_info.append_path("BdeBuildSystem_DIR", bbs_module_path)
-            self.runenv_info.append_path("BdeBuildSystem_DIR", bbs_module_path)
+            super().package_info()
