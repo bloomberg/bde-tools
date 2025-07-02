@@ -25,6 +25,7 @@ _pkgconfig_map_insert(uv             libuv)
 _pkgconfig_map_insert(xercesc        xerces-c)
 _pkgconfig_map_insert(z              zlib)
 _pkgconfig_map_insert(zstd           libzstd)
+_pkgconfig_map_insert(lz4            liblz4)
 
 #.rst
 # .. command: bbs_uor_to_pc_name
