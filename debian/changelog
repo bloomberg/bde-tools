@@ -1,5 +1,14 @@
-bde-tools (4.25.0.0) unstable; urgency=low
+bde-tools (4.27.0.0) unstable; urgency=low
 
+  * 142bee7 Migrate to CMakeModule recipe (#395)
+  * f79f3e9 Remove profile loop (#394)
+  * 2644a4a Drqs 179368073 enable homebrew clang on darwin (#393)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 2 Jul 2025 10:32:05 -0400
+
+bde-tools (4.25.0.0) git; urgency=low
+
+  * 1f0c4dc Changelog for version 4.25.0.0
   * 4cbd9ce Update rtd theme (#391)
   * d82e260 Enable hombrew clang on darwin (#390)
   * d688748 Support user home path expansion on install (#389)
@@ -7,7 +16,7 @@ bde-tools (4.25.0.0) unstable; urgency=low
   * f3a9adb Revert "Make include guard in directory scope" (#387)
   * c4e6f12 Allow detection of clang 19 and 20 (#386)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 16 May 2025 16:47:58 -0400
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Sun, 18 May 2025 18:38:08 +0000
 
 bde-tools (4.24.1.1) git; urgency=low
 
