@@ -1,51 +1,56 @@
 """
-   GDB pretty printer support for BDE components
+GDB pretty printer support for BDE components
 
-   This module provides a set of pretty printers to load into gdb for debugging
-   code using BDE (http://github.com/bloomberg/bde) components.
+This module provides a comprehensive set of pretty printers to load into gdb
+for debugging code using BDE (http://github.com/bloomberg/bde) components.
 
-   This is a work in progress, more printers will be added as needed.
+This module includes printers for containers (vector, map, set, unordered_map,
+unordered_set), strings, smart pointers, time/date types, variant types,
+nullable values, atomic types, and decimal types.
 
-   Authors: David Rodriguez Ibeas <dribeas@bloomberg.net>
-            Evgeny Yakimov        <eyakimov@bloomberg.net>
-            Hyman Rosen           <hrosen4@bloomberg.net>
+Configuration options
+---------------------
+These settings configure some of the behavior of the pretty printer to
+improve access to different elements in the underlying data.
 
-   Configuration options
-   ---------------------
-    These settings configure some of the behavior of the pretty printer to
-    improve access to different elements in the underlying data.
+    (gdb) set print bslma-allocator on
 
-        (gdb) set print bslma-allocator on
+Setting           Meaning
+---------------   -----------------------------------------------------
+bslma-allocator   Controls whether the bslma::Allocator* is printed
 
-    Setting           Meaning
-    ---------------   -----------------------------------------------------
-    bslma-allocator   Controls whether the bslma::Allocator* is printed
+string-address    Controls whether string buffer address is printed
 
-    bsl-eclipse       Controls output format, set to 'on' inside Eclipse
-                      and leave as 'off' for plain gdb.
+Usage
+-----
+To use the pretty printers load the script into gdb, either manually
+through:
 
-    string-address    Controls whether string buffer address is printed
+    (gdb) source /path/to/this/folder/gdbinit
 
-   Usage
-   -----
-    To use the pretty printers load the script into gdb, either manually
-    through:
+or automatically at start up.  See the gdb documentation on how to setup
+automatic loading of pretty printers.
 
-        (gdb) source /path/to/this/folder/gdbinit
+You can list, enable or disable pretty printers by using the gdb commands:
 
-    or automatically at start up.  See the gdb documentation on how to setup
-    automatic loading of pretty printers.
+    (gdb) info    pretty-printer
+    (gdb) disable pretty-printer global BDE;vector
+    (gdb) enable  pretty-printer global BDE
 
-    You can list, enable or disable pretty printers by using the gdb commands:
+Additionally, you can ignore the pretty printer for a single 'print'
+command by running it in "raw" mode:
 
-        (gdb) info    pretty-printer
-        (gdb) disable pretty-printer global BDE;vector
-        (gdb) enable  pretty-printer global BDE
+    (gdb) print /r container
 
-    Additionally, you can ignore the pretty printer for a single 'print'
-    command by running it in "raw" mode:
+Acknowledgements
+----------------
+Thank you to the following people for creating the initial version of this
+module:
+    David Rodriguez Ibeas
+    Evgeny Yakimov
+    Hyman Rosen
 
-        (gdb) print /r container
+
 """
 
 #  General design considerations
@@ -82,42 +87,31 @@ docs = {}
 global pp
 pp = None
 
+
 ##  Helpers controlling the printout based on printer options
-def _createAllocatorList(cbase):
-    """Create a list with the allocator information if 'print bslma-allocator'
-    is set or empty otherwise.
-    """
-    printAllocator = gdb.parameter("print bslma-allocator")
-    return [] if not printAllocator else [("alloc", cbase)]
+def _allocatorResource(val):
+    for resource in ["d_resource", "_M_resource"]:
+        try:
+            return val[resource]
+        except:
+            pass
 
 
-def _optionalAllocator(obj, prefix=",", suffix=""):
-    if not hasattr(obj, "alloc"):
-        return ""
+def _allocatorDict(alloc):
+    """Return a dictionary containing an allocator field if allocator printing
+    is enabled and an empty dictionary otherwise."""
+    return {"alloc": alloc} if gdb.parameter("print bslma-allocator") else {}
+
+
+def _optionalAllocator(alloc, prefix=",", suffix=""):
     printalloc = gdb.parameter("print bslma-allocator")
-    return "%salloc:%s%s" % (prefix, obj.alloc, suffix) if printalloc else ""
-
-
-def keyValueIterator(arg):
-    eclipseMode = gdb.parameter("print bsl-eclipse")
-    if eclipseMode:
-        return RawKeyValueIterator(arg)
-    else:
-        return KeyValueIterator(arg)
-
-
-def valueIterator(arg):
-    eclipseMode = gdb.parameter("print bsl-eclipse")
-    if eclipseMode:
-        return RawValueIterator(arg)
-    else:
-        return ValueIterator(arg)
+    return f"{prefix}alloc:{alloc}{suffix}" if printalloc else ""
 
 
 def stringAddress(arg):
     char_ptr_type = gdb.lookup_type("unsigned char").pointer()
     c_str = arg.cast(char_ptr_type)
-    return "0x%x " % c_str if gdb.parameter("print string-address") else ""
+    return f"0x{c_str:x} " if gdb.parameter("print string-address") else ""
 
 
 def stringRep(arg, length):
@@ -145,6 +139,77 @@ def hasMember(obj, memb):
     except gdb.error:
         return False
     return True
+
+
+def getBaseType(val, index):
+    """Return the type of base class number `index` of the type of the value
+    `val`.  If no such base exists, return `None`"""
+    try:
+        return val.type.items()[index][1].type
+    except:
+        pass
+
+
+def replace_template(text, pattern, replacement):
+    """Replace all occurrences of the template type name adhering to the
+    specified `pattern` with the specified `replacement` in the specified
+    `text`.  Remove a trailing comma if `replacement` is empty.  The behavior
+    is undefined unless `pattern` contains a `<` character."""
+
+    assert "<" in pattern
+
+    pattern = re.compile(pattern)
+    result = ""
+    i = 0
+
+    while i < len(text):
+        match = pattern.search(text, i)
+        if not match:
+            result += text[i:]
+            break
+
+        start = match.start()
+
+        result += text[i:start]
+        result += match.expand(replacement)
+
+        # Move i past the matched template (handle nested < >)
+        i = match.end()
+        depth = 1
+        while i < len(text) and depth > 0:
+            if text[i] == "<":
+                depth += 1
+            elif text[i] == ">":
+                depth -= 1
+            i += 1
+
+        # Remove trailing ", " only we're removing the template
+        if len(replacement) == 0:
+            trailing = re.match(r"\s*,\s*", text[i:])
+            if trailing:
+                i += trailing.end()
+
+    return result.strip()
+
+
+def simplifyTypeName(typeName):
+    """Simplify the specified `typeName` by removing BloombergLP:: prefix,
+    bsl::allocator template parameter, and handle common typedefs like
+    bsl::string, bsl::wstring, etc."""
+
+    typeName = str(typeName).replace("BloombergLP::", "")
+    typeName = replace_template(typeName, "bsl::allocator<", "")
+    typeName = replace_template(typeName, r"(std|bsl)::char_traits<", "")
+    typeName = replace_template(typeName, r"(std|bsl)::basic_string(_view)?<char", r"\1::string\2")
+    typeName = replace_template(typeName, r"(std|bsl)::basic_string(_view)?<wchar_t", r"\1::wstring\2")
+    typeName = replace_template(
+        typeName, r"bslstl::StringRef<char", "bslstl::StringRef"
+    )
+    typeName = replace_template(
+        typeName, r"bslstl::StringRef<wchar_t", "bslstl::StringRefWide"
+    )
+    typeName = re.sub(r",?\s+>", ">", typeName)
+    return typeName
 
 
 ## Debug catch all pretty printer
@@ -229,26 +294,22 @@ class BslStringImp:
         self.capacity = int(val["d_capacity"])
         short = val["d_short"]
         self.isShort = self.capacity < short.type.sizeof
-        self.buffer = (
-            short["d_data"]["d_buffer"] if self.isShort else val["d_start_p"]
-        )
+        self.buffer = short["d_data"]["d_buffer"] if self.isShort else val["d_start_p"]
 
     def to_string(self):
         """Format the string"""
         str = None
         if not self.destroyed:
-            str = '%s[%s:%d,capacity:%d] "%s"' % (
-                stringAddress(self.buffer),
-                "size" if self.isShort else "Size",
-                self.length,
-                self.capacity,
-                stringRep(self.buffer, self.length),
+            str = (
+                f"{stringAddress(self.buffer)}"
+                f'[{"size" if self.isShort else "Size"}:{self.length},capacity:{self.capacity}]'
+                f' "{stringRep(self.buffer, self.length)}"'
             )
         else:
             if self.isShort:
-                str = "[DESTROYED, small buffer value]: %s" % self.buffer
+                str = f"[DESTROYED, small buffer value]: {self.buffer}"
             else:
-                str = "[DESTROYED] %s" % self.buffer
+                str = f"[DESTROYED] {self.buffer}"
         return str
 
 
@@ -258,9 +319,9 @@ class BslVectorImp:
     This pretty printer handles printing instances of the
     'bsl::vectorBase<>' template used to hold the contents of
     'bsl::vector<>'.  The printer will dump the size and capacity of the
-    object followed by the sequence of values in the sequence.
+    object and have children showing the elements.
 
-        [size:10,capacity:16] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+        [size:10,capacity:16]
 
     Note: This is not intended for direct use
     """
@@ -273,7 +334,7 @@ class BslVectorImp:
         self.capacity = int(val["d_capacity"])
 
     def to_string(self):
-        return "[size:%d,capacity:%d]" % (self.size, self.capacity)
+        return f"[size:{self.size},capacity:{self.capacity}]"
 
     def display_hint(self):
         return "map"
@@ -283,27 +344,23 @@ class BslVectorImp:
             """Iterator over the contents of the vector"""
 
             def __init__(s, begin, end):
-                self.begin = begin
-                self.end = end
-                self.current = begin
+                s.end = end
+                s.current = begin
 
             def __iter__(s):
                 return s
 
             def __next__(s):
-                if self.current == self.end:
+                if s.current == s.end:
                     raise StopIteration
 
-                name = int(self.current - self.begin)
-                value = self.current.dereference()
-
-                self.current += 1
-
-                return (name, value)
+                value = s.current.dereference()
+                s.current += 1
+                return value
 
             next = __next__
 
-        return keyValueIterator(VectorContentsIterator(self.begin, self.end))
+        return ValueIterator(VectorContentsIterator(self.begin, self.end))
 
 
 class BslRbTreeIterator:
@@ -317,9 +374,7 @@ class BslRbTreeIterator:
     def __init__(self, type, sentinel):
         self.sentinel = sentinel
         self.current = sentinel["d_right_p"]
-        self.nodeType = gdb.lookup_type(
-            "BloombergLP::bslstl::TreeNode<%s>" % type
-        )
+        self.nodeType = gdb.lookup_type(f"BloombergLP::bslstl::TreeNode<{type}>")
 
     def __iter__(self):
         return self
@@ -369,7 +424,7 @@ class HashTableIterator:
 
     def __init__(self, type, sentinel):
         self.nodeType = gdb.lookup_type(
-            "BloombergLP::bslalg::BidirectionalNode<%s>" % type
+            f"BloombergLP::bslalg::BidirectionalNode<{type}>"
         )
         self.current = sentinel.cast(self.nodeType.pointer())
 
@@ -420,8 +475,8 @@ class KeyValueIterator:
             val = self.item[0]
         else:
             val = self.item[1]
-        ret = ("[%d]" % self.count, val)
-        self.count = self.count + 1
+        ret = (f"[{self.count}]", val)
+        self.count += 1
         return ret
 
     next = __next__
@@ -439,41 +494,9 @@ class ValueIterator:
 
     def __next__(self):
         value = self.iter.next()
-        ret = ("[%d]" % self.count, value)
+        ret = (f"[{self.count}]", value)
         self.count = self.count + 1
         return ret
-
-    next = __next__
-
-
-class RawKeyValueIterator:
-    """This iterator returns a (str(key),value) tuple from an iterator."""
-
-    def __init__(self, iter):
-        self.iter = iter
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        next = self.iter.next()
-        return (str(next[0]), next[1])
-
-    next = __next__
-
-
-class RawValueIterator:
-    """This iterator returns a (str(value),value) tuple from an iterator."""
-
-    def __init__(self, iter):
-        self.iter = iter
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        value = self.iter.next()
-        return (str(value), value)
 
     next = __next__
 
@@ -500,46 +523,56 @@ class IPv4Address:
         self.d = (ip >> 24) & 0xFF
 
     def to_string(self):
-        return "%d.%d.%d.%d:%d" % (self.a, self.b, self.c, self.d, self.port)
+        return f"{self.a}.{self.b}.{self.c}.{self.d}:{self.port}"
 
 
 class Nullable:
-    """Pretty printer for 'bdlb::NullableValue<T>'
+    """Pretty printer for 'bdlb::NullableValue<T>' and 'bsl::optional<T>'
 
     This pretty printer handles both the allocator aware and not allocator
-    aware types internally.
+    aware types internally. It supports both BDE-specific structure
+    (d_value/d_hasValue/d_buffer) and std::optional-like structure
+    (_M_payload/_M_engaged) for cases where bsl::optional inherits from
+    std::optional.
 
-    The output of the pretty printer is split into a 'null' output and
-    optionally a 'value' if not null.
+    The output contains the type name and [null] if the value is null and a
+    child with the value otherwise.
+
+        intNullable = bdlb::NullableValue<int> [null]
+
+        stringOptional = bsl::optional<bsl::string> {
+            value = bsl::string [size:15,capacity:23] "optional string"
+        }
+
+    The allocator child will be added if the nullable is allocator-aware
+    and allocator printing is on.
     """
 
     def __init__(self, val):
         self.val = val
         self.type = val.type.template_argument(0)
-        self.members = []
-        if val.type.has_key("d_allocator"):
-            alloc = val["d_allocator"]
-            self.members = _createAllocatorList(alloc)
+        self.members = {}
 
         if hasMember(val, "d_value"):
-            self.members.append(("null", not val["d_value"]["d_hasValue"]))
             if val["d_value"]["d_hasValue"]:
                 buf = val["d_value"]["d_buffer"]["d_buffer"]
-                self.members.append(
-                    ("value", buf.cast(self.type.pointer()).dereference())
-                )
+                self.members["value"] = buf.cast(self.type.pointer()).dereference()
+
+            if hasMember(val["d_value"], "d_allocator"):
+                self.alloc = _allocatorResource(val["d_value"]["d_allocator"])
+                self.members.update(_allocatorDict(self.alloc))
         else:
-            self.members.append(("null", not val["_M_payload"]["_M_engaged"]))
             if val["_M_payload"]["_M_engaged"]:
-                self.members.append(
-                    ("value", val["_M_payload"]["_M_payload"]["_M_value"])
-                )
+                self.members["value"] = val["_M_payload"]["_M_payload"]["_M_value"]
 
     def to_string(self):
-        return str(self.val.type)
+        if "value" in self.members:
+            return simplifyTypeName(self.val.type)
+        else:
+            return f"{simplifyTypeName(self.val.type)} [null]"
 
     def children(self):
-        return iter(self.members)
+        return iter(self.members.items())
 
 
 class Time:
@@ -561,7 +594,7 @@ class Time:
         value //= 60
         hours = value
 
-        return "%02d:%02d:%02d.%03d" % (hours, minutes, seconds, milliseconds)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
 
     @classmethod
     def toHMuS(cls, value):
@@ -573,13 +606,13 @@ class Time:
         value //= 60
         hours = value
 
-        return "%02d:%02d:%02d.%06d" % (hours, minutes, seconds, microseconds)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{microseconds:06d}"
 
     def to_string(self):
         us = int(self.val["d_value"])
         mask = 0x4000000000
         if us < mask:
-            return "invalid time value %d" % us
+            return f"invalid time value {us}"
         return Time.toHMuS(us & ~mask)
 
 
@@ -594,7 +627,7 @@ class Tz:
             sign = "-"
         else:
             sign = "+"
-        return "%s%02d:%02d" % (sign, offset // 60, offset % 60)
+        return f"{sign}{offset // 60:02d}:{offset % 60:02d}"
 
 
 class TimeTz:
@@ -608,7 +641,7 @@ class TimeTz:
 
     def to_string(self):
         time = Time(self.val["d_localTime"]).to_string()
-        return "%s%s" % (time, Tz.toHM(self.val["d_offset"]))
+        return f"{time}{Tz.toHM(self.val['d_offset'])}"
 
 
 class Date:
@@ -738,9 +771,7 @@ class Date:
 
     @classmethod
     def isLeapYear(cls, year):
-        return 0 == year % 4 and (
-            0 != year % 100 or 0 == year % 400 or year <= 1752
-        )
+        return 0 == year % 4 and (0 != year % 100 or 0 == year % 400 or year <= 1752)
 
     @classmethod
     def dayOfYearToDayMonth(cls, year, dayOfYear):
@@ -771,7 +802,7 @@ class Date:
         (year, dayOfYear) = Date.serialToYearDate(serialDay)
         (month, day) = Date.dayOfYearToDayMonth(year, dayOfYear)
 
-        return "%04d-%02d-%02d" % (year, month, day)
+        return f"{year:04d}-{month:02d}-{day:02d}"
 
     def to_string(self):
         return Date.toYMD(self.val["d_serialDate"])
@@ -788,7 +819,7 @@ class DateTz:
 
     def to_string(self):
         date = Date(self.val["d_localDate"]).to_string()
-        return "%sT00%s" % (date, Tz.toHM(self.val["d_offset"]))
+        return f"{date}T00{Tz.toHM(self.val['d_offset'])}"
 
 
 class Datetime:
@@ -810,7 +841,7 @@ class Datetime:
     def to_string(self):
         value = int(self.val["d_value"])
         if value < 0:
-            value += 2 ** 64
+            value += 2**64
         invalid = (value & Datetime.REP_MASK) == 0
         if invalid:
             if sys.byteorder == "little":
@@ -825,7 +856,7 @@ class Datetime:
         date = Date.toYMD((value >> Datetime.TIME_BITS) + 1)
         time = Time.toHMuS(value & Datetime.TIME_MASK)
 
-        return "%s%sT%s" % (("[invalid]" if invalid else ""), date, time)
+        return f"{'[invalid]' if invalid else ''}{date}T{time}"
 
 
 class DatetimeTz:
@@ -839,7 +870,7 @@ class DatetimeTz:
 
     def to_string(self):
         datetime = Datetime(self.val["d_localDatetime"]).to_string()
-        return "%s%s" % (datetime, Tz.toHM(self.val["d_offset"]))
+        return f"{datetime}{Tz.toHM(self.val['d_offset'])}"
 
 
 class BslString:
@@ -849,35 +880,39 @@ class BslString:
     pretty printer for 'StringImp'.  See the documentation below to interpret
     the printout.
 
-        string = {
-          alloc = 0x804fdf0 <BloombergLP::g_newDeleteAllocatorSingleton>,
-          data = [size:11,capacity:19] "Hello there"
-        }
+        string = bsl::string [size:11,capacity:19] "Hello there"
 
-    Note that while common pretty printers for 'std::string' will only dump
-    the contents ("Hello there"), printing out the allocator
-    ('bslma::Allocator*') helps detect bugs by which a member of a type might
-    not be using the same allocator as the container.  The size and, to lesser
-    extent, capacity and use of small string optimization can help detect other
-    issues and do not add too much verbosity to the output.
+    Note that while common pretty printers for 'std::string' will only dump the
+    contents ("Hello there"), printing out the allocator ('bslma::Allocator*')
+    helps detect bugs when a member of a type might not be using the same
+    allocator as the container.  The size and, to lesser extent, capacity and
+    use of small string optimization can help detect other issues and do not
+    add too much verbosity to the output.  Allocator is displayed as a child
+    when allocator printing is enabled.
+
+        string = bsl::string [size:11,capacity:19] "Hello there" {
+            alloc = 0x4e3ce0 <BloombergLP::g_newDeleteAllocatorSingleton>
+        }
 
     See also: 'BslStringImp'
     """
 
     def __init__(self, val):
         self.val = val
-        self.members = []
-        if hasMember(val["d_allocator"], "d_resource"):
-            self.alloc = val["d_allocator"]["d_resource"]
-            self.members.extend(_createAllocatorList(self.alloc))
-        self.simp = val.cast(val.type.items()[0][1].type)
-        self.members.append(("data", self.simp))
+        self.members = {}
+
+        # First base is String_Imp
+        simp = val.cast(getBaseType(val, 0))
+        self.simp = BslStringImp(simp)
+
+        self.alloc = _allocatorResource(val["d_allocator"])
+        self.members.update(_allocatorDict(self.alloc))
 
     def to_string(self):
-        return "bsl::string"
+        return f"{simplifyTypeName(self.val.type)} {self.simp.to_string()}"
 
     def children(self):
-        return iter(self.members)
+        return iter(self.members.items())
 
 
 class StringRefData:
@@ -896,40 +931,50 @@ class StringRefData:
         else:
             buffer = self.val["_M_str"]
             length = self.val["_M_len"]
-        return '%s[length:%d] "%s"' % (
-            stringAddress(buffer),
-            length,
-            stringRep(buffer, length),
+        return (
+            f"{stringAddress(buffer)}[length:{length}]"
+            f' "{stringRep(buffer, length)}"'
         )
 
 
 class StringRef:
     """Printer for bslstl::StringRef
 
-    The format of the output is bslstl::StringRef = {data = [length:2] "ab"}
+    The format of the output is bslstl::StringRef [length:2] "ab"
     """
 
     def __init__(self, val):
         self.val = val
-        self.imp = val.cast(val.type.items()[0][1].type)
-        self.members = [("data", self.imp)]
+        self.imp = StringRefData(val.cast(getBaseType(val, 0)))
 
     def to_string(self):
-        return "bslstl::StringRef"
-
-    def children(self):
-        return iter(self.members)
+        return f"{simplifyTypeName(self.val.type)} {self.imp.to_string()}"
 
 
 class BslVector:
     """Printer for 'bsl::vector<T,bsl::allocator<T>>'
 
     The pretty printer for specializations of 'bsl::vector<>' is implemented
-    in terms of the 'VectorImp' pretty printer.
+    in terms of the 'VectorImp' pretty printer.  When allocator printing is
+    disabled, elements are direct children of the vector:
 
-        vector = {
-          alloc = 0x804fdf0 <BloombergLP::g_newDeleteAllocatorSingleton>,
-          data = [size:10,capacity:16] = {5, 5, 5, 5, 5, 5, 5, 5, 5, 5}
+        vector = bsl::vector<int> [size:3,capacity:4] {
+            [0] = 1
+            [1] = 2
+            [2] = 3
+        }
+
+    When allocator printing is enabled, the vector will have a child 'data'
+    that holds the 'bsl::vectorBase<T>' implementation, and the elements will
+    be children of the 'data' child:
+
+        vector = bsl::vector<int> [size:3,capacity:4] {
+            data = [size:3,capacity:4] {
+                [0] = 1
+                [1] = 2
+                [2] = 3
+            }
+            alloc = 0x4e3ce0 <BloombergLP::g_newDeleteAllocatorSingleton>
         }
 
     See also 'BslVectorImp'
@@ -937,18 +982,23 @@ class BslVector:
 
     def __init__(self, val):
         self.val = val
-        self.members = []
-        if hasMember(val["d_allocator"], "d_resource"):
-            self.alloc = val["d_allocator"]["d_resource"]
-            self.members.extend(_createAllocatorList(self.alloc))
-        self.vimp = val.cast(val.type.items()[0][1].type)
-        self.members.append(("data", self.vimp))
+        self.members = {}
+
+        vimp = val.cast(getBaseType(val, 0))
+        self.vimp = BslVectorImp(vimp)
+        self.members["data"] = vimp
+
+        self.alloc = _allocatorResource(val["d_allocator"])
+        self.members.update(_allocatorDict(self.alloc))
 
     def to_string(self):
-        return str(self.val.type)
+        return f"{simplifyTypeName(self.val.type)} {self.vimp.to_string()}"
 
     def children(self):
-        return iter(self.members)
+        if "alloc" in self.members:
+            return iter(self.members.items())
+        else:
+            return self.vimp.children()
 
 
 class BslMap:
@@ -970,29 +1020,23 @@ class BslMap:
         self.valueArg = val.type.template_argument(1)
 
         self.valueType = gdb.lookup_type(
-            "bsl::pair<%s, %s >" % (self.keyArg.const(), self.valueArg)
+            f"bsl::pair<{self.keyArg.const()}, {self.valueArg} >"
         )
         self.size = val["d_tree"]["d_numNodes"]
-        if hasMember(val["d_compAndAlloc"]["d_pool"]["d_pool"], "d_resource"):
-            self.alloc = val["d_compAndAlloc"]["d_pool"]["d_pool"][
-                "d_resource"
-            ]
+        self.alloc = _allocatorResource(val["d_compAndAlloc"]["d_pool"]["d_pool"])
         self.sentinel = val["d_tree"]["d_sentinel"]
 
     def to_string(self):
         # Locally handle the printing the allocator or not
-        return "map<%s,%s> [size:%d%s]" % (
-            self.keyArg,
-            self.valueArg,
-            self.size,
-            _optionalAllocator(self),
+        return (
+            f"{simplifyTypeName(self.val.type)} [size:{self.size}{_optionalAllocator(self.alloc)}]"
         )
 
     def display_hint(self):
         return "map"
 
     def children(self):
-        return keyValueIterator(
+        return KeyValueIterator(
             PairTupleIterator(BslRbTreeIterator(self.valueType, self.sentinel))
         )
 
@@ -1014,50 +1058,42 @@ class BslSet:
         self.val = val
         self.valueType = val.type.template_argument(0)
         self.nodeType = gdb.lookup_type(
-            "BloombergLP::bslstl::TreeNode<%s>" % self.valueType
+            f"BloombergLP::bslstl::TreeNode<{self.valueType}>"
         )
 
         self.size = val["d_tree"]["d_numNodes"]
-        if hasMember(val["d_compAndAlloc"]["d_pool"]["d_pool"], "d_resource"):
-            self.alloc = val["d_compAndAlloc"]["d_pool"]["d_pool"][
-                "d_resource"
-            ]
+        self.alloc = _allocatorResource(val["d_compAndAlloc"]["d_pool"]["d_pool"])
         self.sentinel = val["d_tree"]["d_sentinel"]
 
     def to_string(self):
         # Locally handle the printing the allocator or not
-        return "set<%s> [size:%d%s]" % (
-            self.valueType,
-            self.size,
-            _optionalAllocator(self),
+        return (
+            f"{simplifyTypeName(self.val.type)} [size:{self.size}{_optionalAllocator(self.alloc)}]"
         )
 
     def display_hint(self):
         return "array"
 
     def children(self):
-        return valueIterator(BslRbTreeIterator(self.valueType, self.sentinel))
+        return ValueIterator(BslRbTreeIterator(self.valueType, self.sentinel))
 
 
 class BslUnorderedMap:
     """Printer for a bsl::unordered_map<K,V>"""
 
     def __init__(self, val):
+        self.val = val
         self.impl = val["d_impl"]
         self.size = int(self.impl["d_size"])
         self.capacity = int(self.impl["d_capacity"])
-        if hasMember(self.impl["d_parameters"]["d_nodeFactory"]["d_pool"],
-                     "d_resource"
-        ):
-            self.alloc = self.impl["d_parameters"]["d_nodeFactory"]["d_pool"][
-                "d_resource"
-            ]
-
+        self.alloc = _allocatorResource(
+            self.impl["d_parameters"]["d_nodeFactory"]["d_pool"]
+        )
         self.keyArg = val.type.template_argument(0)
         self.valueArg = val.type.template_argument(1)
 
         self.valueType = gdb.lookup_type(
-            "bsl::pair<%s, %s >" % (self.keyArg.const(), self.valueArg)
+            f"bsl::pair<{self.keyArg.const()}, {self.valueArg} >"
         )
 
         anchor = self.impl["d_anchor"]
@@ -1065,20 +1101,16 @@ class BslUnorderedMap:
         self.listRoot = anchor["d_listRootAddress_p"]
 
     def to_string(self):
-        return "unordered_map<%s,%s> [size:%d,capacity:%d,buckets:%d%s]" % (
-            self.keyArg,
-            self.valueArg,
-            self.size,
-            self.capacity,
-            self.buckets,
-            _optionalAllocator(self),
+        return (
+            f"{simplifyTypeName(self.val.type)} [size:{self.size},capacity:{self.capacity},"
+            f"buckets:{self.buckets}{_optionalAllocator(self.alloc)}]"
         )
 
     def display_hint(self):
         return "map"
 
     def children(self):
-        return keyValueIterator(
+        return KeyValueIterator(
             PairTupleIterator(HashTableIterator(self.valueType, self.listRoot))
         )
 
@@ -1087,16 +1119,13 @@ class BslUnorderedSet:
     """Printer for a bsl::unordered_set<V>"""
 
     def __init__(self, val):
+        self.val = val
         self.impl = val["d_impl"]
         self.size = int(self.impl["d_size"])
         self.capacity = int(self.impl["d_capacity"])
-        if hasMember(self.impl["d_parameters"]["d_nodeFactory"]["d_pool"],
-                     "d_resource"
-        ):
-            self.alloc = self.impl["d_parameters"]["d_nodeFactory"]["d_pool"][
-                "d_resource"
-            ]
-
+        self.alloc = _allocatorResource(
+            self.impl["d_parameters"]["d_nodeFactory"]["d_pool"]
+        )
         self.valueType = val.type.template_argument(0)
 
         anchor = self.impl["d_anchor"]
@@ -1104,19 +1133,16 @@ class BslUnorderedSet:
         self.listRoot = anchor["d_listRootAddress_p"]
 
     def to_string(self):
-        return "unordered_set<%s> [size:%d,capacity:%d,buckets:%d%s]" % (
-            self.valueType,
-            self.size,
-            self.capacity,
-            self.buckets,
-            _optionalAllocator(self),
+        return (
+            f"{simplifyTypeName(self.val.type)} [size:{self.size},capacity:{self.capacity},"
+            f"buckets:{self.buckets}{_optionalAllocator(self.alloc)}]"
         )
 
     def display_hint(self):
         return "array"
 
     def children(self):
-        return valueIterator(HashTableIterator(self.valueType, self.listRoot))
+        return ValueIterator(HashTableIterator(self.valueType, self.listRoot))
 
 
 class BslPair:
@@ -1124,13 +1150,13 @@ class BslPair:
 
     def __init__(self, val):
         self.val = val
-        self.members = [("first", val["first"]), ("second", val["second"])]
+        self.members = {"first": val["first"], "second": val["second"]}
 
     def to_string(self):
-        return str(self.val.type)
+        return simplifyTypeName(self.val.type)
 
     def children(self):
-        return iter(self.members)
+        return iter(self.members.items())
 
 
 class BslAtomic:
@@ -1142,8 +1168,8 @@ class BslAtomic:
 
     Example outputs:
 
-        BloombergLP::bsls::AtomicInt = 64
-        BloombergLP::bsls::AtomicPointer<int> = 0x0
+        bsls::AtomicInt = 64
+        bsls::AtomicPointer<int> = 0x0
     """
 
     def __init__(self, val):
@@ -1155,7 +1181,7 @@ class BslAtomic:
         return int(self.value)
 
     def to_string(self):
-        return "%s = %s" % (self.val.type, self.value)
+        return f"{simplifyTypeName(self.val.type)} = {self.value}"
 
 
 class BslSharedPtr:
@@ -1164,9 +1190,13 @@ class BslSharedPtr:
     This pretty printer will display the shared/weak pointer reference count
     and the value of the pointed object.  The format of the output will be
     bsl::shared_ptr<type> [ref:n,weak:n] = {*d_ptr_p = ...} (and the same for
-    bsl::weak_ptr).  If the pointer is null, the data portion looks like
-    {d_ptr_p = 0x0} instead.
+    bsl::weak_ptr).  If the pointer is null, the output shows
+    bsl::shared_ptr<type> [ref:0,weak:0] = null with d_ptr_p = null in the
+    children view.
 
+    The printer handles various null and invalid pointer states gracefully,
+    including cases where the representation pointer is null or the data
+    pointer is inaccessible.
     """
 
     def __init__(self, val):
@@ -1174,6 +1204,8 @@ class BslSharedPtr:
         self.type = val.type.template_argument(0)
         ptr = val["d_ptr_p"]
         rep = val["d_rep_p"]
+
+        # Handle null representation pointer
         if rep == 0:
             self.shared = 0
             self.weak = 0
@@ -1184,16 +1216,28 @@ class BslSharedPtr:
             # adjusted weak count holds 2*count + X
             # where X == 1 if there are outstanding shared ptrs
             self.weak = BslAtomic(rep["d_adjustedWeakCount"]).to_int() // 2
-        if ptr == 0:
-            self.members = [("d_ptr_p", ptr)]
+
+        # Handle null data pointer
+        if ptr == 0 or ptr is None:
+            self.members = {"d_ptr_p": "null"}
+            self.is_null = True
         else:
-            self.members = [("*d_ptr_p", ptr.dereference())]
+            try:
+                self.members = {"*d_ptr_p": ptr.dereference()}
+                self.is_null = False
+            except gdb.error:
+                # Handle case where pointer is invalid/inaccessible
+                self.members = {"d_ptr_p": f"{ptr} (invalid)"}
+                self.is_null = True
 
     def to_string(self):
-        return "%s [ref:%d,weak:%d]" % (self.val.type, self.shared, self.weak)
+        return (
+            f"{simplifyTypeName(self.val.type)} [ref:{self.shared},weak:{self.weak}]"
+            f'{" [null]" if self.is_null else ""}'
+        )
 
     def children(self):
-        return iter(self.members)
+        return iter(self.members.items())
 
 
 class BslmaManagedPtr:
@@ -1212,30 +1256,37 @@ class BslmaManagedPtr:
         self.ptr = val["d_members"]["d_obj_p"]
         if self.ptr == 0:
             self.null = True
+            self.members = {"d_obj_p": "null"}
         else:
             self.null = False
             self.ptr = self.ptr.cast(self.type.pointer())
+            try:
+                self.members = {"*d_obj_p": self.ptr.dereference()}
+            except gdb.error:
+                # Handle case where pointer is invalid/inaccessible
+                self.members = {"d_obj_p": f"{self.ptr} (invalid)"}
 
     def to_string(self):
-        if self.null:
-            return "ManagedPtr<%s> [null]" % (self.type)
-        else:
-            return "ManagedPtr<%s> = %s" % (self.type, self.ptr.dereference())
+        return f'{simplifyTypeName(self.val.type)}{" [null]" if self.null else ""}'
+
+    def children(self):
+        return iter(self.members.items())
 
 
 class BdldfpDecimal64:
-    """Pretty prihter for 'bdldfp::Decimal64' type
+    """Pretty printer for 'bdldfp::Decimal64' type
 
     This pretty printer will print the scientific notation of the decimal.
     """
+
     SIGN_MASK = 0x8000000000000000
     SPECIAL_ENCODING_MASK = 0x6000000000000000
     INFINITY_MASK = 0x7800000000000000
-    NAN_MASK = 0x7c00000000000000
-    SMALL_COEFF_MASK = 0x0007ffffffffffff
-    LARGE_COEFF_MASK = 0x001fffffffffffff
+    NAN_MASK = 0x7C00000000000000
+    SMALL_COEFF_MASK = 0x0007FFFFFFFFFFFF
+    LARGE_COEFF_MASK = 0x001FFFFFFFFFFFFF
     LARGE_COEFF_HIGH_BIT = 0x0020000000000000
-    EXPONENT_MASK = 0x3ff
+    EXPONENT_MASK = 0x3FF
     EXPONENT_SHIFT_LARGE = 51
     EXPONENT_SHIFT_SMALL = 53
     DECIMAL_EXPONENT_BIAS = 398
@@ -1243,34 +1294,40 @@ class BdldfpDecimal64:
     def __init__(self, val):
         self.val = val
         self.type = val.type
-        self.members = [('d_value', val['d_value'])]
-        self.raw = val['d_value']['d_raw']
+        self.members = {"d_value": val["d_value"]}
+        self.raw = val["d_value"]["d_raw"]
 
         if (self.raw & BdldfpDecimal64.SIGN_MASK) == 0:
             self.sign = ""
         else:
             self.sign = "-"
 
-        self.is_nan = (
-            self.raw & BdldfpDecimal64.NAN_MASK) == BdldfpDecimal64.NAN_MASK
+        self.is_nan = (self.raw & BdldfpDecimal64.NAN_MASK) == BdldfpDecimal64.NAN_MASK
         self.is_inf = (
-            self.raw & BdldfpDecimal64.INFINITY_MASK) == BdldfpDecimal64.INFINITY_MASK
-        if (self.raw & BdldfpDecimal64.SPECIAL_ENCODING_MASK) == BdldfpDecimal64.SPECIAL_ENCODING_MASK:
+            self.raw & BdldfpDecimal64.INFINITY_MASK
+        ) == BdldfpDecimal64.INFINITY_MASK
+        if (
+            self.raw & BdldfpDecimal64.SPECIAL_ENCODING_MASK
+        ) == BdldfpDecimal64.SPECIAL_ENCODING_MASK:
             if self.is_inf:
                 self.significand = (
-                    self.raw & BdldfpDecimal64.SMALL_COEFF_MASK) | BdldfpDecimal64.LARGE_COEFF_HIGH_BIT
+                    self.raw & BdldfpDecimal64.SMALL_COEFF_MASK
+                ) | BdldfpDecimal64.LARGE_COEFF_HIGH_BIT
                 tmp = self.raw >> BdldfpDecimal64.EXPONENT_SHIFT_LARGE
                 self.exponent = tmp & BdldfpDecimal64.EXPONENT_MASK
             else:
                 self.significand = (
-                    self.raw & BdldfpDecimal64.SMALL_COEFF_MASK) | BdldfpDecimal64.LARGE_COEFF_HIGH_BIT
+                    self.raw & BdldfpDecimal64.SMALL_COEFF_MASK
+                ) | BdldfpDecimal64.LARGE_COEFF_HIGH_BIT
                 tmp = self.raw >> BdldfpDecimal64.EXPONENT_SHIFT_LARGE
                 self.exponent = (
-                    tmp & BdldfpDecimal64.EXPONENT_MASK) - BdldfpDecimal64.DECIMAL_EXPONENT_BIAS
+                    tmp & BdldfpDecimal64.EXPONENT_MASK
+                ) - BdldfpDecimal64.DECIMAL_EXPONENT_BIAS
         else:
             tmp = self.raw >> BdldfpDecimal64.EXPONENT_SHIFT_SMALL
-            self.exponent = (tmp & BdldfpDecimal64.EXPONENT_MASK) - \
-                BdldfpDecimal64.DECIMAL_EXPONENT_BIAS
+            self.exponent = (
+                tmp & BdldfpDecimal64.EXPONENT_MASK
+            ) - BdldfpDecimal64.DECIMAL_EXPONENT_BIAS
             self.significand = self.raw & BdldfpDecimal64.LARGE_COEFF_MASK
 
     def to_string(self):
@@ -1307,10 +1364,191 @@ class BdldfpDecimal64:
         return "{}{}.{}e{:+}".format(self.sign, digit, fraction, exponent)
 
     def children(self):
-        printMembers = gdb.parameter('print ria-members')
+        printMembers = gdb.parameter("print ria-members")
         if printMembers:
-            return iter(self.members)
+            return iter(self.members.items())
         return []
+
+
+class Variant:
+    """Pretty printer for 'bsl::variant<TYPES...>'
+
+    This pretty printer handles the variant by checking the active index
+    and displaying either the contained value at that index or indicating
+    if the variant is valueless by exception.
+
+    The output shows the active alternative type and its value.
+    """
+
+    def __init__(self, val):
+        self.val = val
+        self.members = {}
+
+        # Get the current active index
+        d_type = val["d_type"]
+
+        # Check if variant is valueless by exception (variant_npos is (size_t)-1)
+        variant_npos = (
+            (1 << 64) - 1 if gdb.lookup_type("size_t").sizeof == 8 else (1 << 32) - 1
+        )
+        if int(d_type) == variant_npos:
+            self.members["valueless_by_exception"] = True
+        else:
+            # Navigate the union structure directly to find the active alternative
+            try:
+                # Navigate through the union to find the active alternative
+                union_val = val["d_union"]
+                current_index = int(d_type)
+
+                # Navigate down the recursive union structure
+                # Each level decrements the index and goes to d_tail until index is 0
+                while current_index > 0:
+                    try:
+                        union_val = union_val["d_tail"]
+                        current_index -= 1
+                    except (gdb.error, AttributeError):
+                        # Can't access d_tail - corrupted state or invalid index
+                        self.members["error"] = (
+                            f"Cannot navigate to index {int(d_type)} -"
+                            " corrupted state or invalid index"
+                        )
+                        return
+
+                # At index 0, we should have the active alternative in d_head
+                try:
+                    # Check if d_head exists
+                    d_head = union_val["d_head"]
+
+                    # Get the type of the active alternative from the union's
+                    # first template argument
+                    union_type = union_val.type.strip_typedefs()
+                    active_type = union_type.template_argument(
+                        0
+                    )  # First template argument of Variant_Union
+
+                    # Get the stored value from d_head's buffer
+                    try:
+                        stored_value = (
+                            d_head["d_buffer"]["d_buffer"]
+                            .cast(active_type.pointer())
+                            .dereference()
+                        )
+                    except (gdb.error, AttributeError) as e:
+                        self.members["error"] = (
+                            f"Cannot access buffer at index {int(d_type)}: {str(e)}"
+                        )
+                        return
+
+                    self.members["index"] = d_type
+                    self.members["value"] = stored_value
+                    self.active_type = simplifyTypeName(active_type)
+
+                    if hasMember(val, "d_allocator"):
+                        self.alloc = _allocatorResource(val["d_allocator"])
+                        self.members.update(_allocatorDict(self.alloc))
+
+                except (gdb.error, AttributeError) as e:
+                    # Can't access d_head - corrupted state
+                    self.members["error"] = (
+                        f"Cannot access d_head at index {int(d_type)} -"
+                        f" corrupted state: {str(e)}"
+                    )
+
+            except (gdb.error, RuntimeError, AttributeError) as e:
+                self.members["error"] = f"Failed to extract value: {str(e)}"
+
+    def to_string(self):
+        typeName = simplifyTypeName(self.val.type)
+        # Check if valueless by exception
+        if "valueless_by_exception" in self.members:
+            return f"{typeName} [valueless_by_exception]"
+        elif "value" in self.members:
+            return f"{typeName} [{self.active_type}]"
+        elif "error" in self.members:
+            return f"{typeName} [error: {self.members['error']}]"
+
+        return typeName
+
+    def children(self):
+        return iter(self.members.items())
+
+
+class BdlbVariant:
+    """Pretty printer for 'bdlb::Variant<TYPES...>' and 'bdlb::VariantN<TYPES...>'
+
+    This pretty printer handles the bdlb variant by checking the active type index
+    and displaying either the contained value at that index or indicating
+    if the variant is unset.
+
+    The output shows the active alternative type and its (1-based) index and
+    value as children.
+
+    For example:
+        variant2 = bdlb::Variant2<int, bsl::string> [int] {
+            index = 1
+            value = 42
+        }
+        variant3 = bdlb::Variant3<int, double, bsl::string> [bsl::string] {
+            index = 3
+            value = bsl::string [size:11,capacity:19] "Hello there"
+        }
+        bdlb::Variant<int, bsl::string> [unset]
+    """
+
+    def __init__(self, val):
+        self.val = val
+        self.members = {}
+
+        # Get the current active type index
+        d_type = int(val["d_type"])
+
+        # Check if variant is unset (type index is 0)
+        if d_type == 0:
+            self.members["unset"] = True
+        else:
+            try:
+                # Get the union containing the values
+                d_value = val["d_value"]
+
+                # bdlb::Variant types are 1-indexed, so we need to access
+                # d_v{d_type}
+                value_field_name = f"d_v{d_type}"
+
+                # Access the ObjectBuffer for the active type
+                object_buffer = d_value[value_field_name]
+
+                # Get the type from the ObjectBuffer's template parameter
+                object_buffer_type = object_buffer.type.strip_typedefs()
+                stored_type = object_buffer_type.template_argument(0)
+
+                # Get the actual object from the ObjectBuffer
+                # # The ObjectBuffer contains the object in its internal buffer
+                # We need to cast the buffer address to the correct type
+                # pointer and dereference it
+                buffer_address = object_buffer.address.cast(stored_type.pointer())
+                stored_object = buffer_address.dereference()
+
+                self.members["index"] = d_type
+                self.members["value"] = stored_object
+                self.stored_type = simplifyTypeName(stored_type)
+
+            except (gdb.error, RuntimeError, AttributeError) as e:
+                self.members["error"] = f"Failed to extract value: {str(e)}"
+
+    def to_string(self):
+        typeName = simplifyTypeName(self.val.type)
+        # Check if unset
+        if "unset" in self.members:
+            return f"{typeName} [unset]"
+        elif "value" in self.members:
+            return f"{typeName} [{self.stored_type}]"
+        elif "error" in self.members:
+            return f"{typeName} [error: {self.members['error']}]"
+
+        return typeName
+
+    def children(self):
+        return iter(self.members.items())
 
 
 ###############################################################################
@@ -1333,16 +1571,14 @@ class BdeHelpCommand(gdb.Command):
         elif len(args) == 1 and args[0] in docs:
             print(docs[args[0]])
         else:
-            print(
-                """
+            print("""
     Usage: bde-help [element]
 
         Prints the documentation for 'element'.
 
         bde-help            -- show documentation for the whole module
         bde-help BslString  -- show documentation for the BslString printer
-"""
-            )
+""")
 
 
 class BslShowAllocatorParameter(gdb.Parameter):
@@ -1372,38 +1608,7 @@ class BslShowAllocatorParameter(gdb.Parameter):
             return "Do not print bslma::Allocator"
 
     def get_show_string(self, svalue):
-        return "Printing of bslma-allocator is %s." % (
-            "on" if svalue else "off"
-        )
-
-
-class BslEclipseModeParameter(gdb.Parameter):
-    """Control whether the containers are printed in raw mode.
-
-    Eclipse requires the raw mode for processing container key/value pairs
-    where as gdb prints the containers in a better format if key/values are
-    alternated as ('key', key) and ('value', value).
-    """
-
-    set_doc = "Controls printing containers in eclipse mode"
-    show_doc = "Print containers in eclipse mode"
-    value = False
-
-    def __init__(self):
-        super(BslEclipseModeParameter, self).__init__(
-            "print bsl-eclipse", gdb.COMMAND_DATA, gdb.PARAM_BOOLEAN
-        )
-
-    def get_set_string(self):
-        if self.value:
-            return "Printing BDE containers in eclipse mode"
-        else:
-            return "Not printing BDE containers in eclipse mode"
-
-    def get_show_string(self, svalue):
-        return "Printing containers in eclipse mode is %s." % (
-            "on" if svalue else "off"
-        )
+        return f"Printing of bslma-allocator is {'on' if svalue else 'off'}."
 
 
 class BslStringAddressParameter(gdb.Parameter):
@@ -1425,9 +1630,7 @@ class BslStringAddressParameter(gdb.Parameter):
             return "Not printing string buffer addresses"
 
     def get_show_string(self, svalue):
-        return "Printing string buffer addresses is %s." % (
-            "on" if svalue else "off"
-        )
+        return f"Printing string buffer addresses is {'on' if svalue else 'off'}."
 
 
 ###############################################################################
@@ -1447,6 +1650,7 @@ def init_globals():
         pp = gdb.printing.RegexpCollectionPrettyPrinter("BDE")
     except:
         pass
+
 
 def makeReferenceUnwrappingPrinter(cls):
 
@@ -1471,26 +1675,27 @@ def add_printer(name, re, klass):
 
 
 def build_pretty_printer():
-    add_printer(
-        "bteso_IPv4Address", "^BloombergLP::bteso_IPv4Address$", IPv4Address
-    )
-    add_printer(
-        "bdlb::NullableValue", "BloombergLP::bdlb::NullableValue<.*>", Nullable
-    )
-
+    add_printer("bteso_IPv4Address", "^BloombergLP::bteso_IPv4Address$", IPv4Address)
+    add_printer("bdlb::NullableValue", "BloombergLP::bdlb::NullableValue<.*>", Nullable)
+    add_printer("bsl::optional", "^bsl::optional<.*>$", Nullable)
+    add_printer("bsl::variant", "^bsl::variant<.*>$", Variant)
+    add_printer("bdlb::Variant", "^BloombergLP::bdlb::Variant<.*>$", BdlbVariant)
+    for i in range(2, 20):
+        add_printer(
+            f"bdlb::Variant{i}",
+            f"^BloombergLP::bdlb::Variant{i}<.*>$",
+            BdlbVariant,
+        )
+    add_printer("bdlb::VariantImp", "^BloombergLP::bdlb::VariantImp<.*>$", BdlbVariant)
     add_printer("bdlt::Date", "^BloombergLP::bdlt::Date$", Date)
     add_printer("bdlt::DateTz", "^BloombergLP::bdlt::DateTz$", DateTz)
     add_printer("bdlt::Datetime", "^BloombergLP::bdlt::Datetime$", Datetime)
-    add_printer(
-        "bdlt::DatetimeTz", "^BloombergLP::bdlt::DatetimeTz$", DatetimeTz
-    )
+    add_printer("bdlt::DatetimeTz", "^BloombergLP::bdlt::DatetimeTz$", DatetimeTz)
     add_printer("bdlt::Time", "^BloombergLP::bdlt::Time$", Time)
     add_printer("bdlt::TimeTz", "^BloombergLP::bdlt::TimeTz$", TimeTz)
 
     add_printer("string", "^bsl::basic_string<char,.*>$", BslString)
-    add_printer(
-        "(internal)StringImp", "^bsl::String_Imp<char,.*>$", BslStringImp
-    )
+    add_printer("(internal)StringImp", "^bsl::String_Imp<char,.*>$", BslStringImp)
     add_printer(
         "bslstl::StringRef",
         "^BloombergLP::bslstl::StringRefImp<char>$",
@@ -1525,7 +1730,8 @@ def build_pretty_printer():
     add_printer(
         "bdldfp::Decimal64",
         "^BloombergLP::bdldfp::Decimal_Type64$",
-        BdldfpDecimal64)
+        BdldfpDecimal64,
+    )
 
     # add_printer('catchall', '.*', CatchAll)
     global pp
@@ -1537,7 +1743,6 @@ def reload():
     init_globals()
     BslShowAllocatorParameter()
     BdeHelpCommand()
-    BslEclipseModeParameter()
     BslStringAddressParameter()
 
     ## Remove the pretty printer if it exists
@@ -1549,9 +1754,7 @@ def reload():
             break
 
     ## Create the new pretty printer
-    gdb.printing.register_pretty_printer(
-        gdb.current_objfile(), build_pretty_printer()
-    )
+    gdb.printing.register_pretty_printer(gdb.current_objfile(), build_pretty_printer())
 
 
 reload()
