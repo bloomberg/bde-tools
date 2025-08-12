@@ -363,6 +363,23 @@ class BslVectorImp:
         return ValueIterator(VectorContentsIterator(self.begin, self.end))
 
 
+def getNodeValue(node, type):
+    # clang optimizes out TreeNode and BidirectionalNode even in debug builds.
+    # Try to work around it by raw memory access.
+    derivedPtr = node + 1
+
+    # align pointer to self.valueType alignment
+    off = int(str(derivedPtr), 16) & (type.alignof - 1)
+    if off != 0:
+        derivedPtr = (
+            derivedPtr.cast(gdb.lookup_type("char").pointer()) + type.alignof - off
+        )
+
+    derivedPtr = derivedPtr.reinterpret_cast(type.pointer())
+
+    return derivedPtr.dereference()
+
+
 class BslRbTreeIterator:
     """Helper class to produce iterations over a RB-tree
 
@@ -374,7 +391,17 @@ class BslRbTreeIterator:
     def __init__(self, type, sentinel):
         self.sentinel = sentinel
         self.current = sentinel["d_right_p"]
-        self.nodeType = gdb.lookup_type(f"BloombergLP::bslstl::TreeNode<{type}>")
+        try:
+            self.nodeType = gdb.lookup_type(f"BloombergLP::bslstl::TreeNode<{type}>")
+        except gdb.error:
+            self.valueType = type
+
+    def value(self):
+        if hasattr(self, "nodeType"):
+            treeNode = self.current.dereference().cast(self.nodeType)
+            return treeNode["d_value"]
+        else:
+            return getNodeValue(self.current, self.valueType)
 
     def __iter__(self):
         return self
@@ -382,9 +409,9 @@ class BslRbTreeIterator:
     def __next__(self):
         if self.current == self.sentinel.address:
             raise StopIteration
-        treeNode = self.current.dereference().cast(self.nodeType)
+        value = self.value()
         self.current = self.nextNode(self.current)
-        return treeNode["d_value"]
+        return value
 
     next = __next__
 
@@ -423,10 +450,20 @@ class HashTableIterator:
     """Helper class to produce iterations over a hash table"""
 
     def __init__(self, type, sentinel):
-        self.nodeType = gdb.lookup_type(
-            f"BloombergLP::bslalg::BidirectionalNode<{type}>"
-        )
-        self.current = sentinel.cast(self.nodeType.pointer())
+        self.current = sentinel
+        try:
+            self.nodeType = gdb.lookup_type(
+                f"BloombergLP::bslalg::BidirectionalNode<{type}>"
+            )
+        except gdb.error:
+            self.valueType = type
+
+    def value(self):
+        if hasattr(self, "nodeType"):
+            node = self.current.dereference().cast(self.nodeType)
+            return node["d_value"]
+        else:
+            return getNodeValue(self.current, self.valueType)
 
     def __iter__(self):
         return self
@@ -434,8 +471,8 @@ class HashTableIterator:
     def __next__(self):
         if self.current == 0:
             raise StopIteration
-        value = self.current.dereference()["d_value"]
-        self.current = self.current["d_next_p"].cast(self.nodeType.pointer())
+        value = self.value()
+        self.current = self.current["d_next_p"]
         return value
 
     next = __next__
@@ -1057,9 +1094,6 @@ class BslSet:
     def __init__(self, val):
         self.val = val
         self.valueType = val.type.template_argument(0)
-        self.nodeType = gdb.lookup_type(
-            f"BloombergLP::bslstl::TreeNode<{self.valueType}>"
-        )
 
         self.size = val["d_tree"]["d_numNodes"]
         self.alloc = _allocatorResource(val["d_compAndAlloc"]["d_pool"]["d_pool"])
@@ -1364,9 +1398,12 @@ class BdldfpDecimal64:
         return "{}{}.{}e{:+}".format(self.sign, digit, fraction, exponent)
 
     def children(self):
-        printMembers = gdb.parameter("print ria-members")
-        if printMembers:
-            return iter(self.members.items())
+        try:
+            printMembers = gdb.parameter("print ria-members")
+            if printMembers:
+                return iter(self.members.items())
+        except:
+            pass
         return []
 
 
