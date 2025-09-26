@@ -3,6 +3,7 @@
         "ms-vscode.cpptools-extension-pack",
         "llvm-vs-code-extensions.vscode-clangd",
         "xaver.clang-format",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "GitHub.vscode-pull-request-github"
     ]
 }
