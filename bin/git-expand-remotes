@@ -47,25 +47,53 @@ manual_expand_url() {
     local url="$1"
     local expanded="$url"
 
-    # Get all insteadOf configurations
-    while IFS= read -r line; do
-        if [[ -n "$line" ]]; then
-            # Parse the config line: url.SHORTCUT.insteadof ACTUAL_URL
-            local config_key="${line%% *}"
-            local actual_url="${line#* }"
+    # Store all matching rules with their prefix lengths for sorting
+    local -a matching_rules=()
 
-            # Extract the shortcut from the config key
-            # url.bbgithub:.insteadof -> bbgithub:
-            local shortcut="${config_key#url.}"
-            shortcut="${shortcut%.insteadof}"
+        # Get all insteadOf configurations and find matching ones
+        while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+                # Parse the config line - format is either:
+                # url.FORM1.insteadof FORM2   or   url.FORM2.insteadof FORM1
+                local config_key="${line%% *}"
+                local config_value="${line#* }"
 
-            # If the URL starts with the shortcut, replace it with the actual URL
-            if [[ "$expanded" == "$shortcut"* ]]; then
-                expanded="${actual_url}${expanded#$shortcut}"
+                # Extract the form from the config key (remove url. prefix and .insteadof suffix)
+                local key_form="${config_key#url.}"
+                key_form="${key_form%.insteadof}"
+
+                # Determine which is shorter (the shortcut) and which is longer (the expanded form)
+                local short_form expanded_form
+                if [[ ${#key_form} -lt ${#config_value} ]]; then
+                    # Key form is shorter, so it's the shortcut
+                    short_form="$key_form"
+                    expanded_form="$config_value"
+                else
+                    # Config value is shorter, so it's the shortcut
+                    short_form="$config_value"
+                    expanded_form="$key_form"
+                fi
+
+                # If the URL starts with the short form, we can expand it
+                if [[ "$expanded" == "$short_form"* ]]; then
+                    # Store: "short_length|short_form|expanded_form"
+                    matching_rules+=("${#short_form}|$short_form|$expanded_form")
+                fi
+            fi
+        done < <(get_insteadof_configs)    # Sort matching rules by short URL length (longest first) to match Git's behavior
+    # Apply the rule with the longest matching prefix first
+    if [[ ${#matching_rules[@]} -gt 0 ]]; then
+        local sorted_rules
+        sorted_rules=$(printf '%s\n' "${matching_rules[@]}" | sort -t'|' -k1,1nr)
+
+        # Apply the first (longest matching) rule
+        while IFS='|' read -r length short_form expanded_form; do
+            if [[ "$expanded" == "$short_form"* ]]; then
+                expanded="${expanded_form}${expanded#$short_form}"
                 break
             fi
-        fi
-    done < <(get_insteadof_configs)
+        done <<< "$sorted_rules"
+    fi
 
     echo "$expanded"
 }
