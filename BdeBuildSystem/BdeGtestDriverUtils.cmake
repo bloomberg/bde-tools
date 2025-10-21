@@ -84,12 +84,25 @@ function(bbs_add_component_gtests target)
             continue()
         endif()
 
-        # Stripping last 2 extentions from the test source (.g.cpp)
+        # Stripping last 2 extensions from the test source (.g.cpp)
         get_filename_component(gtest_target_name ${gtest_src} NAME_WLE)
         get_filename_component(gtest_target_name ${gtest_target_name} NAME_WLE)
         add_executable(${gtest_target_name}.t EXCLUDE_FROM_ALL ${gtest_src})
 
-        # Explicitely adding flags here because we do not want those flags to be
+        set_target_properties(
+            ${gtest_target_name}.t
+            PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+        add_custom_command(TARGET ${gtest_target_name}.t
+            POST_BUILD
+            COMMAND
+            ${CMAKE_COMMAND} -E create_hardlink
+            "$<TARGET_FILE:${gtest_target_name}.t>"
+            "$<TARGET_FILE_DIR:${gtest_target_name}.t>/${gtest_target_name}${CMAKE_EXECUTABLE_SUFFIX}"
+        )
+
+
+        # Explicitly adding flags here because we do not want those flags to be
         # PUBLIC for standalone libraries.
         bbs_add_target_bde_flags(${gtest_target_name}.t PRIVATE)
         bbs_add_target_thread_flags(${gtest_target_name}.t PRIVATE)
