@@ -148,11 +148,11 @@ function(bbs_import_target_dependencies target)
 endfunction()
 
 #[[.rst:
-.. command:: bbs_add_dynamic_dependency
+.. command:: bbs_add_target_dynamic_dependency
 
 Add a dependency not listed in the .dep file.
 #]]
-function(bbs_add_dynamic_dependency_target target)
+function(bbs_add_target_dynamic_dependency target)
     foreach(dep ${ARGN}) 
         target_link_libraries(${target} PUBLIC ${dep})
         bbs_import_target_dependencies(${target} ${dep})
