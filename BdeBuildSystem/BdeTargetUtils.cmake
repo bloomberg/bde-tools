@@ -132,7 +132,6 @@ endfunction()
 
   Import dependencies of the target
 #]]
-
 function(bbs_import_target_dependencies target)
     set(_deferred_deps) # empty list
     foreach(dep ${ARGN})
@@ -146,7 +145,18 @@ function(bbs_import_target_dependencies target)
         cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL _bbs_defer_target_import [[${target}]] ${_deferred_deps})
         ")
     endif()
+endfunction()
 
+#[[.rst:
+.. command:: bbs_add_dynamic_dependency
+
+Add a dependency not listed in the .dep file.
+#]]
+function(bbs_add_dynamic_dependency_target target)
+    foreach(dep ${ARGN}) 
+        target_link_libraries(${target} PUBLIC ${dep})
+        bbs_import_target_dependencies(${target} ${dep})
+    endforeach()
 endfunction()
 
 #[[.rst:
