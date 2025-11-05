@@ -1,3 +1,5 @@
+[![DPKG](https://badges.dev.bloomberg.com/live/template/unstable:bde-tools/%7B%7Bdpkg_builds_unstable.bde-tools%7D%7D)](https://dpkg.dx.bloomberg.com/sources/bde-tools?source-details-tab=distributions)
+
 # BDE Tools
 
 This repository contains a collection of tools to help with the development and
