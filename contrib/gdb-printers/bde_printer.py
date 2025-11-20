@@ -71,6 +71,7 @@ module:
 #   documented below and does not reflect the layout of the C++ types that are
 #   being printed.
 
+import enum
 import re
 import string
 import sys
@@ -203,10 +204,10 @@ def simplifyTypeName(typeName):
     typeName = replace_template(typeName, r"(std|bsl)::basic_string(_view)?<char", r"\1::string\2")
     typeName = replace_template(typeName, r"(std|bsl)::basic_string(_view)?<wchar_t", r"\1::wstring\2")
     typeName = replace_template(
-        typeName, r"bslstl::StringRef<char", "bslstl::StringRef"
+        typeName, r"bslstl::StringRef(Imp)?<char", "bslstl::StringRef"
     )
     typeName = replace_template(
-        typeName, r"bslstl::StringRef<wchar_t", "bslstl::StringRefWide"
+        typeName, r"bslstl::StringRef(Imp)?<wchar_t", "bslstl::StringRefWide"
     )
     typeName = re.sub(r",?\s+>", ">", typeName)
     return typeName
@@ -508,7 +509,7 @@ class KeyValueIterator:
     def __next__(self):
         val = None
         if self.count % 2 == 0:
-            self.item = self.iter.next()
+            self.item = next(self.iter)
             val = self.item[0]
         else:
             val = self.item[1]
@@ -1588,6 +1589,284 @@ class BdlbVariant:
         return iter(self.members.items())
 
 
+def _make_datum_array_ref_printer(type_name, is_mutable):
+    """Factory to create array ref printer classes"""
+
+    class DatumArrayRefPrinter:
+        def __init__(self, val):
+            self.val = val
+            self.type_name = type_name
+            self.data_ptr = val["d_data_p"]
+            if is_mutable:
+                self.length = int(val["d_length_p"].dereference())
+                self.capacity = int(val["d_capacity"])
+            else:
+                self.length = int(val["d_length"])
+                self.capacity = None
+
+        def to_string(self):
+            capacityStr = ""
+            if self.capacity is not None:
+                capacityStr = f", capacity:{self.capacity}"
+            return f"{self.type_name} [size:{self.length}{capacityStr}]"
+
+        def display_hint(self):
+            return "array"
+
+        def children(self):
+            items = []
+            try:
+                for i in range(self.length):
+                    elem = (self.data_ptr + i).dereference()
+                    items.append((str(i), elem))
+            except:
+                pass
+            return iter(items)
+
+    return DatumArrayRefPrinter
+
+
+def _make_datum_map_ref_printer(type_name, is_mutable, key_field):
+    """Factory to create map ref printer classes"""
+
+    class DatumMapRefPrinter:
+        def __init__(self, val):
+            self.val = val
+            self.type_name = type_name
+            self.data_ptr = val["d_data_p"]
+            if is_mutable:
+                self.size = int(val["d_size_p"].dereference())
+            else:
+                self.size = int(val["d_size"])
+
+        def to_string(self):
+            return f"{self.type_name} [size:{self.size}]"
+
+        def display_hint(self):
+            return "map"
+
+        def children(self):
+            items = []
+            try:
+                for i in range(self.size):
+                    entry = (self.data_ptr + i).dereference()
+                    key = entry[key_field]
+                    value = entry["d_value"]
+                    items.append((key, value))
+            except:
+                pass
+            return KeyValueIterator(iter(items))
+
+    return DatumMapRefPrinter
+
+
+# Create the six printer classes using the factories
+DatumArrayRef = _make_datum_array_ref_printer(
+    "bdld::DatumArrayRef", is_mutable=False
+)
+DatumMutableArrayRef = _make_datum_array_ref_printer(
+    "bdld::DatumMutableArrayRef", is_mutable=True
+)
+DatumMapRef = _make_datum_map_ref_printer(
+    "bdld::DatumMapRef", is_mutable=False, key_field="d_key_p"
+)
+DatumMutableMapRef = _make_datum_map_ref_printer(
+    "bdld::DatumMutableMapRef", is_mutable=True, key_field="d_key_p"
+)
+DatumIntMapRef = _make_datum_map_ref_printer(
+    "bdld::DatumIntMapRef", is_mutable=False, key_field="d_key"
+)
+DatumMutableIntMapRef = _make_datum_map_ref_printer(
+    "bdld::DatumMutableIntMapRef", is_mutable=True, key_field="d_key"
+)
+
+
+class DatumType(enum.Enum):
+    """Enum for bdld::Datum type values"""
+    NIL = 0
+    INTEGER = 1
+    DOUBLE = 2
+    STRING = 3
+    BOOLEAN = 4
+    ERROR = 5
+    DATE = 6
+    TIME = 7
+    DATETIME = 8
+    DATETIME_INTERVAL = 9
+    INTEGER64 = 10
+    USERDEFINED = 11
+    ARRAY = 12
+    MAP = 13
+    BINARY = 14
+    DECIMAL64 = 15
+    INT_MAP = 16
+
+    @staticmethod
+    def get_name(type_value):
+        """Return the name for a given type value"""
+        try:
+            return DatumType(type_value).name
+        except ValueError:
+            return f"UNKNOWN({type_value})"
+
+
+class BdldDatum:
+    """Pretty printer for 'bdld::Datum'
+
+    This pretty printer handles the discriminated union type that can hold
+    various types of values including scalars, strings, arrays, maps, and
+    user-defined types.
+
+    The output shows the type and value of the datum:
+
+        datum = [NIL]
+        datum = [INTEGER] 42
+        datum = [DOUBLE] 3.14
+        datum = [STRING] "hello"
+        datum = [BOOLEAN] true
+        datum = [ARRAY] [size:3]
+        datum = [MAP] [size:2]
+        datum = [ERROR] error(100)
+        datum = [USERDEFINED] (type=5, data=0x...)
+
+    For aggregate types (arrays and maps), children are displayed showing
+    the contained elements.
+    """
+
+    def __init__(self, val):
+        self.val = val
+        self.datum_type = None
+        self.value_str = None
+
+        # Empty printer for scalar types (Null Object pattern)
+        class _EmptyPrinter:
+            def children(self):
+                return iter([])
+            def display_hint(self):
+                return None
+
+        self.child_printer = _EmptyPrinter()
+
+        try:
+            # Lambda to call Datum methods via GDB
+            call_method = lambda method: gdb.parse_and_eval(
+                f"((BloombergLP::bdld::Datum*)0x{int(val.address):x})->{method}()"
+            )
+
+            # Call the type() method via GDB
+            self.datum_type = int(call_method("type"))
+
+            # Extract value based on type using accessor methods
+            if self.datum_type == DatumType.NIL.value:
+                self.value_str = None
+            elif self.datum_type == DatumType.INTEGER.value:
+                int_val = call_method("theInteger")
+                self.value_str = str(int(int_val))
+            elif self.datum_type == DatumType.DOUBLE.value:
+                double_val = call_method("theDouble")
+                self.value_str = str(float(double_val))
+            elif self.datum_type == DatumType.STRING.value:
+                str_ref = call_method("theString")
+                self.value_str = str(str_ref)
+            elif self.datum_type == DatumType.BOOLEAN.value:
+                bool_val = call_method("theBoolean")
+                self.value_str = "true" if bool_val else "false"
+            elif self.datum_type == DatumType.ERROR.value:
+                error = call_method("theError")
+                code = int(error["d_code"])
+                msg_ref = error["d_message"]
+                msg_str = f", {str(msg_ref)}" if msg_ref["d_length"] > 0 else ""
+                self.value_str = f"error({code}{msg_str})"
+            elif self.datum_type == DatumType.DATE.value:
+                date_val = call_method("theDate")
+                self.value_str = str(date_val)
+            elif self.datum_type == DatumType.TIME.value:
+                time_val = call_method("theTime")
+                self.value_str = str(time_val)
+            elif self.datum_type == DatumType.DATETIME.value:
+                datetime_val = call_method("theDatetime")
+                self.value_str = str(datetime_val)
+            elif self.datum_type == DatumType.DATETIME_INTERVAL.value:
+                interval_val = call_method("theDatetimeInterval")
+                self.value_str = str(interval_val)
+            elif self.datum_type == DatumType.INTEGER64.value:
+                int64_val = call_method("theInteger64")
+                self.value_str = str(int(int64_val))
+            elif self.datum_type == DatumType.USERDEFINED.value:
+                udt = call_method("theUdt")
+                udt_type = int(udt["d_type"])
+                udt_data = udt["d_data_p"]
+                self.value_str = f"(type={udt_type}, data={udt_data})"
+            elif self.datum_type == DatumType.ARRAY.value:
+                array_ref = call_method("theArray")
+                self.child_printer = DatumArrayRef(array_ref)
+                self.value_str = f"[size:{self.child_printer.length}]"
+            elif self.datum_type == DatumType.MAP.value:
+                map_ref = call_method("theMap")
+                self.child_printer = DatumMapRef(map_ref)
+                self.value_str = f"[size:{self.child_printer.size}]"
+            elif self.datum_type == DatumType.BINARY.value:
+                binary_ref = call_method("theBinary")
+                size = int(binary_ref["d_size"])
+                data = binary_ref["d_data_p"]
+                self.value_str = f"(size={size}, data={data})"
+            elif self.datum_type == DatumType.DECIMAL64.value:
+                decimal_val = call_method("theDecimal64")
+                self.value_str = str(decimal_val)
+            elif self.datum_type == DatumType.INT_MAP.value:
+                intmap_ref = call_method("theIntMap")
+                self.child_printer = DatumIntMapRef(intmap_ref)
+                self.value_str = f"[size:{self.child_printer.size}]"
+            else:
+                self.value_str = f"<unknown type {self.datum_type}>"
+        except gdb.error as e:
+            self.datum_type = None
+            self.value_str = f"<error: {e}>"
+
+    def to_string(self):
+        if self.datum_type is None:
+            return f"bdld::Datum {self.value_str}"
+
+        return f"bdld::Datum [{DatumType.get_name(self.datum_type)}] {self.value_str}"
+
+    def children(self):
+        return self.child_printer.children()
+
+    def display_hint(self):
+        return self.child_printer.display_hint()
+
+
+class BdldManagedDatum:
+    """Pretty printer for 'bdld::ManagedDatum'
+
+    This pretty printer handles the smart-pointer-like wrapper for Datum.
+    ManagedDatum contains a Datum member (d_data) and manages its lifetime.
+
+    The output shows the underlying Datum value by delegating to the
+    BdldDatum printer:
+
+        managedDatum = bdld::ManagedDatum [INTEGER] 42
+        managedDatum = bdld::ManagedDatum [MAP] [size:2] = {...}
+
+    The underlying Datum is available as a child for expanded viewing.
+    """
+
+    def __init__(self, val):
+        self.val = val
+        self.datum = val["d_data"]
+        self.datum_printer = BdldDatum(self.datum)
+
+    def to_string(self):
+        datum_str = self.datum_printer.to_string()
+        return datum_str.replace("bdld::Datum", "bdld::ManagedDatum", 1)
+
+    def children(self):
+        return self.datum_printer.children()
+
+    def display_hint(self):
+        return self.datum_printer.display_hint()
+
+
 ###############################################################################
 ##  Commands and functions
 ###############################################################################
@@ -1768,6 +2047,46 @@ def build_pretty_printer():
         "bdldfp::Decimal64",
         "^BloombergLP::bdldfp::Decimal_Type64$",
         BdldfpDecimal64,
+    )
+    add_printer(
+        "bdld::Datum",
+        "^BloombergLP::bdld::Datum$",
+        BdldDatum,
+    )
+    add_printer(
+        "bdld::ManagedDatum",
+        "^BloombergLP::bdld::ManagedDatum$",
+        BdldManagedDatum,
+    )
+    add_printer(
+        "bdld::DatumArrayRef",
+        "^BloombergLP::bdld::DatumArrayRef$",
+        DatumArrayRef,
+    )
+    add_printer(
+        "bdld::DatumMutableArrayRef",
+        "^BloombergLP::bdld::DatumMutableArrayRef$",
+        DatumMutableArrayRef,
+    )
+    add_printer(
+        "bdld::DatumMapRef",
+        "^BloombergLP::bdld::DatumMapRef$",
+        DatumMapRef,
+    )
+    add_printer(
+        "bdld::DatumMutableMapRef",
+        "^BloombergLP::bdld::DatumMutableMapRef$",
+        DatumMutableMapRef,
+    )
+    add_printer(
+        "bdld::DatumIntMapRef",
+        "^BloombergLP::bdld::DatumIntMapRef$",
+        DatumIntMapRef,
+    )
+    add_printer(
+        "bdld::DatumMutableIntMapRef",
+        "^BloombergLP::bdld::DatumMutableIntMapRef$",
+        DatumMutableIntMapRef,
     )
 
     # add_printer('catchall', '.*', CatchAll)
