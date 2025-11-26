@@ -234,6 +234,7 @@ class Platform:
     MsvcVersion = collections.namedtuple("MsvcVersion", ["year", "version"])
 
     msvcVersionMap = {
+        "msvc-2026": MsvcVersion(2026, 18),
         "msvc-2022": MsvcVersion(2022, 17),
         "msvc-2019": MsvcVersion(2019, 16),
         "msvc-2017": MsvcVersion(2017, 15),
