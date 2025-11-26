@@ -18,8 +18,7 @@ Supported Platforms
    "Darwin", "clang 5.x+"
    "Windows", "Visual Studio 2017+"
    "Solaris", "Sun Studio 12+, gcc 5+"
-   "AIX", "Xlc 10+, gcc 5+"
-   
+
 Required Tools
 --------------
 

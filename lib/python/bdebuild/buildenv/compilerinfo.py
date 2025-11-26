@@ -276,86 +276,28 @@ def detect_installed_compilers(uplid):
                                    "c_name":    "clang-16",
                                    "cxx_name":  "clang++-16",
                                    "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-18",
+                                   "cxx_name":  "clang++-18",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-20",
+                                   "cxx_name":  "clang++-20",
+                                   "toolchain": "clang-default"
+                               },
+                               {
+                                   "type":      "clang",
+                                   "c_name":    "clang-21",
+                                   "cxx_name":  "clang++-21",
+                                   "toolchain": "clang-default"
                                }
                             ]
                           },
                           { "uplid": "unix-sunos-",
-                            "compilers": [
-                               {
-                                   "type":      "gcc",
-                                   "c_name":    "gcc",
-                                   "cxx_name":  "g++",
-                                   "toolchain": "gcc-default"
-                               },
-                               {
-                                   "type":      "gcc",
-                                   "c_name":    "gcc-9",
-                                   "cxx_name":  "g++-9",
-                                   "toolchain": "gcc-default"
-                               },
-                               {
-                                   "type":      "gcc",
-                                   "c_name":    "gcc-10",
-                                   "cxx_name":  "g++-10",
-                                   "toolchain": "gcc-default"
-                               },
-                               {
-                                   "type":      "gcc",
-                                   "c_name":    "gcc-11",
-                                   "cxx_name":  "g++-11",
-                                   "toolchain": "gcc-default"
-                               },
-                               {
-                                   "type":      "gcc",
-                                   "c_name":    "gcc-12",
-                                   "cxx_name":  "g++-12",
-                                   "toolchain": "gcc-default"
-                               },
-                               {
-                                   "type":      "gcc",
-                                   "c_name":    "gcc-13",
-                                   "cxx_name":  "g++-13",
-                                   "toolchain": "gcc-default"
-                               },
-                               {
-                                   "type":      "clang",
-                                   "c_name":    "clang",
-                                   "cxx_name":  "clang++",
-                                   "toolchain": "clang-default"
-                               },
-                               {
-                                   "type":      "clang",
-                                   "c_name":    "clang-11",
-                                   "cxx_name":  "clang++-11",
-                                   "toolchain": "clang-default"
-                               },
-                               {
-                                   "type":      "clang",
-                                   "c_name":    "clang-12",
-                                   "cxx_name":  "clang++-12",
-                                   "toolchain": "clang-default"
-                               },
-                               {
-                                   "type":      "clang",
-                                   "c_name":    "clang-13",
-                                   "cxx_name":  "clang++-13",
-                                   "toolchain": "clang-default"
-                               },
-                               {
-                                   "type":      "clang",
-                                   "c_name":    "clang-14",
-                                   "cxx_name":  "clang++-14",
-                                   "toolchain": "clang-default"
-                               },
-                               {
-                                   "type":      "clang",
-                                   "c_name":    "clang-15",
-                                   "cxx_name":  "clang++-15",
-                                   "toolchain": "clang-default"
-                               }
-                            ]
-                          },
-                          { "uplid": "unix-aix-",
                             "compilers": [
                                {
                                    "type":      "gcc",

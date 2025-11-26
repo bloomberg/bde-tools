@@ -52,7 +52,6 @@ Valid OS Names
 
    "linux", "Linux/Linux container (including WSL)"
    "darwin", "MacOS X"
-   "aix", "IBM AIX OS"
    "sunos", "Sun Solaris OS"
    "windows_nt", "Microsoft Windows OS"
 

@@ -72,9 +72,6 @@ class _Worker(threading.Thread):
         if platform.find("sun", 0) != -1:
             return True
 
-        if platform.find("aix", 0) != -1:
-            return True
-
         return False
 
     def _get_full_test_run_cmd(self):

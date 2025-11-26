@@ -30,7 +30,15 @@ endmacro()
 function(bbs_add_target_thread_flags target scope)
     if (NOT BDE_BUILD_TARGET_NO_MT)
         # add OS specific compilation definitions for multithreaded code
-        if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            target_compile_definitions(${target}
+                ${scope}
+                    _POSIX_PTHREAD_SEMANTICS
+                    _REENTRANT)
+            target_compile_options(${target}
+                ${scope}
+                    -pthread)
+        elseif(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
             target_compile_definitions(${target}
                 ${scope}
                     _POSIX_PTHREAD_SEMANTICS
@@ -45,30 +53,6 @@ function(bbs_add_target_thread_flags target scope)
                     ${scope}
                         -pthread)
             endif()
-        elseif(CMAKE_SYSTEM_NAME STREQUAL "AIX")
-            target_compile_definitions(${target}
-                ${scope}
-                    _POSIX_PTHREAD_SEMANTICS
-                    _REENTRANT
-                    _THREAD_SAFE
-                    __VACPP_MULTI__)
-            if (CMAKE_CXX_COMPILER_ID STREQUAL "XL")
-                target_compile_options(${target}
-                    ${scope}
-                        -qthreaded)
-            elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-                target_compile_options(${target}
-                    ${scope}
-                        -pthread)
-            endif()
-        elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-            target_compile_definitions(${target}
-                ${scope}
-                    _POSIX_PTHREAD_SEMANTICS
-                    _REENTRANT)
-            target_compile_options(${target}
-                ${scope}
-                    -pthread)
         endif()
     endif()
 endfunction()

@@ -14,10 +14,6 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain64.cmake")
 endif()
 
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "AIX")
-    include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain64.cmake")
-endif()
-
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
     include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain64.cmake")
 endif()

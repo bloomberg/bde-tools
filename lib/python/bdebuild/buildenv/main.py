@@ -34,7 +34,6 @@ def program():
         "win32",
         "cygwin",
         "linux",
-        "aix",
         "sunos",
         "darwin",
         "freebsd",
