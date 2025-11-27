@@ -1,8 +1,16 @@
-bde-tools (4.31.0.0) unstable; urgency=low
+bde-tools (4.32.0.0) unstable; urgency=low
 
+  * fd3806c Datum pretty printer (#404)
+  * 1ce83d2 Add DPKG badge to README (#406)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 26 Nov 2025 14:39:12 +0000
+
+bde-tools (4.31.0.0) git; urgency=low
+
+  * e073851 Changelog for version 4.31.0.0
   * 5631a62 Put gtest binaries to tests directory (#403)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Mon, 27 Oct 2025 18:28:19 +0000
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 29 Oct 2025 19:52:42 +0000
 
 bde-tools (4.30.0.0) git; urgency=low
 
