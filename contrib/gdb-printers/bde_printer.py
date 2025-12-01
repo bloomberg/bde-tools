@@ -962,13 +962,20 @@ class StringRefData:
     def __init__(self, val):
         self.val = val
 
-    def to_string(self):
+    def _get_buffer_and_length(self):
+        """Return the buffer pointer and length, handling both BDE and std implementations."""
         if hasMember(self.val, "d_start_p"):
-            buffer = self.val["d_start_p"]
-            length = self.val["d_length"]
+            return self.val["d_start_p"], self.val["d_length"]
         else:
-            buffer = self.val["_M_str"]
-            length = self.val["_M_len"]
+            return self.val["_M_str"], self.val["_M_len"]
+
+    def string_only(self):
+        """Return just the quoted string content without length info."""
+        buffer, length = self._get_buffer_and_length()
+        return f'"{stringRep(buffer, length)}"'
+
+    def to_string(self):
+        buffer, length = self._get_buffer_and_length()
         return (
             f"{stringAddress(buffer)}[length:{length}]"
             f' "{stringRep(buffer, length)}"'
@@ -1775,7 +1782,9 @@ class BdldDatum:
                 error = call_method("theError")
                 code = int(error["d_code"])
                 msg_ref = error["d_message"]
-                msg_str = f", {str(msg_ref)}" if msg_ref["d_length"] > 0 else ""
+                # Use StringRefData printer to handle both d_length/_M_len variants
+                msg_str_only = StringRefData(msg_ref).string_only()
+                msg_str = f", {msg_str_only}" if msg_str_only != '""' else ""
                 self.value_str = f"error({code}{msg_str})"
             elif self.datum_type == DatumType.DATE.value:
                 date_val = call_method("theDate")
