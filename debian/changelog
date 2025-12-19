@@ -1,9 +1,15 @@
-bde-tools (4.32.0.0) unstable; urgency=low
+bde-tools (4.33.0.0) unstable; urgency=low
 
+
+ -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Mon, 1 Dec 2025 22:29:31 +0000
+
+bde-tools (4.32.0.0) git; urgency=low
+
+  * 350fe73 Changelog for version 4.32.0.0
   * fd3806c Datum pretty printer (#404)
   * 1ce83d2 Add DPKG badge to README (#406)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 26 Nov 2025 14:39:12 +0000
+ -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 27 Nov 2025 12:43:01 -0500
 
 bde-tools (4.31.0.0) git; urgency=low
 
