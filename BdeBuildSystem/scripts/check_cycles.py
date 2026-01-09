@@ -86,8 +86,19 @@ def build_dependency_graph(file_list):
     return (test_graph, impl_graph)
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description='Find cycles within a package.')
+    parser.add_argument('files', nargs='*', help='List of .h and .cpp files')
+    parser.add_argument('--file-list', help='File containing list of source files (one per line)')
+    args = parser.parse_args()
+    
+    file_list = args.files
+    if args.file_list:
+        with open(args.file_list, 'r') as f:
+            file_list.extend([line.strip() for line in f if line.strip()])
+    
     print("Parsing source files ...")
-    test_graph, impl_graph = build_dependency_graph(sys.argv[1:])
+    test_graph, impl_graph = build_dependency_graph(file_list)
 
     testdeps = set()
     soletestdeps = set()
