@@ -9,7 +9,7 @@
                 "properties": {
                     "exc": true,
                     "bitness": 64,
-                    "standard": "cpp20",
+                    "standard": "cpp23",
                     "asan": false,
                     "tsan": false,
                     "msan": false,
@@ -23,7 +23,7 @@
                 "properties": {
                     "exc": true,
                     "bitness": 32,
-                    "standard" : "cpp20",
+                    "standard" : "cpp23",
                     "asan": false,
                     "tsan": false,
                     "msan": false,
