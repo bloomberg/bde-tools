@@ -27,6 +27,7 @@ class Ufid():
         "opt": (FRONT + 0, "Build optimized"),
         "dbg": (FRONT + 1, "Build with debugging information"),
         "noexc": (MIDDLE + 0, "Exceptions are disabled"),
+        "nomt": (MIDDLE + 1, "Multithreading is disabled"),
         "32": (MIDDLE + 2, "Build for 32-bit architecture"),
         "64": (MIDDLE + 3, "Build for 64-bit architecture"),
         "safe": (MIDDLE + 5, "Build safe (paranoid) libraries"),
