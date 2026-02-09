@@ -156,7 +156,7 @@ def populate_ufid(ufid_str, profile):
             return None
 
     # Validating and populating true/false flags
-    for flag in ["noexc", "pic", "safe"]:
+    for flag in ["noexc", "nomt", "pic", "safe"]:
         value = properties.get(flag)
         if value is None:
             if ufid.is_set(flag):
