@@ -1,8 +1,14 @@
-bde-tools (4.35.0.0) unstable; urgency=low
+bde-tools (4.36.0.0) unstable; urgency=low
 
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 10 Feb 2026 16:06:53 +0000
+
+bde-tools (4.35.0.0) git; urgency=low
+
+  * c0c23be Changelog for version 4.35.0.0
   * 835e880 Fix check_cycles on Windows. (#408)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 30 Jan 2026 14:29:07 -0500
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 5 Feb 2026 23:58:27 +0000
 
 bde-tools (4.33.0.0) git; urgency=low
 
