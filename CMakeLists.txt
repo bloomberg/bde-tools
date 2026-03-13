@@ -16,8 +16,6 @@ install(PROGRAMS BdeBuildSystem/scripts/sim_cpp11_features.pl
 install(PROGRAMS bin/bbs_build
                  bin/bbs_build_env
                  bin/bbs_make_vscode
-                 bin/bde_build_env
-                 bin/cmake_build
                  bin/bde_runtest
                  bin/get_dependers
         DESTINATION libexec/bde-tools/bin
@@ -26,9 +24,7 @@ install(PROGRAMS bin/bbs_build
 # bbs tools implementation
 install(FILES bin/bbs_build.py
               bin/bbs_build_env.py
-              bin/bde_build_env.py
               bin/bde_runtest.py
-              bin/cmake_build.py
         DESTINATION libexec/bde-tools/bin
         COMPONENT bde-tools)
 
@@ -41,7 +37,7 @@ install(PROGRAMS bin/bbs_make_vscode.py
         DESTINATION libexec/bde-tools/bin
         COMPONENT bde-tools)
 
-install(DIRECTORY cmake lib
+install(DIRECTORY lib
         DESTINATION libexec/bde-tools
         COMPONENT bde-tools
         PATTERN "__pycache__" EXCLUDE)
