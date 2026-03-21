@@ -1,7 +1,15 @@
-bde-tools (4.36.0.0) unstable; urgency=low
+bde-tools (4.37.0.0) unstable; urgency=low
 
+  * 80c8586 Remove old build system (#411)
+  * 1d7fad6 Update common win32 toolchains - ENG2BASINF-4862 (#410)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 10 Feb 2026 16:06:53 +0000
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 13 Mar 2026 13:52:48 -0400
+
+bde-tools (4.36.0.0) git; urgency=low
+
+  * 5c30160 Changelog for version 4.36.0.0
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 20 Feb 2026 23:28:09 +0000
 
 bde-tools (4.35.0.0) git; urgency=low
 
