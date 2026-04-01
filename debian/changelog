@@ -1,19 +1,31 @@
-bde-tools (4.37.0.0) unstable; urgency=low
+bde-tools (4.37.0.2) linuxinfrastructure-unstable; urgency=low
 
+  * 3648289 Restore lib/python/bdebuild/runtest for bde_runtest support (#414)
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 1 Apr 2026 12:00:38 -0400
+
+bde-tools (4.37.0.0) git; urgency=low
+
+  * 156ece2 Changelog for version 4.37.0.0
   * 80c8586 Remove old build system (#411)
   * 1d7fad6 Update common win32 toolchains - ENG2BASINF-4862 (#410)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 13 Mar 2026 13:52:48 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 21 Mar 2026 16:37:50 -0400
 
 bde-tools (4.36.0.0) git; urgency=low
 
   * 5c30160 Changelog for version 4.36.0.0
+  * fc96bd2 Make bde toolchains up to c++26 ready
+  * f635324 Enable nomt ufid flag
+  * afadd87 Add nomt flag for validity check
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 20 Feb 2026 23:28:09 +0000
 
 bde-tools (4.35.0.0) git; urgency=low
 
   * c0c23be Changelog for version 4.35.0.0
+  * a4a3a15 Update profile_utils.py
+  * b770cc1 Bump default toolchains to cpp23
   * 835e880 Fix check_cycles on Windows. (#408)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 5 Feb 2026 23:58:27 +0000
@@ -21,20 +33,27 @@ bde-tools (4.35.0.0) git; urgency=low
 bde-tools (4.33.0.0) git; urgency=low
 
   * ebc5494 Changelog for version 4.33.0.0
+  * b65c099 Fix datum error printing in cpp20
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 19 Dec 2025 16:39:09 +0000
 
 bde-tools (4.32.0.0) git; urgency=low
 
   * 350fe73 Changelog for version 4.32.0.0
+  * 7807a42 Missing info for msvc 2026
+  * 9887b20 Add msvc 2026 to bbs_build
+  * a206cbf Cleanup AIX, add new compilers
   * fd3806c Datum pretty printer (#404)
   * 1ce83d2 Add DPKG badge to README (#406)
+  * 181cf01 Remove outdate doxygen sample
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 27 Nov 2025 12:43:01 -0500
 
 bde-tools (4.31.0.0) git; urgency=low
 
   * e073851 Changelog for version 4.31.0.0
+  * 079ec37 Fix function name
+  * 5affd2f Function to add dynamic dependencies to a target
   * 5631a62 Put gtest binaries to tests directory (#403)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 29 Oct 2025 19:52:42 +0000
@@ -59,8 +78,12 @@ bde-tools (4.29.0.0) git; urgency=low
 bde-tools (4.28.0.0) git; urgency=low
 
   * 011b4d7 Changelog for version 4.27.0.0
+  * 2bbcbb3 Add pkgconfig mapping for lz4
+  * 7a54e29 Add pkgconfig mapping for zstd library
   * 142bee7 Migrate to CMakeModule recipe (#395)
   * f79f3e9 Remove profile loop (#394)
+  * 86ba9f7 Revert "Add profiles Jenkinsfile.conan"
+  * 4608287 Add profiles Jenkinsfile.conan
   * 2644a4a Drqs 179368073 enable homebrew clang on darwin (#393)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 11 Jul 2025 15:47:45 +0000
@@ -100,12 +123,16 @@ bde-tools (4.24.0.0) git; urgency=low
 bde-tools (4.23.0.0) git; urgency=low
 
   * 77761d9 Changelog for version 4.23.0.0
+  * 0830e65 Embed debug info into library (windows)
+  * 3b57dc0 Revert "Add PDBs installation on Windows (#377)"
+  * f8c425a Minor fix
   * 4df3de5 Add PDBs installation on Windows (#377)
   * 6711365 Fix typo in installation docs (#375)
   * b3f2703 Move away from Python 3.8 (#372)
   * 8316d1e Add note to keep cmake_minimum_required in sync (#352)
   * 1fe18ea Remove cmake from bde-tools dependencies (#374)
   * 869696e Use new release profiles (#373)
+  * f6dd88e Drop log level to previous defaults
   * 924c7ad Do not verbose log the tests that succeed. (#371)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 3 Apr 2025 14:40:25 -0400
@@ -131,6 +158,9 @@ bde-tools (4.20.0.0) git; urgency=low
   * 9ae31e9 Changelog for version 4.20.0.0
   * 1d192fc Add "Test target..." task (#365)
   * 6d0df1f Add list available compilers task (#364)
+  * d301e76 correct bde_verify_cfg lookup
+  * 231e78f add gitlens
+  * c0b54ae Fix WSL
   * 7f6eee8 make_vscode improvements (#363)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 30 Jan 2025 15:46:06 -0500
@@ -146,8 +176,10 @@ bde-tools (4.17.0.0) git; urgency=low
 
   * 964f78d Changelog for version 4.17.0.0
   * 23634ed Remove noisy log (#360)
+  * 3cab49f Increase gtest discover timeout.
   * ad147f3 Fix detection loop meeting 'function' objects (#359)
   * 295981b Update Python versions
+  * 73f45e7 Add support for non-OSS  "NOTICE:" copyright blocks
   * 804f06f adjust format-code-comment to new style (#358)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 15 Nov 2024 12:31:57 -0500
@@ -166,7 +198,11 @@ bde-tools (4.16.0.0) git; urgency=low
 bde-tools (4.15.0.0) git; urgency=low
 
   * eedef1e Changelog for version 4.15.0.0
+  * a6c63ae Fix split TD generator dependencies.
+  * e93c091 Suppress duplicate library warning
   * a59dd17 Dependers of tests only with no --test is not an error (#351)
+  * 7a671fd Fix test driver meta-targets
+  * 661a76f Fix -framework handling
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 3 Oct 2024 14:36:15 +0000
 
@@ -174,13 +210,22 @@ bde-tools (4.13.0.0) git; urgency=low
 
   * 2321767 Changelog for version 4.13.0.0
   * 6c00352 Merge pull request #350 from afeher/clang-only-warning-disable
+  * 21a60a7 Suppress clang-only warning for clang only.
   * da5920b Merge pull request #349 from afeher/fix-unused-warning-supression-again
+  * 874d95a Fix unused warnings suppression again.
   * b7ba612 Merge pull request #348 from afeher/fix-empty-cpp03-file-handling
+  * 254770e Fix empty cpp03 file handling in splitter
   * e753651 Merge pull request #347 from afeher/fix-splitter-warning-suppression
+  * f5758ea Fix warning suppression for locals.
+  * a686e5d Local toolchains first
+  * 3ef590f Update setup_refroot_pkgconfig.cmake
+  * 747cd9d Update setup_refroot_pkgconfig.cmake
+  * f806ef6 Update pkg-config seach for generic toolchain
   * 105c5a3 Remove unnecessarily verbose output. (#346)
   * 04b1513 Adjust get_dependers to handle .xt.cpp and .g.cpp (#345)
   * 3e11fb5 Change BdeBuildSystem search order (#344)
   * ef24207 Merge pull request #343 from afeher/drqs-175992119-integrate-bde_xt_cpp_splitter-into-bbs_build
+  * 1666da9 bde_xt_cpp_splitter integrated
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 23 Aug 2024 15:54:41 -0400
 
@@ -188,15 +233,36 @@ bde-tools (4.12.0.1) git; urgency=low
 
   * de1b0d7 Changelog for version 4.12.0.1
   * 7095eb8 Merge pull request #339 from afeher/DRQS-175991813-bde_xt_cpp_splitter-script
+  * 4aacc9b Update BdePkgconfigUtils.cmake
+  * eb8e032 Update BdePkgconfigUtils.cmake
   * e36b827 Enable asan for MSVC (#342)
   * eb89c4c Remove event library .pc mapping (#341)
+  * a9d53b0 Slava parser review.
+  * a5393f0 Slava review.
+  * 15d70b4 Slava review
+  * 4513388 Factor out mapping tables.
+  * 6b560ef Slava review
+  * 5a9e254 Removed Tuples with prejudice.
+  * cd3eeeb Remove !r for strings.
+  * bf9dcce Fix mdtext help when no rich console present
+  * 0c805e1 Make shell wrapper executable
+  * 820664c Ignore control comment in comment.
+  * 96d0a59 Slava's comments.
+  * da4df62 Fix stamp file path
+  * e01bd3a Call out guide in the help text.
+  * 3b3a099 Guide update from Josh & MikeV
+  * c127c67 From os to pathlib.Path
   * e6fee34 Merge pull request #2 from rkhlebnikov/splitter
+  * 443c9e2 Josh review comments
+  * 8d00693 Added bde_xt_cpp_splitter script
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 5 Aug 2024 22:48:03 +0000
 
 bde-tools (4.11.1.0) git; urgency=low
 
   * fb3d8cf Changelog for version 4.11.1.0
+  * c8d5dc2 Re-instate sources parameter
+  * cd68312 Fix pc name tranlations
   * 51dd87e Don't repeatedly find sim_cpp11_features.pl and check_cycles.py (#337)
   * 7d6e40f Handle --framework flag in .pc (#336)
 
@@ -214,7 +280,10 @@ bde-tools (4.10.0.0) git; urgency=low
 
   * 9da4f2c Changelog for version 4.10.0.0
   * 2a7b05a Handle "runtime error:" as a test failure (#334)
+  * 57a295f Fix markup
+  * dbfc797 fix minor typo
   * b3cca33 Add a note about production toolchains for sanitizer builds (#333)
+  * 8576e11 Update conanfile.py
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 12 Jun 2024 13:10:51 -0400
 
@@ -238,13 +307,18 @@ bde-tools (4.8.0.0) git; urgency=low
 bde-tools (4.7.0.0) git; urgency=low
 
   * 292a28c Changelog for version 4.7.0.0
+  * 35ccfda Add run-time dependency for bbs CMake modules.
+  * c826ab8 Add support for cpp26 flag
   * c6e2611 Add conanfile.py (#328)
+  * d6fae4a Update profile_utils.py
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 19 Apr 2024 17:52:17 -0400
 
 bde-tools (4.6.0.0) git; urgency=low
 
   * d786e19 Changelog for version 4.6.0.0
+  * f37d1fc Supress -mt flag for gcc on Sunos
+  * e6b6ac5 Add -Wreorder warning
   * 397b29e Python: Raw strings fix errors from invalid escape sequences (#326)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Sun, 7 Apr 2024 19:39:32 -0400
@@ -252,12 +326,15 @@ bde-tools (4.6.0.0) git; urgency=low
 bde-tools (4.5.0.0) git; urgency=low
 
   * ddcef5d Changelog for version 4.5.0.0
+  * 055a283 Update profile_utils.py
+  * 6c83ca5 Update gcc-default.cmake
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 13 Mar 2024 14:39:03 -0400
 
 bde-tools (4.4.1.0) git; urgency=low
 
   * 5dbbb6d Changelog for version 4.4.1.0
+  * 0d4651b Update to cpp20 defaults
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 8 Mar 2024 12:46:12 -0500
 
@@ -265,6 +342,7 @@ bde-tools (4.4.0.0) git; urgency=low
 
   * f8c0e59 Changelog for version 4.4.0.0
   * d2576d0 Changelog for version 4.4.0.0
+  * fee44a9 Update BdeInternalTargets.cmake
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Sun, 3 Mar 2024 17:38:33 -0500
 
@@ -291,6 +369,13 @@ bde-tools (4.2.0.0) git; urgency=low
 bde-tools (4.1.0.0) git; urgency=low
 
   * 940125d Changelog for version 4.1.0.0
+  * f9919ec Fix gcc on AIX
+  * 38f3ef4 Fix gcc on AIX
+  * 3d416a1 Update compilers for legacy cmake_build
+  * 499a713 Update BdeTargetUtils.cmake
+  * 5f7e169 Update BdeTargetUtils.cmake
+  * 10cd2a2 Update BdeTargetUtils.cmake
+  * 78ab61a Update BdeTargetUtils.cmake
   * 5fb3c86 Ensure BDE_BUILD_TARGET_* flags are defined for executable targets and its internal lib (#317)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 20 Jan 2024 13:17:21 -0500
@@ -304,6 +389,7 @@ bde-tools (4.0.0.0) git; urgency=low
 bde-tools (3.128.1.0) git; urgency=low
 
   * c76c27e Changelog for version 3.128.1.0
+  * 02b14cd Fix module path in sim_cpp11
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 15 Dec 2023 17:49:20 -0500
 
@@ -311,6 +397,8 @@ bde-tools (3.128.0.0) git; urgency=low
 
   * 4e83b9a Changelog for version 3.128.0.0
   * 25965d5 Speedup sim cpp11 features.pl for perl 5.16 (#315)
+  * 344dfea Remove assert/review limits from production toolchains
+  * 58290fa Add new gcc compilers to bde_build_env
   * 9af77d1 Add support for clangd extension in vscode (#313)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 15 Dec 2023 17:05:02 -0500
@@ -318,9 +406,18 @@ bde-tools (3.128.0.0) git; urgency=low
 bde-tools (3.127.0.0) git; urgency=low
 
   * 6d101f2 Changelog for version 3.127.0.0
+  * 1484a79 Add pkgconfig configuration for gcc on SunOS
+  * 6f4a5e5 Add plink modules in DISTRIBUTION_REFROOT
+  * 28ca6c6 Add path to the cmake modules in DISTRIBUTION_REFROOT
+  * 1bc3122 Update profile_utils.py
+  * 860f49a Support tests for application uor
+  * c6d0b4b Quote path strings
   * 3cf5cd5 Add toolchains for cygwin (#312)
+  * 0943279 Create pkg-config compatible alias for application libraries
+  * 190639e Fix escape sequence.
   * 15d68ff Minimal fix for nullable: the current implementation is based in bsl::optional (#311)
   * 50fb16f Default winver change drqs 173162883 (#309)
+  * 0181ed2 Update BdeEmitPkgConfigFile.cmake
   * b93b450 Add headers install path different from INSTALL_INTERFACE (#310)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 24 Nov 2023 12:31:17 -0500
@@ -338,6 +435,7 @@ bde-tools (3.125.0.0) git; urgency=low
 
   * 2c99ca0 Changelog for version 3.125.0.0
   * 4dc12a0 Use DISTRIBUTION_REFROOT for local override builds (#305)
+  * 66012f3 Skip pkg-config if not available
   * 1d200bb Add bbs workspace CML.txt (#304)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 5 Oct 2023 10:34:00 -0400
@@ -345,14 +443,20 @@ bde-tools (3.125.0.0) git; urgency=low
 bde-tools (3.124.0.0) git; urgency=low
 
   * c22d33d Changelog for version 3.124.0.0
+  * 2a1342f Pick 64bit host compiler on Windows
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Sat, 16 Sep 2023 15:27:41 -0400
 
 bde-tools (3.123.0.0) git; urgency=low
 
   * 0e031f8 Changelog for version 3.123.0.0
+  * 5c1dc24 Make Ninja generator default
   * 011446c Support Ninja multi config generator (#302)
+  * 0e79aed Mark group targets for correct bdemeta generation
+  * dd8b363 Add get_dependers to dpkg install
+  * 3ad0282 Fix introduced bug for no target cmake build
   * c272c68 Restore ctest label (#301)
+  * 16f5bc7 Fix introduced bug for no target bbs build
   * 46dbcf3 Integrate 'get_dependers' into build scripts - DRQS 172509043 (#298)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 25 Aug 2023 10:22:49 -0400
@@ -379,6 +483,7 @@ bde-tools (3.119.0.0) git; urgency=low
   * 756809a Changelog for version 3.119.0.0
   * ac155dd Force pthread for libcrypto (#294)
   * e0257d9 Backup old vscode settings before overwriting (#293)
+  * ffe0130 Add some bbs flags to cmake_build_py
   * 7c24363 Add BBS support to sample CMakeLists.txt (#292)
   * dc12947 Setup refroot pkgconfig (#291)
 
@@ -388,6 +493,7 @@ bde-tools (3.118.0.0) git; urgency=low
 
   * f63dfe9 Changelog for version 3.118.0.0
   * 465b664 Get dependent components (#288)
+  * 799fffb Fix bde flags for TDs in standalone libs
   * 168d0ea Add support for ufid flag 32 (#290)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Thu, 11 May 2023 10:08:05 -0400
@@ -395,21 +501,32 @@ bde-tools (3.118.0.0) git; urgency=low
 bde-tools (3.117.0.0) git; urgency=low
 
   * e0f769c Changelog for version 3.117.0.0
+  * c060670 Update output limits to 500 lines
+  * ad01cea Add a pkg-config.64/32 lookup as a fallback on IBM.
   * 8521564 Add uor-all install component (#289)
+  * 3b75ec0 Fix for ninja 11
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 21 Apr 2023 11:44:47 -0400
 
 bde-tools (3.116.0.0) git; urgency=low
 
   * 7c8245c Changelog for version 3.116.0.0
+  * 8b14e62 Reinstate GLOBAL for CMake imports
+  * 90e89fe Ingest EmitPkgConfigFile module
+  * 474db1b Handle CMAKE_PREFIX_PATH as a list
   * fcbbb28 sim_cpp11 copy copyright blocks from source to cpp03 drqs164946453 (#280)
+  * 59b678a Fix typo
+  * a358e55 Add INTERFACE libraries to bbs_install_target
   * bd89ac4 Cleanup/unify compilation flags for Windows (#287)
+  * b146306 Fix pages for OSS publications
+  * a0957e0 Update BdeDependencyUtils.cmake
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 6 Apr 2023 16:11:01 -0400
 
 bde-tools (3.115.1.0) git; urgency=low
 
   * bad79ce Changelog for version 3.115.1.0
+  * 061392f Fix for pkg-config
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 16 Mar 2023 16:35:02 -0400
 
@@ -421,6 +538,7 @@ bde-tools (3.115.0.0) git; urgency=low
   * f1358cf Add private packages (#284)
   * 739fe32 fuzz_testing doc update DRQS 171206698 (#282)
   * b05a27e add .vscode/.cache to excluded folders (#283)
+  * 60564d6 Better gcc support on SunOS
   * 07e3cba Spellcheck pass (#281)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 15 Mar 2023 23:46:41 -0400
@@ -429,6 +547,7 @@ bde-tools (3.114.0.1) git; urgency=low
 
   * 302cb3a Changelog for version 3.114.0.1
   * d25906d Changelog for version 3.114.0.0
+  * 920d669 Fix installation targets for uors with underscores
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 15 Feb 2023 17:21:04 -0500
 
@@ -436,12 +555,24 @@ bde-tools (3.114.0.0) git; urgency=low
 
   * de4ee56 Changelog for version 3.114.0.0
   * 072e902 Change minimum Windows version to Windows 7
+  * ef5706b Restore multithreading flags and options
+  * 4a6265c Fix fuzzer link line
+  * 3c6b52d Remove force-setting -D_GLIBCXX_USE_CXX11_ABI=0
+  * 872af50 Update clang-bde-presets.cmake
+  * 5408fda Update clang-bde-presets.cmake
+  * addc4a6 Update cl-static.cmake
+  * 9b21715 Update cl-default.cmake
+  * d114007 Update cl-static.cmake
+  * 244b195 Update cl-default.cmake
+  * c666932 Fix for dpkg toolchains
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 31 Jan 2023 13:37:52 -0500
 
 bde-tools (3.113.0.0) git; urgency=low
 
   * 0fd88a4 Changelog for version 3.113.0.0
+  * b37ac74 Fix load command
+  * 01fd8b5 Fix docs for loading pretty-printer.
   * e249e9b Add bde metadata generation. (#279)
   * b898dc3 Do not de-duplicate options from dpkg toolchains (#278)
 
@@ -459,7 +590,14 @@ bde-tools (3.112.1.0) git; urgency=low
 bde-tools (3.112.0.0) git; urgency=low
 
   * d08ec6e Changelog for version 3.112.0.0
+  * 235597d Add production toolchain wrappers
+  * 68396f6 Add helper function to build tests by default.
+  * 9de7706 Portable realpath for bbs wrappers
+  * d6c7407 Make dbg_64 a default ufid
+  * db7e15c Update main.py
+  * da7f12e Set dbg_64 as ufid default
   * 24b7eae Add newest compiler versions
+  * f583b8d Handle invalid compiler profile
   * 3bd851e Set the compilers in settings.json (#273)
   * c5f5730 Limit test targets to non-empty ones (#272)
   * 0ca6da4 add .t to --targets doc (#271)
@@ -469,23 +607,41 @@ bde-tools (3.112.0.0) git; urgency=low
 bde-tools (3.111.0.0) git; urgency=low
 
   * d2a2d55 Changelog for version 3.111.0.0
+  * 35065c3 Generate cpp03 for tests.
   * 24b8911 Restore stlport UFID flag (#270)
   * de7344d use CMakePresets instead of CMakeSettings for MS Visual Studio (#269)
   * bbb7df7 Add bbs_make_vssettings for generating CMakeSettings.json consumable by Visual Studio. (#268)
+  * 85fbe3e Better test dependencies import
   * cce49d9 Improvements for make_vscode in Windows (Git Bash) (#267)
+  * b92c7cb Fixes for test runner and AIX toolchain
+  * df42b6a Add missing compile flags for AIX and Solaris
+  * 4958b6a Disable pkg-config on Windows
   * cd367be Add conditional tests dependency resolution (#265)
   * f755460 improve ctest regex (#264)
   * 6312cc3 configure on open, ignore .git and _build (#263)
   * 14de9a0 Skip some dynamic system libraries from [static] import (#262)
+  * d58ae2b Fix link order in the application [library] tests
+  * 4a44279 Add test to the application package
+  * ce7910e Fix dependency resolution for applications.
   * 81dcbcd Add import pkgconfig (#261)
+  * bfb7f42 Update control
+  * 962edbf Add input limiter to install targets
+  * 75e5a81 Better support for refroots.
+  * bdaedb6 Add missing dependency resolution for tests
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Tue, 22 Nov 2022 14:44:08 -0500
 
 bde-tools (3.110.0.0) git; urgency=low
 
   * bf8a7d1 Changelog for version 3.110.0.0
+  * 3fec8fb Update control
+  * 28e5ed3 Fix groups with underscores in names
   * b5d2504 Add gcc BBS toolchains on Darwin (#259)
+  * 11fe0d8 Change compiler profile order
   * fb9d4cd Add multi-version python shebang (#257)
+  * f5593f8 Update cmdline.py
+  * 5d25d43 Update cmdline.py
+  * 02e131f Update cmdline.py
   * 7bad031 Adjust usage documentation for bbs_build_env (#258)
   * 96a446e DRQS 170435960: Switch from master to main (#252)
   * 9d33bcc Temporarily remove tests to unblock the promotion (#256)
@@ -498,8 +654,14 @@ bde-tools (3.109.0.0) git; urgency=low
   * e8bfbc2 Add missing "'s (#255)
   * d9e4125 Change the flag to set group writable bit (#254)
   * e6a5de3 Add bbs_make_vscode, fix test labels (#253)
+  * 965094a Add header-only package processing function
+  * 049b814 Update BdeTargetUtils.cmake
+  * 31e45b5 Update BdeTargetUtils.cmake
   * 83140ff Add NO_EMIT_PKG_CONFIG_FILE flag (#251)
+  * 2ed7fa8 Update BdeTestDriverUtils.cmake
+  * b0fd2b4 Update BdeMetadataUtils.cmake
   * a83405a Bde build system v2 ( aka BBS ) (#246)
+  * 871e0b0 Add newest compilers
   * 45383a6 Update _WIN32_WINNT version macros for C and C++ flags to 0x600 (#249)
   * 07a553a add _WIN32_WINNT version macro to C flags (#247)
   * 9a402f5 cmake_build.py default umask to 002 (#245)
@@ -527,6 +689,7 @@ bde-tools (3.106.0.0) git; urgency=low
 bde-tools (3.105.0.0) git; urgency=low
 
   * 40344d3 Changelog for version 3.105.0.0
+  * a20a67d Update bde_ufid.cmake
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 22 Jul 2022 11:25:09 -0400
 
@@ -536,6 +699,7 @@ bde-tools (3.104.0.0) git; urgency=low
   * 198581c Add UDB launch config (#239)
   * e8e7df9 Normalize and force LF (#238)
   * 73dee3c Added support for variadic union templates to sim_cpp11_features.pl (#237)
+  * e26db23 Update bde_repo.rst
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 6 Jul 2022 13:07:34 -0400
 
@@ -543,7 +707,9 @@ bde-tools (3.103.0.0) git; urgency=low
 
   * cc5202c Changelog for version 3.103.0.0
   * 51718aa updating fuzz docs; small typo fix in 'howto' (#236)
+  * a802a7d Minor change from "black -l 79 cmake_build.py"
   * 62c91d0 Set default linux shell to bash (#235)
+  * cd02c0a Fix permissions on bde_make_vscode.py
   * d889523 Better error handling (#234)
   * bcc7dcf Create bde_make_vscode.py (#233)
 
@@ -595,12 +761,14 @@ bde-tools (3.99.5.0.1.test-promotion) git; urgency=low
 bde-tools (3.99.5.0) git; urgency=low
 
   * c589895 Changelog for version 3.99.5.0
+  * b0cc776 Update control
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Sun, 17 Apr 2022 13:58:40 -0400
 
 bde-tools (3.99.4.0) git; urgency=low
 
   * 07a940d Changelog for version 3.99.4.0
+  * 51fde64 Fix TEST/ERROR issue in wafstyleout.py
   * 4ed9f8d Switch to Python 3.8 (#226)
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Thu, 14 Apr 2022 19:34:31 -0400
@@ -620,6 +788,7 @@ bde-tools (3.100.0.0) git; urgency=low
   * 24c5c71 adding clang11-13, gcc10-11 (#223)
   * 65123e1 Fix nodiscard types unnamed variable again (#220)
   * f4cddae clang add -Wunused-result to enable [[nodiscard]]. (#219)
+  * c2fead1 Enable -Wunused-result for clang
   * eb97cb9 Set -errtags=yes for SunStudio. (#218)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 4 Mar 2022 11:24:50 -0500
@@ -665,6 +834,7 @@ bde-tools (3.90.0.0) git; urgency=low
 
   * d1616b9 Changelog for version 3.90.0.0
   * 36e2ce9 Enabling MSVS 2022 Preview (#209)
+  * afeda8f Remove warnings about cppMatch[3]
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 17 Sep 2021 17:11:47 -0400
 
@@ -678,6 +848,7 @@ bde-tools (3.89.0.0) git; urgency=low
 bde-tools (3.86.0.0) git; urgency=low
 
   * 88629e8 Changelog for version 3.86.0.0
+  * e4da31d Update customization.rst
   * 9ff7005 fix a bug in cmake/layers/gtest.cmake. (#206)
   * 872dec1 Increase test limit from 99 to 499 (#205)
 
@@ -701,6 +872,7 @@ bde-tools (3.83.0.0) git; urgency=low
 
   * bbb167f Changelog for version 3.83.0.0
   * 6386fcb Add ASan flag for Windows and get regex flag working (#203)
+  * bc81fe6 Add gcc 11 to compiler auto-detection.
   * 4fdde98 Fix typo when loading `conanbuildinfo.cmake` (#202)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 13 Jun 2021 14:11:46 -0400
@@ -746,6 +918,7 @@ bde-tools (3.72.0.0) git; urgency=low
 
   * 5d6a2d3 Changelog for version 3.72.0.0
   * 8e57c81 Make release symlink by default. (#190)
+  * 7ca0774 package gdb-printers up in a separate binary package
   * 7f964d2 GDB pretty-printers: VSCode and 64bit fixes (#188)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 16 Jan 2021 18:51:58 -0500
@@ -755,6 +928,9 @@ bde-tools (3.71.0.0) git; urgency=low
   * 9f8753b Changelog for version 3.71.0.0
   * 77ad9d1 Add compiler auto-detection on Sun and Aix. (#189)
   * 7ad4496 Add wafstyleout support to sim_cpp11 invocations, and remove spammy "no change" message. (#187)
+  * 6f7a2a6 Only match "// Copyright \d+" at start of line
+  * 33dcece sim_cpp11_features New Year's fix
+  * 106eae8 reduce sim_cpp11 spam
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 8 Jan 2021 15:14:28 -0500
 
@@ -769,11 +945,14 @@ bde-tools (3.69.0.0) git; urgency=low
 bde-tools (3.68.0.0) git; urgency=low
 
   * bb80121 Changelog for version 3.68.0.0
+  * f65d812 Avoid "uninitialized value $matchPos" warnings
   * 4784c85 Add sim cpp11 and code gen docs drqs164287416 (#181)
   * 0cfd1a2 Add description of generating fuzz data. (#185)
   * eee1703 Respond to feedback (#184)
+  * 7adfa6b Correctly handle metadata for misnamed standalones.
   * 919a264 Add meta target for standalone packages. (#182)
   * 807489f Merge pull request #183 from osubbotin/review/github-PR34
+  * d68a3ea ignore ascii decode error
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 4 Dec 2020 10:13:30 -0500
 
@@ -781,9 +960,14 @@ bde-tools (3.67.0.0) git; urgency=low
 
   * 14a3e89 Changelog for version 3.67.0.0
   * 6e0d641 Changelog for version 3.67.0.0
+  * 6d986bd Remove x bit
   * 875647b Suppress warning 1500-030 on AIX. (#180)
+  * ceb77f4 Unfix equivelent typo to avoid file regnerations
+  * ad8152e Correct verify-no-change usage
+  * 8532905 Create _cpp03 files with read-write permissions
   * 85da723 Fix clang builds (-lrt -lstdc++). (#179)
   * 9877223 Fuzz builder redux (#174)
+  * 6a2dac1 typo fix for "equivelent"
   * db8323d Add simcpp11 docs (#178)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 13 Nov 2020 15:05:50 -0500
@@ -796,6 +980,7 @@ bde-tools (3.66.0.0) git; urgency=low
   * f6d656e Remove use of the common::sense module, fix resulting warnings (#177)
   * 4e7afa4 Add simcpp11 support to cmake drqs161239331 (#172)
   * 6384d44 Merge pull request #176 from osubbotin/review/fix-darwin-install
+  * dbd7365 Change default install lib dir on Darwin.
   * 7209312 subprocess.call returns a bytearray, not a string (#175)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 30 Oct 2020 17:15:45 -0400
@@ -804,7 +989,14 @@ bde-tools (3.64.0.0) git; urgency=low
 
   * 2e2a3f4 Changelog for version 3.64.0.0
   * 0f0d0b8 Merge pull request #170 from phalpern/sim_cpp11-verify-no-change
+  * 3b3b127 Add --verify-no-change option to sim_cpp11_features.pl
   * f8480e8 Merge pull request #157 from phalpern/phalpern/sim_cpp11-non-implace
+  * 47f620f Prevent superfluous writing of unchanged output files.  Minor formatting fixes: 'BSLS_IDENT' is now grouped with '#include <bsls_ident.h>',
+  * c5bc673 Addressed Mike G's comments
+  * 929a178 Fix vertical whitespace when prologue or epilogue is empty
+  * 14a97e6 Small changes to POD documentation in sim_cpp11_features.pl
+  * c7db5cc Add POD documentation to sim_cpp11_features.h
+  * 94af2f4 Change sim_cpp11_features.pl to generate external "_cpp03" files instead of putting C++03 expansions as conditional compilations within the original file. The old behavior is still available by using the --inplace option.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 4 Oct 2020 07:19:14 -0400
 
@@ -844,6 +1036,7 @@ bde-tools (3.59.0.0) git; urgency=low
   * 94e6312 Usage example for sanitizers (#164)
   * ded531a Fix sanitizer options for clang (#163)
   * ff79fe3 Merge pull request #161 from osubbotin/review/fix-ufid-parameters
+  * 9b9e69e Fix ufid generator parameters.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 25 Jul 2020 16:47:08 -0400
 
@@ -851,6 +1044,7 @@ bde-tools (3.58.0.0) git; urgency=low
 
   * 6118645 Changelog for version 3.58.0.0
   * 649d99c Merge pull request #159 from osubbotin/review/sanitizers-drqs-131178185
+  * a72d0d6 Add support for sanitizers.
   * bbe72a6 build test target even if main target doesn't exist (for individual test drivers) (#158)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 10 Jul 2020 13:06:44 -0400
@@ -858,7 +1052,9 @@ bde-tools (3.58.0.0) git; urgency=low
 bde-tools (3.56.0.0) git; urgency=low
 
   * 36127c8 Changelog for version 3.56.0.0
+  * 354ae8c Update README.md
   * e6faada Merge pull request #156 from osubbotin/review/fix-readme
+  * 966a982 Fix links in Readme file.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 7 Jun 2020 11:00:05 -0400
 
@@ -867,6 +1063,7 @@ bde-tools (3.55.0.0) git; urgency=low
   * 2f01679 Changelog for version 3.55.0.0
   * 0c40e74 Build the actual target if user didn't explicitly request test target (#155)
   * 533c3c4 Merge pull request #154 from mgiroux/fix-darwin-version
+  * 3664cc8 Remove blank line
   * ac1eabb Fix darwin clang version detection
   * 0e0fc7d Merge pull request #153 from osubbotin/review/fix-apple-clang-detection
   * 2c20f8f Fix clang version parsing.
@@ -877,6 +1074,7 @@ bde-tools (3.54.0.0) git; urgency=low
 
   * 17fe8de Changelog for version 3.54.0.0
   * 66d5e57 Merge pull request #152 from phalpern/phalpern/sim_cpp-lib-path
+  * c57cb18 Automatically find local support modules
   * 8bbfc79 Add sim_cpp11_features.pl (#151)
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 1 May 2020 10:51:45 -0400
@@ -887,6 +1085,7 @@ bde-tools (3.53.0.0) git; urgency=low
   * f9b97ff Add clang-10 compiler detection. (#150)
   * 61cc2dc Suppress -std=c++03 flag to Sun Studio 12.4 compiler (incompatible ABI). (#149)
   * 2d0cac2 Merge pull request #148 from osubbotin/review/add-cpp20
+  * d64329e Add support for c++20 standard.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 24 Apr 2020 11:34:26 -0400
 
@@ -902,6 +1101,7 @@ bde-tools (3.51.0.0) git; urgency=low
 
   * 1112345 Changelog for version 3.51.0.0
   * 7ef0ba5 Merge pull request #145 from osubbotin/review/fpmath-flag
+  * 49c9e45 Sync gcc flags with build base.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 13 Mar 2020 11:34:57 -0400
 
@@ -909,6 +1109,7 @@ bde-tools (3.50.0.0) git; urgency=low
 
   * c4d6ad9 Changelog for version 3.50.0.0
   * d6e76e5 Merge pull request #144 from osubbotin/review/cpp17-fixes
+  * 7c48847 Adjust defaults for cpp17(Linux) and clang(Darwin).
   * 293138f Add VS2019-compatible toolchains with enhanced optimization flags (#143)
   * 42a31c5 Fix minor typos in windows toolchains. (#142)
   * 665c331 Add toolchain for static runtime support on Windows (#141)
@@ -934,6 +1135,8 @@ bde-tools (3.48.1.0) git; urgency=low
 bde-tools (3.47.0.0) git; urgency=low
 
   * 99b81a7 Changelog for version 3.47.0.0
+  * dcab052 Update main.py
+  * 61a4df7 Update compilerinfo.py
   * 3d8a4d0 Merge pull request #137 from osubbotin/review/add-compilers-to-autodetect
   * b0e26fe Add versioned compilers to auto-detect list.
 
@@ -943,7 +1146,15 @@ bde-tools (3.44.0.0) git; urgency=low
 
   * 7246795 Changelog for version 3.44.0.0
   * b3ca77e Merge pull request #135 from hrosen4/paren-print-python3_drqs-152620782
+  * 5d65d87 Fix cleanup command
+  * 0d2656d Clean up 00 pcomp artifact
+  * f0c1689 More python3 fixing
+  * d49e431 Use floor division for Python3 compatibility
+  * a0f5ebd Use range instead of xrange for python3 compatibility
+  * 7d8f408 Need __next__ methods for python3
+  * 842e64e Parenthesize calls to print for python3 compatibility
   * 453d663 Merge pull request #134 from hrosen4/no-L-python3
+  * b4b16d1 Python3-ize numeric literals, and do some drive-by stuff
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 6 Dec 2019 14:04:28 -0500
 
@@ -951,9 +1162,13 @@ bde-tools (3.43.0.0) git; urgency=low
 
   * bfcd395 Changelog for version 3.43.0.0
   * 34cf77e Merge pull request #133 from osubbotin/review/toolchain-update-sun
+  * fa46db4 Fix c compile options for Sun Studio.
   * 811df89 Merge pull request #132 from osubbotin/review/run-test-after-build
+  * d713ede Keep running after build failure with -k.
   * a62589c Merge pull request #131 from rkhlebnikov/master
+  * 01034f2 Properly select Win32 generator for msvc 2019
   * 9298609 Merge pull request #129 from cteubner/patch-1
+  * abb5b61 cmake_build.py: fix syntax error
 
  -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 22 Nov 2019 15:39:44 -0500
 
@@ -961,9 +1176,12 @@ bde-tools (3.42.0.0) git; urgency=low
 
   * 9e377d0 Changelog for version 3.42.0.0
   * c57e4e9 Merge pull request #127 from osubbotin/review/pc-file-lookup-fix
+  * 75a4541 Fix pkg-config file lookup logic.
   * 41504d0 Move global setting into place. (#126)
   * c87af48 Missed _DBG flag setting. (#125)
+  * 3190cef Update examples.rst
   * 38cfa54 Merge pull request #124 from osubbotin/review/missing-dbg-flag
+  * 561991b Add missing BDE_BUILD_TARGET_DBG flag for opt_dbg ufids.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 8 Nov 2019 11:57:16 -0500
 
@@ -979,6 +1197,8 @@ bde-tools (3.40.0.1) git; urgency=low
 
   * 211e536 Changelog for version 3.40.0.1
   * 1083ad0 Merge pull request #120 from mgiroux/add-mstackrealign-flag-to-linux
+  * 1464f5b Use mstackrealign only for 32 bits (and for C as well)
+  * b88c43d Add mstackrealign option to force stack alignment if called from FORTRAN
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Wed, 9 Oct 2019 15:55:35 -0400
 
@@ -1007,6 +1227,7 @@ bde-tools (3.38.0.0) git; urgency=low
 
   * 4a978ff Changelog for version 3.38.0.0
   * c91a4ba Merge pull request #116 from osubbotin/review/add-cpp03-drqs147749381
+  * b68218d Add cpp03 ufid flag.
   * 57b072d Spelling corrections (#115)
   * 2e61321 Add vswhere support. (#111)
 
@@ -1059,8 +1280,10 @@ bde-tools (3.29.0.0) git; urgency=low
   * cbeedb0 Changelog for version 3.29.0.0
   * e3e5cb2 Restore pkgconfig on windows to avoid configure error. (#100)
   * 2544689 Merge pull request #99 from osubbotin/review/native-cmake-build
+  * 15db998 Add CMake build types to bde_build_env.py
   * 7400431 Trace for missing .m.cpp and suppress pkgconfig on windows. (#98)
   * fdb9393 Merge pull request #97 from hrosen4/update-printers-142153903
+  * cd2e373 Fix string and vector printing
   * ee4b794 Yet another default UFID fix. (#96)
   * f3f9a4c Fix for setting default UFID. (#95)
   * 0534504 Handle BUILD_BITNESS for CMake native build types. (#94)
@@ -1072,10 +1295,15 @@ bde-tools (3.28.0.0) git; urgency=low
   * 3b7dc88 Changelog for version 3.28.0.0
   * b511102 Regex for tests (#92)
   * 21829b9 Merge pull request #90 from osubbotin/review/msvc-2019-support
+  * 1f5b8cb Fix Ninja build on Windows.
   * c60e521 Merge pull request #89 from osubbotin/review/msvc-2019-support
+  * 7c11dcb Add support for MSVC 2019.
   * 972b970 Merge pull request #88 from osubbotin/review/cc-5.13-toolchain
+  * d3bc5c4 Add CC 5.13 (Solaris Studio 12.4) toolchain file.
   * a639d7e Merge pull request #87 from osubbotin/review/typo-in-ufid-map
+  * 1e70851 Fix order of ufid flags to match canonical order.
   * 6eb3045 Merge pull request #86 from osubbotin/review/fix-test-targets
+  * a7c2baf Added check for test metatargets.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 3 May 2019 10:46:45 -0400
 
@@ -1083,6 +1311,7 @@ bde-tools (3.27.0.0) git; urgency=low
 
   * ce8f1b0 Changelog for version 3.27.0.0
   * 7cf4641 Merge pull request #85 from osubbotin/review/support-cmake-build-types
+  * 37ca300 Add CMAKE_BUILD_TYPE to UFID translation. For bbcmake integration.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Sun, 21 Apr 2019 13:49:17 -0400
 
@@ -1090,6 +1319,7 @@ bde-tools (3.25.0.0) git; urgency=low
 
   * 52535e1 Changelog for version 3.25.0.0
   * cf67e45 Merge pull request #82 from osubbotin/review/remove-force-pic
+  * f9e8ac8 Remove force-setting PIC for 64 bit builds.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 29 Mar 2019 15:08:36 -0400
 
@@ -1097,7 +1327,9 @@ bde-tools (3.23.0.0) git; urgency=low
 
   * d536c32 Changelog for version 3.23.0.0
   * 54c53df Merge pull request #81 from osubbotin/review/sun-debug-flags
+  * 4e7e6c8 Added -g0 flag to SunOS debug builds.
   * 1f6f8ae Merge pull request #80 from osubbotin/review/imported-system-libs
+  * 80f47e1 System libraries added as imported interface targets.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 4 Mar 2019 10:10:15 -0500
 
@@ -1113,6 +1345,7 @@ bde-tools (3.19.0.1) git; urgency=low
 
   * 1cbe9e2 Changelog for version 3.19.0.1
   * 6084184 Merge pull request #77 from osubbotin/review/fix-lib-path
+  * fbd1ff2 Propor lib64 detection on AIX and Solaris.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 8 Jan 2019 14:56:33 -0500
 
@@ -1120,6 +1353,7 @@ bde-tools (3.19.0.0) git; urgency=low
 
   * 49156d3 Changelog for version 3.19.0.0
   * 2aff6c3 Merge pull request #76 from osubbotin/review/installation-fixes
+  * 37a9bbe Install respects CMAKE_INSTALL_PREFIX and GNUInstallDirs.
   * c5ee44a Pickup CXX/CFLAGS from the environment in the toolchains. (#74)
   * b9bb436 Missing -g in  gcc toolchain (#73)
   * e027a68 Add -k (--keep-going) option to cmake_build.py (#70)
@@ -1133,6 +1367,7 @@ bde-tools (3.17.0.0) git; urgency=low
   * 0b2ec85 Added custom .pc templates to support wierd packages/groups. (#69)
   * 5aff59b Add failback for unsupported scm version formats. (#67)
   * 73a6f8b Merge pull request #65 from mgiroux/add-depends-to-build-depends-drqs132314790
+  * 925f265 Update Build-Depends with all Depends entries
   * 8b914b9 Wrong position of the project() in the workspace cmake file. (#64)
   * 18676c0 Using pkg-config from the refroot. (#62)
   * 3597399 Fixes for AIX non-exception builds (#63)
@@ -1145,18 +1380,23 @@ bde-tools (3.14.0.0) git; urgency=low
   * ff580db Changelog for version 3.14.0.0
   * 314af8a Add help to the cmake_build.py. (#56)
   * 807e75c Merge pull request #59 from spackard/patch-1
+  * 5136dea Use the canonical path of build-base
   * 3e20a6a Documentation update. (#58)
   * 6a6dc1f Fix regex for selecting tests to run. (#57)
   * af3cc00 Fix for pkg config name (when different from component) (#55)
   * 8a2a4fb Review/gdb printer improvements drqs123923272 (#53)
   * 1d1b403 Merge pull request #52 from rkhlebnikov/master
+  * d23d1cf Fixed "path too long" issue on Windows (DRQS 128304440)
   * bc155ae Merge pull request #51 from rkhlebnikov/master
+  * e6a6b3d turned off waf style output by default, added flag to control it from cmake_build.py
   * 17a1e14 Merge pull request #49 from osubbotin/review/add-assert-and-review-ufids-drqs127252169
   * 08f9575 fix error output on windows (#50)
+  * d43bb98 add r* and a* ufid options
   * 5a1e0cb Update readme.md (#47)
   * 8a02cc7 Improved output (#46)
   * 245fb75 Windows build fixed (#45)
   * 64fef28 Merge pull request #44 from osubbotin/review/prefix-default
+  * baaa6ae Default refroot prefix to /opt/bb.
   * 40564b0 Fix pc file template. (#42)
   * 25834fe Update ufid documentation (#41)
   * b785dd9 Cygwin toolchain flags corrected. (#40)
@@ -1195,12 +1435,16 @@ bde-tools (3.11.0.0) git; urgency=low
   * 181dd5e Typo fix. (#11)
   * 92d0f0f Properly handle unicode in the wafstyleout.py (#10)
   * 1937f28 Merge pull request #9 from osubbotin/review/test-targets
+  * 6835f08 Allow targets with or without '.t'
   * 97b93e6 Invalid version format in changelog. (#8)
   * 9781d4b Merge pull request #7 from osubbotin/review/jobs-and-verbosity
+  * e3cee13 Better verbosity and jobs control.
   * 7c7ec4e Default toolchain fix for AIX. (#6)
   * 21fa764 Default toolchain fix for Solaris. (#4)
   * 7c8ca35 Merge pull request #3 from mgiroux/review/remove-bde-oss-tools-references
+  * 936025d Remove /bbshr and bde-oss-tools refs
   * 9fd3208 DRQS 123976447 Fix cmake on Apple/Darwin. (#2)
   * 1af6cd6 Fixed changelog (#1)
+  * 031db43 Initial commit.
 
  -- Mike Giroux <mgiroux@bloomberg.net>  Mon, 16 Jul 2018 13:31:49 -0400
