@@ -790,7 +790,9 @@ class CacheInfo:
                 "The project build configuration not found in " + build_dir
             )
 
-        for line in open(cacheFileName):
+        # ignore encoding errors - there is no guarantee that CMakeCache.txt
+        # is valid utf-8.
+        for line in open(cacheFileName, errors='ignore'):
             if line.startswith("CMAKE_GENERATOR:"):
                 self.generator = line.strip().split("=")[1]
                 if self.generator.startswith("Visual Studio"):
