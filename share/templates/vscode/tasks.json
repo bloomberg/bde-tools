@@ -4,7 +4,7 @@
         {
             "label": "buildenv",
             "type": "shell",
-            "command": "eval `bbs_build_env ${input:params}` && bbs_make_vscode && touch .promptinput",
+            "command": "output=$(bbs_build_env ${input:params}) && eval \"$output\" && bbs_make_vscode && touch .promptinput",
             "problemMatcher": [],
             "hide": true,
             "presentation": {
