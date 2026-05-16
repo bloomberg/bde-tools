@@ -1,9 +1,19 @@
-bde-tools (4.37.0.0) unstable; urgency=low
+bde-tools (4.38.0.0) unstable; urgency=low
 
+  * 223dfdf Fail to set up BDE environment task if bbs_build_env fails (#417)
+  * 48fab43 Ignore utf-8 errors (#416)
+  * c08fcac Add pretty printer for bsl::deque (#413)
+  * 3648289 Restore lib/python/bdebuild/runtest for bde_runtest support (#414)
+
+ -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Thu, 30 Apr 2026 11:57:45 -0400
+
+bde-tools (4.37.0.0) git; urgency=low
+
+  * 156ece2 Changelog for version 4.37.0.0
   * 80c8586 Remove old build system (#411)
   * 1d7fad6 Update common win32 toolchains - ENG2BASINF-4862 (#410)
 
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Fri, 13 Mar 2026 13:52:48 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Sat, 21 Mar 2026 16:37:50 -0400
 
 bde-tools (4.36.0.0) git; urgency=low
 
