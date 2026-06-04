@@ -114,7 +114,7 @@ function(bbs_add_component_gtests target)
         endif()
 
         gtest_discover_tests(${gtest_target_name}.t
-                             DISCOVERY_TIMEOUT 10
+                             DISCOVERY_TIMEOUT 60
                              EXTRA_ARGS        "${_EXTRA_ARGS}"
                             )
 
