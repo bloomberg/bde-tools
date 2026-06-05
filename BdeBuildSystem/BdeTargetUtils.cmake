@@ -87,6 +87,39 @@ function(bbs_add_target_include_dirs target scope)
     endforeach()
 endfunction()
 
+# Collect all targets reachable via INTERFACE_LINK_LIBRARIES from target_name,
+# using a queue-based traversal (BFS order, though any order gives the same
+# reachability set).  Only CMake target entries are followed; raw file paths
+# in INTERFACE_LINK_LIBRARIES are skipped because they carry no further
+# dependency information.  The result is used to identify which explicitly
+# listed pcdeps are already transitively provided by another pcdep, so those
+# redundant entries can be removed from the target's link list and allowed to
+# arrive in the correct order via their provider's INTERFACE_LINK_LIBRARIES.
+function(_bbs_get_transitive_link_deps target_name result_var)
+    set(_queue "${target_name}")
+    set(_visited "")
+    set(_result "")
+    while(_queue)
+        list(POP_FRONT _queue _current)
+        if (_current IN_LIST _visited)
+            continue()
+        endif()
+        list(APPEND _visited "${_current}")
+        if (TARGET ${_current})
+            get_target_property(_deps ${_current} INTERFACE_LINK_LIBRARIES)
+            if (_deps)
+                foreach(_dep ${_deps})
+                    if (_dep AND TARGET ${_dep} AND NOT _dep IN_LIST _visited)
+                        list(APPEND _queue "${_dep}")
+                        list(APPEND _result "${_dep}")
+                    endif()
+                endforeach()
+            endif()
+        endif()
+    endwhile()
+    set(${result_var} "${_result}" PARENT_SCOPE)
+endfunction()
+
 # Try to find an external dependency passed via arguments
 function(_bbs_defer_target_import target)
     bbs_load_conan_build_info()
@@ -125,6 +158,45 @@ function(_bbs_defer_target_import target)
 
         message(WARNING "Unresolved external dependency: ${dep}")
     endforeach()
+
+    # Remove deps from target's link libraries that are already transitively
+    # reachable from another dep in the same set.  This ensures that when pkg A
+    # declares B in its Requires, B appears after A in the link command even if
+    # both A and B were listed explicitly in the .dep file.
+    set(_pcdeps ${ARGN})
+    if (_pcdeps)
+        set(_all_transitive "")
+        foreach(_dep ${_pcdeps})
+            _bbs_get_transitive_link_deps(${_dep} _trans)
+            list(APPEND _all_transitive ${_trans})
+        endforeach()
+        if (_all_transitive)
+            list(REMOVE_DUPLICATES _all_transitive)
+            get_target_property(_target_type ${target} TYPE)
+            # For executables filter LINK_LIBRARIES (used for the exe's own link
+            # command); for libraries filter INTERFACE_LINK_LIBRARIES (used by
+            # consumers).
+            if (_target_type STREQUAL "EXECUTABLE")
+                get_target_property(_curr_libs ${target} LINK_LIBRARIES)
+            else()
+                get_target_property(_curr_libs ${target} INTERFACE_LINK_LIBRARIES)
+            endif()
+            if (_curr_libs)
+                set(_new_libs "")
+                foreach(_lib ${_curr_libs})
+                    if (_lib IN_LIST _pcdeps AND _lib IN_LIST _all_transitive)
+                        continue()  # reachable transitively — skip explicit entry
+                    endif()
+                    list(APPEND _new_libs "${_lib}")
+                endforeach()
+                if (_target_type STREQUAL "EXECUTABLE")
+                    set_property(TARGET ${target} PROPERTY LINK_LIBRARIES "${_new_libs}")
+                else()
+                    set_property(TARGET ${target} PROPERTY INTERFACE_LINK_LIBRARIES "${_new_libs}")
+                endif()
+            endif()
+        endif()
+    endif()
 endfunction()
 
 #[[.rst:

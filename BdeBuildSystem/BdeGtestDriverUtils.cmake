@@ -108,6 +108,7 @@ function(bbs_add_component_gtests target)
         bbs_add_target_thread_flags(${gtest_target_name}.t PRIVATE)
 
         target_link_libraries(${gtest_target_name}.t PUBLIC ${target} ${_TEST_DEPS} gtest)
+        bbs_import_target_dependencies(${gtest_target_name}.t ${_TEST_DEPS})
 
         if (BDE_BUILD_TARGET_FUZZ)
             target_link_libraries(${gtest_target_name}.t PRIVATE "-fsanitize=fuzzer")
