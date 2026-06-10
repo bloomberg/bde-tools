@@ -7,7 +7,7 @@
 # dependencies as an imported library target
 #
 # Dependency information is searched with the pkg-config tool
-# Additional target direct dependencies can be specified by setting 
+# Additional target direct dependencies can be specified by setting
 # <target>_DEPS variables before calling import_pkgconfig_targets()
 # The extra deps will be searched AFTER the deps defined in the pkgconfig file
 #
@@ -109,7 +109,7 @@ function( _bbs_import_pkgconfig_targets pkgnames pkgparents )
     _bbs_pcimport_add_package( ${pkgname} "${pkgcallchain}" )
   endforeach()
 endfunction()
- 
+
 #
 # Add the following pkg and all its required dependencies as imported targets
 #
@@ -168,7 +168,7 @@ function( _bbs_pcimport_import_cached_target targetname pkgcallchain )
   if( _pcimport_${targetname}_requires )
     _bbs_import_pkgconfig_targets( "${_pcimport_${targetname}_requires}" "${pkgcallchain}" )
   endif()
-  
+
   # import user specified dependencies
   if( ${targetname}_DEPS )
     _bbs_import_pkgconfig_targets( "${${targetname}_DEPS}" "${pkgcallchain}" )

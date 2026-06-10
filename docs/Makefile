@@ -18,7 +18,7 @@ internal: Makefile
 	@rm -rf $(BUILDDIR)/$@/src/*
 	# Copy markdown source into modification area
 	@cp -r docs/* $(BUILDDIR)/$@/src/
-	# Remove the {{{ internal }}} markers, but keep the text between them   
+	# Remove the {{{ internal }}} markers, but keep the text between them
 	@find  $(BUILDDIR)/$@/src/ -iname "*.rst" -exec sed  -i '/{{{[[:space:]]*internal/{:a;N;/}}}/!ba;s/{{{[[:space:]]*internal[[:space:]]*\n\(.*\)\n}}}/\1/;p;d}' {} \;
 	# Remove the {{{ oss }} markers and the text between them
 	@find  $(BUILDDIR)/$@/src/ -iname "*.rst" -exec sed -i '/{{{[[:space:]]*oss/,/}}}/d' {} \;
@@ -30,7 +30,7 @@ oss: Makefile
 	@rm -rf $(BUILDDIR)/$@/src/*
 	# Copy markdown source into modification area
 	@cp -r docs/* $(BUILDDIR)/$@/src/
-	# Remove the {{{ oss }}} markers, but keep the text between them   
+	# Remove the {{{ oss }}} markers, but keep the text between them
 	@find  $(BUILDDIR)/$@/src/ -iname "*.rst" -exec sed  -i '/{{{[[:space:]]*oss/{:a;N;/}}}/!ba;s/{{{[[:space:]]*oss[[:space:]]*\n\(.*\)\n}}}/\1/;p;d}' {} \;
 	# Remove the {{{ internal }} markers and the text between them
 	@find  $(BUILDDIR)/$@/src/ -iname "*.rst" -exec sed -i '/{{{[[:space:]]*internal/,/}}}/d' {} \;
@@ -46,7 +46,7 @@ oss: Makefile
 #GH_PAGES_SOURCES = docs Makefile readme.md
 #gh-pages:
 #	git checkout gh-pages
-#	rm -rf * 
+#	rm -rf *
 #	git checkout main $(GH_PAGES_SOURCES)
 #	git reset HEAD
 #	make html

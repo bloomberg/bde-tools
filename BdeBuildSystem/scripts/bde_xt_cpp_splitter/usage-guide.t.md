@@ -30,7 +30,7 @@ Within the part files, preprocessor `#line` directives are added that refer
 back to the original '.xt.cpp' source and line number, so compiler warning and
 error messages, as well as runtime messages (such as `ASSERT`) will display the
 original '.xt.cpp' file name and source line number.  (This behaviour can be
-disabled if necessary, see 
+disabled if necessary, see
 [Turning Off Line Directives]{#Turning Off Line Directives}.)
 
 Negative test cases are moved into their parts unchanged.  Their code cannot be

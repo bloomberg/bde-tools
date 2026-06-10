@@ -17,7 +17,7 @@ pipeline {
                 checkout scm
                 sh """
                     pwd
-                    ls -l 
+                    ls -l
                     source /bb/bde/documentation/sphinx_env/bin/activate
                     (cd docs; make html)
                     ls -l docs/build

@@ -91,12 +91,12 @@ if __name__ == "__main__":
     parser.add_argument('files', nargs='*', help='List of .h and .cpp files')
     parser.add_argument('--file-list', help='File containing list of source files (one per line)')
     args = parser.parse_args()
-    
+
     file_list = args.files
     if args.file_list:
         with open(args.file_list, 'r') as f:
             file_list.extend([line.strip() for line in f if line.strip()])
-    
+
     print("Parsing source files ...")
     test_graph, impl_graph = build_dependency_graph(file_list)
 

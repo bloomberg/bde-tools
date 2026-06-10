@@ -153,7 +153,7 @@ sub getMnemonic($$) {
     my $pattern = 'MNEMONIC:';
     my @matches = grep /$pattern/, @lines;
 
-    my $numMatches = scalar @matches; 
+    my $numMatches = scalar @matches;
 
     if (2 == $numMatches) {
         my $ret = $matches[0];
@@ -161,7 +161,7 @@ sub getMnemonic($$) {
         $ret =~ s|</a>.*||;
         $ret =~ s|^ ||;
         $ret =~ s| *\(\w+\) *$||;
-    
+
         return $ret;
     } elsif (0 == $numMatches) {
         return "";
@@ -903,7 +903,7 @@ END
 
     sub markComponentNamePrivate($) {
         my $cell = shift;
-        
+
         return markNameDeprecated $cell;
     }
 
@@ -938,7 +938,7 @@ END
 
         $cell =~ s|$startOfTableEntry|$startOfTableEntry$startOfSpan|;
         $cell =~ s|$endOfTableEntry|$endOfSpan$endOfTableEntry|;
- 
+
         return $cell;
     }
 
@@ -1240,7 +1240,7 @@ MAIN: {
 
             my $href                       = hrefOfLine($line);
             my $deprecatedFlag             = isDeprecated($htmlDir, $href);
-            my $mnemonic                   =  getMnemonic($htmlDir, $href); 
+            my $mnemonic                   =  getMnemonic($htmlDir, $href);
 
             my $isolatedPackageNameCell    = getEntityNameCell(
                                                               $isolatedPackage,
@@ -1271,7 +1271,7 @@ MAIN: {
 
             my $href                    = hrefOfLine($line);
             my $deprecatedFlag          = isDeprecated($htmlDir, $href);
-            my $mnemonic                =  getMnemonic($htmlDir, $href); 
+            my $mnemonic                =  getMnemonic($htmlDir, $href);
 
             my $packageGroupNameCell    = getEntityNameCell(  $packageGroup,
                                                               BG_GRP,
@@ -1300,7 +1300,7 @@ MAIN: {
 
             my $href               = hrefOfLine($line);
             my $deprecatedFlag     = isDeprecated($htmlDir, $href);
-            my $mnemonic           =  getMnemonic($htmlDir, $href); 
+            my $mnemonic           =  getMnemonic($htmlDir, $href);
 
             my $packageNameCell    = getEntityNameCell(   $package,
                                                           BG_PKG,

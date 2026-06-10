@@ -74,7 +74,7 @@ instrumented analysis configurations on top of the standard bloomberg toolchain:
 
 .. code-block:: shell
 
-   $ plocum bbcmake-env -64 -S .  --action build:all.t -DBBS_BUILD_SYSTEM=ON 
+   $ plocum bbcmake-env -64 -S .  --action build:all.t -DBBS_BUILD_SYSTEM=ON
      -DCMAKE_BUILD_TYPE=Coverage --bbtoolchain BBInstrumentationToolchain
 
 .. note::

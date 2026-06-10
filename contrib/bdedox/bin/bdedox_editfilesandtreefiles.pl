@@ -97,7 +97,7 @@ sub getOptions {
         my     $name =  shift;
         return $name =~ m|$group$|;
     }
-    
+
     sub isPackageInGroupName($) {
         my     $name =  shift;
         return $name =~ m|$pig_comp$|;
@@ -119,7 +119,7 @@ sub getOptions {
             || isPackageInGroupNoncName($name)
             ||    isPackageIsolatedName($name);
     }
-    
+
     sub isComponentName($) {
         my     $name =  shift;
         return $name =~ m|$cmp$|;
@@ -162,7 +162,7 @@ sub editNonComponentFileFiles($) {
     my $dir = shift;
 
     while (my $filename = <$dir/*_8h.html>) {
-        my $entity = basename $filename; 
+        my $entity = basename $filename;
         $entity =~ s/_8h\.html$//;
         $entity =~ s/_09/\+/;
         $entity =~ s/__/_/;
@@ -224,7 +224,7 @@ sub editFilesFile($) {
 #------------------------------------------------------------------------------
 sub editTreeFileLine($) {
     my $line     = shift;
-   
+
     my $filename = $line;     $filename =~ s|</a></p>$||; $filename =~ s|.*>||;
     my $entity   = $filename; $entity =~ s|\.h$||;
 

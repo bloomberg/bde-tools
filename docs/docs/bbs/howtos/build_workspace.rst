@@ -52,7 +52,7 @@ Create workspace CMakeLists.txt
    add_subdirectory(my_app)
 }}}
 
-Configure and Build the Workspace 
+Configure and Build the Workspace
 ---------------------------------
 Proceed with :doc:`setting up the environment and building<build_bde_basic>` as
 usual.

@@ -581,7 +581,7 @@ my $namespaceStack = 0;
        $curlyDepth -= countCurlies($line);
     }
 
-    sub insertLine($) 
+    sub insertLine($)
     {
        my $line = shift;  # Becomes next line returned by 'getNextLine'.
 
@@ -1570,7 +1570,7 @@ sub processMultilineEnum($$) {
     for (; $i < $numLines - 1; ++$i) {
         my $line = @$inputLinesRef[$i];
 
-        if (isEnumPassthroughLine $line) {       
+        if (isEnumPassthroughLine $line) {
             push  @$outputLinesRef, $line;
             next;
         }
@@ -1625,7 +1625,7 @@ sub processMultilineEnum($$) {
         push  @$outputLinesRef, $line;
         next;
     }
-    
+
     push @$outputLinesRef,  @$inputLinesRef[-1];
 
     @$outputLinesRef = map { "$_\n";} @$outputLinesRef;
@@ -1636,7 +1636,7 @@ sub processMultilineEnum($$) {
          die "processMultilineEnum: unequal counts: "
            .   "input=$inputLinesCount "
            . "output=$outputLinesCount";
-    
+
     debug "processMultilineEnum: leave";
 }
 
@@ -1971,7 +1971,7 @@ sub bde2doxygen($$) {
 
         if ($line =~ s|\s*// IMPLICIT$|| # Strip; confuses 'doxygen'.
         or  $line =~ s|\s*// IMPLICIT[^:]||) {
-         
+
             #Re-create at front of function-level doc.
 
             my $implicitLine = "// IMPLICIT:";  # Need ':'. (All caps eaten??)

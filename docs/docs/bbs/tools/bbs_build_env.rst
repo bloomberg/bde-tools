@@ -59,7 +59,7 @@ Usage Examples
    the environment (see below).  Additional compilers can be manually configured
    into this list by editing ``~/.bbs_build_profiles``.  See
    :doc:`../howtos/configure_profile`.
-   
+
 
 2. ``eval `bbs_build_env -p gcc-9.0.0 -u dbg_64 -i ~/bde-install```
 
@@ -94,7 +94,7 @@ bbs_build_env.py:
 - ``BBS_ENV_MARKER``
 
   Flag to use BBS build system in the dual-mode CMakeLists.txt
-  (this flag is transitional tool to support both old and new build systems 
+  (this flag is transitional tool to support both old and new build systems
   and will be removed once the transition is completed )
 
 - ``BDE_CMAKE_TOOLCHAIN``

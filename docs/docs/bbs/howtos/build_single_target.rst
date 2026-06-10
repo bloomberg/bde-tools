@@ -12,7 +12,7 @@ After :doc:`setting up the build environment <build_bde_basic>`, you can
 configure the library with a simple:
 
 .. code-block:: shell
-    
+
    $ bbs_build configure
 
 This command will generate build target for **all** libraries and **all** test
@@ -22,9 +22,9 @@ drivers in the current build repository or workspace.
   target in the build command:
 
   .. code-block:: shell
-    
-     $ bbs_build build --target bsls  # Build bsls package library 
-     $ bbs_build build --target bal   # Build bal package group library 
+
+     $ bbs_build build --target bsls  # Build bsls package library
+     $ bbs_build build --target bal   # Build bal package group library
 
      $ bbs_build build --target all.t  # Build all test drivers
      $ bbs_build build --test build    # Build all test drivers
@@ -35,7 +35,7 @@ drivers in the current build repository or workspace.
 * To build and run test drivers:
 
   .. code-block:: shell
-    
+
      $ bbs_build build --test run    # Build and run all test drivers
 
      $ bbs_build build --target bslmt --test run  # Build and run test drivers for bslmt package
@@ -43,7 +43,7 @@ drivers in the current build repository or workspace.
 * Check implementation cycles:
 
   .. code-block:: shell
-    
+
      $ bbs_build build --target check_cycles      # Check cycles for all libraries
 
      $ bbs_build build --target bal.check_cycles  # Check cycles for bal package group only
@@ -59,18 +59,18 @@ underlying build system.
   (``bsls_platform`` in the example below):
 
   .. code-block:: shell
-    
+
      $ bbs_build configure --regex "bsls_platform$"
 
   In a similar fashion you can provide a regex to enable tests for the whole
   package or even package groups:
 
   .. code-block:: shell
-    
+
      $ bbs_build configure --regex "bsls"
 
   .. note::
-     Misspeling regex can lead to the test driver set to be empty. 
+     Misspeling regex can lead to the test driver set to be empty.
 
 * Building and running test drivers is done with the following commands:
 

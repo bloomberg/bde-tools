@@ -48,13 +48,13 @@ build.
          Properties:    {'noexc': False, 'bitness': 32, 'standard': 'cpp20', 'sanitizer': False, 'assert_level': 'default', 'review_level': 'default'}
          Description:   Production toolchain for dpkg builds, 32-bit.
 
-Configure, build and test BDE 
+Configure, build and test BDE
 -----------------------------
 
 * Select the build profile and build type:
 
 .. code-block:: shell
-     
+
    $ cd bde
    $ eval `bbs_build_env -u opt`
 
@@ -70,5 +70,5 @@ Configure, build and test BDE
 * Configure and build BDE libraries:
 
 .. code-block:: shell
-     
+
       $ bbs_build configure build

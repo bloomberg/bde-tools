@@ -2,7 +2,7 @@ Source: bde-tools
 Section: unknown
 Priority: extra
 Maintainer: Oleg Subbotin <osubbotin@bloomberg.net>
-Build-Depends: 
+Build-Depends:
     bbtoolchain-cmake-debhelper,
     build-base,
     cmake,
@@ -14,7 +14,7 @@ Standards-Version: 3.8.4
 
 Package: bde-tools
 Architecture: any
-Depends: 
+Depends:
     cmake,
     coreutils,
     make,

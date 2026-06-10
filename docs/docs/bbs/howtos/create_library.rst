@@ -95,12 +95,12 @@ Futhermore, the group and package ``.mem`` file should list respective members:
    xyzb
 
 .. code-block::
-  
+
    # xyza.mem
    xyza_component
 
 .. code-block::
-  
+
    # xyzb.mem
    xyzb_component
 
@@ -175,9 +175,9 @@ The application source:
    #include <ball_loggermanagerconfiguration.h>
    #include <ball_streamobserver.h>
    #include <bsl_memory.h>
-   
+
    using namespace BloombergLP;
-   
+
    BALL_LOG_SET_NAMESPACE_CATEGORY("MAIN");
 
    int main(int argc, char ** argv)
@@ -257,7 +257,7 @@ Configure, build and test your application
 * Configure and build your aplication:
 
 .. code-block:: shell
-    
+
    $ bbs_build configure build --target my_app
 
 * Run the application:

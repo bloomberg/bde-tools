@@ -17,7 +17,7 @@ documentation source tree.
 
 ## Internal documentation build environment
 
-Bloomberg development machines have pre-configured sphinx environment with 
+Bloomberg development machines have pre-configured sphinx environment with
 all necessary modules.  To load the environment:
 
 ```
@@ -35,7 +35,7 @@ make internal
 
 The generated site can be found in the build/internal/html folder.
 
-Developers in a Bloomberg environment can make a symbolic link to their 
+Developers in a Bloomberg environment can make a symbolic link to their
 `public_html` directory using:
 
 ```

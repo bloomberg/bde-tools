@@ -225,7 +225,7 @@ endfunction()
 Add a dependency not listed in the .dep file.
 #]]
 function(bbs_add_target_dynamic_dependency target)
-    foreach(dep ${ARGN}) 
+    foreach(dep ${ARGN})
         target_link_libraries(${target} PUBLIC ${dep})
         bbs_import_target_dependencies(${target} ${dep})
     endforeach()
@@ -525,12 +525,12 @@ function (bbs_emit_check_cycles target)
         LIST(APPEND src ${${target}_INCLUDE_FILES})
         LIST(APPEND src ${${target}_SOURCE_FILES})
         LIST(APPEND src ${${target}_TEST_SOURCES})
-        
+
         # Write source file list to a response file to avoid command line length limits on Windows
         set(file_list_path "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${uor_name}.check_cycles.files.txt")
         string(REPLACE ";" "\n" src_newlines "${src}")
         file(WRITE "${file_list_path}" "${src_newlines}")
-        
+
         add_custom_target(${uor_name}.check_cycles
             COMMAND   ${cmd_wrapper} "${Python3_EXECUTABLE}" "${CHECK_CYCLES}" --file-list "${file_list_path}"
             DEPENDS "${file_list_path}"

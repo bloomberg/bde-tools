@@ -29,10 +29,10 @@ Printing the contents of a map:
     $2 = {
       d_compAndAlloc = {<BloombergLP::bslstl::MapComparator<int, short, std::less<int> >> = {<std::less<int>> = {<std::binary_function<int, int, bool>> = {<No data fields>}, <No data fields>}, <No data fields>}, d_pool = {
           d_pool = {<bsl::allocator<BloombergLP::bsls::AlignmentImp8ByteAlignedType>> = {
-              d_mechanism = 0x804ebc8 <BloombergLP::g_newDeleteAllocatorSingleton>}, d_chunkList_p = 0x804f008, d_freeList_p = 0x0, 
-            d_blocksPerChunk = 2}}}, d_tree = {d_sentinel = {d_parentWithColor_p = 0xf63d4e2e, d_left_p = 0x804f00c, 
+              d_mechanism = 0x804ebc8 <BloombergLP::g_newDeleteAllocatorSingleton>}, d_chunkList_p = 0x804f008, d_freeList_p = 0x0,
+            d_blocksPerChunk = 2}}}, d_tree = {d_sentinel = {d_parentWithColor_p = 0xf63d4e2e, d_left_p = 0x804f00c,
           d_right_p = 0x804f00c}, d_numNodes = 1}}
-    
+
 The printed value of the map contains approximatelly 5 lines, too much, of
 which only the last few characters provide any insight about the contents of
 the map: 'd_numNodes = 1', too little.
@@ -43,7 +43,7 @@ pointers to nodes. Or we can just use a pretty printer:
 
     (gdb) print mii
     $3 = map<int,short> [size:1] = {[10] = 321}
-    
+
 The dump is now obvious: It contains a single entry that maps the value '10' to
 the value '321'.
 
@@ -51,7 +51,7 @@ Printing a bteso_IPv4Address:
 
     (gdb) print addr2
     $2 = {d_address = 23374016, d_portNumber = 8080}
-    
+
 In this case all of the information is present and readily available, the port
 is 8080, but the actual address is kept as an integer in network byte order. We
 can take advantage of that and print the number in hexadecimal to separate the
@@ -59,13 +59,13 @@ can take advantage of that and print the number in hexadecimal to separate the
 
     (gdb) print /x addr2.d_address
     $3 = 0x164a8c0
-    
+
 Now we just need to decode each one of the bytes to get the original address.
 Or we can use a simple pretty printer to solve that for us:
 
     (gdb) print addr2
     $4 = 192.168.100.1:8080
-    
+
 Goal
 ====
 
@@ -116,7 +116,7 @@ running:
         unordered_set
         vector
         weak_ptr
-    
+
 Each printer can be enabled or disabled individually or by blocks.  This can be
 useful to inspect the raw memory when we need to access some detail that is not
 shown by the pretty printer:
@@ -186,7 +186,7 @@ brackets)
       unordered_set            bsl::unordered_set<T>
       vector                   bsl::vector<T> (2)
       weak_ptr                 bsl::weak_ptr<T>
-  
+
 (1) Only specialization with 'bsl::allocator<T>' (i.e. polymorphic allocator
     adaptor) is supported
 

@@ -19,7 +19,7 @@ Currently, this program emulates two constructs:
           arguments and adding an argument with each repetition (up to 10
           arguments by default).
         * Forwarding references in function arguments are emulated by
-          surrounding the argument declaration in a 
+          surrounding the argument declaration in a
           ``BSLS_COMPILERFEATURES_FORWARD_REF`` macro invocation and replacing
           ``std::forward`` calls with ``BSLS_COMPILERFEATURES_FORWARD``.
 
@@ -35,7 +35,7 @@ by the BBS build system.
 Usage
 -----
 
-\ **Usage:**\  \ ``sim_cpp11_features.pl``\  [ \ *option...*\  ] \ *input-file-name...*\ 
+\ **Usage:**\  \ ``sim_cpp11_features.pl``\  [ \ *option...*\  ] \ *input-file-name...*\
 
 Each input file can contain zero or more regions delimited by the simulation
 marker
@@ -56,7 +56,7 @@ Options
 =======
 
 
-``--output=`` *filename.ext* 
+``--output=`` *filename.ext*
 ----------------------------
 Specifies the name of the output file. By default, the C++11 output overwrites
 the input file and the C++03 output is written to a file whose name is the same
@@ -77,7 +77,7 @@ produce a verbose source file that is difficult to maintain. The default is
 ``--no-inplace``.
 
 
-\ ``--verify-no-change``\ 
+\ ``--verify-no-change``\
 --------------------------
 Verify that nothing has changed in the main file that would result in a change
 in generated code (including any generated code within the main file itself).
@@ -85,7 +85,7 @@ If any output (including the main file) would change, do not write any output
 and abort with an error.
 
 
-``--clean`` 
+``--clean``
 -----------
 When used with ``--inplace``, removes all C++03 emulation code, leaving a
 C++11-only file that is more convenient to maintain during development.
@@ -94,7 +94,7 @@ a successful build using C++11, this tool is typically run again without
 ``--clean`` to produce release code that can be tested with C++03.
 
 
-``--var-args=`` *max-args* 
+``--var-args=`` *max-args*
 --------------------------
 The maximum number of variadic template expansions to generate (default 10).
 This value is written into the C++11 file as an embedded option (see below) so
@@ -107,18 +107,18 @@ Runs the tool on a built-in test file, producing a ``diff``  of the original
 and modified file if changes were detected. Usually used with ``--inplace``.
 
 
-``--debug=`` *level* 
+``--debug=`` *level*
 --------------------
 Turns on debugging at the specified level. The higher the level, the more
 verbose the output.
 
 
-``--trace=`` *subroutine*:*level* 
+``--trace=`` *subroutine*:*level*
 ---------------------------------
 Turns on tracing for the specified subroutine (for debugging).
 
 
-*input-file-name...* 
+*input-file-name...*
 --------------------
 One or more input file names.  If the input file is a single dash (-), then
 read from standard input.
@@ -130,7 +130,7 @@ Embedded options
 A few options can be embedded directly into the input file at the end of an
 ``#if``  directive that introduces a region to be emulated:
 
-``// $var-args=`` *n* 
+``// $var-args=`` *n*
 ---------------------
 Globally sets the maximum number of variadic template expansions to *n* . A
 value specified using the command-line ``--var-args`` option overrides the
@@ -138,7 +138,7 @@ value of *n* specified using this embedded option and overwrites *n* in the
 generated output.
 
 
-``// $local-var-args=`` *n* 
+``// $local-var-args=`` *n*
 ---------------------------
 Sets the maximum number of variadic template expansions to *n*  only for the
 current region. The number of expansions returns to the file default after the

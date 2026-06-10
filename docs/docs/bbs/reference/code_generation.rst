@@ -53,7 +53,7 @@ step, which sets up the rules for re-generating the target files if necessary:
     $ bbs_build configure
         ...
         -- Looking for pthread_create in pthread - found
-        -- Found Threads: TRUE  
+        -- Found Threads: TRUE
         -- sim_cpp11 generation: /bb/mbiga/mbig1480/bde/groups/bdl/bdlb/bdlb_nullablevalue.cpp -> /bb/mbiga/mbig1480/bde/groups/bdl/bdlb/bdlb_nullablevalue_cpp03.cpp
         -- sim_cpp11 generation: /bb/mbiga/mbig1480/bde/groups/bdl/bdlb/bdlb_nullablevalue.h -> /bb/mbiga/mbig1480/bde/groups/bdl/bdlb/bdlb_nullablevalue_cpp03.h
         -- sim_cpp11 generation: /bb/mbiga/mbig1480/bde/groups/bsl/bslalg/bslalg_arrayprimitives.cpp -> /bb/mbiga/mbig1480/bde/groups/bsl/bslalg/bslalg_arrayprimitives_cpp03.cpp
@@ -262,5 +262,5 @@ are out of sync, allowing us to make sure that the state of committed code is
 in sync.
 
 .. code-block:: shell
-        
+
    bbs_build build --cpp11-verify-no-change

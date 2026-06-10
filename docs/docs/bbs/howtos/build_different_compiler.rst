@@ -30,13 +30,13 @@ the simplest approach is to use the standard ``CMake`` environment variables lik
 For example:
 
 .. code:: shell
-          
+
    $ eval `bbs_build_env`
-     Using system configuration: /somewhere/bbs_build_profiles   
+     Using system configuration: /somewhere/bbs_build_profiles
      Effective ufid: dbg
      Using build profile: gcc-10.2.1
      Using install directory: /somewhere/else/bde/_install
-   
+
    $ export CXX=/unusual/compiler/location/compiler
    $ export CXXFLAGS=-fcoroutines
    $ bbs_build configure build
@@ -48,7 +48,7 @@ via the compiler command line.
 .. note::
 
    :doc:`../tools/bbs_build_env` will overwrite existing variables you have set.
-          
+
 Observing Build System Traces
 -----------------------------
 

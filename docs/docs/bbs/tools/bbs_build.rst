@@ -24,7 +24,7 @@ More specifically, the tool handles the following aspects of the build process:
 :ref:`bbs_build_env <bbs_build_env-top>` and will pick up those parameters
 from the environment if they are not specified in the command line.
 
-Command line 
+Command line
 ============
 
 .. note::
@@ -74,7 +74,7 @@ Common parameters
 
 .. option:: -v, --verbose
 
-   Produce verbose output. 
+   Produce verbose output.
 
 .. option:: -h, --help
 
@@ -87,7 +87,7 @@ Those parameters are used by ``configure`` command.
 
 .. option:: -u UFID, --ufid UFID
 
-   Unified Flag IDentifier (e.g. "opt_64_cpp17"). 
+   Unified Flag IDentifier (e.g. "opt_64_cpp17").
 
    .. note::
       If the parameter is not specified, the value is taken from the
@@ -98,7 +98,7 @@ Those parameters are used by ``configure`` command.
    Select the build system for compilation.
 
    .. note::
-      If the parameter is not specified, the script will choose the 
+      If the parameter is not specified, the script will choose the
       low-level build system (default is ``ninja``).
 
 .. option:: --toolchain TOOLCHAIN
@@ -109,7 +109,7 @@ Those parameters are used by ``configure`` command.
 
    .. note::
       If the parameter is not specified, the script will try to find the
-      generic compiler toolchain file or use the CMake defaults, if no 
+      generic compiler toolchain file or use the CMake defaults, if no
       toolchain file is found.
 
 .. option:: --compiler COMPILER
@@ -130,10 +130,10 @@ Those parameters are used by ``configure`` command.
 
    The path prefix in which to look for dependencies for this buils. If
    ``--refroot`` is specified, this prefix is relative to the refroot
-   (default="/opt/bb"). 
-   
+   (default="/opt/bb").
+
    .. note::
-      This parameter also defines the installation prefix for install 
+      This parameter also defines the installation prefix for install
       command.
 
 .. option:: --clean

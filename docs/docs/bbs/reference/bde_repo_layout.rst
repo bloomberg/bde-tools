@@ -140,7 +140,7 @@ physical units should have the following structure on the file system:
          `-- bdl
              |
              `-- ...
-    
+
 Stand-Alone and Application Packages
 ------------------------------------
 

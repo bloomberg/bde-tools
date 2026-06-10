@@ -203,7 +203,7 @@ $progDir/bdedox_gencomponentsfile.pl       \
                                }
 logEnd  "bdedox_gencomponentsfile.pl"
 
-# Save 'files.html and tree.html' 
+# Save 'files.html and tree.html'
 logBeg  "Save 'files.html' and 'tree.html'"
 cp -p ${BDEDOX_HTMLDIR}/files.html \
       ${BDEDOX_HTMLDIR}/filesORIG.html || { echo \

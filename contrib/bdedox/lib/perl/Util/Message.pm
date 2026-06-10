@@ -186,7 +186,7 @@ Verbose messages are only logged if the verbosity is set high enough:
 
 =item *
 
-L<"verbose">, L<"verbose_alert">, 
+L<"verbose">, L<"verbose_alert">,
 
 =item *
 
@@ -467,7 +467,7 @@ automatically when L<"open_log"> is called. Similarly, L<"close_log">
 will automatically clear the logging flag.
 
 Note that enabling logging when no log file is opened will have no
-effect; the flag only controls output to a log file that has been 
+effect; the flag only controls output to a log file that has been
 opened previously with L<"open_log">.
 
 =head2 get_logging()
@@ -512,8 +512,8 @@ sub get_recording () { return $recording }
 
 =head2 open_log($filename)
 
-Open a new log file with the specified filename, truncating any existing 
-content in the file if it already exists. If a log file has already been 
+Open a new log file with the specified filename, truncating any existing
+content in the file if it already exists. If a log file has already been
 opened by a previous call to C<open_log> then it is closed first.  An
 exception is thrown if the file cannot be opened for output.
 
@@ -964,7 +964,7 @@ sub warning ($@) {
 =head2 warnonce($msg,@args)
 
 Generate a warning, and additionally record it for future reference. If the
-same warning is issued again, it is suppressed. Note that warnings 
+same warning is issued again, it is suppressed. Note that warnings
 issued via L<warning> are I<not> recorded and will not be suppressed,
 nor suppress the same warning issued via C<warnonce>.
 

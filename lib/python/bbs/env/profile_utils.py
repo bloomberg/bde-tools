@@ -19,11 +19,11 @@ class BuildProfile():
        This object describes a BDE equivalent of the cmake presets
        which is roughly the compiler + toolchain pair.
        Note that build profile can define only a [named] toolchain
-       ( and the toolchain will define path to a compiler ) 
+       ( and the toolchain will define path to a compiler )
 
     Attributes:
         name (str): Build profile name
-        compiler_type (str): Type of the compiler ("gcc", "clang") 
+        compiler_type (str): Type of the compiler ("gcc", "clang")
         c_path (str): Path to the C compiler executable.
         cxx_path (str): Path to the C++ compiler executable.
         version (str): Version number of the compiler.
@@ -454,7 +454,7 @@ def get_build_profiles():
             with open(config_path, "r") as f:
                 user_profiles = get_config_profiles(uplid, f)
 
-        return prod_profiles + system_profiles + detect_installed_compilers(uplid) + user_profiles 
+        return prod_profiles + system_profiles + detect_installed_compilers(uplid) + user_profiles
     else:
         build_profiles = []
         for v in msvcversions.versions:

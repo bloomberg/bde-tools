@@ -496,7 +496,7 @@ sub isPkgConfig($) {
 =head2 isIndexed($package)
 
 Return 1 if the supplied name or numerical type is an indexed entity (i.e
-located in a subdirectory of the main class directory and linked across to 
+located in a subdirectory of the main class directory and linked across to
 from an 'index' directory). Return 0 if the supplied name indicates a
 non-indexed class. See C<isIndexedType>.
 
@@ -757,7 +757,7 @@ Return the type subdirectory for the specifified numeric type.
 =head2 getFullTypeDir($type)
 
 Returns the full type subdirectory for the specified numeric type. This differs from
-L<"getTypeDir($type)"> in that it will check that the type is indexed, in which case 
+L<"getTypeDir($type)"> in that it will check that the type is indexed, in which case
 the subdirectory has an additional C<index/> component.
 
 =head2 getTypeFromDir($dirname)
@@ -931,8 +931,8 @@ sub isValidDependency($$;$) {
     return 0 if !$type1;   # unknown type for "depender" is error
     return 1 if !$type2; # unknown type for "dependee" is assumed to be ok
 
-    return 1 if $type2 eq IS_BASE or 
-      $type2 eq IS_ENTERPRISE or 
+    return 1 if $type2 eq IS_BASE or
+      $type2 eq IS_ENTERPRISE or
         $type2 eq IS_ADAPTER;
 
     return 1 if $type2 eq IS_DEPARTMENT and
@@ -946,8 +946,8 @@ sub isValidDependency($$;$) {
       ($type1 eq IS_DEPARTMENT or
        $type1 eq IS_FUNCTION);
 
-    return 0 if $type2 eq IS_FUNCTION or 
-      $type2 eq IS_WRAPPER or 
+    return 0 if $type2 eq IS_FUNCTION or
+      $type2 eq IS_WRAPPER or
         $type2 eq IS_APPLICATION;
 
     if ($type1 eq IS_WRAPPER) {

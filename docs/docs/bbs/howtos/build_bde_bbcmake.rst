@@ -28,20 +28,20 @@ Setup distribution refroot
    $ export DISTRIBUTION_REFROOT=${PWD}/refroot
    $ refroot-install --config bde/debian/control --arch amd64 --refroot-path ${DISTRIBUTION_REFROOT} --yes
 
-Configure, build and test BDE 
+Configure, build and test BDE
 -----------------------------
 
 * Create build folder
 
 .. code-block:: shell
-     
+
    $ cd bde
    $ mkdir _build; cd _build
 
 * Configure the Cmake build system:
 
 .. code-block:: shell
-    
+
    $ plocum bbcmake .. -64 -DBBS_BUILD_SYSTEM=ON
 
 .. note::
@@ -63,5 +63,5 @@ required once BBS will become BDE primary build system.
 .. code-block:: shell
 
    $ plocum cmake --build . --targets all.t
-   $ plocum ctest 
+   $ plocum ctest
 
