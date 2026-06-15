@@ -1,0 +1,37 @@
+// test_forwarding.h                                                  -*-C++-*-
+#ifndef INCLUDED_TEST_FORWARDING
+#define INCLUDED_TEST_FORWARDING
+
+#include <bsls_compilerfeatures.h>
+
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
+
+template <class T>
+void forwardOne(T&& value) {
+    process(std::forward<T>(value));
+}
+
+template <class T, class U>
+void forwardTwo(T&& first, U&& second) {
+    process(std::forward<T>(first), std::forward<U>(second));
+}
+
+#endif
+
+#endif
+
+// ----------------------------------------------------------------------------
+// Copyright 2020 Bloomberg Finance L.P.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ----------------------------- END-OF-FILE ----------------------------------

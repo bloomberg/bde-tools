@@ -6,29 +6,27 @@ BdeTargetUtils
 This module provide a set of function to create and populate bde targets.
 #]]
 
-# Find perl, but it's ok if it's missing
-find_package(Perl)
-
-# Find sim_cpp11_features.pl.  It's ok if it's missing, as it will be during
+# Find sim_cpp11_features.py.  It's ok if it's missing, as it will be during
 # dpkg builds.
 if(NOT DEFINED SIM_CPP11)
-    if(PERL_FOUND AND NOT WIN32)
+    find_package(Python3 3.9 QUIET)
+    if(Python3_FOUND)
         message(TRACE
-                "Found perl version ${PERL_VERSION_STRING} at ${PERL_EXECUTABLE}")
+                "Found Python3 version ${Python3_VERSION} at ${Python3_EXECUTABLE}")
         find_program(SIM_CPP11
-                     "sim_cpp11_features.pl"
+                     "sim_cpp11_features.py"
                      PATHS ${CMAKE_CURRENT_LIST_DIR}/scripts
                      )
         if(SIM_CPP11)
-            message(STATUS "Found sim_cpp11_features.pl in ${SIM_CPP11}")
+            message(STATUS "Found sim_cpp11_features.py in ${SIM_CPP11}")
 
             option(BBS_CPP11_VERIFY_NO_CHANGE "Verify that sim_cpp11_features generates no changes" OFF)
         else()
             message(STATUS "${CMAKE_CURRENT_LIST_DIR}")
-            message(STATUS "sim_cpp11_features.pl not found - disabled")
+            message(STATUS "sim_cpp11_features.py not found - disabled")
         endif()
     else()
-        message(STATUS "Perl not found and/or on Windows - sim_cpp11_features.pl disabled")
+        message(STATUS "Python 3.9+ not found - sim_cpp11_features.py disabled")
     endif()
 endif()
 
@@ -495,7 +493,7 @@ function (bbs_generate_cpp03_sources srcFiles)
                 string(REPLACE "_cpp03." "." cpp11SrcFile ${srcFile})
                 message(TRACE "sim_cpp11 ${cpp11Operation}: ${cpp11SrcFile} -> ${srcFile}")
 
-                set(command ${cmd_wrapper} "${PERL_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}")
+                set(command ${cmd_wrapper} "${Python3_EXECUTABLE}" "${SIM_CPP11}" ${cpp11VerifyOption} "${cpp11SrcFile}")
 
                 if (_IMMEDIATE)
                     execute_process(

@@ -11,3 +11,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# sim_cpp11_features test output and generated files
+BdeBuildSystem/scripts/run_sim_cpp11_features_tests_output/
+
+# Python virtual environment
+.venv/
