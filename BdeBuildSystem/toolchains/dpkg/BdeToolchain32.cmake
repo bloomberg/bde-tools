@@ -10,12 +10,12 @@ if(NOT DEFINED DISTRIBUTION_REFROOT)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-    include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain32.cmake")
+    include("${DISTRIBUTION_REFROOT}/opt/bb/share/cmake/BBToolchain32.cmake")
     # Nothing to add.
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
-    include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain32.cmake")
+    include("${DISTRIBUTION_REFROOT}/opt/bb/share/cmake/BBToolchain32.cmake")
 
     # CMAKE_<LANG>_COMPILER_ID is not populated for toolchain file yet
     # Using CMAKE_<LANG>_COMPILER instead ( contains full path to the compiler binary )

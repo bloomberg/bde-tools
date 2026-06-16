@@ -213,7 +213,7 @@ def get_production_profiles(uplid):
                         {
                             "name": "BBToolchain64",
                             "description": "Production toolchain for dpkg builds, 64-bit.",
-                            "toolchain": "opt/bb/share/plink/BBToolchain64.cmake",
+                            "toolchain": "opt/bb/share/cmake/BBToolchain64.cmake",
                             "properties": {
                                 "noexc": false,
                                 "bitness": 64,
@@ -224,7 +224,7 @@ def get_production_profiles(uplid):
                         {
                             "name": "BBToolchain32",
                             "description": "Production toolchain for dpkg builds, 32-bit.",
-                            "toolchain": "opt/bb/share/plink/BBToolchain32.cmake",
+                            "toolchain": "opt/bb/share/cmake/BBToolchain32.cmake",
                             "properties": {
                                 "noexc": false,
                                 "bitness": 32,
@@ -240,7 +240,7 @@ def get_production_profiles(uplid):
                         {
                             "name": "BBToolchain64",
                             "description": "Production toolchain for dpkg builds, 64-bit.",
-                            "toolchain": "opt/bb/share/plink/BBToolchain64.cmake",
+                            "toolchain": "opt/bb/share/cmake/BBToolchain64.cmake",
                             "properties": {
                                 "noexc": false,
                                 "bitness": 64,
@@ -251,34 +251,7 @@ def get_production_profiles(uplid):
                         {
                             "name": "BBToolchain32",
                             "description": "Production toolchain for dpkg builds, 32-bit.",
-                            "toolchain": "opt/bb/share/plink/BBToolchain32.cmake",
-                            "properties": {
-                                "noexc": false,
-                                "bitness": 32,
-                                "standard" : "cpp03",
-                                "sanitizer": false
-                            }
-                        }
-                    ]
-                },
-                {
-                    "uplid": "unix-aix",
-                    "profiles": [
-                        {
-                            "name": "BBToolchain64",
-                            "description": "Production toolchain for dpkg builds, 64-bit.",
-                            "toolchain": "opt/bb/share/plink/BBToolchain64.cmake",
-                            "properties": {
-                                "noexc": false,
-                                "bitness": 64,
-                                "standard": "cpp03",
-                                "sanitizer": false
-                            }
-                        },
-                        {
-                            "name": "BBToolchain32",
-                            "description": "Production toolchain for dpkg builds, 32-bit.",
-                            "toolchain": "opt/bb/share/plink/BBToolchain32.cmake",
+                            "toolchain": "opt/bb/share/cmake/BBToolchain32.cmake",
                             "properties": {
                                 "noexc": false,
                                 "bitness": 32,

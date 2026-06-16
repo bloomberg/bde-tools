@@ -11,11 +11,11 @@ endif()
 
 # We converged on the compilation flags with the production toolchains on all platforms.
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-    include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain64.cmake")
+    include("${DISTRIBUTION_REFROOT}/opt/bb/share/cmake/BBToolchain64.cmake")
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
-    include("${DISTRIBUTION_REFROOT}/opt/bb/share/plink/BBToolchain64.cmake")
+    include("${DISTRIBUTION_REFROOT}/opt/bb/share/cmake/BBToolchain64.cmake")
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
