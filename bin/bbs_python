@@ -1,0 +1,20 @@
+# Shared python detection logic for the bin/ scripts.
+#
+# Source this file from a POSIX shell script to make the bbs_exec_python
+# function available.  The function searches for a suitable python
+# interpreter and execs it with the arguments passed to the function.
+# Typical use:
+#
+#     . "$(dirname "$SCRIPT")/bbs_python"
+#     bbs_exec_python "${SCRIPT}.py" "$@"
+#
+# On failure (no suitable interpreter found) the function prints a message
+# to stderr and exits with status 1.
+
+bbs_exec_python() {
+    for pyver in 3.14 3.13 3.12 3.11 3.10 3.9 3.8 3.7 3.6 3 ""; do
+        python$pyver -V > /dev/null 2>&1 && exec python$pyver "$@"
+    done
+    echo "No appropriate python interpreter found." >&2
+    exit 1
+}
