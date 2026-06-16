@@ -30,11 +30,9 @@ if [ "${platform}" == "Cygwin" ]; then
     SCRIPT=$(cygpath -aw ${SCRIPT})
 fi
 
-# Find a python3 or python that is version 3.8, or 3.14
-for py in python{3.14,3.8,3}; do
-    if $py -V 2>&1 | grep -qE '^Python 3\.(8|9|[1-9][0-9])\.'; then
-        exec env PYTHONPATH="$PYTHONPATH:${MY_LIB_PATH}/lib" $py "${SCRIPT}.py" "$@"
-    fi
+# Find suitable python version and invoke the tool.
+for pyver in 3.14 3.13 3.12 3.10 3.9 3.8 3.7 3.6 3 ""; do
+    python$pyver -V > /dev/null 2>&1 && exec env PYTHONPATH="$PYTHONPATH:${MY_LIB_PATH}/lib" python$pyver "${SCRIPT}.py" "$@"
 done
-echo "No appropriate python interpreter found (3.8+ required)." >&2
+echo "No appropriate python interpreter found." >&2
 exit 1
