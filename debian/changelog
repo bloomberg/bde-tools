@@ -1,11 +1,25 @@
-bde-tools (4.38.0.0) unstable; urgency=low
+bde-tools (4.39.0.0) unstable; urgency=low
 
+  * 2f09c8a Update scripts installed, fix missed python list (#426)
+  * b0118ff Factor out python detection logic to bin/bbs_python (#425)
+  * bed2ad7 Revert sh script wrappers (#424)
+  * 1c946ba Adjust location for the production toolchains (#423)
+  * 2d3c62c Drqs 182199588 sim cpp11 features to py (#412)
+  * 13fd718 Cleanup whitespace (#421)
+  * 56049ef Fix pkg-config link ordering when dep is also a transitive requirement (#420)
+  * 884d758 Increase test discovery timeout (#419)
+
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 16 Jun 2026 16:59:34 -0400
+
+bde-tools (4.38.0.0) git; urgency=low
+
+  * 19d2883 Changelog for version 4.38.0.0
   * 223dfdf Fail to set up BDE environment task if bbs_build_env fails (#417)
   * 48fab43 Ignore utf-8 errors (#416)
   * c08fcac Add pretty printer for bsl::deque (#413)
   * 3648289 Restore lib/python/bdebuild/runtest for bde_runtest support (#414)
 
- -- Rostislav Khlebnikov <rkhlebnikov@bloomberg.net>  Thu, 30 Apr 2026 11:57:45 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 15 May 2026 21:51:01 -0400
 
 bde-tools (4.37.0.0) git; urgency=low
 
