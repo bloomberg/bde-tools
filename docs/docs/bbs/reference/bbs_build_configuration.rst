@@ -101,9 +101,13 @@ The following flags are recognized by BBS tools:
    :widths: 10, 30, 60
    :align: left
 
-   "dbg", "CMAKE_BUILD_TYPE='Debug'", "Non optimized build with debug information"
-   "opt",  "CMAKE_BUILD_TYPE='Release'", "Optimized build without debug information"
-   "opt_dbg", "CMAKE_BUILD_TYPE='RelWithDebInfo'", "Optimized build with debug information"
+   "dbg", "CMAKE_BUILD_TYPE='Debug'
+   BDE_BUILD_TARGET_DBG", "Non optimized build with debug information"
+   "opt",  "CMAKE_BUILD_TYPE='Release'
+   BDE_BUILD_TARGET_OPT", "Optimized build without debug information"
+   "opt_dbg", "CMAKE_BUILD_TYPE='RelWithDebInfo'
+   BDE_BUILD_TARGET_DBG
+   BDE_BUILD_TARGET_OPT", "Optimized build with debug information"
    "noexc", "BDE_BUILD_TARGET_NOEXC", "Build with no exception (if not specified, exceptions are enabled)"
    "nomt", "BDE_BUILD_TARGET_NOMT", "Build without multi-threading (if not specified, multi-threading is enabled)"
    "32", "BDE_BUILD_TARGET_32", "Build for 32-bit architecture"
