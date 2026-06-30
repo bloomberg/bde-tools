@@ -1904,6 +1904,13 @@ class BdldDatum:
                 f"((BloombergLP::bdld::Datum*)0x{int(val.address):x})->{method}()"
             )
 
+            self.internal_type = int(call_method("internalType"))
+
+            if self.internal_type == 0:
+                self.value_str = "<uninitialised>"
+                self.datum_type = None
+                return
+
             # Call the type() method via GDB
             self.datum_type = int(call_method("type"))
 
