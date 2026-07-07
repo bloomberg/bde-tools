@@ -24,29 +24,222 @@ import os
 import re
 import sys
 from datetime import datetime
-from typing import Optional, List, Tuple, Dict
+from typing import Iterator, NamedTuple, Optional, List, Tuple, Dict
+
+# ============================================================================
+#                          RUN-TIME CONFIGURATION
+# ============================================================================
+
+
+class Job(NamedTuple):
+    """A single (input, output) processing job emitted by ``Params.iter_jobs``."""
+
+    command_line: str
+    input_filename: str
+    output_filename: str
+
+
+class Params:
+    """Read-only, frozen run-time options parsed from the command line.
+
+    Built once in ``main()`` (or directly from ``argv`` at construction time)
+    and passed explicitly through the call graph so that helper routines do
+    not depend on module-level state.  Also hosts the diagnostic helpers
+    (``trace``, ``trace2``, ``debug_print``) since those consume
+    ``debug_level`` and ``trace_ctrls``.
+
+    Per-file derived data (e.g. the recorded ``command_line``) is
+    intentionally *not* stored here; it is produced by ``iter_jobs`` and
+    passed as a separate argument to the entry points that need it.
+    """
+
+    # Static defaults used by ``__init__``.
+    DEFAULT_MAX_ARGS: int = 10
+    MAX_COLUMN: int = 79  # Maximum allowed output line length
+    TIMESTAMP_PREFIX: str = "Generated on "
+
+    # Type annotations for the attributes set in ``__init__``.  These are
+    # PEP 526 declarations only; the actual values are populated by parsing
+    # ``argv``.
+    debug_level: int
+    trace_ctrls: Dict[str, int]
+    clean: bool
+    inplace: bool
+    verify_no_change: bool
+    self_test: bool
+    default_max_args: int
+    max_args_opt: int
+    max_column: int
+    timestamp_prefix: str
+    timestamp: str
+    timestamp_comment: str
+    files: Tuple[str, ...]
+    output: Optional[str]
+
+    def __init__(self, argv: Optional[List[str]] = None) -> None:
+        """Parse the command line and populate every option.
+
+        ``argv`` defaults to ``sys.argv[1:]`` (the convention used by
+        ``argparse``) so that ``Params()`` mirrors how the script is invoked.
+        Validation errors are reported to stderr and terminate the process,
+        matching the historical behaviour of ``main()``.
+        """
+        parser = argparse.ArgumentParser(
+            description="Convert C++11 code with variadic templates to C++03 equivalent"
+        )
+        parser.add_argument("--output", "-o", dest="output_option", help="Output filename")
+        parser.add_argument("--debug", "-d", type=int, default=0, help="Debug level")
+        parser.add_argument(
+            "--trace", action="append", default=[], help="Trace labels (label:level)"
+        )
+        parser.add_argument("--inplace", action="store_true", help="Generate inplace output")
+        parser.add_argument(
+            "--no-inplace",
+            action="store_true",
+            help="Generate separate output files (default)",
+        )
+        parser.add_argument(
+            "--verify-no-change",
+            action="store_true",
+            help="Verify that nothing has changed",
+        )
+        parser.add_argument(
+            "--clean", action="store_true", help="Remove all C++03 emulation code"
+        )
+        parser.add_argument(
+            "--test", action="store_true", help="Run the tool on built-in test file"
+        )
+        parser.add_argument(
+            "--var-args",
+            type=int,
+            default=0,
+            help="Maximum number of variadic template expansions",
+        )
+        parser.add_argument("files", nargs="*", help="Input files")
+
+        args = parser.parse_args(argv)
+
+        # Build trace label -> level map from --trace specs
+        trace_ctrls: Dict[str, int] = {}
+        for trace_spec in args.trace:
+            for label_spec in trace_spec.split(","):
+                parts = label_spec.split(":")
+                label = parts[0]
+                level = int(parts[1]) if len(parts) > 1 else 1
+                trace_ctrls[label] = level
+
+        inplace = args.inplace and not args.no_inplace
+
+        if args.clean and not inplace:
+            print("Option --clean requires --inplace", file=sys.stderr)
+            sys.exit(1)
+        if args.test and args.files:
+            print("Cannot specify filename with --test", file=sys.stderr)
+            sys.exit(1)
+        if not args.test and not args.files:
+            print("Must specify an input file name or -", file=sys.stderr)
+            sys.exit(1)
+        if len(args.files) > 1 and args.output_option:
+            print(
+                "Only one input file name may be specified when using --output",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        if args.test:
+            files: Tuple[str, ...] = ("TEST",)
+            output: Optional[str] = args.output_option or "TEST_out"
+        else:
+            files = tuple(args.files)
+            output = args.output_option
+
+        timestamp = datetime.now().strftime("%a %b %d %H:%M:%S %Y")
+
+        # Populate all attributes through ``object.__setattr__`` so the
+        # overridden ``__setattr__`` (which enforces frozen semantics) does
+        # not block initialization.
+        set_ = object.__setattr__
+        set_(self, "debug_level", args.debug)
+        set_(self, "trace_ctrls", trace_ctrls)
+        set_(self, "clean", args.clean)
+        set_(self, "inplace", inplace)
+        set_(self, "verify_no_change", args.verify_no_change)
+        set_(self, "self_test", args.test)
+        set_(self, "default_max_args", Params.DEFAULT_MAX_ARGS)
+        set_(self, "max_args_opt", args.var_args)
+        set_(self, "max_column", Params.MAX_COLUMN)
+        set_(self, "timestamp_prefix", Params.TIMESTAMP_PREFIX)
+        set_(self, "timestamp", timestamp)
+        set_(self, "timestamp_comment", Params.TIMESTAMP_PREFIX + timestamp)
+        set_(self, "files", files)
+        set_(self, "output", output)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        raise AttributeError(f"Params is frozen; cannot assign to {name!r}")
+
+    def get_trace_level(self, trace_label: str) -> int:
+        """Return the larger of the level for the trace label and debug level."""
+        return max(self.trace_ctrls.get(trace_label, 0), self.debug_level)
+
+    def trace(self, trace_label: str, message: str, *args) -> None:
+        """Trace message at level 1."""
+        if self.get_trace_level(trace_label) >= 1:
+            formatted = message % args if args else message
+            print(f"{trace_label} ## {formatted}", file=sys.stderr)
+
+    def trace2(self, trace_label: str, message: str, *args) -> None:
+        """Trace message at level 2."""
+        if self.get_trace_level(trace_label) >= 2:
+            formatted = message % args if args else message
+            print(f"{trace_label} ### {formatted}", file=sys.stderr)
+
+    def debug_print(self, message: str) -> None:
+        """Print debug message if debug level is >= 1."""
+        if self.debug_level >= 1:
+            print(f"## {message}", file=sys.stderr)
+
+    def get_command_line(self, filename: str) -> str:
+        """Return the minimal command-line options and current filename."""
+        ret = os.path.basename(sys.argv[0])
+
+        if self.inplace:
+            ret += " --inplace"
+        if self.clean:
+            ret += " --clean"
+        if self.self_test:
+            ret += " --test"
+
+        if filename:
+            ret += " " + os.path.basename(filename)
+
+        return ret
+
+    def iter_jobs(self) -> Iterator[Job]:
+        """Yield a ``Job`` for each (input, output) pair to process.
+
+        Each job carries the recorded command line, the input filename, and
+        the resolved output filename.  When ``--output`` is not specified the
+        output filename defaults to the input filename (in-place style).
+        """
+        for input_filename in self.files:
+            output_filename = self.output or input_filename
+            if output_filename == "-" and not self.inplace:
+                usage("Writing to  standard output ('-') requires option --inplace")
+            yield Job(
+                command_line=self.get_command_line(input_filename),
+                input_filename=input_filename,
+                output_filename=output_filename,
+            )
+
 
 # ============================================================================
 #                             GLOBAL STATE
 # ============================================================================
 
-# Debug settings
-debug_level = 0
-trace_ctrls: Dict[str, int] = {}
-
-# Configuration globals
-clean = False
-inplace = False
-verify_no_change = False
-self_test = False
-default_max_args = 10
-file_max_args = default_max_args
+# Per-file mutable state (reset in ``process_file``).  These will be moved
+# into a per-file context object in a follow-up refactor step.
+file_max_args = 10
 max_args = file_max_args
-max_args_opt = 0  # Command-line specified max args
-max_column = 79  # Maximum allowed output line length
-command_line = ""
-timestamp_prefix = "Generated on "
-timestamp_comment = ""
 variadic_limit_base = ""
 variadic_limit = ""
 bottom_copyright = ""  # Copyright text extracted from input file (bottom style)
@@ -108,34 +301,6 @@ Usage: sim_cpp11_features.pl [ --output=<filename> ]
                              [ --test ]
                              {{ <input-file>... | - }}""")
     sys.exit(1)
-
-
-def debug_print(message: str) -> None:
-    """Print debug message if debug level is >= 1."""
-    if debug_level >= 1:
-        print(f"## {message}", file=sys.stderr)
-
-
-def get_trace_level(trace_label: str) -> int:
-    """Return the larger of the level for the specified trace label or debug level."""
-    trace_level = trace_ctrls.get(trace_label, 0)
-    return max(trace_level, debug_level)
-
-
-def trace(trace_label: str, message: str, *args) -> None:
-    """Trace message at level 1."""
-    trace_level = get_trace_level(trace_label)
-    if trace_level >= 1:
-        formatted = message % args if args else message
-        print(f"{trace_label} ## {formatted}", file=sys.stderr)
-
-
-def trace2(trace_label: str, message: str, *args) -> None:
-    """Trace message at level 2."""
-    trace_level = get_trace_level(trace_label)
-    if trace_level >= 2:
-        formatted = message % args if args else message
-        print(f"{trace_label} ### {formatted}", file=sys.stderr)
 
 
 # ============================================================================
@@ -380,14 +545,16 @@ def cpp_substitute(start: int, length: int, subst: str) -> None:
     input_end += length_change
 
 
-def cpp_find_matching_pp_directive(pos: int, what: str = "else|elif|endif") -> bool:
+def cpp_find_matching_pp_directive(
+    params: Params, pos: int, what: str = "else|elif|endif"
+) -> bool:
     """
     Find the position of the next directive at the same nesting level
     that is part of the same #if...#endif construct.
 
     Returns True if match found, False otherwise.
     """
-    trace("cppFindMatchingPPDirective", "pos = %d, what = %s", pos, what)
+    params.trace("cppFindMatchingPPDirective", "pos = %d, what = %s", pos, what)
 
     depth = 1
     while cpp_search(r"^[ \t]*\#[ \t]*(\w+).*\n", pos):
@@ -396,10 +563,10 @@ def cpp_find_matching_pp_directive(pos: int, what: str = "else|elif|endif") -> b
 
         if depth == 1:
             if re.match(f"^({what})$", pp_directive):
-                trace("cppFindMatchingPPDirective", "Found match '%s' at %d", pp_directive, pos)
+                params.trace("cppFindMatchingPPDirective", "Found match '%s' at %d", pp_directive, pos)
                 return True
             elif pp_directive == "endif":
-                trace("cppFindMatchingPPDirective", "No match")
+                params.trace("cppFindMatchingPPDirective", "No match")
                 return False
 
         if pp_directive.startswith("if"):  # match #if, #ifdef, #ifndef
@@ -410,7 +577,7 @@ def cpp_find_matching_pp_directive(pos: int, what: str = "else|elif|endif") -> b
     if depth != 1:
         fatal(f"Unmatched #if at position {pos}")
 
-    trace("cppFindMatchingPPDirective", "No match")
+    params.trace("cppFindMatchingPPDirective", "No match")
     return False
 
 
@@ -579,7 +746,7 @@ def gen_name(prefix: str) -> str:
     return result
 
 
-def get_template_params(pos: int) -> List[List[str]]:
+def get_template_params(params: Params, pos: int) -> List[List[str]]:
     """
     Given an input string where the substring at pos starts with a template
     parameter list, return a list of [type, name, default] triples.
@@ -601,12 +768,12 @@ def get_template_params(pos: int) -> List[List[str]]:
         if ">" in (cpp_match[6] or ""):
             break
 
-    if get_trace_level("getTemplateParams") > 0:
+    if params.get_trace_level("getTemplateParams") > 0:
         pack_str = "[\n"
         for pack in packs:
             pack_str += f"  [ {pack[0]}, {pack[1]}, {pack[2]} ]\n"
         pack_str += "]"
-        trace("getTemplateParams", "packs = %s", pack_str)
+        params.trace("getTemplateParams", "packs = %s", pack_str)
 
     return packs
 
@@ -617,24 +784,28 @@ def get_template_params(pos: int) -> List[List[str]]:
 
 
 def noop_template_transform(
-    template_begin: int, template_head_end: int, template_end: int, is_variadic: bool = False
+    params: Params,
+    template_begin: int,
+    template_head_end: int,
+    template_end: int,
+    is_variadic: bool = False,
 ) -> str:
     """Return the template substring with comments stripped."""
     return strip_comments(input_text[template_begin:template_end])
 
 
 def replace_and_fit_on_line(
-    working_buffer: str, pack_start: int, pack_len: int, replacement: str
+    params: Params, working_buffer: str, pack_start: int, pack_len: int, replacement: str
 ) -> str:
     """
     Replaces [pack_start, pack_end) with replacement, re-indenting as necessary
-    so that longest line in replacement fits within max_column.
+    so that longest line in replacement fits within ``params.max_column``.
     """
     global input_text, shrouded_input, input_end
 
     pack_end = pack_start + pack_len
 
-    trace("replaceAndFitOnLine", "START workingBuffer = [%s]", working_buffer)
+    params.trace("replaceAndFitOnLine", "START workingBuffer = [%s]", working_buffer)
 
     # pre_pack is the text on same line preceding the current pack
     pre_pack_match = re.search(
@@ -682,8 +853,8 @@ def replace_and_fit_on_line(
 
     # Compute indentation
     target_col = column
-    if column + max_replacement_width > max_column:
-        target_col = max_column - max_replacement_width
+    if column + max_replacement_width > params.max_column:
+        target_col = params.max_column - max_replacement_width
     if target_col < 0:
         target_col = 0
 
@@ -703,7 +874,7 @@ def replace_and_fit_on_line(
     # Insert indentation after every newline in replacement
     replacement = re.sub(r"\n[ \t]*", "\n" + indentation, replacement)
 
-    if target_col + last_replacement_width + post_len > max_column:
+    if target_col + last_replacement_width + post_len > params.max_column:
         # post_pack will not fit on the same line as the last line
         # Remove any leading commas from post_pack
         comma_match = re.match(r"^([ \t]*(,?)[ \t]*)", post_pack)
@@ -714,13 +885,13 @@ def replace_and_fit_on_line(
         else:
             comma = ""
 
-        if target_col + post_len > max_column:
+        if target_col + post_len > params.max_column:
             # Even at the same indentation as the previous line, it
             # still doesn't fit.  Reduce indentation as needed.
             # Note: mirrors Perl's substr($spaces, 0, $maxColumn - $postLen).
             # Python's negative slice handles the same semantics:
             # positive N -> first N chars; negative N -> all but last |N|.
-            indentation = SPACES[: max_column - post_len]
+            indentation = SPACES[: params.max_column - post_len]
 
         replacement = replacement.rstrip()
         replacement += comma + "\n"
@@ -730,18 +901,22 @@ def replace_and_fit_on_line(
 
     if working_buffer is shrouded_input or id(working_buffer) == id(shrouded_input):
         cpp_substitute(pack_start, pack_len, replacement)
-        trace("replaceAndFitOnLine", "RETURN SHROUDED = [%s]", shrouded_input)
+        params.trace("replaceAndFitOnLine", "RETURN SHROUDED = [%s]", shrouded_input)
         return shrouded_input
     else:
         working_buffer = (
             working_buffer[:pack_start] + replacement + working_buffer[pack_start + pack_len :]
         )
-        trace("replaceAndFitOnLine", "RETURN WORKING = [%s]", working_buffer)
+        params.trace("replaceAndFitOnLine", "RETURN WORKING = [%s]", working_buffer)
         return working_buffer
 
 
 def replace_forwarding(
-    template_begin: int, template_head_end: int, template_end: int, is_variadic: bool = False
+    params: Params,
+    template_begin: int,
+    template_head_end: int,
+    template_end: int,
+    is_variadic: bool = False,
 ) -> str:
     """
     Replace uses of perfect forwarding within the specified input with
@@ -750,7 +925,7 @@ def replace_forwarding(
     buffer = strip_comments(input_text[template_begin:template_end])
 
     push_input(buffer)
-    trace("replaceForwarding", "Stripped input = [%s]", buffer)
+    params.trace("replaceForwarding", "Stripped input = [%s]", buffer)
 
     typenames = []
     pos = 0
@@ -770,6 +945,7 @@ def replace_forwarding(
             repl_end = cpp_match_end[2] if cpp_match[2] else cpp_match_end[1]
 
             replace_and_fit_on_line(
+                params,
                 shrouded_input,
                 repl_start,
                 repl_end - repl_start,
@@ -785,6 +961,7 @@ def replace_forwarding(
         pattern = rf"\b(bsl|std|native_std)\s*::\s*forward\s*<\s*{typename}\s*>\s*\("
         while cpp_search(pattern, pos):
             replace_and_fit_on_line(
+                params,
                 shrouded_input,
                 cpp_match_start[0],
                 cpp_match_end[0] - cpp_match_start[0],
@@ -792,20 +969,20 @@ def replace_forwarding(
             )
             pos = cpp_match_end[0]
 
-    trace("replaceForwarding", "Result = [%s]", input_text)
+    params.trace("replaceForwarding", "Result = [%s]", input_text)
 
     buffer = pop_input()
     return buffer
 
 
-def mark_pack_expansions() -> List[str]:
+def mark_pack_expansions(params: Params) -> List[str]:
     """
     Replace every parameter pack and pack expansion in input with markers.
     Return a list of pack expansion patterns.
     """
     global input_text, shrouded_input
 
-    trace("markPackExpansions", "ORIGINAL = [%s]", input_text)
+    params.trace("markPackExpansions", "ORIGINAL = [%s]", input_text)
 
     type_names: Dict[str, bool] = {}
     pack_idents = []
@@ -852,7 +1029,7 @@ def mark_pack_expansions() -> List[str]:
     pattern = rf"([{re.escape(B)}]\s*)([^{re.escape(B)}]+)\.\.\.(?:\s*([A-Za-z_]\w*))?(\s*[{re.escape(E)}])"
 
     while cpp_search(pattern, 0):
-        trace2("markPackExpansions", "found pack = %s", cpp_match_all)
+        params.trace2("markPackExpansions", "found pack = %s", cpp_match_all)
         pack_r = f"__PACK_V{pack_num}R__"
 
         fb = cpp_match[1] or ""  # Found beginning delimiter
@@ -927,13 +1104,15 @@ def mark_pack_expansions() -> List[str]:
         for ident in pack_idents:
             pack_expansions[i] = re.sub(rf"\b{ident}\b", f"{ident}_@", pack_expansions[i])
 
-    trace("markPackExpansion", "AFTER XFORM = [\n%s\n]", input_text)
-    trace("markPackExpansion", 'EXPANSIONS =\n    "%s', '"\n    "'.join(pack_expansions))
+    params.trace("markPackExpansion", "AFTER XFORM = [\n%s\n]", input_text)
+    params.trace("markPackExpansion", 'EXPANSIONS =\n    "%s', '"\n    "'.join(pack_expansions))
 
     return pack_expansions
 
 
-def repeat_packs(buffer: str, max_args_val: int, pack_expansions: List[str]) -> str:
+def repeat_packs(
+    params: Params, buffer: str, max_args_val: int, pack_expansions: List[str]
+) -> str:
     """
     Create multiple copies of buffer, replacing each __PACK_V#R__ or __PACK_T#R__
     pattern with an expansion of the parameter packs.
@@ -1022,7 +1201,7 @@ def repeat_packs(buffer: str, max_args_val: int, pack_expansions: List[str]) -> 
                 replacement += FILL
 
             working_buffer = replace_and_fit_on_line(
-                working_buffer, pack_start, pack_len, replacement
+                params, working_buffer, pack_start, pack_len, replacement
             )
 
         working_buffer += f"#endif  // {variadic_limit} >= {rep_count}\n"
@@ -1032,7 +1211,11 @@ def repeat_packs(buffer: str, max_args_val: int, pack_expansions: List[str]) -> 
 
 
 def transform_variadic_function(
-    template_begin: int, template_head_end: int, template_end: int, is_variadic: bool = False
+    params: Params,
+    template_begin: int,
+    template_head_end: int,
+    template_end: int,
+    is_variadic: bool = False,
 ) -> str:
     """Transform a variadic function template."""
     global input_text
@@ -1043,7 +1226,7 @@ def transform_variadic_function(
         return buffer
 
     push_input(buffer)
-    pack_expansions = mark_pack_expansions()
+    pack_expansions = mark_pack_expansions(params)
 
     # Look for out-of-line definitions of member functions or static member
     # variables of variadic classes
@@ -1062,7 +1245,7 @@ def transform_variadic_function(
     pop_input()
 
     # Expand parameter packs
-    buffer = repeat_packs(buffer, max_args, pack_expansions)
+    buffer = repeat_packs(params, buffer, max_args, pack_expansions)
 
     # Remove empty "template <>" prefixes
     buffer = re.sub(r"\btemplate\s*<\s*>\s*", "", buffer)
@@ -1071,15 +1254,21 @@ def transform_variadic_function(
 
 
 def transform_variadic_class(
-    template_begin: int, template_head_end: int, template_end: int, is_variadic: bool = False
+    params: Params,
+    template_begin: int,
+    template_head_end: int,
+    template_end: int,
+    is_variadic: bool = False,
 ) -> str:
     """Transform a variadic class template."""
     if not is_variadic:
-        return noop_template_transform(template_begin, template_head_end, template_end)
+        return noop_template_transform(params, template_begin, template_head_end, template_end)
 
-    trace("transformVariadicClass", "TEMPLATE = [%s]", input_text[template_begin:template_end])
+    params.trace(
+        "transformVariadicClass", "TEMPLATE = [%s]", input_text[template_begin:template_end]
+    )
 
-    template_params = get_template_params(template_begin)
+    template_params = get_template_params(params, template_begin)
 
     cpp_search(r"\G\s*(class|struct|union)\s*([A-Za-z_]\w*)\b(.)?", template_head_end)
     class_or_struct = cpp_match[1]
@@ -1099,7 +1288,7 @@ def transform_variadic_class(
         sep = ""
         for param in template_params:
             param_str = f"{param[0]} {param[1]}"
-            if col + len(sep) + len(param_str) > max_column:
+            if col + len(sep) + len(param_str) > params.max_column:
                 sep = sep.rstrip()
                 buffer += sep + "\n" + indent + param_str
                 col = len(indent) + len(param_str)
@@ -1121,12 +1310,12 @@ def transform_variadic_class(
             sep = ", "
         buffer += ">"
 
-    trace2("transformVariadicClass", "specialization buffer=[%s]", buffer)
+    params.trace2("transformVariadicClass", "specialization buffer=[%s]", buffer)
 
-    buffer += transform_forwarding(input_text[class_hdr_end:template_end])
+    buffer += transform_forwarding(params, input_text[class_hdr_end:template_end])
 
     push_input(buffer)
-    pack_expansions = mark_pack_expansions()
+    pack_expansions = mark_pack_expansions(params)
     buffer = input_text
     pop_input()
 
@@ -1164,18 +1353,18 @@ def transform_variadic_class(
         output += f">\n{class_or_struct} {class_name};\n\n"
 
     if not is_forward_decl:
-        output += repeat_packs(buffer, max_args, pack_expansions)
+        output += repeat_packs(params, buffer, max_args, pack_expansions)
 
-    trace("transformVariadicClass", "OUTPUT = [%s]", output)
+    params.trace("transformVariadicClass", "OUTPUT = [%s]", output)
     return output
 
 
-def transform_templates(buffer: str, transform_function, transform_class) -> str:
+def transform_templates(params: Params, buffer: str, transform_function, transform_class) -> str:
     """
     Transforms the specified buffer, calling the specified transform functions
     on each template found.
     """
-    trace("transformTemplates", "buffer = [%s]", buffer)
+    params.trace("transformTemplates", "buffer = [%s]", buffer)
 
     # Line and column at start of this segment
     line_num, _ = line_and_column(input_pos)
@@ -1204,7 +1393,7 @@ def transform_templates(buffer: str, transform_function, transform_class) -> str
 
         # For debugging only
         template_head_line = line_and_column(pos)[0] + line_num
-        trace2("transformTemplates", "Template header ends at line %d", template_head_line)
+        params.trace2("transformTemplates", "Template header ends at line %d", template_head_line)
 
         # If the next word is "class", "struct", or "union", this is a class template
         is_class = cpp_search(r"\G\s*(?:class|struct|union)\s*[A-Za-z_]\w*\b", pos)
@@ -1232,10 +1421,12 @@ def transform_templates(buffer: str, transform_function, transform_class) -> str
         )
 
         if is_class:
-            output += transform_class(template_begin, template_head_end, template_end, is_variadic)
+            output += transform_class(
+                params, template_begin, template_head_end, template_end, is_variadic
+            )
         else:
             output += transform_function(
-                template_begin, template_head_end, template_end, is_variadic
+                params, template_begin, template_head_end, template_end, is_variadic
             )
 
         pos = template_end
@@ -1243,18 +1434,18 @@ def transform_templates(buffer: str, transform_function, transform_class) -> str
     output += strip_comments(input_text[pos:])
 
     pop_input()
-    trace("transformTemplates", "output = [%s]", output)
+    params.trace("transformTemplates", "output = [%s]", output)
     return output
 
 
-def transform_forwarding(buffer: str) -> str:
+def transform_forwarding(params: Params, buffer: str) -> str:
     """Transform all uses of perfect forwarding in top-level function templates."""
-    return transform_templates(buffer, replace_forwarding, noop_template_transform)
+    return transform_templates(params, buffer, replace_forwarding, noop_template_transform)
 
 
-def transform_variadics(buffer: str) -> str:
+def transform_variadics(params: Params, buffer: str) -> str:
     """Transform all top-level variadic templates into C++03-compatible code."""
-    return transform_templates(buffer, transform_variadic_function, transform_variadic_class)
+    return transform_templates(params, buffer, transform_variadic_function, transform_variadic_class)
 
 
 # ============================================================================
@@ -1264,7 +1455,7 @@ def transform_variadics(buffer: str) -> str:
 SIM_CPP11_MACRO = "BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES"
 
 
-def get_args_from_pp_line(pp_line: str) -> Tuple[int, str]:
+def get_args_from_pp_line(params: Params, pp_line: str) -> Tuple[int, str]:
     """
     Extract script arguments from a preprocessor directive.
     Returns (local_max_args, args_comment).
@@ -1288,8 +1479,8 @@ def get_args_from_pp_line(pp_line: str) -> Tuple[int, str]:
     if local_max_args:
         args_comment += f" $local-var-args={local_max_args}"
 
-    # max_args_opt overrides new_max_args if both are specified
-    max_args = max_args_opt or new_max_args or max_args
+    # params.max_args_opt overrides new_max_args if both are specified
+    max_args = params.max_args_opt or new_max_args or max_args
     if new_max_args or max_args != file_max_args:
         args_comment += f" $var-args={max_args}"
         file_max_args = max_args
@@ -1315,7 +1506,7 @@ def find_sim_cpp11_directive(pos: int) -> str:
         return ""
 
 
-def find_cpp03_region_markers() -> Tuple[int, ...]:
+def find_cpp03_region_markers(params: Params) -> Tuple[int, ...]:
     """
     Search the current input to find the #include <filename_cpp03.ext> pattern.
     Returns a tuple of 5 integers or empty tuple if not found.
@@ -1326,7 +1517,7 @@ def find_cpp03_region_markers() -> Tuple[int, ...]:
     include_start = cpp_match_start[0]
     include_directive = cpp_match[0]
 
-    trace("findCpp03RegionMarkers", "Found #include at %d\n", include_start)
+    params.trace("findCpp03RegionMarkers", "Found #include at %d\n", include_start)
 
     error = f"Not within '#if {SIM_CPP11_MACRO}':\n{include_directive}"
 
@@ -1336,20 +1527,20 @@ def find_cpp03_region_markers() -> Tuple[int, ...]:
     if_start = cpp_match_start[0]
 
     if not (
-        cpp_find_matching_pp_directive(cpp_match_end[0], "include")
+        cpp_find_matching_pp_directive(params, cpp_match_end[0], "include")
         and cpp_match_start[0] == include_start
     ):
         fatal(error)
 
     if not (
-        cpp_find_matching_pp_directive(cpp_match_end[0], "else")
+        cpp_find_matching_pp_directive(params, cpp_match_end[0], "else")
         and cpp_match_start[0] > include_start
     ):
         fatal(error)
 
     else_end = cpp_match_end[0]
 
-    if not cpp_find_matching_pp_directive(cpp_match_end[0], "endif"):
+    if not cpp_find_matching_pp_directive(params, cpp_match_end[0], "endif"):
         fatal(f"Cannot find #endif after\n  {include_directive}")
 
     endif_start = cpp_match_start[0]
@@ -1358,14 +1549,18 @@ def find_cpp03_region_markers() -> Tuple[int, ...]:
     return (if_start, include_start, else_end, endif_start, endif_end)
 
 
-def transform_file(initial_data: str, gen_master: bool) -> str:
-    """Transform the initial_data from annotated C++11 into C++03."""
+def transform_file(params: Params, command_line: str, initial_data: str, gen_master: bool) -> str:
+    """Transform the initial_data from annotated C++11 into C++03.
+
+    ``command_line`` is the minimized command line recorded in generated
+    output ("// Command line: ...").
+    """
     global variadic_limit, max_args, file_max_args
 
-    gen_expansion = inplace or not gen_master
+    gen_expansion = params.inplace or not gen_master
     set_input(initial_data)
 
-    trace(
+    params.trace(
         "transformFile",
         "Inputlen = %d, masterGen = %d, expansionGen = %d",
         input_end,
@@ -1409,10 +1604,10 @@ def transform_file(initial_data: str, gen_master: bool) -> str:
 
         start_cpp11_segment = pos
 
-        local_max_args, args_comment = get_args_from_pp_line(cpp_match[0] or "")
+        local_max_args, args_comment = get_args_from_pp_line(params, cpp_match[0] or "")
 
         # Find matching #else, #elif, or #endif
-        if not cpp_find_matching_pp_directive(pos):
+        if not cpp_find_matching_pp_directive(params, pos):
             fatal(f"Unmatched #if:\n{display_pos(end_verbatim)}")
 
         pp_directive = cpp_match[1]
@@ -1421,7 +1616,7 @@ def transform_file(initial_data: str, gen_master: bool) -> str:
 
         if pp_directive != "endif":
             # Consume and discard input until matching #endif
-            cpp_find_matching_pp_directive(pos, "endif")
+            cpp_find_matching_pp_directive(params, pos, "endif")
             pos = cpp_match_end[0]
 
         start_verbatim = pos
@@ -1434,7 +1629,7 @@ def transform_file(initial_data: str, gen_master: bool) -> str:
             within_if = True
             output += cpp11_segment
 
-        if clean:
+        if params.clean:
             output += "#else\n"
             output += generated_code_begin + "\n"
             output += "#   error sim_cpp11_features.pl has not been run\n"
@@ -1447,13 +1642,13 @@ def transform_file(initial_data: str, gen_master: bool) -> str:
             max_args = local_max_args or max_args
 
             # Apply the forwarding workaround
-            forwarding_workaround = transform_forwarding(cpp11_segment)
+            forwarding_workaround = transform_forwarding(params, cpp11_segment)
             # Chomp (remove single trailing newline, like Perl's chomp)
             if forwarding_workaround.endswith("\n"):
                 forwarding_workaround = forwarding_workaround[:-1]
 
             # Apply the variadic template simulation
-            variadic_simulation = transform_variadics(forwarding_workaround)
+            variadic_simulation = transform_variadics(params, forwarding_workaround)
             # Chomp (remove single trailing newline)
             if variadic_simulation.endswith("\n"):
                 variadic_simulation = variadic_simulation[:-1]
@@ -1675,14 +1870,16 @@ def get_master_suffix(subs: Dict[str, str]) -> str:
 """
 
 
-def filename_to_boilerplate(output_filename: str) -> Tuple[str, str]:
+def filename_to_boilerplate(
+    params: Params, command_line: str, output_filename: str
+) -> Tuple[str, str]:
     """
     Given a filename, return the prefix and suffix boilerplate text
     for generating that file.
     """
     output_filename = os.path.basename(output_filename)
 
-    trace("filenameToBoilerplate", "outputFilename = %s", output_filename)
+    params.trace("filenameToBoilerplate", "outputFilename = %s", output_filename)
 
     component = output_filename
     # Extract ext (group 2) before stripping; use (\..*)? to capture compound
@@ -1708,7 +1905,7 @@ def filename_to_boilerplate(output_filename: str) -> Tuple[str, str]:
         "component": component,
         "COMPONENT": component.upper(),
         "commandLine": command_line,
-        "timestampComment": timestamp_comment,
+        "timestampComment": params.timestamp_comment,
         "bottomCopyright": bottom_copyright,
         "topCopyright": top_copyright,
     }
@@ -1726,7 +1923,9 @@ def filename_to_boilerplate(output_filename: str) -> Tuple[str, str]:
     ]
 
     for pattern, prefix_fn, suffix_fn in patterns:
-        trace("filenameToBoilerplate", "ext = (?^:%s), filename = %s", pattern, output_filename)
+        params.trace(
+            "filenameToBoilerplate", "ext = (?^:%s), filename = %s", pattern, output_filename
+        )
         if pattern == "" or re.search(pattern, output_filename):
             return (prefix_fn(subs), suffix_fn(subs))
 
@@ -1739,7 +1938,7 @@ def filename_to_boilerplate(output_filename: str) -> Tuple[str, str]:
 # ============================================================================
 
 
-def segment_filedata(file_data: str) -> Tuple[str, str, str, bool]:
+def segment_filedata(params: Params, file_data: str) -> Tuple[str, str, str, bool]:
     """
     Split the file_data string into three segments:
       Prologue: Segment of code before the beginning of simulation directive
@@ -1751,7 +1950,7 @@ def segment_filedata(file_data: str) -> Tuple[str, str, str, bool]:
     includes_bsl_compilerfeatures = False
 
     push_input(file_data)
-    markers = find_cpp03_region_markers()
+    markers = find_cpp03_region_markers(params)
 
     if markers:
         if_start, include_start, else_end, endif_start, endif_end = markers
@@ -1779,7 +1978,7 @@ def segment_filedata(file_data: str) -> Tuple[str, str, str, bool]:
             first_real_code = cpp_match_start[0]
 
         # Find the #endif (if any) enclosing the last #include
-        if cpp_find_matching_pp_directive(last_include, "endif"):
+        if cpp_find_matching_pp_directive(params, last_include, "endif"):
             if cpp_match_start[0] > first_real_code:
                 endif_start = endif_end = cpp_match_start[0]
             else:
@@ -1787,7 +1986,7 @@ def segment_filedata(file_data: str) -> Tuple[str, str, str, bool]:
                 if_start = else_end = cpp_match_end[0]
 
                 # Search again for the #endif we actually care about
-                if cpp_find_matching_pp_directive(else_end, "endif"):
+                if cpp_find_matching_pp_directive(params, else_end, "endif"):
                     endif_start = endif_end = cpp_match_start[0]
 
         if endif_start == input_end:
@@ -1800,7 +1999,7 @@ def segment_filedata(file_data: str) -> Tuple[str, str, str, bool]:
 
     pop_input()
 
-    trace(
+    params.trace(
         "segmentFiledata",
         "ifStart = %d, elseEnd = %d, endifStart = %d",
         if_start,
@@ -1826,7 +2025,7 @@ def segment_filedata(file_data: str) -> Tuple[str, str, str, bool]:
     if epilogue == "\n":
         epilogue = ""
 
-    trace(
+    params.trace(
         "segmentFiledata",
         "prologue size = %d, code size = %d, epilog size = %d",
         len(prologue),
@@ -1837,11 +2036,13 @@ def segment_filedata(file_data: str) -> Tuple[str, str, str, bool]:
     return (prologue, unexpanded_code, epilogue, includes_bsl_compilerfeatures)
 
 
-def write_output(output: str, output_filename: str, permissions: int = 0o666) -> None:
+def write_output(
+    params: Params, output: str, output_filename: str, permissions: int = 0o666
+) -> None:
     """Create a backup of the output_filename and write output to it."""
-    trace("writeOutput", "Writing %d to %s", len(output), output_filename)
+    params.trace("writeOutput", "Writing %d to %s", len(output), output_filename)
 
-    if verify_no_change:
+    if params.verify_no_change:
         fatal(f"--verify-no-change error: Would modify {output_filename}")
 
     if output_filename == "-":
@@ -1854,15 +2055,16 @@ def write_output(output: str, output_filename: str, permissions: int = 0o666) ->
                 os.remove(backup)
             os.rename(output_filename, backup)
 
-        # Write the file
-        with open(output_filename, "w") as f:
+        # Write the file.  Use latin-1 + newline="" so this round-trips
+        # every byte unchanged, matching the Perl script's byte-level I/O.
+        with open(output_filename, "w", encoding="latin-1", newline="") as f:
             f.write(output)
 
         # Set permissions
         os.chmod(output_filename, permissions)
 
 
-def _normalize_for_compare(text: str) -> str:
+def _normalize_for_compare(params: Params, text: str) -> str:
     """Normalize text for comparison by replacing volatile metadata.
 
     Replaces timestamps and the old Perl script name so that files generated
@@ -1870,8 +2072,8 @@ def _normalize_for_compare(text: str) -> str:
     output of the current ``sim_cpp11_features.py``.
     """
     text = re.sub(
-        rf"{re.escape(timestamp_prefix)}.*$",
-        timestamp_comment,
+        rf"{re.escape(params.timestamp_prefix)}.*$",
+        params.timestamp_comment,
         text,
         flags=re.MULTILINE,
     )
@@ -1880,42 +2082,48 @@ def _normalize_for_compare(text: str) -> str:
 
 
 def write_master(
-    input_filename: str, output_filename: str, original_file_data: str, output: str
+    params: Params,
+    input_filename: str,
+    output_filename: str,
+    original_file_data: str,
+    output: str,
 ) -> None:
     """Write the master output file."""
-    trace("writeMaster", "outputName = %s, outputLen = %d", output_filename, len(output))
+    params.trace("writeMaster", "outputName = %s, outputLen = %d", output_filename, len(output))
 
     if (
-        _normalize_for_compare(output) != _normalize_for_compare(original_file_data)
-        or (not self_test and output_filename != input_filename)
+        _normalize_for_compare(params, output) != _normalize_for_compare(params, original_file_data)
+        or (not params.self_test and output_filename != input_filename)
         or output_filename == "-"
     ):
-        write_output(output, output_filename)
+        write_output(params, output, output_filename)
 
-        if self_test:
+        if params.self_test:
             # Dump a copy of the test data to a file
-            with open("TEST", "w") as f:
+            with open("TEST", "w", encoding="latin-1", newline="") as f:
                 f.write(original_file_data)
 
             # Dump test diff
             os.system(f"diff -c TEST {output_filename}")
     else:
-        trace("writeMaster", "Master is unchanged. No file written.")
+        params.trace("writeMaster", "Master is unchanged. No file written.")
 
 
-def write_expansion(output_filename: str, output: str) -> None:
+def write_expansion(params: Params, output_filename: str, output: str) -> None:
     """Write the expansion output file."""
-    trace("writeExpansion", "outputName = %s, outputLen = %d", output_filename, len(output))
+    params.trace("writeExpansion", "outputName = %s, outputLen = %d", output_filename, len(output))
 
     if os.path.exists(output_filename):
-        with open(output_filename, "r") as f:
+        # Use universal newlines so CRLF on disk normalizes to LF, matching
+        # the in-memory output (which stripped \r from input).
+        with open(output_filename, "r", encoding="latin-1") as f:
             original_file_data = f.read()
 
         # Normalize volatile metadata so that trivial differences
         # (timestamp, .pl -> .py rename, copyright year) don't trigger
         # a rewrite.
-        original_file_data = _normalize_for_compare(original_file_data)
-        normalized_output = _normalize_for_compare(output)
+        original_file_data = _normalize_for_compare(params, original_file_data)
+        normalized_output = _normalize_for_compare(params, output)
 
         # Replace old copyright with new
         match = re.search(r"^// Copyright \d+(?:-\d+)?", normalized_output, re.MULTILINE)
@@ -1931,26 +2139,32 @@ def write_expansion(output_filename: str, output: str) -> None:
 
         # Don't modify output file if it's identical to previous version
         if normalized_output == original_file_data:
-            trace("writeExpansion", "Generated file is unchanged. No file written.")
+            params.trace("writeExpansion", "Generated file is unchanged. No file written.")
             return
         else:
-            trace("writeExpansion", "Generated file is changed. File written.")
+            params.trace("writeExpansion", "Generated file is changed. File written.")
 
     # Create read-only file with generated output
-    write_output(output, output_filename, 0o444)
+    write_output(params, output, output_filename, 0o444)
 
 
-def process_file(input_filename: str, output_filename: str) -> int:
-    """Process the specified input filename to the specified output filename."""
+def process_file(
+    params: Params, command_line: str, input_filename: str, output_filename: str
+) -> int:
+    """Process the specified input filename to the specified output filename.
+
+    ``command_line`` is the minimized command line to embed in generated
+    output.
+    """
     global file_max_args, max_args, variadic_limit_base
     global class_template_forward_declared, next_gen_param
 
-    trace("processFile", "Inputfile = %s, Outputfile = %s", input_filename, output_filename)
+    params.trace("processFile", "Inputfile = %s, Outputfile = %s", input_filename, output_filename)
 
     # Reset important globals
 
-    file_max_args = default_max_args
-    max_args = max_args_opt or file_max_args
+    file_max_args = params.default_max_args
+    max_args = params.max_args_opt or file_max_args
     class_template_forward_declared = {}
     next_gen_param = 0
 
@@ -1958,17 +2172,19 @@ def process_file(input_filename: str, output_filename: str) -> int:
     variadic_limit_base = re.sub(r"\..*", "", variadic_limit_base)
     variadic_limit_base = variadic_limit_base.upper() + "_VARIADIC_LIMIT"
 
-    if self_test:
+    if params.self_test:
         # Read from embedded test data
         file_data = get_test_data()
     else:
         with open(input_filename, "rb") as f:
-            file_data = f.read().decode("utf-8")
+            file_data = f.read().decode("latin-1")
 
     file_data = file_data.replace("\r", "")  # Normalize newlines
 
     # Replace old timestamp with new timestamp
-    file_data = re.sub(rf"{timestamp_prefix}.*$", timestamp_comment, file_data, flags=re.MULTILINE)
+    file_data = re.sub(
+        rf"{params.timestamp_prefix}.*$", params.timestamp_comment, file_data, flags=re.MULTILINE
+    )
 
     # Check for copyright block
     global bottom_copyright, top_copyright
@@ -1998,53 +2214,60 @@ def process_file(input_filename: str, output_filename: str) -> int:
 
     if bottom_match:
         bottom_copyright = bottom_match.group(1)
-        debug_print(f"Copyright (bottom of file) is now\n{bottom_copyright}")
+        params.debug_print(f"Copyright (bottom of file) is now\n{bottom_copyright}")
     elif top_match:
         top_copyright = top_match.group(1)
-        debug_print(f"Copyright (top of file) is now\n{top_copyright}")
+        params.debug_print(f"Copyright (top of file) is now\n{top_copyright}")
     else:
         fatal("No recognizable copyright block")
 
     # Find the cut points of the file
     prologue, unexpanded_code, epilogue, includes_bsl_compilerfeatures = segment_filedata(
-        file_data
+        params, file_data
     )
 
     # Generate the main file
-    output = transform_file(unexpanded_code, True)
+    output = transform_file(params, command_line, unexpanded_code, True)
 
     if not output:
         # There were no expansions in the code
         write_master(
-            input_filename, output_filename, file_data, prologue + unexpanded_code + epilogue
+            params,
+            input_filename,
+            output_filename,
+            file_data,
+            prologue + unexpanded_code + epilogue,
         )
-    elif inplace:
-        write_master(input_filename, output_filename, file_data, prologue + output + epilogue)
+    elif params.inplace:
+        write_master(
+            params, input_filename, output_filename, file_data, prologue + output + epilogue
+        )
     else:
         # Write main file with boilerplate
-        boiler_beg, boiler_end = filename_to_boilerplate(output_filename)
+        boiler_beg, boiler_end = filename_to_boilerplate(params, command_line, output_filename)
 
         if not includes_bsl_compilerfeatures:
             prologue += "#include <bsls_compilerfeatures.h>\n\n"
 
         write_master(
+            params,
             input_filename,
             output_filename,
             file_data,
             prologue + boiler_beg + output + boiler_end + epilogue,
         )
 
-    if not inplace:
+    if not params.inplace:
         # Generate expansion output file
         output_filename = re.sub(r"([^.])(\.[^/\\]*)?$", r"\1_cpp03\2", output_filename)
 
         if output:
-            output = transform_file(output, False)
+            output = transform_file(params, command_line, output, False)
         else:
             output = "// No C++03 Expansion\n"
 
-        boiler_beg, boiler_end = filename_to_boilerplate(output_filename)
-        write_expansion(output_filename, boiler_beg + output + boiler_end)
+        boiler_beg, boiler_end = filename_to_boilerplate(params, command_line, output_filename)
+        write_expansion(params, output_filename, boiler_beg + output + boiler_end)
 
     return 0
 
@@ -3146,101 +3369,13 @@ class Q
 #                           MAIN PROGRAM
 # ============================================================================
 
-
-def get_command_line(filename: str) -> str:
-    """Return the minimal command-line options and current filename."""
-    ret = os.path.basename(sys.argv[0])
-
-    if inplace:
-        ret += " --inplace"
-    if clean:
-        ret += " --clean"
-    if self_test:
-        ret += " --test"
-
-    if filename:
-        ret += " " + os.path.basename(filename)
-
-    return ret
-
-
 def main() -> int:
     """Main program entry point."""
-    global debug_level, trace_ctrls, clean, inplace, verify_no_change
-    global self_test, max_args_opt, command_line, timestamp_comment
-
-    parser = argparse.ArgumentParser(
-        description="Convert C++11 code with variadic templates to C++03 equivalent"
-    )
-    parser.add_argument("--output", "-o", dest="output_option", help="Output filename")
-    parser.add_argument("--debug", "-d", type=int, default=0, help="Debug level")
-    parser.add_argument("--trace", action="append", default=[], help="Trace labels (label:level)")
-    parser.add_argument("--inplace", action="store_true", help="Generate inplace output")
-    parser.add_argument(
-        "--no-inplace", action="store_true", help="Generate separate output files (default)"
-    )
-    parser.add_argument(
-        "--verify-no-change", action="store_true", help="Verify that nothing has changed"
-    )
-    parser.add_argument("--clean", action="store_true", help="Remove all C++03 emulation code")
-    parser.add_argument("--test", action="store_true", help="Run the tool on built-in test file")
-    parser.add_argument(
-        "--var-args", type=int, default=0, help="Maximum number of variadic template expansions"
-    )
-    parser.add_argument("files", nargs="*", help="Input files")
-
-    args = parser.parse_args()
-
-    debug_level = args.debug
-    inplace = args.inplace and not args.no_inplace
-    verify_no_change = args.verify_no_change
-    clean = args.clean
-    self_test = args.test
-    max_args_opt = args.var_args
-
-    # Process trace labels
-    for trace_spec in args.trace:
-        for label_spec in trace_spec.split(","):
-            parts = label_spec.split(":")
-            label = parts[0]
-            level = int(parts[1]) if len(parts) > 1 else 1
-            trace_ctrls[label] = level
-
-    timestamp = datetime.now().strftime("%a %b %d %H:%M:%S %Y")
-    timestamp_comment = timestamp_prefix + timestamp
-
-    # Check for conflicting arguments
-    if clean and not inplace:
-        print("Option --clean requires --inplace", file=sys.stderr)
-        sys.exit(1)
-
-    if self_test and args.files:
-        print("Cannot specify filename with --test", file=sys.stderr)
-        sys.exit(1)
-
-    if not self_test and not args.files:
-        print("Must specify an input file name or -", file=sys.stderr)
-        sys.exit(1)
-
-    if len(args.files) > 1 and args.output_option:
-        print("Only one input file name may be specified when using --output", file=sys.stderr)
-        sys.exit(1)
-
-    if self_test:
-        args.files = ["TEST"]
-        if not args.output_option:
-            args.output_option = "TEST_out"
+    params = Params()
 
     ret = 0
-    for input_filename in args.files:
-        command_line = get_command_line(input_filename)
-        output_filename = args.output_option or input_filename
-
-        if output_filename == "-" and not inplace:
-            usage("Writing to  standard output ('-') requires option --inplace")
-
-        ret = process_file(input_filename, output_filename)
-
+    for job in params.iter_jobs():
+        ret = process_file(params, job.command_line, job.input_filename, job.output_filename)
         if ret:
             break
 
