@@ -191,6 +191,21 @@ function(bbs_add_component_tests target)
         endif()
     endforeach()
 
+    # For components that have a generated _cpp03 test driver, make the parent
+    # component's test target depend on the _cpp03 test target.  This ensures
+    # that building (or testing) 'component.t' also builds 'component_cpp03.t',
+    # which in turn regenerates and compiles the '_cpp03' test source.
+    foreach(test_src ${_TEST_SOURCES})
+        get_filename_component(test_name ${test_src} NAME_WE)
+        if (test_name MATCHES "_cpp03$")
+            string(REGEX REPLACE "_cpp03$" "" parent_test_name ${test_name})
+            if (TARGET ${parent_test_name}.t AND TARGET ${test_name}.t)
+                message(TRACE "Adding ${parent_test_name}.t -> ${test_name}.t")
+                add_dependencies(${parent_test_name}.t ${test_name}.t)
+            endif()
+        endif()
+    endforeach()
+
     set(split_cpp03_test_srcs ${_SPLIT_SOURCES})
     list(FILTER split_cpp03_test_srcs INCLUDE REGEX "_cpp03\.")
 
