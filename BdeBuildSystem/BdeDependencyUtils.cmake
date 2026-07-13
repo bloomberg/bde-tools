@@ -1,4 +1,4 @@
-include_guard()
+include_guard(GLOBAL)
 
 # :: bbs_load_conan_build_info ::
 # -----------------------------------------------------------------------------

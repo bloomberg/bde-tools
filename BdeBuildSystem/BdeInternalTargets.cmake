@@ -1,4 +1,4 @@
-include_guard()
+include_guard(GLOBAL)
 
 macro(_bbs_init_bde_options)
     # Flags that can be set by users
@@ -186,7 +186,4 @@ function(bbs_add_target_bde_flags target scope)
     endif ()
 endfunction()
 
-if(NOT bbs_internal_init_complete)
-    _bbs_init_bde_options()
-    set(bbs_internal_init_complete "1")
-endif()
+_bbs_init_bde_options()

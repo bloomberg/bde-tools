@@ -1,4 +1,4 @@
-include_guard()
+include_guard(GLOBAL)
 
 #[[.rst:
 BdeTestDriverUtils
@@ -11,30 +11,34 @@ This module provide a set of function to generate BDE tests
 # invoke the implementation file.
 find_package(Python3 3.6 REQUIRED)
 
-find_file(BBS_RUNTEST bbs_runtest.py
+find_file(BBS_RUNTEST_PATH bbs_runtest.py
           PATHS "${CMAKE_CURRENT_LIST_DIR}/scripts")
 
-if (NOT BBS_RUNTEST)
+if (NOT BBS_RUNTEST_PATH)
     message(FATAL_ERROR "Failed to find bbs_runtest")
 endif()
 
-set(BBS_RUNTEST ${Python3_EXECUTABLE} ${BBS_RUNTEST})
+set(BBS_RUNTEST ${Python3_EXECUTABLE} ${BBS_RUNTEST_PATH})
 
 if (BBS_USE_WAFSTYLEOUT)
     get_property(cmd_wrapper GLOBAL PROPERTY BBS_CMD_WRAPPER)
     set(BBS_RUNTEST ${cmd_wrapper} ${BBS_RUNTEST})
 endif()
 
-find_file(BBS_SPLIT_TEST bde_xt_cpp_splitter.py
+set(BBS_RUNTEST "${BBS_RUNTEST}" CACHE INTERNAL "")
+
+find_file(BBS_SPLIT_TEST_PATH bde_xt_cpp_splitter.py
           PATHS "${CMAKE_CURRENT_LIST_DIR}/scripts/bde_xt_cpp_splitter")
 
-if (BBS_SPLIT_TEST)
-    set(BBS_SPLIT_TEST ${Python3_EXECUTABLE} ${BBS_SPLIT_TEST})
+if (BBS_SPLIT_TEST_PATH)
+    set(BBS_SPLIT_TEST ${Python3_EXECUTABLE} ${BBS_SPLIT_TEST_PATH})
 
     if (BBS_USE_WAFSTYLEOUT)
         get_property(cmd_wrapper GLOBAL PROPERTY BBS_CMD_WRAPPER)
         set(BBS_SPLIT_TEST ${cmd_wrapper} ${BBS_SPLIT_TEST})
     endif()
+
+    set(BBS_SPLIT_TEST "${BBS_SPLIT_TEST}" CACHE INTERNAL "")
 else()
     message(FATAL_ERROR "Failed to find test split generator")
 endif()

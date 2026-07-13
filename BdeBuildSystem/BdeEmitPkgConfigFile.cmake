@@ -1,4 +1,4 @@
-include_guard()
+include_guard(GLOBAL)
 
 function(bbs_emit_pkgconfig_file)
     set(singleValueArgs TARGET PKG VERSION PREFIX LIBDIR INCLUDEDIR COMPONENT)

@@ -1,4 +1,4 @@
-include_guard()
+include_guard(GLOBAL)
 
 # :: bbs_assert_no_extra_args ::
 # -----------------------------------------------------------------------------

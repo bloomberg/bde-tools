@@ -11,7 +11,7 @@
 # <target>_DEPS variables before calling import_pkgconfig_targets()
 # The extra deps will be searched AFTER the deps defined in the pkgconfig file
 #
-include_guard()
+include_guard(GLOBAL)
 
 macro(_bbs_pcimport_initialize)
   #
