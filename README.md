@@ -1,3 +1,5 @@
+[![Devise](https://badges.dev.bloomberg.com/live/devise/verify-status/bde/bde-tools)](https://devise.dx.bloomberg.com/repository/BDETOOLS)
+
 [![DPKG](https://badges.dev.bloomberg.com/live/template/unstable:bde-tools/%7B%7Bdpkg_builds_unstable.bde-tools%7D%7D)](https://dpkg.dx.bloomberg.com/sources/bde-tools?source-details-tab=distributions)
 
 # BDE Tools
