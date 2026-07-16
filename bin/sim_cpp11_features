@@ -1,0 +1,23 @@
+#!/bin/sh
+
+realpath() (
+    OURPWD=$PWD
+    cd "$(dirname "$1")"
+    LINK=$(readlink "$(basename "$1")")
+    while [ "$LINK" ]; do
+        cd "$(dirname "$LINK")"
+        LINK=$(readlink "$(basename "$1")")
+    done
+    REALPATH="$PWD/$(basename "$1")"
+    cd "$OURPWD"
+    echo "$REALPATH"
+)
+
+SCRIPT=$(realpath "$0")
+# Find suitable python version and invoke the tool
+. "$(dirname "$SCRIPT")/bbs_python"
+
+PYTHON_SCRIPT_PATH="$(dirname "$SCRIPT")/../BdeBuildSystem/scripts/"
+PYTHON_SCRIPT_BASENAME="$(basename "$SCRIPT")"
+
+bbs_exec_python "${PYTHON_SCRIPT_PATH}/${PYTHON_SCRIPT_BASENAME}.py" "$@"
