@@ -1,0 +1,4 @@
+verify:
+  berg: {}
+  context:
+    dpkg-distribution: unstable
