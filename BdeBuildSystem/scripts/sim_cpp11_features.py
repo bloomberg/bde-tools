@@ -206,9 +206,15 @@ class Params:
         if self.debug_level >= 1:
             print(f"## {message}", file=sys.stderr)
 
-    def get_command_line(self, filename: str) -> str:
-        """Return the minimal command-line options and current filename."""
-        ret = os.path.basename(sys.argv[0])
+    def get_command_line(self, filename: str, use_basename: bool = True) -> str:
+        """Return the minimal command-line options and current filename.  The
+           returned command elides the '.py' from this script name since that's
+           the invocable wrapper name.
+
+           If `use_basename` is true, the returned commandline removes the path
+           component from `filename`.
+        """
+        ret = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
         if self.inplace:
             ret += " --inplace"
@@ -217,8 +223,11 @@ class Params:
         if self.self_test:
             ret += " --test"
 
+        if use_basename:
+            filename = os.path.basename(filename)
+
         if filename:
-            ret += " " + os.path.basename(filename)
+            ret += " " + filename
 
         return ret
 
@@ -2051,7 +2060,7 @@ def write_output(
     params.trace("writeOutput", "Writing %d to %s", len(output), output_filename)
 
     if params.verify_no_change:
-        fatal(f"--verify-no-change error: Would modify {output_filename}.  To fix, run\n   {params.get_command_line(output_filename)}\nand commit the result.")
+        fatal(f"--verify-no-change error: Would modify {output_filename}.  To fix, run\n   {params.get_command_line(output_filename, use_basename=False)}\nand commit the result.")
 
     if output_filename == "-":
         print(output, end="")
@@ -2085,7 +2094,8 @@ def _normalize_for_compare(params: Params, text: str) -> str:
         text,
         flags=re.MULTILINE,
     )
-    text = text.replace("sim_cpp11_features.pl", "sim_cpp11_features.py")
+    text = text.replace("sim_cpp11_features.pl", "sim_cpp11_features")
+    text = text.replace("sim_cpp11_features.py", "sim_cpp11_features")
     return text
 
 
