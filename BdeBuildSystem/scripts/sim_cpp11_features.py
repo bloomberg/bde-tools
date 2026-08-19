@@ -115,7 +115,13 @@ class Params:
             default=0,
             help="Maximum number of variadic template expansions",
         )
-        parser.add_argument("files", nargs="*", help="Input files")
+        parser.add_argument(
+            "files",
+            nargs="*",
+            help="Input files; a '_cpp03' marker before the extension "
+            "(e.g. 'foo_cpp03.h') is stripped so the C++03 output name "
+            "resolves back to its C++11 source (e.g. 'foo.h')",
+        )
 
         args = parser.parse_args(argv)
 
@@ -150,7 +156,9 @@ class Params:
             files: Tuple[str, ...] = ("TEST",)
             output: Optional[str] = args.output_option or "TEST_out"
         else:
-            files = tuple(args.files)
+            # Strip a '_cpp03' marker (reserved for outputs) that precedes
+            # the extension so, e.g., 'foo_cpp03.h' is treated as 'foo.h'.
+            files = tuple(re.sub(r"_cpp03(?=\.|\Z)", "", f) for f in args.files)
             output = args.output_option
 
         timestamp = datetime.now().strftime("%a %b %d %H:%M:%S %Y")
@@ -2043,7 +2051,7 @@ def write_output(
     params.trace("writeOutput", "Writing %d to %s", len(output), output_filename)
 
     if params.verify_no_change:
-        fatal(f"--verify-no-change error: Would modify {output_filename}")
+        fatal(f"--verify-no-change error: Would modify {output_filename}.  To fix, run\n   {params.get_command_line(output_filename)}\nand commit the result.")
 
     if output_filename == "-":
         print(output, end="")
