@@ -6,7 +6,9 @@
 
 include(${CMAKE_CURRENT_LIST_DIR}/../setup_refroot_pkgconfig.cmake)
 
-set(DEFAULT_CXX_FLAGS_INIT "$ENV{CXXFLAGS}")
+# Add -fsized-deallocation to work around Clang not providing the feature
+# default (manifesting itself as `__cpp_sized_deallocation` being undefined).
+set(DEFAULT_CXX_FLAGS_INIT "$ENV{CXXFLAGS} -fsized-deallocation")
 set(DEFAULT_C_FLAGS_INIT "$ENV{CFLAGS}")
 set(DEFAULT_EXE_LINKER_FLAGS "-Wl,-no_warn_duplicate_libraries")
 

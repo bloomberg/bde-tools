@@ -66,6 +66,17 @@ if (NOT ${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm|aarch")
         )
 endif()
 
+if(EXISTS "/opt/bb/bin/gnu-as")
+    # Make sure that gnu-as is used if available, otherwise gcc-14 outputs
+    # errors like
+    #  ccfPLZA0.s: Assembler messages:
+    #  ccfPLZA0.s:19: Fatal error: bad .section directive: want a,l,w,x,M,S,G,T in string
+    # when compiling C++ code (but not C code).
+    string(CONCAT DEFAULT_CXX_FLAGS
+        "${DEFAULT_CXX_FLAGS} "
+        "-B/opt/bb/bin/gnu- "
+        )
+endif()
 # Include BDE ufid presets
 include("${CMAKE_CURRENT_LIST_DIR}/gcc-bde-presets.cmake")
 
