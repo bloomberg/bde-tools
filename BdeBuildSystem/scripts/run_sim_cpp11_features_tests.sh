@@ -20,7 +20,7 @@ TEST_DIR="$SCRIPT_DIR/test_cases_sim_cpp11_features"
 WORK_DIR="$SCRIPT_DIR/run_sim_cpp11_features_tests_output"
 
 # Script paths
-PERL_SCRIPT="$SCRIPT_DIR/sim_cpp11_features.pl"
+PERL_SCRIPT="$SCRIPT_DIR/test-only/sim_cpp11_features.pl"
 PYTHON_SCRIPT="$SCRIPT_DIR/sim_cpp11_features.py"
 
 # Work subdirectories

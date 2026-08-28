@@ -7,8 +7,7 @@ install(DIRECTORY BdeBuildSystem
         DESTINATION share/cmake
         COMPONENT bbs-cmake-module)
 
-install(PROGRAMS BdeBuildSystem/scripts/sim_cpp11_features.pl
-                 BdeBuildSystem/scripts/sim_cpp11_features.py
+install(PROGRAMS BdeBuildSystem/scripts/sim_cpp11_features.py
                  BdeBuildSystem/scripts/bbs_input_limiter.pl
         DESTINATION share/cmake/BdeBuildSystem/scripts
         COMPONENT bbs-cmake-module)

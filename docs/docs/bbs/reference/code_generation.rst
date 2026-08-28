@@ -67,8 +67,8 @@ if necessary:
 
    $ bbs_build build
        ...
-       [99/328] Generating ../../groups/bsl/bslmf/bslmf_functionpointertraits_cpp03.h - sim_cpp11_features.pl updated file
-       [100/328] Generating ../../groups/bsl/bslmf/bslmf_nthparameter_cpp03.cpp - sim_cpp11_features.pl did not need to update
+       [99/328] Generating ../../groups/bsl/bslmf/bslmf_functionpointertraits_cpp03.h - sim_cpp11_features.py updated file
+       [100/328] Generating ../../groups/bsl/bslmf/bslmf_nthparameter_cpp03.cpp - sim_cpp11_features.py did not need to update
        ...
 
 In this example, ``bslmf_functionpointertraits_cpp03.h`` needed to be
@@ -114,7 +114,7 @@ Unexpanded (source) code
    #endif
 
 We simulate the variadic expansions in C++03 using
-``bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl``.
+``bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.py``.
 
 This tool can be applied to any source file (e.g., ``bslstl_list.h``) and
 generates an ``_cpp03`` file (e.g. ``bslstl_list_cpp03.h``) alongside it, as
@@ -136,7 +136,7 @@ Expanded (generated) code
 
    #if BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
    // {{{ BEGIN GENERATED CODE
-   // Command line: sim_cpp11_features.pl bslstl_list.h
+   // Command line: sim_cpp11_features.py bslstl_list.h
    #ifndef BSLSTL_LIST_VARIADIC_LIMIT
    #define BSLSTL_LIST_VARIADIC_LIMIT 10
    #endif
@@ -240,9 +240,9 @@ components with ``_cpp03`` extensions.
 
 .. code-block:: shell
 
-   .../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl bsl_list.h
-   .../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl bsl_list.cpp
-   .../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.pl bsl_list.t.cpp
+   .../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.py bsl_list.h
+   .../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.py bsl_list.cpp
+   .../bde-tools/BdeBuildSystem/scripts/sim_cpp11_features.py bsl_list.t.cpp
    echo bslstl_list_cpp03 >> package/bslstl.mem
    sort -o package/bslstl.mem package/bslstl.mem
    git add bsl_list_cpp03.{h,cpp,t.cpp} package/bslstl.mem
@@ -254,7 +254,7 @@ Ongoing synchronization of the _cpp03 files
 -------------------------------------------
 
 The ``bbs_build`` tool automatically generates rules to re-run
-``sim_cpp11_features.pl`` if the source files have changed.
+``sim_cpp11_features.py`` if the source files have changed.
 
 A different option is passed to ``bbs_build`` by the nightly and feature branch
 test builds which causes the build to fail if the source and ``_cpp03`` files

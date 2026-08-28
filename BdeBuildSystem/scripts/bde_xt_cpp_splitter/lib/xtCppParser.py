@@ -217,7 +217,7 @@ def _parseSimCpp11Cpp03(
     invocationLines: MutableSequence[int] = []
     for lineNumber, line in enumerate(lines, 1):
         line = line.strip()
-        if line.startswith("// Command line: sim_cpp11_features.pl ") and line.endswith(".xt.cpp"):
+        if line.startswith("// Command line: sim_cpp11_features.p") and line.endswith(".xt.cpp"):
             invocationLines.append(lineNumber)
 
     return SimCpp11Cpp03LinesToUpdate(ifDefLine, elseLine, endifLine, invocationLines)

@@ -363,7 +363,7 @@ def main():
     )
     parser.add_argument(
         "--perl",
-        default=os.path.join(script_dir, "sim_cpp11_features.pl"),
+        default=os.path.join(script_dir, "test-only", "sim_cpp11_features.pl"),
         help="Path to Perl script",
     )
     parser.add_argument(
