@@ -66,7 +66,7 @@ if (NOT ${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "arm|aarch")
         )
 endif()
 
-if(EXISTS "/opt/bb/bin/gnu-as")
+if(EXISTS "${BDE_DPKG_PREFIX}/bin/gnu-as")
     # Make sure that gnu-as is used if available, otherwise gcc-14 outputs
     # errors like
     #  ccfPLZA0.s: Assembler messages:
@@ -74,7 +74,7 @@ if(EXISTS "/opt/bb/bin/gnu-as")
     # when compiling C++ code (but not C code).
     string(CONCAT DEFAULT_CXX_FLAGS
         "${DEFAULT_CXX_FLAGS} "
-        "-B/opt/bb/bin/gnu- "
+        "-B${BDE_DPKG_PREFIX}/bin/gnu- "
         )
 endif()
 # Include BDE ufid presets

@@ -1,5 +1,13 @@
 include_guard()
 
+if(NOT DEFINED BDE_DPKG_PREFIX)
+    if(DEFINED ENV{PREFIX})
+        set(BDE_DPKG_PREFIX "$ENV{PREFIX}" CACHE STRING "BB Dpkg installation prefix set from environment variable.")
+    else()
+        set(BDE_DPKG_PREFIX "/opt/bb" CACHE STRING "BB Dpkg installation prefix set to default.")
+    endif()
+endif()
+
 # Set base environment variables for Bloomberg environment
 if (NOT DEFINED DISTRIBUTION_REFROOT)
     if (DEFINED ENV{DISTRIBUTION_REFROOT})
@@ -9,8 +17,8 @@ endif()
 
 if (DEFINED DISTRIBUTION_REFROOT)
     find_program(PKG_CONFIG_EXECUTABLE pkg-config PATHS
-      ${DISTRIBUTION_REFROOT}/opt/bb/lib/bin
-      /opt/bb/lib/bin
+      ${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/lib/bin
+      ${BDE_DPKG_PREFIX}/lib/bin
       NO_SYSTEM_ENVIRONMENT_PATH
       NO_DEFAULT_PATH)
 
@@ -22,11 +30,11 @@ if (DEFINED DISTRIBUTION_REFROOT)
     endif()
 
     if (BDE_BUILD_TARGET_64)
-        set(ROBO_PKG_CONFIG_PATH "${DISTRIBUTION_REFROOT}/opt/bb/lib64/robo/pkgconfig:${DISTRIBUTION_REFROOT}/opt/bb/lib64/pkgconfig" CACHE STRING "The location of the robo pkgconfig files.")
+        set(ROBO_PKG_CONFIG_PATH "${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/lib64/robo/pkgconfig:${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/lib64/pkgconfig" CACHE STRING "The location of the robo pkgconfig files.")
         set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS yes)
         set(CMAKE_INSTALL_LIBDIR lib64)
     else()
-        set(ROBO_PKG_CONFIG_PATH "${DISTRIBUTION_REFROOT}/opt/bb/lib/robo/pkgconfig:${DISTRIBUTION_REFROOT}/opt/bb/lib/pkgconfig" CACHE STRING "The location of the robo pkgconfig files.")
+        set(ROBO_PKG_CONFIG_PATH "${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/lib/robo/pkgconfig:${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/lib/pkgconfig" CACHE STRING "The location of the robo pkgconfig files.")
         set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS no)
         set(CMAKE_INSTALL_LIBDIR lib)
     endif()
@@ -41,7 +49,7 @@ if (DEFINED DISTRIBUTION_REFROOT)
     set(ENV{PKG_CONFIG_SYSROOT_DIR} ${DISTRIBUTION_REFROOT})
 
     # Set the path for looking up includes, libs and files.
-    list(APPEND CMAKE_SYSTEM_PREFIX_PATH ${DISTRIBUTION_REFROOT}/opt/bb)
+    list(APPEND CMAKE_SYSTEM_PREFIX_PATH ${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX})
 
-    list(APPEND CMAKE_MODULE_PATH ${DISTRIBUTION_REFROOT}/opt/bb/share/plink ${DISTRIBUTION_REFROOT}/opt/bb/share/cmake/Modules)
+    list(APPEND CMAKE_MODULE_PATH ${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/share/plink ${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/share/cmake/Modules)
 endif()

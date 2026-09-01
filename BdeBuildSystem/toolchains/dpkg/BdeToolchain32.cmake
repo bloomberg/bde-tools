@@ -1,5 +1,13 @@
 cmake_minimum_required (VERSION 3.19)
 
+if(NOT DEFINED BDE_DPKG_PREFIX)
+    if(DEFINED ENV{PREFIX})
+        set(BDE_DPKG_PREFIX "$ENV{PREFIX}" CACHE STRING "BB Dpkg installation prefix set from environment variable.")
+    else()
+        set(BDE_DPKG_PREFIX "/opt/bb" CACHE STRING "BB Dpkg installation prefix set to default.")
+    endif()
+endif()
+
 if(NOT DEFINED DISTRIBUTION_REFROOT)
     if(DEFINED ENV{DISTRIBUTION_REFROOT})
         set(DISTRIBUTION_REFROOT "$ENV{DISTRIBUTION_REFROOT}/" CACHE STRING "BB Dpkg root set from environment variable.")
@@ -10,12 +18,12 @@ if(NOT DEFINED DISTRIBUTION_REFROOT)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-    include("${DISTRIBUTION_REFROOT}/opt/bb/share/cmake/BBToolchain32.cmake")
+    include("${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/share/cmake/BBToolchain32.cmake")
     # Nothing to add.
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "SunOS")
-    include("${DISTRIBUTION_REFROOT}/opt/bb/share/cmake/BBToolchain32.cmake")
+    include("${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/share/cmake/BBToolchain32.cmake")
 
     # CMAKE_<LANG>_COMPILER_ID is not populated for toolchain file yet
     # Using CMAKE_<LANG>_COMPILER instead ( contains full path to the compiler binary )
@@ -36,6 +44,6 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
     set(CMAKE_CXX_COMPILER ${root}/clang++)
     set(CMAKE_C_COMPILER ${root}/clang)
 
-    include("${DISTRIBUTION_REFROOT}/opt/bb/share/cmake/BdeBuildSystem/toolchains/darwin/clang-default")
+    include("${DISTRIBUTION_REFROOT}${BDE_DPKG_PREFIX}/share/cmake/BdeBuildSystem/toolchains/darwin/clang-default")
 endif()
 
