@@ -1,5 +1,26 @@
-bde-tools (4.39.0.0) unstable; urgency=low
+bde-tools (4.40.1.0) unstable; urgency=low
 
+  * 2aa9296 Merge remote-tracking branch 'origin/main' into releases/4.40.x
+  * 3863aa0 Do not assume DPKG installation prefix is /opt/bb (#441)
+  * 88e4d8c Move perl sim_cpp11_features (#440)
+  * 22b620b Update default linux gcc and darwin clang flags (#439)
+  * 8c56c57 Correct emitted sim commandline to remove .py extension (#438)
+  * 4d1ba21 Allow redundant _cpp03 in input files (#437)
+
+ -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 2 Sep 2026 13:43:47 +0000
+
+bde-tools (4.40.0.0) unstable; urgency=low
+
+  * 3f7abdd Add a Devise badge to the README (#435)
+  * b6cf4ff Add sim_cpp11_features to bin so it will be on PATH (#436)
+  * f5fdad0 Add devise.yaml (#434)
+  * bdddd43 Global include guards across all `BdeBuildSystem` modules to speed up cmake configuration. (#433)
+  * 8dfd909 Add build dependnency from parent to cpp03 tests (#432)
+  * 33e3a57 Add 3rdparty targets to the dependers-of rebuild logic. (#418)
+  * 98edd86 Command line args related globals moved to class. (#422)
+  * f39cf37 Fix bde_printer.py on uninitialised bdld:Datums (#429)
+  * 4932b52 Document BDE_BUILD_TARGET_DBG/OPT. (#427)
+  * 7c82444 Changelog for version 4.39.0.0 (#428)
   * 2f09c8a Update scripts installed, fix missed python list (#426)
   * b0118ff Factor out python detection logic to bin/bbs_python (#425)
   * bed2ad7 Revert sh script wrappers (#424)
@@ -9,7 +30,7 @@ bde-tools (4.39.0.0) unstable; urgency=low
   * 56049ef Fix pkg-config link ordering when dep is also a transitive requirement (#420)
   * 884d758 Increase test discovery timeout (#419)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 16 Jun 2026 16:59:34 -0400
+ -- devise-pr-bot <no_reply_devise_pr@bloomberg.com>  Thu, 16 Jul 2026 16:34:51 +0100
 
 bde-tools (4.38.0.0) git; urgency=low
 
