@@ -2007,12 +2007,21 @@ def segment_filedata(params: Params, file_data: str) -> Tuple[str, str, str, boo
                     endif_start = endif_end = cpp_match_start[0]
 
         if endif_start == input_end:
-            # Move insertion position to be before closing comments/whitespace
-            # Use \Z (end-of-string) instead of $ because cpp_search uses
-            # re.MULTILINE where $ matches at any line boundary.
-            start_search = max(0, input_end - 1000)
-            if cpp_search(r"\n\s*\Z", start_search):
-                endif_start = endif_end = cpp_match_start[0] + 1
+            # Move the insertion position to just after the last real code, so
+            # that anything generated precedes the file's closing comments
+            # (normally the copyright block).
+            #
+            # Comments are whitespace in ``shrouded_input``, so the last
+            # non-whitespace character there ends the last real code.
+            last_code_end = len(shrouded_input.rstrip())
+            newline = input_text.find("\n", last_code_end)
+            endif_start = endif_end = input_end if newline < 0 else newline + 1
+
+            # Never move the insertion point above the code it delimits.  A
+            # file with no code after its includes has nothing to expand, and
+            # its whole tail belongs to the epilogue.
+            if endif_start < else_end:
+                endif_start = endif_end = else_end
 
     pop_input()
 
