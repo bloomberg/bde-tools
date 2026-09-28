@@ -51,20 +51,20 @@ set(CMAKE_C_FLAGS          ${DEFAULT_C_FLAGS}   CACHE STRING "Default" FORCE)
 # https://cmake.org/cmake/help/v3.15/variable/CMAKE_MSVC_RUNTIME_LIBRARY.html
 set(CMAKE_MSVC_RUNTIME_LIBRARY "")
 
-set(CMAKE_CXX_FLAGS_RELEASE         "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /DNDEBUG"
+set(CMAKE_CXX_FLAGS_RELEASE         "/MD /O2 /Ob1 /Oi /Ot /GS- /GF /Gy /DNDEBUG"
     CACHE STRING "Release"        FORCE)
 set(CMAKE_CXX_FLAGS_MINSIZEREL      "/MD /O1 /Ob1 /Os /DNDEBUG"
     CACHE STRING "MinSizeRel"     FORCE)
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /Zi /DNDEBUG"
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/MD /O2 /Ob1 /Oi /Ot /GS- /GF /Gy /Zi /DNDEBUG"
     CACHE STRING "RelWithDebInfo" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG           "/MDd /Od /Ob0 /Zi"
     CACHE STRING "Debug"          FORCE)
 
-set(CMAKE_C_FLAGS_RELEASE         "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /DNDEBUG"
+set(CMAKE_C_FLAGS_RELEASE         "/MD /O2 /Ob1 /Oi /Ot /GS- /GF /Gy /DNDEBUG"
     CACHE STRING "Release"        FORCE)
 set(CMAKE_C_FLAGS_MINSIZEREL      "/MD /O1 /Ob1 /Os /DNDEBUG"
     CACHE STRING "MinSizeRel"     FORCE)
-set(CMAKE_C_FLAGS_RELWITHDEBINFO  "/MD /O2 /Ob1 /Oi /Ot /GS- /Gs /GF /Gy /Zi /DNDEBUG"
+set(CMAKE_C_FLAGS_RELWITHDEBINFO  "/MD /O2 /Ob1 /Oi /Ot /GS- /GF /Gy /Zi /DNDEBUG"
     CACHE STRING "RelWithDebInfo" FORCE)
 set(CMAKE_C_FLAGS_DEBUG           "/MDd /Od /Ob0 /Zi"
     CACHE STRING "Debug"          FORCE)
