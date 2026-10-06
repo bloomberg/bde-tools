@@ -4,6 +4,7 @@ import contextlib
 import optparse
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -37,14 +38,31 @@ def main():
         print(option_parser.format_help())
         sys.exit(1)
 
-    ctx = make_context_from_options(options, args)
+    if options.parallel_runtests < 1:
+        print("--parallel-runtests must be at least 1", file=sys.stderr)
+        sys.exit(1)
 
-    test_runner = runner.Runner(ctx)
+    if options.parallel_runtests > 1 and options.junit:
+        print(
+            "--junit cannot be combined with --parallel-runtests",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     exit_code = 0
 
-    if not test_runner.start():
-        exit_code = 1
+    if options.parallel_runtests > 1:
+        if not run_parallel_runtests(
+            options.parallel_runtests, temp_directory, options.verbosity > 0
+        ):
+            exit_code = 1
+    else:
+        ctx = make_context_from_options(options, args)
+
+        test_runner = runner.Runner(ctx)
+
+        if not test_runner.start():
+            exit_code = 1
 
     # Clean up our TMPDIR.
     if not (options.keeptmp or "BDE_KEEP_TMPFILES" in os.environ):
@@ -53,6 +71,60 @@ def main():
         print("Not deleting temp files - they are in %s" % temp_directory)
 
     sys.exit(exit_code)
+
+
+def run_parallel_runtests(num_runs, temp_directory, is_verbose):
+    """Run ``num_runs`` copies of this test runner concurrently.
+
+    Each copy gets the same command line, with ``--parallel-runtests 1``
+    appended so it runs the test driver itself.  The output of each copy is
+    captured to a file.  Once all copies finish, the output of each failed
+    copy is printed, in order.  Passing copies are printed only if
+    ``is_verbose`` is True.
+
+    Args:
+        num_runs (int): Number of copies to run.
+        temp_directory (str): Directory for the captured output.
+        is_verbose (bool): Whether to print the output of passing copies.
+
+    Returns:
+        True if every copy succeeded.
+    """
+    child_args = (
+        [sys.executable, os.path.abspath(sys.argv[0])]
+        + sys.argv[1:]
+        + ["--parallel-runtests", "1"]
+    )
+
+    runs = []
+    for i in range(num_runs):
+        out_path = os.path.join(temp_directory, "runtest_%d.out" % (i + 1))
+        out_file = open(out_path, "wb")
+        process = subprocess.Popen(
+            child_args, stdout=out_file, stderr=subprocess.STDOUT
+        )
+        runs.append((process, out_file, out_path))
+
+    num_failed = 0
+    for i, (process, out_file, out_path) in enumerate(runs):
+        rc = process.wait()
+        out_file.close()
+        if rc != 0:
+            num_failed += 1
+        elif not is_verbose:
+            continue
+
+        print(
+            "===== bde_runtest run %d of %d: %s (rc=%d) ====="
+            % (i + 1, num_runs, "FAILED" if rc else "PASSED", rc)
+        )
+        sys.stdout.flush()
+        with open(out_path, "rb") as f:
+            shutil.copyfileobj(f, getattr(sys.stdout, "buffer", sys.stdout))
+        sys.stdout.flush()
+
+    print("%d of %d bde_runtest runs failed" % (num_failed, num_runs))
+    return num_failed == 0
 
 
 def get_cmdline_options():
@@ -69,6 +141,14 @@ def get_cmdline_options():
     )
     parser.add_option(
         "--jobs", "-j", type="int", default=2, help="number of jobs to use"
+    )
+    parser.add_option(
+        "--parallel-runtests",
+        "-J",
+        type="int",
+        default=1,
+        help="number of identical test runner processes to run "
+        "concurrently, each using --jobs jobs [default: %default]",
     )
     parser.add_option(
         "--debug",
