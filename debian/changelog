@@ -1,16 +1,14 @@
-bde-tools (4.40.1.0) unstable; urgency=low
+bde-tools (4.41.0.0) unstable; urgency=low
 
-  * 2aa9296 Merge remote-tracking branch 'origin/main' into releases/4.40.x
+  * 3beaeab Add -J flag to bde_runtest/bbs_runtest (#446)
+  * 2fb7f7b Use the default stack-probe threshold in cl toolchains (#445)
+  * 8bc314e Fix sim cpp11 blank lines (#443)
+  * bbfc936 Merge 4.40.x (#442)
   * 3863aa0 Do not assume DPKG installation prefix is /opt/bb (#441)
   * 88e4d8c Move perl sim_cpp11_features (#440)
   * 22b620b Update default linux gcc and darwin clang flags (#439)
   * 8c56c57 Correct emitted sim commandline to remove .py extension (#438)
   * 4d1ba21 Allow redundant _cpp03 in input files (#437)
-
- -- Oleg Subbotin <osubbotin@bloomberg.net>  Wed, 2 Sep 2026 13:43:47 +0000
-
-bde-tools (4.40.0.0) unstable; urgency=low
-
   * 3f7abdd Add a Devise badge to the README (#435)
   * b6cf4ff Add sim_cpp11_features to bin so it will be on PATH (#436)
   * f5fdad0 Add devise.yaml (#434)
@@ -30,7 +28,7 @@ bde-tools (4.40.0.0) unstable; urgency=low
   * 56049ef Fix pkg-config link ordering when dep is also a transitive requirement (#420)
   * 884d758 Increase test discovery timeout (#419)
 
- -- devise-pr-bot <no_reply_devise_pr@bloomberg.com>  Thu, 16 Jul 2026 16:34:51 +0100
+ -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 6 Oct 2026 10:25:56 -0400
 
 bde-tools (4.38.0.0) git; urgency=low
 
