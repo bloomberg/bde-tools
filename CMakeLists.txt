@@ -53,6 +53,13 @@ install(DIRECTORY share/templates/vscode
         DESTINATION libexec/bde-tools/templates
         COMPONENT bde-tools)
 
+# Install MCP server wrapper (Python module lives under lib/python/bbs/mcp/,
+# installed via the `lib` DIRECTORY rule above). The wrapper is referenced
+# from generated .vscode/mcp.json and from user-authored .mcp.json.
+install(PROGRAMS contrib/mcp/bbs_build_mcp
+        DESTINATION libexec/bde-tools/contrib/mcp
+        COMPONENT bde-tools)
+
 # Install rules for bde-gdb-printers
 install(FILES contrib/gdb-printers/bde_printer.py
         DESTINATION libexec/bde-gdb-printers

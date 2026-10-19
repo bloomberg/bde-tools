@@ -269,6 +269,67 @@ backup(pathlib.Path(".vscode/extensions.json")).write_text(
 )
 
 
+# mcp.json — configures VS Code's built-in MCP client to launch the
+# bbs_build MCP server with the resolved build environment. BBS_ENV_MARKER
+# makes the server adopt the BDE_CMAKE_* values verbatim so it matches the
+# CMake Tools kit.
+bbsBuildMcp = bdeToolsDir / "contrib" / "mcp" / "bbs_build_mcp"
+mcp = json.loads((templatesPath / "mcp.json").read_text())
+server = mcp["servers"]["bbs-build"]
+server["command"] = str(bbsBuildMcp)
+# BDE/BBS/CC/CXX vars for the compiler, plus DISTRIBUTION_REFROOT which
+# the server reads directly.
+mcpEnv = {
+    key: value
+    for key, value in cmakeSettings["env"].items()
+    if (
+        "BDE" in key
+        or "BBS" in key
+        or key in ("CC", "CXX", "DISTRIBUTION_REFROOT")
+    )
+}
+# DISTRIBUTION_REFROOT is passed to cmake as -D... and not part of the
+# compiler env; fall back to the CMake flag dump or the current shell.
+if "DISTRIBUTION_REFROOT" not in mcpEnv:
+    refroot = cmakeSettings["flags"].get(
+        "DISTRIBUTION_REFROOT"
+    ) or os.getenv("DISTRIBUTION_REFROOT")
+    if refroot:
+        mcpEnv["DISTRIBUTION_REFROOT"] = refroot
+server["env"] = mcpEnv
+backup(pathlib.Path(".vscode/mcp.json")).write_text(json.dumps(mcp, indent=4))
+
+# bbs-build.instructions.md — auto-loaded by Copilot Chat from directories
+# listed in `chat.instructionsFilesLocations` (set in settings.json). The
+# imperative snippet steers the model toward the bbs-build MCP tools
+# instead of raw cmake/ninja/bbs_build invocations.
+backup(pathlib.Path(".vscode/bbs-build.instructions.md")).write_text(
+    """\
+---
+applyTo: "**"
+---
+## Build & test in this workspace
+
+This is a BDE / BBS workspace. A `bbs-build` MCP server is configured in
+`.vscode/mcp.json`. **Always use the `bbs-build` MCP tools for build,
+configure, and test operations. Do not invoke `cmake`, `cmake --build`,
+`ninja`, `make`, `bbs_build`, `ctest`, or `bde_runtest` in the terminal
+for these purposes** — the MCP tools use the correct UFID / refroot /
+build directory and return structured diagnostics.
+
+- Configure the build: use the `configure` tool.
+- Compile: use the `build` tool (pass `targets=[...]` for a single
+  component; pass `dependers_of=[...]` with `run_tests=true` to validate
+  a change against every dependent component).
+- Run tests: use the `test` tool (call `build` first with
+  `with_tests=true` if the tests are not built yet).
+
+The UFID / build directory is fixed by the IDE's build environment and
+must not be overridden per-call.
+"""
+)
+
+
 # pretty-printers
 gdbinit = f"""\
 python

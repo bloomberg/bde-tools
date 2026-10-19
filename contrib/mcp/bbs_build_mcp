@@ -1,0 +1,28 @@
+#!/bin/sh
+
+realpath() (
+    OURPWD=$PWD
+    cd "$(dirname "$1")"
+    LINK=$(readlink "$(basename "$1")")
+    while [ "$LINK" ]; do
+        cd "$(dirname "$LINK")"
+        LINK=$(readlink "$(basename "$1")")
+    done
+    REALPATH="$PWD/$(basename "$1")"
+    cd "$OURPWD"
+    echo "$REALPATH"
+)
+
+SCRIPT=$(realpath "$0")
+TOOLS_ROOT=$(dirname "$(dirname "$(dirname "$SCRIPT")")")
+
+# Find suitable python version and invoke the MCP server module.
+# 3.6 is deliberately absent: the module needs dataclasses (3.7+). Bare
+# python3 stays as a last resort, and the module rejects an old one itself.
+for pyver in 3.14 3.13 3.12 3.11 3.10 3.9 3.8 3.7 3 ""; do
+    python$pyver -V > /dev/null 2>&1 && \
+        PYTHONPATH="$TOOLS_ROOT/lib/python${PYTHONPATH:+:$PYTHONPATH}" \
+        exec python$pyver -m bbs.mcp.bbs_build_mcp "$@"
+done
+echo "No appropriate python interpreter found." >&2
+exit 1

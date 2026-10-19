@@ -17,3 +17,5 @@ BdeBuildSystem/scripts/run_sim_cpp11_features_tests_output/
 
 # Python virtual environment
 .venv/
+# Build directory created by bbs_build / bbs_build_mcp
+_build

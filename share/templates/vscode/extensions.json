@@ -4,6 +4,8 @@
         "llvm-vs-code-extensions.vscode-clangd",
         "xaver.clang-format",
         "eamodio.gitlens",
-        "GitHub.vscode-pull-request-github"
+        "GitHub.vscode-pull-request-github",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
     ]
 }

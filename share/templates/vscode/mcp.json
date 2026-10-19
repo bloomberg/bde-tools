@@ -1,0 +1,13 @@
+{
+    "servers": {
+        "bbs-build": {
+            "type": "stdio",
+            "command": "$$bbsBuildMcp$$",
+            "args": [
+                "--project-root",
+                "${workspaceFolder}"
+            ],
+            "env": {}
+        }
+    }
+}
