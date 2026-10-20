@@ -10,6 +10,7 @@ import errno
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -987,7 +988,11 @@ def build(options):
         strip_dottd = lambda x: x[:-2] if x.endswith(".t") else x
         test_list = [strip_dottd(x) for x in target_list]
         if "all" not in test_list:
-            test_pattern = "|".join(["^" + t + "$" for t in test_list])
+            # -L takes a regex, so escape each name before anchoring it.
+            # Package groups such as bsl+stdhdrs contain metacharacters:
+            # unescaped, "^bsl+stdhdrs$" selects a label "bslstdhdrs" (or
+            # nothing) instead of "bsl+stdhdrs".
+            test_pattern = "|".join(["^" + re.escape(t) + "$" for t in test_list])
             test_cmd += ["-L", test_pattern]
         try:
             subprocess.check_call(test_cmd, cwd=options.build_dir)
