@@ -1,4 +1,5 @@
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -149,10 +150,16 @@ class _Worker(threading.Thread):
                 return
 
             def decode_text(txt):
-                if txt:
-                    if not isinstance(out, str):
-                        return txt.decode(sys.stdout.encoding or "iso8859-1")
-                return txt if txt else ""
+                # Test drivers may emit arbitrary bytes; never let decoding
+                # raise, or the worker thread dies and the case is lost.
+                if not txt:
+                    return ""
+                if isinstance(txt, str):
+                    return txt
+                return txt.decode(
+                    sys.stdout.encoding or "iso8859-1",
+                    errors="backslashreplace",
+                )
 
             # BDE uses the -1 return code to indicate that no more tests are
             # left to run:
@@ -177,11 +184,35 @@ class _Worker(threading.Thread):
                 self._ctx.log.debug_case(self._case, "DOES NOT EXIST")
                 self._status.notify_done()
                 return
-            elif rc == 0:
-                self._ctx.log.record_success(self._case, rc, decode_text(out))
-            else:
-                self._ctx.log.record_failure(self._case, rc, decode_text(out))
+            out_text = ""
+            try:
+                out_text = decode_text(out)
+                reason = None
+                if re.search("runtime error:", out_text) is not None:
+                    reason = "'runtime error:' in output"
+                if rc != 0 or reason is not None:
+                    self._ctx.log.record_failure(
+                        self._case, rc, out_text, reason
+                    )
+                    self._status.set_failure()
+                else:
+                    self._ctx.log.record_success(self._case, rc, out_text)
+            except Exception as e:
+                # An escaped exception would kill this thread silently and
+                # leave the run marked as passing.
                 self._status.set_failure()
+                self._ctx.log.record_exception(self._case, e)
+                # Still record the case as failed, so it appears in the junit
+                # report.  The recorder itself may be what raised.
+                try:
+                    self._ctx.log.record_failure(
+                        self._case,
+                        rc,
+                        "PYTHON EXCEPTION: %s\n%s" % (e, out_text),
+                        "python exception",
+                    )
+                except Exception:
+                    pass
 
 
 class Runner(object):

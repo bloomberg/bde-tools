@@ -26,8 +26,9 @@ class _TextRecorder(object):
         else:
             self._logger.info("CASE %2d: SUCCESS" % case)
 
-    def failure(self, case, rc, out):
-        self._logger.info("CASE %2d: FAILURE (rc %s)\n%s" % (case, rc, out))
+    def failure(self, case, rc, out, reason=None):
+        detail = "rc %s" % rc if reason is None else "rc %s; %s" % (rc, reason)
+        self._logger.info("CASE %2d: FAILURE (%s)\n%s" % (case, detail, out))
 
     def skip(self, case):
         self._logger.info("CASE %2d: SKIP" % case)
@@ -49,7 +50,10 @@ class _JunitRecorder(object):
         self._opts = opts
         # test results format:
         # { 1: {'start': <start_time>, 'end': <end_time>, 'rc': <return code>,
-        #         'out': <out> } }
+        #         'out': <out>, 'failed': <bool>, 'reason': <str or None> } }
+        #
+        # 'failed' is stored explicitly: a case can fail with rc 0 (e.g., on
+        # sanitizer output), so the rc alone does not decide the status.
         self._results = {}
         self._skipped = []
         self._timedout = []
@@ -63,23 +67,22 @@ class _JunitRecorder(object):
             # ignored.
             self._start_times[case] = time.time()
 
-    def success(self, case, rc, out):
+    def _add_result(self, case, rc, out, failed, reason=None):
         with self._lock:
             self._results[case] = {
                 "start": self._start_times[case],
                 "end": time.time(),
                 "rc": rc,
                 "out": out,
+                "failed": failed,
+                "reason": reason,
             }
 
-    def failure(self, case, rc, out):
-        with self._lock:
-            self._results[case] = {
-                "start": self._start_times[case],
-                "end": time.time(),
-                "rc": rc,
-                "out": out,
-            }
+    def success(self, case, rc, out):
+        self._add_result(case, rc, out, False)
+
+    def failure(self, case, rc, out, reason=None):
+        self._add_result(case, rc, out, True, reason)
 
     def timeout(self, case, pid):
         with self._lock:
@@ -117,7 +120,7 @@ class _JunitRecorder(object):
                 testcase.set("time", "%.6f" % delta)
                 systemout = ET.SubElement(testcase, "system-out")
                 systemout.text = case_result["out"]
-                if case_result["rc"] == 0:
+                if not case_result["failed"]:
                     testcase.set("status", "passed")
                 else:
                     testcase.set("status", "failed")
@@ -126,7 +129,10 @@ class _JunitRecorder(object):
                         failure.set("type", "timeout")
                     else:
                         failure.set("type", "test failure")
-                    failure.set("message", "rc: %d" % case_result["rc"])
+                    message = "rc: %d" % case_result["rc"]
+                    if case_result["reason"]:
+                        message += " (%s)" % case_result["reason"]
+                    failure.set("message", message)
             else:
                 ET.SubElement(testcase, "skipped")
 
@@ -190,8 +196,8 @@ class Log(object):
     def record_success(self, case, rc, out):
         self._recorder.success(case, rc, out)
 
-    def record_failure(self, case, rc, out):
-        self._recorder.failure(case, rc, out)
+    def record_failure(self, case, rc, out, reason=None):
+        self._recorder.failure(case, rc, out, reason)
 
     def record_exception(self, case, e):
         self._logger.info("CASE %2d: PYTHON EXCEPTION (%s)" % (case, str(e)))
