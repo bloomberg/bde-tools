@@ -143,7 +143,6 @@ endif()
 
 if(BDE_BUILD_TARGET_UBSAN)
     setSanitizerFlags(COMMON_UBSAN_FLAGS "undefined")
-    message(WARNING "flags: ${COMMON_UBSAN_FLAGS}")
 
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "

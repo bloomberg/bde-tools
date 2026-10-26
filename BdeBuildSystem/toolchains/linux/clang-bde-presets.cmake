@@ -94,10 +94,14 @@ if(BDE_BUILD_TARGET_ASAN)
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
            "${COMMON_ASAN_FLAGS} "
+           "-fno-omit-frame-pointer "
+           "-fno-optimize-sibling-calls "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
            "${COMMON_ASAN_FLAGS} "
+           "-fno-omit-frame-pointer "
+           "-fno-optimize-sibling-calls "
            )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
@@ -112,10 +116,16 @@ if(BDE_BUILD_TARGET_MSAN)
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
            "${COMMON_MSAN_FLAGS} "
+           "-fsanitize-memory-track-origins=2 "
+           "-fno-omit-frame-pointer "
+           "-fno-optimize-sibling-calls "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
            "${COMMON_MSAN_FLAGS} "
+           "-fsanitize-memory-track-origins=2 "
+           "-fno-omit-frame-pointer "
+           "-fno-optimize-sibling-calls "
            )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
@@ -130,10 +140,12 @@ if(BDE_BUILD_TARGET_TSAN)
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
            "${COMMON_TSAN_FLAGS} "
+           "-fno-omit-frame-pointer "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
            "${COMMON_TSAN_FLAGS} "
+           "-fno-omit-frame-pointer "
            )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
@@ -143,15 +155,19 @@ if(BDE_BUILD_TARGET_TSAN)
 endif()
 
 if(BDE_BUILD_TARGET_UBSAN)
-    setSanitizerFlags(COMMON_UBSAN_FLAGS "undefined")
+    setSanitizerFlags(COMMON_UBSAN_FLAGS "undefined,vptr")
 
     string(CONCAT DEFAULT_CXX_FLAGS
            "${DEFAULT_CXX_FLAGS} "
            "${COMMON_UBSAN_FLAGS} "
+           "-fno-sanitize-merge "
+           "-fno-omit-frame-pointer "
            )
     string(CONCAT DEFAULT_C_FLAGS
            "${DEFAULT_C_FLAGS} "
            "${COMMON_UBSAN_FLAGS} "
+           "-fno-sanitize-merge "
+           "-fno-omit-frame-pointer "
            )
     string(CONCAT DEFAULT_EXE_LINKER_FLAGS
            "${DEFAULT_EXE_LINKER_FLAGS} "
