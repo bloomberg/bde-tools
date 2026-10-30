@@ -97,8 +97,12 @@ class _Worker(threading.Thread):
         return cmd
 
     def _get_limited_test_run_cmd(self):
-        """Get string of command and arguments for current test case, piping
+        """Get list of command and arguments for current test case, piping
         the output to 'bbs_input_limiter.pl' to limit it to 5000 lines.
+
+        The test command and the limiter are passed to bash as positional
+        arguments, never as part of the script text, so shell metacharacters
+        in the test path are not interpreted.
         """
         limiter_command = (
             os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -106,24 +110,23 @@ class _Worker(threading.Thread):
             + "bbs_input_limiter.pl"
         )
 
-        cmd = self._get_full_test_run_cmd()
-        cmd = " ".join(cmd)
-        cmd = "bash -c 'set -o pipefail; " + cmd
-        cmd += " | " + limiter_command + "'"
+        cmd = [
+            "bash",
+            "-c",
+            'set -o pipefail; "$@" | "$0"',
+            limiter_command,
+        ] + self._get_full_test_run_cmd()
 
-        self._ctx.log.debug_case(self._case, "COMMAND %s" % cmd)
+        self._ctx.log.debug_case(self._case, "COMMAND %s" % " ".join(cmd))
 
         return cmd
 
     def _get_test_run_cmd(self):
-        """Return a tuple containing the command to run (either as a list or
-        as a string) and a boolean flag indicating whether the command
-        is in string form or not.
-        """
+        """Return the list of command and arguments to run."""
         if self._platform_needs_limited_output():
-            return (self._get_limited_test_run_cmd(), True)
+            return self._get_limited_test_run_cmd()
         else:
-            return (self._get_full_test_run_cmd(), False)
+            return self._get_full_test_run_cmd()
 
     def run(self):
         while True:
@@ -132,14 +135,13 @@ class _Worker(threading.Thread):
             if self._case <= 0:
                 return
 
-            (cmd, use_shell) = self._get_test_run_cmd()
+            cmd = self._get_test_run_cmd()
             self._ctx.log.record_start(self._case)
             try:
                 self._proc = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    shell=use_shell,
                 )
                 (out, err) = self._proc.communicate()
                 rc = self._proc.returncode
