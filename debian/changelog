@@ -1,5 +1,12 @@
-bde-tools (4.41.0.0) unstable; urgency=low
+bde-tools (4.43.0.0) unstable; urgency=low
 
+  * edd34b6 Fix rate limiting command (#452)
+  * e367c4a Find the clang runtimes along the compiler's symlink chain on Linux (#451)
+  * 36c469a Use clang's recommended sanitizer flags in the clang presets (#449)
+  * c1d0b84 Handle bad unicode from executed tests (#448)
+  * e88f17a bbs_build: escape test labels in the ctest -L pattern (#450)
+  * 8964e38 Add MCP server for bbs_build integration (#415)
+  * c419920 Changelog for version 4.41.0.0 (#447)
   * 3beaeab Add -J flag to bde_runtest/bbs_runtest (#446)
   * 2fb7f7b Use the default stack-probe threshold in cl toolchains (#445)
   * 8bc314e Fix sim cpp11 blank lines (#443)
@@ -28,7 +35,7 @@ bde-tools (4.41.0.0) unstable; urgency=low
   * 56049ef Fix pkg-config link ordering when dep is also a transitive requirement (#420)
   * 884d758 Increase test discovery timeout (#419)
 
- -- Mike Giroux <mgiroux@bloomberg.net>  Tue, 6 Oct 2026 10:25:56 -0400
+ -- Mike Giroux <mgiroux@bloomberg.net>  Fri, 30 Oct 2026 10:26:04 -0400
 
 bde-tools (4.38.0.0) git; urgency=low
 
