@@ -511,7 +511,7 @@ def wrapper():
         "-k",
         "--keep-going",
         action="store_true",
-        help="Keep going after an error.",
+        help="Keep going after an error (but still fail at the end).",
     )
 
     group.add_argument(
@@ -805,6 +805,11 @@ class CacheInfo:
 
 
 def build_targets(target_list, build_dir, extra_args, environ):
+    """
+    Build the specified 'target_list' (all targets if empty) in the specified
+    'build_dir', and return whether the build succeeded.  The output goes to
+    the console as it is produced.
+    """
     build_cmd = ["cmake", "--build", build_dir]
     if target_list:
         build_cmd += ["--target"] + target_list
@@ -812,7 +817,7 @@ def build_targets(target_list, build_dir, extra_args, environ):
     # filter out empty extra_args or Ninja wont like it
     build_cmd += [arg for arg in extra_args if arg]
 
-    subprocess.check_call(build_cmd, env=environ)
+    return 0 == subprocess.run(build_cmd, env=environ).returncode
 
 
 def buildType(options, cache_info):
@@ -854,6 +859,20 @@ def build(options):
         elif options.generator == "Unix Makefiles":
             extra_args += ["-k"]
 
+    # With '--keep-going', each failure is recorded here instead of raised,
+    # the build goes on (including running the tests), and the build fails
+    # at the end.
+    failures = []
+
+    def fail(message):
+        """
+        Fail the build with the specified 'message': at once, or, with
+        '--keep-going', at the end.
+        """
+        if not options.keep_going:
+            raise RuntimeError(message)
+        failures.append(message)
+
     target_list = []
     if options.dependers_of:
         # If '--dependers-of' is specified on command line, then only build
@@ -886,7 +905,10 @@ def build(options):
                 )
                 print("Building " + " ".join(target_list))
 
-            build_targets(target_list, options.build_dir, extra_args, env)
+            if not build_targets(
+                target_list, options.build_dir, extra_args, env
+            ):
+                fail("Failed to build the dependers.")
         else:
             # When no --test is specified, and --dependers-of is only passed
             # "<component>.t" as arguments, there is nothing that really needs
@@ -926,46 +948,51 @@ def build(options):
                 main_target = target
                 test_target = target + ".t" if options.tests else None
 
-            build_succeeded = False
-            if (
+            # Whether each target built, or 'None' if it was not tried.
+            main_built = None
+            test_built = None
+
+            if main_target is not None and (
                 main_target == "all"
                 or known_targets is None
                 or main_target in known_targets
             ):
-                build_list = [main_target]
-                if main_target == "all":
-                    build_list = []
+                build_list = [] if main_target == "all" else [main_target]
+                main_built = build_targets(
+                    build_list, options.build_dir, extra_args, env
+                )
 
-                try:
-                    build_targets(
-                        build_list, options.build_dir, extra_args, env
-                    )
-                    build_succeeded = True
-                except:
-                    # Continue if the 'target' without '.t' was specified, and
-                    # '--test' was specified since the main target might not
-                    # exist
-                    if not options.tests and not options.keep_going:
-                        raise
+                # The build failed, unless the target may simply not exist.
+                # Without '--test', there is no test target to fall back on,
+                # so this is a failure either way.  'all' always exists.  Only
+                # Ninja lists the known targets; with other generators a
+                # missing target and a failed one look the same, so the test
+                # target decides.
+                if not main_built and (
+                    not options.tests
+                    or main_target == "all"
+                    or known_targets is not None
+                ):
+                    fail(f"Failed to build target '{main_target}'.")
 
-            if test_target and (known_targets is None or test_target in known_targets):
-                try:
-                    build_targets(
-                        [test_target], options.build_dir, extra_args, env
-                    )
-                    build_succeeded = True
-                except:
-                    if not options.keep_going:
-                        raise
+            if test_target and (
+                known_targets is None or test_target in known_targets
+            ):
+                test_built = build_targets(
+                    [test_target], options.build_dir, extra_args, env
+                )
+                if not test_built:
+                    fail(f"Failed to build target '{test_target}'.")
 
-            if not build_succeeded and not options.keep_going:
+            if main_built is None and test_built is None:
                 targets = [
                     f"'{t}'"
                     for t in [main_target, test_target]
                     if t is not None
                 ]
-                raise RuntimeError(
-                    f"Failed to build target '{target}' (tried {' and '.join(targets)})."
+                fail(
+                    f"Target '{target}' does not exist "
+                    + f"(looked for {' and '.join(targets)})."
                 )
 
     if "run" == options.tests:
@@ -994,11 +1021,13 @@ def build(options):
             # nothing) instead of "bsl+stdhdrs".
             test_pattern = "|".join(["^" + re.escape(t) + "$" for t in test_list])
             test_cmd += ["-L", test_pattern]
-        try:
-            subprocess.check_call(test_cmd, cwd=options.build_dir)
-        except:
-            if not options.keep_going:
-                raise
+        if 0 != subprocess.run(test_cmd, cwd=options.build_dir).returncode:
+            fail("Tests failed.")
+
+    if failures:
+        raise RuntimeError(
+            "Build failed (with --keep-going): " + " ".join(failures)
+        )
 
 
 def install(options):

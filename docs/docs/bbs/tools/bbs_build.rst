@@ -168,7 +168,9 @@ Parameters for build command
 
 .. option:: -k, --keep-going
 
-   Continues as much as possible after an error.
+   Continues as much as possible after an error: builds every target it can
+   (including the dependers selected by ``--dependers-of``), and runs the
+   tests. The command still fails at the end if anything failed.
 
    .. note::
       Supported by 'ninja' and 'make' build systems.
