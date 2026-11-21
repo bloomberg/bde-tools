@@ -26,7 +26,7 @@ Prerequisites and Supported Platforms
 
 ``bbs_build_env`` requires:
 
--  Python 3.6+
+-  Python 3.7+
 
 ``bbs_build_env`` is supported on all platform where the :ref:`CMake based
 build system is supported <requirements-top>`.
@@ -66,13 +66,13 @@ Usage Examples
    Set up the environment variables so that the ``bbs_build`` build tool uses
    the build profile named ``gcc-9.0.0`` (assuming that build profile with this
    name exist), builds with the UFID configuration 'dbg_64' to the output
-   directory ``<uplid>-<ufid>``, and install the libraries to a installation
-   prefix of ``~/bde-install/``.
+   directory ``$PWD/_build/<uplid>-<ufid>``, and install the libraries to a
+   installation prefix of ``~/bde-install/``.
 
    For example, on my system, the uplid was
    ``unix-linux-x86_64-2.6.32-gcc-9.0.0``, and
-   ``unix-linux-x86_64-2.6.32-gcc-9.0.0-dbg_64`` was the name of the build
-   output directory.
+   ``_build/unix-linux-x86_64-2.6.32-gcc-9.0.0-dbg_64`` was the build output
+   directory.
 
 
 .. _bbs_build_env-env:
@@ -113,13 +113,15 @@ bbs_build_env.py:
 
 - ``BDE_CMAKE_BUILD_DIR``
 
-  The path in which build artifacts will be generated.  This will be set to the
-  expanded value of ``"$BDE_CMAKE_UPLID-$BDE_CMAKE_UFID``, so that build
-  directory is unique for each build configuration.
+  The path in which build artifacts will be generated.  Unless ``--build-dir``
+  is given, this will be set to the expanded value of
+  ``$PWD/_build/$BDE_CMAKE_UPLID-$BDE_CMAKE_UFID``, so that build directory is
+  unique for each build configuration.
 
-- ``PREFIX``
+- ``BDE_CMAKE_INSTALL_DIR``
 
-  The installation prefix.
+  The installation prefix.  Unless ``--install-dir`` is given, this will be set
+  to ``$PWD/_install``.
 
 Commands and Options
 ====================
@@ -162,19 +164,6 @@ Set Command Options
 .. option:: -u, --ufid
 
   Specify the build configuration using a :ref:`ufid`.
-
-.. option:: --build-type
-
-  Specify the CMake native build type (Debug/Release/RelWithDebInfo).
-
-.. option:: --abi-bits
-
-  Specify the build bitness.
-
-.. note::
-   ``--ufid`` option superseds ``--build-type`` and ``--abit-bits`` options
-   (the latter will be ignored). Also note that the CMake build types are
-   translated into ufid for low level build system.
 
 .. option:: -b, --build-dir
 

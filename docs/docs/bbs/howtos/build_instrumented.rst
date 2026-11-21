@@ -52,14 +52,22 @@ with all necessary support for sanitizers
 
    $ eval `bbs_build_env -u dbg_asan_64_cpp20`
 
-* Build and run BDE tests:
+* Configure the build, then build and run BDE tests:
 
+{{{ internal
 .. code-block:: shell
 
-   $ plocum bbs_build --target all.t --test run
+   $ bbs_build configure
+   $ plocum bbs_build build --targets all.t --tests run
 
-* Build and test as usual.
+}}}
+{{{ oss
+.. code-block:: shell
 
+   $ bbs_build configure
+   $ bbs_build build --targets all.t --tests run
+
+}}}
 {{{ internal
 .. note::
 

@@ -48,7 +48,7 @@ pretty-printers for a number of BDE components.
 ### Bloomberg LP (internal)
 
 * [BDE build tools](https://bde.bloomberg.com/bde-tools)
-* [BDE librarlies](https://bbgithub.dev.bloomberg.com/bde/bde)
+* [BDE libraries](https://bbgithub.dev.bloomberg.com/bde/bde)
 * [bdedox](https://bbgithub.dev.bloomberg.com/bde/bde-tools/blob/main/contrib/bdedox)
 * [gdb-printers](https://bbgithub.dev.bloomberg.com/bde/bde-tools/tree/main/contrib/gdb-printers)
 

@@ -174,7 +174,7 @@ def filter_valid_profiles(uplid, profile_config):
             desc = profile.get("description", "Generic build profile")
 
             if not toolchain and compiler_type:
-                toolchain = compiler_type + "_default"
+                toolchain = compiler_type + "-default"
 
             toolchain = find_toolchain_file(toolchain)
 

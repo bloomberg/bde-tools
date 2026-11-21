@@ -39,7 +39,7 @@ Create workspace CMakeLists.txt
 .. code-block:: CMake
 
    # CMakeLists.txt for a workspace
-   cmake_minimum_required(VERSION 3.22)
+   cmake_minimum_required(VERSION 3.24)
    project(workspace)
 
    enable_testing()

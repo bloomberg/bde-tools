@@ -23,30 +23,30 @@ drivers in the current build repository or workspace.
 
   .. code-block:: shell
 
-     $ bbs_build build --target bsls  # Build bsls package library
-     $ bbs_build build --target bal   # Build bal package group library
+     $ bbs_build build --targets bsls  # Build bsls package library
+     $ bbs_build build --targets bal   # Build bal package group library
 
-     $ bbs_build build --target all.t  # Build all test drivers
-     $ bbs_build build --test build    # Build all test drivers
+     $ bbs_build build --targets all.t  # Build all test drivers
+     $ bbs_build build --tests build    # Build all test drivers
 
-     $ bbs_build build --target bslmt.t             # Build test drivers for bslmt package
-     $ bbs_build build --target bslmt --test build  # Build test drivers for bslmt package
+     $ bbs_build build --targets bslmt.t              # Build test drivers for bslmt package
+     $ bbs_build build --targets bslmt --tests build  # Build test drivers for bslmt package
 
 * To build and run test drivers:
 
   .. code-block:: shell
 
-     $ bbs_build build --test run    # Build and run all test drivers
+     $ bbs_build build --tests run    # Build and run all test drivers
 
-     $ bbs_build build --target bslmt --test run  # Build and run test drivers for bslmt package
+     $ bbs_build build --targets bslmt --tests run  # Build and run test drivers for bslmt package
 
 * Check implementation cycles:
 
   .. code-block:: shell
 
-     $ bbs_build build --target check_cycles      # Check cycles for all libraries
+     $ bbs_build build --targets check_cycles      # Check cycles for all libraries
 
-     $ bbs_build build --target bal.check_cycles  # Check cycles for bal package group only
+     $ bbs_build build --targets bal.check_cycles  # Check cycles for bal package group only
 
 Optimized workflow
 ------------------
@@ -86,7 +86,7 @@ underlying build system.
 
   .. code-block:: shell
 
-      $ bbs_build build --target bsls_platform.t --tests run
+      $ bbs_build build --targets bsls_platform.t --tests run
 
   This command builds only direct dependencies of the tests in ``bsls``
   package. For the regex ``bsls_platform$`` it also runs a single test
@@ -94,4 +94,4 @@ underlying build system.
 
   .. code-block:: shell
 
-      $ bbs_build build --target bsls.t --tests run
+      $ bbs_build build --targets bsls.t --tests run

@@ -35,6 +35,7 @@ For example:
      Using system configuration: /somewhere/bbs_build_profiles
      Effective ufid: dbg
      Using build profile: gcc-10.2.1
+     Using build directory: /somewhere/else/bde/_build/unix-linux-x86_64-3.10.0-gcc-10.2.1-dbg
      Using install directory: /somewhere/else/bde/_install
 
    $ export CXX=/unusual/compiler/location/compiler

@@ -29,7 +29,7 @@ BDE build system uses other system software to implement its functionality:
    :widths: 40, 60
    :align: left
 
-   "CMake", "3.19"
-   "Python", "3.6"
+   "CMake", "3.24"
+   "Python", "3.7 (3.9 for code generation)"
    "Perl", "5.19"
    "Ninja", "1.10"

@@ -62,9 +62,8 @@ def program():
     profile = None
 
     if build_profiles:
-        if args.profile is None:
-            profile = build_profile[0]
-        elif sysutil.is_int_string(args.profile):
+        # '--profile' defaults to "0", the first profile.
+        if sysutil.is_int_string(args.profile):
             idx = int(args.profile)
             if idx < len(build_profiles):
                 profile = build_profiles[idx]
@@ -92,7 +91,7 @@ def unset_command():
     print("unset BDE_CMAKE_UFID")
     print("unset BDE_CMAKE_BUILD_DIR")
     print("unset BDE_CMAKE_TOOLCHAIN")
-    print("unset PREFIX")
+    print("unset BDE_CMAKE_INSTALL_DIR")
     print("unset PKG_CONFIG_PATH")
     print("unset BBS_ENV_MARKER")
 
@@ -215,7 +214,7 @@ def populate_ufid(ufid_str, profile):
                 full_ufid_flags.append(flag)
     else:
         if str(review_level).lower() == "false":
-            for flag in assert_levels:
+            for flag in review_levels:
                 if ufid.is_set(flag):
                     print(f"ERROR: Ufid flag {flag} cannot be used with profile {profile.name}", file=sys.stderr)
                     return None
@@ -259,6 +258,7 @@ def print_envs(args, ufid, profile):
         build_path = Path(args.build_dir).resolve()
     else:
         build_path = Path.cwd() / "_build" / f"{uplid}-{ufid}"
+    print(f"Using build directory: {build_path}", file=sys.stderr)
     print(f'export BDE_CMAKE_BUILD_DIR="{build_path}"')
 
     if os_type == "windows":

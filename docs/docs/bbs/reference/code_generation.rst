@@ -256,11 +256,11 @@ Ongoing synchronization of the _cpp03 files
 The ``bbs_build`` tool automatically generates rules to re-run
 ``sim_cpp11_features.py`` if the source files have changed.
 
-A different option is passed to ``bbs_build`` by the nightly and feature branch
-test builds which causes the build to fail if the source and ``_cpp03`` files
-are out of sync, allowing us to make sure that the state of committed code is
-in sync.
+A different option is passed to ``bbs_build configure`` by the nightly and
+feature branch test builds which causes the build to fail if the source and
+``_cpp03`` files are out of sync, allowing us to make sure that the state of
+committed code is in sync.
 
 .. code-block:: shell
 
-   bbs_build build --cpp11-verify-no-change
+   bbs_build configure build --cpp11-verify-no-change

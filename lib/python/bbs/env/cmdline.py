@@ -17,9 +17,10 @@ eval `bbs_build_env.py [options] [command]`
 set  : set environment variables (default)
 unset: unset environment variables
 list : list available toolchains in the following order:
-    1. Toolchains found in the user configuration file ($HOME/.bdecompilerconfig)
-    2. Toolchains found in the system configuration file ($BDE_ROOT/etc/bdecompilerconfig)
+    1. Production toolchains (if available)
+    2. Toolchains found in the system profile file ($BDE_ROOT/etc/bbs_build_profiles)
     3. gcc and clang compilers detected on $PATH
+    4. Toolchains found in the user profile file (~/.bbs_build_profiles)
 
 For example:
 eval `bbs_build_env -u dbg_64_cpp20 -p gcc-10`   # set the environment

@@ -10,12 +10,12 @@ Prerequisites
 Bde build system expects following software to be preinstalled and configured
 on the system:
 
-  * `CMake <https://cmake.org/>`_ (version 3.19 or later)
+  * `CMake <https://cmake.org/>`_ (version 3.24 or later)
   * `Ninja <https://ninja-build.org/>`_ (recommended) or `GNU Make
     <https://www.gnu.org/software/make/>`_
   * C++ compilers (gcc, clang)
   * Perl (optional). Required only for code generation.
-  * Python (version 3.8 or later)
+  * Python (version 3.7 or later; 3.9 or later for code generation)
 
 See the :doc:`requirements` for details.
 

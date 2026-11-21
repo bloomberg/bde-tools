@@ -108,20 +108,28 @@ The following flags are recognized by BBS tools:
    "opt_dbg", "CMAKE_BUILD_TYPE='RelWithDebInfo'
    BDE_BUILD_TARGET_DBG
    BDE_BUILD_TARGET_OPT", "Optimized build with debug information"
-   "noexc", "BDE_BUILD_TARGET_NOEXC", "Build with no exception (if not specified, exceptions are enabled)"
-   "nomt", "BDE_BUILD_TARGET_NOMT", "Build without multi-threading (if not specified, multi-threading is enabled)"
+   "noexc", "BDE_BUILD_TARGET_NO_EXC", "Build with no exception (if not specified, exceptions are enabled)"
+   "nomt", "BDE_BUILD_TARGET_NO_MT", "Build without multi-threading (if not specified, multi-threading is enabled)"
    "32", "BDE_BUILD_TARGET_32", "Build for 32-bit architecture"
-   "64", "BDE_BUILD_TARGET_64", "Build for 64-bit architecture (if nether 32/64 are specified, defaults to compiler settings)"
+   "64", "BDE_BUILD_TARGET_64", "Build for 64-bit architecture (if neither 32/64 are specified, ``bbs_build_env`` uses the host bitness)"
    "safe", "BDE_BUILD_TARGET_SAFE", "Enable additional assertion checks;"
-   "safe2", "BDE_BUILD_TARGET_SAFE_2", "Enable aggresive assertion checks,  binary-incompatible build"
-   "aopt", "BSLS_ASSERT_LEVEL_ASSERT_OPT", "Set bsls assert level to OPT"
-   "adbg", "BSLS_ASSERT_LEVEL_ASSERT_DBG", "Set bsls assert level to DBG"
-   "asafe", "BSLS_ASSERT_LEVEL_ASSERT_SAFE", "Set bsls assert level to SAFE"
-   "anone", "BSLS_ASSERT_LEVEL_ASSERT_NONE", "Disable bsls asserts"
-   "ropt", "BSLS_REVIEW_LEVEL_REVIEW_OPT", "Set bsls review level to OPT"
-   "rdbg", "BSLS_REVIEW_LEVEL_REVIEW_DBG", "Set bsls review level to DBG"
-   "rsafe", "BSLS_REVIEW_LEVEL_REVIEW_SAFE", "Set bsls review level to SAFE"
-   "rnone", "BSLS_REVIEW_LEVEL_REVIEW_NONE", "Disable bsls reviews"
+   "safe2", "BDE_BUILD_TARGET_SAFE2", "Enable aggresive assertion checks,  binary-incompatible build"
+   "aopt", "BDE_BUILD_TARGET_ASSERT_LEVEL='AOPT'
+   BSLS_ASSERT_LEVEL_ASSERT_OPT", "Set bsls assert level to OPT"
+   "adbg", "BDE_BUILD_TARGET_ASSERT_LEVEL='ADBG'
+   BSLS_ASSERT_LEVEL_ASSERT", "Set bsls assert level to DBG"
+   "asafe", "BDE_BUILD_TARGET_ASSERT_LEVEL='ASAFE'
+   BSLS_ASSERT_LEVEL_ASSERT_SAFE", "Set bsls assert level to SAFE"
+   "anone", "BDE_BUILD_TARGET_ASSERT_LEVEL='ANONE'
+   BSLS_ASSERT_LEVEL_NONE", "Disable bsls asserts"
+   "ropt", "BDE_BUILD_TARGET_REVIEW_LEVEL='ROPT'
+   BSLS_REVIEW_LEVEL_REVIEW_OPT", "Set bsls review level to OPT"
+   "rdbg", "BDE_BUILD_TARGET_REVIEW_LEVEL='RDBG'
+   BSLS_REVIEW_LEVEL_REVIEW", "Set bsls review level to DBG"
+   "rsafe", "BDE_BUILD_TARGET_REVIEW_LEVEL='RSAFE'
+   BSLS_REVIEW_LEVEL_REVIEW_SAFE", "Set bsls review level to SAFE"
+   "rnone", "BDE_BUILD_TARGET_REVIEW_LEVEL='RNONE'
+   BSLS_REVIEW_LEVEL_NONE", "Disable bsls reviews"
    "asan", "BDE_BUILD_TARGET_ASAN", "Build with address sanitizer"
    "msan", "BDE_BUILD_TARGET_MSAN", "Build with memory sanitizer"
    "tsan", "BDE_BUILD_TARGET_TSAN", "Build with thread sanitizer"
@@ -129,13 +137,20 @@ The following flags are recognized by BBS tools:
    "fuzz", "BDE_BUILD_TARGET_FUZZ", "Build with fuzz tester (specify another sanitizer too)"
    "pic", "CMAKE_POSITION_INDEPENDENT_CODE", "Build position-independent code"
    "stlport", "BDE_BUILD_TARGET_STLPORT", "**(SunOS only)** Use STLport standard library implementation"
-   "cpp03", "CMAKE_CXX_STANDARD=98", "Build with support for C++03 features"
-   "cpp11", "CMAKE_CXX_STANDARD=11", "Build with support for C++11 features"
-   "cpp14", "CMAKE_CXX_STANDARD=14", "Build with support for C++14 features"
-   "cpp17", "CMAKE_CXX_STANDARD=17", "Build with support for C++17 features"
-   "cpp20", "CMAKE_CXX_STANDARD=20", "Build with support for C++20 features"
-   "cpp23", "CMAKE_CXX_STANDARD=23", "Build with support for C++23 features"
-   "cpp26", "CMAKE_CXX_STANDARD=26", "Build with support for C++26 features"
+   "cpp03", "BDE_BUILD_TARGET_CPP03
+   CMAKE_CXX_STANDARD=98", "Build with support for C++03 features"
+   "cpp11", "BDE_BUILD_TARGET_CPP11
+   CMAKE_CXX_STANDARD=11", "Build with support for C++11 features"
+   "cpp14", "BDE_BUILD_TARGET_CPP14
+   CMAKE_CXX_STANDARD=14", "Build with support for C++14 features"
+   "cpp17", "BDE_BUILD_TARGET_CPP17
+   CMAKE_CXX_STANDARD=17", "Build with support for C++17 features"
+   "cpp20", "BDE_BUILD_TARGET_CPP20
+   CMAKE_CXX_STANDARD=20", "Build with support for C++20 features"
+   "cpp23", "BDE_BUILD_TARGET_CPP23
+   CMAKE_CXX_STANDARD=23", "Build with support for C++23 features"
+   "cpp26", "BDE_BUILD_TARGET_CPP26
+   CMAKE_CXX_STANDARD=26", "Build with support for C++26 features"
 
 For example, the UFID ``dbg_64_pic`` represents a build
 configuration that enables debugging symbols, enables multi-threading

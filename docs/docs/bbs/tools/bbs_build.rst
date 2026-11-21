@@ -145,6 +145,27 @@ Those parameters are used by ``configure`` command.
       configuration and cached by the build system. User must use
       empty (clean) build directory when switching compilers.
 
+.. option:: --regex REGEX
+
+   Regular expression for filtering test drivers.
+
+.. option:: --cpp11-verify-no-change
+
+   Verify that none of the generated ``_cpp03`` components change when the
+   generator is run (i.e., the components are up-to-date).
+
+.. option:: --recover-sanitizer
+
+   Try to recover after sanitizer error(s) and continue.
+
+.. option:: --dump-cmake-flags
+
+   Dump CMake flags and exit.
+
+.. option:: --cmake-flags CMAKE_FLAGS
+
+   String with comma-separated flags for CMake.
+
 Parameters for build command
 ----------------------------
 
@@ -155,10 +176,23 @@ Parameters for build command
    (ball_log/ball_log.t) and well as high-level target for building everything
    (all/all.t)
 
-.. option:: --test {build, run}
+.. option:: --dependers-of TARGET_LIST
+
+   Comma-separated list of targets whose dependers need to be built.  Cannot
+   be combined with ``--targets``.
+
+.. option:: --no-missing-target-warning
+
+   Suppress warnings for invalid targets.
+
+.. option:: --config {Debug, RelWithDebInfo, Release}
+
+   Select the build type.  If not provided, the build type used on
+   ``configure`` stage will be used.
+
+.. option:: --tests {build, run}
 
    Selects whether to build or run the tests. Tests are not built by default.
-   build step.
 
 .. option:: --timeout TIMEOUT
 

@@ -19,7 +19,7 @@ pipeline {
                     pwd
                     ls -l
                     source /bb/bde/documentation/sphinx_env/bin/activate
-                    (cd docs; make html)
+                    (cd docs; make internal)
                     ls -l docs/build
                 """
             }

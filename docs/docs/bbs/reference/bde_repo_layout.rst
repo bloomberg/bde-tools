@@ -220,7 +220,7 @@ metadata.  For example, in the BDE libraries, the ``mem`` file of the package
 group ``bsl`` is named ``bsl.mem`` and located at the path
 ``<repo_root>/groups/bsl/group/bsl.mem``; the ``dep`` file of the package
 ``bslstl`` is named ``bslstl.dep`` and located at the path
-``<repo_root>/groups/bsl/group/bslstl.dep``.
+``<repo_root>/groups/bsl/bslstl/package/bslstl.dep``.
 
 .. _bde_repo_layout-mem:
 

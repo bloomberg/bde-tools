@@ -67,10 +67,11 @@ master_doc = "index"
 # The exclude patterns
 if tags.has("oss"):
     exclude_patterns = [
-        "cmake/bde_modules.rst",
-        "cmake/advanced.rst",
-        "modules/*",
-        "misc/docs-howto.rst",
+        "bbs/modules/*",
+        "bbs/general_info/docs-howto.rst",
+        "bbs/howtos/build_bde_bbcmake.rst",
+        "bbs/howtos/build_bde_bbcmake_env.rst",
+        "bbs/howtos/build_bde_refroot.rst",
     ]
 else:
     exclude_patterns = []

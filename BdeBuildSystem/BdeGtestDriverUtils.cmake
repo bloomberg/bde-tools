@@ -73,7 +73,9 @@ function(bbs_add_component_gtests target)
         message(FATAL_ERROR "No sources for the test ${target}")
     endif()
 
-    set(test_targets)
+    # This function can be called after bbs_add_component_tests for the same
+    # target.  We want to "continue" to populate the list set by previous calls.
+    set(test_targets ${${target}_TEST_TARGETS})
 
     foreach(gtest_src ${_GTEST_SOURCES})
         # Stripping all extensions from the gtest source ( including numbers
@@ -121,7 +123,7 @@ function(bbs_add_component_gtests target)
 
 
         set(test_src_labels ${gtest_name})
-        if (NOT gtest_name STREQUAL test_target_name)
+        if (NOT gtest_name STREQUAL gtest_target_name)
             list(APPEND test_src_labels ${gtest_target_name})
         endif()
 
@@ -151,7 +153,7 @@ function(bbs_add_component_gtests target)
             endif()
 
             message(STATUS "Adding ${gtest_name}.t -> ${gtest_target_name}.t")
-            add_dependencies(${gtest_name}.t ${test_target_name}.t)
+            add_dependencies(${gtest_name}.t ${gtest_target_name}.t)
         endif()
     endforeach()
 

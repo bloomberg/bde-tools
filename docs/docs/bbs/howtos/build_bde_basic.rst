@@ -74,11 +74,13 @@ variables that will be set:
    export BBS_ENV_MARKER=ON
    export BDE_CMAKE_UPLID=unix-linux-x86_64-3.10.0-gcc-10.2.1
    export BDE_CMAKE_UFID=dbg_64
-   export BDE_CMAKE_BUILD_DIR="_build/unix-linux-x86_64-3.10.0-gcc-10.2.1-dbg"
+   Using build directory: /home/<user>/workspace/bde/_build/unix-linux-x86_64-3.10.0-gcc-10.2.1-dbg_64
+   export BDE_CMAKE_BUILD_DIR="/home/<user>/workspace/bde/_build/unix-linux-x86_64-3.10.0-gcc-10.2.1-dbg_64"
    export CC=/opt/bb/bin/gcc
    export CXX=/opt/bb/bin/g++
    export BDE_CMAKE_TOOLCHAIN=/home/<user>/bde-tools/BdeBuildSystem/toolchains/linux/gcc-default.cmake
-   export BDE_CMAKE_INSTALL_DIR=/home/<user>/workspace/bde/_install
+   Using install directory: /home/<user>/workspace/bde/_install
+   export BDE_CMAKE_INSTALL_DIR="/home/<user>/workspace/bde/_install"
 
 Configure the Build
 -------------------
