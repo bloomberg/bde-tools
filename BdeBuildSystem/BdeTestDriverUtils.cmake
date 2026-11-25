@@ -44,6 +44,106 @@ else()
 endif()
 
 #[[.rst:
+.. command:: bbs_set_test_driver_output_dir
+
+Put the test driver ``target`` in the directory every test driver shares,
+``tests`` in the top build directory, and stage there what the drivers need to
+start.  Multi-config generators (Visual Studio, Ninja Multi-Config) append the
+configuration: ``tests/<config>``.
+
+.. code-block:: cmake
+
+   bbs_set_test_driver_output_dir(target)
+#]]
+function(bbs_set_test_driver_output_dir target)
+    set(dir "${CMAKE_BINARY_DIR}/tests")
+    set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${dir}")
+    _bbs_stage_asan_runtime(${target} "${dir}")
+endfunction()
+
+# MSVC links the dynamic ASan runtime: clang_rt.asan_dynamic-x86_64.dll, and
+# clang_rt.asan_dbg_dynamic-x86_64.dll under /MDd.  It sits beside cl.exe.
+# Windows looks for a DLL in the executable's own directory first, so copy the
+# runtime into 'dir', the drivers' RUNTIME_OUTPUT_DIRECTORY.  A driver then
+# starts whatever PATH holds: under ctest, during gtest discovery, or by hand.
+#
+# All drivers share 'dir', so one target copies the runtime and every driver
+# depends on it.
+function(_bbs_stage_asan_runtime target dir)
+    if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND BDE_BUILD_TARGET_ASAN))
+        return()
+    endif()
+
+    if(NOT TARGET bbs_asan_runtime)
+        get_property(checked GLOBAL PROPERTY BBS_ASAN_RUNTIME_CHECKED)
+        if(checked)
+            # An earlier call found no runtime and warned.
+            return()
+        endif()
+        set_property(GLOBAL PROPERTY BBS_ASAN_RUNTIME_CHECKED ON)
+
+        get_filename_component(asan_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        file(GLOB asan_dlls "${asan_dir}/clang_rt.asan*.dll")
+        if(NOT asan_dlls)
+            message(WARNING
+                    "No clang_rt.asan*.dll in '${asan_dir}'. ASan test "
+                    "drivers will not start unless the runtime is on PATH.")
+            return()
+        endif()
+
+        # CMAKE_RUNTIME_OUTPUT_DIRECTORY_<CONFIG> sets each driver's
+        # RUNTIME_OUTPUT_DIRECTORY_<CONFIG>, which wins over 'dir'.  The
+        # runtime would then miss the drivers.
+        if(CMAKE_CONFIGURATION_TYPES)
+            set(configs ${CMAKE_CONFIGURATION_TYPES})
+        else()
+            set(configs ${CMAKE_BUILD_TYPE})
+        endif()
+        foreach(config ${configs})
+            string(TOUPPER "${config}" config)
+            if(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${config})
+                message(WARNING
+                        "CMAKE_RUNTIME_OUTPUT_DIRECTORY_${config} sends test "
+                        "drivers to "
+                        "'${CMAKE_RUNTIME_OUTPUT_DIRECTORY_${config}}', but the "
+                        "MSVC ASan runtime is staged in '${dir}'. Test drivers "
+                        "may not start unless the runtime is on PATH.")
+            endif()
+        endforeach()
+
+        set(stage_dir "${dir}")
+        get_property(multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+        if(multi_config)
+            string(APPEND stage_dir "/$<CONFIG>")
+        endif()
+
+        if(multi_config AND CMAKE_VERSION VERSION_LESS 3.20)
+            # OUTPUT takes no generator expressions before CMake 3.20.  Copy
+            # on every build instead.
+            add_custom_target(bbs_asan_runtime
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${stage_dir}"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${asan_dlls} "${stage_dir}"
+                VERBATIM)
+        else()
+            set(staged)
+            foreach(dll ${asan_dlls})
+                get_filename_component(name "${dll}" NAME)
+                add_custom_command(OUTPUT "${stage_dir}/${name}"
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                            "${dll}" "${stage_dir}/${name}"
+                    DEPENDS "${dll}"
+                    VERBATIM)
+                list(APPEND staged "${stage_dir}/${name}")
+            endforeach()
+            add_custom_target(bbs_asan_runtime DEPENDS ${staged})
+        endif()
+    endif()
+
+    add_dependencies(${target} bbs_asan_runtime)
+endfunction()
+
+#[[.rst:
 .. command:: bbs_add_bde_style_test
 
 Add the [executable] ``target`` as a BDE test and create ctest labels for it.
@@ -133,10 +233,7 @@ function(bbs_add_component_tests target)
         get_filename_component(test_target_name ${test_src} NAME_WLE)
         get_filename_component(test_target_name ${test_target_name} NAME_WLE)
         add_executable(${test_target_name}.t EXCLUDE_FROM_ALL ${test_src})
-        set_target_properties(
-            ${test_target_name}.t
-            PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+        bbs_set_test_driver_output_dir(${test_target_name}.t)
         add_custom_command(TARGET ${test_target_name}.t
             POST_BUILD
             COMMAND
@@ -299,10 +396,7 @@ function(bbs_add_component_tests target)
                 add_custom_target(${split_target_name}.t SOURCES ${td_output_dir}/${split_test})
             else()
                 add_executable(${split_target_name}.t EXCLUDE_FROM_ALL ${td_output_dir}/${split_test})
-                set_target_properties(
-                    ${split_target_name}.t
-                    PROPERTIES
-                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+                bbs_set_test_driver_output_dir(${split_target_name}.t)
 
                 bbs_add_target_bde_flags(${split_target_name}.t PRIVATE)
                 bbs_add_target_thread_flags(${split_target_name}.t PRIVATE)

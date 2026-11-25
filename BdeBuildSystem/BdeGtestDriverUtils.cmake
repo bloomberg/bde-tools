@@ -91,10 +91,7 @@ function(bbs_add_component_gtests target)
         get_filename_component(gtest_target_name ${gtest_target_name} NAME_WLE)
         add_executable(${gtest_target_name}.t EXCLUDE_FROM_ALL ${gtest_src})
 
-        set_target_properties(
-            ${gtest_target_name}.t
-            PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+        bbs_set_test_driver_output_dir(${gtest_target_name}.t)
         add_custom_command(TARGET ${gtest_target_name}.t
             POST_BUILD
             COMMAND
